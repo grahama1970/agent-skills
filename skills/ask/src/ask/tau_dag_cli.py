@@ -486,6 +486,14 @@ def compete(
         list[str] | None,
         typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
     ] = None,
+    judge_handler: Annotated[
+        str,
+        typer.Option("--judge-handler", help="Independent judge seat (e.g. webgpt) reviewing all competitors."),
+    ] = "",
+    report_handler: Annotated[
+        str,
+        typer.Option("--report-handler", help="Report seat (profile/model or browser handler) writing up the winner after the join."),
+    ] = "",
     ask_id: Annotated[str | None, typer.Option("--ask-id", help="Stable artifact id.")] = None,
     output_root: Annotated[
         Path,
@@ -530,6 +538,8 @@ def compete(
         workflow_mode="compete",
         dag_template="compete",
         join_handler="join",
+        judge_handler=judge_handler,
+        report_handler=report_handler,
         handler_projects=handler_project,
         handler_workspaces=handler_workspace,
         ask_id=ask_id,

@@ -1,0 +1,79 @@
+{
+  "created_at": "2026-08-06T13:12:51Z",
+  "degradation_analysis": {
+    "blockers": [],
+    "candidate_count": 2,
+    "failed_candidate_count": 0,
+    "failed_candidates": [],
+    "failure_codes": {},
+    "recovery_commands": [],
+    "schema": "ask.tau_dag_degradation_analysis.v1",
+    "status": "PASS",
+    "transport_blocker_count": 0,
+    "verified_feature_count": 2,
+    "why": "Winner `gpt-5.5-medium` selected from receipt-backed verified features.",
+    "winner_handler": "gpt-5.5-medium"
+  },
+  "handler": "join",
+  "handler_response_index": [
+    {
+      "failure": "",
+      "failure_code": "",
+      "failure_kind": "semantic",
+      "feature_count": 1,
+      "handler": "gpt-5.5-medium",
+      "live": true,
+      "node_id": "handler-gpt-5-5-medium",
+      "ok": true,
+      "provider_live": true,
+      "recovery_packet_path": null,
+      "response_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/handler-gpt-5-5-medium/response.md",
+      "status": "PASS",
+      "verified_features": [
+        "`add_numbers(*values)` returns the sum of all positional numeric arguments using `sum(values)`."
+      ]
+    },
+    {
+      "failure": "",
+      "failure_code": "",
+      "failure_kind": "semantic",
+      "feature_count": 1,
+      "handler": "opencode-go/deepseek-v4-pro",
+      "live": true,
+      "node_id": "handler-opencode-go-deepseek-v4-pro",
+      "ok": true,
+      "provider_live": true,
+      "recovery_packet_path": null,
+      "response_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/handler-opencode-go-deepseek-v4-pro/response.md",
+      "status": "PASS",
+      "verified_features": [
+        "The function `add_numbers(*values)` accepts a variable number of numeric positional arguments and returns their total sum via the built-in `sum()`."
+      ]
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "node_id": "join",
+  "ok": true,
+  "provider_live": true,
+  "provider_receipt": {
+    "execution_owner": "$tau",
+    "live": true,
+    "mocked": false,
+    "ok": true,
+    "provider_live": true,
+    "provider_transport": "$surf_or_scillm",
+    "route": "tau_compete_join_adapter",
+    "schema": "ask.tau_dag_provider_route_receipt.v1",
+    "status": "PASS"
+  },
+  "revision_request_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/winner-continuation-request.md",
+  "schema": "ask.tau_dag_compete_join_receipt.v1",
+  "scorecard_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/compete-scorecard.json",
+  "status": "PASS",
+  "summary_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/compete-summary.md",
+  "topology": "concurrent",
+  "unresolved_gaps": [],
+  "winner_continuation_request_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/winner-continuation-request.md",
+  "workflow_mode": "compete"
+}

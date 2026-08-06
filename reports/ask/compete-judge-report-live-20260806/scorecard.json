@@ -1,0 +1,85 @@
+{
+  "blockers": [],
+  "candidates": [
+    {
+      "failure": "",
+      "failure_code": "",
+      "failure_kind": "semantic",
+      "feature_count": 1,
+      "handler": "gpt-5.5-medium",
+      "live": true,
+      "node_id": "handler-gpt-5-5-medium",
+      "ok": true,
+      "provider_live": true,
+      "recovery_packet_path": null,
+      "response_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/handler-gpt-5-5-medium/response.md",
+      "status": "PASS",
+      "verified_features": [
+        "`add_numbers(*values)` returns the sum of all positional numeric arguments using `sum(values)`."
+      ]
+    },
+    {
+      "failure": "",
+      "failure_code": "",
+      "failure_kind": "semantic",
+      "feature_count": 1,
+      "handler": "opencode-go/deepseek-v4-pro",
+      "live": true,
+      "node_id": "handler-opencode-go-deepseek-v4-pro",
+      "ok": true,
+      "provider_live": true,
+      "recovery_packet_path": null,
+      "response_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/handler-opencode-go-deepseek-v4-pro/response.md",
+      "status": "PASS",
+      "verified_features": [
+        "The function `add_numbers(*values)` accepts a variable number of numeric positional arguments and returns their total sum via the built-in `sum()`."
+      ]
+    }
+  ],
+  "created_at": "2026-08-06T13:12:51Z",
+  "degradation_analysis": {
+    "blockers": [],
+    "candidate_count": 2,
+    "failed_candidate_count": 0,
+    "failed_candidates": [],
+    "failure_codes": {},
+    "recovery_commands": [],
+    "schema": "ask.tau_dag_degradation_analysis.v1",
+    "status": "PASS",
+    "transport_blocker_count": 0,
+    "verified_feature_count": 2,
+    "why": "Winner `gpt-5.5-medium` selected from receipt-backed verified features.",
+    "winner_handler": "gpt-5.5-medium"
+  },
+  "failure_kind": "none",
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "proof_scope": {
+    "does_not_prove": [
+      "The winning candidate is semantically best.",
+      "The verified feature markers are true without project-agent codebase checks.",
+      "The winner revision request has been submitted to a model."
+    ],
+    "proves": [
+      "Candidate node receipts were collected.",
+      "The scorecard fail-closed when no clear receipt-backed winner existed.",
+      "Only explicit VERIFIED_FEATURE markers were promoted into the revision packet.",
+      "Browser transport blockers were separated from semantic candidate failures."
+    ]
+  },
+  "provider_live": true,
+  "revision_request_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/winner-continuation-request.md",
+  "schema": "ask.tau_dag_compete_scorecard.v1",
+  "selection_basis": "deterministic_receipts_and_explicit_verified_feature_markers",
+  "status": "PASS",
+  "transport_blockers": [],
+  "verified_features": [
+    "`add_numbers(*values)` returns the sum of all positional numeric arguments using `sum(values)`.",
+    "The function `add_numbers(*values)` accepts a variable number of numeric positional arguments and returns their total sum via the built-in `sum()`."
+  ],
+  "winner_continuation_request_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/compete-live3/ask-tau-write-a-python-function-add-numb-73edf197608c/node-artifacts/join/winner-continuation-request.md",
+  "winner_handler": "gpt-5.5-medium",
+  "winner_node_id": "handler-gpt-5-5-medium",
+  "winner_selected_by": "judge_verdict"
+}

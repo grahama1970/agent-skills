@@ -428,8 +428,8 @@ from pathlib import Path
 args = sys.argv[1:]
 log = Path(__file__).with_suffix(".log")
 log.write_text(log.read_text() + json.dumps(args) + "\\n" if log.exists() else json.dumps(args) + "\\n")
-if args[:1] == ["tab.new"]:
-    print(json.dumps({"success": True, "tabId": 456, "url": args[1]}))
+if args[:1] == ["tab.new"] or args[:1] == ["window.new"]:
+    print(json.dumps({"success": True, "tabId": 456, "windowId": 900, "url": args[1]}))
     raise SystemExit(0)
 if args[:1] == ["webgpt.submit"]:
     meta = Path(args[args.index("--meta-output") + 1])

@@ -236,6 +236,8 @@ class TauDagCompileInput:
     browser_lock_timeout: int = 0
     execution_timeout_seconds: int = 0
     attachments: tuple[str, ...] = ()
+    judge_handler: str = ""
+    report_handler: str = ""
 
 
 def infer_compile_input(
@@ -251,6 +253,8 @@ def infer_compile_input(
     topology: str = "",
     workflow_mode: str = "roundtable",
     join_handler: str = "join",
+    judge_handler: str = "",
+    report_handler: str = "",
     handler_projects: list[str] | None = None,
     handler_workspaces: list[str] | None = None,
     dag_template: str = "",
@@ -313,6 +317,8 @@ def infer_compile_input(
         topology=resolved_topology,
         workflow_mode=resolved_workflow_mode,
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
+        judge_handler=_normalize_handler(judge_handler) if judge_handler else "",
+        report_handler=_normalize_handler(report_handler) if report_handler else "",
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
         handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
         handler_provider_hints=tuple(inferred_provider_hints[: len(inferred_handlers)]),
@@ -2263,6 +2269,107 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "selection_policy": "deterministic_receipts_first_then_project_agent_review",
             "fail_closed_on_tie": True,
         }
+    extra_nodes: list[dict[str, Any]] = []
+    competitor_ids = [str(node["id"]) for node in handler_nodes]
+    if is_compete and input.judge_handler:
+        judge_handler = input.judge_handler
+        extra_nodes.append(
+            {
+                "id": "judge",
+                "agent": "judge",
+                "executor": "local",
+                "max_attempts": 1,
+                "command_spec": "command-specs/judge/tau-dispatch-command.json",
+                "required_evidence": [
+                    "handler_response_receipt",
+                    "normalized_handler_receipt",
+                    "prior_handler_receipts",
+                ],
+                "depends_on": list(competitor_ids),
+                "context": {
+                    "role": "compete_judge",
+                    "workflow_mode": input.workflow_mode,
+                    **_dag_template_context(input),
+                    "handler": judge_handler,
+                    "provider_hint": "",
+                    "handler_policy": _handler_policy(judge_handler, workflow_mode=input.workflow_mode),
+                    "prompt_contract": {
+                        "system": (
+                            "You are the independent compete judge. Review EVERY competitor "
+                            "submission below against the stated criteria only."
+                        ),
+                        "instruction": (
+                            "Score each competitor against the criteria "
+                            f"({', '.join(input.criteria)}), name concrete violations, and end "
+                            "with exactly one line 'WINNER: <competitor-node-id>' choosing the "
+                            "best submission. Do not write code yourself."
+                        ),
+                    },
+                    "browser_oracle_project": _handler_project(input, judge_handler)
+                    if _is_browser_handler(judge_handler)
+                    else None,
+                    "request": input.request,
+                    "immutable_goal": input.immutable_goal,
+                    "topology": input.topology,
+                    "prior_nodes": list(competitor_ids),
+                    "scheduler_dependencies": list(competitor_ids),
+                    "transport_resource": "surf_socket" if _is_browser_handler(judge_handler) else None,
+                    "requires_prior_receipts": True,
+                    "requires_verdict": True,
+                    "isolation_required": False,
+                },
+            }
+        )
+        join_node["context"]["join_semantics"]["requires_completed"] = [*competitor_ids, "judge"]
+        join_node["context"]["join_semantics"]["selection_policy"] = (
+            "judge_verdict_first_then_deterministic_receipts"
+        )
+    if is_compete and input.report_handler:
+        report_priors = ["join", *( ["judge"] if input.judge_handler else [] )]
+        extra_nodes.append(
+            {
+                "id": "report",
+                "agent": "report",
+                "executor": "local",
+                "max_attempts": 1,
+                "command_spec": "command-specs/report/tau-dispatch-command.json",
+                "required_evidence": [
+                    "handler_response_receipt",
+                    "normalized_handler_receipt",
+                    "prior_handler_receipts",
+                ],
+                "depends_on": ["join"],
+                "context": {
+                    "role": "compete_report",
+                    "workflow_mode": input.workflow_mode,
+                    **_dag_template_context(input),
+                    "handler": input.report_handler,
+                    "provider_hint": "",
+                    "handler_policy": _handler_policy(input.report_handler, workflow_mode=input.workflow_mode),
+                    "prompt_contract": {
+                        "system": "You are the report writer for a completed code competition.",
+                        "instruction": (
+                            "Using the join scorecard and judge verdict in the prior receipts, "
+                            "write a concise report: the task, each competitor's approach, why "
+                            "the winner won against the criteria, and the winning function "
+                            "itself. Markdown, under 600 words."
+                        ),
+                    },
+                    "browser_oracle_project": _handler_project(input, input.report_handler)
+                    if _is_browser_handler(input.report_handler)
+                    else None,
+                    "request": input.request,
+                    "immutable_goal": input.immutable_goal,
+                    "topology": input.topology,
+                    "prior_nodes": report_priors,
+                    "scheduler_dependencies": ["join"],
+                    "transport_resource": "surf_socket" if _is_browser_handler(input.report_handler) else None,
+                    "requires_prior_receipts": True,
+                    "requires_verdict": False,
+                    "isolation_required": False,
+                },
+            }
+        )
     edges: list[dict[str, str]] = []
     if input.topology == "sequential":
         previous = ""
@@ -2272,11 +2379,20 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             previous = str(node["id"])
         edges.append({"from": previous, "to": "join"})
     else:
-        edges.extend(
-            {"from": str(node["id"]), "to": "join"}
-            for node in handler_nodes
-        )
-    edges.append({"from": "join", "to": "human"})
+        judge_present = any(n["id"] == "judge" for n in extra_nodes)
+        if judge_present:
+            edges.extend({"from": cid, "to": "judge"} for cid in competitor_ids)
+            edges.append({"from": "judge", "to": "join"})
+        else:
+            edges.extend(
+                {"from": str(node["id"]), "to": "join"}
+                for node in handler_nodes
+            )
+    if any(n["id"] == "report" for n in extra_nodes):
+        edges.append({"from": "join", "to": "report"})
+        edges.append({"from": "report", "to": "human"})
+    else:
+        edges.append({"from": "join", "to": "human"})
     return {
         "schema": TAU_DAG_SCHEMA,
         "dag_id": dag_id,
@@ -2287,7 +2403,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "limits": {
             "resume": True,
             "default_timeout_seconds": 300,
-            "max_total_attempts": len(handler_nodes) + 1,
+            "max_total_attempts": len(handler_nodes) + 1 + len(extra_nodes),
             "max_concurrency": (
                 min(len(handler_nodes), TAU_STANDARD_PROFILE_MAX_CONCURRENCY)
                 if input.topology == "concurrent"
@@ -2324,7 +2440,12 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         },
         "provider_sensitive": False,
         "requires_provider_route": False,
-        "nodes": [*handler_nodes, join_node],
+        "nodes": [
+            *handler_nodes,
+            *[n for n in extra_nodes if n["id"] == "judge"],
+            join_node,
+            *[n for n in extra_nodes if n["id"] == "report"],
+        ],
         "edges": edges,
         "required_evidence": [
             "handler_response_receipt",
@@ -2445,6 +2566,10 @@ def _write_roundtable_command_spec(
     prior_nodes = _roundtable_prior_nodes(input, node_id)
     if node_id == "join":
         prior_nodes = _handler_node_ids(input.handlers)
+    context_priors = node_context.get("prior_nodes")
+    if node_id in ("judge", "report") and isinstance(context_priors, list):
+        # Judge reads every competitor; report reads the join scorecard (+judge).
+        prior_nodes = [str(p) for p in context_priors]
     for prior_node in prior_nodes:
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS and handler != "codex":
@@ -2719,6 +2844,10 @@ def _handler_workspace(input: TauDagCompileInput, handler: str) -> str:
 
 def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
     if node_id == "join":
+        return "report" if input.report_handler else "human"
+    if node_id == "judge":
+        return "join"
+    if node_id == "report":
         return "human"
     if not node_id.startswith("handler-"):
         return "human"

@@ -147,6 +147,42 @@
           "input_per_mtok"
         ]
       }
+    },
+    {
+      "name": "compete-judge-report-chain-compiles",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "tau-dag",
+        "compete",
+        "Write a Python function add_numbers(*values) that adds N numbers",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--target",
+        "eval-compete-chain",
+        "--immutable-goal",
+        "best-practices-python compliant add_numbers with judge-picked winner",
+        "--handler",
+        "opencode-go/deepseek-v4-pro",
+        "--handler",
+        "gpt-5.5-medium",
+        "--judge-handler",
+        "webgpt",
+        "--report-handler",
+        "claude-opus",
+        "--criterion",
+        "best-practices-python compliance",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"READY\"",
+          "\"id\": \"judge\"",
+          "\"id\": \"report\"",
+          "handler-gpt-5-5-medium"
+        ]
+      }
     }
   ]
 }

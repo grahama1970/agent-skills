@@ -458,7 +458,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             model_preference=getattr(args, "browser_model_preference", ""),
             # API (scillm) handlers have no attachment channel and no path
             # preflight: give them the full prior response including the diff.
-            inline_full=handler not in HANDLER_SUBMIT_COMMANDS and handler != "codex",
+            # The judge must see full competitor bodies regardless.
+            inline_full=(handler not in HANDLER_SUBMIT_COMMANDS and handler != "codex")
+            or args.node_id in ("judge", "report"),
+            node_id=str(args.node_id),
+            criteria=[str(c) for c in (request_payload.get("criteria") or [])],
         ),
         encoding="utf-8",
     )
@@ -4703,6 +4707,36 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
     tied = bool(len(selectable) > 1 and selectable[0]["feature_count"] == selectable[1]["feature_count"])
     candidate_winner_handler = str(winner.get("handler") or "") if winner and not tied else ""
     fatal_blockers = []
+    # Independent judge verdict (agent-skills#1243): when a judge node ran,
+    # its WINNER line is authoritative over the deterministic feature count —
+    # provided it names a real, passing competitor. An unparseable or invalid
+    # verdict is a blocker, never silently ignored.
+    judge_selection = None
+    judge_receipt_path = node_artifacts_root / "judge" / "node-receipt.json"
+    if judge_receipt_path.is_file():
+        judge_receipt = _read_json(judge_receipt_path)
+        judge_response = ""
+        response_path = Path(str(judge_receipt.get("response_path") or ""))
+        if response_path.is_file():
+            judge_response = response_path.read_text(encoding="utf-8", errors="replace")
+        winner_lines = [
+            line.split("WINNER:", 1)[1].strip().strip("`*")
+            for line in judge_response.splitlines()
+            if "WINNER:" in line
+        ]
+        named = winner_lines[-1] if winner_lines else ""
+        by_node = {str(item.get("node_id")): item for item in handler_receipts}
+        if judge_receipt.get("ok") is not True:
+            fatal_blockers.append("judge_seat_failed")
+        elif named in by_node and by_node[named]["ok"] is True:
+            judge_selection = by_node[named]
+            winner = judge_selection
+            tied = False
+            candidate_winner_handler = str(judge_selection.get("handler") or "")
+        elif named:
+            fatal_blockers.append(f"judge_named_invalid_winner:{named}")
+        else:
+            fatal_blockers.append("judge_verdict_missing_winner_line")
     if tied:
         fatal_blockers.append("winner_tie_requires_project_agent_review")
     if not candidate_winner_handler:
@@ -4766,6 +4800,7 @@ def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_
         "live": any(item["live"] for item in handler_receipts),
         "provider_live": bool(ok and winner and winner.get("provider_live") is True),
         "winner_handler": winner_handler,
+        "winner_selected_by": "judge_verdict" if judge_selection is not None else "deterministic_receipts",
         "winner_node_id": winner.get("node_id") if winner and winner_handler else "",
         "selection_basis": "deterministic_receipts_and_explicit_verified_feature_markers",
         "failure_kind": (
@@ -5009,23 +5044,41 @@ def _handler_prompt(
     inline_full: bool = False,
     workflow_mode: str = "roundtable",
     model_preference: str = "",
+    node_id: str = "",
+    criteria: list[str] | None = None,
 ) -> str:
     prior_receipts = prior_receipts or []
+    if node_id == "judge":
+        role_line = (
+            "You are the INDEPENDENT JUDGE of a Tau-managed implementation "
+            "competition. You did not write any submission. Review every "
+            "competitor receipt below strictly against the criteria."
+        )
+    elif node_id == "report":
+        role_line = (
+            "You are the REPORT WRITER for a completed Tau-managed "
+            "implementation competition. Using the scorecard and judge "
+            "verdict below, write a concise Markdown report: the task, each "
+            "competitor's approach, why the winner won against the criteria, "
+            "and the winning function itself. Under 600 words."
+        )
+    elif workflow_mode == "compete":
+        role_line = "You are one isolated competitor in a Tau-managed implementation competition."
+    else:
+        role_line = "You are one participant in a Tau-managed roundtable."
     lines = [
-        (
-            "You are one isolated competitor in a Tau-managed implementation competition."
-            if workflow_mode == "compete"
-            else "You are one participant in a Tau-managed roundtable."
-        ),
+        role_line,
         f"Handler: {handler}",
         "",
         "Request:",
         request_text,
         "",
     ]
+    if node_id in ("judge", "report") and criteria:
+        lines.extend(["Evaluation criteria:", *[f"- {c}" for c in criteria], ""])
     if model_preference:
         lines.extend(["Browser model preference:", model_preference, ""])
-    if workflow_mode == "compete":
+    if workflow_mode == "compete" and node_id not in ("judge", "report"):
         lines.extend(
             [
                 "Isolation rule: work from the shared task only. Do not assume any other competitor output.",
@@ -5056,7 +5109,17 @@ def _handler_prompt(
                     "",
                 ]
             )
-    if requires_verdict:
+    if node_id == "judge":
+        lines.extend(
+            [
+                "Score each competitor against the criteria, name concrete "
+                "violations, then end with exactly one line naming the best "
+                "submission's node id:",
+                "WINNER: <competitor-node-id>",
+                "",
+            ]
+        )
+    elif requires_verdict:
         lines.extend(
             [
                 "Return a review verdict using exactly one of:",
