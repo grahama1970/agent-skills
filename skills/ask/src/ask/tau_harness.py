@@ -355,3 +355,22 @@ def run_plan_spec(
     }
     (run_dir / "execution-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
+
+
+def fetch_profile_registry(base_url: str | None = None) -> list[dict[str, Any]]:
+    """Live read of the scillm transport-profile registry (scillm#33).
+
+    Preview-time readiness query only — profile selection authority for
+    execution remains with Tau (tau#308).
+    """
+    import httpx
+
+    url = (base_url or os.environ.get("SCILLM_BASE_URL", "http://localhost:4001")).rstrip("/")
+    key = resolve_scillm_key(url)
+    resp = httpx.get(
+        f"{url}/v1/scillm/profiles",
+        headers={"Authorization": f"Bearer {key}", "X-Caller-Skill": "ask"},
+        timeout=15.0,
+    )
+    resp.raise_for_status()
+    return list(resp.json().get("profiles", []))

@@ -139,3 +139,44 @@ def test_review_fails_closed_when_no_independent_provider_exists(tmp_path: Path)
     }
     with _pytest.raises(ValueError, match="independent review impossible"):
         _compile(plan, tmp_path)
+
+
+REGISTRY_FIXTURE = [
+    {"id": "claude-fable-model-turn", "strengths": ["orchestration", "review"], "complexity_tier": "premium", "pricing": {"input_per_mtok": 10, "output_per_mtok": 50}},
+    {"id": "claude-model-turn", "strengths": ["standard_code", "review"], "complexity_tier": "high", "pricing": {"input_per_mtok": 3, "output_per_mtok": 15}},
+    {"id": "codex-high-model-turn", "strengths": ["complex_code", "review"], "complexity_tier": "high", "pricing": {"input_per_mtok": 5, "output_per_mtok": 30}},
+    {"id": "opencode-deepseek-v4", "strengths": ["standard_code"], "complexity_tier": "medium", "pricing": {"input_per_mtok": 0.14, "output_per_mtok": 0.28}},
+    {"id": "opencode-kimi-k26", "strengths": ["docs"], "complexity_tier": "medium", "pricing": {"input_per_mtok": 0.95, "output_per_mtok": 4}},
+    {"id": "opencode-kimi-k25", "strengths": ["docs"], "complexity_tier": "low", "pricing": {"input_per_mtok": 0.6, "output_per_mtok": 3}},
+]
+
+ALL_ROLES = ["coordinator", "backend", "frontend", "documentation", "testing", "independent_reviewer"]
+
+
+def test_strength_selection_premium_matches_operator_policy() -> None:
+    from ask.project_plan_to_tau import select_role_profiles_by_strength
+
+    sel = select_role_profiles_by_strength(REGISTRY_FIXTURE, mode="premium", roles=ALL_ROLES)
+    assert sel["coordinator"] == "claude-fable-model-turn"      # Fable orchestrates
+    assert sel["backend"] == "codex-high-model-turn"            # GPT 5.5 high for complex code
+    assert sel["documentation"] == "opencode-kimi-k26"          # Kimi for docs
+    assert sel["independent_reviewer"] == "claude-fable-model-turn"  # highest-tier reviewer
+
+
+def test_strength_selection_economical_picks_cheapest() -> None:
+    from ask.project_plan_to_tau import select_role_profiles_by_strength
+
+    sel = select_role_profiles_by_strength(REGISTRY_FIXTURE, mode="economical", roles=ALL_ROLES)
+    assert sel["backend"] == "opencode-deepseek-v4"             # $0.42 combined
+    assert sel["documentation"] == "opencode-kimi-k25"          # cheapest docs
+    assert sel["coordinator"] == "claude-fable-model-turn"      # only orchestration profile
+
+
+def test_strength_selection_fails_closed_on_missing_strength() -> None:
+    import pytest as _pytest
+
+    from ask.project_plan_to_tau import select_role_profiles_by_strength
+
+    no_docs = [p for p in REGISTRY_FIXTURE if "docs" not in p["strengths"]]
+    with _pytest.raises(ValueError, match="no profile satisfies strength 'docs'"):
+        select_role_profiles_by_strength(no_docs, mode="economical", roles=["documentation"])

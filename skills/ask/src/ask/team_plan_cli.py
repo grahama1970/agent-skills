@@ -25,6 +25,7 @@ from ask.project_plan_to_tau import (
     compile_plan_to_tau_spec,
     heterogeneous_profile_count,
     resolve_role_profiles,
+    select_role_profiles_by_strength,
 )
 
 app = typer.Typer(help="Render role-based team plans and compile them into Tau DAG specs.")
@@ -104,7 +105,20 @@ def plan(
     live: bool = typer.Option(False, "--live", help="Required with --execute: makes live provider calls."),
 ) -> None:
     """Render the plan, compile the frozen Tau spec, and print a preview."""
-    plan_payload = render_team_plan(request, repo=repo, team=team)
+    strength_mode = None
+    if team.startswith("strengths-"):
+        strength_mode = team.removeprefix("strengths-")
+        plan_payload = render_team_plan(request, repo=repo, team="fullstack-premium")
+    else:
+        plan_payload = render_team_plan(request, repo=repo, team=team)
+    registry: list[dict[str, Any]] = []
+    if strength_mode:
+        from ask.tau_harness import fetch_profile_registry
+
+        registry = fetch_profile_registry()
+        roles = [str(ws["role"]) for ws in plan_payload["workstreams"]]
+        selected = select_role_profiles_by_strength(registry, mode=strength_mode, roles=roles)
+        plan_payload["team"] = {"preset": "fullstack-premium", "role_profiles": selected, "strength_mode": strength_mode}
     if plan_payload["unresolved"]:
         result = {
             "schema": "ask.team_plan_result.v1",
@@ -150,6 +164,13 @@ def plan(
             for n in spec["nodes"]
         ],
         "heterogeneous_profiles": heterogeneous_profile_count(spec),
+        "pricing": {
+            p["id"]: p.get("pricing")
+            for p in registry
+            if f"profile:{p['id']}" in {n["tau_agent"]["model"] for n in spec["nodes"]}
+        }
+        if registry
+        else None,
         "spec_sha256": spec["extensions"]["spec_sha256"],
         "written": {"plan": str(out / "project-plan.json"), "spec": str(out / "dag-spec.json")} if out else None,
         "execution_note": (

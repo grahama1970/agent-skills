@@ -54,10 +54,77 @@ PROFILE_PROVIDER_FAMILY: dict[str, str] = {
     "claude-fable-model-turn": "anthropic",
     "claude-model-turn": "anthropic",
     "codex-model-turn": "openai",
+    "codex-high-model-turn": "openai",
     "gemini-vlm": "google",
     "local-text": "ollama",
     "opencode-serve-compat": "opencode",
+    "opencode-deepseek-v4": "deepseek",
+    "opencode-deepseek-v4-pro": "deepseek",
+    "opencode-kimi-k26": "moonshot",
+    "opencode-kimi-k25": "moonshot",
 }
+
+# Role → required strength (scillm#33 registry semantics). Premium mode wants
+# complex_code for backend; everything else keys off the strength alone.
+ROLE_STRENGTHS: dict[str, str] = {
+    "coordinator": "orchestration",
+    "backend": "standard_code",
+    "frontend": "standard_code",
+    "documentation": "docs",
+    "testing": "standard_code",
+    "independent_reviewer": "review",
+}
+_TIER_RANK = {"premium": 3, "high": 2, "medium": 1, "low": 0}
+
+
+def select_role_profiles_by_strength(
+    registry_profiles: list[dict[str, Any]],
+    *,
+    mode: str,
+    roles: list[str],
+) -> dict[str, str]:
+    """Deterministic strength-based selection over a registry snapshot.
+
+    premium: highest complexity tier satisfying the role's strength
+    (backend upgraded to complex_code), ties broken by higher output price
+    then id. economical: cheapest (input+output) satisfying the strength,
+    ties broken by id. Fails closed naming the unsatisfiable strength.
+    """
+    if mode not in ("premium", "economical"):
+        raise ValueError(f"unknown strength mode {mode!r}")
+
+    def price(p: dict[str, Any]) -> float | None:
+        pr = p.get("pricing") or {}
+        try:
+            return float(pr["input_per_mtok"]) + float(pr["output_per_mtok"])
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    selected: dict[str, str] = {}
+    for role in roles:
+        strength = ROLE_STRENGTHS.get(role)
+        if strength is None:
+            raise ValueError(f"no strength mapping for role {role!r}")
+        if mode == "premium" and role == "backend":
+            strength = "complex_code"
+        candidates = [
+            p for p in registry_profiles
+            if strength in (p.get("strengths") or []) and price(p) is not None
+        ]
+        if not candidates and mode == "premium" and strength == "complex_code":
+            strength = "standard_code"
+            candidates = [
+                p for p in registry_profiles
+                if strength in (p.get("strengths") or []) and price(p) is not None
+            ]
+        if not candidates:
+            raise ValueError(f"no profile satisfies strength {strength!r} for role {role!r}")
+        if mode == "premium":
+            best = max(candidates, key=lambda p: (_TIER_RANK.get(p.get("complexity_tier"), -1), float((p.get("pricing") or {}).get("output_per_mtok", 0)), p["id"]))
+        else:
+            best = min(candidates, key=lambda p: (price(p), p["id"]))
+        selected[role] = best["id"]
+    return selected
 
 # Roles whose output is code; the reviewer must come from a different
 # provider family than ALL of these (a provider never reviews its own code).

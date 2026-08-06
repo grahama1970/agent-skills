@@ -125,6 +125,28 @@
           "refusing to run: live provider calls"
         ]
       }
+    },
+    {
+      "name": "strengths-premium-team-selects-by-registry-with-pricing",
+      "type": "positive",
+      "command": [
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+        "team-plan",
+        "rust API with auth, React dashboard, onboarding guide, and regression tests",
+        "--team",
+        "strengths-premium"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"READY\"",
+          "claude-fable-model-turn",
+          "codex-high-model-turn",
+          "opencode-kimi-k26",
+          "\"pricing\"",
+          "input_per_mtok"
+        ]
+      }
     }
   ]
 }
