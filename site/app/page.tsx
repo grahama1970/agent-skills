@@ -34,7 +34,7 @@ const DREAM_PHASES = [
   { f: 'phase07-storyboard', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)', dims: '480×920', src: 'persona-dream/assets/readme/phase07' },
   { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)', dims: '1600×1387', src: 'persona-dream/assets/readme/phase08' },
   { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)', dims: '1280×997', src: 'persona-dream/assets/readme/phase09' },
-  { f: 'embry-memory-desk', n: '10', c: 'a rendered dream — Embry, reviewing her memories', t: 'rgba(209,112,60,.45)', dims: '1672×941', src: 'persona-dream/provider_media/dream-run/panel_01' },
+  { f: 'dream-panel', n: '10', c: 'a rendered dream — memory review beneath the watching eye', t: 'rgba(209,112,60,.45)', dims: '1536×1024', src: 'persona-dream/provider_media/issue-33-live · 2026-06-29' },
 ];
 
 const TRACK = [
@@ -265,7 +265,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>02</b> persona-dream
                 </p>
-                <h2 className="h2">Agent memories, rendered into film.</h2>
+                <h2 className="h2">Can a persona dream itself a personality?</h2>
               </div>
               <p className="b">
                 Not a movie generator — a preregistered study. The question:
@@ -274,8 +274,9 @@ export default function Home() {
                 is it still itself afterwards? The day&apos;s memories yield a
                 tension; the tension yields a dream; the dream returns as
                 typed, inspectable records — and its certified affect is
-                injected into the persona&apos;s live voice: emotion tags,
-                conversation tone, identity held stable. Four sealed arms
+                injected into the persona&apos;s live Chatterbox voice —
+                emotion tags, conversation tone — identity held stable. Four
+                sealed arms
                 (flat / memory-only / dream / shuffled-dream) decide whether
                 the dream earns its keep. &quot;No&quot; is a real answer.{' '}
                 <span className="lore">
