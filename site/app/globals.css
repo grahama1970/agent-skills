@@ -1402,3 +1402,109 @@ footer a:hover {
   font-size: 0.74rem;
   line-height: 1.6;
 }
+
+/* Dream stepper */
+.stepper {
+  margin-top: clamp(2rem, 3.6vw, 3.4rem);
+}
+.stepper-view {
+  margin: 0;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background-color: #171010;
+  background-image:
+    linear-gradient(180deg, rgba(12, 9, 8, 0.15), rgba(12, 9, 8, 0.4)),
+    var(--img),
+    radial-gradient(120% 160% at 70% 20%, var(--tint), transparent 70%);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 1px solid var(--line);
+  position: relative;
+}
+.stepper-view figcaption {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  background: linear-gradient(90deg, rgba(12, 9, 8, 0.92), transparent);
+}
+.stepper-view figcaption b {
+  color: var(--brass);
+  font-weight: 400;
+}
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+}
+.stepper-controls > button {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.45em 0.8em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+.stepper-controls > button:hover:not(:disabled) {
+  color: var(--brass);
+  border-color: var(--brass);
+}
+.stepper-controls > button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.stepper-thumbs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+}
+.stepper-thumb {
+  position: relative;
+  flex: 0 0 64px;
+  aspect-ratio: 16/10;
+  background-image: linear-gradient(180deg, rgba(12, 9, 8, 0.15), rgba(12, 9, 8, 0.45)), var(--img);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--line-2);
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+  filter: saturate(0.8);
+  transition: border-color 0.15s ease, filter 0.15s ease, transform 0.15s ease;
+}
+.stepper-thumb:hover {
+  filter: saturate(1);
+  transform: translateY(-2px);
+}
+.stepper-thumb.is-current {
+  border-color: var(--brass);
+  filter: saturate(1.05);
+}
+.stepper-thumb i {
+  position: absolute;
+  left: 3px;
+  bottom: 2px;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 0.55rem;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+@media (max-width: 760px) {
+  .stepper-controls {
+    flex-wrap: wrap;
+  }
+}

@@ -1,5 +1,6 @@
 import artifacts from '@/artifacts.json';
 import { ReceiptTicket } from '@/components/receipt-ticket';
+import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
 import { SkillMosaic } from '@/components/skill-mosaic';
@@ -32,6 +33,7 @@ const DREAM_PHASES = [
   { f: 'phase07-storyboard', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)' },
   { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)' },
   { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)' },
+  { f: 'embry-memory-desk', n: '10', c: 'a rendered dream — Embry, reviewing her memories · dream-run panel 01', t: 'rgba(209,112,60,.45)' },
 ];
 
 const TRACK = [
@@ -250,32 +252,7 @@ export default function Home() {
                 </span>
               </p>
             </div>
-            <figure
-              className="panel"
-              role="img"
-              aria-label="Embry at a desk reviewing contact sheets of her own memories — persona-dream rendered frame"
-            >
-              <span className="tag">Embry, reviewing her memories · dream-run · panel 01</span>
-            </figure>
-            <div className="film" aria-label="persona-dream pipeline phases">
-              {DREAM_PHASES.map((d) => (
-                <figure className="frame" key={d.f}>
-                  <div
-                    className="im"
-                    style={{
-                      ['--img' as string]: `url('/dream/${d.f}.webp')`,
-                      ['--tint' as string]: d.t,
-                    }}
-                    role="img"
-                    aria-label={`Phase ${d.n} — ${d.c}`}
-                  />
-                  <figcaption className="cap">
-                    <b>phase {d.n}</b>
-                    {d.c}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <DreamStepper phases={DREAM_PHASES} />
           </div>
         </section>
 
