@@ -116,13 +116,8 @@ export function HeroLineage({ data }: { data: HeroLineageData }) {
         </g>
 
         {/* G1-A selected: base core + evaluation halo + selection overlay. */}
-        <g
-          className="proof-lineage__node proof-lineage__node--g1a"
-          tabIndex={0}
-          role="group"
-          aria-label={`G1-A selected. ${g1a.techniqueDelta}`}
-        >
-          <title>{g1a.techniqueDelta}</title>
+        <g className="proof-lineage__node proof-lineage__node--g1a">
+          <title>{`G1-A selected. ${g1a.techniqueDelta}`}</title>
           <rect className="proof-lineage__eval-halo" x="69" y="61" width="10" height="10" />
           <rect className="proof-lineage__node-core" x="71.5" y="63.5" width="5" height="5" />
           <rect className="proof-lineage__selected-overlay" x="71.5" y="63.5" width="5" height="5" />
@@ -149,13 +144,8 @@ export function HeroLineage({ data }: { data: HeroLineageData }) {
         </g>
 
         {/* G1-B runner-up: base core + evaluation halo + runner outline. */}
-        <g
-          className="proof-lineage__node proof-lineage__node--g1b"
-          tabIndex={0}
-          role="group"
-          aria-label={`G1-B runner-up. ${g1b.techniqueDelta}`}
-        >
-          <title>{g1b.techniqueDelta}</title>
+        <g className="proof-lineage__node proof-lineage__node--g1b">
+          <title>{`G1-B runner-up. ${g1b.techniqueDelta}`}</title>
           <rect className="proof-lineage__eval-halo" x="281" y="61" width="10" height="10" />
           <rect className="proof-lineage__node-core" x="283.5" y="63.5" width="5" height="5" />
           <rect className="proof-lineage__runner-outline" x="281.5" y="61.5" width="9" height="9" />

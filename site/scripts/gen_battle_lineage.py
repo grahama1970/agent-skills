@@ -28,19 +28,30 @@ def main() -> None:
     raw = FIXTURE.read_bytes()
     fixture = json.loads(raw)
 
-    assert fixture["schema"] == "battle.adaptive_lineage_mechanics_fixture.v1"
-    assert fixture["battle_id"] == "battle-004"
-    assert fixture["data_source"] == "live"
-    assert fixture["qualification"]["status"] == "PASS"
     nodes = {node["id"]: node for node in fixture["nodes"]}
-    assert set(nodes) == {"G0", "G1-A", "G1-B", "G2"}
-    assert fixture["selection"]["selected_id"] == "G1-A"
-    assert fixture["selection"]["runner_up_id"] == "G1-B"
-    assert fixture["selection"]["deciding_criterion"] == "novelty_distance"
-    assert nodes["G2"]["parentId"] == "G1-A"
-    assert nodes["G1-A"]["mutation_operator"] == "method_replace"
-    assert nodes["G1-B"]["mutation_operator"] == "oracle_or_parameter_mutation"
-    assert nodes["G2"]["mutation_operator"] == "failure_guided_crossover"
+    # Fail-closed contract on the recorded fixture. Explicit raises (not
+    # `assert`, which `python -O` strips) so the "build fails if the fixture
+    # drifts" guarantee holds under any interpreter flags.
+    expectations = [
+        (fixture.get("schema") == "battle.adaptive_lineage_mechanics_fixture.v1", "schema"),
+        (fixture.get("battle_id") == "battle-004", "battle_id"),
+        (fixture.get("data_source") == "live", "data_source"),
+        (fixture.get("qualification", {}).get("status") == "PASS", "qualification.status"),
+        (set(nodes) == {"G0", "G1-A", "G1-B", "G2"}, "node set"),
+        (fixture.get("selection", {}).get("selected_id") == "G1-A", "selection.selected_id"),
+        (fixture.get("selection", {}).get("runner_up_id") == "G1-B", "selection.runner_up_id"),
+        (fixture.get("selection", {}).get("deciding_criterion") == "novelty_distance", "selection.deciding_criterion"),
+        (nodes.get("G2", {}).get("parentId") == "G1-A", "G2.parentId"),
+        (nodes.get("G1-A", {}).get("mutation_operator") == "method_replace", "G1-A.mutation_operator"),
+        (nodes.get("G1-B", {}).get("mutation_operator") == "oracle_or_parameter_mutation", "G1-B.mutation_operator"),
+        (nodes.get("G2", {}).get("mutation_operator") == "failure_guided_crossover", "G2.mutation_operator"),
+    ]
+    drifted = [name for ok, name in expectations if not ok]
+    if drifted:
+        raise SystemExit(
+            f"battle-004 fixture drifted from asserted shape: {', '.join(drifted)} "
+            f"({FIXTURE.relative_to(REPO)})"
+        )
 
     out = {
         "battleId": fixture["battle_id"],
