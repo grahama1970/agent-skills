@@ -97,7 +97,8 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
 def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path) -> None:
     fixture = Path(__file__).parent / "fixtures" / "discovery" / "linkedin-top-candidate.json"
     out = tmp_path / "nightly-linkedin"
-    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--out", str(out)])
+    sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
+    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 0, result.output
     receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
     assert receipt["external_effects"] is False
@@ -117,7 +118,8 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
 def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevant(tmp_path: Path) -> None:
     fixture = Path(__file__).parent / "fixtures" / "discovery" / "ops-linkedin-jobs-capture.json"
     out = tmp_path / "nightly-ops-linkedin"
-    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--out", str(out)])
+    sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
+    result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 0, result.output
     receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
     assert receipt["external_effects"] is False

@@ -73,3 +73,26 @@ def client_research_receipt(skill_dir: Path) -> dict[str, Any]:
         receipt["limitations"].append(f"client research unavailable: {type(exc).__name__}")
     return finalize_receipt(receipt)
 
+
+
+def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Honest MATCHES receipt from a read-only SAM.gov website capture.
+
+    Satisfies the API-break-must-use-website rule when the SAM API is down:
+    source_class 'sam.gov_website' marks a browser fallback capture.
+    """
+    receipt = base_receipt("B", "sam.gov", "SAM.gov website capture", "sam.gov_website")
+    receipt["request_summary"] = "read-only surf capture of SAM.gov opportunity search"
+    try:
+        data = json.loads(evidence_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        logger.error("federal website evidence unreadable {}: {}", evidence_path, exc)
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        return finalize_receipt(receipt), []
+    opps = data.get("opportunities", [])
+    receipt["response_status"] = 200
+    receipt["result_status"] = "MATCHES" if opps else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"].append(f"sam_website_capture:{len(opps)}")
+    return finalize_receipt(receipt), []

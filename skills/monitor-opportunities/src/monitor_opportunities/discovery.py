@@ -13,7 +13,7 @@ import httpx
 from loguru import logger
 
 from .receipts import base_receipt as _base_receipt, finalize_receipt as _finalize_receipt
-from .required_source_receipts import client_research_receipt as _client_research_receipt, linkedin_required_receipt as _linkedin_required_receipt
+from .required_source_receipts import client_research_receipt as _client_research_receipt, federal_website_receipt as _federal_website_receipt, linkedin_required_receipt as _linkedin_required_receipt
 from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write_jsonl
 
 LANES = ("A", "B", "C")
@@ -688,6 +688,7 @@ def sweep(
     out_dir: Path,
     fixture_dir: Path | None = None,
     linkedin_evidence: Path | None = None,
+    federal_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -715,6 +716,10 @@ def sweep(
         if "B" in lanes:
             for target in targets.get("federal", [{"name": "SAM.gov Opportunities", "provider": "sam.gov"}]):
                 receipt, rows = _federal_candidates(target)
+                receipts.append(receipt)
+                candidates.extend(rows)
+            if federal_evidence is not None:
+                receipt, rows = _federal_website_receipt(federal_evidence)
                 receipts.append(receipt)
                 candidates.extend(rows)
         if "C" in lanes:

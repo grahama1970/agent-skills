@@ -136,6 +136,19 @@ exported, pasted, screenshot, and `ops-linkedin` capture artifacts are ingested 
 evidence, then the workflow leaves the platform. The monitor still ranks across all
 enabled lanes and must not become LinkedIn-only.
 
+## API break must fall back to the website (unignorable)
+
+When any source's API path fails — non-2xx, `FEED_DOWN`, `AUTH_FAILED`,
+`INVALID_RESPONSE` — the skill MUST fall back to the source website via
+read-only browser capture. A bare API-failure receipt is a DEFECT, never an
+acceptable answer (Graham, 2026-08-06). `config/required_sources.json` flags each
+`api_failure_requires_browser` source with its `website_fallback`, and
+`pipeline._enforce_api_website_fallback` FAILS the live run with
+`API_BREAK_REQUIRES_WEBSITE` when such a source reports an API failure and has no
+companion `*_website` / human-supplied browser-capture receipt. Example: SAM.gov's
+API returns 404, so the run is only valid with a `--federal-evidence` website
+capture. This is enforced in code and covered by tests.
+
 ## Mandatory sources are enforced in code, not prose
 
 Discovery is not a suggestion. `config/required_sources.json` lists the sources

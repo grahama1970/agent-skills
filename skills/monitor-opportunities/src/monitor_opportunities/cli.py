@@ -328,6 +328,14 @@ def run_command(
         readable=True,
         help="Local Ask roundtable receipt map keyed by opportunity_id:channel.",
     ),
+    federal_evidence: Path | None = typer.Option(
+        None,
+        "--federal-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Read-only SAM.gov website capture (used when the SAM API is down; API break must use the website).",
+    ),
     outreach_effects: Path | None = typer.Option(
         None,
         "--outreach-effects",
@@ -350,6 +358,7 @@ def run_command(
             linkedin_evidence,
             roundtable_receipts,
             outreach_effects,
+            federal_evidence=federal_evidence,
         )
     except ValueError as exc:
         _fail(ContractError("RUN_REJECTED", str(exc)))

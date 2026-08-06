@@ -453,6 +453,53 @@ def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str,
     return {"required_sources_enforced": True, "checked": [r["id"] for r in config.get("required", [])]}
 
 
+def _enforce_api_website_fallback(skill_dir: Path, discovery_dir: Path) -> dict[str, Any]:
+    """API break must fall back to the website (Graham 2026-08-06, unignorable rule).
+
+    A required source flagged api_failure_requires_browser whose receipt reports
+    an API-failure status (FEED_DOWN/AUTH_FAILED/INVALID_RESPONSE) must have a
+    companion browser-capture receipt (source_class ending _website or a
+    human_supplied capture). Otherwise the run FAILS: a bare API failure is a
+    defect, not an acceptable answer.
+    """
+    config = read_json(skill_dir / "config" / "required_sources.json")
+    receipts = _source_receipts(discovery_dir)
+    api_failure = {"FEED_DOWN", "AUTH_FAILED", "INVALID_RESPONSE", "INVALID_REQUEST"}
+
+    def _norm(v: str) -> str:
+        return v.lower().replace("-", "").replace("_", "").replace(".", "")
+
+    by_provider: dict[str, list[str]] = {}
+    browser_captured: set[str] = set()
+    for r in receipts:
+        prov = _norm(str(r.get("provider", "")))
+        by_provider.setdefault(prov, []).append(str(r.get("result_status", "")))
+        src_class = str(r.get("source_class", ""))
+        if src_class.endswith("_website") or src_class.startswith("human_supplied") or "authorized_read_only" in src_class:
+            browser_captured.add(prov)
+
+    violations: list[str] = []
+    for required in config.get("required", []):
+        if not required.get("api_failure_requires_browser"):
+            continue
+        rid = _norm(str(required["id"]))
+        statuses = next((s for p, s in by_provider.items() if rid in p or p in rid), None)
+        if statuses is None:
+            continue
+        had_api_failure = any(s in api_failure for s in statuses)
+        had_success = any(s == "MATCHES" for s in statuses)
+        has_browser = any(rid in p or p in rid for p in browser_captured)
+        if had_api_failure and not had_success and not has_browser:
+            violations.append(required["id"])
+    if violations:
+        raise ContractError(
+            "API_BREAK_REQUIRES_WEBSITE",
+            f"sources with failed API and no website/browser fallback: {violations}; "
+            "if the API breaks the skill must use the website (config/required_sources.json)",
+        )
+    return {"api_website_fallback_enforced": True, "checked": violations == []}
+
+
 def run_stage0(
     skill_dir: Path,
     out_dir: Path,
@@ -460,6 +507,7 @@ def run_stage0(
     linkedin_evidence: Path | None = None,
     roundtable_receipts_path: Path | None = None,
     outreach_effects_path: Path | None = None,
+    federal_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
@@ -475,12 +523,15 @@ def run_stage0(
         out_dir=discovery_dir,
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
+        federal_evidence=federal_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
     if fixture_dir is None:
         # Enforcement is for live runs; fixtures are deterministic test scaffolding.
         required_sources = _enforce_required_sources(skill_dir, discovery_dir)
         phases.append({"phase": "REQUIRED_SOURCES_ENFORCED", "checked": required_sources["checked"]})
+        _enforce_api_website_fallback(skill_dir, discovery_dir)
+        phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
     ranking_receipt = rank(discovery_dir, 8, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"

@@ -1,0 +1,12 @@
+{
+  "schema_version": "monitor_opportunities.federal_capture.v1",
+  "source": "human_authorized_sam_tab",
+  "capture_method": "surf_read_only_existing_tab",
+  "observed_at": "2026-08-06T00:00:00Z",
+  "sam_url": "https://sam.gov/search/?index=opp&keyword=artificial+intelligence",
+  "result_count": 2,
+  "opportunities": [
+    {"title": "AI Engineering Sources Sought", "url": "https://sam.gov/opp/example1", "source": "sam.gov_website"},
+    {"title": "Autonomous Systems RFS", "url": "https://sam.gov/opp/example2", "source": "sam.gov_website"}
+  ]
+}

@@ -1,17 +1,75 @@
 {
   "schema": "monitor_opportunities.required_sources.v1",
-  "policy": "These sources MUST be attempted every run. A run that produces no receipt for a required source (or a receipt with result_status NOT_SEARCHED) FAILS the run — silent skipping is a defect, not a degraded lane. This is enforced in code by pipeline._enforce_required_sources and tested; it is not prose.",
+  "policy": "These sources MUST be attempted every run. A run that produces no receipt for a required source (or a receipt with result_status NOT_SEARCHED) FAILS the run \u2014 silent skipping is a defect, not a degraded lane. This is enforced in code by pipeline._enforce_required_sources and tested; it is not prose.",
   "required": [
-    {"id": "linkedin_top_applicant", "lane": "A", "channel": "browser_human_supplied", "note": "LinkedIn 'top applicant' collection via read-only surf capture or --linkedin-evidence; never platform automation."},
-    {"id": "indeed", "lane": "A", "channel": "browser_human_supplied", "note": "Indeed search via read-only surf capture; API/automation is blocked, so browser evidence is the channel."},
-    {"id": "hiddenjobs", "lane": "A", "channel": "browser_or_locator", "note": "hiddenjobs.dev via read-only capture; locator hint only, primary source still required to admit."},
-    {"id": "greenhouse", "lane": "A", "channel": "api", "note": "Registry greenhouse employers."},
-    {"id": "ashby", "lane": "A", "channel": "api", "note": "Registry ashby employers (Reducto/Unstructured/Datalab)."},
-    {"id": "sam.gov", "lane": "B", "channel": "browser_or_api", "note": "SAM.gov active opportunities; API 404s so browser capture is the channel."},
-    {"id": "darpa", "lane": "B", "channel": "api", "note": "DARPA opportunities."},
-    {"id": "client_research", "lane": "C", "channel": "brave_search", "note": "Deep client-services research over candidate mandates (document extraction, agentic pipelines, compliance, Buffalo prospects). Mandatory, no exceptions."}
+    {
+      "id": "linkedin_top_applicant",
+      "lane": "A",
+      "channel": "browser_human_supplied",
+      "note": "LinkedIn 'top applicant' collection via read-only surf capture or --linkedin-evidence; never platform automation.",
+      "website_fallback": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "api_failure_requires_browser": true
+    },
+    {
+      "id": "indeed",
+      "lane": "A",
+      "channel": "browser_human_supplied",
+      "note": "Indeed automation hits captcha; requires human-supplied results-page capture.",
+      "website_fallback": "https://www.indeed.com/jobs",
+      "api_failure_requires_browser": true
+    },
+    {
+      "id": "hiddenjobs",
+      "lane": "A",
+      "channel": "browser_or_locator",
+      "note": "hiddenjobs.dev via read-only capture; locator hint only, primary source still required to admit."
+    },
+    {
+      "id": "greenhouse",
+      "lane": "A",
+      "channel": "api",
+      "note": "Registry greenhouse employers."
+    },
+    {
+      "id": "ashby",
+      "lane": "A",
+      "channel": "api",
+      "note": "Registry ashby employers (Reducto/Unstructured/Datalab)."
+    },
+    {
+      "id": "sam.gov",
+      "lane": "B",
+      "channel": "browser_or_api",
+      "note": "SAM.gov active opportunities; API 404s so browser capture is the channel.",
+      "website_fallback": "https://sam.gov/search/?index=opp&keyword=artificial+intelligence",
+      "api_failure_requires_browser": true
+    },
+    {
+      "id": "darpa",
+      "lane": "B",
+      "channel": "api",
+      "note": "DARPA opportunities."
+    },
+    {
+      "id": "client_research",
+      "lane": "C",
+      "channel": "brave_search",
+      "note": "Deep client-services research over candidate mandates (document extraction, agentic pipelines, compliance, Buffalo prospects). Mandatory, no exceptions."
+    }
   ],
-  "accepted_non_match_states": ["MATCHES","NO_MATCHES","FEED_DOWN","AUTH_REQUIRED","AUTH_FAILED","RATE_LIMITED","POLICY_BLOCKED","STALE_DATA"],
-  "forbidden_states": ["NOT_SEARCHED"],
-  "rule": "A required source may legitimately report FEED_DOWN/AUTH_REQUIRED with a receipt (honest failure). It may NOT be absent and may NOT be NOT_SEARCHED. Absence or NOT_SEARCHED fails the run."
+  "accepted_non_match_states": [
+    "MATCHES",
+    "NO_MATCHES",
+    "FEED_DOWN",
+    "AUTH_REQUIRED",
+    "AUTH_FAILED",
+    "RATE_LIMITED",
+    "POLICY_BLOCKED",
+    "STALE_DATA"
+  ],
+  "forbidden_states": [
+    "NOT_SEARCHED"
+  ],
+  "rule": "A required source may legitimately report FEED_DOWN/AUTH_REQUIRED with a receipt (honest failure). It may NOT be absent and may NOT be NOT_SEARCHED. Absence or NOT_SEARCHED fails the run.",
+  "api_website_fallback_rule": "NON-NEGOTIABLE: if a source's API path fails (FEED_DOWN / AUTH_FAILED / INVALID_RESPONSE / any non-2xx), the skill MUST fall back to the source website via read-only browser capture. A bare API-failure receipt is a DEFECT. Enforced by pipeline._enforce_api_website_fallback; a required source with a website_fallback that reports an API-failure status with no companion browser-capture receipt/evidence FAILS the run."
 }
