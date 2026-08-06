@@ -96,3 +96,46 @@ def test_evidence_required_only_with_paths(tmp_path: Path) -> None:
     spec = _compile(plan, tmp_path)
     assert spec["nodes"][0]["tau_agent"]["required_evidence"] == ["tool_effect_receipt"]
     assert spec["nodes"][1]["tau_agent"]["required_evidence"] == []
+
+
+def test_reviewer_never_shares_provider_with_code_writers(tmp_path: Path) -> None:
+    # fullstack-premium: code on anthropic, reviewer on openai — already independent.
+    spec = _compile(PLAN, tmp_path)
+    assert spec["nodes"][1]["tau_agent"]["model"] == "profile:codex-model-turn"
+
+
+def test_reviewer_swaps_when_it_would_review_its_own_provider(tmp_path: Path) -> None:
+    import copy
+
+    from ask.project_plan_to_tau import PROFILE_PROVIDER_FAMILY
+
+    plan = copy.deepcopy(PLAN)
+    # Put the code on openai; preset reviewer is also openai -> must swap to Fable.
+    plan["team"] = {"preset": "fullstack-premium", "role_profiles": {"backend": "codex-model-turn"}}
+    spec = _compile(plan, tmp_path)
+    worker, reviewer = spec["nodes"]
+    assert worker["tau_agent"]["model"] == "profile:codex-model-turn"
+    assert reviewer["tau_agent"]["model"] == "profile:claude-fable-model-turn"
+    assert (
+        PROFILE_PROVIDER_FAMILY[reviewer["tau_agent"]["model"].removeprefix("profile:")]
+        != PROFILE_PROVIDER_FAMILY[worker["tau_agent"]["model"].removeprefix("profile:")]
+    )
+
+
+def test_review_fails_closed_when_no_independent_provider_exists(tmp_path: Path) -> None:
+    import copy
+
+    import pytest as _pytest
+
+    plan = copy.deepcopy(PLAN)
+    plan["workstreams"].insert(
+        1, {"id": "ui", "role": "frontend", "allowed_paths": [], "depends_on": ["worker"]}
+    )
+    plan["workstreams"][-1]["depends_on"] = ["worker", "ui"]
+    # Code on BOTH families: anthropic backend + openai frontend.
+    plan["team"] = {
+        "preset": "fullstack-premium",
+        "role_profiles": {"backend": "claude-model-turn", "frontend": "codex-model-turn"},
+    }
+    with _pytest.raises(ValueError, match="independent review impossible"):
+        _compile(plan, tmp_path)

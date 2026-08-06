@@ -43,6 +43,54 @@ TEAM_PRESETS: dict[str, dict[str, str]] = {
 }
 
 
+# Provider family per profile id — POLICY MIRROR of the scillm registry's
+# provider field, used only for the independent-review invariant below.
+# test_provider_map_matches_live_registry guards drift; scillm#33 will let
+# this resolve from the registry's strengths/provider fields directly.
+PROFILE_PROVIDER_FAMILY: dict[str, str] = {
+    "claude-fable-model-turn": "anthropic",
+    "claude-model-turn": "anthropic",
+    "codex-model-turn": "openai",
+    "gemini-vlm": "google",
+    "local-text": "ollama",
+    "opencode-serve-compat": "opencode",
+}
+
+# Roles whose output is code; the reviewer must come from a different
+# provider family than ALL of these (a provider never reviews its own code).
+CODE_ROLES = frozenset({"backend", "frontend", "testing"})
+
+
+def enforce_independent_review(profiles: dict[str, str], workstream_roles: list[str]) -> dict[str, str]:
+    """Reviewer provider must differ from every code-writing provider.
+
+    Deterministic reassignment per operator policy: if the current reviewer
+    shares a provider family with any code role, swap to codex-model-turn
+    (GPT 5.5) when OpenAI wrote no code, else to claude-fable-model-turn
+    (Fable) when Anthropic wrote no code. If every candidate family also
+    wrote code, fail closed — independent review needs a third provider.
+    """
+    if "independent_reviewer" not in workstream_roles:
+        return profiles
+    code_families = {
+        PROFILE_PROVIDER_FAMILY.get(profiles[r], "unknown")
+        for r in workstream_roles
+        if r in CODE_ROLES
+    }
+    if not code_families:
+        return profiles
+    reviewer_profile = profiles["independent_reviewer"]
+    if PROFILE_PROVIDER_FAMILY.get(reviewer_profile, "unknown") not in code_families:
+        return profiles
+    for candidate in ("codex-model-turn", "claude-fable-model-turn"):
+        if PROFILE_PROVIDER_FAMILY[candidate] not in code_families:
+            return {**profiles, "independent_reviewer": candidate}
+    raise ValueError(
+        "independent review impossible: every reviewer-capable provider family "
+        f"also wrote code ({sorted(code_families)}); add a third-provider profile"
+    )
+
+
 def _canonical_sha256(payload: dict[str, Any]) -> str:
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -77,6 +125,9 @@ def compile_plan_to_tau_spec(
         raise ValueError(f"invalid ask.project_plan.v1: {errors}")
 
     profiles = resolve_role_profiles(plan)
+    profiles = enforce_independent_review(
+        profiles, [str(ws["role"]) for ws in plan["workstreams"]]
+    )
     goal = str(plan["goal"])
     receipts_dir = run_dir / "receipts"
     nodes: list[dict[str, Any]] = []
