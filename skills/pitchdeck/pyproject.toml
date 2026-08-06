@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pitchdeck"
+version = "0.1.0"
+description = "Compile claim-bound README content into editable PPTX pitch decks and Google Slides handoff bundles"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "httpx>=0.27,<1",
+  "loguru>=0.7,<1",
+  "pillow>=10,<13",
+  "pydantic>=2.7,<3",
+  "python-pptx>=1.0,<2",
+  "pyyaml>=6,<7",
+  "typer>=0.12,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+]
+
+[project.scripts]
+pitchdeck = "pitchdeck.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pitchdeck"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

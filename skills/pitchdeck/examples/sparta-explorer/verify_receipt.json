@@ -1,0 +1,37 @@
+{
+  "schema": "pitchdeck.verify_receipt.v1",
+  "operation": "verify",
+  "readiness": "USABLE_WITH_GAPS",
+  "mocked": false,
+  "live": false,
+  "inputs": {
+    "bundle_dir": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/sparta-explorer",
+    "deck": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/sparta-explorer/deck.public.yaml"
+  },
+  "outputs": {
+    "validation_report": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/sparta-explorer/validation_report.json"
+  },
+  "counts": {
+    "slides": 12,
+    "claims": 24,
+    "assets": 9,
+    "errors": 0,
+    "warnings": 1
+  },
+  "gaps": [
+    "ASSET_NOT_CURRENT: Asset 'sparta-embry-os-foundation' is marked regenerate."
+  ],
+  "claims": {
+    "proves": [
+      "Typed bundle manifests passed or failed according to the emitted validation issues."
+    ],
+    "does_not_prove": [
+      "The deck is factually or visually approved.",
+      "Source claims match the current codebase or live runtime."
+    ]
+  },
+  "seam_validation": {
+    "kind": "verify_receipt",
+    "status": "PASS"
+  }
+}

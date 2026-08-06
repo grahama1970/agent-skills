@@ -1,0 +1,260 @@
+{
+  "schema": "pitchdeck.skill_bundle_receipt.v1",
+  "skill": "pitchdeck",
+  "version": "0.1.0",
+  "created_at": "2026-08-05T13:40:05.672088Z",
+  "validation": {
+    "pytest": {
+      "status": "PASS",
+      "tests_passed": 7
+    },
+    "sanity": {
+      "status": "PASS",
+      "gates": [
+        "positive-control planning",
+        "negative public/private and overclaim controls",
+        "editable PPTX build",
+        "PPTX reopen verification",
+        "LibreOffice PDF render",
+        "contact-sheet render"
+      ]
+    },
+    "sparta_profile": {
+      "status": "PASS",
+      "public_slides": 12,
+      "private_appendix_slides": 7,
+      "claim_boundary_validation": "PASS",
+      "visual_layout_check": "PASS_WITH_SYNTHETIC_PLACEHOLDER_ASSETS"
+    },
+    "shell_syntax": {
+      "status": "PASS"
+    }
+  },
+  "claims": {
+    "proves": [
+      "The ZIP contains a runnable deterministic skill with typed source, claim, asset, deck, validation, and receipt contracts.",
+      "The committed fixtures exercise positive, negative, public/private leakage, overclaim, qualifier, required-asset, PPTX, and Sparta-profile boundaries.",
+      "The Sparta example contains a 12-slide public structure and a seven-slide private technical appendix."
+    ],
+    "does_not_prove": [
+      "The skill has been installed into grahama1970/agent-skills or passed that repository CI.",
+      "The current Sparta README claims match the live codebase or runtime.",
+      "The real Sparta screenshots have been recaptured from the current demonstration commit.",
+      "A generated deck has been imported into and visually approved in Google Slides."
+    ]
+  },
+  "files": [
+    {
+      "path": ".ask/browser-oracles.yaml",
+      "sha256": "347a4c785fd6b5ecb9b77223728b947b0689e12fc58797f9f5441e96a7c1ba21",
+      "bytes": 57
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "d09614a8a2bca9004afee0d736175dbb3ef81173ed5d881a3358812ee90d8928",
+      "bytes": 205
+    },
+    {
+      "path": "README.md",
+      "sha256": "35f57be95f0321e30f9329e29fbfda9e2c8697cb9d19efe298513251b8bb04b9",
+      "bytes": 5475
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "c690701cf70f4f8cffc5a607044fc25a6c637db482ac3ff27ed6413bb41064ea",
+      "bytes": 6197
+    },
+    {
+      "path": "docs/PROJECT_KNOWLEDGE.md",
+      "sha256": "4774a027be32a21e5f033409b76ccadfc24ef0f16f7d5780af4384079984f228",
+      "bytes": 2140
+    },
+    {
+      "path": "examples/sparta-explorer/DECK_BRIEF.md",
+      "sha256": "21a06e0e099df3a959fd08fdea9f7b5d3f03e6569692bcc269a9c898af5f321a",
+      "bytes": 1521
+    },
+    {
+      "path": "examples/sparta-explorer/README.md",
+      "sha256": "4211826615642c90533d767849bc42741eb69f4d807d30f1262e1b3648954334",
+      "bytes": 1426
+    },
+    {
+      "path": "examples/sparta-explorer/asset_manifest.yaml",
+      "sha256": "cc7a564c9d5ac5adfba62a45bee53ef5b8173228deb633095a7cee9e783c2d1b",
+      "bytes": 5137
+    },
+    {
+      "path": "examples/sparta-explorer/claim_ledger.yaml",
+      "sha256": "90b70ae7a026893961b1b59c2b725841a5f304c49066f499b5fcf7beb4bec15f",
+      "bytes": 10039
+    },
+    {
+      "path": "examples/sparta-explorer/deck.private-appendix.yaml",
+      "sha256": "a1689b5dbc42563e561907d0bdd6dcb81c251a5f849a4659f2bd5fbcea95086c",
+      "bytes": 10330
+    },
+    {
+      "path": "examples/sparta-explorer/deck.public.yaml",
+      "sha256": "0a2f57e78d0a14c3917a73b864eb0982527a0f6d8c095d7ee02061d0e101e073",
+      "bytes": 14188
+    },
+    {
+      "path": "examples/sparta-explorer/qa/CLAIM_CHECKS.md",
+      "sha256": "6d2207f29a6e6ea1a790f6ecb54513744e73e2db2b99e333fc9025d53a3e83db",
+      "bytes": 617
+    },
+    {
+      "path": "examples/sparta-explorer/qa/REVIEW_REQUEST.md",
+      "sha256": "e2e085bbc0f1076d70414d2412e269bd9d7b355921de8fc618ddf587fc35d0b9",
+      "bytes": 1052
+    },
+    {
+      "path": "examples/sparta-explorer/qa/acceptance_checklist.md",
+      "sha256": "f1499e6ee27d63a763998fc8cc588ef6df34be39d48e5223d902cf9a7065b685",
+      "bytes": 1128
+    },
+    {
+      "path": "examples/sparta-explorer/source_manifest.yaml",
+      "sha256": "e3d7ce0d6ba4c262cfb42ef04b0e8ddac21f5dc912ce846f1a30ac1e96e606a0",
+      "bytes": 2692
+    },
+    {
+      "path": "examples/sparta-explorer/speaker_notes.md",
+      "sha256": "c5d8262edb450cc1e3f0bb9f3bc6915448724325c116507a9ed54d4fac9d0934",
+      "bytes": 652
+    },
+    {
+      "path": "examples/sparta-explorer/visual_system.md",
+      "sha256": "a66a6a07d49cf82e20a1b96d7ba3efa40183ae5a86641dd3aea208545ac39dc0",
+      "bytes": 1144
+    },
+    {
+      "path": "fixtures/minimal/README.md",
+      "sha256": "ae83983d79bbcdc7ab1a2d2ac63871c8905a97a68292e91f0c7b280599793e40",
+      "bytes": 2139
+    },
+    {
+      "path": "fixtures/minimal/source_manifest.yaml",
+      "sha256": "1d77e1d78d5b34ed0dd19bfb7528069f726f36a3ac79be1ea602579b5c3650c8",
+      "bytes": 665
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "711d94955e72fe86f7bbf9ac180e8566a87916da665e84af20ae00c54bfdcc34",
+      "bytes": 695
+    },
+    {
+      "path": "references/claim_ledger_schema.md",
+      "sha256": "5f52ff18d8a90448c96377bb05c841a5abb0f74426a6f7470273964f70c9f134",
+      "bytes": 1599
+    },
+    {
+      "path": "references/deck_manifest_schema.md",
+      "sha256": "1cff0892d26196895fbeafa6bef779ecbea2f5bc2eeaabb64c3cd6d3287b2fbb",
+      "bytes": 2083
+    },
+    {
+      "path": "references/google_slides_handoff.md",
+      "sha256": "921b01cf3df33bdaa4106b941de7b1719e3b87ba13196dad48f683b19fa3de82",
+      "bytes": 845
+    },
+    {
+      "path": "references/pptx_visual_rules.md",
+      "sha256": "c9e9c1fa99816fb0a8ee6bf9ed8d1ec4b5fef59dd5a0301a0402ccf6aef5cd1a",
+      "bytes": 1534
+    },
+    {
+      "path": "references/public_private_filtering.md",
+      "sha256": "9a2f15de95282d16130280393e5132d28e6e8343d849e1fd3be3d5cdbd5a93b4",
+      "bytes": 1328
+    },
+    {
+      "path": "run.sh",
+      "sha256": "76f45808ee0a59971a22b0356f6ee4a23660d2f1f07570a34804214a0b900cf8",
+      "bytes": 1137
+    },
+    {
+      "path": "sanity.sh",
+      "sha256": "3678d8f7c41e555d650a6da7234aba4cd29e9ec1e1344465ae55345d2eb8e34f",
+      "bytes": 2096
+    },
+    {
+      "path": "src/pitchdeck/__init__.py",
+      "sha256": "87bd0c933384edcb2a7074ea239825c7ce49e8fe42d6b81be1aa267a38cbc363",
+      "bytes": 72
+    },
+    {
+      "path": "src/pitchdeck/cli.py",
+      "sha256": "e2e5a198f46596da0e938389e0db5e9f16ce5a5c7ede0daea2bbed76152c827c",
+      "bytes": 12403
+    },
+    {
+      "path": "src/pitchdeck/io.py",
+      "sha256": "5061f2fab485cceba770f89d8914829037d3bf4ceb2f3d419872eb67d06b30aa",
+      "bytes": 3129
+    },
+    {
+      "path": "src/pitchdeck/markdown.py",
+      "sha256": "ee9818377762b465028532df6d1e0b56d20dfd99dd291996e11dfe0a1a095c6b",
+      "bytes": 7451
+    },
+    {
+      "path": "src/pitchdeck/models.py",
+      "sha256": "967c9801fed99e0cd054bacff7bc08b5baeac155051d13e9a35980cc22086f2c",
+      "bytes": 11589
+    },
+    {
+      "path": "src/pitchdeck/planner.py",
+      "sha256": "26ab336e5872da27fe0395b0daff42fa65baaf53081bcc79b2364ccca19a7b93",
+      "bytes": 25656
+    },
+    {
+      "path": "src/pitchdeck/pptx_builder.py",
+      "sha256": "c016152e36cf689d94d5583a6d228319037433ebff20e8578e2dfc9ba0c7db41",
+      "bytes": 24790
+    },
+    {
+      "path": "src/pitchdeck/renderer.py",
+      "sha256": "8f865f8d917bb190832cda73dcb9702a330d1eee64547001028410f8a1153bf6",
+      "bytes": 4552
+    },
+    {
+      "path": "src/pitchdeck/validation.py",
+      "sha256": "0f371ae8ecf919c5d519d1d4c8d29cc2686fcb471d7f34b766e8d640c63304d8",
+      "bytes": 16465
+    },
+    {
+      "path": "templates/generic/DECK_BRIEF.md",
+      "sha256": "975647fc252ff2a33e7b0c7adebd6afa04e55ad3f01873288d2b5c7e62775c8a",
+      "bytes": 1005
+    },
+    {
+      "path": "templates/generic/README.md",
+      "sha256": "cd1312eceda10323aec2599d187adf70ec793669ee3cf4e9702459cfe3409977",
+      "bytes": 615
+    },
+    {
+      "path": "templates/generic/qa/acceptance_checklist.md",
+      "sha256": "15ba942c444fc6caa3934207dc80b89c7e475aa88ac95c20806e4da096116d1a",
+      "bytes": 855
+    },
+    {
+      "path": "templates/generic/source_manifest.yaml",
+      "sha256": "0ef375d0b1540776cf0c617991d67f73eeb54e1e556cb32a339599c5919661dd",
+      "bytes": 932
+    },
+    {
+      "path": "templates/generic/visual_system.md",
+      "sha256": "56f198d7101b4e4e5952a3002cf007f9270f2599b3ccabc9a7aaa7f8a858745f",
+      "bytes": 557
+    },
+    {
+      "path": "tests/test_skill.py",
+      "sha256": "1115e24e88adc7f40e30d980dc8998f93c597de51179d8b00be240326ec994f5",
+      "bytes": 12236
+    }
+  ],
+  "file_count": 42,
+  "manifest_excludes_self": true
+}

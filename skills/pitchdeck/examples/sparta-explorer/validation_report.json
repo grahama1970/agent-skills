@@ -1,0 +1,19 @@
+{
+  "schema": "pitchdeck.validation_report.v1",
+  "readiness": "USABLE_WITH_GAPS",
+  "errors": 0,
+  "warnings": 1,
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "ASSET_NOT_CURRENT",
+      "message": "Asset 'sparta-embry-os-foundation' is marked regenerate.",
+      "slide_id": "06-embry-os",
+      "asset_id": "sparta-embry-os-foundation"
+    }
+  ],
+  "seam_validation": {
+    "kind": "validation_report",
+    "status": "PASS"
+  }
+}

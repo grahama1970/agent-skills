@@ -1,0 +1,523 @@
+schema: pitchdeck.deck_manifest.v1
+deck:
+  id: sparta-explorer-private-appendix
+  title: Sparta Explorer — Private Technical Appendix
+  subtitle: Architecture, bounded proof, open gates, and demonstration controls
+  audience: Authorized technical reviewers and design partners
+  visibility: private
+  target_editor: google_slides
+  theme: dark_cyan_evidence
+  source_policy: public_and_private
+  author: Graham Anderson
+slides:
+- id: 01-status-ledger
+  order: 1
+  role: private-current-status
+  layout: appendix
+  visibility: private
+  title: Current status is a ledger, not one readiness score
+  message: Working product surfaces, bounded proof, response-route integration, and
+    deployment gaps must remain separately visible.
+  body:
+  - Explorer surfaces are implemented on the prepared host.
+  - Selected evidence and human-review slices have dated receipts.
+  - Response-route convergence remains in integration.
+  - A verified clean-machine quick start is not yet published.
+  - Each live demonstration requires a fresh commit-bound preflight.
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Current Status and Closure Gates
+  - source_id: sparta-private-readme
+    section: Evaluate a Prepared Host
+  claim_ids:
+  - sparta-public-working-surfaces
+  - sparta-private-response-gaps
+  - sparta-private-deployment-gap
+  - sparta-private-preflight
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-public-working-surfaces
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-response-gaps
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-deployment-gap
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-preflight
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: 'Treat this as a prepared-host late-stage prototype claim and verify the
+    exact commit, preflight, and current screenshots before presenting it.
+
+    These named gaps keep the broader response-surface claim in integration rather
+    than closed.
+
+    Prepared-host orchestration is not a clone-and-run installation path or supported
+    external deployment profile.
+
+    The preflight receipt binds to commit c60318363 only; rerun it against the exact
+    commit demonstrated and do not demonstrate on failure.'
+  footer: Treat this as a prepared-host late-stage prototype claim and verify the
+    exact commit, preflight, and current screenshots before presenting it. These named
+    gaps keep the broader response-surface claim in integration rather than closed.
+    Prepared-host orchestration is not a clone-and-run installation path or supported
+    external deployment profile. The preflight receipt binds to commit c60318363 only;
+    rerun it against the exact commit demonstrated and do not demonstrate on failure.
+- id: 02-dated-proof
+  order: 2
+  role: private-dated-proof
+  layout: proof_cards
+  visibility: private
+  title: Dated proof points establish bounded slices
+  message: Counts and passes are useful only when the population, date, source artifact,
+    and non-claim are carried with them.
+  body:
+  - Canonical QRA snapshot — 2,180 active canonical records, 2,180 aliases, 5,046
+    quarantined records, zero duplicate active semantic identities, expected identity
+    at rank 1.
+  - Human-review slice — one accepted, one rejected, one pending, one accepted evidence
+    case, two reviewed overlays, and one compliance-credit unit.
+  - Chat campaign — 115 broad browser cases and 35 interaction cases in the dated
+    aggregate receipt.
+  - Proof boundary — implementation receipts do not substitute for broader expert
+    review, response quality, or deployment closure.
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Dated Proof Points
+  claim_ids:
+  - sparta-private-qra-snapshot
+  - sparta-private-review-slice
+  - sparta-private-chat-campaign
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-qra-snapshot
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-review-slice
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-chat-campaign
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: 'Quote these counts only for the 2026-07-29 population and source artifact;
+    canonical-active does not mean expert-approved or compliance-credited.
+
+    This is a bounded 2026-07-29 slice and does not establish corpus-wide review or
+    quality.
+
+    This dated local campaign is implementation evidence, not full response-quality
+    or production-readiness proof.'
+  footer: Quote these counts only for the 2026-07-29 population and source artifact;
+    canonical-active does not mean expert-approved or compliance-credited. This is
+    a bounded 2026-07-29 slice and does not establish corpus-wide review or quality.
+    This dated local campaign is implementation evidence, not full response-quality
+    or production-readiness proof.
+- id: 03-prepared-host-route
+  order: 3
+  role: private-demo-route
+  layout: flow
+  visibility: private
+  title: The demonstration route fails closed before the client session
+  message: The prepared-host path binds source state, preflight, route capture, and
+    visible degradation to one exact demonstration commit.
+  body:
+  - Pin the commit and working tree
+  - Run the deterministic client preflight
+  - Stop on any failed gate
+  - Open Global Posture
+  - Trace one relationship in Threat Matrix
+  - Ask one bounded question beside the relevant surface
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Evaluate a Prepared Host
+  - source_id: sparta-client-demo-guide
+    section: Demonstration route
+  claim_ids:
+  - sparta-private-preflight
+  visual:
+    type: native_diagram
+    position: right
+    items:
+    - Pin commit
+    - Run preflight
+    - Fail closed
+    - Open Posture
+    - Trace relationship
+    - Ask bounded question
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  - path: body:5
+    kind: non_claim
+  - path: visual.items:0
+    kind: non_claim
+  - path: visual.items:1
+    kind: non_claim
+  - path: visual.items:2
+    kind: non_claim
+  - path: visual.items:3
+    kind: non_claim
+  - path: visual.items:4
+    kind: non_claim
+  - path: visual.items:5
+    kind: non_claim
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-preflight
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: The preflight receipt binds to commit c60318363 only; rerun it against the
+    exact commit demonstrated and do not demonstrate on failure.
+  footer: The preflight receipt binds to commit c60318363 only; rerun it against the
+    exact commit demonstrated and do not demonstrate on failure.
+- id: 04-answerability-contract
+  order: 4
+  role: private-answerability-contract
+  layout: flow
+  visibility: private
+  title: Retrieval, answerability, language, and authority remain separate
+  message: The governed response path preserves source identity, scopes the current
+    turn, assembles evidence, decides answerability, presents a bounded response,
+    and leaves the final decision to a person.
+  body:
+  - Preserve native sources and fingerprints
+  - Build typed candidates and relationships
+  - Scope the current question and recall boundary
+  - Assemble the current evidence case
+  - Return answerable, clarification, unsupported, or error
+  - Present for inspection and human workflow
+  source_refs:
+  - source_id: sparta-answerability-contract
+    section: Semantic contract
+  - source_id: sparta-private-readme
+    section: How Sparta Works
+  claim_ids:
+  - sparta-private-answerability-contract
+  - sparta-public-model-boundary
+  visual:
+    type: native_diagram
+    position: right
+    items:
+    - Preserve sources
+    - Build candidates
+    - Scope turn
+    - Assemble evidence
+    - Decide answerability
+    - Human workflow
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  - path: body:5
+    kind: non_claim
+  - path: visual.items:0
+    kind: non_claim
+  - path: visual.items:1
+    kind: non_claim
+  - path: visual.items:2
+    kind: non_claim
+  - path: visual.items:3
+    kind: non_claim
+  - path: visual.items:4
+    kind: non_claim
+  - path: visual.items:5
+    kind: non_claim
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: This is the governed semantic contract. Do not use it to claim every visible
+    response route has already converged.
+- id: 05-qra-governance
+  order: 5
+  role: private-qra-governance
+  layout: appendix
+  visibility: private
+  title: QRA generation and answer correctness are different authorities
+  message: Agent-driven answerability, human candidate review, reasoning repair, and
+    lineage reuse must remain distinguishable in the deck and product story.
+  body:
+  - Generated candidates remain candidates until human review.
+  - Human interview, accept, reject, and promote actions determine correctness status.
+  - Canonical-active means retrieval-eligible, not expert-approved or compliance-credited.
+  - Reuse must preserve multi-hop lineage and reviewed-only governance where required.
+  - Direct bypass or legacy release paths remain explicit defects, not hidden implementation
+    detail.
+  source_refs:
+  - source_id: sparta-qra-governance
+    section: Governance lifecycle
+  - source_id: sparta-private-readme
+    section: Current Status and Closure Gates
+  claim_ids:
+  - sparta-private-qra-governance
+  - sparta-private-response-gaps
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-response-gaps
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: These named gaps keep the broader response-surface claim in integration rather
+    than closed.
+  footer: These named gaps keep the broader response-surface claim in integration
+    rather than closed.
+- id: 06-risk-register
+  order: 6
+  role: private-risk-register
+  layout: roadmap
+  visibility: private
+  title: The highest credibility risks remain testable
+  message: The private appendix should help a reviewer distinguish a convincing prepared-host
+    demonstration from broader claims the evidence does not yet support.
+  body:
+  - Working — product surfaces and bounded review/evidence receipts
+  - Working — deterministic preflight and route capture for one exact commit
+  - In integration — authoritative response-route convergence
+  - In integration — QRA reasoning repair and reviewed-only reuse
+  - Open — independent corpus review and broader adjudication
+  - Open — clean-machine, managed, disconnected, security, and governance paths
+  source_refs:
+  - source_id: sparta-private-readme
+    section: Remaining Closure Gates
+  claim_ids:
+  - sparta-private-response-gaps
+  - sparta-private-deployment-gap
+  - sparta-public-open-gates
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  - path: body:5
+    kind: non_claim
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-response-gaps
+  - path: footer
+    kind: qualifier
+    claim_id: sparta-private-deployment-gap
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: 'These named gaps keep the broader response-surface claim in integration
+    rather than closed.
+
+    Prepared-host orchestration is not a clone-and-run installation path or supported
+    external deployment profile.'
+  footer: These named gaps keep the broader response-surface claim in integration
+    rather than closed. Prepared-host orchestration is not a clone-and-run installation
+    path or supported external deployment profile.
+- id: 07-private-non-claims
+  order: 7
+  role: private-non-claims
+  layout: appendix
+  visibility: private
+  title: What this appendix still does not establish
+  message: Technical detail and reviewer agreement do not transfer authority or close
+    missing deterministic proof.
+  body:
+  - The F-36 program world is fictional and synthetic.
+  - Candidate visibility is not compliance credit.
+  - A model does not receive approval, risk, certification, or signoff authority.
+  - A preflight receipt applies only to the exact demonstrated commit.
+  - The project does not claim accreditation, certification, customer deployment,
+    or endorsement.
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Responsible Use and Repository Boundary
+  - source_id: sparta-private-readme
+    section: Current Status and Closure Gates
+  claim_ids:
+  - non-claim-f36-synthetic
+  - non-claim-candidate-credit
+  - non-claim-human-authority
+  - non-claim-preflight-commit
+  - non-claim-no-production
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids:
+    - non-claim-f36-synthetic
+    - non-claim-candidate-credit
+    - non-claim-human-authority
+    - non-claim-preflight-commit
+    - non-claim-no-production
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: claim_quote
+    claim_id: non-claim-candidate-credit
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  - path: body:4
+    kind: non_claim
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: 'The F-36 corpus and program world are fictional and synthetic.
+
+    Candidate visibility is not compliance credit.
+
+    A model may explain; authorized people retain approval, risk, certification, and
+    signoff authority.
+
+    Prepared-host receipts bind to the exact demonstrated commit and must be rerun
+    before a live demonstration.
+
+    This deck does not establish production readiness, accreditation, certification,
+    customer deployment, or endorsement.'
+seam_validation:
+  kind: deck_manifest
+  status: PASS

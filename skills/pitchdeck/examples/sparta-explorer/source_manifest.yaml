@@ -1,0 +1,75 @@
+schema: pitchdeck.source_manifest.v1
+project_name: Sparta Explorer
+deck_title: Sparta Explorer — Inspectable Space-Cyber Assurance
+audience: Aerospace and defense design partners, assessors, engineers, cyber analysts, and program leads
+sources:
+  - id: sparta-public-readme
+    title: Sparta Explorer public product overview
+    path: ${SPARTA_PUBLIC_ROOT}/README.md
+    visibility: public
+    role: primary
+    required: true
+    repo: grahama1970/sparta-public
+    ref: main
+    content_sha: github-blob:6d6d59f18d733635b2f39f212ac43a8e8056159e
+  - id: sparta-private-readme
+    title: Sparta Explorer implementation and proof overview
+    path: ${SPARTA_ROOT}/README.md
+    visibility: private
+    role: evidence
+    required: true
+    repo: grahama1970/sparta
+    ref: main
+    content_sha: github-blob:7c248476126d775678b64843340b92853689a84b
+  - id: sparta-answerability-contract
+    title: SPARTA Answerability Contract
+    path: ${SPARTA_ROOT}/docs/architecture/SPARTA_ANSWERABILITY_CONTRACT.md
+    visibility: private
+    role: evidence
+    required: false
+    repo: grahama1970/sparta
+    ref: main
+  - id: sparta-how-it-works
+    title: How Sparta Works — Deep Dive
+    path: ${SPARTA_ROOT}/docs/architecture/HOW_SPARTA_WORKS.md
+    visibility: private
+    role: supporting
+    required: false
+    repo: grahama1970/sparta
+    ref: main
+  - id: sparta-qra-governance
+    title: QRA governance
+    path: ${SPARTA_ROOT}/docs/architecture/QRA_GOVERNANCE.md
+    visibility: private
+    role: evidence
+    required: false
+    repo: grahama1970/sparta
+    ref: main
+  - id: sparta-client-demo-guide
+    title: Prepared-host client demonstration guide
+    path: ${SPARTA_ROOT}/docs/client-demo/README.md
+    visibility: private
+    role: evidence
+    required: false
+    repo: grahama1970/sparta
+    ref: main
+policy:
+  public_deck_source_ids:
+    - sparta-public-readme
+  forbidden_unqualified_claims:
+    - production-ready
+    - all surfaces use one evidence model
+    - all QRAs are evidence-bound
+    - all Console responses use the governed route
+    - turnkey SDK
+    - operational F-36
+    - deployed at Lockheed Martin
+  mandatory_non_claims:
+    - The F-36 corpus and program world are fictional and synthetic.
+    - Candidate visibility is not compliance credit.
+    - A model may explain; authorized people retain approval, risk, certification, and signoff authority.
+    - Prepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.
+    - This deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement.
+seam_validation:
+  kind: source_manifest
+  status: PASS
