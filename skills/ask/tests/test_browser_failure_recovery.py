@@ -1552,3 +1552,19 @@ def test_matching_tabs_are_not_crosstalk() -> None:
 def test_unknown_tabs_are_not_reported_as_crosstalk() -> None:
     assert tau_roundtable_worker.crosstalk_tab_mismatch("", {"controlled_tab_id": "837362948"}) is None
     assert tau_roundtable_worker.crosstalk_tab_mismatch("837362945", {}) is None
+
+
+def test_current_tab_url_helper_parses_array_tablist(monkeypatch, tmp_path):
+    # #1252: the --expect-url fallback must read surf tab.list --json (a JSON
+    # array) and return the live URL for an explicit tab id.
+    from types import SimpleNamespace
+
+    class _Res:
+        returncode = 0
+        stdout = '[{"id":837368227,"url":"https://chatgpt.com/","title":"ChatGPT"},{"id":999,"url":"https://x"}]'
+        stderr = ""
+
+    monkeypatch.setattr(tau_roundtable_worker, "_run_cmd", lambda *a, **k: _Res())
+    args = SimpleNamespace(surf_run="/nonexistent/run.sh")
+    assert tau_roundtable_worker._current_tab_url(args, "837368227") == "https://chatgpt.com/"
+    assert tau_roundtable_worker._current_tab_url(args, "12345") == ""

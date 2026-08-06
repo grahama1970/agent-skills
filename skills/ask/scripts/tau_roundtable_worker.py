@@ -534,6 +534,14 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             resolve_payload = _parse_json_object(resolve.stdout)
             tab_id = str(resolve_payload.get("tab_id") or "")
             url = str(resolve_payload.get("conversation_url") or "")
+            if not url and tab_id:
+                # Ask provisions webgpt seats at a bare provider root (no
+                # conversation id), so conversation_url is empty and no
+                # --expect-url gets passed. With many provider tabs open the
+                # identity guard then fails unverified_tab_id_with_multiple_
+                # chatgpt_tabs and the seat never submits (#1252). Resolve the
+                # tab's live URL so --expect-url is always asserted.
+                url = _current_tab_url(args, tab_id) or url
             if not tab_id:
                 raise RuntimeError(f"browser-oracle project {project!r} resolved without tab_id")
             binding_refresh = _refresh_browser_binding_before_submit(
@@ -1056,6 +1064,29 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         evidence=evidence,
     )
     return {"exit_code": 0 if lane_exit_ok else 1, "handoff": handoff}
+
+
+def _current_tab_url(args: argparse.Namespace, tab_id: str) -> str:
+    """Best-effort live URL for an explicit tab id via surf tab.list (#1252).
+
+    Used to supply --expect-url when the binding has no conversation_url yet,
+    so the webgpt identity guard can verify the tab even amid many open
+    provider tabs. Never raises; returns "" on any failure.
+    """
+    try:
+        res = _run_cmd([str(args.surf_run), "tab.list", "--json"], cwd=Path(args.surf_run).parent, timeout=30)
+        if res.returncode != 0:
+            return ""
+        parsed = json.loads(res.stdout.strip())
+        rows = parsed.get("tabs") if isinstance(parsed, dict) else parsed
+        if not isinstance(rows, list):
+            return ""
+        for row in rows:
+            if isinstance(row, dict) and str(row.get("id")) == str(tab_id):
+                return str(row.get("url") or "")
+    except Exception:
+        return ""
+    return ""
 
 
 def _browser_submit_command(
