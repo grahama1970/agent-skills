@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Maximize2, MessageSquare, Minimize2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Maximize2, MessageSquare, Mic, Minimize2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { UiSlide } from '../types'
 
@@ -20,6 +20,23 @@ export function NotesDrawer({
   const [notes, setNotes] = useState(slide.notes)
   const [expanded, setExpanded] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [recording, setRecording] = useState(false)
+
+  const record = async () => {
+    setRecording(true)
+    try {
+      const response = await fetch('/api/record-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slide_id: slide.id }),
+      })
+      const data = (await response.json()) as { status?: string; transcript?: string; reason?: string; error?: string }
+      if (data.status === 'PASS') onChanged()
+      else window.alert?.(data.reason ?? data.error ?? 'recording failed')
+    } finally {
+      setRecording(false)
+    }
+  }
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -73,6 +90,23 @@ export function NotesDrawer({
           <span className="max-w-56 truncate font-mono text-xs text-slate-500">{slide.title}</span>
         </span>
         <span className="flex items-center gap-3 text-xs text-slate-400">
+          <span
+            role="button"
+            tabIndex={0}
+            data-qid="deck:notes:record"
+            data-qs-action="DECK_RECORD_NOTE"
+            title={recording ? 'Listening — speak now; stops on silence' : 'Record narration into these notes (RealtimeSTT + faster-whisper, local)'}
+            onClick={(event) => {
+              event.stopPropagation()
+              if (!recording) void record()
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !recording) void record()
+            }}
+            className={`inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 ${recording ? 'animate-pulse bg-rose-500/20 text-rose-300' : 'text-slate-400 hover:text-cyan-300'}`}
+          >
+            <Mic aria-hidden className="h-3.5 w-3.5" /> {recording ? 'listening…' : 'record'}
+          </span>
           {isOpen ? (
             <span className="font-mono text-[11px] text-slate-500">
               {wordCount} words · {notes.length} chars{busy ? ' · validating…' : ''}

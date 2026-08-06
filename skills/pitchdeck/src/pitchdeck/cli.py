@@ -334,6 +334,29 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="record-note")
+def record_note_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    slide_id: Annotated[str, typer.Option(help="Slide whose speaker notes receive the narration.")],
+    timeout_seconds: Annotated[int, typer.Option(help="Max recording window.")] = 120,
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+) -> None:
+    """Record narration (RealtimeSTT mic capture, faster-whisper local transcription) into slide notes."""
+    import json as json_mod
+
+    from .transcribe import record_note
+
+    try:
+        result = record_note(bundle_dir, output_dir, slide_id=slide_id, deck_name=deck_name, timeout_seconds=timeout_seconds)
+        typer.echo(json_mod.dumps(result, indent=1))
+        raise typer.Exit(0 if result["status"] == "PASS" else 6)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="claim-decide")
 def claim_decide(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

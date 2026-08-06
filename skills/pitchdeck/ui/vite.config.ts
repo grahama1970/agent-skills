@@ -66,6 +66,45 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/record-note', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { slide_id } = JSON.parse(body) as Record<string, string>
+            const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            if (!bundleDir || !slide_id) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'slide_id required' }))
+              return
+            }
+            execFile(
+              `${skillRoot}/run.sh`,
+              ['record-note', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--slide-id', String(slide_id)],
+              { timeout: 180_000 },
+              (error, stdout, stderr) => {
+                res.setHeader('Content-Type', 'application/json')
+                try {
+                  JSON.parse(stdout)
+                  res.end(stdout)
+                } catch {
+                  res.statusCode = 422
+                  res.end(JSON.stringify({ error: stderr.trim().slice(-300) || String(error) }))
+                }
+              },
+            )
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
       server.middlewares.use('/api/claim-decide', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
