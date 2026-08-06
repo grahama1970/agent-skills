@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, MessageSquare, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
@@ -182,6 +182,7 @@ export function App() {
   const [direction, setDirection] = useState<'fwd' | 'back'>('fwd')
   const [view, setView] = useState<View>(viewFromHash)
   const [showNotes, setShowNotes] = useState(false)
+  const [chatCollapsed, setChatCollapsed] = usePersistentPane('deck-pane-chat-collapsed', true)
   const [editing, setEditing] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
   const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
@@ -203,6 +204,12 @@ export function App() {
     action: 'DECK_NEXT_SLIDE',
     label: 'Next slide',
     description: 'Navigate to the next slide in the presented deck',
+  })
+  useRegisterAction('deck:view:chat', {
+    app: 'pitchdeck',
+    action: 'DECK_TOGGLE_CHAT',
+    label: 'Toggle chat',
+    description: 'Show or hide the conversational deck-edit pane (proposals preview via simulate)',
   })
   useRegisterAction('deck:toolbar:undo', {
     app: 'pitchdeck',
@@ -476,6 +483,17 @@ export function App() {
           </button>
           <button
             type="button"
+            data-qid="deck:view:chat"
+            data-qs-action="DECK_TOGGLE_CHAT"
+            title="Toggle the deck chat pane - propose edits conversationally"
+            aria-pressed={!chatCollapsed}
+            onClick={() => setChatCollapsed((value) => !value)}
+            className={`${navButton} ${!chatCollapsed ? 'border-cyan-500/80 text-cyan-200' : ''}`}
+          >
+            <MessageSquare aria-hidden className="h-4 w-4" /> Chat
+          </button>
+          <button
+            type="button"
             data-qid="deck:view:notes"
             data-qs-action="DECK_TOGGLE_NOTES"
             title="Toggle speaker notes panel"
@@ -583,6 +601,15 @@ export function App() {
                 <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
               </EditContext.Provider>
             </AssetDropZone>
+            {!chatCollapsed && !presenting ? (
+              <aside
+                aria-label="Deck chat"
+                data-qid="deck:pane:chat"
+                className="min-h-0 w-[380px] shrink-0 overflow-hidden border-l border-slate-800"
+              >
+                <DeckChat deck={deck} onChanged={reloadAll} />
+              </aside>
+            ) : null}
             {editing && !inspectorCollapsed ? (
               <>
                 <ResizeHandle pane="inspector" isDragging={activeResizer === 'inspector'} onMouseDown={(e) => startResizing('inspector', e)} onDoubleClick={() => resetWidth('inspector')} />

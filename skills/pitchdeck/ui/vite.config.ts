@@ -66,6 +66,45 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/simulate', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { slide_id, field, value, op, target_order } = JSON.parse(body) as Record<string, string | number>
+            const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            if (!bundleDir || !slide_id) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'bundle_dir and slide_id required' }))
+              return
+            }
+            const args = ['simulate', '--bundle-dir', bundleDir, '--slide-id', String(slide_id)]
+            if (field) args.push('--field', String(field), '--value', String(value ?? ''))
+            if (op) args.push('--op', String(op))
+            if (target_order) args.push('--target-order', String(target_order))
+            execFile(`${skillRoot}/run.sh`, args, { timeout: 60_000 }, (error, stdout) => {
+              res.setHeader('Content-Type', 'application/json')
+              // simulate exits 3 on would_pass=false but still prints JSON
+              try {
+                JSON.parse(stdout)
+                res.end(stdout)
+              } catch {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: String(error) }))
+              }
+            })
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
       server.middlewares.use('/api/undo', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405

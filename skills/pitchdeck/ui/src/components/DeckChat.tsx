@@ -14,10 +14,31 @@ import type { UiDeckBundle } from '../types'
 // compiler validates — nothing is ever applied from text alone.
 // Set VITE_DECK_AGENT_URL to forward unrecognized turns to a live agent.
 
+export type SimulatePreview = { would_pass: boolean; gate_codes: string[]; error: string | null; diff: string }
+
 export type DeckCommand = (
   | { kind: 'slide-edit'; slide_id: string; field: string; value: string; summary: string }
   | { kind: 'deck-op'; op: string; slide_id: string; target_order?: number; summary: string }
-) & { base_revision?: number }
+) & { base_revision?: number; preview?: SimulatePreview | null }
+
+// Simulate-first proposals (#1228): the Apply card shows the compiler's
+// verdict BEFORE anything is committed — propose -> preview -> confirm.
+async function fetchSimulate(command: DeckCommand): Promise<SimulatePreview | null> {
+  try {
+    const response = await fetch('/api/simulate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(
+        command.kind === 'slide-edit'
+          ? { slide_id: command.slide_id, field: command.field, value: command.value }
+          : { slide_id: command.slide_id, op: command.op, target_order: command.target_order },
+      ),
+    })
+    return (await response.json()) as SimulatePreview
+  } catch {
+    return null
+  }
+}
 
 function slideByNumber(deck: UiDeckBundle, n: number) {
   return deck.slides.find((s) => s.order === n) ?? null
@@ -156,10 +177,24 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
         // Pin the revision the proposal was computed against (review P1):
         // a reorder before Apply produces a CAS 409, never a silent rebase
         // onto a different referent.
-        setPending({ ...command, base_revision: revisionStore.current })
+        const pinned = { ...command, base_revision: revisionStore.current, preview: null }
+        setPending(pinned)
         setMessages((prev) => [
           ...prev,
-          msg('assistant', `Proposed: ${command.summary}.\nNothing is applied yet — confirm with the Apply card above the input. The compiler re-validates the full bundle before anything is written.`),
+          msg('assistant', `Proposed: ${command.summary}.\nRunning the compiler dry-run…`),
+        ])
+        const preview = await fetchSimulate(pinned)
+        setPending((current) => (current && current.summary === pinned.summary ? { ...current, preview } : current))
+        setMessages((prev) => [
+          ...prev,
+          msg(
+            'assistant',
+            preview
+              ? preview.would_pass
+                ? 'Simulated: this change PASSES validation. Confirm with the Apply card.'
+                : `Simulated: this change would be REJECTED (${preview.gate_codes.join(', ') || 'validation error'}). Apply is disabled — amend and re-propose.`
+              : 'Simulation unavailable; Apply will validate on commit.',
+          ),
         ])
         return
       }
@@ -217,12 +252,21 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
           className="mx-2 mb-1 flex items-center gap-2 rounded-lg border border-cyan-700/60 bg-cyan-950/40 px-3 py-2 text-xs text-cyan-100"
         >
           <span className="min-w-0 flex-1 truncate" title={pending.summary}>{pending.summary}</span>
+          {pending.preview ? (
+            <span
+              data-qid="deck:chat:proposal:verdict"
+              title={pending.preview.would_pass ? 'Compiler dry-run passed' : `Would be rejected: ${pending.preview.gate_codes.join(', ')}`}
+              className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${pending.preview.would_pass ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}
+            >
+              {pending.preview.would_pass ? 'PASS' : pending.preview.gate_codes[0] || 'REJECT'}
+            </span>
+          ) : null}
           <button
             type="button"
             data-qid="deck:chat:proposal:apply"
             data-qs-action="DECK_CHAT_APPLY_PROPOSAL"
             title="Apply this proposed command (compiler validates first)"
-            disabled={busy}
+            disabled={busy || (pending.preview ? !pending.preview.would_pass : false)}
             onClick={() => void applyPending()}
             className="inline-flex cursor-pointer items-center gap-1 rounded bg-cyan-600 px-2 py-1 font-medium text-white hover:bg-cyan-500 disabled:opacity-40"
           >
