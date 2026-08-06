@@ -642,3 +642,17 @@ allowlist DTO.
   diff on Apply card, undo tombstones for created files, visual-diff
   closure, .history scrub command for reclassification, real human
   approval cycle on sparta.
+
+## Best-in-class roundtable (2026-08-06): 3 seats PASS, closed at round 1
+
+Run: ask-tau-roundtable-...-8842fdf68a32 (concurrent webgpt/webclaude/
+webgemini, identical packet, join PASS). Full synthesis:
+/mnt/storage12tb/skills/readme-to-pitchdeck/outputs/roundtable-best-in-class-20260806/synthesis.md
+Adopted plan of record (ranked slices): (1) simulate dry-run through real
+emitters, (2) span-first claim model (EvidenceSpan/ClaimRendering/
+transform_class/RENDERING_UNBOUND), (3) NUMERIC_UNBOUND, (4) writable
+keyboard triage Claims mode, (5) decision memory across commits,
+(6) ChangeSet typed ops + confirmation tokens (JSON-Patch REJECTED 2-1),
+(7) MCP adapter over the same path, (8) visual-fidelity xfail closure.
+Unanimous: quote-first extraction; provenance-surviving-diligence is the
+moat; visual-diff xfail blocks fundraise-grade claims.
