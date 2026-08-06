@@ -153,7 +153,7 @@ export default function Home() {
             aria-label="Rendered dream frame from the persona-dream pipeline"
           >
             <figcaption>
-              <b>/dream/dream-panel.webp</b> — persona-dream, rendered frame
+              <b>persona-dream</b> — frame 001, live run issue-33 · 2026-06-29 · provider_media/…/panel_001.png
             </figcaption>
           </figure>
         </section>
@@ -260,7 +260,7 @@ export default function Home() {
               role="img"
               aria-label="Cinematic rendered dream frame from persona-dream"
             >
-              <span className="tag">/dream/dream-panel.webp</span>
+              <span className="tag">frame 001 · live run issue-33 · 2026-06-29</span>
             </figure>
             <div className="film" aria-label="persona-dream pipeline phases">
               {DREAM_PHASES.map((d) => (
