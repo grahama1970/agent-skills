@@ -706,3 +706,25 @@ authenticated ChatGPT OAuth session; tau-DAG nodes are codex handlers.
 Live PASS: 3/3 variants from the atlas 'problem' brief (accent #22d3ee,
 no-text rule), visually verified, contact sheet assembled. Final ticket
 tally: 7 of 8 closed; #1227 open solely for the human timed triage run.
+
+## UI spec backlog captured as tickets (2026-08-06 evening)
+
+- #1244 Design-mode context menu (canvas + element targets, hover submenus;
+  menu is chrome only — all actions route through validated ops).
+- #1247 adopt the REAL Sparta Explorer shared-chat family: ux-lab's
+  ComplianceChatWell is an older subset; the canonical rich chat
+  (ChatWell, CompactChatInterface, CommandPalette, CodeBlockWithCopy,
+  ActivityFeed, ChatProcessingState, ChatSessionSidebar) lives in
+  sparta/explorer/src/components/shared-chat/ and must graduate to ux-lab,
+  then DeckChat consumes it. This resolves the recurring "bespoke chat"
+  finding at its true root.
+- #1248 top-nav hierarchy redesign: Present as filled CTA, centered
+  Overview|Design|Claims|Source tabs, compact status chip, Chat/Notes as
+  icon toggles.
+Landed same evening: hybrid icon+text mode nav + useTopNavShortcuts
+(single-key P/D/C/S/G reliable tier; Chrome reserves Ctrl+1..8), fixed the
+Rules-of-Hooks white-screen (hook below early returns), click-gated builds
+(reveal: step) verified live, env-var asset resolution bug fixed (deck
+images restored), record-note narration (RealtimeSTT + faster-whisper,
+OAuth-free local), sparta fixture approvals retired into a real 11-card
+triage queue.
