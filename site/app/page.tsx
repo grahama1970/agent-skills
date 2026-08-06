@@ -240,6 +240,7 @@ export default function Home() {
                       </h3>
                       <p className="q">{p.question}</p>
                       <p className="d">{p.blurb}</p>
+                      <p className="why">{p.why}</p>
                       <span className={`chip${external ? ' ext' : ''}`}>
                         {external
                           ? 'external repo'

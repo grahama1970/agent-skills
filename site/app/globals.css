@@ -1871,3 +1871,15 @@ a.fig:hover .l::after,
   border-bottom-style: solid;
   border-bottom-color: var(--brass);
 }
+
+/* Why this project exists — the R&D rationale, from each README. */
+.why {
+  grid-column: 2;
+  color: var(--faint);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0.55em 0 0;
+  max-width: 54ch;
+  border-left: 2px solid rgba(226, 172, 98, 0.35);
+  padding-left: 0.9em;
+}
