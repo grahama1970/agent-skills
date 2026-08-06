@@ -8,12 +8,14 @@ export function ReceiptTicket({
   id,
   title,
   callout,
+  proves,
   body,
   caption,
 }: {
   id: string;
   title: string;
   callout: string;
+  proves: string;
   body: string;
   caption: string;
 }) {
@@ -22,6 +24,7 @@ export function ReceiptTicket({
     <article className="ticket">
       <h3>{title}</h3>
       <p className="callout">{callout}</p>
+      <p className="proves">{proves}</p>
       <button
         type="button"
         data-qid={`receipts:toggle:${id}`}

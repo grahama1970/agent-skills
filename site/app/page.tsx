@@ -380,18 +380,31 @@ export default function Home() {
               <div className="tickets">
                 {(
                   [
-                    ['roundtable-receipt', 'PREFLIGHT: PASS'],
-                    ['live-audit', 'DRIFT: 0 · LIVE: 200/200'],
-                    ['inventory-provenance', `BUILD: ${commit}`],
+                    [
+                      'roundtable-receipt',
+                      'PREFLIGHT: PASS',
+                      'Proves the agent that designed this page actually ran in the intended environment — not that a model merely claimed it did.',
+                    ],
+                    [
+                      'live-audit',
+                      'DRIFT: 0 · LIVE: 200/200',
+                      'Proves the deployed site and the repository haven’t silently diverged.',
+                    ],
+                    [
+                      'inventory-provenance',
+                      `BUILD: ${commit}`,
+                      'Proves the numbers above came from checked source state, not marketing copy.',
+                    ],
                   ] as const
                 ).map(
-                  ([id, callout]) =>
+                  ([id, callout, proves]) =>
                     receiptArtifacts[id] && (
                       <ReceiptTicket
                         key={id}
                         id={id}
                         title={receiptArtifacts[id].title}
                         callout={callout}
+                        proves={proves}
                         body={receiptArtifacts[id].body}
                         caption={receiptArtifacts[id].caption}
                       />
