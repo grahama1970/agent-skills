@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "proof_scope": "adversarial: the #1224 failure class \u2014 wedged build locks and stale dist \u2014 must self-recover or fail closed with a structured receipt, never hang",
+  "claims": {
+    "proves": "a wedged (D-state) lock holder is rotated automatically with a recovered:true receipt and the build proceeds; a live lock holder is never rotated and times out with a structured build_lock_timeout receipt; the hot path is bounded",
+    "does_not_prove": "Chrome extension reconnection behavior (needs a live browser) or real D-state process handling (simulated via SURF_TEST_LOCK_HOLDER_STATES)"
+  },
+  "cases": [
+    {
+      "name": "wedged-lock-rotates-automatically-and-build-proceeds",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/surf; V=vendor/surf-cli; ( exec 9>$V/.ensure-surf-cli-build.lock; flock 9; sleep 25 ) & H=$!; sleep 1; touch $V/native/host.cjs; SURF_TEST_LOCK_HOLDER_STATES=D SURF_CLI_BUILD_LOCK_TIMEOUT_SECONDS=3 timeout 200 scripts/ensure-surf-cli.sh 2>&1; rc=$?; kill $H 2>/dev/null; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "wedged_lock_rotated",
+          "\"recovered\":true",
+          "built in"
+        ]
+      }
+    },
+    {
+      "name": "live-lock-holder-is-never-rotated",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/surf; V=vendor/surf-cli; ( exec 9>$V/.ensure-surf-cli-build.lock; flock 9; sleep 15 ) & H=$!; sleep 1; touch $V/native/host.cjs; SURF_TEST_LOCK_HOLDER_STATES=S SURF_CLI_BUILD_LOCK_TIMEOUT_SECONDS=3 scripts/ensure-surf-cli.sh 2>&1; rc=$?; kill $H 2>/dev/null; scripts/ensure-surf-cli.sh >/dev/null 2>&1; [ $rc -eq 75 ] && echo LIVE_LOCK_PRESERVED; exit 0"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "build_lock_timeout",
+          "LIVE_LOCK_PRESERVED"
+        ]
+      }
+    },
+    {
+      "name": "hot-path-tab-list-bounded-and-fast",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/surf && start=$(date +%s); timeout 30 ./run.sh tab.list --json >/dev/null; rc=$?; end=$(date +%s); echo \"rc=$rc elapsed=$((end-start))s\"; [ $rc -eq 0 ] && [ $((end-start)) -le 20 ] && echo HOT_PATH_BOUNDED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HOT_PATH_BOUNDED"
+        ]
+      }
+    }
+  ]
+}
