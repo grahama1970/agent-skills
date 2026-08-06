@@ -58,3 +58,19 @@ def test_widened_vocabulary_frontend_and_docs_and_tests() -> None:
 def test_unmatched_request_still_fails_closed() -> None:
     plan = render_team_plan("make it better please", repo="r", team="fullstack-premium")
     assert plan["unresolved"] == ["workstreams"]
+
+
+def test_ascii_chart_shows_all_nodes_with_deps_and_confirm_banner() -> None:
+    from pathlib import Path
+    import tempfile
+
+    from ask.project_plan_to_tau import compile_plan_to_tau_spec
+    from ask.team_plan_cli import render_ascii_dag
+
+    plan = render_team_plan("python api with docs and tests", repo="r", team="fullstack-premium")
+    spec = compile_plan_to_tau_spec(plan, run_id="chart-test", run_dir=Path(tempfile.mkdtemp()))
+    chart = render_ascii_dag(spec)
+    assert "confirm before --execute --live" in chart
+    for nid in ("coordinator", "api", "docs", "tests", "review"):
+        assert f"[{nid}]" in chart
+    assert "<- api, docs, tests" in chart

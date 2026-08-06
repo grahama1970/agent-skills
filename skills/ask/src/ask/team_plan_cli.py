@@ -94,6 +94,35 @@ def render_team_plan(request: str, *, repo: str, team: str) -> dict[str, Any]:
     }
 
 
+def render_ascii_dag(spec: dict[str, Any], pricing: dict[str, Any] | None = None) -> str:
+    """Deterministic ASCII chart of the compiled DAG for pre-run confirmation."""
+    nodes = {n["node_id"]: n for n in spec["nodes"]}
+    depths: dict[str, int] = {}
+
+    def depth(nid: str) -> int:
+        if nid not in depths:
+            deps = nodes[nid]["depends_on"]
+            depths[nid] = 0 if not deps else 1 + max(depth(d) for d in deps)
+        return depths[nid]
+
+    for nid in nodes:
+        depth(nid)
+    lines = ["DAG (confirm before --execute --live):", ""]
+    for level in range(max(depths.values()) + 1):
+        for nid in sorted(n for n, d in depths.items() if d == level):
+            node = nodes[nid]
+            profile = node["tau_agent"]["model"].removeprefix("profile:")
+            price = ""
+            if pricing and pricing.get(profile):
+                pr = pricing[profile]
+                price = f"  ${pr.get('input_per_mtok', '?')}/${pr.get('output_per_mtok', '?')}/Mtok"
+            deps = node["depends_on"]
+            arrow = "" if not deps else f"  <- {', '.join(deps)}"
+            indent = "    " * level
+            lines.append(f"{indent}[{nid}] {node['role']} :: {profile}{price}{arrow}")
+    return "\n".join(lines)
+
+
 @app.command("plan")
 def plan(
     request: str = typer.Argument(..., help="Natural-language project request."),
@@ -148,6 +177,15 @@ def plan(
         (out / "project-plan.json").write_text(json.dumps(plan_payload, indent=2), encoding="utf-8")
         (out / "dag-spec.json").write_text(json.dumps(spec, indent=2), encoding="utf-8")
 
+    pricing_by_profile = {
+        p["id"]: p.get("pricing")
+        for p in registry
+        if f"profile:{p['id']}" in {n["tau_agent"]["model"] for n in spec["nodes"]}
+    } if registry else None
+    chart = render_ascii_dag(spec, pricing_by_profile)
+    if not as_json:
+        typer.echo(chart)
+        typer.echo("")
     profiles = resolve_role_profiles(plan_payload)
     result = {
         "schema": "ask.team_plan_result.v1",
@@ -164,13 +202,8 @@ def plan(
             for n in spec["nodes"]
         ],
         "heterogeneous_profiles": heterogeneous_profile_count(spec),
-        "pricing": {
-            p["id"]: p.get("pricing")
-            for p in registry
-            if f"profile:{p['id']}" in {n["tau_agent"]["model"] for n in spec["nodes"]}
-        }
-        if registry
-        else None,
+        "chart": chart,
+        "pricing": pricing_by_profile,
         "spec_sha256": spec["extensions"]["spec_sha256"],
         "written": {"plan": str(out / "project-plan.json"), "spec": str(out / "dag-spec.json")} if out else None,
         "execution_note": (
