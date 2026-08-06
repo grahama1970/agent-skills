@@ -118,7 +118,7 @@ type ResizablePane = 'source' | 'rail' | 'inspector'
 
 const PANE_CONSTRAINTS: Record<ResizablePane, { min: number; max: number; initial: number }> = {
   source: { min: 260, max: 650, initial: 400 },
-  rail: { min: 140, max: 320, initial: 176 },
+  rail: { min: 110, max: 320, initial: 130 },
   inspector: { min: 240, max: 480, initial: 320 },
 }
 

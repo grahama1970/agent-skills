@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { MessageSquare, StickyNote, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useRegisterAction } from '../hooks'
 
 // Right side sheet (3-pane spec): auxiliary tools — Chat and Notes — anchor
@@ -15,7 +15,7 @@ import { useRegisterAction } from '../hooks'
 const DRAWER_WIDTH = 380
 const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
-export type RightSheetTab = 'chat' | 'notes'
+export type RightSheetTab = 'chat' | 'notes' | 'layout'
 
 export function RightSheet({
   collapsed,
@@ -24,6 +24,7 @@ export function RightSheet({
   onCollapse,
   chat,
   notes,
+  layout,
 }: {
   collapsed: boolean
   tab: RightSheetTab
@@ -31,6 +32,8 @@ export function RightSheet({
   onCollapse: () => void
   chat: React.ReactNode
   notes: React.ReactNode
+  /** Design-mode layout inspector; when absent the Layout tab is hidden. */
+  layout?: React.ReactNode
 }) {
   useRegisterAction('deck:chat:collapse', {
     app: 'pitchdeck',
@@ -40,22 +43,27 @@ export function RightSheet({
   })
   const ref = useRef<HTMLElement | null>(null)
 
-  const tabButton = (id: RightSheetTab, label: string, icon: React.ReactNode, badge?: string) => (
+  const TAB_META: Record<RightSheetTab, { label: string; action: string; title: string }> = {
+    chat: { label: 'Chat', action: 'DECK_SHEET_TAB_CHAT', title: 'Chat — propose edits conversationally' },
+    notes: { label: 'Notes', action: 'DECK_SHEET_TAB_NOTES', title: 'Speaker notes for the current slide' },
+    layout: { label: 'Layout', action: 'DECK_SHEET_TAB_LAYOUT', title: 'Layout inspector for the current slide' },
+  }
+  const tabButton = (id: RightSheetTab) => (
     <button
+      key={id}
       type="button"
       data-qid={`deck:sheet:tab:${id}`}
-      data-qs-action={id === 'chat' ? 'DECK_SHEET_TAB_CHAT' : 'DECK_SHEET_TAB_NOTES'}
-      title={id === 'chat' ? 'Chat — propose edits conversationally' : 'Speaker notes for the current slide'}
+      data-qs-action={TAB_META[id].action}
+      title={TAB_META[id].title}
       aria-pressed={tab === id}
       onClick={() => onTab(id)}
-      className={`flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-sm transition ${
-        tab === id ? 'bg-slate-800 font-semibold text-slate-100' : 'text-slate-400 hover:text-slate-200'
+      className={`flex-1 cursor-pointer border-b-2 py-2.5 text-center text-xs font-medium transition ${
+        tab === id
+          ? 'border-cyan-500 bg-slate-900 font-semibold text-cyan-300'
+          : 'border-transparent text-slate-400 hover:text-slate-200'
       }`}
     >
-      {icon} {label}
-      {badge && tab === id ? (
-        <span className="rounded bg-slate-700/80 px-1.5 py-0.5 text-[10px] font-normal text-slate-400">{badge}</span>
-      ) : null}
+      {TAB_META[id].label}
     </button>
   )
 
@@ -79,11 +87,8 @@ export function RightSheet({
       }}
     >
       <div className="flex h-full flex-col" style={{ width: DRAWER_WIDTH }}>
-        <div className="flex h-11 shrink-0 items-center justify-between border-b border-slate-800 px-2">
-          <div className="flex items-center gap-1">
-            {tabButton('chat', 'Chat', <MessageSquare aria-hidden className="h-3.5 w-3.5" />, 'proposes · you apply')}
-            {tabButton('notes', 'Notes', <StickyNote aria-hidden className="h-3.5 w-3.5" />)}
-          </div>
+        <div className="flex h-11 shrink-0 items-center border-b border-slate-800 bg-slate-950/60">
+          {(['chat', 'notes', ...(layout ? (['layout'] as RightSheetTab[]) : [])] as RightSheetTab[]).map(tabButton)}
           <button
             type="button"
             data-qid="deck:chat:collapse"
@@ -91,14 +96,15 @@ export function RightSheet({
             aria-label="Collapse panel"
             title="Collapse this panel (Esc)"
             onClick={onCollapse}
-            className="cursor-pointer rounded-md p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+            className="mx-1.5 cursor-pointer rounded-md p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
           >
             <X aria-hidden className="h-4 w-4" />
           </button>
         </div>
-        {/* Both panes stay mounted; the hidden one keeps its state. */}
+        {/* All panes stay mounted; hidden ones keep their state. */}
         <div className={`min-h-0 flex-1 ${tab === 'chat' ? '' : 'hidden'}`}>{chat}</div>
         <div className={`min-h-0 flex-1 ${tab === 'notes' ? '' : 'hidden'}`}>{notes}</div>
+        {layout ? <div className={`hover-scrollbar min-h-0 flex-1 overflow-y-auto ${tab === 'layout' ? '' : 'hidden'}`}>{layout}</div> : null}
       </div>
     </aside>
   )

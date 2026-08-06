@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { RightSheet, type RightSheetTab } from './components/ChatDrawer'
@@ -192,7 +192,6 @@ export function App() {
   const [showSource, setShowSource] = usePersistentPane('deck-pane-source', false)
   const [presenting, setPresenting] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [inspectorCollapsed, setInspectorCollapsed] = usePersistentPane('deck-pane-inspector-collapsed', false)
   const [sourceVersion, setSourceVersion] = useState(0)
 
   useRegisterAction('deck:nav:prev', {
@@ -269,18 +268,18 @@ export function App() {
   const { widths, startResizing, resetWidth, activeResizer } = usePaneResize()
 
   const toggleFocusMode = useCallback(() => {
-    const anyOpen = showSource || !railCollapsed || !inspectorCollapsed
+    const anyOpen = showSource || !railCollapsed || !chatCollapsed
     if (anyOpen) {
-      lastPaneState.current = { source: showSource, rail: !railCollapsed, inspector: !inspectorCollapsed }
+      lastPaneState.current = { source: showSource, rail: !railCollapsed, inspector: !chatCollapsed }
       setShowSource(false)
       setRailCollapsed(true)
-      setInspectorCollapsed(true)
+      setChatCollapsed(true)
     } else {
       setShowSource(lastPaneState.current.source)
       setRailCollapsed(!lastPaneState.current.rail)
-      setInspectorCollapsed(!lastPaneState.current.inspector)
+      setChatCollapsed(!lastPaneState.current.inspector)
     }
-  }, [showSource, railCollapsed, inspectorCollapsed, setShowSource, setRailCollapsed, setInspectorCollapsed])
+  }, [showSource, railCollapsed, chatCollapsed, setShowSource, setRailCollapsed, setChatCollapsed])
 
   // Shortcut matrix: Ctrl+\ source · Ctrl+B rail · Ctrl+Shift+I inspector · Ctrl+Shift+F focus
   useEffect(() => {
@@ -294,7 +293,8 @@ export function App() {
         setRailCollapsed((value) => !value)
       } else if (event.key.toLowerCase() === 'i' && event.shiftKey) {
         event.preventDefault()
-        setInspectorCollapsed((value) => !value)
+        setSheetTab('layout')
+        setChatCollapsed((value) => (sheetTab === 'layout' ? !value : false))
       } else if (event.key.toLowerCase() === 'f' && event.shiftKey) {
         event.preventDefault()
         toggleFocusMode()
@@ -324,7 +324,7 @@ export function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggleFocusMode, setShowSource, setRailCollapsed, setInspectorCollapsed, editing, reloadAll])
+  }, [toggleFocusMode, setShowSource, setRailCollapsed, setChatCollapsed, editing, reloadAll])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -440,13 +440,16 @@ export function App() {
               </button>
               <button
                 type="button"
-                aria-label="Toggle inspector"
-                aria-pressed={!inspectorCollapsed}
+                aria-label="Toggle layout inspector"
+                aria-pressed={!chatCollapsed && sheetTab === 'layout'}
                 data-qid="deck:toolbar:inspector-toggle"
                 data-qs-action="DECK_TOGGLE_INSPECTOR"
-                title="Show or hide the slide inspector"
-                onClick={() => setInspectorCollapsed((value) => !value)}
-                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${inspectorCollapsed ? 'text-slate-500' : 'text-cyan-300'}`}
+                title="Show or hide the layout inspector (right sheet)"
+                onClick={() => {
+                  setSheetTab('layout')
+                  setChatCollapsed((value) => (sheetTab === 'layout' ? !value : false))
+                }}
+                className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${!chatCollapsed && sheetTab === 'layout' ? 'text-cyan-300' : 'text-slate-500'}`}
               >
                 <PanelRight aria-hidden className="h-4 w-4" />
               </button>
@@ -607,58 +610,47 @@ export function App() {
               </>
             ) : null}
             {editing ? <OverflowBadge warnings={lintSlide(slide)} /> : null}
-            {editing && !showSource ? (
-              // The rail no longer needs a floating restore — its collapsed
-              // 48px strip carries its own expand chevron.
-              <div className="absolute left-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
-                <button
-                  type="button"
-                  aria-label="Expand source pane"
-                  data-qid="deck:restore:source"
-                  data-qs-action="DECK_RESTORE_SOURCE"
-                  title="Expand source pane (Ctrl+\\)"
-                  onClick={() => setShowSource(true)}
-                  className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
-                >
-                  <PanelLeftOpen aria-hidden className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
-            {editing ? (
-              <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
-                <button
-                  type="button"
-                  aria-label="Toggle focus mode"
-                  data-qid="deck:restore:focus"
-                  data-qs-action="DECK_FOCUS_MODE"
-                  title="Focus mode — collapse or restore all panes (Ctrl+Shift+F)"
-                  onClick={toggleFocusMode}
-                  className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
-                >
-                  <Maximize2 aria-hidden className="h-4 w-4" />
-                </button>
-                {inspectorCollapsed ? (
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+              {/* Floating controls anchor to the CANVAS column so they never
+                  overlay the rail or the right sheet. */}
+              {editing && !showSource ? (
+                <div className="absolute left-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
                   <button
                     type="button"
-                    aria-label="Expand inspector"
-                    data-qid="deck:restore:inspector"
-                    data-qs-action="DECK_RESTORE_INSPECTOR"
-                    title="Expand inspector (Ctrl+Shift+I)"
-                    onClick={() => setInspectorCollapsed(false)}
+                    aria-label="Expand source pane"
+                    data-qid="deck:restore:source"
+                    data-qs-action="DECK_RESTORE_SOURCE"
+                    title="Expand source pane (Ctrl+\\)"
+                    onClick={() => setShowSource(true)}
                     className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
                   >
-                    <PanelRightOpen aria-hidden className="h-4 w-4" />
+                    <PanelLeftOpen aria-hidden className="h-4 w-4" />
                   </button>
-                ) : null}
-              </div>
-            ) : null}
-            <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
-              <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
-                <FragmentContext.Provider value={editing ? Infinity : fragment}>
-                  <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
-                </FragmentContext.Provider>
-              </EditContext.Provider>
-            </AssetDropZone>
+                </div>
+              ) : null}
+              {editing ? (
+                <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
+                  <button
+                    type="button"
+                    aria-label="Toggle focus mode"
+                    data-qid="deck:restore:focus"
+                    data-qs-action="DECK_FOCUS_MODE"
+                    title="Focus mode — collapse or restore all panes (Ctrl+Shift+F)"
+                    onClick={toggleFocusMode}
+                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                  >
+                    <Maximize2 aria-hidden className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
+              <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
+                <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
+                  <FragmentContext.Provider value={editing ? Infinity : fragment}>
+                    <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
+                  </FragmentContext.Provider>
+                </EditContext.Provider>
+              </AssetDropZone>
+            </div>
             {!presenting ? (
               <RightSheet
                 collapsed={chatCollapsed}
@@ -667,13 +659,8 @@ export function App() {
                 onCollapse={() => setChatCollapsed(true)}
                 chat={<DeckChat deck={deck} onChanged={reloadAll} />}
                 notes={<NotesPanel slide={slide} onChanged={reloadAll} />}
+                layout={editing ? <Inspector slide={slide} onChanged={reloadAll} /> : undefined}
               />
-            ) : null}
-            {editing && !inspectorCollapsed ? (
-              <>
-                <ResizeHandle pane="inspector" isDragging={activeResizer === 'inspector'} onMouseDown={(e) => startResizing('inspector', e)} onDoubleClick={() => resetWidth('inspector')} />
-                <Inspector slide={slide} onChanged={reloadAll} onCollapse={() => setInspectorCollapsed(true)} width={widths.inspector} />
-              </>
             ) : null}
           </div>
           {pendingEdit ? (

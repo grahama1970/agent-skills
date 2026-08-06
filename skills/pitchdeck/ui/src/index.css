@@ -178,3 +178,75 @@ a:focus-visible {
     animation: none;
   }
 }
+
+/* Dark-theme scrollbars (user spec): thin slate thumbs on transparent tracks —
+   native scrollbars glare in a slate-950 UI and waste horizontal width. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
+
+@layer utilities {
+  /* Hide the scrollbar entirely while keeping scrollability (filmstrip, code blocks). */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  /* Sleek 4px micro-scrollbar for tight sidebars */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #1e293b;
+    border-radius: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #334155;
+  }
+  /* Auto-hiding scrollbar: transparent until the container is hovered;
+     scrollbar-gutter keeps layout stable when it appears. */
+  .hover-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+  }
+  .hover-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .hover-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .hover-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+  .hover-scrollbar:hover {
+    scrollbar-color: #334155 transparent;
+  }
+  .hover-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #334155;
+  }
+  .hover-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #475569 !important;
+  }
+}

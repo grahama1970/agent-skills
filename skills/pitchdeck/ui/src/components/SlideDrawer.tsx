@@ -90,45 +90,39 @@ export function SlideThumbnail({
       data-qs-action="DECK_RAIL_GOTO_SLIDE"
       title={`Go to slide ${slide.order}: ${slide.title}`}
       onClick={onSelect}
-      className={`group relative flex cursor-pointer items-center gap-2 rounded-lg p-1.5 pl-2.5 transition-all ${
+      className={`group relative cursor-pointer rounded-lg p-1 pl-2 transition-all ${
         isActive ? 'opacity-100' : 'opacity-60 hover:opacity-100'
       } ${slide.hidden ? 'opacity-35' : ''}`}
     >
       {/* Active edge bar — selection reads from one crisp accent, not card fill */}
-      {isActive ? <span aria-hidden className="absolute bottom-1 left-0 top-1 w-1 rounded-r bg-cyan-400" /> : null}
-      {/* Number by default; drag grip only on hover (or while dragging) */}
-      <span className="relative w-4 shrink-0 text-center">
-        <span className={`font-mono text-[11px] font-medium ${isActive ? 'font-bold text-cyan-300' : 'text-slate-500'} group-hover:hidden`}>
-          {index + 1}
-        </span>
-        <span
-          {...dragHandleProps}
-          data-qid={`deck:rail:drag:${slide.id}`}
-          data-qs-action="DECK_DRAG_SLIDE"
-          title={`Drag to reorder slide ${slide.order}`}
-          onClick={(event) => event.stopPropagation()}
-          className="hidden cursor-grab touch-none rounded p-0.5 text-slate-400 hover:bg-slate-800/60 active:cursor-grabbing group-hover:inline-flex"
-        >
-          <GripVertical aria-hidden className="h-3.5 w-3.5" />
-        </span>
-      </span>
+      {isActive ? <span aria-hidden className="absolute bottom-0.5 left-0 top-0.5 w-1 rounded-r bg-cyan-400" /> : null}
       <div
-        className={`relative aspect-video w-28 flex-shrink-0 overflow-hidden rounded border bg-slate-950 shadow-sm ${
+        className={`relative aspect-video w-full overflow-hidden rounded border bg-slate-950 shadow-sm ${
           isActive ? 'border-cyan-500/50 ring-1 ring-cyan-500/30' : 'border-slate-800/80 group-hover:border-slate-700'
         }`}
       >
         <MiniPreview slide={slide} />
+        {/* Overlaid number chip — doubles as the drag handle (grip on hover) */}
+        <span
+          {...dragHandleProps}
+          data-qid={`deck:rail:drag:${slide.id}`}
+          data-qs-action="DECK_DRAG_SLIDE"
+          title={`Slide ${slide.order} — drag to reorder`}
+          onClick={(event) => event.stopPropagation()}
+          className={`absolute left-1 top-1 inline-flex cursor-grab touch-none items-center rounded border px-1 py-0.5 font-mono text-[9px] font-bold leading-none backdrop-blur-sm active:cursor-grabbing ${
+            isActive ? 'border-cyan-500/40 bg-cyan-950/90 text-cyan-300' : 'border-slate-800/80 bg-slate-950/90 text-slate-400'
+          }`}
+        >
+          <span className="group-hover:hidden">{String(index + 1).padStart(2, '0')}</span>
+          <GripVertical aria-hidden className="hidden h-2.5 w-2.5 group-hover:inline" />
+        </span>
         {dot ? (
           <span
             title={dot.title}
             data-qid={`deck:rail:status:${slide.id}`}
-            className={`absolute right-1 top-1 h-1.5 w-1.5 rounded-full ${dot.className}`}
+            className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${dot.className}`}
           />
         ) : null}
-      </div>
-      <div className="min-w-0 flex-1 pr-1">
-        <p className="m-0 truncate text-xs font-medium text-slate-200 group-hover:text-slate-100">{slide.title}</p>
-        <p className="m-0 text-[10px] capitalize text-slate-500">{slide.layout.replace('_', ' ')}</p>
       </div>
       <div className="absolute right-2 flex items-center gap-1 rounded border border-slate-700/80 bg-slate-900/95 p-1 opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100">
         <button
@@ -263,7 +257,7 @@ export function SlideDrawer({
         className="flex select-none flex-col border-r border-slate-800 bg-slate-900/50"
         style={{ width: 48, minWidth: 48, transition: 'width 200ms cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto py-2">
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto py-2">
           {deck.slides.map((s, i) => (
             <button
               key={s.id}
@@ -304,10 +298,10 @@ export function SlideDrawer({
     <nav
       aria-label="Slides"
       style={{ ...(width ? { width, minWidth: width } : {}), transition: 'width 250ms cubic-bezier(0.16, 1, 0.3, 1)' }}
-      className="flex w-64 min-w-64 select-none flex-col bg-slate-900/50"
+      className="flex w-32 min-w-32 select-none flex-col bg-slate-900/50"
     >
       <div className="flex items-center justify-between border-b border-slate-800/60 p-2.5">
-        <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        <span className="flex items-center gap-1 whitespace-nowrap font-mono text-[10px] font-semibold uppercase text-slate-500">
           {onToggleCollapsed ? (
             <button
               type="button"
@@ -321,7 +315,7 @@ export function SlideDrawer({
               <ChevronsLeft aria-hidden className="h-3.5 w-3.5" />
             </button>
           ) : null}
-          {deck.slides.length} slides
+          {deck.slides.length}
         </span>
         <button
           type="button"
@@ -330,9 +324,9 @@ export function SlideDrawer({
           title="Add a slide after the current one"
           disabled={busy}
           onClick={() => void run({ op: 'add_after', slide_id: activeSlide.id })}
-          className="flex cursor-pointer items-center gap-1 rounded bg-cyan-700 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-cyan-600 disabled:opacity-40"
+          className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:opacity-40"
         >
-          <Plus aria-hidden className="h-3.5 w-3.5" /> Add
+          <Plus aria-hidden className="h-3.5 w-3.5" />
         </button>
       </div>
       {error ? (
@@ -340,7 +334,7 @@ export function SlideDrawer({
           Rejected: {error}
         </p>
       ) : null}
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+      <div className="hover-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
