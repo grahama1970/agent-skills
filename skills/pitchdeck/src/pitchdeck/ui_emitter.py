@@ -273,6 +273,15 @@ def emit_ui_bundle(
     if private_leak:  # validate_bundle already errors on this; belt-and-braces.
         raise ValueError("public deck references private claims")
 
+    # The canonical whole-deck document (#1263) is materialized on EVERY emit —
+    # deck.data.json is the renderer view; deck.document.json is the datastore.
+    from .document import compile_document
+
+    document = compile_document(asset_manifest_dir)
+    (output_dir / "deck.document.json").write_text(
+        document.model_dump_json(by_alias=True, indent=1), encoding="utf-8"
+    )
+
     receipt = OperationReceipt(
         schema="pitchdeck.emit_ui_receipt.v1",
         operation="emit-ui",
@@ -282,6 +291,7 @@ def emit_ui_bundle(
         inputs={"deck_id": deck.deck.id, "slides": str(len(ui_slides))},
         outputs={
             "deck_data": str((output_dir / "deck.data.json").resolve()),
+            "deck_document": str((output_dir / "deck.document.json").resolve()),
             "bundle_dir": str(asset_manifest_dir.resolve()),
         },
         counts={

@@ -706,3 +706,30 @@ def test_deck_document_canonical_schema(tmp_path):
 
     with _pytest.raises(Exception):
         DeckDocument.model_validate(broken)
+
+
+def test_emit_ui_materializes_deck_document(tmp_path):
+    """#1263 slice 2: every emit writes the canonical document alongside the view."""
+    import json
+
+    from pitchdeck.document import DeckDocument
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import AssetManifest, ClaimLedger, DeckManifest, SourceManifest
+    from pitchdeck.ui_emitter import emit_ui_bundle
+
+    bundle = Path(__file__).parent.parent / "examples" / "sparta-explorer"
+    deck = load_yaml(bundle / "deck.public.yaml", DeckManifest)
+    ledger = load_yaml(bundle / "claim_ledger.yaml", ClaimLedger)
+    source_path = bundle / "source_manifest.resolved.yaml"
+    if not source_path.exists():
+        source_path = bundle / "source_manifest.yaml"
+    sources = load_yaml(source_path, SourceManifest)
+    assets = load_yaml(bundle / "asset_manifest.yaml", AssetManifest)
+    out = tmp_path / "ui"
+    receipt, _ = emit_ui_bundle(
+        deck, ledger, sources, assets,
+        source_manifest_dir=bundle, asset_manifest_dir=bundle, output_dir=out,
+    )
+    assert "deck_document" in receipt.outputs
+    doc = DeckDocument.model_validate(json.loads((out / "deck.document.json").read_text()))
+    assert len(doc.slides) == len(deck.slides)

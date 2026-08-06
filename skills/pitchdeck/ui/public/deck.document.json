@@ -1,0 +1,3691 @@
+{
+ "schema": "pitchdeck.deck_document.v1",
+ "deck": {
+  "id": "sparta-explorer-public",
+  "title": "Sparta Explorer — Inspectable Space-Cyber Assurance",
+  "subtitle": "Trace a conclusion from framework guidance to program evidence and human review",
+  "audience": "Aerospace and defense design partners, assessors, engineers, cyber analysts, and program leads",
+  "visibility": "public",
+  "target_editor": "google_slides",
+  "theme": "dark_cyan_evidence",
+  "theme_tokens": {
+   "accent": "#22d3ee",
+   "heading_font": "Arial",
+   "body_font": "Arial"
+  },
+  "source_policy": "public_only",
+  "author": "Graham Anderson"
+ },
+ "sources": [
+  {
+   "id": "sparta-public-readme",
+   "title": "Sparta Explorer public product overview",
+   "path": "${SPARTA_PUBLIC_ROOT}/README.md",
+   "visibility": "public",
+   "role": "primary",
+   "required": true,
+   "repo": "grahama1970/sparta-public",
+   "ref": "main",
+   "content_sha": "github-blob:6d6d59f18d733635b2f39f212ac43a8e8056159e",
+   "include_sections": [],
+   "exclude_sections": []
+  },
+  {
+   "id": "sparta-private-readme",
+   "title": "Sparta Explorer implementation and proof overview",
+   "path": "${SPARTA_ROOT}/README.md",
+   "visibility": "private",
+   "role": "evidence",
+   "required": true,
+   "repo": "grahama1970/sparta",
+   "ref": "main",
+   "content_sha": "github-blob:7c248476126d775678b64843340b92853689a84b",
+   "include_sections": [],
+   "exclude_sections": []
+  },
+  {
+   "id": "sparta-answerability-contract",
+   "title": "SPARTA Answerability Contract",
+   "path": "${SPARTA_ROOT}/docs/architecture/SPARTA_ANSWERABILITY_CONTRACT.md",
+   "visibility": "private",
+   "role": "evidence",
+   "required": false,
+   "repo": "grahama1970/sparta",
+   "ref": "main",
+   "content_sha": null,
+   "include_sections": [],
+   "exclude_sections": []
+  },
+  {
+   "id": "sparta-how-it-works",
+   "title": "How Sparta Works — Deep Dive",
+   "path": "${SPARTA_ROOT}/docs/architecture/HOW_SPARTA_WORKS.md",
+   "visibility": "private",
+   "role": "supporting",
+   "required": false,
+   "repo": "grahama1970/sparta",
+   "ref": "main",
+   "content_sha": null,
+   "include_sections": [],
+   "exclude_sections": []
+  },
+  {
+   "id": "sparta-qra-governance",
+   "title": "QRA governance",
+   "path": "${SPARTA_ROOT}/docs/architecture/QRA_GOVERNANCE.md",
+   "visibility": "private",
+   "role": "evidence",
+   "required": false,
+   "repo": "grahama1970/sparta",
+   "ref": "main",
+   "content_sha": null,
+   "include_sections": [],
+   "exclude_sections": []
+  },
+  {
+   "id": "sparta-client-demo-guide",
+   "title": "Prepared-host client demonstration guide",
+   "path": "${SPARTA_ROOT}/docs/client-demo/README.md",
+   "visibility": "private",
+   "role": "evidence",
+   "required": false,
+   "repo": "grahama1970/sparta",
+   "ref": "main",
+   "content_sha": null,
+   "include_sections": [],
+   "exclude_sections": []
+  }
+ ],
+ "claims": [
+  {
+   "id": "sparta-public-thesis",
+   "text": "Trace a space-cyber conclusion from framework guidance to program evidence and human review without letting AI turn relevance into authority.",
+   "kind": "thesis",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Introduction",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**Trace a space-cyber conclusion from framework guidance to program evidence and human review—without letting AI turn relevance into authority.**",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-one-thread",
+   "text": "Sparta Explorer turns scattered space-cyber, engineering, supplier, and test evidence into one inspectable decision thread.",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Introduction",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**Sparta Explorer turns scattered space-cyber, engineering, supplier, and test",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-three-questions",
+   "text": "The product helps teams ask why a conclusion is believed, what is missing or disputed, and who is allowed to decide.",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Introduction",
+     "locator": null
+    }
+   ],
+   "risk": "low",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "It helps a team answer three practical questions:",
+     "section": null
+    },
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**Why do we believe this?**",
+     "section": null
+    },
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**What is missing, stale, disputed, or still only a candidate?**",
+     "section": null
+    },
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**Who is allowed to decide?**",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-model-boundary",
+   "text": "The model helps users navigate while governed evidence and authorized people decide.",
+   "kind": "thesis",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Why Sparta Explorer",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "governed evidence and authorized people decide.**",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-relevance-not-support",
+   "text": "Search, embeddings, and graph traversal can identify relevant material without establishing support, scope, currency, or approval.",
+   "kind": "thesis",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Why Sparta Explorer",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "- **Relevance is not support.** Search, embeddings, and graph traversal identify",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-embry-foundation",
+   "text": "Sparta Explorer is the assurance workbench inside the planned Embry OS local operating foundation for policy-bounded and disconnected environments.",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Built on Embry OS",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "**Sparta Explorer is the assurance workbench inside Embry OS: one planned local",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-f36-demo",
+   "text": "The synthetic F-36 program world tests whether one evidence thread can serve program, engineering, supplier, test, and operational readers without collapsing authority boundaries.",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "The Synthetic F-36 Demonstration",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| Synthetic F-36 demonstration | The program, engineering, supplier, test, and operational evidence thread. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-working-surfaces",
+   "text": "The prepared-host investigation experience includes Global Posture, Threat Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and a docked Console.",
+   "kind": "status",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Current Status and Closure Gates",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Explorer** | **Implemented:** repository-local Global Posture, Threat Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and docked Console surfaces. | Refresh the remaining older captures and continue page-level interaction proof as the UI changes. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-response-path-status",
+   "text": "On the governed path, Sparta Chat can answer, clarify, deflect, or expose insufficient evidence while transitional response branches remain open.",
+   "kind": "status",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Product Tour — Sparta Chat",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Response path** | **In integration:** bounded answer, clarify, deflect, error, citation, selected-QRA, and visible-answer admission receipts exist on the governed path. | Remove or govern direct recall-cache release, raw QuerySpec rendering, and legacy Tau fallback; extend reviewed-only reuse across governed paths. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-collaboration-stage",
+   "text": "Sparta Explorer is ready for design-partner conversation, architecture walkthrough, workflow evaluation, co-design, and prepared-host technical sessions.",
+   "kind": "ask",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Why Collaborate Now",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "> walkthrough, workflow evaluation, co-design, and prepared-host technical",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-public-open-gates",
+   "text": "Independent corpus review, response-route convergence, QRA reasoning and reuse, decision authority, voice, setup, and deployment remain explicit closure gates.",
+   "kind": "roadmap",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Current Status and Closure Gates",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-private-readme",
+     "text": "demo health, response-route convergence, independent corpus review, clean-machine",
+     "section": null
+    },
+    {
+     "source_id": "sparta-private-readme",
+     "text": "**Separated:** identity, data access, release state, approval scope, and decision authority.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-preflight",
+   "text": "A prepared-host client demo preflight passed for one exact commit and closed issue 38.",
+   "kind": "proof",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Current Status and Closure Gates",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "The preflight receipt binds to commit c60318363 only; rerun it against the exact commit demonstrated and do not demonstrate on failure.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Client demo** | **Prepared-host ready:** deterministic route, preflight, route capture, and evidence-bundle tooling exist, and issue #38 closed on a passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`, `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each commit actually demonstrated; the receipt binds to one exact commit, not to the branch. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-qra-snapshot",
+   "text": "The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases, 5,046 quarantined records, zero duplicate active semantic identities, and expected identity at rank 1.",
+   "kind": "proof",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Dated Proof Points",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "Quote these counts only for the 2026-07-29 population and source artifact; canonical-active does not mean expert-approved or compliance-credited.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "- The issue #20 proof records 2,180 active canonical QRAs, 2,180 aliases, 5,046 quarantined records, zero duplicate active semantic identities, and expected identity at rank 1 for the 2026-07-29 snapshot.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-review-slice",
+   "text": "The dated issue 6 proof records one accepted decision, one rejected decision, one pending decision, one accepted evidence case, two reviewed overlays, and one compliance-credit unit.",
+   "kind": "proof",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Dated Proof Points",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "This is a bounded 2026-07-29 slice and does not establish corpus-wide review or quality.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "- The issue #6 proof records one accepted decision, one rejected decision, one pending decision, one accepted evidence case, two reviewed overlays, and one compliance-credit unit for the bounded 2026-07-29 slice.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-chat-campaign",
+   "text": "The dated Sparta Chat aggregate receipt records 115 broad browser cases and 35 interaction cases.",
+   "kind": "proof",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Dated Proof Points",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "This dated local campaign is implementation evidence, not full response-quality or production-readiness proof.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "- The Sparta Chat aggregate receipt records 115 broad browser cases and 35 interaction cases for the dated local campaign.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-answerability-contract",
+   "text": "The governed response path separates source preservation, candidate construction, current-turn scope, answerability, presentation, and human decision.",
+   "kind": "product",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-answerability-contract",
+     "section": "Semantic contract",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Memory + `create-evidence-case`** | On the governed path, scope the current turn, retrieve candidate material, decide answerability, and select answer, clarify, or deflect. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-response-gaps",
+   "text": "Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback, and reviewed-only reuse remain named response-route gaps.",
+   "kind": "status",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Current Status and Closure Gates",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "These named gaps keep the broader response-surface claim in integration rather than closed.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Response path** | **In integration:** bounded answer, clarify, deflect, error, citation, selected-QRA, and visible-answer admission receipts exist on the governed path. | Remove or govern direct recall-cache release, raw QuerySpec rendering, and legacy Tau fallback; extend reviewed-only reuse across governed paths. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-deployment-gap",
+   "text": "A verified clean-machine quick start and supported external deployment profile are not yet published.",
+   "kind": "status",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-private-readme",
+     "section": "Evaluate a Prepared Host",
+     "locator": null
+    }
+   ],
+   "risk": "high",
+   "status": "candidate",
+   "required_qualifier": "Prepared-host orchestration is not a clone-and-run installation path or supported external deployment profile.",
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "A verified clean-machine quick start is not yet published.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "sparta-private-qra-governance",
+   "text": "Candidate QRA generation, human interview and promotion, reasoning repair, and reviewed-only lineage reuse require distinct governance boundaries.",
+   "kind": "product",
+   "visibility": "private",
+   "source_refs": [
+    {
+     "source_id": "sparta-qra-governance",
+     "section": "Governance lifecycle",
+     "locator": null
+    }
+   ],
+   "risk": "medium",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **QRA reasoning and reuse** | Complete the reasoning-field repair and add reviewed-only predicates to remaining lineage-reuse paths. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "non-claim-f36-synthetic",
+   "text": "The F-36 corpus and program world are fictional and synthetic.",
+   "kind": "non_claim",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Responsible Use and Repository Boundary",
+     "locator": null
+    }
+   ],
+   "risk": "mandatory_non_claim",
+   "status": "approved",
+   "required_qualifier": null,
+   "approval": {
+    "approved_by": "source-policy (mandatory non-claim)",
+    "approved_at": "2026-08-06",
+    "source_snapshot_sha256": null,
+    "expires_at": null,
+    "fixture": false
+   },
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "proprietary, and unauthorized program data by policy. **The F-36 corpus is fictional and synthetic.**",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "non-claim-candidate-credit",
+   "text": "Candidate visibility is not compliance credit.",
+   "kind": "non_claim",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Why Sparta Explorer",
+     "locator": null
+    }
+   ],
+   "risk": "mandatory_non_claim",
+   "status": "approved",
+   "required_qualifier": null,
+   "approval": {
+    "approved_by": "source-policy (mandatory non-claim)",
+    "approved_at": "2026-08-06",
+    "source_snapshot_sha256": null,
+    "expires_at": null,
+    "fixture": false
+   },
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "- **Candidate visibility is not compliance credit.** Candidate mappings and",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "non-claim-human-authority",
+   "text": "A model may explain; authorized people retain approval, risk, certification, and signoff authority.",
+   "kind": "non_claim",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Why Sparta Explorer",
+     "locator": null
+    }
+   ],
+   "risk": "mandatory_non_claim",
+   "status": "approved",
+   "required_qualifier": null,
+   "approval": {
+    "approved_by": "source-policy (mandatory non-claim)",
+    "approved_at": "2026-08-06",
+    "source_snapshot_sha256": null,
+    "expires_at": null,
+    "fixture": false
+   },
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "approval, risk acceptance, certification, or signoff authority to the model.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "non-claim-preflight-commit",
+   "text": "Prepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.",
+   "kind": "non_claim",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Collaboration",
+     "locator": null
+    }
+   ],
+   "risk": "mandatory_non_claim",
+   "status": "approved",
+   "required_qualifier": null,
+   "approval": {
+    "approved_by": "source-policy (mandatory non-claim)",
+    "approved_at": "2026-08-06",
+    "source_snapshot_sha256": null,
+    "expires_at": null,
+    "fixture": false
+   },
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "| **Client demo** | **Prepared-host ready:** deterministic route, preflight, route capture, and evidence-bundle tooling exist, and issue #38 closed on a passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`, `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each commit actually demonstrated; the receipt binds to one exact commit, not to the branch. |",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "non-claim-no-production",
+   "text": "This deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement.",
+   "kind": "non_claim",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "sparta-public-readme",
+     "section": "Responsible Use and Repository Boundary",
+     "locator": null
+    }
+   ],
+   "risk": "mandatory_non_claim",
+   "status": "approved",
+   "required_qualifier": null,
+   "approval": {
+    "approved_by": "source-policy (mandatory non-claim)",
+    "approved_at": "2026-08-06",
+    "source_snapshot_sha256": null,
+    "expires_at": null,
+    "fixture": false
+   },
+   "evidence_spans": [
+    {
+     "source_id": "sparta-public-readme",
+     "text": "It does not mean expert-approved, implemented, or compliance-credited.",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  }
+ ],
+ "assets": [
+  {
+   "id": "sparta-helmet-mark",
+   "kind": "logo",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-front-helmet-cyan.svg",
+   "source_url": null,
+   "required": false,
+   "alt_text": "Sparta Explorer cyan helmet mark",
+   "target_aspect": "1:1",
+   "status": "present",
+   "generation_brief": "Export a transparent PNG fallback at 1024 by 1024 if the SVG import changes in Google Slides.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Introduction",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-threat-matrix",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp",
+   "source_url": null,
+   "required": true,
+   "alt_text": "Sparta Explorer Threat Matrix showing tactic coverage, mapping state, mission context, and candidate versus reviewed state",
+   "target_aspect": "16:9",
+   "status": "present",
+   "generation_brief": "Recapture from one preflighted commit at 2560 by 1440 if the current UI differs from the dated image.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "The Product in One View",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-global-posture",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp",
+   "source_url": null,
+   "required": true,
+   "alt_text": "Global Posture showing degraded readiness, evidence gaps, threat context, and supplier lineage",
+   "target_aspect": "16:9",
+   "status": "present",
+   "generation_brief": "Recapture from the same commit and browser geometry as the other product slides.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Product Tour — Global Posture",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-chat-console",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp",
+   "source_url": null,
+   "required": true,
+   "alt_text": "Sparta Chat docked beside Supply Chain with an inspectable response pipeline and cited answer",
+   "target_aspect": "16:9",
+   "status": "present",
+   "generation_brief": "Recapture only after the exact response route and screenshot commit pass the current demo preflight.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Product Tour — Sparta Chat",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-embry-os-foundation",
+   "kind": "diagram",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-embry-os-value-prop-header.webp",
+   "source_url": null,
+   "required": true,
+   "alt_text": "Conceptual Embry OS foundation connecting plant and warfighter program profiles through separated evidence, identity, policy, data scope, and authority boundaries",
+   "target_aspect": "16:9",
+   "status": "regenerate",
+   "generation_brief": "Recompose for a true 16:9 slide with three zones—plant, governed local foundation, warfighter program—and no embedded small text.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Built on Embry OS",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-response-flow",
+   "kind": "diagram",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-response-flow.webp",
+   "source_url": null,
+   "required": false,
+   "alt_text": "Conceptual response flow from source material through answerability to human workflow",
+   "target_aspect": "16:9",
+   "status": "regenerate",
+   "generation_brief": "Prefer native PowerPoint flow shapes; use the image only as design reference.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "How Sparta Works",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-supply-chain",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp",
+   "source_url": null,
+   "required": false,
+   "alt_text": "Supply-chain topology showing a simulated service loss through suppliers, mission threads, and candidate requirements",
+   "target_aspect": "16:9",
+   "status": "present",
+   "generation_brief": "Optional appendix capture; recapture with the main set if used.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Product Tour — Supply Chain",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-qra-review",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-qras-20260730.webp",
+   "source_url": null,
+   "required": false,
+   "alt_text": "QRA review queue showing candidate records, evidence gates, review state, and adjudication actions",
+   "target_aspect": "16:9",
+   "status": "stale",
+   "generation_brief": "Keep in the private appendix or recapture after the named reasoning-field defect is repaired.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Product Tour — QRAs",
+    "locator": null
+   }
+  },
+  {
+   "id": "sparta-problem-fragmentation",
+   "kind": "illustration",
+   "visibility": "public",
+   "local_path": null,
+   "source_url": null,
+   "required": false,
+   "alt_text": "Disconnected frameworks, engineering records, supplier data, tests, and human review converging on an unsupported answer",
+   "target_aspect": "16:9",
+   "status": "planned",
+   "generation_brief": "Create a restrained dark 16:9 conceptual illustration with six disconnected source classes; do not include text or fake product UI.",
+   "source_ref": {
+    "source_id": "sparta-public-readme",
+    "section": "Why Sparta Explorer",
+    "locator": null
+   }
+  }
+ ],
+ "slides": [
+  {
+   "id": "01-cover",
+   "order": 1,
+   "section": "cover",
+   "layout_origin": "cover",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.08,
+      "y": 0.3,
+      "w": 0.84,
+      "h": 0.18
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Sparta Explorer",
+     "style": {
+      "size_pt": 64.0,
+      "bold": true,
+      "color": null,
+      "align": "center",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.08,
+      "y": 0.5,
+      "w": 0.7,
+      "h": 0.16
+     },
+     "z": 0,
+     "role": "message",
+     "text": "Trace a space-cyber conclusion from framework guidance to program evidence and human review—without letting AI turn relevance into authority.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-thesis"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Public design-partner opener. Keep the proposition intact and do not add deployment, customer, or readiness language."
+  },
+  {
+   "id": "04-product",
+   "order": 2,
+   "section": "product-in-one-view",
+   "layout_origin": "split",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "One inspectable decision thread",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "Start with a threat, control, requirement, component, supplier, test, or finding and follow the relevant evidence, derivation, uncertainty, and remaining human decision.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Why do we believe this?",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.47250000000000003,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "What is missing, stale, disputed, or still only a candidate?",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.615,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Who is allowed to decide?",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.7575000000000001,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "What blocks signoff next?",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-one-thread",
+    "sparta-public-three-questions"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Use native slide shapes for the decision-thread visual; do not paste the README's long workflow verbatim."
+  },
+  {
+   "id": "02-problem",
+   "order": 3,
+   "section": "problem",
+   "layout_origin": "statement",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.34,
+      "w": 0.8,
+      "h": 0.22
+     },
+     "z": 0,
+     "role": "title",
+     "text": "The failure is not finding another document",
+     "style": {
+      "size_pt": 64.0,
+      "bold": true,
+      "color": null,
+      "align": "center",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.58,
+      "w": 0.8,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "message",
+     "text": "The failure is carrying a defensible claim across frameworks, program records, suppliers, tests, review states, and decision owners without collapsing their authority.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-one-thread",
+    "sparta-public-relevance-not-support"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Frame the problem as evidence and authority fragmentation, not as a generic search or chatbot problem."
+  },
+  {
+   "id": "03-thesis",
+   "order": 4,
+   "section": "product-thesis",
+   "layout_origin": "three_cards",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Three boundaries make the product useful",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "The system is designed to make uncertainty and authority visible rather than turn navigation into approval.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Relevance is not support — retrieval identifies useful material but does not prove the claim.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "rise",
+      "delay_ms": 0,
+      "fragment_index": 0
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Candidate visibility is not compliance credit — proposed mappings stay separate from reviewed conclusions.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "rise",
+      "delay_ms": 0,
+      "fragment_index": 1
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.71,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "A model may explain; a person still decides — approval, risk, certification, and signoff remain human authorities.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "rise",
+      "delay_ms": 0,
+      "fragment_index": 2
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-relevance-not-support",
+    "sparta-public-model-boundary",
+    "non-claim-candidate-credit",
+    "non-claim-human-authority"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "step",
+   "hidden": false,
+   "notes": "This is the deck's intellectual center. Preserve the three distinctions exactly enough that later slides cannot imply stronger authority."
+  },
+  {
+   "id": "05-f36-demo",
+   "order": 5,
+   "section": "synthetic-f36-demonstration",
+   "layout_origin": "flow",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "A synthetic F-36 world tests the hard boundary",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "Can one evidence thread serve program, engineering, supplier, test, and operational readers without silently transferring authority between them?",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Framework guidance",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.42500000000000004,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Program mapping candidate",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Component and supplier lineage",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.615,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "Verification and test evidence",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-4",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.7100000000000001,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:4",
+     "text": "Review state and blockers",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:4"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-5",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.8050000000000002,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:5",
+     "text": "Human decision",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:5"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:4",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:5",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:4",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "visual.items:5",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-f36-demo",
+    "non-claim-f36-synthetic"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Say explicitly that F-36 is a fictional synthetic program world. The demo tests separation and lineage; it does not represent operational program truth."
+  },
+  {
+   "id": "06-embry-os",
+   "order": 6,
+   "section": "embry-os-foundation",
+   "layout_origin": "split",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Shared foundation, separated authority",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "Plant and warfighter-program evidence can share governed local infrastructure while identity, data, release state, approval scope, and decision authority remain mission-separated.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Shared — governed memory, evidence lineage, monitoring, orchestration, local inference, and human review.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Separated — identity, data access, release state, approval scope, and decision authority.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.71,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Evidence continuity informs assurance without silently becoming operational truth.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "visual",
+     "kind": "image",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": null,
+     "style": null,
+     "asset_id": "sparta-embry-os-foundation",
+     "svg": null,
+     "figure": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-embry-foundation",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-embry-foundation"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment."
+  },
+  {
+   "id": "07-threat-matrix",
+   "order": 7,
+   "section": "product-surface-threat-matrix",
+   "layout_origin": "screenshot",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Threat Matrix keeps relationship state visible",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "Enter through a synthetic requirement and inspect tactic coverage, mapping provenance, direction, review state, and the next unresolved decision.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Candidate coverage remains separate from reviewed controls.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Adjacency is never proof.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.71,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Direction, source, release, and review state remain inspectable.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "visual",
+     "kind": "image",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": null,
+     "style": null,
+     "asset_id": "sparta-threat-matrix",
+     "svg": null,
+     "figure": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-working-surfaces",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-working-surfaces",
+    "non-claim-candidate-credit"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it."
+  },
+  {
+   "id": "08-global-posture",
+   "order": 8,
+   "section": "product-surface-global-posture",
+   "layout_origin": "screenshot",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Global Posture starts with the strongest blocker",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "A degraded state is a truthful answer when evidence is missing, stale, disputed, or insufficient for signoff.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Lead with the strongest current blocker.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Keep unavailable readings unavailable rather than inventing zeroes.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.71,
+      "w": 0.42,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Link posture back to evidence and unresolved decisions.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "visual",
+     "kind": "image",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": null,
+     "style": null,
+     "asset_id": "sparta-global-posture",
+     "svg": null,
+     "figure": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-working-surfaces",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-working-surfaces"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it."
+  },
+  {
+   "id": "09-sparta-chat",
+   "order": 9,
+   "section": "product-surface-sparta-chat",
+   "layout_origin": "screenshot",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Chat stays beside the evidence surface",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "On the governed route, the Console can answer, clarify, deflect, or expose insufficient evidence while showing the response stages and citations beside the work that prompted the question.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Scope the current turn and recall boundary.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.47250000000000003,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Assemble a current evidence case.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.615,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Separate answerability from language generation.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.7575000000000001,
+      "w": 0.42,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "Fail closed rather than manufacture support.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "visual",
+     "kind": "image",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": null,
+     "style": null,
+     "asset_id": "sparta-chat-console",
+     "svg": null,
+     "figure": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-response-path-status",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-response-path-status"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it."
+  },
+  {
+   "id": "10-proof-today",
+   "order": 10,
+   "section": "proof-today",
+   "layout_origin": "proof_cards",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Working evidence, not product theater",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "The project can support a bounded prepared-host evaluation today while keeping broader corpus, response-route, and deployment closure explicit.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.88,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Working surfaces — Threat Matrix, Global Posture, Supply Chain, QRA review, corpus views, and docked Console exist on the prepared host.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.47250000000000003,
+      "w": 0.88,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Review separation — candidate, reviewed, accepted, rejected, pending, and compliance-credit states remain distinct.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.615,
+      "w": 0.88,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Bounded proof — dated receipts exist for selected retrieval, review, answerability, and interaction paths.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.7575000000000001,
+      "w": 0.88,
+      "h": 0.12250000000000001
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "Design-partner stage — the offer is workflow evaluation, architecture review, co-design, and prepared-host technical sessions.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-working-surfaces",
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-collaboration-stage",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-working-surfaces",
+    "sparta-public-collaboration-stage"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.\nThe offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nKeep exact private counts and receipt paths in the private appendix."
+  },
+  {
+   "id": "11-open-gates",
+   "order": 11,
+   "section": "honest-closure-gates",
+   "layout_origin": "roadmap",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "The remaining work is explicit",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "The last mile is not hidden behind a readiness score; the project names what is implemented, what is in integration, and what still needs independent proof or governance.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Working surfaces and prepared-host investigation path",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.42500000000000004,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Bounded evidence and review receipts",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Response-route convergence",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.615,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "Independent corpus review and adjudication",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-4",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.7100000000000001,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:4",
+     "text": "Clean-machine setup, deployment, security, and governance",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:4"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-5",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.8050000000000002,
+      "w": 0.88,
+      "h": 0.07500000000000001
+     },
+     "z": 0,
+     "role": "body:5",
+     "text": "Voice and broader integration closure",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:5"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:3",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:4",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:5",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-open-gates"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "Do not soften open gates into vague roadmap language. The credibility of this slide comes from naming what remains unresolved."
+  },
+  {
+   "id": "12-collaboration",
+   "order": 12,
+   "section": "collaboration-ask",
+   "layout_origin": "collaboration",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Trace one representative claim together",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "title"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "message",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.2,
+      "w": 0.88,
+      "h": 0.1
+     },
+     "z": 0,
+     "role": "message",
+     "text": "A useful next conversation tests one real workflow from framework source through program relationship, component or supplier lineage, evidence, review state, and final human decision.",
+     "style": {
+      "size_pt": 24.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.33,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "Workflow co-design — validate how assessors, engineers, suppliers, program teams, and risk owners move through one evidence thread.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.52,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Integration design — prioritize GRC, OSCAL, PLM, requirements, test, supplier, identity, and evidence-store boundaries.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.71,
+      "w": 0.88,
+      "h": 0.17
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Deployment planning — define prepared-host, disconnected, policy-bounded, logging, access-control, and review requirements.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "title",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "message",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:0",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:1",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "body:2",
+     "kind": "non_claim",
+     "claim_id": null,
+     "transform_class": null
+    },
+    {
+     "path": "footer",
+     "kind": "qualifier",
+     "claim_id": "sparta-public-collaboration-stage",
+     "transform_class": null
+    }
+   ],
+   "claim_ids": [
+    "sparta-public-collaboration-stage",
+    "non-claim-f36-synthetic",
+    "non-claim-candidate-credit",
+    "non-claim-human-authority",
+    "non-claim-preflight-commit",
+    "non-claim-no-production"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nThe F-36 corpus and program world are fictional and synthetic.\nCandidate visibility is not compliance credit.\nA model may explain; authorized people retain approval, risk, certification, and signoff authority.\nPrepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.\nThis deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement."
+  }
+ ],
+ "revision": 10,
+ "provenance": {
+  "bundle_dir": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/sparta-explorer",
+  "deck_manifest": "deck.public.yaml"
+ }
+}
