@@ -424,3 +424,41 @@ def test_span_first_rendering_gates(tmp_path: Path) -> None:
     # Rendering a claim with no spans -> RENDERING_UNBOUND error at publish.
     unbound = _run(deck_with("An unsupported statement.", None, claim_id="public-claim"), ledger2, sources, assets, tmp_path, publish=True)
     assert any(i.code == "RENDERING_UNBOUND" and i.severity == "error" for i in unbound.issues)
+
+
+def test_decision_memory_rebuild(tmp_path: Path) -> None:
+    import yaml as _yaml
+
+    from pitchdeck.models import SourceManifest
+
+    source_path = FIXTURE / "source_manifest.yaml"
+    src = load_yaml(source_path, SourceManifest)
+    out = tmp_path / "bundle"
+    plan_bundle(src, source_manifest_path=source_path, output_dir=out, max_slides=10)
+
+    # Human approves one claim (with provenance) between plans.
+    ledger = _yaml.safe_load((out / "claim_ledger.yaml").read_text())
+    target = next(c for c in ledger["claims"] if c["status"] == "candidate")
+    target["status"] = "approved"
+    target["approval"] = {"approved_by": "human", "approved_at": "2026-08-06"}
+    (out / "claim_ledger.yaml").write_text(_yaml.safe_dump(ledger, sort_keys=False))
+
+    # Re-plan into the same bundle: the decision must carry.
+    receipt = plan_bundle(src, source_manifest_path=source_path, output_dir=out, max_slides=10)
+    after = _yaml.safe_load((out / "claim_ledger.yaml").read_text())
+    carried = next(c for c in after["claims"] if c["id"] == target["id"])
+    assert carried["status"] == "approved"
+    assert carried["approval"]["approved_by"] == "human"
+    assert any("decision memory" in g for g in receipt.gaps)
+
+    # Changed claim text must NOT inherit the approval.
+    ledger2 = _yaml.safe_load((out / "claim_ledger.yaml").read_text())
+    for c in ledger2["claims"]:
+        if c["id"] == target["id"]:
+            c["text"] = c["text"] + " with a materially different ending"
+    (out / "claim_ledger.yaml").write_text(_yaml.safe_dump(ledger2, sort_keys=False))
+    plan_bundle(src, source_manifest_path=source_path, output_dir=out, max_slides=10)
+    final = _yaml.safe_load((out / "claim_ledger.yaml").read_text())
+    reproposed = next(c for c in final["claims"] if c["id"] == target["id"])
+    assert reproposed["status"] == "candidate"
+    assert not reproposed.get("approval")

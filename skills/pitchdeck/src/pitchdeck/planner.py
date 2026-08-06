@@ -610,6 +610,17 @@ def plan_bundle(
         documents[source.id] = parse_markdown(path)
 
     ledger = _make_claims(resolved, documents)
+    # Decision memory (#1225): a re-plan into an existing bundle carries prior
+    # human decisions for unchanged claim text; changed/new text re-proposes.
+    prior_ledger_path = output_dir / "claim_ledger.yaml"
+    decision_counts: dict[str, int] = {}
+    if prior_ledger_path.exists():
+        from .decision_memory import carry_decisions
+        from .io import load_yaml as _load_yaml
+        from .models import ClaimLedger as _ClaimLedger
+
+        prior = _load_yaml(prior_ledger_path, _ClaimLedger)
+        ledger, decision_counts = carry_decisions(prior, ledger)
     assets = _make_assets(resolved, documents)
     deck = _make_deck(resolved, documents, ledger, assets, max_slides)
 
@@ -624,6 +635,11 @@ def plan_bundle(
     missing_assets = sum(1 for asset in assets.assets if asset.status != AssetStatus.PRESENT)
     if candidate_claims:
         gaps.append(f"{candidate_claims} claims remain candidate and require human review")
+    if decision_counts:
+        gaps.append(
+            f"decision memory: {decision_counts['carried']} carried, "
+            f"{decision_counts['re_proposed']} re-proposed, {decision_counts['fresh']} fresh"
+        )
     if missing_assets:
         gaps.append(f"{missing_assets} assets are missing, remote, stale, or planned")
 
