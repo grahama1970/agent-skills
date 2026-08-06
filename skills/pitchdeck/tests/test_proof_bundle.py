@@ -383,3 +383,44 @@ def test_simulate_dry_run_real_pipeline(planned: Path) -> None:
     # Deck op simulation (delete) also dry-runs.
     op = simulate_edit(planned, slide_id=sid, op="delete")
     assert op["would_pass"] and (planned / "deck.public.yaml").read_text() == before
+
+
+def test_span_first_rendering_gates(tmp_path: Path) -> None:
+    from pitchdeck.models import EvidenceSpan
+
+    sources, ledger, assets = _base_models(tmp_path)
+    span = EvidenceSpan(source_id="public-source", text="The pipeline processed 1200 documents in 45 minutes.")
+    claim = Claim(
+        id="span-claim", text="The pipeline processed 1200 documents in 45 minutes.",
+        kind=ClaimKind.PROOF, visibility=Visibility.PUBLIC,
+        source_refs=[SourceRef(source_id="public-source")], risk=ClaimRisk.MEDIUM,
+        status=ClaimStatus.APPROVED,
+        approval=ClaimApproval(approved_by="h", approved_at="2026-08-06"),
+        evidence_spans=[span],
+    )
+    ledger2 = ledger.model_copy(update={"claims": [*ledger.claims, claim]})
+
+    def deck_with(message, transform, claim_id="span-claim"):
+        slide = _slide(
+            message=message,
+            claim_ids=[claim_id],
+            bindings=[
+                TextBinding(path="title", kind=BindingKind.NON_CLAIM),
+                TextBinding(path="message", kind=BindingKind.CLAIM_PARAPHRASE, claim_id=claim_id, transform_class=transform),
+            ],
+        )
+        return _deck(slide)
+
+    # Verbatim rendering passes; digit-flip trips NUMERIC_UNBOUND at publish.
+    ok = _run(deck_with("The pipeline processed 1200 documents in 45 minutes.", "verbatim"), ledger2, sources, assets, tmp_path, publish=True)
+    assert not any(i.code in {"NUMERIC_UNBOUND", "TRANSFORM_MISMATCH", "RENDERING_UNBOUND"} for i in ok.issues)
+    flipped = _run(deck_with("The pipeline processed 1300 documents in 45 minutes.", None), ledger2, sources, assets, tmp_path, publish=True)
+    assert any(i.code == "NUMERIC_UNBOUND" and i.severity == "error" for i in flipped.issues)
+
+    # Claimed verbatim but actually rewritten -> TRANSFORM_MISMATCH.
+    lied = _run(deck_with("Documents fly through at record speed 45", "verbatim"), ledger2, sources, assets, tmp_path)
+    assert any(i.code == "TRANSFORM_MISMATCH" for i in lied.issues)
+
+    # Rendering a claim with no spans -> RENDERING_UNBOUND error at publish.
+    unbound = _run(deck_with("An unsupported statement.", None, claim_id="public-claim"), ledger2, sources, assets, tmp_path, publish=True)
+    assert any(i.code == "RENDERING_UNBOUND" and i.severity == "error" for i in unbound.issues)

@@ -47,6 +47,88 @@ def _qualified_occurrence(text: str, phrase: str) -> bool:
         start = index + len(needle)
 
 
+_DIGIT_RE = re.compile(r"\d+(?:[.,]\d+)*")  # known grammar: numeric tokens in deck strings
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip().lower())
+
+
+def _stem(token: str) -> str:
+    for suffix in ("ing", "ed", "es", "s"):
+        if token.endswith(suffix) and len(token) > len(suffix) + 2:
+            return token[: -len(suffix)]
+    return token
+
+
+def _check_rendering(slide_id, binding, resolved, claim, require_approved_claims) -> list:
+    """Mechanical transform verification + NUMERIC_UNBOUND (roundtable #1226).
+
+    verbatim/truncation/inflection are checkable against the claim's evidence
+    spans and auto-pass; aggregation/generalization lean on claim approval
+    (already publish-enforced). Every digit in a rendering must appear in a
+    span or in the claim's recorded formula.
+    """
+    issues: list[ValidationIssue] = []
+    span_norms = [_norm(s.text) for s in claim.evidence_spans]
+    rendering = _norm(resolved)
+
+    tc = binding.transform_class
+    if tc == "verbatim" and not any(rendering in s or s in rendering for s in span_norms):
+        issues.append(
+            ValidationIssue(
+                severity="error",
+                code="TRANSFORM_MISMATCH",
+                message=f"Binding '{binding.path}' claims transform_class=verbatim but matches no evidence span of '{claim.id}'.",
+                slide_id=slide_id,
+                claim_id=claim.id,
+            )
+        )
+    elif tc == "truncation":
+        clipped = rendering.rstrip(" .…")
+        if not any(clipped in s for s in span_norms):
+            issues.append(
+                ValidationIssue(
+                    severity="error",
+                    code="TRANSFORM_MISMATCH",
+                    message=f"Binding '{binding.path}' claims transform_class=truncation but is not a contiguous excerpt of any span of '{claim.id}'.",
+                    slide_id=slide_id,
+                    claim_id=claim.id,
+                )
+            )
+    elif tc == "inflection":
+        span_stems = {_stem(t) for s in span_norms for t in re.findall(r"[a-z0-9]+", s)}
+        rendering_stems = {_stem(t) for t in re.findall(r"[a-z0-9]+", rendering)}
+        if not rendering_stems <= span_stems:
+            issues.append(
+                ValidationIssue(
+                    severity="error",
+                    code="TRANSFORM_MISMATCH",
+                    message=f"Binding '{binding.path}' claims transform_class=inflection but introduces tokens absent from every span of '{claim.id}'.",
+                    slide_id=slide_id,
+                    claim_id=claim.id,
+                )
+            )
+
+    # NUMERIC_UNBOUND: every digit sequence must trace to a span or a formula.
+    span_and_formula = " ".join([*span_norms, _norm(claim.formula or "")])
+    for number in _DIGIT_RE.findall(resolved):
+        if number not in span_and_formula:
+            issues.append(
+                ValidationIssue(
+                    severity="error" if require_approved_claims else "warning",
+                    code="NUMERIC_UNBOUND",
+                    message=(
+                        f"Binding '{binding.path}' renders number '{number}' that appears in no evidence "
+                        f"span or recorded formula of claim '{claim.id}'."
+                    ),
+                    slide_id=slide_id,
+                    claim_id=claim.id,
+                )
+            )
+    return issues
+
+
 def validate_bundle(
     deck: DeckManifest,
     ledger: ClaimLedger,
@@ -203,6 +285,27 @@ def validate_bundle(
                     )
                 if binding.kind == BindingKind.QUALIFIER:
                     structural_qualifiers[binding.claim_id] = resolved
+                # --- Span-first rendering gates (roundtable 2026-08-06, #1226) ---
+                if binding.kind in {BindingKind.CLAIM_QUOTE, BindingKind.CLAIM_PARAPHRASE}:
+                    if not bound_claim.evidence_spans:
+                        issues.append(
+                            ValidationIssue(
+                                severity="error" if require_approved_claims else "warning",
+                                code="RENDERING_UNBOUND",
+                                message=(
+                                    f"Binding '{binding.path}' renders claim '{binding.claim_id}' which has "
+                                    "no evidence spans; publish requires every rendering to resolve to a span."
+                                ),
+                                slide_id=slide.id,
+                                claim_id=binding.claim_id,
+                            )
+                        )
+                    else:
+                        issues.extend(
+                            _check_rendering(
+                                slide.id, binding, resolved, bound_claim, require_approved_claims
+                            )
+                        )
 
         # Structural qualifier authority: a high-risk claim's qualifier must be
         # STRUCTURALLY bound to visible text containing the required qualifier.

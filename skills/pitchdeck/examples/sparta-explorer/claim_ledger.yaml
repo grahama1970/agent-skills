@@ -15,6 +15,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '**Trace a space-cyber conclusion from framework guidance to program evidence
+      and human review—without letting AI turn relevance into authority.**'
 - id: sparta-public-one-thread
   text: Sparta Explorer turns scattered space-cyber, engineering, supplier, and test
     evidence into one inspectable decision thread.
@@ -29,6 +33,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '**Sparta Explorer turns scattered space-cyber, engineering, supplier, and
+      test'
 - id: sparta-public-three-questions
   text: The product helps teams ask why a conclusion is believed, what is missing
     or disputed, and who is allowed to decide.
@@ -43,6 +51,15 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: 'It helps a team answer three practical questions:'
+  - source_id: sparta-public-readme
+    text: '**Why do we believe this?**'
+  - source_id: sparta-public-readme
+    text: '**What is missing, stale, disputed, or still only a candidate?**'
+  - source_id: sparta-public-readme
+    text: '**Who is allowed to decide?**'
 - id: sparta-public-model-boundary
   text: The model helps users navigate while governed evidence and authorized people
     decide.
@@ -57,6 +74,9 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: governed evidence and authorized people decide.**
 - id: sparta-public-relevance-not-support
   text: Search, embeddings, and graph traversal can identify relevant material without
     establishing support, scope, currency, or approval.
@@ -71,6 +91,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '- **Relevance is not support.** Search, embeddings, and graph traversal
+      identify'
 - id: sparta-public-embry-foundation
   text: Sparta Explorer is the assurance workbench inside the planned Embry OS local
     operating foundation for policy-bounded and disconnected environments.
@@ -87,6 +111,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '**Sparta Explorer is the assurance workbench inside Embry OS: one planned
+      local'
 - id: sparta-public-f36-demo
   text: The synthetic F-36 program world tests whether one evidence thread can serve
     program, engineering, supplier, test, and operational readers without collapsing
@@ -102,6 +130,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| Synthetic F-36 demonstration | The program, engineering, supplier, test,
+      and operational evidence thread. |'
 - id: sparta-public-working-surfaces
   text: The prepared-host investigation experience includes Global Posture, Threat
     Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and a docked Console.
@@ -119,6 +151,12 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Explorer** | **Implemented:** repository-local Global Posture, Threat
+      Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and docked Console
+      surfaces. | Refresh the remaining older captures and continue page-level interaction
+      proof as the UI changes. |'
 - id: sparta-public-response-path-status
   text: On the governed path, Sparta Chat can answer, clarify, deflect, or expose
     insufficient evidence while transitional response branches remain open.
@@ -135,6 +173,13 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Response path** | **In integration:** bounded answer, clarify, deflect,
+      error, citation, selected-QRA, and visible-answer admission receipts exist on
+      the governed path. | Remove or govern direct recall-cache release, raw QuerySpec
+      rendering, and legacy Tau fallback; extend reviewed-only reuse across governed
+      paths. |'
 - id: sparta-public-collaboration-stage
   text: Sparta Explorer is ready for design-partner conversation, architecture walkthrough,
     workflow evaluation, co-design, and prepared-host technical sessions.
@@ -151,6 +196,9 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '> walkthrough, workflow evaluation, co-design, and prepared-host technical'
 - id: sparta-public-open-gates
   text: Independent corpus review, response-route convergence, QRA reasoning and reuse,
     decision authority, voice, setup, and deployment remain explicit closure gates.
@@ -165,6 +213,12 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-private-readme
+    text: demo health, response-route convergence, independent corpus review, clean-machine
+  - source_id: sparta-private-readme
+    text: '**Separated:** identity, data access, release state, approval scope, and
+      decision authority.'
 - id: sparta-private-preflight
   text: A prepared-host client demo preflight passed for one exact commit and closed
     issue 38.
@@ -181,6 +235,14 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Client demo** | **Prepared-host ready:** deterministic route, preflight,
+      route capture, and evidence-bundle tooling exist, and issue #38 closed on a
+      passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`,
+      `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each
+      commit actually demonstrated; the receipt binds to one exact commit, not to
+      the branch. |'
 - id: sparta-private-qra-snapshot
   text: The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases,
     5,046 quarantined records, zero duplicate active semantic identities, and expected
@@ -198,6 +260,11 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '- The issue #20 proof records 2,180 active canonical QRAs, 2,180 aliases,
+      5,046 quarantined records, zero duplicate active semantic identities, and expected
+      identity at rank 1 for the 2026-07-29 snapshot.'
 - id: sparta-private-review-slice
   text: The dated issue 6 proof records one accepted decision, one rejected decision,
     one pending decision, one accepted evidence case, two reviewed overlays, and one
@@ -215,6 +282,11 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '- The issue #6 proof records one accepted decision, one rejected decision,
+      one pending decision, one accepted evidence case, two reviewed overlays, and
+      one compliance-credit unit for the bounded 2026-07-29 slice.'
 - id: sparta-private-chat-campaign
   text: The dated Sparta Chat aggregate receipt records 115 broad browser cases and
     35 interaction cases.
@@ -231,6 +303,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '- The Sparta Chat aggregate receipt records 115 broad browser cases and
+      35 interaction cases for the dated local campaign.'
 - id: sparta-private-answerability-contract
   text: The governed response path separates source preservation, candidate construction,
     current-turn scope, answerability, presentation, and human decision.
@@ -245,6 +321,11 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Memory + `create-evidence-case`** | On the governed path, scope the
+      current turn, retrieve candidate material, decide answerability, and select
+      answer, clarify, or deflect. |'
 - id: sparta-private-response-gaps
   text: Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback,
     and reviewed-only reuse remain named response-route gaps.
@@ -261,6 +342,13 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Response path** | **In integration:** bounded answer, clarify, deflect,
+      error, citation, selected-QRA, and visible-answer admission receipts exist on
+      the governed path. | Remove or govern direct recall-cache release, raw QuerySpec
+      rendering, and legacy Tau fallback; extend reviewed-only reuse across governed
+      paths. |'
 - id: sparta-private-deployment-gap
   text: A verified clean-machine quick start and supported external deployment profile
     are not yet published.
@@ -277,6 +365,9 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: A verified clean-machine quick start is not yet published.
 - id: sparta-private-qra-governance
   text: Candidate QRA generation, human interview and promotion, reasoning repair,
     and reviewed-only lineage reuse require distinct governance boundaries.
@@ -291,6 +382,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **QRA reasoning and reuse** | Complete the reasoning-field repair and
+      add reviewed-only predicates to remaining lineage-reuse paths. |'
 - id: non-claim-f36-synthetic
   text: The F-36 corpus and program world are fictional and synthetic.
   kind: non_claim
@@ -304,6 +399,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: proprietary, and unauthorized program data by policy. **The F-36 corpus
+      is fictional and synthetic.**
 - id: non-claim-candidate-credit
   text: Candidate visibility is not compliance credit.
   kind: non_claim
@@ -317,6 +416,10 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '- **Candidate visibility is not compliance credit.** Candidate mappings
+      and'
 - id: non-claim-human-authority
   text: A model may explain; authorized people retain approval, risk, certification,
     and signoff authority.
@@ -331,6 +434,9 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: approval, risk acceptance, certification, or signoff authority to the model.
 - id: non-claim-preflight-commit
   text: Prepared-host receipts bind to the exact demonstrated commit and must be rerun
     before a live demonstration.
@@ -345,6 +451,14 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: '| **Client demo** | **Prepared-host ready:** deterministic route, preflight,
+      route capture, and evidence-bundle tooling exist, and issue #38 closed on a
+      passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`,
+      `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each
+      commit actually demonstrated; the receipt binds to one exact commit, not to
+      the branch. |'
 - id: non-claim-no-production
   text: This deck does not establish production readiness, accreditation, certification,
     customer deployment, or endorsement.
@@ -359,6 +473,9 @@ claims:
     approved_by: fixture-maintainer
     approved_at: '2026-08-05'
     fixture: true
+  evidence_spans:
+  - source_id: sparta-public-readme
+    text: It does not mean expert-approved, implemented, or compliance-credited.
 seam_validation:
   kind: claim_ledger
   status: PASS

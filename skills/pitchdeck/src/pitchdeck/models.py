@@ -211,6 +211,10 @@ class Claim(StrictModel):
     status: ClaimStatus = ClaimStatus.CANDIDATE
     required_qualifier: str | None = None
     approval: ClaimApproval | None = None
+    evidence_spans: list[EvidenceSpan] = Field(default_factory=list)
+    # Recorded formula for computed numbers (NUMERIC_UNBOUND accepts digits
+    # appearing in a span OR in this formula).
+    formula: str | None = None
     notes: str | None = None
 
     @model_validator(mode="after")
@@ -357,6 +361,19 @@ class BindingKind(str, Enum):
     DECORATIVE = "decorative"            # no informational content; still leak-scanned
 
 
+class EvidenceSpan(StrictModel):
+    """Verbatim source excerpt — the canonical unit the human approves.
+
+    Roundtable 2026-08-06 (unanimous): deck prose is a RENDERING of a span,
+    never the canonical claim. Spans are deterministic extractions; no LLM
+    rewriting between source and approval surface.
+    """
+
+    source_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    section: str | None = None
+
+
 class TextBinding(StrictModel):
     """Binds one addressable slide string to the ledger.
 
@@ -368,6 +385,11 @@ class TextBinding(StrictModel):
     path: str = Field(min_length=1)
     kind: BindingKind
     claim_id: str | None = None
+    # Mechanically-checkable transform classes auto-verify against the claim's
+    # evidence spans; aggregation/generalization always require claim approval.
+    transform_class: (
+        Literal["verbatim", "truncation", "inflection", "aggregation", "generalization"] | None
+    ) = None
 
     @model_validator(mode="after")
     def validate_claim_ref(self) -> "TextBinding":
