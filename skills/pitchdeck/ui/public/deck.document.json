@@ -939,7 +939,7 @@
      "kind": "text",
      "bbox": {
       "x": 0.08,
-      "y": 0.3,
+      "y": 0.28,
       "w": 0.84,
       "h": 0.18
      },
@@ -970,9 +970,9 @@
      "kind": "text",
      "bbox": {
       "x": 0.08,
-      "y": 0.5,
+      "y": 0.48,
       "w": 0.7,
-      "h": 0.16
+      "h": 0.14
      },
      "z": 0,
      "role": "message",
@@ -990,6 +990,29 @@
      "binding_paths": [
       "message"
      ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "visual",
+     "kind": "image",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": null,
+     "style": null,
+     "asset_id": "sparta-threat-matrix",
+     "svg": null,
+     "figure": null,
+     "binding_paths": [],
      "entrance": {
       "effect": "none",
       "delay_ms": 0,
@@ -1272,7 +1295,7 @@
      "kind": "text",
      "bbox": {
       "x": 0.1,
-      "y": 0.34,
+      "y": 0.3,
       "w": 0.8,
       "h": 0.22
      },
@@ -1303,7 +1326,7 @@
      "kind": "text",
      "bbox": {
       "x": 0.1,
-      "y": 0.58,
+      "y": 0.54,
       "w": 0.8,
       "h": 0.12
      },
@@ -1322,6 +1345,130 @@
      "figure": null,
      "binding_paths": [
       "message"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-0",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.68,
+      "w": 0.8,
+      "h": 0.04
+     },
+     "z": 0,
+     "role": "body:0",
+     "text": "General-purpose models remain fluent when evidence is weak.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:0"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-1",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.74,
+      "w": 0.8,
+      "h": 0.04
+     },
+     "z": 0,
+     "role": "body:1",
+     "text": "Relevance is easily mistaken for evidentiary support.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:1"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-2",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.8,
+      "w": 0.8,
+      "h": 0.04
+     },
+     "z": 0,
+     "role": "body:2",
+     "text": "Candidate mappings can look like approved compliance conclusions.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "body-3",
+     "kind": "text",
+     "bbox": {
+      "x": 0.1,
+      "y": 0.8600000000000001,
+      "w": 0.8,
+      "h": 0.04
+     },
+     "z": 0,
+     "role": "body:3",
+     "text": "Teams rebuild the same decision thread across disconnected tools.",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "body:3"
      ],
      "entrance": {
       "effect": "none",
@@ -1837,6 +1984,42 @@
       "delay_ms": 0,
       "fragment_index": null
      }
+    },
+    {
+     "id": "visual",
+     "kind": "text",
+     "bbox": {
+      "x": 0.52,
+      "y": 0.28,
+      "w": 0.42,
+      "h": 0.6
+     },
+     "z": 0,
+     "role": "visual",
+     "text": "Framework guidance\nProgram mapping candidate\nComponent and supplier lineage\nVerification and test evidence\nReview state and blockers\nHuman decision",
+     "style": {
+      "size_pt": 20.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "visual.items:0",
+      "visual.items:1",
+      "visual.items:2",
+      "visual.items:3",
+      "visual.items:4",
+      "visual.items:5"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
     }
    ],
    "bindings": [
@@ -2118,6 +2301,37 @@
       "delay_ms": 0,
       "fragment_index": null
      }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
     }
    ],
    "bindings": [
@@ -2345,6 +2559,37 @@
      "svg": null,
      "figure": null,
      "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer"
+     ],
      "entrance": {
       "effect": "none",
       "delay_ms": 0,
@@ -2578,6 +2823,37 @@
      "svg": null,
      "figure": null,
      "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer"
+     ],
      "entrance": {
       "effect": "none",
       "delay_ms": 0,
@@ -2846,6 +3122,37 @@
       "delay_ms": 0,
       "fragment_index": null
      }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
     }
    ],
    "bindings": [
@@ -3086,6 +3393,38 @@
      "figure": null,
      "binding_paths": [
       "body:3"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it. The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer",
+      "footer"
      ],
      "entrance": {
       "effect": "none",
@@ -3622,6 +3961,37 @@
      "figure": null,
      "binding_paths": [
       "body:2"
+     ],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "footer",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.92,
+      "w": 0.88,
+      "h": 0.05
+     },
+     "z": 0,
+     "role": "footer",
+     "text": "The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.",
+     "style": {
+      "size_pt": 12.0,
+      "bold": false,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "binding_paths": [
+      "footer"
      ],
      "entrance": {
       "effect": "none",

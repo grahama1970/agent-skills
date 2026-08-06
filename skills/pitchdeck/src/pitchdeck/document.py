@@ -174,13 +174,17 @@ _BODY_LEFT = Bbox(x=0.06, y=0.33, w=0.42, h=0.55)
 _VISUAL_RIGHT = Bbox(x=0.52, y=0.28, w=0.42, h=0.60)
 
 LAYOUT_GEOMETRY: dict[SlideLayout, dict[str, Bbox]] = {
+    # cover/statement carry a body block too: bound content must NEVER drop
+    # just because the layout is spare (reviewer finding, 2026-08-06).
     SlideLayout.COVER: {
-        "title": Bbox(x=0.08, y=0.30, w=0.84, h=0.18),
-        "message": Bbox(x=0.08, y=0.50, w=0.70, h=0.16),
+        "title": Bbox(x=0.08, y=0.28, w=0.84, h=0.18),
+        "message": Bbox(x=0.08, y=0.48, w=0.70, h=0.14),
+        "body": Bbox(x=0.08, y=0.64, w=0.70, h=0.24),
     },
     SlideLayout.STATEMENT: {
-        "title": Bbox(x=0.10, y=0.34, w=0.80, h=0.22),
-        "message": Bbox(x=0.10, y=0.58, w=0.80, h=0.12),
+        "title": Bbox(x=0.10, y=0.30, w=0.80, h=0.22),
+        "message": Bbox(x=0.10, y=0.54, w=0.80, h=0.12),
+        "body": Bbox(x=0.10, y=0.68, w=0.80, h=0.22),
     },
     SlideLayout.SPLIT: {"title": _TITLE, "message": _MESSAGE, "body": _BODY_LEFT, "visual": _VISUAL_RIGHT},
     SlideLayout.SCREENSHOT: {"title": _TITLE, "message": _MESSAGE, "body": _BODY_LEFT, "visual": _VISUAL_RIGHT},
@@ -249,19 +253,49 @@ def _compile_slide(slide: SlideSpec, reveal_steps: bool) -> DocSlide:
                         entrance=DocEntrance(effect="rise", fragment_index=i) if reveal_steps else DocEntrance(),
                     )
                 )
-        visual_base = geometry.get("visual")
-        if visual_base and slide.visual.asset_id:
+        visual_base = geometry.get("visual") or _VISUAL_RIGHT
+        if slide.visual.asset_id:
             elements.append(
                 DocElement(id="visual", kind=DocElementKind.IMAGE, bbox=visual_base, role="visual", asset_id=slide.visual.asset_id)
+            )
+        elif slide.visual.items or slide.visual.caption:
+            # Item/caption visuals (flow steps, callout lists) compile to a text
+            # element until diagram primitives land (#1251 populates FIGURE) —
+            # bound content must never drop on the way to the document.
+            elements.append(
+                DocElement(
+                    id="visual",
+                    kind=DocElementKind.TEXT,
+                    bbox=visual_base,
+                    role="visual",
+                    text="\n".join([*slide.visual.items, *( [slide.visual.caption] if slide.visual.caption else [])]),
+                    style=_BODY_STYLE,
+                )
+            )
+        if slide.footer:
+            elements.append(
+                DocElement(
+                    id="footer",
+                    kind=DocElementKind.TEXT,
+                    bbox=Bbox(x=0.06, y=0.92, w=0.88, h=0.05),
+                    role="footer",
+                    text=slide.footer,
+                    style=DocTextStyle(size_pt=12.0, color=None),
+                )
             )
     # Bindings must land on elements: map binding paths onto element roles.
     roles = {e.role for e in elements} | {e.id for e in elements}
     binding_paths: dict[str, list[str]] = {}
     for binding in slide.bindings:
         root = binding.path.split(".")[0]
-        if root not in roles and binding.path not in roles:
-            continue  # visual.caption / items live on the visual element below
-        binding_paths.setdefault(root, []).append(binding.path)
+        # visual.caption / visual.items:<i> render on the visual element.
+        target = "visual" if root == "visual" else root
+        if target not in roles and binding.path not in roles:
+            raise ValueError(
+                f"slide '{slide.id}': binding path '{binding.path}' maps to no document element — "
+                "the document would silently drop bound content"
+            )
+        binding_paths.setdefault(target, []).append(binding.path)
     for el in elements:
         el.binding_paths = binding_paths.get(el.role or el.id, [])
     return DocSlide(
