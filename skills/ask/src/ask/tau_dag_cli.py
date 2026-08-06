@@ -56,6 +56,55 @@ BROWSER_BACKENDS = {
 }
 
 
+def _emit_dag_chart(bundle: dict[str, Any], *, execute: bool) -> None:
+    """Print an ASCII confirmation chart of the compiled DAG before any run.
+
+    Deterministic and rendered from the same compiled nodes Tau executes;
+    stderr so --json stdout stays parseable.
+    """
+    dag = bundle.get("dag") if isinstance(bundle, dict) else None
+    nodes = (dag or {}).get("nodes") if isinstance(dag, dict) else None
+    if not nodes:
+        return
+    by_id = {str(n.get("id")): n for n in nodes if isinstance(n, dict) and n.get("id")}
+    # Edges live per-node (depends_on) or in the contract's top-level edges list.
+    deps_by_node: dict[str, set[str]] = {nid: set() for nid in by_id}
+    for nid, node in by_id.items():
+        deps_by_node[nid].update(d for d in (node.get("depends_on") or []) if d in by_id)
+    for edge in (dag or {}).get("edges") or []:
+        if isinstance(edge, dict):
+            src, dst = str(edge.get("from", "")), str(edge.get("to", ""))
+        elif isinstance(edge, (list, tuple)) and len(edge) == 2:
+            src, dst = str(edge[0]), str(edge[1])
+        else:
+            continue
+        if src in by_id and dst in by_id:
+            deps_by_node[dst].add(src)
+    depths: dict[str, int] = {}
+
+    def depth(nid: str) -> int:
+        if nid not in depths:
+            deps = deps_by_node[nid]
+            depths[nid] = 0 if not deps else 1 + max(depth(d) for d in deps)
+        return depths[nid]
+
+    try:
+        for nid in by_id:
+            depth(nid)
+    except RecursionError:
+        return
+    mode = "about to EXECUTE via Tau" if execute else "preview only; add --execute to run"
+    lines = [f"DAG ({mode}):", ""]
+    for level in range(max(depths.values()) + 1):
+        for nid in sorted(n for n, d in depths.items() if d == level):
+            node = by_id[nid]
+            deps = sorted(deps_by_node[nid])
+            arrow = f"  <- {', '.join(deps)}" if deps else ""
+            lines.append(f"{'    ' * level}[{nid}] {node.get('agent', '')}{arrow}")
+    typer.echo("\n".join(lines) + "\n", err=True)
+
+
+
 @app.command("run")
 def run(
     request: Annotated[
@@ -220,6 +269,7 @@ def run(
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
+    _emit_dag_chart(bundle, execute=execute)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
@@ -350,9 +400,18 @@ def run(
         from .seam_models import enforce as _enforce_seam
 
         execution = _enforce_seam("ask.tau_dag_execution.v1", execution)
+    # A panel that lost a requested seat must never read as a clean PASS.
+    # best-practices-roundtable: a missing seat is NEEDS_ATTENTION, not silent
+    # consensus (observed 2026-08-03: webgpt dropped by availability selection
+    # and the run still reported PASS with four seats).
+    _removed_seats = list((browser_selection or {}).get("removed_handlers") or [])
+    _status = execution.get("status") if isinstance(execution, dict) else bundle.get("status")
+    if _removed_seats and _status == "PASS":
+        _status = "DEGRADED"
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
-        "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
+        "removed_seats": _removed_seats or None,
+        "status": _status,
         "ok": exit_code == 0,
         "mocked": False,
         "live": output_live,
@@ -587,9 +646,18 @@ def compete(
         from .seam_models import enforce as _enforce_seam
 
         execution = _enforce_seam("ask.tau_dag_execution.v1", execution)
+    # A panel that lost a requested seat must never read as a clean PASS.
+    # best-practices-roundtable: a missing seat is NEEDS_ATTENTION, not silent
+    # consensus (observed 2026-08-03: webgpt dropped by availability selection
+    # and the run still reported PASS with four seats).
+    _removed_seats = list((browser_selection or {}).get("removed_handlers") or [])
+    _status = execution.get("status") if isinstance(execution, dict) else bundle.get("status")
+    if _removed_seats and _status == "PASS":
+        _status = "DEGRADED"
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
-        "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
+        "removed_seats": _removed_seats or None,
+        "status": _status,
         "ok": exit_code == 0,
         "mocked": False,
         "live": bool(isinstance(execution, dict) and execution.get("live") is True)
@@ -760,7 +828,13 @@ def _probe_browser_provider_availability(
 
 
 def _resolve_explicit_browser_provider_tabs(input_payload: Any, handlers: list[str]) -> dict[str, Any]:
-    """Resolve caller-specified browser-oracle projects to exact tab ids."""
+    """Resolve caller-specified browser-oracle projects to exact tab ids.
+
+    Availability probing is allowed to scan ambient tabs for default fresh
+    browser lifecycle runs. It must not do that when the caller deliberately
+    bound a handler to a project: an unrelated stale tab for the same provider
+    must not poison the exact requested reviewer tab.
+    """
     explicit_projects = _explicit_handler_projects(input_payload)
     if not explicit_projects:
         return {"schema": "ask.browser_provider_binding_resolution.v1", "status": "skipped", "explicit_tab_args": []}
@@ -1159,6 +1233,10 @@ def _provision_browser_lifecycle(
 
     surf_run = surf_run or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")
     browser_oracle_run = browser_oracle_run or (Path(__file__).resolve().parents[2].parent / "browser-oracle" / "run.sh")
+    # Reclaim abandoned windows before adding more. Doing this at
+    # provisioning time keeps window count bounded by concurrent runs rather
+    # than by total runs ever executed.
+    window_reap = _reap_stale_ask_windows(surf_run)
     created_tabs: list[dict[str, Any]] = []
     commands: list[dict[str, Any]] = []
     handler_projects: list[str] = list(input_payload.handler_projects)
@@ -1176,55 +1254,66 @@ def _provision_browser_lifecycle(
             command_timeout_seconds,
             max(1, int(timeout_budget_seconds)) + BROWSER_COMMAND_GRACE_SECONDS,
         )
-    first = browser_handlers[0]
-    first_project = f"{lifecycle_id}-{first}"
-    window = _lifecycle_command(
-        [
+    # One unfocused window per browser seat. Chrome reports
+    # document.visibilityState "hidden" for every tab that is not the selected
+    # tab of its window, and providers defer DOM updates while hidden - which
+    # is why N seats sharing one window left exactly one seat unthrottled and
+    # the rest timing out. Measured 2026-08-03: a tab alone in an unfocused
+    # window reports visible/hidden=false, while a non-selected tab in a shared
+    # window reports hidden=true.
+    for handler in browser_handlers:
+        project = f"{lifecycle_id}-{handler}"
+        window_command = [
             str(surf_run),
             "window.new",
-            BROWSER_FRESH_URLS[first],
+            BROWSER_FRESH_URLS[handler],
             "--json",
             "--unfocused",
             "--lock-timeout",
             str(lock_timeout_seconds),
-        ],
-        cwd=surf_run.parent,
-        timeout_seconds=command_timeout_seconds,
-    )
-    commands.append(window)
-    if window["returncode"] != 0:
-        lifecycle = _lifecycle_blocked(mode, run_dir, "browser_window_create_failed", commands, created_tabs)
-        _write_lifecycle(run_dir, lifecycle)
-        return lifecycle
-    window_payload = _json_or_text(window["stdout"])
-    window_id = _extract_window_id(window_payload)
-    first_tab = _extract_tab_id(window_payload)
-    if not first_tab:
-        lifecycle = _lifecycle_blocked(mode, run_dir, "browser_window_missing_tab_id", commands, created_tabs)
-        _write_lifecycle(run_dir, lifecycle)
-        return lifecycle
-    created_tabs.append({"handler": first, "project": first_project, "tab_id": first_tab, "url": BROWSER_FRESH_URLS[first], "window_id": window_id})
-    _replace_handler_project(handler_projects, first, first_project)
-
-    for handler in browser_handlers[1:]:
-        project = f"{lifecycle_id}-{handler}"
-        tab_command = [str(surf_run), "tab.new", BROWSER_FRESH_URLS[handler], "--json", "--background"]
-        if window_id:
-            tab_command.extend(["--window-id", window_id])
-        tab_command.extend(["--lock-timeout", str(lock_timeout_seconds)])
-        opened = _lifecycle_command(tab_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds)
-        commands.append(opened)
-        if opened["returncode"] != 0:
-            lifecycle = _lifecycle_blocked(mode, run_dir, f"{handler}_tab_create_failed", commands, created_tabs, window_id=window_id)
+        ]
+        window = _lifecycle_command(
+            window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
+        )
+        commands.append(window)
+        if window["returncode"] != 0:
+            # Provisioning can fail transiently while the host settles a
+            # previous run's teardown; one bounded retry before failing closed.
+            time.sleep(10)
+            window = _lifecycle_command(
+                window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
+            )
+            commands.append(window)
+        if window["returncode"] != 0:
+            lifecycle = _lifecycle_blocked(
+                mode, run_dir, f"{handler}_window_create_failed", commands, created_tabs
+            )
             _write_lifecycle(run_dir, lifecycle)
             return lifecycle
-        tab_id = _extract_tab_id(_json_or_text(opened["stdout"]))
-        if not tab_id:
-            lifecycle = _lifecycle_blocked(mode, run_dir, f"{handler}_tab_missing_tab_id", commands, created_tabs, window_id=window_id)
+        payload = _json_or_text(window["stdout"])
+        seat_window_id = _extract_window_id(payload)
+        seat_tab_id = _extract_tab_id(payload)
+        if not seat_tab_id:
+            lifecycle = _lifecycle_blocked(
+                mode, run_dir, f"{handler}_window_missing_tab_id", commands, created_tabs
+            )
             _write_lifecycle(run_dir, lifecycle)
             return lifecycle
-        created_tabs.append({"handler": handler, "project": project, "tab_id": tab_id, "url": BROWSER_FRESH_URLS[handler], "window_id": window_id})
+        created_tabs.append(
+            {
+                "handler": handler,
+                "project": project,
+                "tab_id": seat_tab_id,
+                "url": BROWSER_FRESH_URLS[handler],
+                "window_id": seat_window_id,
+            }
+        )
         _replace_handler_project(handler_projects, handler, project)
+    window_id = created_tabs[0].get("window_id") if created_tabs else None
+    # Register before the identity guard and before any provider work: from
+    # here on the run can be killed at any point, and an unregistered window
+    # is one nothing will ever reclaim.
+    _register_ask_windows({"created_tabs": created_tabs, "mode": mode, "run_dir": str(run_dir)})
 
     # Provisioning-to-gate identity guard (#1139): the handler gate resolves
     # these ids minutes later through tab.list; twice a run's freshly created
@@ -1278,6 +1367,7 @@ def _provision_browser_lifecycle(
         "status": "READY",
         "mode": mode,
         "run_dir": str(run_dir),
+        "window_reap": window_reap,
         "window_id": window_id,
         "identity_guard": verified_identity_guard,
         "created_tabs": created_tabs,
@@ -1411,6 +1501,157 @@ def _verify_created_tabs(
     return guard
 
 
+# Windows Ask created but never got to close: the owning process was killed
+# before its `finally` ran, or the run used fresh-keep and nobody came back.
+# Eight provider windows were live on 2026-08-04, the oldest from a batch run
+# on 2026-07-27 -- a permanent leak, because a skipped cleanup had no expiry
+# and no second chance. The registry makes ownership durable so a later run
+# can reclaim what an earlier one abandoned.
+ASK_WINDOW_REGISTRY = Path.home() / ".ask" / "browser-windows.jsonl"
+# fresh-keep exists so a human can inspect the tabs. Four hours is long past
+# the end of any session that would have looked.
+FRESH_KEEP_TTL_SECONDS = 4 * 3600
+FRESH_TEMPORARY_TTL_SECONDS = 900
+
+
+def _register_ask_windows(lifecycle: dict[str, Any]) -> None:
+    """Record window ownership durably, before the run can be killed."""
+    windows = [
+        str(tab.get("window_id"))
+        for tab in lifecycle.get("created_tabs", [])
+        if isinstance(tab, dict) and tab.get("window_id")
+    ]
+    if not windows:
+        return
+    try:
+        ASK_WINDOW_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+        with ASK_WINDOW_REGISTRY.open("a", encoding="utf-8") as handle:
+            for window_id in dict.fromkeys(windows):
+                handle.write(
+                    json.dumps(
+                        {
+                            "window_id": window_id,
+                            "mode": str(lifecycle.get("mode") or ""),
+                            "run_dir": str(lifecycle.get("run_dir") or ""),
+                            "pid": os.getpid(),
+                            "created_at": time.time(),
+                        },
+                        sort_keys=True,
+                    )
+                    + "\n"
+                )
+    except OSError:
+        # A registry write must never take the run down; the worst case is
+        # the pre-existing leak, not a failed roundtable.
+        pass
+
+
+def _deregister_ask_windows(window_ids: set[str]) -> None:
+    if not window_ids or not ASK_WINDOW_REGISTRY.is_file():
+        return
+    try:
+        kept: list[str] = []
+        for line in ASK_WINDOW_REGISTRY.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if str((entry or {}).get("window_id") or "") not in window_ids:
+                kept.append(line)
+        ASK_WINDOW_REGISTRY.write_text(
+            "".join(line + "\n" for line in kept), encoding="utf-8"
+        )
+    except OSError:
+        pass
+
+
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return True
+    return True
+
+
+def _reap_stale_ask_windows(surf_run: Path, *, timeout_seconds: int = 60) -> dict[str, Any]:
+    """Close Ask-created windows whose run is over, before opening more.
+
+    Reaping runs at provisioning time rather than on a timer: that is the
+    moment Ask is about to add windows, so it is exactly when reclaiming old
+    ones matters and when the surf transport is known to be up.
+
+    A window is reclaimed only when its owning process is gone AND its mode's
+    TTL has passed, so a concurrent roundtable never has its seats closed out
+    from under it.
+    """
+    receipt: dict[str, Any] = {"schema": "ask.window_reap.v1", "closed": [], "kept": []}
+    if not ASK_WINDOW_REGISTRY.is_file():
+        return receipt
+    try:
+        raw_lines = ASK_WINDOW_REGISTRY.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return receipt
+    entries: list[dict[str, Any]] = []
+    for line in raw_lines:
+        if not line.strip():
+            continue
+        try:
+            loaded = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(loaded, dict):
+            entries.append(loaded)
+
+    now = time.time()
+    reaped: set[str] = set()
+    for entry in entries:
+        window_id = str(entry.get("window_id") or "")
+        if not window_id or window_id in reaped:
+            continue
+        pid = entry.get("pid")
+        age = now - float(entry.get("created_at") or 0)
+        ttl = (
+            FRESH_KEEP_TTL_SECONDS
+            if str(entry.get("mode") or "") == "fresh-keep"
+            else FRESH_TEMPORARY_TTL_SECONDS
+        )
+        owner_alive = _pid_alive(int(pid)) if isinstance(pid, int) else False
+        if owner_alive or age < ttl:
+            receipt["kept"].append(
+                {
+                    "window_id": window_id,
+                    "reason": "owner_alive" if owner_alive else "within_ttl",
+                    "age_seconds": int(age),
+                }
+            )
+            continue
+        result = _lifecycle_command(
+            [str(surf_run), "window.close", window_id],
+            cwd=surf_run.parent,
+            timeout_seconds=timeout_seconds,
+        )
+        reaped.add(window_id)
+        receipt["closed"].append(
+            {
+                "window_id": window_id,
+                "mode": entry.get("mode"),
+                "age_seconds": int(age),
+                "returncode": result.get("returncode"),
+                "run_dir": entry.get("run_dir"),
+            }
+        )
+    # A window that is already gone still deregisters: the registry tracks
+    # outstanding obligations, and a failed close on a closed window is done.
+    _deregister_ask_windows(reaped)
+    return receipt
+
+
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     if lifecycle.get("cleanup_status") == "attempted":
         return
@@ -1432,6 +1673,32 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
             return
     surf_run = Path(str(lifecycle.get("surf_run") or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")))
     cleanup: list[dict[str, Any]] = []
+    # Every seat now owns an unfocused window, so teardown closes each of them.
+    # Closing only the first window would strand one live provider window per
+    # seat per run - the sprawl that made the shared browser unusable.
+    seat_windows = [
+        str(tab.get("window_id"))
+        for tab in lifecycle.get("created_tabs", [])
+        if isinstance(tab, dict) and tab.get("window_id")
+    ]
+    seat_windows = list(dict.fromkeys(seat_windows))
+    if seat_windows:
+        lock_timeout_seconds = int(lifecycle.get("lock_timeout_seconds") or DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS)
+        for seat_window in seat_windows:
+            cleanup.append(
+                _lifecycle_command(
+                    [str(surf_run), "window.close", seat_window, "--lock-timeout", str(lock_timeout_seconds)],
+                    cwd=surf_run.parent,
+                    timeout_seconds=lock_timeout_seconds + BROWSER_COMMAND_GRACE_SECONDS,
+                )
+            )
+        lifecycle["cleanup"] = cleanup
+        lifecycle["cleanup_status"] = "attempted"
+        _deregister_ask_windows(set(seat_windows))
+        run_dir = Path(str(lifecycle.get("run_dir") or ""))
+        if run_dir:
+            _write_lifecycle(run_dir, lifecycle)
+        return
     window_id = str(lifecycle.get("window_id") or "")
     if window_id:
         lock_timeout_seconds = int(lifecycle.get("lock_timeout_seconds") or DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS)
