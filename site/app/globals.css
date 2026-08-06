@@ -1334,6 +1334,19 @@ footer a:hover {
   color: #3f6b45;
   margin: 0 0 0.5rem;
 }
+/* A human line closing the dense ledger, reconnecting it to the thesis so the
+   page breathes before the Receipts wall. */
+.ledger-close {
+  max-width: 46ch;
+  margin: clamp(1.6rem, 3vw, 2.6rem) auto 0;
+  text-align: center;
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+  line-height: 1.5;
+  color: var(--text);
+  font-variation-settings: 'SOFT' 40, 'WONK' 0, 'opsz' 40;
+}
+
 /* Plain-English "what this proves" — the human claim above the raw payload. */
 .ticket .proves {
   font-size: 0.82rem;

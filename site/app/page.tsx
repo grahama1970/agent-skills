@@ -355,6 +355,11 @@ export default function Home() {
               </div>
               <SkillMosaic />
             </div>
+            <p className="ledger-close">
+              All of it points back to the line at the top: a system that can
+              prove what it did is one you can trust with a job that actually
+              matters — where a quiet failure would cost something.
+            </p>
           </div>
         </section>
 
