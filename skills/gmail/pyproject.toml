@@ -1,0 +1,31 @@
+[project]
+name = "agent-skills-gmail"
+version = "0.1.0"
+description = "API-first Gmail control for Codex with least-privilege OAuth and plan-gated writes"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "email-validator>=2.2.0,<3",
+  "google-auth>=2.38.0,<3",
+  "google-auth-oauthlib>=1.2.1,<2",
+  "httpx>=0.27.0,<1",
+  "loguru>=0.7.0,<0.8",
+  "pydantic>=2.10.0,<3",
+  "typer>=0.15.0,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0,<10",
+]
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gmail_skill"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["src"]
