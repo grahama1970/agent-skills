@@ -13,7 +13,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { AlertTriangle, ChevronsLeft, ChevronsRight, Copy, Eye, EyeOff, GripVertical, Plus, ShieldQuestion, Trash2 } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight, Copy, Eye, EyeOff, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { revisionStore } from '../hooks'
 import { SlideBody } from '../layouts/SlideLayouts'
@@ -34,9 +34,11 @@ function deriveStatus(slide: UiSlide): DerivedStatus {
   return null
 }
 
-const BADGES: Record<Exclude<DerivedStatus, null>, { label: string; className: string; icon: typeof AlertTriangle }> = {
-  REVIEW: { label: 'REVIEW', className: 'border-rose-500/30 bg-rose-500/10 text-rose-400', icon: ShieldQuestion },
-  GAPS: { label: 'GAPS', className: 'border-amber-500/30 bg-amber-500/10 text-amber-400', icon: AlertTriangle },
+// De-cluttered (user spec): status renders as a 6px dot, not a text pill —
+// the tooltip carries the words. Colors keep the derived-status semantics.
+const STATUS_DOTS: Record<Exclude<DerivedStatus, null>, { title: string; className: string }> = {
+  REVIEW: { title: 'Review required — candidate claims on this slide', className: 'bg-rose-500/90' },
+  GAPS: { title: 'Missing asset on this slide', className: 'bg-amber-500/90' },
 }
 
 const THUMB_W = 112
@@ -80,7 +82,7 @@ export function SlideThumbnail({
   dragHandleProps,
 }: ThumbnailProps) {
   const status = deriveStatus(slide)
-  const badge = status ? BADGES[status] : null
+  const dot = status ? STATUS_DOTS[status] : null
   const HideIcon = slide.hidden ? Eye : EyeOff
   return (
     <div
@@ -88,32 +90,40 @@ export function SlideThumbnail({
       data-qs-action="DECK_RAIL_GOTO_SLIDE"
       title={`Go to slide ${slide.order}: ${slide.title}`}
       onClick={onSelect}
-      className={`group relative flex cursor-pointer items-center gap-2 rounded-lg border p-1.5 transition-all ${
-        isActive
-          ? 'border-cyan-500/80 bg-cyan-500/10 ring-1 ring-cyan-500/30'
-          : 'border-slate-800/80 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900'
-      } ${slide.hidden ? 'opacity-40' : 'opacity-100'}`}
+      className={`group relative flex cursor-pointer items-center gap-2 rounded-lg p-1.5 pl-2.5 transition-all ${
+        isActive ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+      } ${slide.hidden ? 'opacity-35' : ''}`}
     >
-      <span
-        {...dragHandleProps}
-        data-qid={`deck:rail:drag:${slide.id}`}
-        data-qs-action="DECK_DRAG_SLIDE"
-        title={`Drag to reorder slide ${slide.order}`}
-        onClick={(event) => event.stopPropagation()}
-        className="cursor-grab touch-none rounded p-1 text-slate-600 hover:bg-slate-800/60 active:cursor-grabbing group-hover:text-slate-400"
-      >
-        <GripVertical aria-hidden className="h-3.5 w-3.5" />
+      {/* Active edge bar — selection reads from one crisp accent, not card fill */}
+      {isActive ? <span aria-hidden className="absolute bottom-1 left-0 top-1 w-1 rounded-r bg-cyan-400" /> : null}
+      {/* Number by default; drag grip only on hover (or while dragging) */}
+      <span className="relative w-4 shrink-0 text-center">
+        <span className={`font-mono text-[11px] font-medium ${isActive ? 'font-bold text-cyan-300' : 'text-slate-500'} group-hover:hidden`}>
+          {index + 1}
+        </span>
+        <span
+          {...dragHandleProps}
+          data-qid={`deck:rail:drag:${slide.id}`}
+          data-qs-action="DECK_DRAG_SLIDE"
+          title={`Drag to reorder slide ${slide.order}`}
+          onClick={(event) => event.stopPropagation()}
+          className="hidden cursor-grab touch-none rounded p-0.5 text-slate-400 hover:bg-slate-800/60 active:cursor-grabbing group-hover:inline-flex"
+        >
+          <GripVertical aria-hidden className="h-3.5 w-3.5" />
+        </span>
       </span>
-      <span className="w-4 text-center font-mono text-[11px] font-medium text-slate-500">{index + 1}</span>
-      <div className="relative aspect-video w-28 flex-shrink-0 overflow-hidden rounded border border-slate-800 bg-slate-950 shadow-inner">
+      <div
+        className={`relative aspect-video w-28 flex-shrink-0 overflow-hidden rounded border bg-slate-950 shadow-sm ${
+          isActive ? 'border-cyan-500/50 ring-1 ring-cyan-500/30' : 'border-slate-800/80 group-hover:border-slate-700'
+        }`}
+      >
         <MiniPreview slide={slide} />
-        {badge ? (
+        {dot ? (
           <span
-            className={`absolute right-1 top-1 flex items-center gap-1 rounded border px-1 py-0.5 font-mono text-[8px] font-semibold backdrop-blur-md ${badge.className}`}
-          >
-            <badge.icon aria-hidden className="h-2.5 w-2.5" />
-            {badge.label}
-          </span>
+            title={dot.title}
+            data-qid={`deck:rail:status:${slide.id}`}
+            className={`absolute right-1 top-1 h-1.5 w-1.5 rounded-full ${dot.className}`}
+          />
         ) : null}
       </div>
       <div className="min-w-0 flex-1 pr-1">
@@ -296,12 +306,22 @@ export function SlideDrawer({
       style={{ ...(width ? { width, minWidth: width } : {}), transition: 'width 250ms cubic-bezier(0.16, 1, 0.3, 1)' }}
       className="flex w-64 min-w-64 select-none flex-col bg-slate-900/50"
     >
-      <div className="flex items-center justify-between border-b border-slate-800 p-2.5">
-        <span className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          Slides
-          <span className="rounded-full border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">
-            {deck.slides.length}
-          </span>
+      <div className="flex items-center justify-between border-b border-slate-800/60 p-2.5">
+        <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          {onToggleCollapsed ? (
+            <button
+              type="button"
+              data-qid="deck:rail:collapse"
+              data-qs-action="DECK_RAIL_COLLAPSE"
+              aria-label="Collapse slide navigation"
+              title="Collapse to icon rail (Ctrl+B)"
+              onClick={onToggleCollapsed}
+              className="cursor-pointer rounded p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200"
+            >
+              <ChevronsLeft aria-hidden className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+          {deck.slides.length} slides
         </span>
         <button
           type="button"
@@ -368,21 +388,6 @@ export function SlideDrawer({
           </DragOverlay>
         </DndContext>
       </div>
-      {onToggleCollapsed ? (
-        <div className="border-t border-slate-800 p-1.5">
-          <button
-            type="button"
-            data-qid="deck:rail:collapse"
-            data-qs-action="DECK_RAIL_COLLAPSE"
-            aria-label="Collapse slide navigation"
-            title="Collapse to icon rail (Ctrl+B)"
-            onClick={onToggleCollapsed}
-            className="flex w-full cursor-pointer items-center justify-center gap-1 rounded py-1 text-xs text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
-          >
-            <ChevronsLeft aria-hidden className="h-3.5 w-3.5" /> Collapse
-          </button>
-        </div>
-      ) : null}
     </nav>
   )
 }
