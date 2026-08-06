@@ -59,7 +59,8 @@
    "product/brand/creative-digital": "lead RealPie EP + Dentsu interactive leadership (Disney/Toyota/Cartoon Network/Bandai, global teams)"
   },
   "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented.",
-  "recency_rule": "Recent work (ARCOS, pdf_oxide, extractor, SPARTA, memory) leads for engineering/technical audiences. RealPie/Dentsu are early-career leadership \u2014 surface as depth/range or for leadership-framed audiences, never as recent experience. Respect the existing 10-year-window resume-targeting policy: older roles are supporting context, not headline."
+  "recency_rule": "Recent work (ARCOS, pdf_oxide, extractor, SPARTA, memory) leads for engineering/technical audiences. RealPie/Dentsu are early-career leadership \u2014 surface as depth/range or for leadership-framed audiences, never as recent experience. Respect the existing 10-year-window resume-targeting policy: older roles are supporting context, not headline.",
+  "color_rule": "The creative/leadership arc (composer -> interactive leadership) is COLOR: it establishes a differentiated, cross-disciplinary problem-solving approach vs a typical agentic VP/engineer. Deploy as a thin differentiation thread, not as headline experience. The technical claims carry the credential weight."
  },
  "audiences": [
   "defense/compliance",
@@ -71,5 +72,6 @@
  "correction_log": [
   "2026-08-06: 'Sony God of War Executive Producer' framing (Indeed resume) is INACCURATE and must not be used. Actual: Executive Producer (web) at RealPie leading ~12; Director of Interactive Services at Dentsu America, Santa Monica, major consumer brands, global teams."
  ],
- "career_arc": "Commercial composer (X Games/Nokia/Pepsi/Taco Bell/Adidas) -> interactive/digital leadership (RealPie EP, Dentsu Director of Interactive Services) -> AI/verification architect (DARPA ARCOS, SPARTA, pdf_oxide, extractor, memory). Unusual creative-to-hard-technical range; the arc itself is a differentiator for the right audience."
+ "career_arc": "Commercial composer (X Games/Nokia/Pepsi/Taco Bell/Adidas) -> interactive/digital leadership (RealPie EP, Dentsu Director of Interactive Services) -> AI/verification architect (DARPA ARCOS, SPARTA, pdf_oxide, extractor, memory). Unusual creative-to-hard-technical range; the arc itself is a differentiator for the right audience.",
+ "differentiator": "Cross-disciplinary path (music/creative -> brand/interactive leadership -> AI/verification architecture) yields a problem-solving approach distinct from conventionally-trained agentic engineers/VPs."
 }
