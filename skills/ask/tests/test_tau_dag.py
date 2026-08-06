@@ -1011,8 +1011,12 @@ def test_compete_cli_execute_passes_poll_timeout_to_browser_worker_budget(monkey
             Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
         )
         command = spec["command"]
-        assert spec["timeout_s"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
-        assert command[command.index("--command-timeout-budget") + 1] == "900"
+        # Lane budgets come from per-handler envelopes, NOT --poll-timeout
+        # (98b021d2e: deriving them from poll timeout starved browser lanes;
+        # execution_timeout_seconds=0 means no --command-timeout-budget cap).
+        expected = {"handler-webgpt": 3900, "handler-webclaude": 3000}[node]
+        assert spec["timeout_s"] == expected
+        assert "--command-timeout-budget" not in command
 
 
 def test_browser_compete_gate_timeout_kills_process_group(tmp_path: Path) -> None:
@@ -3156,7 +3160,9 @@ args = sys.argv[1:]
 with log.open("a", encoding="utf-8") as fh:
     fh.write(json.dumps(args) + "\\n")
 if args[:1] == ["window.new"]:
-    print(json.dumps({"id": 900, "tabs": [{"id": 101, "windowId": 900, "url": args[1]}]}))
+    value = int(counter.read_text(encoding="utf-8").strip() or "100") + 1 if counter.exists() else 101
+    counter.write_text(str(value), encoding="utf-8")
+    print(json.dumps({"id": 800 + value, "tabs": [{"id": value, "windowId": 800 + value, "url": args[1]}]}))
 elif args[:1] == ["tab.new"]:
     value = int(counter.read_text(encoding="utf-8").strip() or "101") + 1 if counter.exists() else 102
     counter.write_text(str(value), encoding="utf-8")
@@ -3203,9 +3209,13 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
 
     assert lifecycle["status"] == "READY"
     assert lifecycle["mode"] == "fresh-temporary"
-    assert lifecycle["window_id"] == "900"
+    # One unfocused window per seat: a tab that is not the selected tab of its
+    # window reports document.hidden, and providers defer DOM updates while
+    # hidden, so seats must not share a window.
     assert [tab["handler"] for tab in lifecycle["created_tabs"]] == ["webgpt", "webclaude", "webkimi"]
     assert [tab["tab_id"] for tab in lifecycle["created_tabs"]] == ["101", "102", "103"]
+    seat_windows = [tab["window_id"] for tab in lifecycle["created_tabs"]]
+    assert len(set(seat_windows)) == 3, f"each seat needs its own window, got {seat_windows}"
     assert lifecycle["handler_projects"] == [
         "webgpt=fresh-browser-lifecycle-webgpt",
         "webclaude=fresh-browser-lifecycle-webclaude",
@@ -3221,25 +3231,23 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
         "1800",
     ]
     assert [
-        "tab.new",
+        "window.new",
         "https://claude.ai/new",
         "--json",
-        "--background",
-        "--window-id",
-        "900",
+        "--unfocused",
         "--lock-timeout",
         "1800",
     ] in logged
     assert [
-        "tab.new",
+        "window.new",
         "https://www.kimi.com/",
         "--json",
-        "--background",
-        "--window-id",
-        "900",
+        "--unfocused",
         "--lock-timeout",
         "1800",
     ] in logged
+    assert sum(1 for c in logged if c[:1] == ["window.new"]) == 3
+    assert not any(c[:1] == ["tab.new"] for c in logged), "seats must not share a window"
     assert ["bind", "fresh-browser-lifecycle-webgpt", "--backend", "webgpt", "--tab-id", "101", "--url", "https://chatgpt.com/", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
@@ -3553,6 +3561,11 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
 
     monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
     monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_lifecycle)
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "probe_browser_compete_handler_gate",
+        lambda *args, **kwargs: {"schema": "ask.browser_compete_handler_gate.v1", "skipped": True},
+    )
     monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_tau_execution)
 
     result = CliRunner().invoke(
@@ -3580,7 +3593,11 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["status"] == "PASS"
+    # The run still continues to Tau with the remaining seats, but a panel that
+    # lost a requested provider must report DEGRADED and name the lost seat -
+    # a four-seat result must never read as a clean five-seat PASS.
+    assert payload["status"] == "DEGRADED"
+    assert payload["removed_seats"], "a dropped seat must be surfaced, not silent"
     assert payload["live"] is True
     assert captured["lifecycle_started"] is True
     assert captured["bundle"]["status"] == "READY"
@@ -3646,6 +3663,11 @@ def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, t
 
     monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
     monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_lifecycle)
+    monkeypatch.setattr(
+        tau_dag_cli,
+        "probe_browser_compete_handler_gate",
+        lambda *args, **kwargs: {"schema": "ask.browser_compete_handler_gate.v1", "skipped": True},
+    )
     monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_tau_execution)
 
     result = CliRunner().invoke(
@@ -3673,7 +3695,8 @@ def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, t
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["status"] == "PASS"
+    assert payload["status"] == "DEGRADED"
+    assert payload["removed_seats"] == ["webgpt"]
     assert captured["lifecycle_started"] is True
     assert captured["bundle"]["status"] == "READY"
     assert captured["lifecycle_handlers"] == ["webkimi", "webclaude"]
