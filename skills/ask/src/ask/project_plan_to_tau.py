@@ -29,7 +29,10 @@ TEAM_PRESETS: dict[str, dict[str, str]] = {
         "backend": "claude-model-turn",
         "frontend": "claude-model-turn",
         "documentation": "codex-model-turn",
-        "testing": "codex-model-turn",
+        # Tests are code: with two provider families deployed, all code sits
+        # on anthropic so the openai reviewer stays independent. scillm#33's
+        # third-party profiles let testing diverge again.
+        "testing": "claude-model-turn",
         "independent_reviewer": "codex-model-turn",
     },
     "economical": {

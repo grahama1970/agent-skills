@@ -38,7 +38,7 @@ def main() -> int:
             {"id": "tests", "role": "testing", "depends_on": ["api", "ui"]},
             {"id": "review", "role": "independent_reviewer", "depends_on": ["api", "ui", "tests"]},
         ],
-        "team": {"preset": "fullstack-premium", "role_profiles": {"testing": "codex-model-turn"}},
+        "team": {"preset": "fullstack-premium", "role_profiles": {"documentation": "codex-model-turn"}},
         "execution": {"topology": "hybrid", "max_concurrency": 3, "max_retries": 1},
         "unresolved": [],
     }
