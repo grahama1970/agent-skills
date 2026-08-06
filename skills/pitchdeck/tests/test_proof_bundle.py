@@ -472,3 +472,51 @@ def test_decision_memory_rebuild(tmp_path: Path) -> None:
     reproposed = next(c for c in final["claims"] if c["id"] == target["id"])
     assert reproposed["status"] == "candidate"
     assert not reproposed.get("approval")
+
+
+def test_living_deck_drift_and_versioning(tmp_path: Path) -> None:
+    import json as _json
+
+    from pitchdeck.drift import check_drift, pin_version, snapshot_sources
+    from pitchdeck.models import SourceManifest
+
+    source_path = FIXTURE / "source_manifest.yaml"
+    src = load_yaml(source_path, SourceManifest)
+    out = tmp_path / "bundle"
+    plan_bundle(src, source_manifest_path=source_path, output_dir=out, max_slides=8)
+
+    deck = load_yaml(out / "deck.public.yaml", DeckManifest)
+    ledger = load_yaml(out / "claim_ledger.yaml", ClaimLedger)
+    resolved = load_yaml(out / "source_manifest.resolved.yaml", SourceManifest)
+
+    # No-op: fresh snapshot reports clean.
+    report = check_drift(out, deck, ledger, resolved, source_path.parent)
+    assert report["snapshot"] and report["no_op"]
+
+    # Edit a source -> drift names it and maps affected claims; publish blocks.
+    target = Path(resolved.sources[0].path)
+    original = target.read_text()
+    try:
+        target.write_text(original + "\nA new paragraph that changes the source hash.\n")
+        drifted = check_drift(out, deck, ledger, resolved, source_path.parent)
+        assert resolved.sources[0].id in drifted["changed"] and not drifted["no_op"]
+        assert drifted["affected_claims"], "changed source must map to claims"
+        publish = validate_bundle(
+            deck, ledger, resolved, load_yaml(out / "asset_manifest.yaml", AssetManifest),
+            source_manifest_dir=source_path.parent, asset_manifest_dir=out,
+            require_approved_claims=True,
+        )
+        assert any(i.code == "SOURCE_DRIFT" and i.severity == "error" for i in publish.issues)
+        # Refresh snapshot -> clean again (the repair path).
+        snapshot_sources(out, resolved, source_path.parent)
+        assert check_drift(out, deck, ledger, resolved, source_path.parent)["no_op"]
+    finally:
+        target.write_text(original)
+    snapshot_sources(out, resolved, source_path.parent)
+
+    # Version pinning writes the hash set + revision beside the artifact.
+    artifact = tmp_path / "deck.pptx"
+    artifact.write_bytes(b"PK\x03\x04fake")
+    version_path = pin_version(artifact, out, deck, 7)
+    version = _json.loads(version_path.read_text())
+    assert version["bundle_revision"] == 7 and version["source_sha256"]

@@ -179,6 +179,26 @@ def validate_bundle(
                     )
                 )
 
+    # Living-deck drift gate (#1229): a stale snapshot blocks publish.
+    if require_approved_claims:
+        from .drift import SOURCE_STATE_FILE, check_drift
+
+        if (asset_manifest_dir / SOURCE_STATE_FILE).exists():
+            drift = check_drift(asset_manifest_dir, deck, ledger, sources, source_manifest_dir)
+            for source_id in [*drift["changed"], *drift["missing"]]:
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        code="SOURCE_DRIFT",
+                        message=(
+                            f"Source '{source_id}' changed or vanished since the recorded snapshot; "
+                            f"affected claims: {', '.join(drift['affected_claims']) or 'none mapped'}. "
+                            "Re-plan, re-review, and refresh the snapshot before publishing."
+                        ),
+                        source_id=source_id,
+                    )
+                )
+
     for slide in deck.slides:
         element_texts = [e.text for e in slide.elements if e.text]
         visual_texts = [*slide.visual.items, *slide.visual.callouts]

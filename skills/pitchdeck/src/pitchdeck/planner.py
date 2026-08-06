@@ -630,6 +630,9 @@ def plan_bundle(
     dump_yaml(assets, output_dir / "asset_manifest.yaml")
     dump_yaml(deck, output_dir / "deck.public.yaml")
     write_text(output_dir / "speaker_notes.md", _speaker_notes(deck))
+    from .drift import snapshot_sources
+
+    snapshot_sources(output_dir, resolved, source_manifest_path.parent)
 
     candidate_claims = sum(1 for claim in ledger.claims if claim.status == ClaimStatus.CANDIDATE)
     missing_assets = sum(1 for asset in assets.assets if asset.status != AssetStatus.PRESENT)

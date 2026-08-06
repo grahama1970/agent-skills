@@ -334,6 +334,32 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="drift")
+def drift(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    update: Annotated[bool, typer.Option("--update", help="Refresh the source snapshot after reporting.")] = False,
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+) -> None:
+    """Living-deck drift check: report changed sources + affected claims/slides; --update refreshes the snapshot."""
+    import json as json_mod
+
+    from .drift import check_drift, snapshot_sources
+    from .slide_edit import _load
+
+    try:
+        deck, ledger, sources, assets, source_path = _load(bundle_dir, deck_name)
+        report = check_drift(bundle_dir, deck, ledger, sources, source_path.parent)
+        if update:
+            snapshot_sources(bundle_dir, sources, source_path.parent)
+            report["snapshot_refreshed"] = True
+        typer.echo(json_mod.dumps(report, indent=1))
+        raise typer.Exit(0 if report["no_op"] or update else 4)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="simulate")
 def simulate(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

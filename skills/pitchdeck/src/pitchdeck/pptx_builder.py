@@ -759,6 +759,13 @@ def build_pptx(
     all_warnings = [issue.message for issue in report.issues if issue.severity == "warning"]
     all_warnings.extend(issue.message for issue in pptx_issues if issue.severity == "warning")
     readiness = Readiness.USABLE_WITH_GAPS if all_warnings else Readiness.READY
+    if require_approved_claims:
+        # Living-deck versioning (#1229): every publish is pinned to the
+        # source-hash set + bundle revision so versions are diffable.
+        from .drift import pin_version
+        from .revisions import current_revision
+
+        pin_version(output_path, asset_manifest_dir, deck, current_revision(asset_manifest_dir))
     receipt = OperationReceipt(
         schema="pitchdeck.build_receipt.v1",
         operation="build",
