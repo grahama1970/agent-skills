@@ -1513,9 +1513,23 @@ footer a:hover {
   position: relative;
   overflow: hidden;
 }
+/* Cross-fade buffer: one full frame (blurred backdrop + sharp contain),
+   stacked and opacity-faded so phase changes never flash or hard-swap. */
+.stepper-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+.stepper-layer.is-active {
+  opacity: 1;
+  z-index: 1;
+}
 /* Backdrop: the same frame, cover-filled, blurred and dimmed — no dead
    space around portrait frames, no cropping of the sharp layer. */
-.stepper-view::before {
+.stepper-layer::before {
   content: '';
   position: absolute;
   inset: -4%;
@@ -1525,7 +1539,7 @@ footer a:hover {
   filter: blur(22px) brightness(0.45) saturate(0.85);
   z-index: 0;
 }
-.stepper-view::after {
+.stepper-layer::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1537,6 +1551,11 @@ footer a:hover {
   background-repeat: no-repeat;
   background-position: center;
   z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stepper-layer {
+    transition: none;
+  }
 }
 .stepper-view .hud,
 .stepper-view figcaption {

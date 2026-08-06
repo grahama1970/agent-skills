@@ -24,6 +24,31 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   const go = (next: number) =>
     setIdx(Math.min(Math.max(next, 0), phases.length - 1));
 
+  // Dual-buffer cross-fade: two stacked layers, only one visible. On a phase
+  // change the incoming frame is written to the hidden buffer and faded in
+  // (CSS opacity, GPU-composited) while the old one fades out — no flash, no
+  // hard swap. Preloaded frames (below) make the incoming layer paint instantly.
+  const [buffers, setBuffers] = useState<[DreamPhase, DreamPhase | null]>([
+    phases[0],
+    null,
+  ]);
+  const [active, setActive] = useState(0);
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    const next = active === 0 ? 1 : 0;
+    setBuffers((prev) => {
+      const copy: [DreamPhase, DreamPhase | null] = [prev[0], prev[1]];
+      copy[next] = cur;
+      return copy;
+    });
+    setActive(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
+
   // Preload every frame once on mount so scrubbing never waits on the
   // network — the first visit to a phase would otherwise flash unrendered.
   useEffect(() => {
@@ -77,16 +102,25 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
       <button
         type="button"
         className="stepper-view"
-        style={{
-          ['--img' as string]: `url('/dream/${cur.f}.webp')`,
-          ['--tint' as string]: cur.t,
-        }}
         data-qid="dream:action:zoom"
         data-qs-action="DREAM_ZOOM_FRAME"
         title={`Open phase ${cur.n} frame full-screen`}
         onClick={() => setZoom(true)}
         aria-label={`Phase ${cur.n} — ${cur.c}. Click to view full-screen.`}
       >
+        {buffers.map((b, i) =>
+          b ? (
+            <span
+              key={i}
+              className={`stepper-layer${active === i ? ' is-active' : ''}`}
+              style={{
+                ['--img' as string]: `url('/dream/${b.f}.webp')`,
+                ['--tint' as string]: b.t,
+              }}
+              aria-hidden="true"
+            />
+          ) : null,
+        )}
         <span className="hud hud-tl">
           [{cur.n}/{String(phases.length).padStart(2, '0')}] {cur.c}
         </span>
