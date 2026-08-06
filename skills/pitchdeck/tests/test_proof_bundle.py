@@ -229,9 +229,19 @@ def test_case12_pptx_text_inventory_matches_plan(planned: Path) -> None:
     assert counts["strings_verified"] > 10  # full whole-string inventory ran
 
 
-@pytest.mark.xfail(strict=True, reason="visual-diff threshold between browser and LibreOffice render not implemented (roundtable backlog)")
+@pytest.mark.xfail(strict=True, reason="visual-diff threshold between browser and LibreOffice render not implemented; documented as a named limitation (#1231)")
 def test_case13_browser_vs_libreoffice_visual_diff() -> None:
     raise NotImplementedError
+
+
+def test_case13_limitation_is_documented() -> None:
+    """#1231 accepted-branch: the unproven fidelity gap must be NAMED wherever
+    publish appears — SKILL.md, README.md, and every build receipt."""
+    root = Path(__file__).resolve().parents[1]
+    for doc in ("SKILL.md", "README.md"):
+        assert "Known limitation: visual fidelity" in (root / doc).read_text(), doc
+    builder = (root / "src" / "pitchdeck" / "pptx_builder.py").read_text()
+    assert "KNOWN LIMITATION: browser-vs-PPTX visual fidelity is unverified" in builder
 
 
 def test_case14_malformed_asset_upload_magic_bytes(tmp_path: Path) -> None:

@@ -781,7 +781,14 @@ def build_pptx(
             ),
             "validation_warnings": len(all_warnings),
         },
-        gaps=all_warnings,
+        gaps=[
+            *all_warnings,
+            # Named limitation (#1231): whole-string scanning proves text bytes
+            # survive; it does not prove visual fidelity between the browser
+            # renderer and PPTX/LibreOffice output (geometry, wrap, legibility).
+            "KNOWN LIMITATION: browser-vs-PPTX visual fidelity is unverified; "
+            "review the rendered PPTX before external delivery.",
+        ],
         claims=OperationClaims(
             proves=[
                 "The PPTX was generated from typed, producer-validated manifests.",

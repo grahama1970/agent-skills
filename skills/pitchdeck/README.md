@@ -148,3 +148,7 @@ A passing build proves typed manifest validation, encoded public/private claim c
 editable PPTX generation, and structural reopen. It does not prove README/code alignment,
 claim correctness, screenshot freshness, visual approval, current demo health, production
 readiness, certification, accreditation, deployment, or customer endorsement.
+
+## Known limitation: visual fidelity
+
+The compiler proves every visible string survives into the emitted artifacts (post-emit whole-string scan), but it does NOT yet prove visual fidelity between the browser renderer and the PPTX/LibreOffice render: geometry, wrapping, and legibility can differ. The strict xfail `test_case13_browser_vs_libreoffice_visual_diff` tracks this. Review the rendered PPTX (`run.sh render`) before external delivery; every build receipt carries this limitation as a gap line.

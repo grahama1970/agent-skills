@@ -249,3 +249,7 @@ services. Positive, negative, public/private leakage, missing-asset, qualifier,
 and PPTX-structure behavior is covered by committed fixtures, `pytest`, and
 `sanity.sh`. Add an `agentic-evals` fixture before introducing autonomous claim
 rewriting, external research, or multi-agent slide selection.
+
+## Known limitation: visual fidelity
+
+The compiler proves every visible string survives into the emitted artifacts (post-emit whole-string scan), but it does NOT yet prove visual fidelity between the browser renderer and the PPTX/LibreOffice render: geometry, wrapping, and legibility can differ. The strict xfail `test_case13_browser_vs_libreoffice_visual_diff` tracks this. Review the rendered PPTX (`run.sh render`) before external delivery; every build receipt carries this limitation as a gap line.
