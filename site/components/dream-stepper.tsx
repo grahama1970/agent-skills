@@ -55,6 +55,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   return (
     <div className="stepper">
       <button
+        key={cur.f}
         type="button"
         className="stepper-view"
         style={{
