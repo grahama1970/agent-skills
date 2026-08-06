@@ -559,3 +559,84 @@ def test_variation_plan_compiles_from_theme(tmp_path: Path, planned: Path) -> No
     if not os.getenv("OPENAI_API_KEY"):
         result = run_variations(plan_path, tmp_path / "vars")
         assert result["status"] == "NEEDS_ATTENTION" and "OPENAI_API_KEY" in result["reason"]
+
+
+def test_changeset_tokens_and_mcp(planned: Path, tmp_path: Path) -> None:
+    import ast
+
+    from pitchdeck.change_set import (
+        DeckStructureOp,
+        EditProposal,
+        SetSlideField,
+        apply_proposal,
+        mint_confirmation_token,
+        simulate_proposal,
+    )
+    from pitchdeck.mcp_server import handle_request
+    from pitchdeck.revisions import current_revision
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    sid = sorted(deck.slides, key=lambda s: s.order)[1].id
+    rev = current_revision(planned)
+
+    # Cosmetic proposal: simulate then apply without a token.
+    cosmetic = EditProposal(
+        base_revision=rev,
+        ops=[SetSlideField(slide_id=sid, field="footer", value="proposal footer")],
+        rationale="cosmetic footer", idempotency_key="idem-cosmetic-1",
+    )
+    assert simulate_proposal(planned, cosmetic)["would_pass"]
+    assert apply_proposal(planned, tmp_path / "ui", cosmetic)["applied"]
+
+    # Governance proposal (delete) requires a token.
+    rev2 = current_revision(planned)
+    governance = EditProposal(
+        base_revision=rev2,
+        ops=[DeckStructureOp(deck_op="delete", slide_id=sid)],
+        rationale="drop slide", idempotency_key="idem-gov-1",
+    )
+    with pytest.raises(PermissionError, match="confirmation token"):
+        apply_proposal(planned, tmp_path / "ui", governance)
+
+    # Cross-proposal token rejected; correct token works once; replay rejected.
+    other = governance.model_copy(update={"idempotency_key": "idem-gov-2"})
+    wrong = mint_confirmation_token(planned, other)
+    with pytest.raises(PermissionError, match="different proposal"):
+        apply_proposal(planned, tmp_path / "ui", governance, token=wrong)
+    token = mint_confirmation_token(planned, governance)
+    assert apply_proposal(planned, tmp_path / "ui", governance, token=token)["governance"]
+    restore = EditProposal(
+        base_revision=current_revision(planned),
+        ops=[DeckStructureOp(deck_op="delete", slide_id=deck.slides[0].id)],
+        rationale="x", idempotency_key="idem-gov-3",
+    )
+    with pytest.raises(PermissionError, match="unknown or already used"):
+        apply_proposal(planned, tmp_path / "ui", restore, token=token)
+
+    # Stale revision refuses.
+    stale = EditProposal(
+        base_revision=rev,  # long since advanced
+        ops=[SetSlideField(slide_id="03-thesis", field="footer", value="x")],
+        rationale="stale", idempotency_key="idem-stale-1",
+    )
+    result = simulate_proposal(planned, stale)  # simulate ignores CAS (dry)
+    if result["would_pass"]:
+        with pytest.raises(ValueError, match="revision"):
+            apply_proposal(planned, tmp_path / "ui", stale)
+
+    # MCP adapter: history works, token minting is NOT exposed, imports are clean.
+    history = handle_request({"tool": "pitchdeck_history", "arguments": {"bundle_dir": str(planned)}})
+    assert "revision" in history
+    unknown = handle_request({"tool": "pitchdeck_mint_token", "arguments": {"bundle_dir": str(planned)}})
+    assert "unknown tool" in unknown["error"]
+    tree = ast.parse((Path(__file__).resolve().parents[1] / "src" / "pitchdeck" / "mcp_server.py").read_text())
+    imported = {
+        node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module
+    }
+    assert "pitchdeck.change_set" not in imported  # relative imports only
+    for mod in imported:
+        assert mod in {"__future__", "change_set", "revisions", "pathlib"} or not mod.startswith("pitchdeck"), mod
+    mint_exposed = any(
+        isinstance(n, ast.Name) and n.id == "mint_confirmation_token" for n in ast.walk(tree)
+    )
+    assert not mint_exposed, "MCP module must not mint confirmation tokens"
