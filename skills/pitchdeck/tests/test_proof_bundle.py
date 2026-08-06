@@ -554,11 +554,13 @@ def test_variation_plan_compiles_from_theme(tmp_path: Path, planned: Path) -> No
     assert deck.deck.theme_tokens.accent in plan["brief"]
     assert "MUST NOT contain any text" in plan["brief"]
     assert plan["tau_dag"]["topology"] == "concurrent" and len(plan["tau_dag"]["nodes"]) == 3
-    # Without a key, live execution refuses honestly instead of fabricating.
-    import os
-    if not os.getenv("OPENAI_API_KEY"):
+    # OAuth route: nodes are codex handlers carrying the imagegen skill.
+    assert all(n["handler"] == "codex" and n["skill"] == "imagegen" for n in plan["tau_dag"]["nodes"])
+    # Without the codex CLI, live execution refuses honestly instead of fabricating.
+    import shutil as _shutil
+    if not _shutil.which("codex"):
         result = run_variations(plan_path, tmp_path / "vars")
-        assert result["status"] == "NEEDS_ATTENTION" and "OPENAI_API_KEY" in result["reason"]
+        assert result["status"] == "NEEDS_ATTENTION"
 
 
 def test_changeset_tokens_and_mcp(planned: Path, tmp_path: Path) -> None:

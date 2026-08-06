@@ -2,19 +2,20 @@
 
 compile_brief turns a slide's visual need + theme tokens into a generation
 brief (so variations match the deck palette instead of generic AI-art drift).
-emit_variation_plan writes N prompt variants plus a tau-DAG-shaped spec; when
-OPENAI_API_KEY is present, run_variations executes them live through the
-system imagegen CLI and writes a contact sheet. Selected images enter through
-the NORMAL asset intake (magic bytes, alt text) as ILLUSTRATION assets whose
-generation_brief marks them for the GENERATED_ASSET_CLAIM_SURFACE gate.
-Failure modes: missing key or missing imagegen CLI reports NEEDS_ATTENTION —
-never a fabricated image, never a silent skip.
+emit_variation_plan writes N prompt variants plus a tau-DAG-shaped spec whose
+nodes are CODEX handlers: this house uses OAuth sessions, not API keys — each
+variant runs through `codex exec`, where the imagegen skill's built-in
+image_gen tool generates under the authenticated ChatGPT session. Selected
+images enter through the NORMAL asset intake (magic bytes, alt text) as
+ILLUSTRATION assets whose generation_brief marks them for the
+GENERATED_ASSET_CLAIM_SURFACE gate. Failure modes: missing codex CLI or a
+failed generation reports NEEDS_ATTENTION — never a fabricated image, never a
+silent skip.
 """
 
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 from pathlib import Path
 
@@ -29,9 +30,7 @@ _AXES = [
     "flat vector style, bold shapes, no text",
 ]
 
-IMAGEGEN_CLI = (
-    Path(__file__).resolve().parents[3] / ".system" / "imagegen" / "scripts" / "image_gen.py"
-)
+CODEX_TIMEOUT_SECONDS = 600
 
 
 def compile_brief(deck: DeckManifest, slide_id: str) -> str:
@@ -58,7 +57,7 @@ def emit_variation_plan(deck: DeckManifest, slide_id: str, output_dir: Path, cou
         "tau_dag": {
             "topology": "concurrent",
             "nodes": [
-                {"id": f"imagegen-{i + 1}", "handler": "imagegen", "prompt": v}
+                {"id": f"imagegen-{i + 1}", "handler": "codex", "skill": "imagegen", "prompt": v}
                 for i, v in enumerate(variants)
             ],
             "join": {"id": "contact-sheet", "type": "human-select"},
@@ -71,25 +70,31 @@ def emit_variation_plan(deck: DeckManifest, slide_id: str, output_dir: Path, cou
 
 
 def run_variations(plan_path: Path, output_dir: Path) -> dict:
-    """Execute the plan live via the system imagegen CLI; contact-sheet the results."""
-    if not os.getenv("OPENAI_API_KEY"):
-        return {"status": "NEEDS_ATTENTION", "reason": "OPENAI_API_KEY is not set; live generation blocked"}
-    if not IMAGEGEN_CLI.exists():
-        return {"status": "NEEDS_ATTENTION", "reason": f"imagegen CLI not found at {IMAGEGEN_CLI}"}
+    """Execute the plan live via codex (OAuth built-in image_gen); contact-sheet the results."""
+    import shutil as _shutil
+
+    if not _shutil.which("codex"):
+        return {"status": "NEEDS_ATTENTION", "reason": "codex CLI not found; OAuth image generation unavailable"}
     plan = json.loads(plan_path.read_text())
     produced: list[str] = []
     for index, prompt in enumerate(plan["variants"], start=1):
         out = output_dir / f"variant-{index}.png"
+        instruction = (
+            "Use the imagegen skill's built-in image_gen tool to generate ONE image "
+            f"with exactly this prompt, then copy the generated PNG to {out} and reply "
+            f"with only the absolute saved path: {prompt}"
+        )
         result = subprocess.run(
-            ["python3", str(IMAGEGEN_CLI), "--prompt", prompt, "--output", str(out)],
+            ["codex", "exec", "--skip-git-repo-check", instruction],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=CODEX_TIMEOUT_SECONDS,
+            cwd=output_dir,
         )
-        if result.returncode == 0 and out.exists():
+        if out.exists() and out.stat().st_size > 0:
             produced.append(str(out))
         else:
-            logger.error("variant {} failed: {}", index, result.stderr[-200:])
+            logger.error("variant {} failed (codex exit {}): {}", index, result.returncode, result.stdout[-200:])
     status = "PASS" if len(produced) == len(plan["variants"]) else "USABLE_WITH_GAPS" if produced else "NEEDS_ATTENTION"
     if produced:
         from PIL import Image
