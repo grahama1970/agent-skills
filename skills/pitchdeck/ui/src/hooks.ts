@@ -3,6 +3,14 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle } from './types'
 
 export const revisionStore = { current: 0 }
 
+/** Resolve an emitted asset path against the LOADED deck's URL, not the site
+ * root — a deck opened via ?deck=./fresh/deck.data.json keeps its own assets/
+ * directory next to it. */
+export function assetUrl(file: string): string {
+  const deckParam = new URLSearchParams(window.location.search).get('deck') ?? './deck.data.json'
+  return new URL(file, new URL(deckParam, window.location.href)).toString()
+}
+
 /** Load the emitted deck bundle. Refuses bundles without a seam_validation PASS stamp. */
 export function useDeck(): { deck: UiDeckBundle | null; error: string | null; reload: () => void } {
   const [deck, setDeck] = useState<UiDeckBundle | null>(null)

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { assetUrl } from '../hooks'
 import { ImageOff } from 'lucide-react'
 import { MathBlock, MermaidDiagram } from '../components/DiagramRenderer'
 import { Editable } from '../edit'
@@ -34,7 +35,7 @@ function Visual({ visual }: { visual: UiVisual }) {
       <figure className="flex h-full w-full flex-col gap-3">
         {visual.asset.kind === 'video' ? (
           <video
-            src={visual.asset.file}
+            src={assetUrl(visual.asset.file)}
             controls
             playsInline
             preload="metadata"
@@ -43,7 +44,7 @@ function Visual({ visual }: { visual: UiVisual }) {
           />
         ) : (
           <img
-            src={visual.asset.file}
+            src={assetUrl(visual.asset.file)}
             alt={visual.asset.alt_text}
             className="min-h-0 w-full flex-1 rounded-2xl object-contain shadow-2xl"
           />

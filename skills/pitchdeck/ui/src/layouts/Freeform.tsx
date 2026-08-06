@@ -2,7 +2,7 @@ import { useContext, useState } from 'react'
 import { Rnd } from 'react-rnd'
 import { FloatingToolbar } from '../components/FloatingToolbar'
 import { EditContext } from '../edit'
-import { revisionStore } from '../hooks'
+import { assetUrl, revisionStore } from '../hooks'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiElement, type UiSlide } from '../types'
 
 // Freeform layout: elements carry fractional x/y/w/h that map 1:1 onto both
@@ -123,7 +123,7 @@ function ElementContent({ element }: { element: UiElement }) {
     }
     return element.asset.kind === 'video' ? (
       <video
-        src={element.asset.file}
+        src={assetUrl(element.asset.file)}
         controls
         playsInline
         preload="metadata"
@@ -131,7 +131,7 @@ function ElementContent({ element }: { element: UiElement }) {
         className="h-full w-full rounded-xl object-contain"
       />
     ) : (
-      <img src={element.asset.file} alt={element.asset.alt_text} className="h-full w-full rounded-xl object-contain" />
+      <img src={assetUrl(element.asset.file)} alt={element.asset.alt_text} className="h-full w-full rounded-xl object-contain" />
     )
   }
   return (
