@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml
 from loguru import logger
 
-from .revisions import commit_bundle_write
+from .revisions import RevisionConflict, commit_bundle_write, stamp_emitted_revision
 from .models import (
     AssetManifest,
     ClaimLedger,
@@ -301,17 +301,32 @@ def apply_slide_edit(
     )
 
     deck_path = bundle_dir / deck_name
-    revision = commit_bundle_write(
-        bundle_dir,
-        {
-            deck_path: yaml.safe_dump(
-                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-                sort_keys=False,
-                allow_unicode=True,
-            )
-        },
-        expected_revision=expected_revision,
-    )
+    try:
+        revision = commit_bundle_write(
+            bundle_dir,
+            {
+                deck_path: yaml.safe_dump(
+                    updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
+            },
+            expected_revision=expected_revision,
+        )
+    except RevisionConflict:
+        # The emission above reflects the now-REJECTED edit; restore output_dir
+        # to the committed bundle before failing closed (#1261).
+        emit_ui_bundle(
+            deck,
+            ledger,
+            sources,
+            assets,
+            source_manifest_dir=source_path.parent,
+            asset_manifest_dir=bundle_dir,
+            output_dir=output_dir,
+        )
+        raise
+    stamp_emitted_revision(output_dir, revision)
     logger.info("slide edit applied: {} {} (rev {}); deck re-emitted", slide_id, field, revision)
 
     return OperationReceipt(
@@ -422,17 +437,32 @@ def apply_deck_op(
         output_dir=output_dir,
     )
     deck_path = bundle_dir / deck_name
-    revision = commit_bundle_write(
-        bundle_dir,
-        {
-            deck_path: yaml.safe_dump(
-                updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
-                sort_keys=False,
-                allow_unicode=True,
-            )
-        },
-        expected_revision=expected_revision,
-    )
+    try:
+        revision = commit_bundle_write(
+            bundle_dir,
+            {
+                deck_path: yaml.safe_dump(
+                    updated_deck.model_dump(mode="json", by_alias=True, exclude_none=True),
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
+            },
+            expected_revision=expected_revision,
+        )
+    except RevisionConflict:
+        # The emission above reflects the now-REJECTED edit; restore output_dir
+        # to the committed bundle before failing closed (#1261).
+        emit_ui_bundle(
+            deck,
+            ledger,
+            sources,
+            assets,
+            source_manifest_dir=source_path.parent,
+            asset_manifest_dir=bundle_dir,
+            output_dir=output_dir,
+        )
+        raise
+    stamp_emitted_revision(output_dir, revision)
     logger.info("deck op applied: {} on {} (rev {}); {} slides", op, slide_id, revision, len(renumbered))
     return OperationReceipt(
         schema="pitchdeck.deck_op_receipt.v1",

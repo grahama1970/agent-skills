@@ -85,6 +85,23 @@ def current_revision(bundle_dir: Path) -> int:
         return 0
 
 
+def stamp_emitted_revision(output_dir: Path, revision: int) -> None:
+    """Rewrite the revision field of an already-emitted deck.data.json (atomic).
+
+    Mutation paths validate-and-emit BEFORE commit_bundle_write bumps the
+    counter, so the emitted bundle carries the pre-bump revision. Without this
+    stamp every published bundle is one revision behind and clients that
+    reload still pin a stale base_revision — the next CAS edit can never
+    succeed without an unrelated re-emit (#1261).
+    """
+    target = output_dir / "deck.data.json"
+    bundle = json.loads(target.read_text(encoding="utf-8"))
+    bundle["revision"] = revision
+    tmp = target.parent / f".{target.name}.tmp"
+    tmp.write_text(json.dumps(bundle, indent=1), encoding="utf-8")
+    os.replace(tmp, target)
+
+
 def commit_bundle_write(
     bundle_dir: Path,
     files: dict[Path, str],

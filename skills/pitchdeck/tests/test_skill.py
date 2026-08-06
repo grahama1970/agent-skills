@@ -994,3 +994,46 @@ def test_content_bindings_session2(tmp_path: Path) -> None:
         i.code == "QUALIFIER_NOT_STRUCTURAL" and i.severity == "error"
         for i in run(bad_deck, publish=True).issues
     )
+
+
+def test_emitted_revision_matches_committed_and_conflict_restores_output(tmp_path: Path) -> None:
+    """#1261: after any apply the published bundle carries the COMMITTED revision;
+    a CAS conflict restores output_dir to the committed state instead of leaving
+    the rejected edit's emission behind."""
+    import json
+
+    from pitchdeck.revisions import RevisionConflict, current_revision
+    from pitchdeck.slide_edit import apply_deck_op, apply_slide_edit
+
+    source_path = FIXTURE / "source_manifest.yaml"
+    source = load_yaml(source_path, SourceManifest)
+    planned = tmp_path / "planned"
+    plan_bundle(source, source_manifest_path=source_path, output_dir=planned, max_slides=10)
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    slide = deck.slides[1]
+    out = tmp_path / "ui"
+
+    apply_slide_edit(planned, out, slide_id=slide.id, field="title", value="Revision stamp check")
+    emitted = json.loads((out / "deck.data.json").read_text())
+    assert emitted["revision"] == current_revision(planned)
+
+    apply_deck_op(planned, out, op="duplicate", slide_id=slide.id)
+    emitted = json.loads((out / "deck.data.json").read_text())
+    assert emitted["revision"] == current_revision(planned)
+
+    # Stale base_revision: rejected, and output_dir is restored to the
+    # committed bundle (same revision and title as before the attempt).
+    committed = json.loads((out / "deck.data.json").read_text())
+    with pytest.raises(RevisionConflict):
+        apply_slide_edit(
+            planned,
+            out,
+            slide_id=slide.id,
+            field="title",
+            value="This edit must not surface",
+            expected_revision=current_revision(planned) - 1,
+        )
+    restored = json.loads((out / "deck.data.json").read_text())
+    assert restored["revision"] == committed["revision"]
+    assert "This edit must not surface" not in json.dumps(restored)
