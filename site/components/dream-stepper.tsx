@@ -24,29 +24,36 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
     setIdx(Math.min(Math.max(next, 0), phases.length - 1));
 
   useEffect(() => {
-    if (!zoom) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setZoom(false);
+      if (e.key === 'Escape') {
+        setZoom(false);
+        return;
+      }
+      const el = document.activeElement as HTMLElement | null;
+      const editing =
+        !!el &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) ||
+          el.isContentEditable);
+      if (editing) return;
+      const k = e.key.toLowerCase();
+      if (e.key === 'ArrowRight' || k === 'l') {
+        go(idx + 1);
+      } else if (e.key === 'ArrowLeft' || k === 'h') {
+        go(idx - 1);
+      } else {
+        const num = parseInt(e.key, 10);
+        if (!Number.isNaN(num)) {
+          const target = num === 0 ? 9 : num - 1;
+          if (target < phases.length) setIdx(target);
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [zoom]);
+  }, [idx, phases.length]);
 
   return (
-    <div
-      className="stepper"
-      onKeyDown={(e) => {
-        const k = e.key.toLowerCase();
-        if (e.key === 'ArrowRight' || k === 'l') {
-          e.preventDefault();
-          go(idx + 1);
-        }
-        if (e.key === 'ArrowLeft' || k === 'h') {
-          e.preventDefault();
-          go(idx - 1);
-        }
-      }}
-    >
+    <div className="stepper">
       <button
         type="button"
         className="stepper-view"
@@ -109,8 +116,9 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         </button>
       </div>
       <p className="stepper-hint">
-        ← → or H / L to scrub · click frame to zoom · every value in the
-        overlay is the file&apos;s real path and size
+        ← → or H / L to scrub · 1–9 jump to a phase, 0 to the finale · click
+        frame to zoom · every value in the overlay is the file&apos;s real
+        path and size
       </p>
       {zoom && (
         <div
