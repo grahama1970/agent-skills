@@ -676,3 +676,33 @@ def test_claim_decide_and_replay(planned: Path, tmp_path: Path) -> None:
     assert replayed["replayed"] == len(log_lines)
     replay_ledger = load_yaml(copy / "claim_ledger.yaml", ClaimLedger)
     assert next(c for c in replay_ledger.claims if c.id == plain.id).status.value == "approved"
+
+
+def test_deck_document_canonical_schema(tmp_path):
+    """#1263: the whole deck compiles into ONE strict document — every slide as
+    in-bounds bbox elements, referential integrity enforced, deterministic."""
+    import json
+
+    from pitchdeck.document import DeckDocument, compile_document, export_json_schema
+
+    bundle = Path(__file__).parent.parent / "examples" / "sparta-explorer"
+    doc = compile_document(bundle)
+    assert doc.schema_ == "pitchdeck.deck_document.v1"
+    assert len(doc.slides) >= 1 and all(s.elements for s in doc.slides)
+    for slide in doc.slides:
+        for el in slide.elements:
+            assert el.bbox.x + el.bbox.w <= 1.0001 and el.bbox.y + el.bbox.h <= 1.0001
+    # deterministic round-trip, and the dump revalidates strictly
+    dump = doc.model_dump_json(by_alias=True)
+    assert dump == compile_document(bundle).model_dump_json(by_alias=True)
+    DeckDocument.model_validate(json.loads(dump))
+    # committed JSON Schema artifact matches the models (generated, not hand-edited)
+    committed = json.loads((Path(__file__).parent.parent / "schemas" / "pitchdeck.deck_document.v1.schema.json").read_text())
+    assert committed == export_json_schema()
+    # referential integrity fails closed
+    broken = json.loads(dump)
+    broken["slides"][0]["claim_ids"] = ["no-such-claim"]
+    import pytest as _pytest
+
+    with _pytest.raises(Exception):
+        DeckDocument.model_validate(broken)

@@ -52,57 +52,8 @@ slides:
   hidden: false
   notes: Public design-partner opener. Keep the proposition intact and do not add
     deployment, customer, or readiness language.
-- id: 04-product
-  order: 2
-  role: product-in-one-view
-  layout: split
-  visibility: public
-  title: One inspectable decision thread
-  message: Start with a threat, control, requirement, component, supplier, test, or
-    finding and follow the relevant evidence, derivation, uncertainty, and remaining
-    human decision.
-  body:
-  - Why do we believe this?
-  - What is missing, stale, disputed, or still only a candidate?
-  - Who is allowed to decide?
-  - What blocks signoff next?
-  source_refs:
-  - source_id: sparta-public-readme
-    section: Introduction
-  claim_ids:
-  - sparta-public-one-thread
-  - sparta-public-three-questions
-  visual:
-    type: none
-    position: right
-    items: []
-    callouts: []
-  claim_guard:
-    allowed_claim_ids: []
-    requires_non_claim_ids: []
-    forbidden_unqualified: []
-  elements: []
-  bindings:
-  - path: title
-    kind: non_claim
-  - path: message
-    kind: non_claim
-  - path: body:0
-    kind: non_claim
-  - path: body:1
-    kind: non_claim
-  - path: body:2
-    kind: non_claim
-  - path: body:3
-    kind: non_claim
-  transition: slide
-  transition_duration_ms: 400
-  reveal: stagger_up
-  hidden: false
-  notes: Use native slide shapes for the decision-thread visual; do not paste the
-    README's long workflow verbatim.
 - id: 02-problem
-  order: 3
+  order: 2
   role: problem
   layout: statement
   visibility: public
@@ -151,7 +102,7 @@ slides:
   notes: Frame the problem as evidence and authority fragmentation, not as a generic
     search or chatbot problem.
 - id: 03-thesis
-  order: 4
+  order: 3
   role: product-thesis
   layout: three_cards
   visibility: public
@@ -200,6 +151,55 @@ slides:
   hidden: false
   notes: This is the deck's intellectual center. Preserve the three distinctions exactly
     enough that later slides cannot imply stronger authority.
+- id: 04-product
+  order: 4
+  role: product-in-one-view
+  layout: split
+  visibility: public
+  title: One inspectable decision thread
+  message: Start with a threat, control, requirement, component, supplier, test, or
+    finding and follow the relevant evidence, derivation, uncertainty, and remaining
+    human decision.
+  body:
+  - Why do we believe this?
+  - What is missing, stale, disputed, or still only a candidate?
+  - Who is allowed to decide?
+  - What blocks signoff next?
+  source_refs:
+  - source_id: sparta-public-readme
+    section: Introduction
+  claim_ids:
+  - sparta-public-one-thread
+  - sparta-public-three-questions
+  visual:
+    type: none
+    position: right
+    items: []
+    callouts: []
+  claim_guard:
+    allowed_claim_ids: []
+    requires_non_claim_ids: []
+    forbidden_unqualified: []
+  elements: []
+  bindings:
+  - path: title
+    kind: non_claim
+  - path: message
+    kind: non_claim
+  - path: body:0
+    kind: non_claim
+  - path: body:1
+    kind: non_claim
+  - path: body:2
+    kind: non_claim
+  - path: body:3
+    kind: non_claim
+  transition: slide
+  transition_duration_ms: 400
+  reveal: stagger_up
+  hidden: false
+  notes: Use native slide shapes for the decision-thread visual; do not paste the
+    README's long workflow verbatim.
 - id: 05-f36-demo
   order: 5
   role: synthetic-f36-demonstration

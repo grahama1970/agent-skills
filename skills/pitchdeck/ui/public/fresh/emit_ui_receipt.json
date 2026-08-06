@@ -1,0 +1,77 @@
+{
+  "schema": "pitchdeck.emit_ui_receipt.v1",
+  "operation": "emit-ui",
+  "readiness": "USABLE_WITH_GAPS",
+  "mocked": false,
+  "live": false,
+  "inputs": {
+    "deck_id": "sparta-explorer-public",
+    "slides": "12"
+  },
+  "outputs": {
+    "deck_data": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/ui/public/fresh/deck.data.json",
+    "bundle_dir": "/mnt/storage12tb/skills/pitchdeck/outputs/sparta-fresh-run"
+  },
+  "counts": {
+    "slides": 12,
+    "claims": 169,
+    "copied_assets": 6
+  },
+  "gaps": [
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-introduction-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-introduction-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-introduction-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-introduction-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-why-sparta-explorer-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 6 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-02'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-03'; human review remains open.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-threat-matrix-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-threat-matrix-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-built-on-embry-os-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-02'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-03'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-the-synthetic-f-36-demonstration-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-the-synthetic-f-36-demonstration-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-the-synthetic-f-36-demonstration-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-the-synthetic-f-36-demonstration-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-global-posture-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-global-posture-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-sparta-chat-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-sparta-chat-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 3 substantive string(s) have no content binding (title, message, body:0); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-sparta-chat-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-sparta-chat-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-qras-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-qras-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-current-status-and-closure-gates-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 6 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-current-status-and-closure-gates-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-current-status-and-closure-gates-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 7 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-current-status-and-closure-gates-01'; human review remains open.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage."
+  ],
+  "claims": {
+    "proves": [
+      "The UI bundle was emitted from manifests that passed the same fail-closed validation as the PPTX build."
+    ],
+    "does_not_prove": [
+      "The rendered browser deck is visually approved.",
+      "Hand edits to emitted JSON after this receipt are detected (re-run emit-ui to re-validate)."
+    ]
+  },
+  "seam_validation": {
+    "kind": "emit_ui_receipt",
+    "status": "PASS"
+  }
+}

@@ -1,0 +1,684 @@
+{
+  "schema": "pitchdeck.ui_deck_bundle.v1",
+  "deck_id": "sparta-explorer-public",
+  "title": "Sparta Explorer — Inspectable Space-Cyber Assurance",
+  "subtitle": "Trace a space-cyber conclusion from framework guidance to program evidence and human review—without letting AI turn relevance into authority.",
+  "audience": "Aerospace and defense design partners, assessors, engineers, cyber analysts, and program leads",
+  "visibility": "public",
+  "theme": "dark_cyan_evidence",
+  "theme_tokens": {
+    "accent": "#22d3ee",
+    "heading_font": "Arial",
+    "body_font": "Arial"
+  },
+  "slides": [
+    {
+      "id": "01-cover",
+      "order": 1,
+      "layout": "cover",
+      "role": "cover",
+      "title": "Sparta Explorer",
+      "message": "Trace a space-cyber conclusion from framework guidance to program evidence and human review—without letting AI turn relevance into authority.",
+      "body": [],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-introduction-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "Trace a space-cyber conclusion from framework guidance to program evidence and human review—without letting AI turn relevance into authority.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-introduction-02",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "Sparta Explorer is a local-first investigation workspace for compliance, security, engineering, supplier, test, program, and assessment teams. It brings Aerospace SPARTA knowledge beside program requirements, component and supplier lineage, engineering artifacts, test evidence, and human review state.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Introduction\nHuman review required before external use."
+    },
+    {
+      "id": "02-thesis",
+      "order": 2,
+      "layout": "three_cards",
+      "role": "thesis",
+      "title": "The thesis",
+      "message": "The difficult part is not finding a document or drawing an edge between two identifiers. It is carrying a defensible claim across sources with different authorities, release cycles, review states, and owners—and keeping those distinctions intact until a person makes a decision.",
+      "body": [
+        "Relevance is not support. Search, embeddings, and graph traversal identify",
+        "Candidate visibility is not compliance credit. Candidate mappings and",
+        "A model may explain; a person still decides. The product makes a",
+        "Frameworks explain what matters. Program records show what was designed, built, tested, accepted, or left unresolved. Models can help navigate the material, but they…"
+      ],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-why-sparta-explorer-01",
+          "status": "candidate",
+          "risk": "medium",
+          "kind": "thesis",
+          "text": "The difficult part is not finding a document or drawing an edge between two identifiers. It is carrying a defensible claim across sources with different authorities, release cycles, review states, and owners—and keeping those distinctions intact until a person makes a decision.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-why-sparta-explorer-02",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "Frameworks explain what matters. Program records show what was designed, built, tested, accepted, or left unresolved. Models can help navigate the material, but they are fluent even when the evidence is weak. Collapse those roles and the result is a confident sentence with nothing underneath it.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-why-sparta-explorer-03",
+          "status": "candidate",
+          "risk": "medium",
+          "kind": "thesis",
+          "text": "Relevance is not support. Search, embeddings, and graph traversal identify",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Why Sparta Explorer (line 122)\nHuman review required before external use."
+    },
+    {
+      "id": "03-product",
+      "order": 3,
+      "layout": "split",
+      "role": "product",
+      "title": "The product",
+      "message": "What the product changes",
+      "body": [],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nSources:\n- sparta-public-readme — The Product in One View (line 44)\nHuman review required before external use."
+    },
+    {
+      "id": "04-product-view-threat-matrix",
+      "order": 4,
+      "layout": "screenshot",
+      "role": "product-view-threat-matrix",
+      "title": "Threat Matrix",
+      "message": "*Follow a synthetic F-36 requirement into SPARTA tactic coverage, mapping provenance, review state, and the next unresolved decision. Candidate coverage stays separate from compliance credit. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+      "body": [],
+      "visual": {
+        "type": "screenshot",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-threat-matrix-01",
+          "kind": "screenshot",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-threat-matrix-01.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from Threat Matrix; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-threat-matrix-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "*Follow a synthetic F-36 requirement into SPARTA tactic coverage, mapping provenance, review state, and the next unresolved decision. Candidate coverage stays separate from compliance credit. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Threat Matrix (line 46)\nHuman review required before external use."
+    },
+    {
+      "id": "05-product-view-built-on-embry-os",
+      "order": 5,
+      "layout": "screenshot",
+      "role": "product-view-built-on-embry-os",
+      "title": "Built on Embry OS",
+      "message": "Sparta Explorer is the assurance workbench inside Embry OS: one planned local operating foundation, designed for disconnected and policy-bounded environments, intended to connect the plant that builds and sustains a system with the warfighter program that depends on it.",
+      "body": [
+        "Plant profile — Warfighter-program profile",
+        "Supplier records, configuration, manufacturing evidence, machine tests, anomalies, maintenance, and corpus health. — Mission threats, control relationships…",
+        "Shared: governed memory, evidence lineage, monitoring, orchestration, local inference, and human review. — Separated: identity, data access, release state, approval…"
+      ],
+      "visual": {
+        "type": "image",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-built-on-embry-os-02",
+          "kind": "illustration",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-built-on-embry-os-02.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from Built on Embry OS; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-built-on-embry-os-01",
+          "status": "candidate",
+          "risk": "low",
+          "kind": "candidate",
+          "text": "Sparta Explorer is the assurance workbench inside Embry OS: one planned local operating foundation, designed for disconnected and policy-bounded environments, intended to connect the plant that builds and sustains a system with the warfighter program that depends on it.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-built-on-embry-os-02",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "The plant and warfighter-program profiles share infrastructure and evidence continuity, but not implicit authority. Identity, data, network, review, and decision boundaries remain mission-separated. Plant-side engineering, supplier, machine-test, configuration, and maintenance evidence can inform mission assurance without silently becoming operational truth.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-built-on-embry-os-03",
+          "status": "candidate",
+          "risk": "low",
+          "kind": "candidate",
+          "text": "Plant profile — Warfighter-program profile",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Built on Embry OS (line 64)\nHuman review required before external use."
+    },
+    {
+      "id": "06-product-view-the-synthetic-f-36-demonstration",
+      "order": 6,
+      "layout": "screenshot",
+      "role": "product-view-the-synthetic-f-36-demonstration",
+      "title": "The Synthetic F-36 Demonstration",
+      "message": "F-36 is a fictional aerospace program world used to test a difficult systems question: can one evidence thread serve program, engineering, supplier, test, and operational readers without collapsing their authority boundaries?",
+      "body": [
+        "The useful behavior is separation. A program manager can ask whether a control is covered, partial, missing, stale, or blocked. An engineer can enter through a…",
+        "Candidate-versus-reviewed example",
+        "*RD-0003 shows complete candidate coverage while reviewed controls remain at zero. The useful fact is the separation: visibility is not compliance credit. Live local…"
+      ],
+      "visual": {
+        "type": "screenshot",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-the-synthetic-f-36-demonstration-03",
+          "kind": "screenshot",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-the-synthetic-f-36-demonstration-03.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from The Synthetic F-36 Demonstration; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-the-synthetic-f-36-demonstration-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "F-36 is a fictional aerospace program world used to test a difficult systems question: can one evidence thread serve program, engineering, supplier, test, and operational readers without collapsing their authority boundaries?",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-the-synthetic-f-36-demonstration-02",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "The useful behavior is separation. A program manager can ask whether a control is covered, partial, missing, stale, or blocked. An engineer can enter through a component, supplier, verification method, test record, anomaly, waiver, or unresolved limitation. An operational user can ask a mission-scoped question only when the governed path can prove support for the specific variant, environment, date range, and…",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — The Synthetic F-36 Demonstration (line 93)\nHuman review required before external use."
+    },
+    {
+      "id": "07-product-view-global-posture",
+      "order": 7,
+      "layout": "screenshot",
+      "role": "product-view-global-posture",
+      "title": "Global Posture",
+      "message": "*Global Posture starts with the strongest current blocker and explains why the system is degraded instead of hiding uncertainty behind a headline score. Unavailable readings remain visibly unavailable rather than becoming invented zeroes. Live local capture, 2026-07-30.*",
+      "body": [],
+      "visual": {
+        "type": "screenshot",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-global-posture-04",
+          "kind": "screenshot",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-global-posture-04.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from Global Posture; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-global-posture-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "*Global Posture starts with the strongest current blocker and explains why the system is degraded instead of hiding uncertainty behind a headline score. Unavailable readings remain visibly unavailable rather than becoming invented zeroes. Live local capture, 2026-07-30.*",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Global Posture (line 176)\nHuman review required before external use."
+    },
+    {
+      "id": "08-product-view-sparta-chat",
+      "order": 8,
+      "layout": "screenshot",
+      "role": "product-view-sparta-chat",
+      "title": "Sparta Chat",
+      "message": "*The Console stays beside the surface that prompted the question and exposes the execution stages behind the response. On the governed path it can answer, clarify, deflect, or show that evidence is insufficient rather than manufacture an answer; transitional branches are still being converged. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+      "body": [
+        "More implemented surfaces"
+      ],
+      "visual": {
+        "type": "screenshot",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-sparta-chat-05",
+          "kind": "screenshot",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-sparta-chat-05.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from Sparta Chat; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-sparta-chat-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "*The Console stays beside the surface that prompted the question and exposes the execution stages behind the response. On the governed path it can answer, clarify, deflect, or show that evidence is insufficient rather than manufacture an answer; transitional branches are still being converged. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        },
+        {
+          "id": "sparta-public-readme-sparta-chat-02",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "status",
+          "text": "More implemented surfaces",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Sparta Chat (line 185)\nHuman review required before external use."
+    },
+    {
+      "id": "09-product-view-qras",
+      "order": 9,
+      "layout": "screenshot",
+      "role": "product-view-qras",
+      "title": "QRAs",
+      "message": "*Questions, answers, control bindings, gate state, and human review remain inspectable together. A known reasoning-field defect stays visible and is tracked in QRA governance. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+      "body": [],
+      "visual": {
+        "type": "screenshot",
+        "position": "right",
+        "asset": {
+          "id": "sparta-public-readme-qras-06",
+          "kind": "screenshot",
+          "status": "present",
+          "alt_text": "README image",
+          "file": "assets/sparta-public-readme-qras-06.webp",
+          "missing": false
+        },
+        "items": [],
+        "callouts": [],
+        "caption": "Source visual from QRAs; verify capture freshness before use."
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-qras-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "proof",
+          "text": "*Questions, answers, control bindings, gate state, and human review remain inspectable together. A known reasoning-field defect stays visible and is tracked in QRA governance. Live local capture, 2026-07-30, source commit 26523b2a4.*",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — QRAs (line 198)\nHuman review required before external use."
+    },
+    {
+      "id": "10-proof-today",
+      "order": 10,
+      "layout": "proof_cards",
+      "role": "proof-today",
+      "title": "What is established today",
+      "message": "Implemented means the capability exists in this repository. Demonstrated means a dated live receipt or artifact exists. In integration means meaningful parts work but the end-to-end contract is still open.",
+      "body": [
+        "Area — Current state — What closes the remaining gap",
+        "Explorer — Implemented: repository-local Global Posture, Threat Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and docked Console surfaces. — Refresh…",
+        "Evidence and review — Demonstrated: synthetic F-36 projection, canonical-active recall, candidate/review separation, and a bounded accepted/rejected/pending…",
+        "Response path — In integration: bounded answer, clarify, deflect, error, citation, selected-QRA, and visible-answer admission receipts exist on the governed path. —…"
+      ],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-current-status-and-closure-gates-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "roadmap",
+          "text": "Implemented means the capability exists in this repository. Demonstrated means a dated live receipt or artifact exists. In integration means meaningful parts work but the end-to-end contract is still open.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Current Status and Closure Gates (line 268)\nHuman review required before external use."
+    },
+    {
+      "id": "11-honest-gaps",
+      "order": 11,
+      "layout": "roadmap",
+      "role": "honest-gaps",
+      "title": "What remains open",
+      "message": "Implemented means the capability exists in this repository. Demonstrated means a dated live receipt or artifact exists. In integration means meaningful parts work but the end-to-end contract is still open.",
+      "body": [
+        "Area — Current state — What closes the remaining gap",
+        "Explorer — Implemented: repository-local Global Posture, Threat Matrix, Supply Chain, QRAs, Coverage, Controls, Sources, URLs, and docked Console surfaces. — Refresh…",
+        "Evidence and review — Demonstrated: synthetic F-36 projection, canonical-active recall, candidate/review separation, and a bounded accepted/rejected/pending…",
+        "Response path — In integration: bounded answer, clarify, deflect, error, citation, selected-QRA, and visible-answer admission receipts exist on the governed path. —…",
+        "Voice — In integration: bounded direct-speak rendering consumes the Memory delivery plan and produces exact-text audio artifacts. — Close authoritative listener/journal…"
+      ],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "sparta-public-readme-current-status-and-closure-gates-01",
+          "status": "candidate",
+          "risk": "high",
+          "kind": "roadmap",
+          "text": "Implemented means the capability exists in this repository. Demonstrated means a dated live receipt or artifact exists. In integration means meaningful parts work but the end-to-end contract is still open.",
+          "required_qualifier": "Verify this status against the pinned source commit and current evidence before external use.",
+          "evidence_spans": []
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nRequired qualifiers:\n- Verify this status against the pinned source commit and current evidence before external use.\nSources:\n- sparta-public-readme — Current Status and Closure Gates (line 268)\nHuman review required before external use."
+    },
+    {
+      "id": "12-collaboration-ask",
+      "order": 12,
+      "layout": "collaboration",
+      "role": "collaboration-ask",
+      "title": "A useful next conversation",
+      "message": "A verified clean-machine quick start is not yet published.",
+      "body": [
+        "Open Global Posture and identify the strongest current blocker.",
+        "Open Threat Matrix and inspect a candidate relationship's direction, source, release, and review state.",
+        "Open QRAs and inspect the question, evidence, gate, and human-review state."
+      ],
+      "visual": {
+        "type": "none",
+        "position": "right",
+        "items": [],
+        "callouts": []
+      },
+      "elements": [],
+      "transition": "slide",
+      "transition_duration_ms": 400,
+      "reveal": "stagger_up",
+      "hidden": false,
+      "claims": [
+        {
+          "id": "non-claim-01-the-f-36-corpus-and-program-world-ar",
+          "status": "approved",
+          "risk": "mandatory_non_claim",
+          "kind": "non_claim",
+          "text": "The F-36 corpus and program world are fictional and synthetic.",
+          "evidence_spans": [
+            {
+              "source_id": "sparta-public-readme",
+              "text": "proprietary, and unauthorized program data by policy. **The F-36 corpus is fictional and synthetic.**",
+              "section": null
+            }
+          ]
+        },
+        {
+          "id": "non-claim-02-candidate-visibility-is-not-complian",
+          "status": "approved",
+          "risk": "mandatory_non_claim",
+          "kind": "non_claim",
+          "text": "Candidate visibility is not compliance credit.",
+          "evidence_spans": [
+            {
+              "source_id": "sparta-public-readme",
+              "text": "- **Candidate visibility is not compliance credit.** Candidate mappings and",
+              "section": null
+            }
+          ]
+        },
+        {
+          "id": "non-claim-03-a-model-may-explain-authorized-peopl",
+          "status": "approved",
+          "risk": "mandatory_non_claim",
+          "kind": "non_claim",
+          "text": "A model may explain; authorized people retain approval, risk, certification, and signoff authority.",
+          "evidence_spans": [
+            {
+              "source_id": "sparta-public-readme",
+              "text": "approval, risk acceptance, certification, or signoff authority to the model.",
+              "section": null
+            }
+          ]
+        },
+        {
+          "id": "non-claim-04-prepared-host-receipts-bind-to-the-e",
+          "status": "approved",
+          "risk": "mandatory_non_claim",
+          "kind": "non_claim",
+          "text": "Prepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.",
+          "evidence_spans": [
+            {
+              "source_id": "sparta-public-readme",
+              "text": "| **Client demo** | **Prepared-host ready:** deterministic route, preflight, route capture, and evidence-bundle tooling exist, and issue #38 closed on a passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`, `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each commit actually demonstrated; the receipt binds to one exact commit, not to the branch. |",
+              "section": null
+            }
+          ]
+        },
+        {
+          "id": "non-claim-05-this-deck-does-not-establish-product",
+          "status": "approved",
+          "risk": "mandatory_non_claim",
+          "kind": "non_claim",
+          "text": "This deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement.",
+          "evidence_spans": [
+            {
+              "source_id": "sparta-public-readme",
+              "text": "It does not mean expert-approved, implemented, or compliance-credited.",
+              "section": null
+            }
+          ]
+        }
+      ],
+      "source_ids": [
+        "sparta-public-readme"
+      ],
+      "notes": "Draft slide generated from README source material.\nSources:\n- sparta-public-readme — Evaluate a Prepared Host (line 317)\nHuman review required before external use.\nMandatory non-claims:\n- The F-36 corpus and program world are fictional and synthetic.\n- Candidate visibility is not compliance credit.\n- A model may explain; authorized people retain approval, risk, certification, and signoff authority.\n- Prepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.\n- This deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement."
+    }
+  ],
+  "claim_summary": {
+    "candidate": 164,
+    "approved": 5
+  },
+  "revision": 0,
+  "validation_readiness": "USABLE_WITH_GAPS",
+  "validation_gaps": [
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-introduction-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-introduction-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-introduction-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-introduction-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-why-sparta-explorer-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 6 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-02'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-why-sparta-explorer-03'; human review remains open.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-threat-matrix-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-threat-matrix-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-built-on-embry-os-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-02'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-built-on-embry-os-03'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-the-synthetic-f-36-demonstration-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-the-synthetic-f-36-demonstration-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-the-synthetic-f-36-demonstration-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-the-synthetic-f-36-demonstration-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-global-posture-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-global-posture-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-sparta-chat-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-sparta-chat-02' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 3 substantive string(s) have no content binding (title, message, body:0); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-sparta-chat-01'; human review remains open.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-sparta-chat-02'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-qras-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 2 substantive string(s) have no content binding (title, message); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-qras-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-current-status-and-closure-gates-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 6 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-current-status-and-closure-gates-01'; human review remains open.",
+    "QUALIFIER_NOT_STRUCTURAL: High-risk claim 'sparta-public-readme-current-status-and-closure-gates-01' has no structural qualifier binding on this slide; publish requires kind=qualifier bound to visible text.",
+    "UNBOUND_TEXT: 7 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage.",
+    "SLIDE_CANDIDATE_CLAIM: Slide uses candidate claim 'sparta-public-readme-current-status-and-closure-gates-01'; human review remains open.",
+    "UNBOUND_TEXT: 5 substantive string(s) have no content binding (title, message, body:0, body:1…); publish requires full coverage."
+  ],
+  "seam_validation": {
+    "kind": "ui_deck_bundle",
+    "status": "PASS"
+  }
+}

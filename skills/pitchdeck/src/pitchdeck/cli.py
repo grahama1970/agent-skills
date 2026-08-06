@@ -357,6 +357,33 @@ def record_note_cmd(
         _abort(exc)
 
 
+@app.command(name="compile-document")
+def compile_document_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output: Annotated[Path, typer.Option(help="Path for the emitted deck.document.json.")],
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+) -> None:
+    """Compile the bundle into the canonical whole-deck document (pitchdeck.deck_document.v1)."""
+    import json as json_mod
+
+    from .document import compile_document
+
+    try:
+        document = compile_document(bundle_dir, deck_name=deck_name)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(document.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS",
+            "schema": "pitchdeck.deck_document.v1",
+            "output": str(output.resolve()),
+            "slides": len(document.slides),
+            "elements": sum(len(s.elements) for s in document.slides),
+            "revision": document.revision,
+        }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="record-transcript")
 def record_transcript_cmd(
     timeout_seconds: Annotated[int, typer.Option(help="Max recording window.")] = 120,
