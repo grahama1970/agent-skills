@@ -50,13 +50,60 @@ command -v timeout >/dev/null 2>&1 || {
   exit 1
 }
 
+# ── automatic wedged-lock recovery (#1224) ─────────────────────────────
+# A holder stuck in kernel D state (e.g. io_uring-wedged npm, unkillable)
+# would otherwise block every surf command until reboot. If every current
+# holder is wedged or gone, rotate the lock inode and take a fresh lock —
+# the same recovery a human would perform, done automatically with a
+# receipt. A holder in any runnable state means a real build is in
+# progress: never rotate then.
+_lock_holder_pids() {
+  fuser "${lock_file}" 2>/dev/null | tr -s ' \t' '\n' | grep -E '^[0-9]+$' || true
+}
+
+_holders_all_wedged() {
+  # env override for tests: comma-separated states, e.g. "D" or "S,R"
+  if [[ -n "${SURF_TEST_LOCK_HOLDER_STATES:-}" ]]; then
+    local IFS=','
+    for st in ${SURF_TEST_LOCK_HOLDER_STATES}; do
+      [[ "${st}" == D* || "${st}" == Z* ]] || return 1
+    done
+    return 0
+  fi
+  local pids pid state found=0
+  pids="$(_lock_holder_pids)"
+  [[ -z "${pids}" ]] && return 0
+  for pid in ${pids}; do
+    [[ "${pid}" == "$$" ]] && continue
+    state="$(awk '{print $3}' "/proc/${pid}/stat" 2>/dev/null || echo GONE)"
+    found=1
+    [[ "${state}" == D* || "${state}" == Z* || "${state}" == GONE ]] || return 1
+  done
+  return 0
+}
+
+_rotate_wedged_lock() {
+  local rotated="${lock_file}.wedged-$(date +%s)"
+  mv "${lock_file}" "${rotated}" 2>/dev/null || return 1
+  printf '{"schema":"surf.build_lock_incident.v1","code":"wedged_lock_rotated","lock_file":"%s","rotated_to":"%s","holders":"%s","recovered":true}\n' \
+    "${lock_file}" "${rotated}" "$(_lock_holder_pids | tr '\n' ',' )" >&2
+  return 0
+}
+
 exec 9>"${lock_file}"
 if ! flock -w "${lock_wait_seconds}" 9; then
-  # Structured incident so callers (ask browser preflight) get actionable
-  # metadata instead of an opaque hang (#1224).
-  printf '{"schema":"surf.build_lock_incident.v1","code":"build_lock_timeout","lock_file":"%s","waited_seconds":%s,"holders":"%s","hint":"a wedged build process holds the lock; inspect with lsof, rotate the lock file if the holder is unkillable (D-state), then run surf setup"}\n'     "${lock_file}" "${lock_wait_seconds}" "$(fuser "${lock_file}" 2>/dev/null | tr -s ' ' ',' | sed 's/^,//' || true)" >&2
-  echo "Error: timed out after ${lock_wait_seconds}s waiting for surf-cli build lock at ${lock_file}" >&2
-  exit 75
+  if _holders_all_wedged && _rotate_wedged_lock; then
+    exec 9>"${lock_file}"
+    if ! flock -w 10 9; then
+      echo "Error: fresh lock still contended after wedged-lock rotation" >&2
+      exit 75
+    fi
+  else
+    printf '{"schema":"surf.build_lock_incident.v1","code":"build_lock_timeout","lock_file":"%s","waited_seconds":%s,"holders":"%s","hint":"a live build holds the lock; retry later or run surf setup"}\n' \
+      "${lock_file}" "${lock_wait_seconds}" "$(_lock_holder_pids | tr '\n' ',')" >&2
+    echo "Error: timed out after ${lock_wait_seconds}s waiting for surf-cli build lock at ${lock_file}" >&2
+    exit 75
+  fi
 fi
 
 if ! needs_build; then

@@ -839,6 +839,19 @@ case "$1" in
         exit $?
         ;;
     tab.*)
+        # Self-heal (#1224): a stale/broken native host prevents the extension
+        # from binding /tmp/surf.sock. Rebuild (with automatic wedged-lock
+        # rotation) and give the extension a moment to reconnect before
+        # failing closed with a structured receipt.
+        "$SKILL_DIR/scripts/ensure-surf-cli.sh" >&2 || true
+        for _i in 1 2 3 4 5 6; do
+            surf_cli_available && break
+            sleep 2
+        done
+        if surf_cli_available && [[ -f "$LOCAL_CLI" ]]; then
+            exec node "$LOCAL_CLI" "$@"
+        fi
+        printf '{"schema":"surf.extension_incident.v1","code":"socket_missing_after_recovery","socket":"/tmp/surf.sock","hint":"native host rebuilt but extension did not reconnect; reload the extension at chrome://extensions (Load unpacked: %s/dist) or restart Chrome"}\n' "${SURF_CLI_PATH}" >&2
         echo "Error: Tab commands require surf-cli extension." >&2
         echo "  1. Load extension: chrome://extensions → Load unpacked → ${SURF_CLI_PATH}/dist" >&2
         echo "  2. Install host: surf install <extension-id>" >&2
