@@ -758,6 +758,43 @@ hash
 identity_boundary_receipt.json for persona, actor-like, or public-figure-adjacent images
 ```
 
+## Character-Locked Keyframe Generation (multi-shot dreams)
+
+For a multi-shot dream, character identity MUST be locked by construction, not
+by prose. `scripts/generate_image.py` (the scillm gpt-image CLI) accepts only a
+text prompt — it has NO reference/init image input — so calling it per shot with
+character descriptions produces a different Horus/Embry every frame. Do not use
+it for a multi-shot sequence and expect continuity. (Observed 2026-08-06: four
+shots generated free-form gave four different men for Horus; the canonical Horus
+is the bald Warmaster in black-and-gold armor per
+`reports/assets/horus_reference_sheet.png`.)
+
+The identity anchors already exist: `character_scene_bible.json` (per-run
+`visual_continuity` strings) and the committed
+`reports/assets/{horus,embry}_reference_sheet.png`. Lock keyframes with a
+reference-conditioned path:
+
+- **WebGPT + reference zip (proven working).** Zip the reference sheets into ONE
+  archive (`webgpt` accepts exactly one attachment; a zip is allowed) and drive
+  it through `/ask tau-dag ... --handler webgpt --attach-file refs.zip`. Then
+  keep continuity across shots by sending each subsequent shot as a FOLLOW-UP in
+  the SAME ChatGPT conversation ("same two characters, IDENTICAL — now shot N"):
+  ChatGPT holds character consistency within a thread.
+- **Auth is OAuth, never API keys** (codex-oauth / ChatGPT subscription). The
+  OpenAI API-key lane is unfunded (429 no-credits).
+- **Harvest from the tab, not the wrapper receipt.** Ask's read-only browser
+  provider preflight probe can time out and report `NEEDS_ATTENTION`
+  (`browser_provider_probe_timeout` / `provider_probe_uncertain_requires_readback`)
+  while the browser tab it created still completes the generation. Check the tab
+  (`surf js --tab-id <id> --no-activate`) for the finished image
+  (`img[src*="backend-api/estuary/content"]`, `naturalWidth>600`) and pull it via
+  an in-tab `fetch → blob → a.download` (surf's js output is capped ~50KB, so the
+  image cannot be returned inline).
+- ComfyUI can lock identity locally only if a reference model (Flux Kontext /
+  IPAdapter / Qwen-Image-Edit) is mounted. The default mounted model is
+  `z_image_turbo` (text-to-image, no reference conditioning), so the local lane
+  cannot lock characters as-is.
+
 ## Motion Backend Lane
 
 Motion generation is optional. Use it after `dream_packet.json` exists,

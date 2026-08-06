@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-29 UTC (SPARTA local live arc-bias consumption receipted; listener rater page ready and analysis false-green gated; human responses next) by Codex
+**Last updated:** 2026-08-06 UTC (character continuity requires reference-conditioned WebGPT+zip generation, not free-form gpt-image; four contract/pipeline bugs fixed by a live dream run; see the 2026-08-06 entry) by Claude Fable 5
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
 **Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
@@ -13,6 +13,43 @@ P2 engineering pilot, not production or full Phase 01-16 reliability),
 #1131 PCTOM-R corpus/estimator repair CLOSED (apparatus now valid; the live
 held-out benefit result is #1008 and does not exist yet),
 #1059 previous-video causality deferred with no provider spend.
+
+## 2026-08-06 — Character continuity requires reference-conditioned generation; pipeline bugs fixed by a live dream run
+
+A friendly-tea Horus+Embry dream was driven end-to-end as a live debugging run
+(`horus-embry-tea-friendly-sparta-20260806`). Findings, all receipted:
+
+- **Free-form image generation cannot hold a character.** `scripts/generate_image.py`
+  (scillm gpt-image CLI) has no reference/init-image input; four shots generated
+  from text-only prompts produced four different men for Horus. The canonical
+  Horus is the bald black-and-gold Warmaster (`reports/assets/horus_reference_sheet.png`).
+  Fix by construction: WebGPT with the reference sheets as ONE zip attachment,
+  and each subsequent shot sent as a FOLLOW-UP in the SAME ChatGPT conversation
+  (thread holds identity). All four keyframes then came out character-locked.
+  See SKILL.md "Character-Locked Keyframe Generation".
+- **Auth is OAuth, not API keys** — the OpenAI API-key lane returned 429
+  no-credits; codex-oauth / ChatGPT subscription is the funded path.
+- **Harvest from the tab, not the wrapper.** `/ask tau-dag --handler webgpt`
+  reported `NEEDS_ATTENTION` (`browser_provider_probe_timeout`) from its
+  read-only preflight probe while the browser tab it created had already
+  generated the image. Recovered via `surf js --tab-id <id> --no-activate`,
+  `img[src*="backend-api/estuary/content"]`, in-tab `fetch→blob→a.download`
+  (surf js output is capped ~50KB; the image cannot return inline).
+- **Four contract/pipeline bugs fixed** (agent-skills@main): journal keyword
+  extraction leaked stopwords/boilerplate into the "I woke with …" line
+  (expanded stopword set); `./run.sh test-suite` aborted on missing numpy
+  (added dep; 699 pass); `validate-run-root` validated the plan-stage
+  `storyboard.json` against the panel-*receipt* schema, burying a fresh run's
+  real blocker (now reports the panel receipt missing); `multiscene-live-smoke`
+  killed codex image calls at a 30s first-event deadline under concurrent
+  workers (widened to 180s). Tau `persona_dream_panel_agent` discarded the
+  caller's `visual_review_prompt`, so the eight-check visual-review contract
+  never reached the VLM (fixed in tau@main; the reviewer then correctly rejected
+  off-spec panels).
+- The run cleared the full contract lane once
+  (`DRY_RUN_REVIEW_PACKET_READY`, 8/8 phases) — the first run to do so. The
+  remaining step is I2V motion, which is paid Kling/Chutes and stays gated on
+  explicit spend authorization.
 
 ## 2026-07-29 — SPARTA local live arc-bias consumption PASS; human perception still missing
 
