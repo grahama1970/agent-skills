@@ -250,12 +250,16 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
         receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
         return _finalize_receipt(receipt), []
 
-    jobs = data.get("jobs", [])
+    jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    jobs = jobs if isinstance(jobs, list) else []
     receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in jobs[: _registry_limit(target, 20)]:
+        if not isinstance(job, dict):
+            logger.warning("greenhouse board {} returned a non-dict job entry; skipping", target.get("name"))
+            continue
         location = (job.get("location") or {}).get("name") or "Unknown"
         posting_url = job.get("absolute_url")
         payload = {
@@ -320,6 +324,9 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in postings[: _registry_limit(target, 20)]:
+        if not isinstance(job, dict):
+            logger.warning("lever board {} returned a non-dict posting; skipping", target.get("name"))
+            continue
         categories = job.get("categories") or {}
         location = categories.get("location") or "Unknown"
         hosted_url = job.get("hostedUrl") or job.get("applyUrl")
@@ -386,6 +393,9 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in jobs[: _registry_limit(target, 20)]:
+        if not isinstance(job, dict):
+            logger.warning("ashby board {} returned a non-dict job; skipping", target.get("name"))
+            continue
         location = _ashby_location(job)
         posting_url = job.get("jobUrl")
         payload = {
@@ -417,7 +427,10 @@ def _lever_posting_text(job: dict[str, Any]) -> str:
     parts = [str(job.get("description") or "")]
     for list_key in ("lists", "additional"):
         for section in job.get(list_key) or []:
-            parts.append(str(section.get("text") or section.get("content") or ""))
+            if isinstance(section, dict):
+                parts.append(str(section.get("text") or section.get("content") or ""))
+            elif isinstance(section, str):
+                parts.append(section)
     return "\n".join(part for part in parts if part)
 
 
