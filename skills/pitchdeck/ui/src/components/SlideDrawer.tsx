@@ -13,7 +13,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { AlertTriangle, Copy, Eye, EyeOff, GripVertical, Plus, ShieldQuestion, Trash2 } from 'lucide-react'
+import { AlertTriangle, ChevronsLeft, ChevronsRight, Copy, Eye, EyeOff, GripVertical, Plus, ShieldQuestion, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { revisionStore } from '../hooks'
 import { SlideBody } from '../layouts/SlideLayouts'
@@ -203,10 +203,14 @@ export function SlideDrawer({
   width,
   onSelect,
   onChanged,
+  collapsed = false,
+  onToggleCollapsed,
 }: {
   deck: UiDeckBundle
   currentIndex: number
   width?: number
+  collapsed?: boolean
+  onToggleCollapsed?: () => void
   onSelect: (index: number) => void
   onChanged: () => void
 }) {
@@ -239,10 +243,57 @@ export function SlideDrawer({
   const activeSlide = deck.slides[currentIndex]
   const draggedSlide = deck.slides.find((slide) => slide.id === draggedId) ?? null
 
+  // Collapsed: 48px icon-only strip — numbers stay clickable so navigation
+  // never requires re-expanding; the strip's own chevron restores the pane.
+  if (collapsed) {
+    return (
+      <nav
+        aria-label="Slides (collapsed)"
+        data-qid="deck:rail:strip"
+        className="flex select-none flex-col border-r border-slate-800 bg-slate-900/50"
+        style={{ width: 48, minWidth: 48, transition: 'width 200ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+      >
+        <div className="min-h-0 flex-1 overflow-y-auto py-2">
+          {deck.slides.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              data-qid={`deck:rail:strip:${s.id}`}
+              data-qs-action="DECK_GOTO_SLIDE"
+              title={`Go to slide ${s.order}: ${s.title}`}
+              aria-current={i === currentIndex}
+              onClick={() => onSelect(i)}
+              className={`mx-auto mb-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded font-mono text-xs ${
+                i === currentIndex ? 'bg-cyan-500/15 font-bold text-cyan-300 ring-1 ring-cyan-500/40' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+              }`}
+            >
+              {s.order}
+            </button>
+          ))}
+        </div>
+        {onToggleCollapsed ? (
+          <div className="border-t border-slate-800 p-1.5">
+            <button
+              type="button"
+              data-qid="deck:rail:expand"
+              data-qs-action="DECK_RAIL_EXPAND"
+              aria-label="Expand slide navigation"
+              title="Expand slide navigation (Ctrl+B)"
+              onClick={onToggleCollapsed}
+              className="flex w-full cursor-pointer items-center justify-center rounded py-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
+            >
+              <ChevronsRight aria-hidden className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
+      </nav>
+    )
+  }
+
   return (
     <nav
       aria-label="Slides"
-      style={width ? { width, minWidth: width } : undefined}
+      style={{ ...(width ? { width, minWidth: width } : {}), transition: 'width 250ms cubic-bezier(0.16, 1, 0.3, 1)' }}
       className="flex w-64 min-w-64 select-none flex-col bg-slate-900/50"
     >
       <div className="flex items-center justify-between border-b border-slate-800 p-2.5">
@@ -317,6 +368,21 @@ export function SlideDrawer({
           </DragOverlay>
         </DndContext>
       </div>
+      {onToggleCollapsed ? (
+        <div className="border-t border-slate-800 p-1.5">
+          <button
+            type="button"
+            data-qid="deck:rail:collapse"
+            data-qs-action="DECK_RAIL_COLLAPSE"
+            aria-label="Collapse slide navigation"
+            title="Collapse to icon rail (Ctrl+B)"
+            onClick={onToggleCollapsed}
+            className="flex w-full cursor-pointer items-center justify-center gap-1 rounded py-1 text-xs text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
+          >
+            <ChevronsLeft aria-hidden className="h-3.5 w-3.5" /> Collapse
+          </button>
+        </div>
+      ) : null}
     </nav>
   )
 }

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Columns3, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { ChatDrawer } from './components/ChatDrawer'
@@ -583,41 +583,38 @@ export function App() {
                 <ResizeHandle pane="source" isDragging={activeResizer === 'source'} onMouseDown={(e) => startResizing('source', e)} onDoubleClick={() => resetWidth('source')} />
               </>
             ) : null}
-            {editing && !railCollapsed ? (
+            {editing ? (
               <>
-                <SlideDrawer deck={deck} currentIndex={index} onSelect={go} width={widths.rail} onChanged={reloadAll} />
-                <ResizeHandle pane="rail" isDragging={activeResizer === 'rail'} onMouseDown={(e) => startResizing('rail', e)} onDoubleClick={() => resetWidth('rail')} />
+                <SlideDrawer
+                  deck={deck}
+                  currentIndex={index}
+                  onSelect={go}
+                  width={railCollapsed ? undefined : widths.rail}
+                  onChanged={reloadAll}
+                  collapsed={railCollapsed}
+                  onToggleCollapsed={() => setRailCollapsed((value) => !value)}
+                />
+                {!railCollapsed ? (
+                  <ResizeHandle pane="rail" isDragging={activeResizer === 'rail'} onMouseDown={(e) => startResizing('rail', e)} onDoubleClick={() => resetWidth('rail')} />
+                ) : null}
               </>
             ) : null}
             {editing ? <OverflowBadge warnings={lintSlide(slide)} /> : null}
-            {editing && (!showSource || railCollapsed) ? (
+            {editing && !showSource ? (
+              // The rail no longer needs a floating restore — its collapsed
+              // 48px strip carries its own expand chevron.
               <div className="absolute left-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
-                {!showSource ? (
-                  <button
-                    type="button"
-                    aria-label="Expand source pane"
-                    data-qid="deck:restore:source"
-                    data-qs-action="DECK_RESTORE_SOURCE"
-                    title="Expand source pane (Ctrl+\\)"
-                    onClick={() => setShowSource(true)}
-                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
-                  >
-                    <PanelLeftOpen aria-hidden className="h-4 w-4" />
-                  </button>
-                ) : null}
-                {railCollapsed ? (
-                  <button
-                    type="button"
-                    aria-label="Expand slide navigation"
-                    data-qid="deck:restore:rail"
-                    data-qs-action="DECK_RESTORE_RAIL"
-                    title="Expand slide navigation (Ctrl+B)"
-                    onClick={() => setRailCollapsed(false)}
-                    className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
-                  >
-                    <Columns3 aria-hidden className="h-4 w-4" />
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  aria-label="Expand source pane"
+                  data-qid="deck:restore:source"
+                  data-qs-action="DECK_RESTORE_SOURCE"
+                  title="Expand source pane (Ctrl+\\)"
+                  onClick={() => setShowSource(true)}
+                  className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
+                >
+                  <PanelLeftOpen aria-hidden className="h-4 w-4" />
+                </button>
               </div>
             ) : null}
             {editing ? (
