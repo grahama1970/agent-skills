@@ -656,3 +656,17 @@ keyboard triage Claims mode, (5) decision memory across commits,
 (7) MCP adapter over the same path, (8) visual-fidelity xfail closure.
 Unanimous: quote-first extraction; provenance-surviving-diligence is the
 moat; visual-diff xfail blocks fundraise-grade claims.
+
+## Tickets filed from roundtable + scope decisions (2026-08-06)
+
+Label roundtable-2026-08-06 on grahama1970/agent-skills:
+- #1225 decision memory across commits (gates #1229)
+- #1226 span-first claim model + RENDERING_UNBOUND/NUMERIC_UNBOUND (gates #1232)
+- #1227 writable keyboard triage Claims mode (gates #1228)
+- #1228 persistent collapsible chat pane + simulate-previewed Apply + content qids
+- #1229 living versioned deck: drift monitor + repair proposals + pinned versions
+- #1230 imagegen variations via tau DAG into the asset pipeline (ILLUSTRATION-only gate)
+- #1231 visual fidelity closure (retire xfail case 13 or name the limitation)
+- #1232 ChangeSet typed ops + confirmation tokens + MCP adapter
+Simulate (roundtable slice 1) already landed pre-filing. Build order: 1226 ->
+1227 -> 1225 -> 1228 -> 1229; 1230/1231/1232 independent.
