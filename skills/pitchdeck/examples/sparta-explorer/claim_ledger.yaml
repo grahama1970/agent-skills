@@ -10,11 +10,7 @@ claims:
   - source_id: sparta-public-readme
     section: Introduction
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '**Trace a space-cyber conclusion from framework guidance to program evidence
@@ -28,11 +24,7 @@ claims:
   - source_id: sparta-public-readme
     section: Introduction
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '**Sparta Explorer turns scattered space-cyber, engineering, supplier, and
@@ -46,11 +38,7 @@ claims:
   - source_id: sparta-public-readme
     section: Introduction
   risk: low
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: 'It helps a team answer three practical questions:'
@@ -69,11 +57,7 @@ claims:
   - source_id: sparta-public-readme
     section: Why Sparta Explorer
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: governed evidence and authorized people decide.**
@@ -86,11 +70,7 @@ claims:
   - source_id: sparta-public-readme
     section: Why Sparta Explorer
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '- **Relevance is not support.** Search, embeddings, and graph traversal
@@ -104,13 +84,9 @@ claims:
   - source_id: sparta-public-readme
     section: Built on Embry OS
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: Embry OS is a planned local operating foundation; it is not
     flight-control software and this claim does not establish deployment.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '**Sparta Explorer is the assurance workbench inside Embry OS: one planned
@@ -125,11 +101,7 @@ claims:
   - source_id: sparta-public-readme
     section: The Synthetic F-36 Demonstration
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| Synthetic F-36 demonstration | The program, engineering, supplier, test,
@@ -143,14 +115,10 @@ claims:
   - source_id: sparta-public-readme
     section: Current Status and Closure Gates
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: Treat this as a prepared-host late-stage prototype claim and
     verify the exact commit, preflight, and current screenshots before presenting
     it.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Explorer** | **Implemented:** repository-local Global Posture, Threat
@@ -166,13 +134,9 @@ claims:
   - source_id: sparta-public-readme
     section: Product Tour — Sparta Chat
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: The governed path is bounded and transitional branches are still
     being converged; do not claim every visible response uses it.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Response path** | **In integration:** bounded answer, clarify, deflect,
@@ -189,13 +153,9 @@ claims:
   - source_id: sparta-public-readme
     section: Why Collaborate Now
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: The offer is a late-stage prototype and prepared-host evaluation,
     not a turnkey production deployment.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '> walkthrough, workflow evaluation, co-design, and prepared-host technical'
@@ -208,11 +168,7 @@ claims:
   - source_id: sparta-public-readme
     section: Current Status and Closure Gates
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-private-readme
     text: demo health, response-route convergence, independent corpus review, clean-machine
@@ -228,13 +184,9 @@ claims:
   - source_id: sparta-private-readme
     section: Current Status and Closure Gates
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: The preflight receipt binds to commit c60318363 only; rerun
     it against the exact commit demonstrated and do not demonstrate on failure.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Client demo** | **Prepared-host ready:** deterministic route, preflight,
@@ -253,13 +205,9 @@ claims:
   - source_id: sparta-private-readme
     section: Dated Proof Points
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: Quote these counts only for the 2026-07-29 population and source
     artifact; canonical-active does not mean expert-approved or compliance-credited.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '- The issue #20 proof records 2,180 active canonical QRAs, 2,180 aliases,
@@ -275,13 +223,9 @@ claims:
   - source_id: sparta-private-readme
     section: Dated Proof Points
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: This is a bounded 2026-07-29 slice and does not establish corpus-wide
     review or quality.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '- The issue #6 proof records one accepted decision, one rejected decision,
@@ -296,13 +240,9 @@ claims:
   - source_id: sparta-private-readme
     section: Dated Proof Points
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: This dated local campaign is implementation evidence, not full
     response-quality or production-readiness proof.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '- The Sparta Chat aggregate receipt records 115 broad browser cases and
@@ -316,11 +256,7 @@ claims:
   - source_id: sparta-answerability-contract
     section: Semantic contract
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Memory + `create-evidence-case`** | On the governed path, scope the
@@ -335,13 +271,9 @@ claims:
   - source_id: sparta-private-readme
     section: Current Status and Closure Gates
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: These named gaps keep the broader response-surface claim in
     integration rather than closed.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Response path** | **In integration:** bounded answer, clarify, deflect,
@@ -358,13 +290,9 @@ claims:
   - source_id: sparta-private-readme
     section: Evaluate a Prepared Host
   risk: high
-  status: approved
+  status: candidate
   required_qualifier: Prepared-host orchestration is not a clone-and-run installation
     path or supported external deployment profile.
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
   evidence_spans:
   - source_id: sparta-public-readme
     text: A verified clean-machine quick start is not yet published.
@@ -377,11 +305,7 @@ claims:
   - source_id: sparta-qra-governance
     section: Governance lifecycle
   risk: medium
-  status: approved
-  approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+  status: candidate
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **QRA reasoning and reuse** | Complete the reasoning-field repair and
@@ -396,9 +320,8 @@ claims:
   risk: mandatory_non_claim
   status: approved
   approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+    approved_by: source-policy (mandatory non-claim)
+    approved_at: '2026-08-06'
   evidence_spans:
   - source_id: sparta-public-readme
     text: proprietary, and unauthorized program data by policy. **The F-36 corpus
@@ -413,9 +336,8 @@ claims:
   risk: mandatory_non_claim
   status: approved
   approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+    approved_by: source-policy (mandatory non-claim)
+    approved_at: '2026-08-06'
   evidence_spans:
   - source_id: sparta-public-readme
     text: '- **Candidate visibility is not compliance credit.** Candidate mappings
@@ -431,9 +353,8 @@ claims:
   risk: mandatory_non_claim
   status: approved
   approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+    approved_by: source-policy (mandatory non-claim)
+    approved_at: '2026-08-06'
   evidence_spans:
   - source_id: sparta-public-readme
     text: approval, risk acceptance, certification, or signoff authority to the model.
@@ -448,9 +369,8 @@ claims:
   risk: mandatory_non_claim
   status: approved
   approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+    approved_by: source-policy (mandatory non-claim)
+    approved_at: '2026-08-06'
   evidence_spans:
   - source_id: sparta-public-readme
     text: '| **Client demo** | **Prepared-host ready:** deterministic route, preflight,
@@ -470,9 +390,8 @@ claims:
   risk: mandatory_non_claim
   status: approved
   approval:
-    approved_by: fixture-maintainer
-    approved_at: '2026-08-05'
-    fixture: true
+    approved_by: source-policy (mandatory non-claim)
+    approved_at: '2026-08-06'
   evidence_spans:
   - source_id: sparta-public-readme
     text: It does not mean expert-approved, implemented, or compliance-credited.

@@ -1,4 +1,4 @@
-import React, { FormEvent, useMemo, useState } from 'react'
+import React, { FormEvent, ReactNode, useMemo, useState } from 'react'
 import { ArrowUp, Mic, MicOff, Shield, Sparkles } from 'lucide-react'
 import type { ChatMessage, StreamingStep, TurnBranch } from './memory-turn'
 import { liveStatusLabelFromSteps, streamingStepsToThinkingTrace } from './memory-turn'
@@ -33,6 +33,8 @@ export interface ComplianceChatWellProps {
   emptyTitle?: string
   emptyDescription?: string
   starterChips?: StarterChip[]
+  /** Pending-action confirmation card rendered between messages and composer (e.g. a propose→confirm flow). */
+  actionSlot?: ReactNode
   qid?: string
   surface?: string
   className?: string
@@ -53,6 +55,7 @@ export function ComplianceChatWell({
   disabled = false,
   composerDisabled = false,
   showComposer = true,
+  actionSlot,
   emptyTitle = 'Hello, Graham',
   emptyDescription = 'Ask for compliance evidence, scene context, or PersonaPlex memory.',
   starterChips = [],
@@ -141,6 +144,8 @@ export function ComplianceChatWell({
           </div>
         )}
       </div>
+
+      {actionSlot ?? null}
 
       {showComposer && (
         <form

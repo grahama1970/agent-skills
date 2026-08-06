@@ -244,9 +244,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
     }
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      {pending ? (
+  const proposalCard = pending ? (
         <div
           data-qid="deck:chat:proposal"
           className="mx-2 mb-1 flex items-center gap-2 rounded-lg border border-cyan-700/60 bg-cyan-950/40 px-3 py-2 text-xs text-cyan-100"
@@ -284,14 +282,17 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
             <X aria-hidden className="h-3 w-3" />
           </button>
         </div>
-      ) : null}
-      <ChatWell
+  ) : null
+
+  return (
+    <ChatWell
+      actionSlot={proposalCard}
       messages={messages}
       onSend={onSend}
       isStreaming={busy}
       qid="deck:chat:claims"
       surface="pitchdeck"
-      placeholder={`Review ${deck.title} — gaps · candidates · show <claim-id>`}
+      placeholder="Ask about claims, or type a command (hide slide 3 …)"
       emptyTitle={`Reviewing ${deck.title}`}
       emptyDescription={`${deck.visibility} deck · ${deck.validation_readiness} · ${new Set(candidateCount.map((c) => c.id)).size} candidate claims await review. Ask for gaps, inspect a claim, or get the exact ledger commands to approve, reject, or qualify it.`}
       starterChips={[
@@ -302,6 +303,5 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
           : []),
       ]}
     />
-    </div>
   )
 }

@@ -33,6 +33,7 @@ declare module '@ux-lab/ui/ChatWell' {
     emptyTitle?: string
     emptyDescription?: string
     starterChips?: StarterChip[]
+    actionSlot?: React.ReactNode
     qid?: string
     surface?: string
     className?: string
