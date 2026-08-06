@@ -114,9 +114,15 @@ def run_image(
         "--json",
     ]
     started = time.monotonic()
+    # Codex cold-start under concurrent workers can exceed generate_image.py's
+    # 30s first-event deadline (observed 2026-08-06: single warm call passed,
+    # 2-worker smoke failed at 30s). Widen it unless the caller pinned one.
+    child_env = {**os.environ}
+    child_env.setdefault("SCILLM_IMAGE_FIRST_EVENT_TIMEOUT_S", "180")
     proc = subprocess.run(
         cmd,
         cwd=ROOT,
+        env=child_env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

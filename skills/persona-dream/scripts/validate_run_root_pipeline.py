@@ -231,6 +231,17 @@ def _validate_storyboard_panel(run_root: Path, packet: dict[str, Any] | None) ->
     if path is None:
         return _missing("storyboard_panel", candidates)
 
+    # storyboard.json is the *plan* (persona_dream.storyboard.v1), kept as a
+    # legacy candidate. A plan-stage run that has no panel receipt yet should
+    # report the receipt as missing — not a schema wall from validating the
+    # plan against the panel-receipt schema.
+    try:
+        declared = _read_json(path).get("schema")
+    except (ValueError, AttributeError):
+        declared = None
+    if declared == "persona_dream.storyboard.v1":
+        return _missing("storyboard_panel", candidates[:-1] or candidates)
+
     result = validate_storyboard_panel_receipt(path, run_root=run_root)
     blocker = result.get("first_blocker")
     if blocker:
