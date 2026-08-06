@@ -1,13 +1,13 @@
 import { ChevronLeft, ChevronRight, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
-import { ChatDrawer } from './components/ChatDrawer'
+import { RightSheet, type RightSheetTab } from './components/ChatDrawer'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar, postUndo } from './components/EditChrome'
 import { SlideDrawer } from './components/SlideDrawer'
 import { ExportMenu } from './components/ExportMenu'
-import { NotesDrawer } from './components/NotesDrawer'
+import { NotesPanel } from './components/NotesDrawer'
 import { OverflowBadge } from './components/OverflowBadge'
 import { PresenterOverlay } from './components/Presenter'
 import { ShortcutsModal } from './components/ShortcutsModal'
@@ -183,7 +183,7 @@ export function App() {
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'fwd' | 'back'>('fwd')
   const [view, setView] = useState<View>(viewFromHash)
-  const [showNotes, setShowNotes] = useState(false)
+  const [sheetTab, setSheetTab] = useState<RightSheetTab>('chat')
   const [chatCollapsed, setChatCollapsed] = usePersistentPane('deck-pane-chat-collapsed', true)
   const [editing, setEditing] = useState(false)
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
@@ -300,7 +300,8 @@ export function App() {
         toggleFocusMode()
       } else if (event.key.toLowerCase() === 'n' && event.shiftKey) {
         event.preventDefault()
-        setShowNotes((value) => !value)
+        setSheetTab('notes')
+        setChatCollapsed((value) => (sheetTab === 'notes' ? !value : false))
       } else if (event.key === 'Enter') {
         event.preventDefault()
         setPresenting(true)
@@ -538,9 +539,12 @@ export function App() {
             data-qid="deck:view:chat"
             data-qs-action="DECK_TOGGLE_CHAT"
             title="Toggle the deck chat pane - propose edits conversationally"
-            aria-pressed={!chatCollapsed}
-            onClick={() => setChatCollapsed((value) => !value)}
-            className={`${navButton} ${!chatCollapsed ? 'border-cyan-500/80 text-cyan-200' : ''}`}
+            aria-pressed={!chatCollapsed && sheetTab === 'chat'}
+            onClick={() => {
+              setSheetTab('chat')
+              setChatCollapsed((value) => (sheetTab === 'chat' ? !value : false))
+            }}
+            className={`${navButton} ${!chatCollapsed && sheetTab === 'chat' ? 'border-cyan-500/80 text-cyan-200' : ''}`}
           >
             <MessageSquare aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Chat</span>
           </button>
@@ -549,9 +553,12 @@ export function App() {
             data-qid="deck:view:notes"
             data-qs-action="DECK_TOGGLE_NOTES"
             title="Toggle speaker notes panel"
-            aria-pressed={showNotes}
-            onClick={() => setShowNotes((value) => !value)}
-            className={navButton}
+            aria-pressed={!chatCollapsed && sheetTab === 'notes'}
+            onClick={() => {
+              setSheetTab('notes')
+              setChatCollapsed((value) => (sheetTab === 'notes' ? !value : false))
+            }}
+            className={`${navButton} ${!chatCollapsed && sheetTab === 'notes' ? 'border-cyan-500/80 text-cyan-200' : ''}`}
           >
             <StickyNote aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Notes</span>
           </button>
@@ -653,9 +660,14 @@ export function App() {
               </EditContext.Provider>
             </AssetDropZone>
             {!presenting ? (
-              <ChatDrawer collapsed={chatCollapsed} onCollapse={() => setChatCollapsed(true)}>
-                <DeckChat deck={deck} onChanged={reloadAll} />
-              </ChatDrawer>
+              <RightSheet
+                collapsed={chatCollapsed}
+                tab={sheetTab}
+                onTab={setSheetTab}
+                onCollapse={() => setChatCollapsed(true)}
+                chat={<DeckChat deck={deck} onChanged={reloadAll} />}
+                notes={<NotesPanel slide={slide} onChanged={reloadAll} />}
+              />
             ) : null}
             {editing && !inspectorCollapsed ? (
               <>
@@ -667,7 +679,6 @@ export function App() {
           {pendingEdit ? (
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />
           ) : null}
-          <NotesDrawer slide={slide} isOpen={showNotes} onToggleOpen={() => setShowNotes((value) => !value)} onChanged={reloadAll} />
           <footer className="flex items-center justify-between gap-4 border-t border-slate-800 px-4 py-2">
             <button
               type="button"
