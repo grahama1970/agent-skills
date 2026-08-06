@@ -681,3 +681,19 @@ directory, Python package (src/pitchdeck), pyproject, receipt schema strings
 binding (pitchdeck-review -> tab 837367961), and tickets #1225-#1232
 (titles + body paths). All gates re-verified post-rename: 37 passed
 1 xfailed, tsc clean, UI contracts PASS, live simulate CLI round-trip.
+
+## Ticket resolution sweep (2026-08-06): 6 closed, 2 human-gated
+
+CLOSED with unit+live-e2e closure evidence: #1226 span-first model,
+#1225 decision memory, #1231 fidelity limitation named, #1229 living
+versioned deck (drift/SOURCE_DRIFT/version pinning), #1232 ChangeSet +
+confirmation tokens + MCP adapter, #1228 persistent chat pane with
+simulate-previewed proposals. BLOCKED (implementation landed, closure
+gated on things only a human/credential can supply): #1230 imagegen
+(needs OPENAI_API_KEY for the live variation run), #1227 triage mode
+(needs the human <10-min timed run; audit-log timestamps are the receipt).
+New capabilities this sweep: simulate, EvidenceSpan/transform_class/
+RENDERING_UNBOUND/NUMERIC_UNBOUND, decision memory, drift + version
+pinning, GENERATED_ASSET_CLAIM_SURFACE, EditProposal + tokens + MCP,
+/api/simulate + /api/claim-decide, TriageQueue, chat pane. Suite:
+45 passed, 1 xfailed (visual diff, named limitation).
