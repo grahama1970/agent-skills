@@ -122,6 +122,11 @@ export default function Home() {
                     Read the code
                   </a>
                 </div>
+                <p className="hero-intake rise" style={{ ['--d' as string]: '.46s' }}>
+                  Principal R&amp;D capacity for the agent problems a roadmap
+                  can&apos;t prioritize — non-deterministic behavior, formal
+                  verification, multimodal pipelines.
+                </p>
               </div>
               <aside
                 className="hero-side rise"

@@ -1374,6 +1374,16 @@ footer a:hover {
   color: var(--brass);
   font-weight: 500;
 }
+/* Intake sweet spot under the CTA — quiet mono spec line, not a tagline. */
+.hero-intake {
+  margin-top: 1rem;
+  max-width: 54ch;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  color: var(--faint);
+}
 
 /* Lore clarifier for persona names. */
 .dream-head .lore {
