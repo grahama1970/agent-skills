@@ -176,6 +176,25 @@
           "passed"
         ]
       }
+    },
+    {
+      "name": "broad-surface-batch2-probes",
+      "type": "adversarial",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_discovery_batch2.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
     }
   ]
 }

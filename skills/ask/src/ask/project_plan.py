@@ -95,6 +95,38 @@ def validate_project_plan(plan: Any) -> tuple[bool, list[str]]:
                 elif dep == ws.get("id"):
                     _err(errors, f"workstreams[{i}] depends on itself")
 
+        # Reject dependency cycles (#1260): a cycle compiles to an
+        # unschedulable Tau DAG that deadlocks/fails deep instead of failing
+        # closed here. Only edges between known workstreams are considered.
+        graph = {
+            str(ws["id"]): [str(d) for d in (ws.get("depends_on") or []) if d in ws_ids]
+            for ws in workstreams
+            if isinstance(ws, dict) and str(ws.get("id", "")).strip()
+        }
+        WHITE, GREY, BLACK = 0, 1, 2
+        color = {node: WHITE for node in graph}
+
+        def _find_cycle(node: str, stack: list[str]) -> list[str] | None:
+            color[node] = GREY
+            stack.append(node)
+            for nxt in graph.get(node, []):
+                if color.get(nxt) == GREY:
+                    return stack[stack.index(nxt):] + [nxt]
+                if color.get(nxt) == WHITE:
+                    found = _find_cycle(nxt, stack)
+                    if found:
+                        return found
+            color[node] = BLACK
+            stack.pop()
+            return None
+
+        for node in graph:
+            if color[node] == WHITE:
+                cycle = _find_cycle(node, [])
+                if cycle:
+                    _err(errors, f"workstreams form a dependency cycle: {' -> '.join(cycle)}")
+                    break
+
     team = plan.get("team")
     if team is not None:
         if not isinstance(team, dict):
