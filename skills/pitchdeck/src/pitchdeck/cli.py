@@ -334,6 +334,35 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="image-variations")
+def image_variations(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    slide_id: Annotated[str, typer.Option(help="Slide to generate visual variations for.")],
+    output_dir: Annotated[Path, typer.Option(help="Directory for the plan, variants, and contact sheet.")],
+    count: Annotated[int, typer.Option(help="Number of variations.")] = 4,
+    execute: Annotated[bool, typer.Option("--execute", help="Run live via the system imagegen CLI (needs OPENAI_API_KEY).")] = False,
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+) -> None:
+    """Compile a theme-aware brief and fan out N image variations (plan always; live with --execute)."""
+    import json as json_mod
+
+    from .image_variations import emit_variation_plan, run_variations
+    from .slide_edit import _load
+
+    try:
+        deck, *_ = _load(bundle_dir, deck_name)
+        plan_path = emit_variation_plan(deck, slide_id, output_dir, count=count)
+        result = {"plan": str(plan_path)}
+        if execute:
+            result.update(run_variations(plan_path, output_dir))
+        typer.echo(json_mod.dumps(result, indent=1))
+        raise typer.Exit(0 if result.get("status") in (None, "PASS") else 5)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="drift")
 def drift(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

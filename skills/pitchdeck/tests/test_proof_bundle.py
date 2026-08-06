@@ -520,3 +520,42 @@ def test_living_deck_drift_and_versioning(tmp_path: Path) -> None:
     version_path = pin_version(artifact, out, deck, 7)
     version = _json.loads(version_path.read_text())
     assert version["bundle_revision"] == 7 and version["source_sha256"]
+
+
+def test_generated_pixels_never_claim_bearing(tmp_path: Path) -> None:
+    from pitchdeck.models import AssetSpec, AssetKind, AssetStatus
+
+    sources, ledger, assets = _base_models(tmp_path)
+    generated = AssetSpec(
+        id="gen-hero", kind=AssetKind.ILLUSTRATION, visibility=Visibility.PUBLIC,
+        alt_text="abstract hero", status=AssetStatus.PLANNED,
+        generation_brief="Illustration for slide, no text",
+    )
+    assets2 = assets.model_copy(update={"assets": [*assets.assets, generated]})
+    # Generated asset on a claim-bearing visual type -> blocked.
+    slide = _slide(visual=VisualSpec(type="native_diagram", items=["a", "b"], asset_id="gen-hero"))
+    report = _run(_deck(slide), ledger, sources, assets2, tmp_path)
+    assert any(i.code == "GENERATED_ASSET_CLAIM_SURFACE" for i in report.issues)
+    # Same asset as a decorative image visual -> no gate hit.
+    ok = _run(_deck(_slide(visual=VisualSpec(type="image", asset_id="gen-hero"))), ledger, sources, assets2, tmp_path)
+    assert not any(i.code == "GENERATED_ASSET_CLAIM_SURFACE" for i in ok.issues)
+
+
+def test_variation_plan_compiles_from_theme(tmp_path: Path, planned: Path) -> None:
+    import json as _json
+
+    from pitchdeck.image_variations import emit_variation_plan, run_variations
+
+    deck = load_yaml(planned / "deck.public.yaml", DeckManifest)
+    sid = sorted(deck.slides, key=lambda s: s.order)[1].id
+    plan_path = emit_variation_plan(deck, sid, tmp_path / "vars", count=3)
+    plan = _json.loads(plan_path.read_text())
+    assert len(plan["variants"]) == 3
+    assert deck.deck.theme_tokens.accent in plan["brief"]
+    assert "MUST NOT contain any text" in plan["brief"]
+    assert plan["tau_dag"]["topology"] == "concurrent" and len(plan["tau_dag"]["nodes"]) == 3
+    # Without a key, live execution refuses honestly instead of fabricating.
+    import os
+    if not os.getenv("OPENAI_API_KEY"):
+        result = run_variations(plan_path, tmp_path / "vars")
+        assert result["status"] == "NEEDS_ATTENTION" and "OPENAI_API_KEY" in result["reason"]

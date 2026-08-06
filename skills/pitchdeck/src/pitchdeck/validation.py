@@ -643,6 +643,35 @@ def validate_bundle(
                     slide_id=slide.id,
                 )
             )
+        # Generated-pixel boundary (#1230): assets born from a generation brief
+        # are decorative ONLY — never on claim-bearing visual surfaces.
+        if slide.visual.asset_id:
+            visual_asset = asset_map.get(slide.visual.asset_id)
+            claim_bearing_visual = slide.visual.type in {
+                VisualType.NATIVE_DIAGRAM,
+                VisualType.MERMAID,
+                VisualType.MATH,
+            } or any(
+                b.path.startswith("visual.") and b.kind.value in {"claim_quote", "claim_paraphrase"}
+                for b in slide.bindings
+            )
+            if (
+                visual_asset is not None
+                and visual_asset.generation_brief
+                and claim_bearing_visual
+            ):
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        code="GENERATED_ASSET_CLAIM_SURFACE",
+                        message=(
+                            f"Generated asset '{visual_asset.id}' (has generation_brief) is bound to a "
+                            "claim-bearing visual; generated pixels are decorative only."
+                        ),
+                        slide_id=slide.id,
+                        asset_id=visual_asset.id,
+                    )
+                )
         if slide.visual.type in {VisualType.IMAGE, VisualType.SCREENSHOT}:
             asset_id = slide.visual.asset_id or ""
             asset = asset_map.get(asset_id)
