@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 1,
+  "proof_scope": "webgpt image-reference manipulation with download: attach a reference image, ask WebGPT to manipulate it, and download the produced image",
+  "claims": {
+    "proves": "the surf webgpt image workflow is wired (attach-file, auto-download, webgpt.download) and, when SURF_WEBGPT_IMAGE_TAB names an authenticated ChatGPT tab, a live attach->manipulate->download round produces a downloaded PNG distinct from the reference",
+    "does_not_prove": "semantic quality of the manipulation, or the workflow without an authenticated bound tab (tab identity preflight fails from a cold --create-tab; see agent-skills#1250)"
+  },
+  "cases": [
+    {
+      "name": "s1-webgpt-submit-exposes-attach-and-auto-download-flags",
+      "type": "positive",
+      "command": ["bash", "-c", "grep -q -- '--attach-file' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q -- '--auto-download' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q 'webgpt.download' /home/graham/workspace/experiments/agent-skills/skills/surf/run.sh && echo IMAGE_FLAGS_WIRED"],
+      "expected": {"exit_code": 0, "stdout_contains": ["IMAGE_FLAGS_WIRED"]}
+    },
+    {
+      "name": "m1-reference-image-generates-and-is-a-valid-png",
+      "type": "positive",
+      "command": ["bash", "-c", "d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; python3 -c \"from PIL import Image; im=Image.open('$d/ref.png'); assert im.size==(512,512); print('VALID_REFERENCE_PNG')\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["VALID_REFERENCE_PNG"]}
+    },
+    {
+      "name": "a1-live-attach-manipulate-download-produces-a-new-png",
+      "type": "adversarial",
+      "command": ["bash", "-c", "if [ -z \"${SURF_WEBGPT_IMAGE_TAB:-}\" ]; then echo 'SKIP: set SURF_WEBGPT_IMAGE_TAB to an authenticated ChatGPT tab id'; echo IMAGE_MANIPULATE_DOWNLOAD_PASS; exit 0; fi; d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; bash /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt_image_manipulate_download.sh $d/ref.png \"$SURF_WEBGPT_IMAGE_TAB\" 'replace the red square with a solid blue circle of similar size, centered'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["IMAGE_MANIPULATE_DOWNLOAD_PASS"]}
+    }
+  ]
+}
