@@ -125,7 +125,8 @@ def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
             return None
 
         def get(self, url: str, params: dict[str, str]) -> httpx.Response:
-            assert params == {"api_key": "example-key-not-secret"}
+            assert params["api_key"] == "example-key-not-secret"
+            assert "postedFrom" in params and "postedTo" in params
             return httpx.Response(200, json={"totalRecords": 0, "opportunitiesData": []})
 
     monkeypatch.setattr("monitor_opportunities.discovery.httpx.Client", FakeClient)
