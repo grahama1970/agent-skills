@@ -132,6 +132,7 @@ def plan(
     as_json: bool = typer.Option(False, "--json"),
     execute: bool = typer.Option(False, "--execute", help="Submit the frozen spec to Tau for execution."),
     live: bool = typer.Option(False, "--live", help="Required with --execute: makes live provider calls."),
+    watch: bool = typer.Option(False, "--watch", help="With --execute: serve the live React Flow DAG viewer and print its URL at run start."),
 ) -> None:
     """Render the plan, compile the frozen Tau spec, and print a preview."""
     strength_mode = None
@@ -220,7 +221,12 @@ def plan(
             raise typer.Exit(2)
         from ask.tau_harness import run_plan_spec
 
-        summary = run_plan_spec(spec, run_dir=run_dir)
+        summary = run_plan_spec(
+            spec,
+            run_dir=run_dir,
+            watch=watch,
+            on_viewer_url=lambda url: typer.echo(f"LIVE DAG VIEWER: {url}", err=True),
+        )
         result["execution"] = summary
         result["status"] = "EXECUTED_PASS" if summary["scheduler_status"] == "PASS" else "EXECUTED_" + str(summary["scheduler_status"])
         typer.echo(json.dumps(result, indent=2))

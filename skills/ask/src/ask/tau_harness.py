@@ -295,6 +295,8 @@ def run_plan_spec(
     run_dir: Path,
     goal_hash: str | None = None,
     execute_node: Callable[..., dict[str, Any]] | None = None,
+    watch: bool = False,
+    on_viewer_url: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Execute a compiled multi-node tau.generic_dag_spec.v1 through Tau.
 
@@ -332,7 +334,33 @@ def run_plan_spec(
         def execute_node(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
             return executors[plan_node.node_id](plan_node, accepted_inputs, execution)
 
-    result = run_dag_plan(plan, execute_node=execute_node)
+    viewer_info: dict[str, Any] = {}
+    if watch:
+        from tau_coding.dag_runtime.watched_run import run_dag_plan_watched
+
+        def _capture_url(url: str) -> None:
+            viewer_info["url"] = url
+            # Probe at t0 so the receipt proves the page served mid-run.
+            try:
+                import httpx
+
+                viewer_info["served_at_t0"] = "Tau Live DAG" in httpx.get(url, timeout=5.0).text
+            except Exception as exc:  # pragma: no cover - best-effort probe
+                viewer_info["served_at_t0"] = False
+                viewer_info["probe_error"] = str(exc)[:200]
+            if on_viewer_url is not None:
+                on_viewer_url(url)
+
+        watched = run_dag_plan_watched(
+            plan,
+            execute_node=execute_node,
+            run_dir=run_dir,
+            watch=True,
+            on_viewer_url=_capture_url,
+        )
+        result = watched.result
+    else:
+        result = run_dag_plan(plan, execute_node=execute_node)
     by_id = {item["node_id"]: item for item in result.node_results}
     nodes = {}
     for node_id in profile_by_node:
@@ -352,6 +380,7 @@ def run_plan_spec(
         "completed_node_ids": sorted(result.completed_node_ids),
         "nodes": nodes,
         "run_dir": str(run_dir),
+        "viewer": viewer_info or None,
     }
     (run_dir / "execution-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
