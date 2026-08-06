@@ -8,6 +8,12 @@ const GROUPS = [
     category: 'Panes & workspace',
     icon: Layout,
     items: [
+      { keys: ['P'], description: 'Present mode (single key, when not typing)' },
+      { keys: ['D'], description: 'Design mode (single key)' },
+      { keys: ['C'], description: 'Claims mode (single key)' },
+      { keys: ['S'], description: 'Source mode (single key)' },
+      { keys: ['G'], description: 'Toggle overview grid (single key)' },
+      { keys: ['Ctrl', 'J'], description: 'Toggle chat pane' },
       { keys: ['Ctrl', 'Z'], description: 'Undo last committed change (edit mode)' },
       { keys: ['Ctrl', '\\'], description: 'Toggle deck source pane' },
       { keys: ['Ctrl', 'B'], description: 'Toggle slide navigation drawer' },

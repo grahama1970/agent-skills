@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Columns3, FileCode2, LayoutGrid, Maximize2, MessageSquare, NotebookText, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Columns3, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
@@ -17,6 +17,7 @@ import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
 import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
+import { useTopNavShortcuts } from './useTopNavShortcuts'
 import { FragmentContext, SlideBody, fragmentCount } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
 
@@ -374,6 +375,25 @@ export function App() {
     setShowSource(next === 'source')
   }
 
+  // Top-nav shortcuts (spec): mod+1..5 best-effort (Chrome reserves Ctrl+1..8),
+  // single keys are the reliable tier; mod+j toggles chat. Focus-guarded.
+  useTopNavShortcuts(
+    {
+      'mod+1': () => setMode('present'),
+      'mod+2': () => setMode('design'),
+      'mod+3': () => setMode('claims'),
+      'mod+4': () => setMode('source'),
+      'mod+5': () => setView((value) => (value === 'overview' ? 'present' : 'overview')),
+      'mod+j': () => setChatCollapsed((value) => !value),
+      p: () => setMode('present'),
+      d: () => setMode('design'),
+      c: () => setMode('claims'),
+      s: () => setMode('source'),
+      g: () => setView((value) => (value === 'overview' ? 'present' : 'overview')),
+    },
+    { enabled: !presenting },
+  )
+
   const navSlides = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
   const slide = navSlides[Math.min(index, navSlides.length - 1)] ?? deck.slides[0]
   const navButton =
@@ -471,27 +491,31 @@ export function App() {
           >
             {(
               [
-                ['present', 'Present', 'Read the deck as it will present'],
-                ['design', 'Design', 'Edit slides — click any text to change it'],
-                ['claims', 'Claims', 'Review the claim ledger and evidence bindings'],
-                ['source', 'Source', 'Edit the deck manifest YAML directly'],
+                ['present', 'Present', 'Read the deck as it will present', Play],
+                ['design', 'Design', 'Edit slides — click any text to change it', LayoutTemplate],
+                ['claims', 'Claims', 'Review the claim ledger and evidence bindings', ShieldCheck],
+                ['source', 'Source', 'Edit the deck manifest YAML directly', Database],
               ] as const
-            ).map(([id, label, hint]) => (
+            ).map(([id, label, hint, Icon], modeIndex) => (
+              <React.Fragment key={id}>
+              {modeIndex === 2 ? <span aria-hidden className="my-1 w-px self-stretch bg-slate-700" /> : null}
               <button
-                key={id}
                 type="button"
                 role="radio"
                 aria-checked={mode === id}
+                aria-label={label}
                 data-qid={`deck:mode:${id}`}
                 data-qs-action={`DECK_MODE_${id.toUpperCase()}`}
                 title={hint}
                 onClick={() => setMode(id)}
-                className={`cursor-pointer px-3 py-1.5 text-sm transition-colors ${
+                className={`inline-flex cursor-pointer items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
                   mode === id ? 'bg-cyan-600/25 text-cyan-200' : 'bg-slate-900 text-slate-300 hover:text-cyan-300'
                 }`}
               >
-                {label}
+                <Icon aria-hidden className="h-4 w-4" />
+                <span className="hidden lg:inline">{label}</span>
               </button>
+              </React.Fragment>
             ))}
           </div>
           <button
@@ -503,8 +527,9 @@ export function App() {
             onClick={() => setView(view === 'overview' ? 'present' : 'overview')}
             className={navButton}
           >
-            <LayoutGrid aria-hidden className="h-4 w-4" /> Overview
+            <LayoutGrid aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Overview</span>
           </button>
+          <span aria-hidden className="mx-1 h-5 w-px bg-slate-700" />
           <button
             type="button"
             data-qid="deck:view:chat"
@@ -514,7 +539,7 @@ export function App() {
             onClick={() => setChatCollapsed((value) => !value)}
             className={`${navButton} ${!chatCollapsed ? 'border-cyan-500/80 text-cyan-200' : ''}`}
           >
-            <MessageSquare aria-hidden className="h-4 w-4" /> Chat
+            <MessageSquare aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Chat</span>
           </button>
           <button
             type="button"
@@ -525,7 +550,7 @@ export function App() {
             onClick={() => setShowNotes((value) => !value)}
             className={navButton}
           >
-            <NotebookText aria-hidden className="h-4 w-4" /> Notes
+            <StickyNote aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Notes</span>
           </button>
           <ExportMenu />
         </nav>
