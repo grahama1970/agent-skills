@@ -346,6 +346,33 @@ h1 .it::after {
   font-style: normal;
   font-weight: 500;
 }
+/* Boot scan: one-time staggered sweep over the bio credentials on load.
+   Plays once, color/text-shadow only (no layout shift), then locks static. */
+.hero-bio em {
+  color: rgba(236, 226, 211, 0.55);
+  animation: boot-scan 0.45s var(--ease-entrance) forwards;
+  animation-delay: calc(0.55s + var(--i, 0) * 0.12s);
+}
+@keyframes boot-scan {
+  0% {
+    color: rgba(236, 226, 211, 0.55);
+    text-shadow: none;
+  }
+  50% {
+    color: var(--brass);
+    text-shadow: 0 0 8px rgba(226, 172, 98, 0.45);
+  }
+  100% {
+    color: var(--text);
+    text-shadow: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-bio em {
+    animation: none;
+    color: var(--text);
+  }
+}
 .hero-actions {
   display: flex;
   flex-wrap: wrap;

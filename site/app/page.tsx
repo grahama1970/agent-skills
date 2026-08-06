@@ -79,9 +79,13 @@ export default function Home() {
                 </h1>
                 <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
                   A one-person practice with an unusual résumé: commercial
-                  composer for <em>Adidas</em> and <em>Pepsi</em>,
-                  Webby-recognized producer for <em>Sony</em>, DARPA technical
-                  lead alongside <em>Lockheed Martin</em> and <em>MIT</em>.
+                  composer for <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
+                  and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
+                  Webby-recognized producer for{' '}
+                  <em style={{ ['--i' as string]: 3 }}>Sony</em>, DARPA technical
+                  lead alongside{' '}
+                  <em style={{ ['--i' as string]: 4 }}>Lockheed Martin</em> and{' '}
+                  <em style={{ ['--i' as string]: 5 }}>MIT</em>.
                   High-end creative and hard technical work — delivered by the
                   same person, shipped as working code, in public.
                 </p>
