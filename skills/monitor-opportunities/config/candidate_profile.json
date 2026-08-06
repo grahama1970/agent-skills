@@ -65,9 +65,11 @@
   "defense/compliance",
   "document-AI",
   "agentic pipelines/LLM systems",
-  "product/brand/creative-digital leadership"
+  "product/brand/creative-digital leadership",
+  "creative/brand/audio"
  ],
  "correction_log": [
   "2026-08-06: 'Sony God of War Executive Producer' framing (Indeed resume) is INACCURATE and must not be used. Actual: Executive Producer (web) at RealPie leading ~12; Director of Interactive Services at Dentsu America, Santa Monica, major consumer brands, global teams."
- ]
+ ],
+ "career_arc": "Commercial composer (X Games/Nokia/Pepsi/Taco Bell/Adidas) -> interactive/digital leadership (RealPie EP, Dentsu Director of Interactive Services) -> AI/verification architect (DARPA ARCOS, SPARTA, pdf_oxide, extractor, memory). Unusual creative-to-hard-technical range; the arc itself is a differentiator for the right audience."
 }

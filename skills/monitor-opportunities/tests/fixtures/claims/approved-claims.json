@@ -153,6 +153,27 @@
    "sensitivity": "public",
    "recency": "early_career",
    "usage_note": "Dated leadership credential. Use as background depth/range and for leadership-framed audiences; do not present as recent hands-on work. Recent claims (ARCOS/pdf_oxide/extractor/SPARTA/memory) lead for engineering roles."
+  },
+  {
+   "claim_key": "claim:composer:commercial-brand-work",
+   "wordings": [
+    {
+     "wording_id": "w1",
+     "text": "Worked as a commercial composer, creating music for campaigns and accounts including X Games, Nokia, Pepsi, Taco Bell, and Adidas."
+    }
+   ],
+   "evidence_refs": [
+    "human_attested:graham:2026-08-06"
+   ],
+   "verification_status": "human_attested",
+   "allowed_channels": [
+    "resume",
+    "GMAIL",
+    "LINKEDIN"
+   ],
+   "sensitivity": "public",
+   "recency": "early_career",
+   "usage_note": "Earliest-career creative credential. Use for creative/brand/audio-adjacent audiences or as range/depth; never as recent work."
   }
  ],
  "schema": "monitor_opportunities.claim_snapshot.v1"
