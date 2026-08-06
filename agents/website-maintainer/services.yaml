@@ -8,8 +8,9 @@ services:
     command: skills/monitor-website/run.sh refresh --commit --push
     then: skills/monitor-website/run.sh audit --json
     notes: >
-      Regenerates site/inventory.json and site/artifacts.json from repo
-      state, gates on verify-data-qid + npm build, commits/pushes only when
+      Regenerates site/inventory.json, site/artifacts.json, and
+      site/generated/battle-lineage.json from repo state, gates on
+      verify-data-qid + npm build, commits/pushes only when
       content changed (push triggers Pages deploy). Copy (questions,
       blurbs, sections) is never modified by this job — copy changes stay
       doc-grounded and agent/human-authored. The audit run after refresh
