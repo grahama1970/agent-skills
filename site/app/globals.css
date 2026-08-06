@@ -244,8 +244,25 @@ section {
   color: var(--brass);
 }
 @media (max-width: 720px) {
-  .nav a:not(.mailref) {
+  /* Keep section nav on mobile as a horizontally scrollable strip. */
+  .topbar .wrap {
+    flex-wrap: wrap;
+    height: auto;
+    padding-block: 0.5rem;
+    row-gap: 0.1rem;
+  }
+  .nav {
+    flex: 1 1 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav::-webkit-scrollbar {
     display: none;
+  }
+  .nav a {
+    padding-block: 0.65rem;
   }
 }
 
@@ -1900,6 +1917,57 @@ a.fig:hover .l::after,
   color: var(--brass);
   border-bottom-style: solid;
   border-bottom-color: var(--brass);
+}
+
+/* Mobile touch ergonomics: bigger tap areas for inline links and thumbs. */
+@media (max-width: 640px) {
+  a.fig {
+    padding: 0.4rem 0.5rem;
+  }
+  .gen-link,
+  .github-repo-link {
+    display: inline-block;
+    padding: 0.5rem 0.6rem;
+  }
+  .github-repo-link {
+    display: inline-flex;
+  }
+  .stepper-thumb {
+    flex-basis: 88px;
+  }
+  .stepper-thumb i {
+    font-size: 0.66rem;
+  }
+}
+
+/* Ledger touch ergonomics: WCAG 2.2 target sizes on coarse pointers,
+   without inflating the desktop density. */
+@media (max-width: 640px), (pointer: coarse) {
+  .ledger-chip,
+  .ledger-view {
+    min-height: 44px;
+    padding-inline: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ledger-chips {
+    gap: 0.65rem;
+  }
+  .ledger-tools input {
+    min-height: 44px;
+    font-size: 16px; /* stops iOS Safari auto-zoom on focus */
+  }
+  .ledger-chip:active,
+  .ledger-view:active,
+  .stepper-thumb:active,
+  .github-repo-link:active {
+    border-color: var(--brass);
+    transform: scale(0.97);
+    transition: transform 0.05s ease;
+  }
 }
 
 /* Why this project exists — the R&D rationale, from each README. */
