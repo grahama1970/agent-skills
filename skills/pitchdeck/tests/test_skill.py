@@ -363,9 +363,9 @@ def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path)
     )
 
     for deck in (public, private):
-        # Publish mode: the ONLY errors must be APPROVAL_FIXTURE — the example
-        # ledger carries fixture stamps precisely so this gate has something
-        # to reject (review condition: fixture provenance never publishes).
+        # The example is mid-REAL-review (fixture stamps were retired for the
+        # human approval cycle): publish blocks only on the open candidates,
+        # never on fixture provenance (none remains) and never on span gaps.
         report = validate_bundle(
             deck,
             ledger,
@@ -376,7 +376,8 @@ def test_sparta_example_manifests_validate_with_resolved_sources(tmp_path: Path)
             require_approved_claims=True,
         )
         error_codes = {i.code for i in report.issues if i.severity == "error"}
-        assert error_codes == {"APPROVAL_FIXTURE"}, [issue.model_dump() for issue in report.issues]
+        assert error_codes <= {"SLIDE_UNAPPROVED_CLAIM"}, [issue.model_dump() for issue in report.issues]
+        assert "APPROVAL_FIXTURE" not in error_codes
         # Draft mode: fixture stamps are fine; zero errors.
         draft = validate_bundle(
             deck,

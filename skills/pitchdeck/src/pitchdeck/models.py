@@ -78,11 +78,18 @@ class SlideTransition(str, Enum):
 
 
 class ContentReveal(str, Enum):
-    """Browser-deck content entrance animation for body items."""
+    """Browser-deck content entrance animation for body items.
+
+    `step` is click-gated: in Present mode the advance key reveals the next
+    bullet/card (a fragment) before it advances the slide — real-presentation
+    pacing. Honored by the workbench, presenter, and HTML export; PPTX stays
+    animation-free by design.
+    """
 
     NONE = "none"
     STAGGER_UP = "stagger_up"
     STAGGER_FADE = "stagger_fade"
+    STEP = "step"
 
 
 class VisualPosition(str, Enum):

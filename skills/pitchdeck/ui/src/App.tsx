@@ -17,7 +17,7 @@ import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
 import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
-import { SlideBody } from './layouts/SlideLayouts'
+import { FragmentContext, SlideBody, fragmentCount } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
@@ -228,12 +228,28 @@ export function App() {
     root.setProperty('--deck-body-font', deck.theme_tokens.body_font)
   }, [deck])
 
+  const [fragment, setFragment] = useState(0)
+  const fragmentTotal = useRef(0)
+
+  // Click-gated builds: forward advance consumes fragments before slides;
+  // backward un-reveals before retreating. Only in Present (not editing).
   const go = useCallback(
     (next: number) => {
+      if (!editing && fragmentTotal.current > 0) {
+        if (next > index && fragment < fragmentTotal.current) {
+          setFragment((value) => value + 1)
+          return
+        }
+        if (next < index && fragment > 0) {
+          setFragment((value) => value - 1)
+          return
+        }
+      }
       setDirection(next >= index ? 'fwd' : 'back')
       setIndex(next)
+      setFragment(0)
     },
-    [index],
+    [index, editing, fragment],
   )
 
   useEffect(() => {
@@ -319,6 +335,14 @@ export function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  useEffect(() => {
+    if (deck) {
+      const navSlidesNow = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
+      const current = navSlidesNow[Math.min(index, navSlidesNow.length - 1)]
+      fragmentTotal.current = current ? fragmentCount(current) : 0
+    }
+  }, [deck, index, editing])
 
   useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go)
 
@@ -598,7 +622,9 @@ export function App() {
             ) : null}
             <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
               <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
-                <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
+                <FragmentContext.Provider value={editing ? Infinity : fragment}>
+                  <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
+                </FragmentContext.Provider>
               </EditContext.Provider>
             </AssetDropZone>
             {!chatCollapsed && !presenting ? (

@@ -9,10 +9,6 @@ deck:
   visibility: public
   target_editor: google_slides
   theme: dark_cyan_evidence
-  theme_tokens:
-    accent: '#22d3ee'
-    heading_font: Arial
-    body_font: Arial
   source_policy: public_only
   author: Graham Anderson
 slides:
@@ -147,7 +143,7 @@ slides:
     kind: non_claim
   transition: slide
   transition_duration_ms: 400
-  reveal: step
+  reveal: stagger_up
   hidden: false
   notes: This is the deck's intellectual center. Preserve the three distinctions exactly
     enough that later slides cannot imply stronger authority.

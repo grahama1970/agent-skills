@@ -156,7 +156,9 @@ def emit_ui_bundle(
         file_name: str | None = None
         missing = spec.local_path is None
         if spec.local_path:
-            src = (asset_manifest_dir / spec.local_path).resolve()
+            from .io import expand_path
+
+            src = expand_path(spec.local_path, base_dir=asset_manifest_dir)
             if src.exists():
                 assets_out.mkdir(parents=True, exist_ok=True)
                 file_name = f"{spec.id}{src.suffix}"

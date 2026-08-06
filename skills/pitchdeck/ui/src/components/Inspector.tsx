@@ -156,7 +156,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
           onChange={(event) => void apply('reveal', event.target.value)}
           className={input}
         >
-          {['stagger_up', 'stagger_fade', 'none'].map((name) => (
+          {['stagger_up', 'stagger_fade', 'step', 'none'].map((name) => (
             <option key={name} value={name}>
               {name.replace('_', ' ')}
             </option>

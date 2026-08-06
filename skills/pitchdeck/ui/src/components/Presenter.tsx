@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Clock, Database, ExternalLink, FastForward, Minimize2, MessageSquare, Monitor, Pause, Play, Repeat, RotateCcw, ShieldAlert, ShieldCheck, ShieldQuestion, Type, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { SlideBody } from '../layouts/SlideLayouts'
+import { FragmentContext, SlideBody, fragmentCount } from '../layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiSlide } from '../types'
 
 // Presenter view (user spec, adapted): REAL slide renders (SlideBody scaled)
@@ -30,7 +30,7 @@ function usePresenterTimer() {
   return { formatted, wallClock, running, toggle: () => setRunning((v) => !v), reset: () => setElapsed(0) }
 }
 
-function ScaledSlide({ slide }: { slide: UiSlide }) {
+function ScaledSlide({ slide, revealed = Infinity }: { slide: UiSlide; revealed?: number }) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [scale, setScale] = useState(0.1)
   useEffect(() => {
@@ -50,7 +50,9 @@ function ScaledSlide({ slide }: { slide: UiSlide }) {
         className="absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950"
         style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
-        <SlideBody slide={slide} />
+        <FragmentContext.Provider value={revealed}>
+          <SlideBody slide={slide} />
+        </FragmentContext.Provider>
       </div>
     </div>
   )
@@ -172,8 +174,25 @@ export function PresenterOverlay({
   const [showEvidence, setShowEvidence] = useState(false)
   const timer = usePresenterTimer()
 
-  const next = useCallback(() => setIndex((value) => Math.min(value + 1, slides.length - 1)), [slides.length])
-  const prev = useCallback(() => setIndex((value) => Math.max(value - 1, 0)), [])
+  const [fragment, setFragment] = useState(0)
+  const currentSlide = slides[index]
+  const total = currentSlide ? fragmentCount(currentSlide) : 0
+  const next = useCallback(() => {
+    if (total > 0 && fragment < total) {
+      setFragment((value) => value + 1)
+      return
+    }
+    setIndex((value) => Math.min(value + 1, slides.length - 1))
+    setFragment(0)
+  }, [slides.length, fragment, total])
+  const prev = useCallback(() => {
+    if (total > 0 && fragment > 0) {
+      setFragment((value) => value - 1)
+      return
+    }
+    setIndex((value) => Math.max(value - 1, 0))
+    setFragment(0)
+  }, [fragment, total])
   const first = useCallback(() => setIndex(0), [])
   const auto = useAutoAdvance(slides.length, index, next, first)
 
@@ -341,7 +360,7 @@ export function PresenterOverlay({
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-6 overflow-hidden p-6">
         <div className="col-span-7 flex min-h-0 flex-col gap-4 overflow-hidden">
           <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-2xl">
-            <ScaledSlide slide={slide} />
+            <ScaledSlide slide={slide} revealed={fragment} />
           </div>
           <div className="flex h-32 flex-shrink-0 gap-4">
             <div className="flex w-1/3 flex-col justify-between rounded-xl border border-slate-800 bg-slate-900 p-3">

@@ -52,6 +52,7 @@ main { flex: 1; position: relative; display: flex; align-items: center; justify-
 .slide ul { margin: 0; padding-left: 1.8vw; font-size: 1.4vw; line-height: 1.7; color: #cbd5e1; }
 .slide li { margin-bottom: .6vw; opacity: 0; animation: reveal .46s ease forwards; animation-delay: calc(.16s + var(--i) * .11s); }
 .slide.no-reveal li { animation: none; opacity: 1; }
+.slide li.frag-hidden { visibility: hidden; opacity: 0; animation: none; }
 .slide img, .slide video { max-width: 42%; max-height: 60%; object-fit: contain; border-radius: 12px;
                            position: absolute; right: 4.5%; top: 50%; transform: translateY(-50%); }
 .slide .footer { position: absolute; bottom: 3%; left: 4.5%; right: 4.5%; font-size: 1vw; color: #64748b; }
@@ -122,6 +123,23 @@ function renderEvidence() {
     box.appendChild(card);
   }
 }
+// Click-gated builds (reveal: step): the advance key consumes fragments first.
+function stepOrShow(direction) {
+  const active = slides[index];
+  const fragments = active.dataset.reveal === 'step' ? Array.from(active.querySelectorAll('li')) : [];
+  if (direction > 0) {
+    const hidden = fragments.find((li) => li.classList.contains('frag-hidden'));
+    if (hidden) { hidden.classList.remove('frag-hidden'); return; }
+    show(index + 1);
+  } else {
+    const shown = fragments.filter((li) => !li.classList.contains('frag-hidden'));
+    if (fragments.length && shown.length) { shown[shown.length - 1].classList.add('frag-hidden'); return; }
+    show(index - 1);
+  }
+}
+function resetFragments() {
+  slides.forEach((el) => { if (el.dataset.reveal === 'step') el.querySelectorAll('li').forEach((li) => li.classList.add('frag-hidden')); });
+}
 function toggleAutoplay() {
   autoplay = !autoplay;
   document.getElementById('autoplay').textContent = autoplay ? 'Pause (A)' : 'AutoPlay (A)';
@@ -133,13 +151,14 @@ document.getElementById('notesBtn').onclick = () => { notesOpen = !notesOpen; do
 document.getElementById('autoplay').onclick = toggleAutoplay;
 document.getElementById('fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(index + 1); }
-  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(index - 1); }
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); stepOrShow(1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); stepOrShow(-1); }
   else if (e.key.toLowerCase() === 'n') document.getElementById('notesBtn').click();
   else if (e.key.toLowerCase() === 'e') document.getElementById('evidenceBtn').click();
   else if (e.key.toLowerCase() === 'f') document.getElementById('fs').click();
   else if (e.key.toLowerCase() === 'a') toggleAutoplay();
 });
+resetFragments();
 show(0);
 """
 
@@ -227,7 +246,7 @@ def emit_html(
                 ]
             )
             slide_sections.append(
-                f'<section class="slide t-{slide.transition}{reveal_class}" '
+                f'<section class="slide t-{slide.transition}{reveal_class}" data-reveal="{slide.reveal}" '
                 f'style="--dur:{slide.transition_duration_ms}ms" '
                 f'data-claims="{html.escape(claims_payload)}" '
                 f'data-notes="{html.escape(slide.notes)}">'
