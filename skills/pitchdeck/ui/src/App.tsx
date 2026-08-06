@@ -347,18 +347,6 @@ export function App() {
 
   useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go)
 
-  if (error) {
-    return (
-      <main className="flex h-full items-center justify-center p-8 text-center">
-        <p className="max-w-xl text-rose-300">
-          Failed to load deck bundle: {error}. Run{' '}
-          <code className="rounded bg-slate-800 px-1">./run.sh emit-ui --bundle-dir &lt;bundle&gt; --output-dir ui/public</code>{' '}
-          first.
-        </p>
-      </main>
-    )
-  }
-  if (!deck) return <main className="flex h-full items-center justify-center text-slate-500">Loading deck…</main>
 
   // Mode architecture (roundtable): Present | Design | Claims | Source as one
   // segmented control — derived from existing state, so deep panes still work.
@@ -393,6 +381,20 @@ export function App() {
     },
     { enabled: !presenting },
   )
+
+
+  if (error) {
+    return (
+      <main className="flex h-full items-center justify-center p-8 text-center">
+        <p className="max-w-xl text-rose-300">
+          Failed to load deck bundle: {error}. Run{' '}
+          <code className="rounded bg-slate-800 px-1">./run.sh emit-ui --bundle-dir &lt;bundle&gt; --output-dir ui/public</code>{' '}
+          first.
+        </p>
+      </main>
+    )
+  }
+  if (!deck) return <main className="flex h-full items-center justify-center text-slate-500">Loading deck…</main>
 
   const navSlides = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
   const slide = navSlides[Math.min(index, navSlides.length - 1)] ?? deck.slides[0]
