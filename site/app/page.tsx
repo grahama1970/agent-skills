@@ -3,6 +3,7 @@ import { ReceiptTicket } from '@/components/receipt-ticket';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
+import { UnusualPath } from '@/components/unusual-path';
 import { SkillMosaic } from '@/components/skill-mosaic';
 import content from '@/content.json';
 import inventory from '@/inventory.json';
@@ -333,7 +334,10 @@ export default function Home() {
                 <p className="kicker">
                   <b>05</b> About
                 </p>
-                <h2 className="h2">An unusual path, on purpose.</h2>
+                <h2 className="h2">
+                  An unusual path, on purpose.
+                  <UnusualPath />
+                </h2>
                 <div className="thesis">
                   <p>
                     An unconventional path is an advantage on problems with no
