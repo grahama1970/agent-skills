@@ -10,7 +10,7 @@
   "If not in the SF Bay area, are you open to relocating to the SF Bay Area for this position?": "No",
   "Are you legally authorized to work in the United States for our Company?": "Yes"
  },
- "workplace_preference": "hybrid or remote, based in Buffalo NY",
+ "workplace_preference": "Buffalo/WNY on-site, hybrid, or remote all acceptable; relocation OUTSIDE the Buffalo area is No (Graham 2026-08-06: 'On-site is fine for Buffalo').",
  "not_yet_provided": [
   "work authorization declaration",
   "EEO self-identification choices",
@@ -29,5 +29,6 @@
   "owner": "agent",
   "method": "claim-bound draft from approved claims + posting text + brave-search of the company; presented in the open tab for Graham's edit before submit",
   "authorized": "Graham 2026-08-05: 'this is your domain'"
- }
+ },
+ "eligibility_note": "On-site is eligible when the location is Buffalo/Western NY. Relocation-required roles outside WNY remain rejected before ranking."
 }
