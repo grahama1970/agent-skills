@@ -140,9 +140,8 @@
         "exit_code": 0,
         "stdout_contains": [
           "\"status\": \"READY\"",
-          "claude-fable-model-turn",
-          "codex-high-model-turn",
-          "opencode-kimi-k26",
+          "profile:claude-fable-model-turn",
+          "profile:codex-high-model-turn",
           "\"pricing\"",
           "input_per_mtok"
         ]
