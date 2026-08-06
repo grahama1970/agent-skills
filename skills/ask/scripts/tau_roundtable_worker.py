@@ -547,6 +547,15 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             resolve_payload = _parse_json_object(resolve.stdout)
             tab_id = str(resolve_payload.get("tab_id") or "")
             url = str(resolve_payload.get("conversation_url") or "")
+            if handler == "webgpt" and tab_id:
+                # webgpt --expect-url must equal the tab's LIVE url: the guard
+                # checks the live tab, and a fresh chatgpt tab navigates to
+                # /c/<id> after any activity, so a stored root url goes stale
+                # and mismatches on later rounds (#1252, found via live eval).
+                # Always reconcile against the current tab url for webgpt.
+                live_url = _current_tab_url(args, tab_id)
+                if live_url:
+                    url = live_url
             if not url and tab_id:
                 # Ask provisions webgpt seats at a bare provider root (no
                 # conversation id), so conversation_url is empty and no
