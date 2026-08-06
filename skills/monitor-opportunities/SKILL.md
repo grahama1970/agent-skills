@@ -136,6 +136,24 @@ exported, pasted, screenshot, and `ops-linkedin` capture artifacts are ingested 
 evidence, then the workflow leaves the platform. The monitor still ranks across all
 enabled lanes and must not become LinkedIn-only.
 
+## Mandatory sources are enforced in code, not prose
+
+Discovery is not a suggestion. `config/required_sources.json` lists the sources
+that MUST be attempted on every live run, and `pipeline._enforce_required_sources`
+(called from `run_stage0` for live runs, covered by
+`tests/test_required_sources.py`) FAILS the run with `REQUIRED_SOURCE_NOT_SEARCHED`
+when a mandated source is absent or reports `NOT_SEARCHED`. A run cannot claim
+success while silently skipping a source.
+
+Mandated sources: LinkedIn top-applicant (human-supplied read-only capture /
+`--linkedin-evidence`; AUTH_REQUIRED when none, never a fake MATCHES), Indeed and
+hiddenjobs (read-only browser capture — the only legitimate channel), Greenhouse
+and Ashby (registry APIs), SAM.gov and DARPA (federal), and mandatory
+client-services research (live brave-search over the candidate mandates). An
+honest FEED_DOWN/AUTH_REQUIRED receipt is allowed; absence or NOT_SEARCHED is a
+defect that stops the run. The nightly transaction inherits this gate — it is the
+same `run` path.
+
 ## Source and feed truth
 
 Each source attempt writes a receipt. Closed run-result vocabulary:

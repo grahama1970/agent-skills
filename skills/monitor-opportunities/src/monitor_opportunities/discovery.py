@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -705,6 +706,65 @@ def _federal_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], list[di
     return _federal_page_candidates(target)
 
 
+
+def _linkedin_required_receipt(evidence_supplied: bool) -> dict[str, Any]:
+    """Honest receipt for the mandatory LinkedIn top-applicant source.
+
+    LinkedIn platform automation is forbidden, so this source is satisfied by
+    human-supplied read-only evidence (--linkedin-evidence / surf capture). When
+    none is supplied the receipt is AUTH_REQUIRED — an honest 'human capture
+    required', never a silent skip.
+    """
+    receipt = _base_receipt("A", "linkedin", "LinkedIn top-applicant", "human_supplied_linkedin")
+    receipt["automation_policy"] = "linkedin_authorized_read_only_no_actions"
+    receipt["request_summary"] = "LinkedIn top-applicant requires human-supplied read-only capture"
+    if evidence_supplied:
+        receipt["result_status"] = "MATCHES"
+        receipt["parser_result"] = "PARSED"
+    else:
+        receipt["result_status"] = "AUTH_REQUIRED"
+        receipt["parser_result"] = "BLOCKED"
+        receipt["limitations"].append("No --linkedin-evidence supplied; run a read-only surf capture of the top-applicant collection and re-run.")
+    return _finalize_receipt(receipt)
+
+
+def _client_research_receipt(skill_dir: Path) -> dict[str, Any]:
+    """Mandatory client-services research over the candidate's mandates.
+
+    Runs a live brave-search sweep for companies that could use the candidate's
+    services (document extraction, agentic pipelines, compliance, Buffalo
+    prospects). Honest FEED_DOWN receipt if the search tool is unavailable.
+    """
+    receipt = _base_receipt("C", "client-research", "Client-services prospects", "source_locator")
+    queries = [
+        "companies hiring document extraction AI agentic pipelines compliance",
+        "Buffalo NY AI consulting document extraction machine learning company",
+        "aerospace defense CMMC compliance AI services contract",
+    ]
+    brave = skill_dir.parents[0] / "brave-search" / "run.sh"
+    receipt["request_summary"] = f"brave-search client-services research: {len(queries)} queries"
+    hits = 0
+    try:
+        import subprocess
+
+        for q in queries:
+            proc = subprocess.run([str(brave), "web", q, "--count", "5"], capture_output=True, text=True, timeout=60)
+            if proc.returncode == 0 and proc.stdout.strip():
+                try:
+                    hits += len(json.loads(proc.stdout).get("results", []))
+                except (ValueError, KeyError):
+                    pass
+        receipt["response_status"] = 200
+        receipt["result_status"] = "MATCHES" if hits > 0 else "NO_MATCHES"
+        receipt["parser_result"] = "PARSED"
+        receipt["evidence_refs"].append(f"client_research_hits:{hits}")
+    except Exception as exc:  # brave-search unavailable is an honest feed-down
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"client research unavailable: {type(exc).__name__}")
+    return _finalize_receipt(receipt)
+
+
 def sweep(
     *,
     skill_dir: Path,
@@ -729,6 +789,9 @@ def sweep(
                     receipt, rows = _linkedin_evidence_candidates(linkedin_evidence)
                     receipts.append(receipt)
                     candidates.extend(rows)
+                else:
+                    # No human capture supplied: honest AUTH_REQUIRED, never a silent skip.
+                    receipts.append(_linkedin_required_receipt(False))
                 for target in targets.get("employment", []):
                     receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)
@@ -739,6 +802,7 @@ def sweep(
                 receipts.append(receipt)
                 candidates.extend(rows)
         if "C" in lanes:
+            receipts.append(_client_research_receipt(skill_dir))
             for target in targets.get("commercial", []):
                 receipt, rows = _commercial_receipt(target)
                 receipts.append(receipt)

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .application_packets import build_application_packets
-from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE
+from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .discovery import sweep
 from .outreach import build_outreach_packets
 from .ranking import rank
@@ -414,6 +414,45 @@ def _report_from_run(
     }
 
 
+def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str, Any]:
+    """Fail the run if any mandated source produced no receipt or NOT_SEARCHED.
+
+    Discovery is enforced in code, not prose: a source listed in
+    config/required_sources.json MUST appear in the run's source receipts with
+    an honest terminal status. Absence or NOT_SEARCHED is a defect and stops
+    the run. An honest FEED_DOWN/AUTH_REQUIRED receipt is allowed.
+    """
+    config_path = skill_dir / "config" / "required_sources.json"
+    if not config_path.exists():
+        raise ContractError("REQUIRED_SOURCES_CONFIG_MISSING", str(config_path))
+    config = read_json(config_path)
+    receipts = _source_receipts(discovery_dir)
+    def _norm(value: str) -> str:
+        return value.lower().replace("-", "").replace("_", "").replace(".", "")
+
+    seen: dict[str, str] = {}
+    for r in receipts:
+        provider = _norm(str(r.get("provider", "")))
+        seen[provider] = str(r.get("result_status", ""))
+    missing: list[str] = []
+    not_searched: list[str] = []
+    for required in config.get("required", []):
+        rid = _norm(str(required["id"]))
+        # match by normalized provider substring (linkedin/indeed/sam.gov/etc)
+        match = next((s for p, s in seen.items() if rid in p or p in rid), None)
+        if match is None:
+            missing.append(required["id"])
+        elif match == "NOT_SEARCHED":
+            not_searched.append(required["id"])
+    if missing or not_searched:
+        raise ContractError(
+            "REQUIRED_SOURCE_NOT_SEARCHED",
+            f"mandated sources missing={missing} not_searched={not_searched}; "
+            "discovery must attempt every required source (config/required_sources.json)",
+        )
+    return {"required_sources_enforced": True, "checked": [r["id"] for r in config.get("required", [])]}
+
+
 def run_stage0(
     skill_dir: Path,
     out_dir: Path,
@@ -438,6 +477,10 @@ def run_stage0(
         linkedin_evidence=linkedin_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
+    if fixture_dir is None:
+        # Enforcement is for live runs; fixtures are deterministic test scaffolding.
+        required_sources = _enforce_required_sources(skill_dir, discovery_dir)
+        phases.append({"phase": "REQUIRED_SOURCES_ENFORCED", "checked": required_sources["checked"]})
     ranking_receipt = rank(discovery_dir, 8, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"

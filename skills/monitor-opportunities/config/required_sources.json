@@ -1,0 +1,17 @@
+{
+  "schema": "monitor_opportunities.required_sources.v1",
+  "policy": "These sources MUST be attempted every run. A run that produces no receipt for a required source (or a receipt with result_status NOT_SEARCHED) FAILS the run — silent skipping is a defect, not a degraded lane. This is enforced in code by pipeline._enforce_required_sources and tested; it is not prose.",
+  "required": [
+    {"id": "linkedin_top_applicant", "lane": "A", "channel": "browser_human_supplied", "note": "LinkedIn 'top applicant' collection via read-only surf capture or --linkedin-evidence; never platform automation."},
+    {"id": "indeed", "lane": "A", "channel": "browser_human_supplied", "note": "Indeed search via read-only surf capture; API/automation is blocked, so browser evidence is the channel."},
+    {"id": "hiddenjobs", "lane": "A", "channel": "browser_or_locator", "note": "hiddenjobs.dev via read-only capture; locator hint only, primary source still required to admit."},
+    {"id": "greenhouse", "lane": "A", "channel": "api", "note": "Registry greenhouse employers."},
+    {"id": "ashby", "lane": "A", "channel": "api", "note": "Registry ashby employers (Reducto/Unstructured/Datalab)."},
+    {"id": "sam.gov", "lane": "B", "channel": "browser_or_api", "note": "SAM.gov active opportunities; API 404s so browser capture is the channel."},
+    {"id": "darpa", "lane": "B", "channel": "api", "note": "DARPA opportunities."},
+    {"id": "client_research", "lane": "C", "channel": "brave_search", "note": "Deep client-services research over candidate mandates (document extraction, agentic pipelines, compliance, Buffalo prospects). Mandatory, no exceptions."}
+  ],
+  "accepted_non_match_states": ["MATCHES","NO_MATCHES","FEED_DOWN","AUTH_REQUIRED","AUTH_FAILED","RATE_LIMITED","POLICY_BLOCKED","STALE_DATA"],
+  "forbidden_states": ["NOT_SEARCHED"],
+  "rule": "A required source may legitimately report FEED_DOWN/AUTH_REQUIRED with a receipt (honest failure). It may NOT be absent and may NOT be NOT_SEARCHED. Absence or NOT_SEARCHED fails the run."
+}
