@@ -82,10 +82,11 @@ export default function Home() {
                   composer for <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
                   and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
                   Webby-recognized producer for{' '}
-                  <em style={{ ['--i' as string]: 3 }}>Sony</em>, DARPA technical
+                  <em style={{ ['--i' as string]: 3 }}>Sony</em>,{' '}
+                  <em style={{ ['--i' as string]: 4 }}>DARPA</em> technical
                   lead alongside{' '}
-                  <em style={{ ['--i' as string]: 4 }}>Lockheed Martin</em> and{' '}
-                  <em style={{ ['--i' as string]: 5 }}>MIT</em>.
+                  <em style={{ ['--i' as string]: 5 }}>Lockheed Martin</em> and{' '}
+                  <em style={{ ['--i' as string]: 6 }}>MIT</em>.
                   High-end creative and hard technical work — delivered by the
                   same person, shipped as working code, in public.
                 </p>
