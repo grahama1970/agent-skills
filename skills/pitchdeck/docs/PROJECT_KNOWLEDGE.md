@@ -728,3 +728,9 @@ Rules-of-Hooks white-screen (hook below early returns), click-gated builds
 images restored), record-note narration (RealtimeSTT + faster-whisper,
 OAuth-free local), sparta fixture approvals retired into a real 11-card
 triage queue.
+
+## 2026-08-06 — #1247 closed: real Sparta shared-chat adopted
+- `skills/ux-lab/ui/shared-chat/` is now the canonical chat family (vendored from sparta/explorer shared-chat, `_support/` shims for sparta-external hooks/cards). `@ux-lab/ui/ChatWell` resolves to it; legacy subset kept only for SharedChatShell consumers.
+- DeckChat: Sparta chrome end-to-end (markdown/code chips, ThinkingTrace, MessageActionRow, "Ran /pitchdeck simulate" collapsible), actionSlot Apply card, `projectLabel="PITCHDECK COMPILER"`, mic icon → `/api/record-transcript` (RealtimeSTT local) → normal grammar/simulate/Apply path.
+- Gotchas learned: vendored out-of-root sources need `optimizeDeps.include` + leaf deps installed in ux-lab/ui (react stays peer, deduped); sparta imports use BOTH quote styles when sed-rewriting; the repo shares one git index across lanes — my staged #1247 files were swallowed into a concurrent lane's commit `528686540` (content verified on main, message misattributed).
+- Follow-up candidate: revisionStore not refreshed after chat Apply → second proposal without reload pins stale revision (CAS rejects safely).
