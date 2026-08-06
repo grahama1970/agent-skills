@@ -235,3 +235,18 @@ def test_resolve_scillm_key_fails_loudly_naming_chain(monkeypatch: pytest.Monkey
     with pytest.raises(ScillmAuthUnresolved) as exc:
         resolve_scillm_key("http://x")
     assert "env:SCILLM_MASTER_KEY" in str(exc.value) and "dev-fallback" in str(exc.value)
+
+
+def test_tool_less_turns_do_not_demand_tool_calling_capability() -> None:
+    # Regression for the empty_terminal_output class: small local profiles
+    # (ollama local-text) fail the capability gate if tool-less turns demand
+    # tool_calling; the live executor must default to streaming only.
+    import inspect
+
+    import ask.tau_harness as th
+
+    sig = inspect.signature(th._live_executor)
+    default = sig.parameters["required_capabilities"].default
+    assert default == ("streaming",), default
+    source = inspect.getsource(th._live_executor)
+    assert "required_capabilities=list(required_capabilities)" in source

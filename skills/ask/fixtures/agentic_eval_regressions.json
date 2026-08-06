@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "regression: every resolved 2026-08-05 ask/surf ticket class stays fixed; each case maps to a closed ticket or contract change",
+  "claims": {
+    "proves": "the join never re-stamps failure codes on passing seats (#1217), killed browser lanes keep the recovery-ladder command contract, compete lane budgets stay on per-handler envelopes (unstarve contract), tool-less Tau turns never demand tool_calling (empty_terminal_output class), the auth resolver chain holds (#1223), and the plan->tau compiler invariants hold (review independence, freeze hash, strength selection)",
+    "does_not_prove": "live provider/browser behavior (covered by the orchestration and lock-recovery fixtures) or classes from still-open tickets (#1222 desktop placement, scillm#32 key churn)"
+  },
+  "cases": [
+    {
+      "name": "join-failure-code-1217-and-killed-lane-contract",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_join_failure_code_regression.py",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_browser_failure_recovery.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["passed"]
+      }
+    },
+    {
+      "name": "harness-auth-capability-and-seam-contracts",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_tau_harness.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["passed"]
+      }
+    },
+    {
+      "name": "plan-compiler-invariants-review-freeze-strengths",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_project_plan_to_tau.py",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_project_plan_schema.py",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_team_plan_cli.py",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_route_inventory.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["passed"]
+      }
+    },
+    {
+      "name": "compete-budgets-stay-on-per-handler-envelopes",
+      "type": "positive",
+      "command": [
+        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_tau_dag.py",
+        "-q", "-k", "poll_timeout or budget or envelope"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["passed"]
+      }
+    }
+  ]
+}
