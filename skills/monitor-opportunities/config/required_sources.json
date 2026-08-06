@@ -22,7 +22,9 @@
       "id": "hiddenjobs",
       "lane": "A",
       "channel": "browser_or_locator",
-      "note": "hiddenjobs.dev via read-only capture; locator hint only, primary source still required to admit."
+      "note": "No public API \u2014 browser capture from hiddenjobs.dev is mandatory, always.",
+      "website_fallback": "https://hiddenjobs.dev/",
+      "api_failure_requires_browser": true
     },
     {
       "id": "greenhouse",
@@ -71,5 +73,5 @@
     "NOT_SEARCHED"
   ],
   "rule": "A required source may legitimately report FEED_DOWN/AUTH_REQUIRED with a receipt (honest failure). It may NOT be absent and may NOT be NOT_SEARCHED. Absence or NOT_SEARCHED fails the run.",
-  "api_website_fallback_rule": "NON-NEGOTIABLE: if a source's API path fails (FEED_DOWN / AUTH_FAILED / INVALID_RESPONSE / any non-2xx), the skill MUST fall back to the source website via read-only browser capture. A bare API-failure receipt is a DEFECT. Enforced by pipeline._enforce_api_website_fallback; a required source with a website_fallback that reports an API-failure status with no companion browser-capture receipt/evidence FAILS the run."
+  "api_website_fallback_rule": "NON-NEGOTIABLE, 100% of the time (Graham 2026-08-06): if a source has NO working API, OR its API path fails (non-2xx / FEED_DOWN / AUTH_FAILED / INVALID_RESPONSE), the skill MUST capture from the source website via read-only browser. A bare API-failure or api-absent receipt is a DEFECT. Enforced by pipeline._enforce_api_website_fallback: a source flagged api_failure_requires_browser that lacks a *_website / human-supplied browser-capture receipt FAILS the run."
 }
