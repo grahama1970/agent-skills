@@ -33,7 +33,7 @@
       "limit": 1,
       "name": "Agentic compliance hiring signals",
       "provider": "duckduckgo",
-      "url": "https://duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring",
+      "url": "https://html.duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring",
       "mandate_ref": "mandate:agentic-compliance"
     }
   ],
@@ -147,7 +147,8 @@
     {
       "name": "SAM.gov Opportunities",
       "provider": "sam.gov",
-      "registry_entry_id": "federal:sam:opportunities"
+      "registry_entry_id": "federal:sam:opportunities",
+      "url": "https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D=artificial%20intelligence&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=artificial%20intelligence"
     }
   ],
   "commercial": [

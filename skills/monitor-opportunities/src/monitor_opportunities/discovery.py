@@ -520,17 +520,27 @@ def _sam_receipt(target: dict[str, Any] | None = None) -> dict[str, Any]:
     target = target or {"name": "SAM.gov Opportunities"}
     receipt = _base_receipt("B", "sam.gov", target["name"], "federal_feed")
     api_key = os.getenv("SAM_GOV_API_KEY")
-    _add_registry_evidence(receipt, target, "https://api.sam.gov/opportunities/v2/search")
+    _add_registry_evidence(receipt, target, "https://api.sam.gov/prod/opportunities/v2/search")
     receipt["request_summary"] = "SAM.gov opportunity probe; credential value redacted"
     if not api_key:
         receipt["result_status"] = "AUTH_REQUIRED"
         receipt["parser_result"] = "BLOCKED"
         receipt["limitations"].append("SAM_GOV_API_KEY is not present; no unauthenticated query was attempted.")
         return _finalize_receipt(receipt)
-    url = "https://api.sam.gov/opportunities/v2/search?limit=1"
+    url = "https://api.sam.gov/prod/opportunities/v2/search"
+    # The v2 search API 404s without a bounded postedFrom/postedTo window.
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    params = {
+        "api_key": api_key,
+        "limit": "1",
+        "postedFrom": (now - timedelta(days=30)).strftime("%m/%d/%Y"),
+        "postedTo": now.strftime("%m/%d/%Y"),
+    }
     try:
         with httpx.Client(timeout=HTTP_TIMEOUT, follow_redirects=False) as client:
-            response = client.get(url, params={"api_key": api_key})
+            response = client.get(url, params=params)
         receipt["response_status"] = response.status_code
         receipt["content_type"] = response.headers.get("content-type")
         receipt["response_bytes"] = len(response.content)
