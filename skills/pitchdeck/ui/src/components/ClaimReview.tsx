@@ -1,4 +1,5 @@
 import { ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react'
+import { TriageQueue } from './TriageQueue'
 import type { UiDeckBundle } from '../types'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -15,9 +16,10 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 /** Read-only claim-ledger review over the emitted bundle, grouped by slide. */
-export function ClaimReview({ deck }: { deck: UiDeckBundle }) {
+export function ClaimReview({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: () => void }) {
   return (
     <div className="mx-auto flex h-full max-w-5xl flex-col gap-6 overflow-y-auto px-8 py-10">
+      <TriageQueue deck={deck} onChanged={onChanged ?? (() => window.location.reload())} />
       <header className="flex flex-wrap items-baseline justify-between gap-4">
         <h1 className="m-0 text-2xl font-semibold">Claim review — {deck.title}</h1>
         <p className="m-0 text-sm text-slate-400">

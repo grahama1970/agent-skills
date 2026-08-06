@@ -640,3 +640,37 @@ def test_changeset_tokens_and_mcp(planned: Path, tmp_path: Path) -> None:
         isinstance(n, ast.Name) and n.id == "mint_confirmation_token" for n in ast.walk(tree)
     )
     assert not mint_exposed, "MCP module must not mint confirmation tokens"
+
+
+def test_claim_decide_and_replay(planned: Path, tmp_path: Path) -> None:
+    import json as _json
+
+    from pitchdeck.claim_decide import DECISION_LOG, decide_claim, replay_decisions
+
+    ledger = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    candidates = [c for c in ledger.claims if c.status.value == "candidate"]
+    plain = next(c for c in candidates if c.risk.value != "high" and not any(ch.isdigit() for ch in c.text))
+    risky = next(c for c in candidates if c.risk.value == "high" or any(ch.isdigit() for ch in c.text))
+
+    # Individual decision writes provenance + audit line.
+    result = decide_claim(planned, tmp_path / "ui", claim_id=plain.id, decision="approve", decided_by="human-tester")
+    after = load_yaml(planned / "claim_ledger.yaml", ClaimLedger)
+    decided = next(c for c in after.claims if c.id == plain.id)
+    assert decided.status.value == "approved" and decided.approval.approved_by == "human-tester"
+    assert not decided.approval.fixture
+    log_lines = (planned / DECISION_LOG).read_text().splitlines()
+    assert _json.loads(log_lines[-1])["claim_id"] == plain.id
+
+    # Batch context refuses high-risk/numeric claims.
+    with pytest.raises(PermissionError, match="batch"):
+        decide_claim(planned, tmp_path / "ui", claim_id=risky.id, decision="approve", decided_by="h", batch=True)
+
+    # Decisions replay deterministically onto a fresh copy of the bundle.
+    import shutil
+
+    copy = tmp_path / "replay-bundle"
+    shutil.copytree(planned, copy, ignore=shutil.ignore_patterns(".history", DECISION_LOG))
+    replayed = replay_decisions(copy, tmp_path / "ui2", planned / DECISION_LOG)
+    assert replayed["replayed"] == len(log_lines)
+    replay_ledger = load_yaml(copy / "claim_ledger.yaml", ClaimLedger)
+    assert next(c for c in replay_ledger.claims if c.id == plain.id).status.value == "approved"

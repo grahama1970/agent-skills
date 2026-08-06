@@ -509,7 +509,7 @@ export function App() {
 
       {view === 'claims' ? (
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_420px]">
-          <ClaimReview deck={deck} />
+          <ClaimReview deck={deck} onChanged={reloadAll} />
           <aside aria-label="Claim review chat" className="min-h-0 overflow-hidden border-t border-slate-800 lg:border-l lg:border-t-0">
             <DeckChat deck={deck} onChanged={reloadAll} />
           </aside>

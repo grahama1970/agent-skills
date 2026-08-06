@@ -334,6 +334,33 @@ def apply_edit(
         _abort(exc)
 
 
+@app.command(name="claim-decide")
+def claim_decide(
+    bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],
+    output_dir: Annotated[Path, typer.Option(help="Output directory holding deck.data.json to refresh.")],
+    claim_id: Annotated[str, typer.Option(help="Claim id to decide.")],
+    decision: Annotated[str, typer.Option(help="approve | reject")],
+    decided_by: Annotated[str, typer.Option(help="Human reviewer identity.")],
+    qualifier: Annotated[str, typer.Option(help="Qualifier to attach on approval.")] = "",
+    batch: Annotated[bool, typer.Option("--batch", help="Batch context: high-risk/numeric claims refuse.")] = False,
+    deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
+    json_output: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
+) -> None:
+    """Decide one candidate claim through full validation; appends a replayable audit line."""
+    import json as json_mod
+
+    from .claim_decide import decide_claim
+
+    try:
+        result = decide_claim(
+            bundle_dir, output_dir, claim_id=claim_id, decision=decision,
+            decided_by=decided_by, qualifier=qualifier or None, batch=batch, deck_name=deck_name,
+        )
+        typer.echo(json_mod.dumps(result, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="image-variations")
 def image_variations(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

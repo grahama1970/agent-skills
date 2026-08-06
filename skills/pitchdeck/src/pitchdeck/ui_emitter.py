@@ -34,6 +34,7 @@ class UiClaimBadge(StrictModel):
     kind: str
     text: str
     required_qualifier: str | None = None
+    evidence_spans: list[dict] = Field(default_factory=list)
 
 
 class UiAsset(StrictModel):
@@ -192,6 +193,7 @@ def emit_ui_bundle(
                 kind=claim.kind.value,
                 text=claim.text,
                 required_qualifier=claim.required_qualifier,
+                evidence_spans=[s.model_dump() for s in claim.evidence_spans],
             )
             for claim in (claims_by_id[cid] for cid in slide.claim_ids)
         ]

@@ -7,6 +7,7 @@ export interface UiClaimBadge {
   kind: string
   text: string
   required_qualifier?: string
+  evidence_spans?: { source_id: string; text: string; section?: string }[]
 }
 
 export interface UiAsset {

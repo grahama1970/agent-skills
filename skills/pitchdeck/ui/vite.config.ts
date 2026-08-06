@@ -66,6 +66,42 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/claim-decide', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        let body = ''
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          try {
+            const { claim_id, decision, decided_by, qualifier, batch } = JSON.parse(body) as Record<string, string | boolean>
+            const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            const bundleDir = receipt?.outputs?.bundle_dir
+            if (!bundleDir || !claim_id || !decision || !decided_by) {
+              res.statusCode = 400
+              res.end(JSON.stringify({ error: 'claim_id, decision, decided_by required' }))
+              return
+            }
+            const args = ['claim-decide', '--bundle-dir', bundleDir, '--output-dir', publicDir, '--claim-id', String(claim_id), '--decision', String(decision), '--decided-by', String(decided_by), '--json']
+            if (qualifier) args.push('--qualifier', String(qualifier))
+            if (batch) args.push('--batch')
+            execFile(`${skillRoot}/run.sh`, args, { timeout: 60_000 }, (error, stdout, stderr) => {
+              res.setHeader('Content-Type', 'application/json')
+              if (error) {
+                res.statusCode = 422
+                res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
+                return
+              }
+              res.end(stdout)
+            })
+          } catch (error) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: String(error) }))
+          }
+        })
+      })
       server.middlewares.use('/api/simulate', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
