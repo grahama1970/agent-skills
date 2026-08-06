@@ -1,0 +1,49 @@
+name: CodeQL
+
+# Advanced CodeQL (replaces GitHub "default setup") so rapid successive pushes
+# collapse to the latest run instead of queuing one full scan per commit and
+# starving the shared runner pool (which was stalling site-deploy for 50+ min).
+# Coverage is unchanged from default setup: same languages, push to main + PRs
+# + weekly schedule.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['actions', 'javascript-typescript', 'python', 'rust']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
