@@ -1589,10 +1589,10 @@ footer a:hover {
   display: block;
   width: 100%;
   max-width: 400px;
-  height: 24px;
-  margin-top: 10px;
+  height: 26px;
+  margin-top: 12px;
   color: var(--brass);
-  opacity: 0.65;
+  opacity: 0.85;
 }
 .path-line {
   stroke-dasharray: 460;

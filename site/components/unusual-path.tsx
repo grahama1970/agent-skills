@@ -38,7 +38,7 @@ export function UnusualPath() {
         className="path-line"
         d="M0 12 L60 12 L95 5 L140 19 L190 7 L235 16 L280 12 L400 12"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
       />
       <circle className="path-node n1" cx="95" cy="5" r="2.2" fill="currentColor" />
       <circle className="path-node n2" cx="140" cy="19" r="2.2" fill="currentColor" />
