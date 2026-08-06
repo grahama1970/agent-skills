@@ -81,6 +81,12 @@ export default function Home() {
                   High-end creative and hard technical work — delivered by the
                   same person, shipped as working code, in public.
                 </p>
+                <p className="hero-outcomes rise" style={{ ['--d' as string]: '.34s' }}>
+                  In practice: <b>verifiable audit trails</b>,{' '}
+                  <b>zero-trust execution</b>, <b>no silent failures</b> — for
+                  workflows where &quot;probably fine&quot; isn&apos;t good
+                  enough.
+                </p>
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
                   <a
                     className="btn"
@@ -160,38 +166,13 @@ export default function Home() {
 
         <hr className="rule" />
 
-        {/* ===================== LEDGER ===================== */}
-        <section id="ledger">
-          <div className="wrap">
-            <div className="ledger-grid">
-              <div className="ledger-copy">
-                <p className="kicker">
-                  <b>01</b> The ledger
-                </p>
-                <h2 className="h2">
-                  Every contract, including the ones without checks.
-                </h2>
-                <p className="lede" style={{ marginTop: '1.1rem' }}>
-                  One cell per skill contract — each links to its SKILL.md.
-                  Filled cells carry a sanity check; outlined cells are
-                  contract-only. The gaps stay visible on purpose — a practice
-                  built on receipts doesn&apos;t get to hide its holes.
-                </p>
-              </div>
-              <SkillMosaic />
-            </div>
-          </div>
-        </section>
-
-        <hr className="rule" />
-
         {/* ===================== WORK ===================== */}
         <section id="work">
           <div className="wrap">
             <div className="work-head">
               <div>
                 <p className="kicker">
-                  <b>02</b> Work
+                  <b>01</b> Work
                 </p>
                 <h2 className="h2">Ten questions, answered in running code.</h2>
               </div>
@@ -239,20 +220,28 @@ export default function Home() {
           </div>
         </section>
 
+        <hr className="rule" />
+
         {/* ===================== DREAM ===================== */}
         <section className="dream" id="dream">
           <div className="wrap">
             <div className="dream-head">
               <div className="a">
                 <p className="kicker">
-                  <b>03</b> persona-dream
+                  <b>02</b> persona-dream
                 </p>
                 <h2 className="h2">Agent memories, rendered into film.</h2>
               </div>
               <p className="b">
                 Nine phases from idea to media lock, each a real frame out of
                 the pipeline — receipt-backed dream packets rather than a mood
-                board. Captured from the live run of 2026-06-29.
+                board. Captured from the live run of 2026-06-29.{' '}
+                <span className="lore">
+                  Embry, Kai, and Horus Lupercal are resident personas —
+                  long-lived agent identities with their own memory, voice, and
+                  continuity; the pipeline renders their accumulated memories
+                  into film.
+                </span>
               </p>
             </div>
             <figure
@@ -284,6 +273,29 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ===================== LEDGER ===================== */}
+        <section id="ledger">
+          <div className="wrap">
+            <div className="ledger-grid">
+              <div className="ledger-copy">
+                <p className="kicker">
+                  <b>03</b> The ledger
+                </p>
+                <h2 className="h2">
+                  Every contract, including the ones without checks.
+                </h2>
+                <p className="lede" style={{ marginTop: '1.1rem' }}>
+                  One cell per skill contract — each links to its SKILL.md.
+                  Filled cells carry a sanity check; outlined cells are
+                  contract-only. The gaps stay visible on purpose — a practice
+                  built on receipts doesn&apos;t get to hide its holes.
+                </p>
+              </div>
+              <SkillMosaic />
+            </div>
+          </div>
+        </section>
+
         <hr className="rule" />
 
         {/* ===================== RECEIPTS ===================== */}
@@ -304,11 +316,18 @@ export default function Home() {
                 </p>
               </div>
               <div className="tickets">
-                {(['roundtable-receipt', 'live-audit', 'inventory-provenance'] as const).map(
-                  (id) =>
+                {(
+                  [
+                    ['roundtable-receipt', 'PREFLIGHT: PASS'],
+                    ['live-audit', 'DRIFT: 0 · LIVE: 200/200'],
+                    ['inventory-provenance', `BUILD: ${commit}`],
+                  ] as const
+                ).map(
+                  ([id, callout]) =>
                     receiptArtifacts[id] && (
                       <article className="ticket" key={id}>
                         <h3>{receiptArtifacts[id].title}</h3>
+                        <p className="callout">{callout}</p>
                         <pre className="json">{receiptArtifacts[id].body}</pre>
                         <p className="foot">{receiptArtifacts[id].caption}</p>
                       </article>
@@ -380,8 +399,22 @@ export default function Home() {
               <div className="b">
                 <p className="accountability">
                   The one with no playbook — the one that stalled because it
-                  needed both halves of the job.
+                  needed both halves of the job. Good fits:
                 </p>
+                <ul className="fits">
+                  <li>
+                    <b>Stalled multi-agent orchestration</b> — pipelines that
+                    demo well and drift in production.
+                  </li>
+                  <li>
+                    <b>Zero-trust &amp; compliance blockers</b> — work that
+                    can&apos;t ship without audit trails and evidence.
+                  </li>
+                  <li>
+                    <b>High-reliability autonomy</b> — overnight or unattended
+                    runs where silent failure isn&apos;t survivable.
+                  </li>
+                </ul>
                 <a
                   className="btn"
                   href="mailto:graham@grahama.co"
