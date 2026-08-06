@@ -51,8 +51,10 @@ def _load(path: str) -> dict | None:
 def diagnose_run(run_dir: str) -> None:
     join_glob = glob.glob(os.path.join(run_dir, "node-artifacts", "join", "node-receipt.json"))
     if not join_glob:
-        # maybe run_dir is a parent holding one hashed run dir
+        # run_dir may nest a hashed run dir (one or two levels down)
         join_glob = glob.glob(os.path.join(run_dir, "*", "node-artifacts", "join", "node-receipt.json"))
+    if not join_glob:
+        join_glob = glob.glob(os.path.join(run_dir, "**", "node-artifacts", "join", "node-receipt.json"), recursive=True)
     if not join_glob:
         print(f"  no join receipt under {run_dir} — run blocked before execution (see result status)")
         return
