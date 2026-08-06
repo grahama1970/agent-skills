@@ -268,14 +268,21 @@ export default function Home() {
                 <h2 className="h2">Agent memories, rendered into film.</h2>
               </div>
               <p className="b">
-                Nine phases from idea to media lock, each a real frame out of
-                the pipeline — receipt-backed dream packets rather than a mood
-                board. Captured from the live run of 2026-06-29.{' '}
+                Not a movie generator — a preregistered study. The question:
+                does letting a persistent voice persona <em>dream</em> about
+                its experience actually help, beyond plainly remembering — and
+                is it still itself afterwards? The day&apos;s memories yield a
+                tension; the tension yields a dream; the dream returns as
+                typed, inspectable records — and its certified affect is
+                injected into the persona&apos;s live voice: emotion tags,
+                conversation tone, identity held stable. Four sealed arms
+                (flat / memory-only / dream / shuffled-dream) decide whether
+                the dream earns its keep. &quot;No&quot; is a real answer.{' '}
                 <span className="lore">
-                  Embry, Kai, and Horus Lupercal are resident personas —
-                  long-lived agent identities with their own memory, voice, and
-                  continuity; the pipeline renders their accumulated memories
-                  into film.
+                  Embry, Kai, and Horus Lupercal are the resident personas —
+                  long-lived agent identities with durable memory and trained
+                  voices. Below: nine real pipeline surfaces from the live run
+                  of 2026-06-29, then a rendered dream frame.
                 </span>
               </p>
             </div>

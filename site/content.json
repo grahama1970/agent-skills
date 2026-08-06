@@ -29,9 +29,9 @@
     {
       "slug": "persona-dream",
       "name": "persona-dream",
-      "blurb": "Agent memories rendered into movies — receipt-backed dream packets.",
+      "blurb": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
-      "question": "What do agent memories look like as film?"
+      "question": "Does dreaming help a persona beyond remembering?"
     },
     {
       "slug": "extractor",
