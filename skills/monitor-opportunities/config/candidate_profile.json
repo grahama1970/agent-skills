@@ -48,6 +48,15 @@
  },
  "open_strategic_questions": {
   "fte_vs_client": "UNRESOLVED \u2014 Graham pursuing both employment and consulting clients; affects ranking and whether a lead is an application or a client prospect.",
-  "resume_persona": "UNRESOLVED \u2014 bold framing (Sony God of War EP + DARPA ARCOS) vs careful ATS framing (verification-focused defense architect); different doors."
+  "resume_persona": "RESOLVED (2026-08-06): no fixed persona. Per opportunity, tell the story that most resonates with that specific employer/client, drawn from approved claims. Custom resume + custom framing per client. Audience-adaptive narrative selection, not one voice."
+ },
+ "narrative_policy": {
+  "rule": "For each opportunity, select and order the approved claims / framing that the specific audience would most want to hear.",
+  "examples": {
+   "defense/compliance": "lead ARCOS + SPARTA verification",
+   "document-AI": "lead pdf_oxide + extractor",
+   "product/creative-systems": "lead worlds/creative-systems framing"
+  },
+  "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented."
  }
 }
