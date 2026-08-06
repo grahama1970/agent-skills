@@ -8,7 +8,7 @@ import inventory from '@/inventory.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
-const CARD_META: Record<string, { cls: string; tint: string }> = {
+const CARD_META: Record<string, { cls: string; tint: string; img?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)' },
   surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)' },
@@ -18,7 +18,7 @@ const CARD_META: Record<string, { cls: string; tint: string }> = {
   watch: { cls: 'c7', tint: 'rgba(209,112,60,.42)' },
   scillm: { cls: 'c8', tint: 'rgba(147,162,137,.42)' },
   debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
-  'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)' },
+  'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage' },
 };
 
 const DREAM_PHASES = [
@@ -213,11 +213,11 @@ export default function Home() {
                     <div
                       className="shot"
                       style={{
-                        ['--img' as string]: `url('/projects/${p.slug}.webp')`,
+                        ['--img' as string]: `url('/projects/${meta.img ?? p.slug}.webp')`,
                         ['--tint' as string]: meta.tint,
                       }}
                       role="img"
-                      aria-label={`${p.name} — concept art`}
+                      aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer montage — F-36 spaceplane in the factory, live threat-matrix triage interface, governed evidence thread' : `${p.name} — concept art`}
                     />
                     <div className="card-body">
                       <span className="idx">{String(i + 1).padStart(2, '0')}</span>
