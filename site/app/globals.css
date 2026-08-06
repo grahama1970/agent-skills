@@ -315,9 +315,19 @@ h1 .it::after {
   background: linear-gradient(90deg, var(--ember), var(--brass));
   transform-origin: left center;
   transform: scaleX(0);
-  animation: sweep 1.05s cubic-bezier(0.2, 0.75, 0.2, 1) 0.82s forwards;
+  animation: sweep var(--dur-reveal) var(--ease-entrance) 0.82s forwards;
   border-radius: 2px;
   opacity: 0.85;
+}
+/* S4 compromise: the reader draws the underline by scrolling — reversible. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    h1 .it::after {
+      animation: sweep linear both;
+      animation-timeline: scroll();
+      animation-range: 0px 420px;
+    }
+  }
 }
 @keyframes sweep {
   to {
@@ -510,12 +520,13 @@ h1 .it::after {
   border-radius: 1px;
   background: var(--brass);
   opacity: 0.92;
-  transform: scale(0.2);
-  animation: pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform: scale(0.86) translateY(2px);
+  animation: pop 0.5s var(--ease-entrance) forwards;
   animation-delay: calc(var(--i) * 4.2ms + 0.35s);
   transition:
-    transform 0.18s ease,
-    background 0.18s ease;
+    transform var(--dur-state) var(--ease-state),
+    background var(--dur-state) var(--ease-state),
+    opacity var(--dur-state) var(--ease-state);
   display: block;
 }
 .cell:nth-child(3n) {
@@ -530,10 +541,14 @@ h1 .it::after {
 }
 .cell:hover,
 .cell:focus-visible {
-  transform: scale(1.75);
+  transform: scale(1.28);
   background: var(--ember);
   z-index: 2;
   position: relative;
+}
+/* Neighbor recoil (approx): non-hovered cells step back while one is up. */
+.mosaic:hover .cell:not(:hover) {
+  opacity: 0.8;
 }
 .cell.out:hover,
 .cell.out:focus-visible {
@@ -541,7 +556,7 @@ h1 .it::after {
 }
 @keyframes pop {
   to {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 .legend {
@@ -632,7 +647,6 @@ h1 .it::after {
 }
 .card:hover .shot,
 .card:focus-visible .shot {
-  transform: scale(1.012);
   border-color: rgba(226, 172, 98, 0.35);
 }
 .shot::after {
@@ -1380,6 +1394,7 @@ footer a:hover {
   opacity: 1;
   visibility: visible;
   translate: -50% 0;
+  transition-delay: 70ms;
 }
 
 /* Ticket dual-view */
@@ -1660,6 +1675,108 @@ footer a:hover {
   }
   to {
     transform: none;
+    opacity: 1;
+  }
+}
+
+/* ============ Motion tokens (S1) — the grammar in code ============ */
+:root {
+  --dur-state: 180ms;
+  --dur-reveal: 1050ms;
+  --ease-entrance: cubic-bezier(0.2, 0, 0, 1);
+  --ease-state: cubic-bezier(0.4, 0, 0.6, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ============ S3 SIGNATURE: scroll-driven ledger accretion ============
+   The 338 real cells materialize on a diagonal wavefront scrubbed by the
+   reader's scroll — reversible, stable at any intermediate state, no JS.
+   Fallback (no support / reduced motion): the existing pop-in stagger. */
+.ledger-count {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 38, 'WONK' 1, 'opsz' 144;
+  font-size: clamp(3.4rem, 7vw, 6.8rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--brass);
+  margin: 0.35em 0 0;
+  font-variant-numeric: tabular-nums;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ledger-mosaic {
+      view-timeline: --ledger block;
+    }
+    .ledger-mosaic .cell {
+      animation: accrete linear both;
+      animation-timeline: --ledger;
+      animation-range: cover calc(var(--t) * 34%) cover calc(16% + var(--t) * 34%);
+      animation-delay: 0s;
+    }
+    .ledger-grid {
+      timeline-scope: --ledger;
+    }
+    .ledger-count {
+      animation: count-weight linear both;
+      animation-timeline: --ledger;
+      animation-range: cover 0% cover 50%;
+    }
+  }
+}
+@keyframes accrete {
+  from {
+    opacity: 0;
+    transform: scale(0.86) translateY(2px);
+  }
+  to {
+    opacity: 0.92;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes count-weight {
+  from {
+    font-weight: 300;
+  }
+  to {
+    font-weight: 700;
+  }
+}
+
+/* ============ S4: DAG trace scrubbed by scroll ============ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .unusual-path-svg .path-line {
+      transition: none;
+      stroke-dasharray: 460;
+      animation: trace-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 55%;
+    }
+    .unusual-path-svg .path-node {
+      transition: none;
+      animation: node-in linear both;
+      animation-timeline: view();
+    }
+    .unusual-path-svg .n1 { animation-range: cover 18% cover 26%; }
+    .unusual-path-svg .n2 { animation-range: cover 28% cover 36%; }
+    .unusual-path-svg .n3 { animation-range: cover 38% cover 46%; }
+    .unusual-path-svg .n4 { animation-range: cover 48% cover 56%; }
+  }
+}
+@keyframes trace-draw {
+  from {
+    stroke-dashoffset: 460;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes node-in {
+  from {
+    opacity: 0;
+  }
+  to {
     opacity: 1;
   }
 }

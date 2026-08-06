@@ -59,7 +59,12 @@ export function SkillMosaic() {
     (!q || s.n.includes(q) || s.c.includes(q));
   const shown = skills.filter(matches).length;
 
-  const renderCell = (s: SkillCell, i: number) => (
+  const COLS = 26;
+  const maxRank = COLS - 1 + Math.ceil(skills.length / COLS) - 1;
+  const renderCell = (s: SkillCell, i: number) => {
+    const rank = (i % COLS) + Math.floor(i / COLS);
+    const t = Math.pow(rank / maxRank, 0.8); // decaying stagger: tail converges
+    return (
     <a
       key={s.n}
       role="listitem"
@@ -71,12 +76,14 @@ export function SkillMosaic() {
       className={`cell${s.s ? '' : ' out'}`}
       style={{
         ['--i' as string]: i,
+        ['--t' as string]: t.toFixed(4),
         ...(matches(s) ? {} : { opacity: 0.12 }),
       }}
     >
       <span className="sr-only">{s.n}</span>
     </a>
-  );
+    );
+  };
 
   let gi = 0;
   return (

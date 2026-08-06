@@ -268,6 +268,9 @@ export default function Home() {
                 <h2 className="h2">
                   Every contract, including the ones without checks.
                 </h2>
+                <p className="ledger-count" aria-hidden="true">
+                  {stats.skills}
+                </p>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
                   One cell per skill contract — each links to its SKILL.md.
                   Filled cells carry a sanity check; outlined cells are
