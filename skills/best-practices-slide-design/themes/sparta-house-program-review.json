@@ -1,0 +1,17 @@
+{
+ "schema": "pitchdeck.theme_template.v1",
+ "id": "sparta-house-program-review",
+ "description": "DARPA/PI-meeting variant: program-blue joins the palette, pipeline-position slide early, accomplishments-since-last-review section.",
+ "mode": "light",
+ "theme_tokens": { "accent": "#065E7C", "heading_font": "Calibri", "body_font": "Calibri" },
+ "palette": {
+  "primary": "#065E7C", "secondary": "#26558E", "canvas": "#FFFFFF",
+  "ink": "#2B2B2B", "muted": "#595959",
+  "program_blue": "#275791", "highlight_warm": "#C36518", "alert": "#A14240"
+ },
+ "type_scale_pt": { "hero": 112, "section": 36, "title": 28, "lead": 24, "body": 20, "support": 16, "caption": 10 },
+ "code_font": "Consolas",
+ "chrome": { "header_band": { "fill": "#065E7C", "title_color": "#FFFFFF" }, "footer": { "right": "distribution statement + page number" }, "notice_slide": "compliance notice slide REQUIRED up front" },
+ "arc_overrides": { "required_early": ["pipeline_position"], "required_sections": ["accomplishments_since_last_review"], "recap_device": "What's the point, again? statement slides" },
+ "density": { "max_takeaways_before_visual": 4, "words_target_median": 33, "words_hard_p90": 93 }
+}

@@ -1,0 +1,61 @@
+schema: slide_design.exemplars.v1
+# Every rule in SKILL.md cites at least one exemplar below. Images are rendered
+# from the human's real decks (corpus: /mnt/storage12tb/skills/pitchdeck/sources/style-corpus)
+# and live at /mnt/storage12tb/skills/pitchdeck/outputs/style-references/exemplars
+# (symlinked as ./assets). deck+slide references are stable against the corpus files.
+exemplars:
+  - id: statement-slide
+    rule: thesis-as-statement
+    deck: ReqML_GE_Presentation.pptx
+    slide: 12
+    image: assets/reqml-12-statement-slide.png
+    why: 'One 112pt assertion ("Intelligent Automation Saves Time") + ONE icon. The correct thesis form.'
+  - id: assertion-humor
+    rule: headline-as-assertion
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 49
+    image: assets/cybersummit-49-assertion-humor.png
+    why: '"LLMs are Expensive" (assertion, not "Cost Analysis") + humor as retention (Pluto as heat sink) + labeled diagram endpoints.'
+  - id: multichannel
+    rule: multi-channel-reinforcement
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 18
+    image: assets/cybersummit-18-multichannel.png
+    why: 'Headline asserts ("Hand Extraction is Horrible"), 3 chevrons state it, icon diagram shows days->minutes, sad-face metaphor badge sets the register. All channels, one idea.'
+  - id: header-band
+    rule: distance-legibility-chrome
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 4
+    image: assets/cybersummit-04-problem-solution.png
+    why: 'Teal band + white title separates header from body at 5-20ft; color-coded label prefixes (Problems/Goal/Solution/Impact) give scan structure.'
+  - id: how-diagram
+    rule: one-big-diagram
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 12
+    image: assets/cybersummit-12-how-diagram.png
+    why: 'Process slides earn ONE large line-art diagram with dotted-path arrows, not bullet paragraphs.'
+  - id: pipeline-position
+    rule: audience-required-slides
+    deck: ACERT_Darpa_PI_Meeting_FtWorth.pptx
+    slide: 4
+    image: assets/ftworth-04-pipeline-position.png
+    why: 'Program reviews REQUIRE an early "where are we in your pipeline" slide; also reqml-04.'
+  - id: cover
+    rule: cover-brand
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 1
+    image: assets/cybersummit-01-cover.png
+    why: 'Wordmark + one-phrase tagline + composition-of-parts glyph. Five words total.'
+anti_exemplars:
+  - id: wall-of-text
+    rule: density-5x5
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: 21
+    image: assets/cybersummit-21-ANTIPATTERN-wall.png
+    why: '224 words ("How It Works"). Even good decks slip; the lint exists because taste alone does not hold.'
+  - id: manual-build
+    rule: builds-are-fragments
+    deck: SpartaAI_CyberSummitv_v3.pptx
+    slide: [42, 43, 44, 45]
+    image: [assets/cybersummit-42-manual-build-1.png, assets/cybersummit-43-manual-build-2.png]
+    why: 'Four duplicated slides each adding one element = hand-faked build. ContentReveal.STEP does this natively; design-pass should detect duplicated-slide runs and propose fragment conversion.'

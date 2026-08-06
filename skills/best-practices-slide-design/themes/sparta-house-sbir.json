@@ -1,0 +1,17 @@
+{
+ "schema": "pitchdeck.theme_template.v1",
+ "id": "sparta-house-sbir",
+ "description": "SBIR/investor variant: same skeleton reordered (value prop before ToC), warm gold up-weighted, humor dialed down.",
+ "mode": "light",
+ "theme_tokens": { "accent": "#065E7C", "heading_font": "Calibri", "body_font": "Calibri" },
+ "palette": {
+  "primary": "#065E7C", "secondary": "#228099", "canvas": "#FFFFFF",
+  "ink": "#292929", "muted": "#595959",
+  "highlight_warm": "#D6A300", "highlight_green": "#6F8E30", "alert": "#A14240"
+ },
+ "type_scale_pt": { "hero": 64, "section": 36, "title": 28, "lead": 24, "body": 20, "support": 16, "caption": 12 },
+ "code_font": "Consolas",
+ "chrome": { "header_band": { "fill": "#065E7C", "title_color": "#FFFFFF" }, "footer": { "right": "distribution statement + page number" } },
+ "arc_overrides": { "order": ["cover", "value_prop", "toc", "problem_solution", "vision", "product_modules", "roadmap", "ask"] },
+ "density": { "max_takeaways_before_visual": 4, "words_target_median": 21, "words_hard_p90": 144 }
+}
