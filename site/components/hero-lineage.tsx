@@ -29,6 +29,7 @@ export interface HeroLineageData {
  * selection-receipt sidecar, not a co-parent junction.
  */
 export function HeroLineage({ data }: { data: HeroLineageData }) {
+  const g0 = data.nodes.G0;
   const g1a = data.nodes['G1-A'];
   const g1b = data.nodes['G1-B'];
   const g2 = data.nodes.G2;
@@ -80,33 +81,36 @@ export function HeroLineage({ data }: { data: HeroLineageData }) {
           d="M74 69 V142 C74 166 126 176 180 176"
           pathLength="1"
         />
-        {/* Runner-up evidence: dotted edge to the selection-receipt sidecar. */}
+        {/* Runner-up evidence: dotted edge landing on the lineage near the
+            selection-receipt sidecar (not a co-parent junction). */}
         <path
+          id="proof-runner-evidence-path"
           className="proof-lineage__edge proof-lineage__edge--evidence"
-          d="M286 69 V142 C286 158 248 166 212 166"
+          d="M286 69 V142 C286 158 248 166 212 166 L184 176"
           pathLength="1"
         />
         {/* G2 continues the selected lineage downward. */}
         <path
           className="proof-lineage__edge proof-lineage__edge--g2"
-          d="M180 176 V193"
+          d="M180 176 V194"
           pathLength="1"
         />
 
         {/* G0 root — the bridge's return target. */}
         <g className="proof-lineage__node proof-lineage__node--g0">
+          <title>{g0.techniqueDelta}</title>
           <rect
             data-proof-entry
             className="proof-lineage__node-core"
             x="177.5"
-            y="13.5"
+            y="15.5"
             width="5"
             height="5"
           />
-          <text className="proof-lineage__id" x="191" y="19">
+          <text className="proof-lineage__id" x="191" y="21">
             G0
           </text>
-          <text className="proof-lineage__operator" x="191" y="30">
+          <text className="proof-lineage__operator" x="191" y="32">
             seed exploit
           </text>
         </g>
