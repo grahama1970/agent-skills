@@ -226,6 +226,7 @@ def plan(
             run_dir=run_dir,
             watch=watch,
             on_viewer_url=lambda url: typer.echo(f"LIVE DAG VIEWER: {url}", err=True),
+            progress=lambda line: typer.echo(line, err=True),
         )
         result["execution"] = summary
         result["status"] = "EXECUTED_PASS" if summary["scheduler_status"] == "PASS" else "EXECUTED_" + str(summary["scheduler_status"])

@@ -297,6 +297,7 @@ def run_plan_spec(
     execute_node: Callable[..., dict[str, Any]] | None = None,
     watch: bool = False,
     on_viewer_url: Callable[[str], None] | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Execute a compiled multi-node tau.generic_dag_spec.v1 through Tau.
 
@@ -335,6 +336,26 @@ def run_plan_spec(
             return executors[plan_node.node_id](plan_node, accepted_inputs, execution)
 
     viewer_info: dict[str, Any] = {}
+    node_started_at: dict[str, float] = {}
+
+    def _event_sink(event: dict[str, Any]) -> None:
+        if progress is None:
+            return
+        kind = event.get("event")
+        nid = event.get("node_id")
+        now = time.strftime("%H:%M:%S")
+        if kind == "node_started" and nid:
+            node_started_at[str(nid)] = time.monotonic()
+            node = next((n for n in spec["nodes"] if n["node_id"] == nid), {})
+            profile = str(node.get("tau_agent", {}).get("model", "")).removeprefix("profile:")
+            progress(f"[{now}] > {nid} ({node.get('role', '?')} :: {profile}) running")
+        elif kind == "node_completed" and nid:
+            took = time.monotonic() - node_started_at.get(str(nid), time.monotonic())
+            progress(f"[{now}] + {nid} completed in {took:.1f}s")
+        elif kind in ("node_attempt_failed", "node_blocked", "node_retry_scheduled") and nid:
+            progress(f"[{now}] ! {nid} {kind.removeprefix('node_')}")
+        elif kind == "scheduler_finished":
+            progress(f"[{now}] scheduler finished: {event.get('status', '')}")
     if watch:
         from tau_coding.dag_runtime.watched_run import run_dag_plan_watched
 
@@ -357,10 +378,11 @@ def run_plan_spec(
             run_dir=run_dir,
             watch=True,
             on_viewer_url=_capture_url,
+            event_sink=_event_sink,
         )
         result = watched.result
     else:
-        result = run_dag_plan(plan, execute_node=execute_node)
+        result = run_dag_plan(plan, execute_node=execute_node, event_sink=_event_sink)
     by_id = {item["node_id"]: item for item in result.node_results}
     nodes = {}
     for node_id in profile_by_node:
