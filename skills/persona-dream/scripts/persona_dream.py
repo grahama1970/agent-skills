@@ -713,12 +713,29 @@ def _detect_contradictions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return tensions[:5]
 
 
+# Function words and residue-record boilerplate. Frequency ranking otherwise
+# promotes them into the journal's "I woke with ..." line as dream imagery
+# (observed 2026-08-06: "I woke with source, first, about, aerospace ...").
+_KEYWORD_STOPWORDS = frozenset("""
+    this that with where from into each until memory
+    about above after again along also another back because been before being
+    between both came come could does done down during even every feel felt
+    first found gave gets give goes going gone have having here itself just
+    keep kept know last like made make many more most much must never next
+    only other over same seem seemed seems should since some sort still such
+    take taken than their them then there these they thing things those
+    through time today took toward tried trying under upon very want week
+    were what when which while whose will within without would your
+    source sources context records record turns
+""".split())
+
+
 def _keywords(items: list[dict[str, Any]]) -> list[str]:
     words: dict[str, int] = {}
     for item in items:
         for word in re.findall(r"[A-Za-z][A-Za-z0-9-]{3,}", item["text"]):
             low = word.lower()
-            if low in {"this", "that", "with", "where", "from", "into", "each", "until", "memory"}:
+            if low in _KEYWORD_STOPWORDS:
                 continue
             words[low] = words.get(low, 0) + 1
     return [word for word, _ in sorted(words.items(), key=lambda kv: (-kv[1], kv[0]))[:10]]

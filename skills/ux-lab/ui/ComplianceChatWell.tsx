@@ -198,10 +198,21 @@ export function ComplianceChatWell({
             placeholder={placeholder}
             disabled={disabled || composerDisabled || isStreaming}
             rows={1}
+            onInput={(event) => {
+              // Auto-grow (Sparta pattern): height follows content up to the
+              // cap; overflow stays hidden below it so an empty composer can
+              // never show a scrollbar.
+              const el = event.currentTarget
+              el.style.height = 'auto'
+              el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+              el.style.overflowY = el.scrollHeight > 120 ? 'auto' : 'hidden'
+            }}
             style={{
               resize: 'none',
-              minHeight: 42,
+              minHeight: 46,
               maxHeight: 120,
+              overflowY: 'hidden',
+              lineHeight: 1.4,
               borderRadius: 16,
               border: '1px solid rgba(255,255,255,0.1)',
               background: 'rgba(255,255,255,0.045)',

@@ -357,6 +357,30 @@ def record_note_cmd(
         _abort(exc)
 
 
+@app.command(name="record-transcript")
+def record_transcript_cmd(
+    timeout_seconds: Annotated[int, typer.Option(help="Max recording window.")] = 120,
+) -> None:
+    """Record one utterance (RealtimeSTT mic, faster-whisper local) and print the transcript JSON.
+
+    Used by the chat well's voice/dictation affordance: the transcript enters the
+    chat composer path, never the deck directly — proposals still go through
+    simulate + human Apply + compiler validation.
+    """
+    import json as json_mod
+
+    from .transcribe import record_transcript
+
+    try:
+        result = record_transcript(timeout_seconds)
+        typer.echo(json_mod.dumps(result, indent=1))
+        raise typer.Exit(0 if result["status"] == "PASS" else 6)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="claim-decide")
 def claim_decide(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

@@ -32,6 +32,20 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@xyflow/react": "^12.11.0",
+    "dagre": "^0.8.5",
+    "framer-motion": "^12.42.1",
+    "prismjs": "^1.30.0",
+    "react-markdown": "^10.1.0",
+    "react-simple-code-editor": "^0.14.1",
+    "react-syntax-highlighter": "^16.1.1",
+    "recharts": "^2.15.4",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "katex": "^0.18.1"
+  },
   "peerDependencies": {
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",

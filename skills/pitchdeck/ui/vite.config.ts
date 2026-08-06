@@ -105,6 +105,28 @@ function slideEditApi(): Plugin {
           }
         })
       })
+      server.middlewares.use('/api/record-transcript', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end(JSON.stringify({ error: 'POST only' }))
+          return
+        }
+        execFile(
+          `${skillRoot}/run.sh`,
+          ['record-transcript'],
+          { timeout: 180_000 },
+          (error, stdout, stderr) => {
+            res.setHeader('Content-Type', 'application/json')
+            try {
+              JSON.parse(stdout)
+              res.end(stdout)
+            } catch {
+              res.statusCode = 422
+              res.end(JSON.stringify({ error: stderr.trim().slice(-300) || String(error) }))
+            }
+          },
+        )
+      })
       server.middlewares.use('/api/claim-decide', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
@@ -481,6 +503,26 @@ function slideEditApi(): Plugin {
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), slideEditApi()],
-  resolve: { alias: { '@ux-lab/ui': uxLabUi } },
+  resolve: { alias: { '@ux-lab/ui': uxLabUi }, dedupe: ['react', 'react-dom'] },
+  // The vendored shared-chat family under @ux-lab/ui lives outside this
+  // package root, so Vite's dependency scanner never sees its bare imports —
+  // force them through the optimizer (root-resolved) or import-analysis fails.
+  optimizeDeps: {
+    include: [
+      'react-markdown',
+      'remark-gfm',
+      'remark-math',
+      'rehype-katex',
+      'framer-motion',
+      'prismjs',
+      'react-simple-code-editor',
+      'react-syntax-highlighter',
+      'react-syntax-highlighter/dist/esm/styles/prism',
+      'recharts',
+      '@xyflow/react',
+      'dagre',
+      'lucide-react',
+    ],
+  },
   server: { port: 3006, fs: { allow: ['.', uxLabUi] } },
 })

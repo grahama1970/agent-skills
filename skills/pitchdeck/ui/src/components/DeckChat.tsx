@@ -179,6 +179,10 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState<DeckCommand | null>(null)
   const [steps, setSteps] = useState<{ id: string; label: string; status: string }[]>([])
+  // Voice dictation (RealtimeSTT + faster-whisper, local, no keys): the
+  // transcript enters the NORMAL send path — command grammar, simulate,
+  // human Apply — never the deck directly.
+  const [voiceStatus, setVoiceStatus] = useState<'off' | 'listening'>('off')
 
   const onSend = useCallback(
     async (text: string) => {
@@ -249,6 +253,30 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
     [deck],
   )
 
+  const onVoiceToggle = useCallback(
+    async (enabled: boolean) => {
+      if (!enabled) {
+        setVoiceStatus('off')
+        return
+      }
+      setVoiceStatus('listening')
+      try {
+        const response = await fetch('/api/record-transcript', { method: 'POST' })
+        const data = (await response.json()) as { status?: string; transcript?: string; reason?: string; error?: string }
+        if (data.status === 'PASS' && data.transcript) {
+          await onSend(data.transcript)
+        } else {
+          setMessages((prev) => [...prev, msg('assistant', `Dictation unavailable: ${data.reason ?? data.error ?? 'no transcript'}`)])
+        }
+      } catch (error) {
+        setMessages((prev) => [...prev, msg('assistant', `Dictation failed: ${String(error)}`)])
+      } finally {
+        setVoiceStatus('off')
+      }
+    },
+    [onSend],
+  )
+
   const candidateCount = deck.slides
     .flatMap((slide) => slide.claims)
     .filter((claim) => claim.status === 'candidate')
@@ -317,7 +345,12 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
       streamingSteps={steps}
       qid="deck:chat:claims"
       surface="pitchdeck"
-      placeholder="Ask about claims, or type a command (hide slide 3 …)"
+      voiceEnabled={voiceStatus !== 'off'}
+      voiceStatus={voiceStatus === 'listening' ? 'listening' : 'idle'}
+      voiceLabel="dictation (RealtimeSTT)"
+      projectLabel="PITCHDECK COMPILER"
+      onVoiceToggle={(enabled: boolean) => void onVoiceToggle(enabled)}
+      placeholder="Ask about this deck…"
       emptyTitle={`Reviewing ${deck.title}`}
       emptyDescription={`${deck.visibility} deck · ${deck.validation_readiness} · ${new Set(candidateCount.map((c) => c.id)).size} candidate claims await review. Ask for gaps, inspect a claim, or get the exact ledger commands to approve, reject, or qualify it.`}
       starterChips={[
