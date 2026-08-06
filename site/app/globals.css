@@ -640,6 +640,9 @@ h1 .it::after {
   position: relative;
   display: flex;
   flex-direction: column;
+}
+.shot-link {
+  display: block;
   text-decoration: none;
 }
 .c1 { grid-column: 1 / span 7; grid-row: 1; }
@@ -1883,3 +1886,46 @@ a.fig:hover .l::after,
   border-left: 2px solid rgba(226, 172, 98, 0.35);
   padding-left: 0.9em;
 }
+
+/* Explicit GitHub action bar on work cards. */
+.project-actions {
+  grid-column: 2;
+  margin-top: 1.1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-2);
+}
+.github-repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  background: rgba(236, 226, 211, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.github-repo-link .gh-icon {
+  opacity: 0.75;
+  transition: opacity 150ms ease;
+}
+.github-repo-link .gh-arrow {
+  color: var(--brass);
+  font-weight: 700;
+  transition: transform 150ms ease;
+}
+.github-repo-link:hover {
+  background: rgba(226, 172, 98, 0.08);
+  border-color: rgba(226, 172, 98, 0.45);
+  color: var(--text);
+}
+.github-repo-link:hover .gh-icon { opacity: 1; }
+.github-repo-link:hover .gh-path {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+.github-repo-link:hover .gh-arrow { transform: translate(2px, -2px); }
