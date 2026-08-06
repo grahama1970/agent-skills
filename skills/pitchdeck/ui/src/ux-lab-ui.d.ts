@@ -13,6 +13,9 @@ declare module '@ux-lab/ui/ChatWell' {
     title?: string
     footer?: string
     skillUsed?: string
+    evidenceCase?: boolean
+    thinkingTrace?: { id: string; label: string; status: string }[]
+    reasoningSteps?: { id: string; label: string; status: string }[]
   }
 
   export interface StarterChip {
@@ -24,6 +27,7 @@ declare module '@ux-lab/ui/ChatWell' {
   export interface ChatWellProps {
     messages?: ChatMessage[]
     isStreaming?: boolean
+    streamingSteps?: { id: string; label: string; status: string }[]
     liveAssistantMessage?: ChatMessage
     onSend?: (text: string) => void | Promise<void>
     placeholder?: string

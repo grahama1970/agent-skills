@@ -95,9 +95,13 @@ async function applyCommand(command: DeckCommand): Promise<string | null> {
 }
 
 let counter = 0
-function msg(role: 'user' | 'assistant', content: string): ChatMessage {
+function msg(
+  role: 'user' | 'assistant',
+  content: string,
+  extra?: Partial<Pick<ChatMessage, 'title' | 'footer' | 'skillUsed' | 'evidenceCase' | 'thinkingTrace'>>,
+): ChatMessage {
   counter += 1
-  return { id: `deck-chat-${counter}`, role, content, createdAt: new Date().toISOString() }
+  return { id: `deck-chat-${counter}`, role, content, createdAt: new Date().toISOString(), ...extra }
 }
 
 function findClaim(deck: UiDeckBundle, id: string) {
@@ -108,7 +112,7 @@ function findClaim(deck: UiDeckBundle, id: string) {
   return null
 }
 
-function interpret(deck: UiDeckBundle, text: string): string {
+function interpret(deck: UiDeckBundle, text: string): string | { content: string; extra: Partial<ChatMessage> } {
   const input = text.trim()
   const lower = input.toLowerCase()
   if (lower === 'gaps' || lower.includes('validation gap')) {
@@ -126,12 +130,18 @@ function interpret(deck: UiDeckBundle, text: string): string {
   if (showMatch) {
     const hit = findClaim(deck, showMatch)
     if (!hit) return `No claim '${showMatch}' is bound to any slide in this deck.`
-    return [
-      `Claim ${hit.claim.id} (slide ${hit.slide.order}: ${hit.slide.title})`,
-      `status: ${hit.claim.status} · risk: ${hit.claim.risk} · kind: ${hit.claim.kind}`,
-      `text: ${hit.claim.text}`,
-      hit.claim.required_qualifier ? `required qualifier: ${hit.claim.required_qualifier}` : '',
-    ].filter(Boolean).join('\n')
+    return {
+      content: [
+        hit.claim.text,
+        hit.claim.required_qualifier ? `Required qualifier: ${hit.claim.required_qualifier}` : '',
+      ].filter(Boolean).join('\n'),
+      extra: {
+        evidenceCase: true,
+        title: `Claim ${hit.claim.id} · slide ${hit.slide.order}`,
+        footer: `status ${hit.claim.status} · risk ${hit.claim.risk} · kind ${hit.claim.kind}`,
+        skillUsed: 'pitchdeck',
+      },
+    }
   }
   for (const verb of ['approve', 'reject', 'qualify'] as const) {
     if (lower.startsWith(`${verb} `)) {
@@ -168,6 +178,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState<DeckCommand | null>(null)
+  const [steps, setSteps] = useState<{ id: string; label: string; status: string }[]>([])
 
   const onSend = useCallback(
     async (text: string) => {
@@ -179,11 +190,11 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
         // onto a different referent.
         const pinned = { ...command, base_revision: revisionStore.current, preview: null }
         setPending(pinned)
-        setMessages((prev) => [
-          ...prev,
-          msg('assistant', `Proposed: ${command.summary}.\nRunning the compiler dry-run…`),
-        ])
+        setBusy(true)
+        setSteps([{ id: 'checking-gates', label: 'Dry-running the proposal through the compiler', status: 'running' }])
         const preview = await fetchSimulate(pinned)
+        setBusy(false)
+        setSteps([])
         setPending((current) => (current && current.summary === pinned.summary ? { ...current, preview } : current))
         setMessages((prev) => [
           ...prev,
@@ -192,8 +203,17 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
             preview
               ? preview.would_pass
                 ? 'Simulated: this change PASSES validation. Confirm with the Apply card.'
-                : `Simulated: this change would be REJECTED (${preview.gate_codes.join(', ') || 'validation error'}). Apply is disabled — amend and re-propose.`
+                : `Simulated: this change would be REJECTED. Apply is disabled — amend and re-propose.`
               : 'Simulation unavailable; Apply will validate on commit.',
+            preview
+              ? {
+                  title: pinned.summary,
+                  footer: preview.would_pass ? 'compiler dry-run: PASS' : `blocked by ${preview.gate_codes.join(', ') || 'validation'}`,
+                  skillUsed: 'pitchdeck simulate',
+                  evidenceCase: !preview.would_pass,
+                  thinkingTrace: preview.gate_codes.map((code) => ({ id: code, label: code, status: 'failed' })),
+                }
+              : undefined,
           ),
         ])
         return
@@ -213,14 +233,18 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
         } catch (error) {
           setMessages((prev) => [
             ...prev,
-            msg('assistant', `Agent endpoint failed (${String(error)}); falling back to local commands.\n\n${interpret(deck, text)}`),
+            msg('assistant', `Agent endpoint failed (${String(error)}); falling back to local commands.`),
           ])
         } finally {
           setBusy(false)
         }
         return
       }
-      setMessages((prev) => [...prev, msg('assistant', interpret(deck, text))])
+      const answer = interpret(deck, text)
+      setMessages((prev) => [
+        ...prev,
+        typeof answer === 'string' ? msg('assistant', answer) : msg('assistant', answer.content, answer.extra),
+      ])
     },
     [deck],
   )
@@ -290,6 +314,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
       messages={messages}
       onSend={onSend}
       isStreaming={busy}
+      streamingSteps={steps}
       qid="deck:chat:claims"
       surface="pitchdeck"
       placeholder="Ask about claims, or type a command (hide slide 3 …)"
