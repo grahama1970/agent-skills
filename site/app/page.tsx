@@ -1,4 +1,5 @@
 import artifacts from '@/artifacts.json';
+import { ReceiptTicket } from '@/components/receipt-ticket';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
 import { SkillMosaic } from '@/components/skill-mosaic';
@@ -8,17 +9,17 @@ import inventory from '@/inventory.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
-const CARD_META: Record<string, { cls: string; tint: string; img?: string }> = {
-  tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)' },
-  battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)' },
-  surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)' },
-  'persona-dream': { cls: 'c4', tint: 'rgba(226,172,98,.5)' },
+const CARD_META: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
+  tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
+  battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'adversarial fuzzing arena' },
+  surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
+  'persona-dream': { cls: 'c4', tint: 'rgba(226,172,98,.5)', decode: 'memory-to-film pipeline' },
   extractor: { cls: 'c5', tint: 'rgba(196,142,86,.45)' },
   dogpile: { cls: 'c6', tint: 'rgba(160,120,150,.4)' },
   watch: { cls: 'c7', tint: 'rgba(209,112,60,.42)' },
   scillm: { cls: 'c8', tint: 'rgba(147,162,137,.42)' },
   debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
-  'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage' },
+  'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
 };
 
 const DREAM_PHASES = [
@@ -198,11 +199,16 @@ export default function Home() {
                         ['--tint' as string]: meta.tint,
                       }}
                       role="img"
-                      aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — diagonal triptych: analyst deep work, voice-first engine test, team readiness board' : `${p.name} — concept art`}
+                      aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — governed evidence thread from program manager and engineer through policy gate to pilot, Embry OS' : `${p.name} — concept art`}
                     />
                     <div className="card-body">
                       <span className="idx">{String(i + 1).padStart(2, '0')}</span>
-                      <h3 className="cname">{p.name}</h3>
+                      <h3 className="cname">
+                        {p.name}
+                        {meta.decode && (
+                          <span className="decode">{meta.decode}</span>
+                        )}
+                      </h3>
                       <p className="q">{p.question}</p>
                       <p className="d">{p.blurb}</p>
                       <span className={`chip${external ? ' ext' : ''}`}>
@@ -325,12 +331,14 @@ export default function Home() {
                 ).map(
                   ([id, callout]) =>
                     receiptArtifacts[id] && (
-                      <article className="ticket" key={id}>
-                        <h3>{receiptArtifacts[id].title}</h3>
-                        <p className="callout">{callout}</p>
-                        <pre className="json">{receiptArtifacts[id].body}</pre>
-                        <p className="foot">{receiptArtifacts[id].caption}</p>
-                      </article>
+                      <ReceiptTicket
+                        key={id}
+                        id={id}
+                        title={receiptArtifacts[id].title}
+                        callout={callout}
+                        body={receiptArtifacts[id].body}
+                        caption={receiptArtifacts[id].caption}
+                      />
                     ),
                 )}
               </div>
@@ -411,8 +419,9 @@ export default function Home() {
                     can&apos;t ship without audit trails and evidence.
                   </li>
                   <li>
-                    <b>High-reliability autonomy</b> — overnight or unattended
-                    runs where silent failure isn&apos;t survivable.
+                    <b>Bespoke multimodal &amp; generative workflows</b> — where
+                    the work demands technical rigor and aesthetic polish at
+                    once.
                   </li>
                 </ul>
                 <a

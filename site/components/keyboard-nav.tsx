@@ -12,6 +12,7 @@ const SHORTCUTS = [
       { keys: ['K'], desc: 'Jump to previous section' },
       { keys: ['Shift', 'G'], desc: 'Jump to page bottom' },
       { keys: ['g', 'g'], desc: 'Jump to top of page' },
+      { keys: ['/'], desc: 'Search the skill ledger' },
       { keys: ['Tab'], desc: 'Cycle focusable elements' },
     ],
   },

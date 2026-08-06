@@ -1293,3 +1293,112 @@ footer a:hover {
 .dream-head .lore {
   color: var(--faint);
 }
+
+/* Ledger chips + view toggle */
+.ledger-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+.ledger-chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3em 0.75em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.ledger-chip:hover {
+  color: var(--text);
+  border-color: var(--brass);
+}
+.ledger-chip.is-on {
+  color: #170f09;
+  background: var(--brass);
+  border-color: var(--brass);
+}
+.ledger-view {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.ledger-view:hover {
+  color: var(--brass);
+}
+
+/* Decode pill: quiet clarifier for internal codenames. */
+.decode {
+  display: inline-block;
+  margin-left: 0.7em;
+  vertical-align: 0.35em;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.28em 0.65em;
+  white-space: nowrap;
+}
+
+/* Cell hover popover: live-evidence micro-preview. */
+.cell::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  translate: -50% 2px;
+  padding: 0.35rem 0.6rem;
+  background: var(--paper);
+  color: #1a1411;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, translate 0.15s ease;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
+  z-index: 30;
+}
+.cell:hover::after,
+.cell:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  translate: -50% 0;
+}
+
+/* Ticket dual-view */
+.ticket-toggle {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a6a3e;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0 0 0.5rem;
+}
+.ticket-toggle:hover {
+  color: #1a1411;
+}
+.ticket .human {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.6;
+}

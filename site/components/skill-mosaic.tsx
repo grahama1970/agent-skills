@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import inventory from '@/inventory.json';
 
 const GH = 'https://github.com/grahama1970/agent-skills/blob/main/skills';
@@ -12,15 +12,36 @@ interface SkillCell {
 }
 
 /**
- * The ledger, grouped by the taxonomy already in the data, with a filter.
- * Every cell is a REAL skill from inventory.json — outlined cells are the
- * actual contracts without sanity checks — and each links to its SKILL.md.
- * Filtering dims non-matches; the transition is the query result.
+ * The ledger: every cell a real skill from inventory.json, linking to its
+ * SKILL.md. Category chips + text filter (press "/" anywhere to focus),
+ * and a Matrix / Categorized density toggle. Filtering dims non-matches —
+ * the transition is the query result.
  */
 export function SkillMosaic() {
   const [query, setQuery] = useState('');
+  const [cat, setCat] = useState('all');
+  const [view, setView] = useState<'categorized' | 'matrix'>('categorized');
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const skills = inventory.skills as SkillCell[];
   const checked = skills.filter((s) => s.s).length;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      const editing =
+        !!el &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) ||
+          el.isContentEditable);
+      if (e.key === '/' && !editing) {
+        e.preventDefault();
+        inputRef.current?.scrollIntoView({ block: 'center' });
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const groups = useMemo(() => {
     const by = new Map<string, SkillCell[]>();
@@ -33,61 +54,112 @@ export function SkillMosaic() {
   }, [skills]);
 
   const q = query.trim().toLowerCase();
-  const matches = (s: SkillCell) => !q || s.n.includes(q) || s.c.includes(q);
-  const shown = q ? skills.filter(matches).length : skills.length;
-  let globalIndex = 0;
+  const matches = (s: SkillCell) =>
+    (cat === 'all' || s.c === cat) &&
+    (!q || s.n.includes(q) || s.c.includes(q));
+  const shown = skills.filter(matches).length;
 
+  const renderCell = (s: SkillCell, i: number) => (
+    <a
+      key={s.n}
+      role="listitem"
+      href={`${GH}/${s.n}/SKILL.md`}
+      data-qid={`ledger:cell:${s.n}`}
+      data-qs-action="LEDGER_OPEN_SKILL"
+      title={`${s.n} · ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
+      data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ sanity-checked' : '○ contract only'}`}
+      className={`cell${s.s ? '' : ' out'}`}
+      style={{
+        ['--i' as string]: i,
+        ...(matches(s) ? {} : { opacity: 0.12 }),
+      }}
+    >
+      <span className="sr-only">{s.n}</span>
+    </a>
+  );
+
+  let gi = 0;
   return (
     <div className="ledger-mosaic">
       <div className="ledger-tools">
         <label>
           filter
           <input
+            ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             data-qid="ledger:input:filter"
             data-qs-action="LEDGER_FILTER"
-            title="Filter skills by name or category"
-            placeholder="e.g. monitor, tau, extract"
+            title="Filter skills by name or category (press / to focus)"
+            placeholder="press / to search"
           />
         </label>
         <span aria-live="polite">
           {shown}/{skills.length} shown
         </span>
+        <button
+          type="button"
+          data-qid="ledger:action:view"
+          data-qs-action="LEDGER_TOGGLE_VIEW"
+          title="Toggle between categorized and flat matrix view"
+          onClick={() =>
+            setView(view === 'categorized' ? 'matrix' : 'categorized')
+          }
+          className="ledger-view"
+        >
+          [{view === 'categorized' ? 'categorized' : 'matrix'}]
+        </button>
       </div>
-      {groups.map(([cat, list]) => (
-        <div className="ledger-group" key={cat}>
-          <span className="ledger-cat">
-            {cat} · {list.length}
-          </span>
-          <div
-            className="mosaic"
-            role="list"
-            aria-label={`${cat}: ${list.length} skill contracts`}
+      <div className="ledger-chips" role="group" aria-label="Category filters">
+        <button
+          type="button"
+          data-qid="ledger:chip:all"
+          data-qs-action="LEDGER_FILTER_CATEGORY"
+          title="Show all categories"
+          onClick={() => setCat('all')}
+          className={`ledger-chip${cat === 'all' ? ' is-on' : ''}`}
+        >
+          all · {skills.length}
+        </button>
+        {groups.map(([c, list]) => (
+          <button
+            key={c}
+            type="button"
+            data-qid={`ledger:chip:${c}`}
+            data-qs-action="LEDGER_FILTER_CATEGORY"
+            title={`Filter to ${c}`}
+            onClick={() => setCat(cat === c ? 'all' : c)}
+            className={`ledger-chip${cat === c ? ' is-on' : ''}`}
           >
-            {list.map((s) => {
-              const i = globalIndex++;
-              return (
-                <a
-                  key={s.n}
-                  role="listitem"
-                  href={`${GH}/${s.n}/SKILL.md`}
-                  data-qid={`ledger:cell:${s.n}`}
-                  data-qs-action="LEDGER_OPEN_SKILL"
-                  title={`${s.n} · ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
-                  className={`cell${s.s ? '' : ' out'}`}
-                  style={{
-                    ['--i' as string]: i,
-                    ...(matches(s) ? {} : { opacity: 0.12 }),
-                  }}
-                >
-                  <span className="sr-only">{s.n}</span>
-                </a>
-              );
-            })}
+            {c} · {list.length}
+          </button>
+        ))}
+      </div>
+      {view === 'categorized' ? (
+        groups.map(([c, list]) => (
+          <div className="ledger-group" key={c}>
+            <span className="ledger-cat">
+              {c} · {list.length}
+            </span>
+            <div
+              className="mosaic"
+              role="list"
+              aria-label={`${c}: ${list.length} skill contracts`}
+            >
+              {list.map((s) => renderCell(s, gi++))}
+            </div>
           </div>
+        ))
+      ) : (
+        <div
+          className="mosaic"
+          role="list"
+          aria-label={`All ${skills.length} skill contracts`}
+          style={{ marginTop: '1rem' }}
+        >
+          {skills.map((s, i) => renderCell(s, i))}
         </div>
-      ))}
+      )}
       <div className="legend">
         <span>
           <i className="swatch" /> <b>{checked}</b> sanity-checked
