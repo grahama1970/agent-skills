@@ -1512,19 +1512,26 @@ footer a:hover {
   border: 1px solid var(--line);
   position: relative;
   overflow: hidden;
+  touch-action: pan-y; /* let vertical page scroll pass; JS owns horizontal swipe */
 }
 /* Cross-fade buffer: one full frame (blurred backdrop + sharp contain),
-   stacked and opacity-faded so phase changes never flash or hard-swap. */
+   stacked and opacity-faded so phase changes never flash or hard-swap. The
+   incoming layer also drifts a few px from the travel side (--dir) — a
+   directional cue, not a slide. */
 .stepper-layer {
   position: absolute;
   inset: 0;
   opacity: 0;
   z-index: 0;
-  transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity;
+  transform: translateX(calc(var(--dir, 0) * 8px));
+  transition:
+    opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 .stepper-layer.is-active {
   opacity: 1;
+  transform: translateX(0);
   z-index: 1;
 }
 /* Backdrop: the same frame, cover-filled, blurred and dimmed — no dead
@@ -1555,6 +1562,10 @@ footer a:hover {
 @media (prefers-reduced-motion: reduce) {
   .stepper-layer {
     transition: none;
+    transform: none;
+  }
+  .stepper-layer.is-active {
+    transform: none;
   }
 }
 .stepper-view .hud,

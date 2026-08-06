@@ -33,12 +33,20 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
     null,
   ]);
   const [active, setActive] = useState(0);
+  // Direction of the last move (+1 forward, -1 back) so the incoming layer
+  // drifts a few px from the travel side as it fades — directional cue without
+  // a full slide.
+  const [dir, setDir] = useState(0);
+  const prevIdx = useRef(0);
   const firstRun = useRef(true);
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
+      prevIdx.current = idx;
       return;
     }
+    setDir(Math.sign(idx - prevIdx.current));
+    prevIdx.current = idx;
     const next = active === 0 ? 1 : 0;
     setBuffers((prev) => {
       const copy: [DreamPhase, DreamPhase | null] = [prev[0], prev[1]];
@@ -48,6 +56,43 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
     setActive(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx]);
+
+  // Touch/pointer swipe → drives the cross-fade (not a slide). Direction-lock
+  // (horizontal vs vertical) lets vertical page scroll pass through; a fast
+  // flick counts even under the distance threshold.
+  const drag = useRef<{
+    x: number;
+    y: number;
+    t: number;
+    horiz: boolean | null;
+  } | null>(null);
+  const suppressClick = useRef(false);
+  const onPointerDown = (e: React.PointerEvent) => {
+    drag.current = { x: e.clientX, y: e.clientY, t: e.timeStamp, horiz: null };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (d.horiz === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      d.horiz = Math.abs(dx) > Math.abs(dy);
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || !d.horiz) return;
+    const dx = e.clientX - d.x;
+    const v = dx / Math.max(1, e.timeStamp - d.t); // px per ms
+    if (dx < -50 || v < -0.5) {
+      suppressClick.current = true;
+      go(idx + 1);
+    } else if (dx > 50 || v > 0.5) {
+      suppressClick.current = true;
+      go(idx - 1);
+    }
+  };
 
   // Preload every frame once on mount so scrubbing never waits on the
   // network — the first visit to a phase would otherwise flash unrendered.
@@ -100,14 +145,23 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   }, [idx, phases.length]);
 
   return (
-    <div className="stepper">
+    <div className="stepper" style={{ ['--dir' as string]: dir }}>
       <button
         type="button"
         className="stepper-view"
         data-qid="dream:action:zoom"
         data-qs-action="DREAM_ZOOM_FRAME"
         title={`Open phase ${cur.n} frame full-screen`}
-        onClick={() => setZoom(true)}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onClick={() => {
+          if (suppressClick.current) {
+            suppressClick.current = false;
+            return;
+          }
+          setZoom(true);
+        }}
         aria-label={`Phase ${cur.n} — ${cur.c}. Click to view full-screen.`}
       >
         {buffers.map((b, i) =>
