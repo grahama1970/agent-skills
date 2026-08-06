@@ -1779,6 +1779,9 @@ footer a:hover {
   --dur-state: 180ms;
   --dur-reveal: 1050ms;
   --ease-entrance: cubic-bezier(0.2, 0, 0, 1);
+  /* Expo-out for line draws — fast attack, long decelerating landing, no
+     overshoot (stays inside the non-bouncy motion grammar). */
+  --ease-wire-snap: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-state: cubic-bezier(0.4, 0, 0.6, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
@@ -2253,11 +2256,11 @@ h1 .proof-origin::after {
 
 /* Sequence */
 .hero-grid.proof-ready .proof-lineage__edge--trunk {
-  animation: proof-draw 240ms var(--ease-entrance) 1.18s forwards;
+  animation: proof-draw 240ms var(--ease-wire-snap) 1.18s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--branch-a,
 .hero-grid.proof-ready .proof-lineage__edge--branch-b {
-  animation: proof-draw 620ms var(--ease-entrance) 1.35s forwards;
+  animation: proof-draw 620ms var(--ease-wire-snap) 1.35s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__node--g1a,
 .hero-grid.proof-ready .proof-lineage__node--g1b {
@@ -2277,10 +2280,10 @@ h1 .proof-origin::after {
   animation: proof-fade 300ms ease-out 3.12s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--selected {
-  animation: proof-draw 500ms var(--ease-entrance) 3.05s forwards;
+  animation: proof-draw 500ms var(--ease-wire-snap) 3.05s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--evidence {
-  animation: proof-draw 650ms var(--ease-entrance) 3.55s forwards;
+  animation: proof-draw 650ms var(--ease-wire-snap) 3.55s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__token--evidence {
   animation: proof-token 650ms linear 3.55s both;
@@ -2289,7 +2292,7 @@ h1 .proof-origin::after {
   animation: proof-fade 180ms ease-out 4.08s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--g2 {
-  animation: proof-draw 240ms var(--ease-entrance) 4.12s forwards;
+  animation: proof-draw 240ms var(--ease-wire-snap) 4.12s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__node--g2 {
   animation: proof-fade 220ms ease-out 4.28s forwards;
