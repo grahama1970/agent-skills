@@ -1,5 +1,11 @@
 name: Skills CI
 
+# Supersede in-flight runs so rapid pushes don't queue a backlog that starves
+# the shared runner pool (and delays site-deploy behind it).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]

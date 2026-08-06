@@ -1,5 +1,11 @@
 name: Resume PDF
 
+# Supersede in-flight runs so rapid pushes don't queue a backlog on the shared
+# runner pool.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
