@@ -697,3 +697,12 @@ RENDERING_UNBOUND/NUMERIC_UNBOUND, decision memory, drift + version
 pinning, GENERATED_ASSET_CLAIM_SURFACE, EditProposal + tokens + MCP,
 /api/simulate + /api/claim-decide, TriageQueue, chat pane. Suite:
 45 passed, 1 xfailed (visual diff, named limitation).
+
+## #1230 closed via OAuth route (2026-08-06)
+
+Corrected mid-ticket per operator: NO API keys — image generation runs
+through `codex exec`, where imagegen's built-in image_gen tool uses the
+authenticated ChatGPT OAuth session; tau-DAG nodes are codex handlers.
+Live PASS: 3/3 variants from the atlas 'problem' brief (accent #22d3ee,
+no-text rule), visually verified, contact sheet assembled. Final ticket
+tally: 7 of 8 closed; #1227 open solely for the human timed triage run.
