@@ -181,6 +181,8 @@ ASK_TICKET_TARGET = "$ask at agent-skills@main"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
+BROWSER_TAB_UNVERIFIED_MULTIPLE = "browser_tab_unverified_with_multiple_provider_tabs"
+BROWSER_TAB_NOT_OPEN = "browser_tab_not_open"
 BROWSER_TAB_READ_TIMEOUT = "browser_tab_read_timeout"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
@@ -220,6 +222,17 @@ BROWSER_FAILURE_CODES: dict[str, BrowserFailureCode] = {
         BROWSER_TAB_IDENTITY_MISMATCH,
         "The browser-oracle binding or requested tab does not match the live browser tab URL.",
         auto_retry_blocked_reason="browser_tab_identity_rebind_required",
+    ),
+    BROWSER_TAB_UNVERIFIED_MULTIPLE: BrowserFailureCode(
+        BROWSER_TAB_UNVERIFIED_MULTIPLE,
+        "The explicit tab id could not be verified because many provider tabs are open; "
+        "pass --expect-url for the seat's tab or close excess provider tabs (not a rebind).",
+        auto_retry_blocked_reason="browser_tab_needs_expect_url_or_fewer_tabs",
+    ),
+    BROWSER_TAB_NOT_OPEN: BrowserFailureCode(
+        BROWSER_TAB_NOT_OPEN,
+        "The requested provider tab is no longer open; reprovision the seat tab (not a rebind).",
+        auto_retry_blocked_reason="browser_tab_reprovision_required",
     ),
     BROWSER_TAB_READ_TIMEOUT: BrowserFailureCode(
         BROWSER_TAB_READ_TIMEOUT,
@@ -2180,6 +2193,14 @@ def _classify_browser_failure(
         return BROWSER_HANDLER_TIMEOUT
     if _looks_repo_access_blocked(haystack):
         return REPO_ACCESS_BLOCKED
+    preflight_error = ""
+    identity_pf = submit_meta.get("tab_identity_preflight")
+    if isinstance(identity_pf, dict):
+        preflight_error = str(identity_pf.get("error") or "").strip().lower()
+    if preflight_error == "unverified_tab_id_with_multiple_chatgpt_tabs":
+        return BROWSER_TAB_UNVERIFIED_MULTIPLE
+    if preflight_error in {"tab_not_open_chatgpt", "tab_not_open_claude", "tab_not_open_kimi", "tab_not_open_gemini", "invalid_tab_id"}:
+        return BROWSER_TAB_NOT_OPEN
     if _looks_tab_identity_mismatch(haystack, submit_meta):
         return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):

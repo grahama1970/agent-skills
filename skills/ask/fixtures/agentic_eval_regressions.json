@@ -109,6 +109,25 @@
           "passed"
         ]
       }
+    },
+    {
+      "name": "browser-identity-subreasons-distinct-1259",
+      "type": "positive",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_browser_identity_subreason_1259.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
     }
   ]
 }
