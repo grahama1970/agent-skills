@@ -1369,13 +1369,15 @@ def _retry_browser_stale_binding(
         }
     if handler != "webgpt":
         return None
-    open_tab = _run_cmd([str(args.surf_run), "tab.new", url], cwd=Path(args.surf_run).parent, timeout=90)
+    # #1222: recovery must not open tabs in the user's working window —
+    # provision an unfocused reviewer window like normal seat provisioning.
+    open_tab = _run_cmd([str(args.surf_run), "window.new", url, "--unfocused"], cwd=Path(args.surf_run).parent, timeout=90)
     open_summary = open_tab.summary()
     open_summary["recovery_attempt"] = "webgpt_stale_binding_open_url"
     commands.append(open_summary)
     if open_tab.returncode != 0 and "browser lock" in (open_tab.stderr + open_tab.stdout).lower():
         open_tab = _run_cmd(
-            [str(args.surf_run), "tab.new", url, "--no-lock"],
+            [str(args.surf_run), "window.new", url, "--unfocused", "--no-lock"],
             cwd=Path(args.surf_run).parent,
             timeout=90,
         )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -292,6 +293,99 @@ def _extract_new_tab_id(payload: object) -> str:
     return ""
 
 
+def _wmctrl_chrome_windows() -> list[str]:
+    wmctrl = shutil.which("wmctrl")
+    if not wmctrl:
+        return []
+    try:
+        listing = subprocess.run([wmctrl, "-lx"], capture_output=True, text=True, timeout=5)
+    except Exception:
+        return []
+    return [
+        line.split()[0]
+        for line in listing.stdout.splitlines()
+        if "google-chrome" in line.lower() or "chromium" in line.lower()
+    ]
+
+
+def _move_new_window_to_reviewer_desktop(before: list[str] | None = None) -> dict[str, Any] | None:
+    """Best-effort: move the newest Chrome window to the reviewer desktop.
+
+    Desktop 2 (wmctrl index 1) by default, BROWSER_ORACLE_REVIEWER_DESKTOP to
+    override, empty value to disable. Never fails the bind — placement is a
+    courtesy to the user's workspace, not a proof boundary (#1222).
+    """
+    raw = os.environ.get("BROWSER_ORACLE_REVIEWER_DESKTOP", "1")
+    if raw == "":
+        return None
+    try:
+        desktop = int(raw)
+    except ValueError:
+        return {"status": "skipped", "reason": f"bad desktop index {raw!r}"}
+    wmctrl = shutil.which("wmctrl")
+    if not wmctrl:
+        return {"status": "skipped", "reason": "wmctrl not installed"}
+    try:
+        # The reliable identity is the diff against the pre-open snapshot;
+        # position in wmctrl output is NOT creation order (verified live:
+        # the last-sorts heuristic moved the wrong window). The new window
+        # takes a moment to be X-mapped, so poll briefly.
+        import time as _time
+
+        new_windows: list[str] = []
+        for _ in range(10):
+            chrome_windows = _wmctrl_chrome_windows()
+            new_windows = [w for w in chrome_windows if w not in (before or [])]
+            if len(new_windows) == 1:
+                break
+            _time.sleep(0.5)
+        if len(new_windows) != 1:
+            return {
+                "status": "skipped",
+                "reason": f"expected exactly one new chrome window, saw {len(new_windows)}",
+            }
+        target = new_windows[0]
+
+        def _current_desktop() -> str | None:
+            listing = subprocess.run([wmctrl, "-lx"], capture_output=True, text=True, timeout=5)
+            for line in listing.stdout.splitlines():
+                if line.lower().startswith(target.lower()):
+                    return line.split()[1]
+            return None
+
+        # wmctrl returning 0 does not mean the move stuck: KDE can bounce a
+        # freshly-mapped window back to the active desktop (observed live).
+        # Move, verify by readback, retry a few times until it sticks.
+        last_stderr = None
+        for _ in range(5):
+            move = subprocess.run(
+                [wmctrl, "-i", "-r", target, "-t", str(desktop)],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            last_stderr = move.stderr.strip() or None
+            _time.sleep(0.4)
+            if _current_desktop() == str(desktop):
+                return {
+                    "status": "moved",
+                    "window": target,
+                    "desktop_index": desktop,
+                    "verified": True,
+                    "stderr": last_stderr,
+                }
+        return {
+            "status": "failed",
+            "window": target,
+            "desktop_index": desktop,
+            "verified": False,
+            "reason": "window did not stay on the reviewer desktop after 5 attempts",
+            "stderr": last_stderr,
+        }
+    except Exception as exc:
+        return {"status": "failed", "reason": str(exc)[:200]}
+
+
 @app.command("open-bind")
 def open_bind_cmd(
     name: str = typer.Argument(..., help="Project name to bind."),
@@ -309,7 +403,9 @@ def open_bind_cmd(
         typer.echo("open-bind is not supported for cursor-browser", err=True)
         raise typer.Exit(2)
     surf = surf_run_path()
-    use_window = backend == "webgpt" and window and os.environ.get("BROWSER_ORACLE_OPEN_BIND_WINDOW", "1") not in {"0", "false", "False"}
+    # Reviewer windows for EVERY surf-backed browser backend (#1222): seats
+    # must never open tabs in the user's working window.
+    use_window = window and os.environ.get("BROWSER_ORACLE_OPEN_BIND_WINDOW", "1") not in {"0", "false", "False"}
     if use_window:
         cmd = [str(surf), "window.new", url, "--json"]
         if os.environ.get("BROWSER_ORACLE_OPEN_BIND_UNFOCUSED", "1") not in {"0", "false", "False"}:
@@ -318,6 +414,7 @@ def open_bind_cmd(
         cmd = [str(surf), "tab.new", url, "--json"]
         if os.environ.get("BROWSER_ORACLE_OPEN_BIND_UNFOCUSED", "1") not in {"0", "false", "False"}:
             cmd.append("--background")
+    pre_open_windows = _wmctrl_chrome_windows() if use_window else []
     try:
         proc = subprocess.run(cmd, cwd=surf.parent, capture_output=True, text=True, timeout=45)
     except Exception as exc:
@@ -335,6 +432,7 @@ def open_bind_cmd(
     if not tab_id:
         typer.echo("surf open did not return a tab id", err=True)
         raise typer.Exit(1)
+    kde_move = _move_new_window_to_reviewer_desktop(pre_open_windows) if use_window else None
     state = bind(name, backend, tab_id=tab_id, conversation_url=url, manual=manual)
     payload = {
         "status": "open_bound",
@@ -342,6 +440,7 @@ def open_bind_cmd(
         "state_path": str(state_path(state.name, state.backend)),
         "open_command": cmd,
         "open_result": open_payload,
+        "kde_move": kde_move,
     }
     _emit(payload, as_json)
 

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "proof_scope": "reviewer-window hygiene (#1222): browser seats open in unfocused reviewer windows placed on the reviewer desktop, never in the user's working window, and provisioned windows are closed once their data is ingested",
+  "claims": {
+    "proves": "open-bind provisions a windowed, unfocused seat for non-webgpt backends with a wmctrl-verified move to the reviewer desktop; window.close removes the window and its tab (readback shows the tab gone); the roundtable recovery path opens windows not tabs",
+    "does_not_prove": "placement under Wayland (wmctrl is X11-only), kde title-annotation accuracy for same-titled windows, or ask lifecycle cleanup semantics (covered by the ask regressions fixture's tau_dag suite)"
+  },
+  "cases": [
+    {
+      "name": "open-bind-nonwebgpt-windows-unfocused-and-lands-on-reviewer-desktop",
+      "type": "positive",
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/surf/scripts/reviewer_window_proof.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WINDOWED",
+          "UNFOCUSED",
+          "MOVE:moved:1",
+          "WMCTRL_DESKTOP:1",
+          "CLOSED_AFTER_INGEST"
+        ]
+      }
+    },
+    {
+      "name": "roundtable-recovery-opens-windows-not-tabs",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "grep -c 'window.new\", url, \"--unfocused' /home/graham/workspace/experiments/agent-skills/skills/ask/scripts/tau_roundtable_worker.py | { read n; [ \"$n\" -ge 2 ] && echo RECOVERY_WINDOWED; }; grep -c '\"tab.new\", url' /home/graham/workspace/experiments/agent-skills/skills/ask/scripts/tau_roundtable_worker.py | { read n; [ \"$n\" -eq 0 ] && echo NO_BARE_TABS; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOVERY_WINDOWED",
+          "NO_BARE_TABS"
+        ]
+      }
+    },
+    {
+      "name": "ask-lifecycle-closes-seat-windows-at-run-end",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "grep -A8 'seat_windows = list' /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/tau_dag_cli.py | grep -q 'window.close' && echo SEAT_WINDOWS_CLOSED; grep -q 'skipped_pending_recovery' /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/tau_dag_cli.py && echo RECOVERY_LANES_PRESERVED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SEAT_WINDOWS_CLOSED",
+          "RECOVERY_LANES_PRESERVED"
+        ]
+      }
+    }
+  ]
+}
