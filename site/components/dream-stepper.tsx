@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface DreamPhase {
   f: string;
@@ -19,9 +19,19 @@ export interface DreamPhase {
 export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   const [idx, setIdx] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const scrubLock = useRef(false);
   const cur = phases[idx];
   const go = (next: number) =>
     setIdx(Math.min(Math.max(next, 0), phases.length - 1));
+
+  // Preload every frame once on mount so scrubbing never waits on the
+  // network — the first visit to a phase would otherwise flash unrendered.
+  useEffect(() => {
+    for (const p of phases) {
+      const img = new Image();
+      img.src = `/dream/${p.f}.webp`;
+    }
+  }, [phases]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -36,6 +46,16 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
           el.isContentEditable);
       if (editing) return;
       const k = e.key.toLowerCase();
+      const isScrub =
+        e.key === 'ArrowRight' || e.key === 'ArrowLeft' || k === 'l' || k === 'h';
+      // Throttle held-key repeat so rapid scrubbing doesn't stack frame swaps.
+      if (isScrub) {
+        if (scrubLock.current) return;
+        scrubLock.current = true;
+        setTimeout(() => {
+          scrubLock.current = false;
+        }, 120);
+      }
       if (e.key === 'ArrowRight' || k === 'l') {
         go(idx + 1);
       } else if (e.key === 'ArrowLeft' || k === 'h') {
@@ -55,7 +75,6 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   return (
     <div className="stepper">
       <button
-        key={cur.f}
         type="button"
         className="stepper-view"
         style={{
