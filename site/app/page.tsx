@@ -24,16 +24,16 @@ const CARD_META: Record<string, { cls: string; tint: string; img?: string; decod
 };
 
 const DREAM_PHASES = [
-  { f: 'phase01-idea-memory-residue', n: '01', c: 'idea · memory residue', t: 'rgba(209,112,60,.5)' },
-  { f: 'phase02-story', n: '02', c: 'story', t: 'rgba(196,142,86,.45)' },
-  { f: 'phase03-crew', n: '03', c: 'crew', t: 'rgba(147,162,137,.42)' },
-  { f: 'phase04-contact-sheets', n: '04', c: 'contact sheets', t: 'rgba(226,172,98,.42)' },
-  { f: 'phase05-voices', n: '05', c: 'voices', t: 'rgba(178,74,58,.42)' },
-  { f: 'phase06-script', n: '06', c: 'script', t: 'rgba(160,120,150,.4)' },
-  { f: 'phase07-storyboard', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)' },
-  { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)' },
-  { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)' },
-  { f: 'embry-memory-desk', n: '10', c: 'a rendered dream — Embry, reviewing her memories · dream-run panel 01', t: 'rgba(209,112,60,.45)' },
+  { f: 'phase01-idea-memory-residue', n: '01', c: 'idea · memory residue', t: 'rgba(209,112,60,.5)', dims: '1600×1891', src: 'persona-dream/assets/readme/phase01' },
+  { f: 'phase02-story', n: '02', c: 'story', t: 'rgba(196,142,86,.45)', dims: '480×920', src: 'persona-dream/assets/readme/phase02' },
+  { f: 'phase03-crew', n: '03', c: 'crew', t: 'rgba(147,162,137,.42)', dims: '480×920', src: 'persona-dream/assets/readme/phase03' },
+  { f: 'phase04-contact-sheets', n: '04', c: 'contact sheets', t: 'rgba(226,172,98,.42)', dims: '480×920', src: 'persona-dream/assets/readme/phase04' },
+  { f: 'phase05-voices', n: '05', c: 'voices', t: 'rgba(178,74,58,.42)', dims: '480×920', src: 'persona-dream/assets/readme/phase05' },
+  { f: 'phase06-script', n: '06', c: 'script', t: 'rgba(160,120,150,.4)', dims: '480×920', src: 'persona-dream/assets/readme/phase06' },
+  { f: 'phase07-storyboard', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)', dims: '480×920', src: 'persona-dream/assets/readme/phase07' },
+  { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)', dims: '1600×1387', src: 'persona-dream/assets/readme/phase08' },
+  { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)', dims: '1280×997', src: 'persona-dream/assets/readme/phase09' },
+  { f: 'embry-memory-desk', n: '10', c: 'a rendered dream — Embry, reviewing her memories', t: 'rgba(209,112,60,.45)', dims: '1672×941', src: 'persona-dream/provider_media/dream-run/panel_01' },
 ];
 
 const TRACK = [

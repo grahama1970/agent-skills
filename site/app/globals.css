@@ -1508,3 +1508,78 @@ footer a:hover {
     flex-wrap: wrap;
   }
 }
+
+/* Stepper HUD: real metadata only (phase, source path, native size). */
+.stepper-view {
+  display: block;
+  padding: 0;
+  cursor: zoom-in;
+}
+.hud {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  background: rgba(10, 12, 16, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.4em 0.7em;
+  border-radius: 2px;
+  pointer-events: none;
+  max-width: 92%;
+  text-align: left;
+}
+.hud-tl {
+  top: 10px;
+  left: 10px;
+  text-transform: uppercase;
+}
+.hud-br {
+  bottom: 10px;
+  right: 10px;
+  color: var(--muted);
+}
+.stepper-hint {
+  margin: 0.6rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(8, 6, 5, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+.lightbox img {
+  max-width: 96vw;
+  max-height: 92vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+}
+.lightbox button {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(10, 12, 16, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  padding: 0.5em 0.9em;
+  cursor: pointer;
+}
+.lightbox button:hover {
+  color: var(--brass);
+  border-color: var(--brass);
+}
