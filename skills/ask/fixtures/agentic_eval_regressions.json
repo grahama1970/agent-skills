@@ -12,7 +12,10 @@
       "name": "join-failure-code-1217-and-killed-lane-contract",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
         "pytest",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_join_failure_code_regression.py",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_browser_failure_recovery.py",
@@ -20,28 +23,38 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["passed"]
+        "stdout_contains": [
+          "passed"
+        ]
       }
     },
     {
       "name": "harness-auth-capability-and-seam-contracts",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
         "pytest",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_tau_harness.py",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["passed"]
+        "stdout_contains": [
+          "passed"
+        ]
       }
     },
     {
       "name": "plan-compiler-invariants-review-freeze-strengths",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
         "pytest",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_project_plan_to_tau.py",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_project_plan_schema.py",
@@ -51,21 +64,50 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["passed"]
+        "stdout_contains": [
+          "passed"
+        ]
       }
     },
     {
       "name": "compete-budgets-stay-on-per-handler-envelopes",
       "type": "positive",
       "command": [
-        "uv", "run", "--project", "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
         "pytest",
         "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_tau_dag.py",
-        "-q", "-k", "poll_timeout or budget or envelope"
+        "-q",
+        "-k",
+        "poll_timeout or budget or envelope"
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["passed"]
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "webgpt-seat-passes-expect-url-1252",
+      "type": "positive",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_webgpt_expect_url_1252.py",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_roundtable_join_seat_states.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
       }
     }
   ]

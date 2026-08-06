@@ -183,6 +183,21 @@
           "handler-gpt-5-5-medium"
         ]
       }
+    },
+    {
+      "name": "webgpt-expect-url-clears-identity-guard-live",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "if [ -z \"${SURF_WEBGPT_TAB:-}\" ]; then echo 'SKIP: set SURF_WEBGPT_TAB to an ask-provisioned chatgpt tab id'; echo PASS_GATED; exit 0; fi; bash /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/verify_webgpt_expect_url_1252.sh \"$SURF_WEBGPT_TAB\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS"
+        ]
+      }
     }
   ]
 }

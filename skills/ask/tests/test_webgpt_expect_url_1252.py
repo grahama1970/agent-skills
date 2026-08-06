@@ -1,0 +1,45 @@
+"""#1252: webgpt seats must pass --expect-url so the identity guard clears
+amid many ChatGPT tabs. The command builder must include --expect-url
+whenever a url is available for a webgpt tab."""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+from types import SimpleNamespace
+from pathlib import Path
+
+WORKER = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
+spec = importlib.util.spec_from_file_location("trw_expecturl", WORKER)
+w = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = w
+spec.loader.exec_module(w)
+
+
+def _args(tmp_path: Path) -> SimpleNamespace:
+    return SimpleNamespace(
+        surf_run=str(tmp_path / "surf.sh"), timeout=900, stable_polls=3,
+        browser_lock_timeout=0, no_activate=True, browser_model_preference="",
+    )
+
+
+def test_webgpt_submit_command_passes_expect_url(tmp_path: Path) -> None:
+    cmd = w._browser_submit_command(
+        _args(tmp_path), handler="webgpt",
+        prompt_path=tmp_path / "p.md", response_path=tmp_path / "o.md",
+        raw_path=tmp_path / "r.md", meta_path=tmp_path / "m.json",
+        tab_id="837368227", url="https://chatgpt.com/", attachment_paths=[],
+    )
+    assert "--expect-url" in cmd
+    assert cmd[cmd.index("--expect-url") + 1] == "https://chatgpt.com/"
+    assert "--tab-id" in cmd
+
+
+def test_current_tab_url_fallback_reads_array_tablist(tmp_path: Path, monkeypatch) -> None:
+    class _Res:
+        returncode = 0
+        stdout = '[{"id":837368227,"url":"https://chatgpt.com/","title":"ChatGPT"}]'
+        stderr = ""
+
+    monkeypatch.setattr(w, "_run_cmd", lambda *a, **k: _Res())
+    assert w._current_tab_url(_args(tmp_path), "837368227") == "https://chatgpt.com/"
