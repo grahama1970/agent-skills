@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Columns3, Database, FileCode2, LayoutGrid, LayoutTemplate, Maximize2, MessageSquare, PanelLeft, PanelLeftOpen, PanelRight, PanelRightOpen, Play, ShieldCheck, StickyNote } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ClaimReview } from './components/ClaimReview'
+import { ChatDrawer } from './components/ChatDrawer'
 import { DeckChat } from './components/DeckChat'
 import { AssetDropZone } from './components/AssetDrop'
 import { EditToolbar, postUndo } from './components/EditChrome'
@@ -654,14 +655,10 @@ export function App() {
                 </FragmentContext.Provider>
               </EditContext.Provider>
             </AssetDropZone>
-            {!chatCollapsed && !presenting ? (
-              <aside
-                aria-label="Deck chat"
-                data-qid="deck:pane:chat"
-                className="min-h-0 w-[380px] shrink-0 overflow-hidden border-l border-slate-800"
-              >
+            {!presenting ? (
+              <ChatDrawer collapsed={chatCollapsed} onCollapse={() => setChatCollapsed(true)}>
                 <DeckChat deck={deck} onChanged={reloadAll} />
-              </aside>
+              </ChatDrawer>
             ) : null}
             {editing && !inspectorCollapsed ? (
               <>
