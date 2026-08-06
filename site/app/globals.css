@@ -2024,3 +2024,397 @@ a.fig:hover .l::after,
   text-underline-offset: 3px;
 }
 .github-repo-link:hover .gh-arrow { transform: translate(2px, -2px); }
+
+/* ============================================================
+   The Proof Returns — hero lineage instrument + cross-column bridge.
+   An unboxed instrument in the Inventory rail (no panel/blur/card) plus
+   a DOM-measured wire that physically reaches the word "prove". The
+   proof sequence OWNS the .proof-origin underline; the generic .it sweep
+   is neutralized for that word.
+   ============================================================ */
+
+.hero-grid {
+  position: relative;
+}
+.hero-main,
+.hero-side {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cross-column bridge overlay (measured by hero-proof-bridge.tsx). */
+.proof-bridge {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  display: none;
+}
+@media (min-width: 1200px) {
+  .proof-bridge {
+    display: block;
+  }
+}
+.proof-bridge__wire {
+  fill: none;
+  stroke: var(--ember);
+  stroke-width: 0.75;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+.proof-bridge.is-ready .proof-bridge__wire {
+  animation: proof-bridge-wire 5.25s linear both;
+}
+.proof-bridge__token {
+  opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+.proof-bridge__token--out {
+  fill: var(--ember);
+}
+.proof-bridge__token--return {
+  fill: var(--brass);
+}
+
+/* The proof sequence now owns the underline on .proof-origin. */
+h1 .proof-origin::after {
+  animation: none;
+  animation-timeline: auto;
+  transform: scaleX(0);
+  background: var(--ember);
+}
+.hero-grid.proof-ready h1 .proof-origin::after {
+  animation: proof-origin-line 5.25s linear both;
+}
+
+/* Open instrument; no glass panel, blur, or rounded card. */
+.proof-lineage {
+  display: none;
+  margin: 1.1rem 0 0;
+  padding: 0.75rem 0 0.5rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line-2);
+  font-family: var(--mono);
+  user-select: none;
+}
+@media (min-width: 1024px) {
+  .proof-lineage {
+    display: block;
+  }
+}
+.proof-lineage__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--faint);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.proof-lineage__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.4rem;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+.proof-lineage__edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 0.75;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.proof-lineage__edge--selected {
+  stroke: rgba(226, 172, 98, 0.54);
+}
+.proof-lineage__edge--evidence {
+  stroke: rgba(236, 226, 211, 0.28);
+  stroke-dasharray: 0.025 0.025;
+}
+.proof-lineage__node {
+  opacity: 0;
+  outline: none;
+}
+.proof-lineage__node--g0 {
+  opacity: 1;
+}
+.proof-lineage__node-core {
+  fill: rgba(236, 226, 211, 0.2);
+  stroke: rgba(236, 226, 211, 0.36);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+.proof-lineage__id,
+.proof-lineage__operator,
+.proof-lineage__meta,
+.proof-lineage__judge-label,
+.proof-lineage__role,
+.proof-lineage__receipt {
+  font-family: var(--mono);
+}
+.proof-lineage__id {
+  fill: var(--text);
+  font-size: 9px;
+  font-weight: 500;
+}
+.proof-lineage__operator {
+  fill: var(--faint);
+  font-size: 7.5px;
+}
+.proof-lineage__meta {
+  fill: var(--muted);
+  font-size: 7.5px;
+}
+.proof-lineage__judge-label {
+  fill: var(--faint);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.proof-lineage__judge-dot {
+  fill: var(--sage);
+  opacity: 0;
+}
+.proof-lineage__eval-halo {
+  fill: rgba(147, 162, 137, 0.12);
+  stroke: var(--sage);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+.proof-lineage__selected-overlay {
+  fill: var(--brass);
+  stroke: var(--brass);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+.proof-lineage__runner-outline {
+  fill: none;
+  stroke: rgba(236, 226, 211, 0.42);
+  stroke-width: 0.65;
+  stroke-dasharray: 1.5 1.5;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+.proof-lineage__role {
+  font-size: 7.5px;
+  opacity: 0;
+}
+.proof-lineage__role--selected {
+  fill: var(--brass);
+}
+.proof-lineage__role--runner {
+  fill: var(--faint);
+}
+.proof-lineage__receipt {
+  fill: var(--faint);
+  font-size: 6.8px;
+  opacity: 0;
+}
+.proof-lineage__receipt rect {
+  fill: transparent;
+  stroke: var(--brass);
+  stroke-width: 0.65;
+  vector-effect: non-scaling-stroke;
+}
+.proof-lineage__token {
+  fill: var(--brass);
+  opacity: 0;
+  offset-anchor: center;
+  offset-rotate: 0deg;
+}
+.proof-lineage__token--evidence {
+  offset-path: path("M 286 69 V 142 C 286 158 248 166 212 166");
+}
+.proof-lineage__token--return {
+  offset-path: path("M 180 176 V 142 C 74 166 74 142 74 69 V 49 H 180 V 18");
+}
+.proof-lineage__caption {
+  margin-top: 0.2rem;
+  color: var(--faint);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+/* Sequence */
+.hero-grid.proof-ready .proof-lineage__edge--trunk {
+  animation: proof-draw 240ms var(--ease-entrance) 1.18s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__edge--branch-a,
+.hero-grid.proof-ready .proof-lineage__edge--branch-b {
+  animation: proof-draw 620ms var(--ease-entrance) 1.35s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__node--g1a,
+.hero-grid.proof-ready .proof-lineage__node--g1b {
+  animation: proof-fade 220ms ease-out 1.78s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__eval-halo {
+  animation: proof-evaluate 900ms var(--ease-entrance) 2.15s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__judge-dot {
+  animation: proof-judge-dot 900ms var(--ease-entrance) 2.15s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__selected-overlay {
+  animation: proof-fade 300ms ease-out 3.05s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__runner-outline,
+.hero-grid.proof-ready .proof-lineage__role {
+  animation: proof-fade 300ms ease-out 3.12s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__edge--selected {
+  animation: proof-draw 500ms var(--ease-entrance) 3.05s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__edge--evidence {
+  animation: proof-draw 650ms var(--ease-entrance) 3.55s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__token--evidence {
+  animation: proof-token 650ms linear 3.55s both;
+}
+.hero-grid.proof-ready .proof-lineage__receipt {
+  animation: proof-fade 180ms ease-out 4.08s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__edge--g2 {
+  animation: proof-draw 240ms var(--ease-entrance) 4.12s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__node--g2 {
+  animation: proof-fade 220ms ease-out 4.28s forwards;
+}
+.hero-grid.proof-ready .proof-lineage__token--return {
+  animation: proof-token 360ms linear 4.44s both;
+}
+
+@keyframes proof-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes proof-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes proof-evaluate {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  28%,
+  62% {
+    opacity: 0.8;
+  }
+}
+@keyframes proof-judge-dot {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  35%,
+  70% {
+    opacity: 0.9;
+  }
+}
+@keyframes proof-token {
+  0% {
+    opacity: 0;
+    offset-distance: 0%;
+  }
+  10% {
+    opacity: 1;
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
+  }
+}
+@keyframes proof-bridge-wire {
+  0%,
+  15% {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+  16% {
+    opacity: 0.72;
+  }
+  26% {
+    opacity: 0.5;
+    stroke-dashoffset: 0;
+  }
+  90% {
+    opacity: 0.22;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes proof-origin-line {
+  0% {
+    transform: scaleX(0);
+    background: var(--ember);
+  }
+  26% {
+    transform: scaleX(1);
+    background: var(--ember);
+  }
+  93% {
+    transform: scaleX(1);
+    background: var(--ember);
+  }
+  100% {
+    transform: scaleX(1);
+    background: var(--brass);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proof-bridge {
+    display: none !important;
+  }
+  h1 .proof-origin::after {
+    animation: none !important;
+    transform: scaleX(1) !important;
+    background: var(--brass) !important;
+  }
+  .proof-lineage__edge {
+    animation: none !important;
+    stroke-dashoffset: 0;
+  }
+  .proof-lineage__node,
+  .proof-lineage__selected-overlay,
+  .proof-lineage__runner-outline,
+  .proof-lineage__role,
+  .proof-lineage__receipt {
+    animation: none !important;
+    opacity: 1;
+  }
+  .proof-lineage__eval-halo,
+  .proof-lineage__token {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  h1 .proof-origin::after {
+    animation: none !important;
+    transform: scaleX(1);
+    background: var(--brass);
+  }
+}

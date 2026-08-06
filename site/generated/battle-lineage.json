@@ -1,0 +1,72 @@
+{
+  "battleId": "battle-004",
+  "runId": "arena-adaptive-lineage-20260718T152350Z",
+  "sourceSha256": "68391a9d884c72dc3b0a0bdf275910ae7bd20f6f5efbd9278067089abb8fe8ea",
+  "qualification": "PASS",
+  "criterion": "novelty_distance",
+  "selectedId": "G1-A",
+  "runnerUpId": "G1-B",
+  "nodes": {
+    "G0": {
+      "id": "G0",
+      "mutationOperator": null,
+      "noveltyDistance": null,
+      "techniqueDelta": "seed exploit (no mutation operator)",
+      "changedDimensions": []
+    },
+    "G1-A": {
+      "id": "G1-A",
+      "mutationOperator": "method_replace",
+      "noveltyDistance": 2,
+      "techniqueDelta": "Changed app.py loading from direct from app import import_zip to importlib.import_module('app') with getattr; archive construction, traversal member, direct call, and oracle remain unchanged.",
+      "changedDimensions": [
+        {
+          "child": "none",
+          "dimension": "app_load_mode",
+          "parent": "from_import_app"
+        },
+        {
+          "child": "none",
+          "dimension": "target_call_form",
+          "parent": "function_call"
+        }
+      ]
+    },
+    "G1-B": {
+      "id": "G1-B",
+      "mutationOperator": "oracle_or_parameter_mutation",
+      "noveltyDistance": 1,
+      "techniqueDelta": "Archive entry construction changed from in-memory writestr traversal member to a real file added with explicit traversal arcname.",
+      "changedDimensions": [
+        {
+          "child": "zipfile_write_arcname",
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr"
+        }
+      ]
+    },
+    "G2": {
+      "id": "G2",
+      "mutationOperator": "failure_guided_crossover",
+      "noveltyDistance": 3,
+      "techniqueDelta": "Changed app loading to importlib.util.spec_from_file_location, changed archive construction to ZipInfo plus archive.open writes, and changed target call form to keyword arguments while retaining the outside-destination content oracle.",
+      "changedDimensions": [
+        {
+          "child": "importlib_spec_from_file",
+          "dimension": "app_load_mode",
+          "parent": "none"
+        },
+        {
+          "child": "zipinfo",
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr"
+        },
+        {
+          "child": "try[Exception:return|Exception:return|OSError:handle]",
+          "dimension": "exception_handling",
+          "parent": "try[Exception:return]"
+        }
+      ]
+    }
+  }
+}

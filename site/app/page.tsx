@@ -1,4 +1,7 @@
 import artifacts from '@/artifacts.json';
+import lineage from '@/generated/battle-lineage.json';
+import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
+import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
@@ -74,7 +77,10 @@ export default function Home() {
                   methods, evidence
                 </p>
                 <h1 className="rise" style={{ ['--d' as string]: '.12s' }}>
-                  I build agent systems that can <span className="it">prove</span>{' '}
+                  I build agent systems that can{' '}
+                  <span className="it proof-origin" data-proof-origin>
+                    prove
+                  </span>{' '}
                   what they did.
                 </h1>
                 <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
@@ -184,8 +190,10 @@ export default function Home() {
                     </a>{' '}
                     · {as_of}
                   </p>
+                  <HeroLineage data={lineage as HeroLineageData} />
                 </div>
               </aside>
+              <HeroProofBridge />
             </div>
           </div>
           <figure
