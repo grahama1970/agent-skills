@@ -153,7 +153,7 @@ export default function Home() {
             aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream storyboard panel"
           >
             <figcaption>
-              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — storyboard panel 01, run 20260612-horus-embry-storyboard
+              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — re-rendered at 2172px from storyboard run 20260612, via WebGPT
             </figcaption>
           </figure>
         </section>
