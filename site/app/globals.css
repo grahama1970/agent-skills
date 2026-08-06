@@ -463,7 +463,7 @@ h1 .it::after {
   background-image:
     linear-gradient(90deg, var(--ink) 0%, rgba(12, 9, 8, 0.25) 22%, rgba(12, 9, 8, 0.15) 70%, var(--ink) 100%),
     linear-gradient(180deg, rgba(12, 9, 8, 0.55), rgba(12, 9, 8, 0.2) 40%, rgba(12, 9, 8, 0.75)),
-    url('/dream/dream-panel.webp'),
+    url('/dream/horus-embry-tea.webp'),
     radial-gradient(100% 140% at 30% 20%, rgba(209, 112, 60, 0.5), transparent 70%);
   background-size: cover, cover, cover, cover;
   background-position: center, center, center 38%, center;
@@ -734,7 +734,7 @@ h1 .it::after {
   background-color: #171010;
   background-image:
     linear-gradient(180deg, rgba(12, 9, 8, 0.28), rgba(12, 9, 8, 0.62)),
-    url('/dream/dream-panel.webp'),
+    url('/dream/embry-memory-desk.webp'),
     radial-gradient(120% 160% at 70% 20%, rgba(209, 112, 60, 0.45), transparent 70%);
   background-size: cover;
   background-position: center;

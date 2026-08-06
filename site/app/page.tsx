@@ -150,10 +150,10 @@ export default function Home() {
           <figure
             className="strip wipe"
             role="img"
-            aria-label="Rendered dream frame from the persona-dream pipeline"
+            aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream storyboard panel"
           >
             <figcaption>
-              <b>persona-dream</b> — frame 001, live run issue-33 · 2026-06-29 · provider_media/…/panel_001.png
+              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — storyboard panel 01, run 20260612-horus-embry-storyboard
             </figcaption>
           </figure>
         </section>
@@ -258,9 +258,9 @@ export default function Home() {
             <figure
               className="panel"
               role="img"
-              aria-label="Cinematic rendered dream frame from persona-dream"
+              aria-label="Embry at a desk reviewing contact sheets of her own memories — persona-dream rendered frame"
             >
-              <span className="tag">frame 001 · live run issue-33 · 2026-06-29</span>
+              <span className="tag">Embry, reviewing her memories · dream-run · panel 01</span>
             </figure>
             <div className="film" aria-label="persona-dream pipeline phases">
               {DREAM_PHASES.map((d) => (
