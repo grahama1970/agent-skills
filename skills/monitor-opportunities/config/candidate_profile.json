@@ -1,0 +1,53 @@
+{
+ "schema": "monitor_opportunities.candidate_profile.v1",
+ "updated": "2026-08-06",
+ "source": "Graham, direct, this session \u2014 single source of truth; agents answer 'what does Graham prefer' from here",
+ "identity": {
+  "name": "Graham Anderson",
+  "email": "graham@grahama.co",
+  "phone": "310-402-3980",
+  "website": "https://grahama.co",
+  "location": "Buffalo, NY",
+  "citizenship": "US citizen",
+  "work_authorization": "Authorized to work in the US"
+ },
+ "workplace_preference": {
+  "preferred": [
+   "remote",
+   "hybrid"
+  ],
+  "acceptable": [
+   "on-site if Buffalo/WNY"
+  ],
+  "rejected": [
+   "relocation outside Buffalo/WNY"
+  ],
+  "verbatim": [
+   "'On-site is fine for Buffalo' (2026-08-06)",
+   "'hybrid or remote is preferred' (2026-08-06)"
+  ]
+ },
+ "seniority": [
+  "Principal",
+  "Staff+",
+  "Architect",
+  "Senior"
+ ],
+ "seniority_floor_note": "Below Principal/Staff (e.g. 'Implementation Engineer','Software Engineer') is deprioritized unless exceptional.",
+ "mandates": [
+  "agentic-compliance (flagship: sparta)",
+  "document-extraction (flagships: pdf_oxide, extractor)",
+  "agentic pipelines / LLM systems",
+  "verification-oriented AI"
+ ],
+ "eeo_standing": {
+  "gender": "Male",
+  "race_ethnicity": "White/Caucasian",
+  "veteran": "Not a protected veteran",
+  "disability": "No, not disabled"
+ },
+ "open_strategic_questions": {
+  "fte_vs_client": "UNRESOLVED \u2014 Graham pursuing both employment and consulting clients; affects ranking and whether a lead is an application or a client prospect.",
+  "resume_persona": "UNRESOLVED \u2014 bold framing (Sony God of War EP + DARPA ARCOS) vs careful ATS framing (verification-focused defense architect); different doors."
+ }
+}

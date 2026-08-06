@@ -1,7 +1,14 @@
 {
-  "schema": "monitor_opportunities.ranking_policy.v1",
-  "policy_version": "ranking.v1",
-  "shortlist_limit": 8,
-  "geography_priority": ["WNY_HYBRID", "WNY_ONSITE", "REMOTE"],
-  "non_claims": ["Ranking cannot override eligibility."]
+ "schema": "monitor_opportunities.ranking_policy.v1",
+ "policy_version": "ranking.v1",
+ "shortlist_limit": 8,
+ "geography_priority": [
+  "WNY_HYBRID",
+  "REMOTE",
+  "WNY_ONSITE"
+ ],
+ "non_claims": [
+  "Ranking cannot override eligibility."
+ ],
+ "geography_note": "Graham 2026-08-06: hybrid or remote preferred; Buffalo on-site acceptable but ranked below."
 }
