@@ -8,23 +8,23 @@
     {
       "slug": "tau",
       "name": "t'au",
-      "blurb": "Memory-first, zero-trust agent harness — DAG contracts, verdicts, receipts.",
+      "blurb": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "question": "Can agent execution be memory-first and zero-trust?"
+      "question": "Can an agent turn carry its own stop condition?"
     },
     {
       "slug": "battle",
       "name": "battle",
-      "blurb": "Red/blue-team genetic fuzzing arena for agents attacking agents.",
+      "blurb": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
-      "question": "Can red/blue adversarial search expose agent failure modes?"
+      "question": "Can evolved exploit code be judged by proof instead of plausibility?"
     },
     {
       "slug": "surf",
       "name": "surf",
-      "blurb": "Authenticated browser control for agents — real Chrome, real sessions.",
+      "blurb": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
-      "question": "Can agents drive a real, authenticated browser safely?"
+      "question": "Can an agent prove which real browser tab actually answered?"
     },
     {
       "slug": "persona-dream",
@@ -36,44 +36,44 @@
     {
       "slug": "extractor",
       "name": "extractor",
-      "blurb": "Documents into hierarchical evidence trees, not lossy text soup.",
+      "blurb": "Zero-choice document extraction: one file in, one truthful result envelope out.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
-      "question": "Can documents become evidence instead of text soup?"
+      "question": "Can document extraction hide every knob and still tell the truth?"
     },
     {
       "slug": "dogpile",
       "name": "dogpile",
-      "blurb": "Deep-research aggregator across arXiv, GitHub, YouTube, web, and workspace.",
+      "blurb": "Multi-source research with traceable citations and honest used/skipped/degraded provider reporting.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
-      "question": "Can one query sweep the whole research surface?"
+      "question": "Can a research sweep admit which sources it failed to reach?"
     },
     {
       "slug": "watch",
       "name": "watch",
-      "blurb": "Video that agents actually understand, frame by frame.",
+      "blurb": "Video into timestamped frames, transcript, and reports — evidence agents can re-query from memory.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
-      "question": "Can agents understand video rather than just transcribe it?"
+      "question": "Can video become timecode-aligned evidence an agent can query later?"
     },
     {
       "slug": "scillm",
       "name": "scillm",
-      "blurb": "One-shot, exec, subagent, and DAG orchestration over any model gateway.",
+      "blurb": "One execution surface for any model — chat, image, batch, tools, agents, receipts.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
-      "question": "How should agents orchestrate many models at once?"
+      "question": "Can provider glue live in one place instead of every skill?"
     },
     {
       "slug": "debugger",
       "name": "debugger",
-      "blurb": "Live breakpoints and variable state for agents — observe before patching.",
+      "blurb": "Real breakpoints and paused-frame state — prove runtime truth before patching.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
-      "question": "Why should an agent guess at runtime state?"
+      "question": "What was true at the moment the bug happened?"
     },
     {
       "slug": "sparta-explorer",
       "name": "sparta explorer",
-      "blurb": "Space-cyber evidence workbench: framework guidance to program evidence to human review.",
+      "blurb": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "href": "https://github.com/grahama1970/sparta-public",
-      "question": "Can space-cyber conclusions stay traceable to evidence?"
+      "question": "Can AI surface evidence without acquiring approval authority?"
     }
   ]
 }
