@@ -32,10 +32,32 @@ app = typer.Typer(help="Render role-based team plans and compile them into Tau D
 # Deterministic keyword → role inference. Deliberately simple: anything the
 # rules cannot infer becomes an /interview question instead of a model guess.
 ROLE_PATTERNS: list[tuple[str, str, str]] = [
-    (r"\bapi\b|\bbackend\b|\bpython\b|\bserver\b|\bendpoint", "backend", "api"),
-    (r"\bui\b|\breact\b|\bfrontend\b|\bdashboard\b|\bscreen", "frontend", "ui"),
-    (r"\bdocs?\b|\bdocumentation\b|\breadme\b", "documentation", "docs"),
-    (r"\btests?\b|\btesting\b|\bcoverage\b", "testing", "tests"),
+    (
+        r"\bapi\b|\bbackend\b|\bpython\b|\bserver\b|\bendpoint|\bdatabase\b|\bschema\b"
+        r"|\bmigrations?\b|\bpipeline\b|\bcli\b|\bdaemon\b|\bservice\b|\bworker\b"
+        r"|\brust\b|\bgolang\b|\bgo\b|\bsql\b|\bgraphql\b|\bwebhooks?\b|\bauth(entication)?\b",
+        "backend",
+        "api",
+    ),
+    (
+        r"\bui\b|\breact\b|\bfrontend\b|\bdashboard\b|\bscreen|\bcomponents?\b|\bcss\b"
+        r"|\bdesign\b|\blayout\b|\bpage\b|\bmodal\b|\bform\b|\bchart\b|\bvisuali[sz]"
+        r"|\bnext\.?js\b|\bvue\b|\bsvelte\b|\btypescript\b|\bwebsite\b|\bmobile\b|\bresponsive\b",
+        "frontend",
+        "ui",
+    ),
+    (
+        r"\bdocs?\b|\bdocumentation\b|\breadme\b|\bguide\b|\btutorial\b|\bchangelog\b"
+        r"|\bapi reference\b|\bwrite-?up\b|\bmanual\b|\bonboarding\b",
+        "documentation",
+        "docs",
+    ),
+    (
+        r"\btests?\b|\btesting\b|\bcoverage\b|\bqa\b|\bregression\b|\be2e\b"
+        r"|\bunit tests?\b|\bintegration tests?\b|\bbenchmarks?\b|\bvalidat",
+        "testing",
+        "tests",
+    ),
 ]
 
 

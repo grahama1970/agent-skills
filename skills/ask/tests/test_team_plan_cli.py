@@ -37,3 +37,24 @@ def test_workers_delegated_under_coordinator() -> None:
     for ws in plan["workstreams"]:
         if ws["role"] not in ("coordinator", "independent_reviewer"):
             assert ws["depends_on"] == ["coordinator"]
+
+
+def test_widened_vocabulary_backend_synonyms() -> None:
+    for phrase in ("add a database schema migration", "build a graphql service", "rust CLI with auth"):
+        plan = render_team_plan(phrase, repo="r", team="fullstack-premium")
+        assert any(ws["role"] == "backend" for ws in plan["workstreams"]), phrase
+
+
+def test_widened_vocabulary_frontend_and_docs_and_tests() -> None:
+    plan = render_team_plan(
+        "a responsive Next.js page with charts, an onboarding guide, and regression coverage",
+        repo="r",
+        team="fullstack-premium",
+    )
+    roles = {ws["role"] for ws in plan["workstreams"]}
+    assert {"frontend", "documentation", "testing"} <= roles
+
+
+def test_unmatched_request_still_fails_closed() -> None:
+    plan = render_team_plan("make it better please", repo="r", team="fullstack-premium")
+    assert plan["unresolved"] == ["workstreams"]
