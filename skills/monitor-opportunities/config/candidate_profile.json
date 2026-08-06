@@ -55,8 +55,18 @@
   "examples": {
    "defense/compliance": "lead ARCOS + SPARTA verification",
    "document-AI": "lead pdf_oxide + extractor",
-   "product/creative-systems": "lead worlds/creative-systems framing"
+   "product/creative-systems": "lead worlds/creative-systems framing",
+   "product/brand/creative-digital": "lead RealPie EP + Dentsu interactive leadership (Disney/Toyota/Cartoon Network/Bandai, global teams)"
   },
   "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented."
- }
+ },
+ "audiences": [
+  "defense/compliance",
+  "document-AI",
+  "agentic pipelines/LLM systems",
+  "product/brand/creative-digital leadership"
+ ],
+ "correction_log": [
+  "2026-08-06: 'Sony God of War Executive Producer' framing (Indeed resume) is INACCURATE and must not be used. Actual: Executive Producer (web) at RealPie leading ~12; Director of Interactive Services at Dentsu America, Santa Monica, major consumer brands, global teams."
+ ]
 }

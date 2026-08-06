@@ -111,6 +111,44 @@
     "LINKEDIN"
    ],
    "sensitivity": "public"
+  },
+  {
+   "claim_key": "claim:realpie:executive-producer-web",
+   "wordings": [
+    {
+     "wording_id": "w1",
+     "text": "Served as Executive Producer for web at RealPie, leading a team of about 12 people."
+    }
+   ],
+   "evidence_refs": [
+    "human_attested:graham:2026-08-06"
+   ],
+   "verification_status": "human_attested",
+   "allowed_channels": [
+    "resume",
+    "GMAIL",
+    "LINKEDIN"
+   ],
+   "sensitivity": "public"
+  },
+  {
+   "claim_key": "claim:dentsu:interactive-director",
+   "wordings": [
+    {
+     "wording_id": "w1",
+     "text": "Director of Interactive Services at Dentsu America (Santa Monica), delivering websites, games, and hardware projects for major brands including Disney, Toyota, Cartoon Network, and Bandai with globally distributed teams."
+    }
+   ],
+   "evidence_refs": [
+    "human_attested:graham:2026-08-06"
+   ],
+   "verification_status": "human_attested",
+   "allowed_channels": [
+    "resume",
+    "GMAIL",
+    "LINKEDIN"
+   ],
+   "sensitivity": "public"
   }
  ],
  "schema": "monitor_opportunities.claim_snapshot.v1"
