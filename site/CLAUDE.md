@@ -11,7 +11,18 @@ Display face Instrument Serif (self-hosted OFL); body system sans.
 program produced — inventory numbers, commit SHAs, paths. Never headlines.
 **No fabricated evidence:** no fake traces, no animated counters, no number
 that isn't emitted by `scripts/gen_inventory.py`. First-person voice ("I"),
-never "we". Zero animation; the site is exhibits, not theater.
+never "we".
+
+**Motion (operator override, 2026-08-07):** the original roundtable set "zero
+animation." The operator has since directed two deliberate, structural
+exceptions — both physical/real, not decorative theater:
+- the capability constellation is a live `d3-force` graph (repulsion +
+  collision + drag), matching the persona-dream node graph;
+- the search placeholder rotates through real client-style questions.
+Both honour `prefers-reduced-motion` (the constellation settles statically; the
+placeholder stops rotating), so the exhibits-not-theater posture still holds for
+that audience. No animated *evidence* — counters, traces, fake numbers — remains
+banned. Any further motion needs the same explicit operator sign-off.
 
 Direction set by a 4-seat /ask roundtable (webgpt, webclaude, webkimi,
 webgemini); packet + receipts in `reviews/grahama-co-roundtable/` and the

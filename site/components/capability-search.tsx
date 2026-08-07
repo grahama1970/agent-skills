@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MiniSearch from 'minisearch';
 import catalog from '@/catalog.json';
 
@@ -52,6 +52,18 @@ const EXAMPLES = [
   'video generation',
 ];
 
+// Client-style questions the placeholder rotates through, so a visitor sees the
+// range of "does Graham have experience with X" this search actually answers.
+const PROMPTS = [
+  'a voice agent that remembers previous conversations',
+  'generating compliance evidence from a control catalog',
+  'extracting tables and figures from messy PDFs',
+  'proving which browser tab an agent acted in',
+  'red-teaming an adaptive adversary over many rounds',
+  'reference-locked character generation for video',
+  'a memory layer over ArangoDB and Qdrant',
+];
+
 /**
  * Capability search: a client types a problem, gets ranked real work back.
  * Retrieval only selects/ranks — every href and label comes from the
@@ -59,8 +71,21 @@ const EXAMPLES = [
  */
 export function CapabilitySearch() {
   const [query, setQuery] = useState('');
+  const [promptIdx, setPromptIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const index = useMemo(buildIndex, []);
+
+  // Rotate the placeholder question while the box is empty. Honours reduced
+  // motion (stays on the first prompt) and pauses once the visitor types.
+  useEffect(() => {
+    if (query) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const id = window.setInterval(
+      () => setPromptIdx((i) => (i + 1) % PROMPTS.length),
+      3200,
+    );
+    return () => window.clearInterval(id);
+  }, [query]);
 
   const q = query.trim();
   const results = q
@@ -85,7 +110,7 @@ export function CapabilitySearch() {
         data-qid="search:input:capability"
         data-qs-action="SEARCH_CAPABILITY"
         title="Type a problem or capability to find matching projects and skills"
-        placeholder="e.g. a voice agent that remembers previous conversations"
+        placeholder={`e.g. ${PROMPTS[promptIdx]}`}
         autoComplete="off"
       />
       {!q && (

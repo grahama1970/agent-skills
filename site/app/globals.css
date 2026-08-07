@@ -2361,12 +2361,31 @@ a:hover .c-img { opacity: 1; }
 }
 .c-node--project { cursor: pointer; }
 .c-node.is-dim { opacity: 0.28; }
-.c-practice {
+.c-mark {
   font-family: var(--serif);
-  font-style: italic;
-  font-size: 19px;
-  fill: var(--text);
-  font-variation-settings: 'SOFT' 80, 'opsz' 30;
+  font-size: 46px;
+  fill: var(--brass);
+  font-variation-settings: 'SOFT' 40, 'opsz' 48;
+  pointer-events: none;
+}
+.constellation-hint {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+  text-transform: uppercase;
+}
+.constellation-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 .c-alabel {
   font-family: var(--serif);

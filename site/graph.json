@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "683f9b1f3",
+  "sourceCommit": "8636c7bb5",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -17,7 +17,8 @@
       "type": "area",
       "label": "Agentic pipelines & orchestration",
       "lens": "technical",
-      "skillCount": 49
+      "skillCount": 49,
+      "img": "tau"
     },
     {
       "id": "project:tau",
@@ -72,7 +73,8 @@
       "type": "area",
       "label": "Agentic memory & persona",
       "lens": "hybrid",
-      "skillCount": 28
+      "skillCount": 28,
+      "img": "persona-dream"
     },
     {
       "id": "project:persona-dream",
@@ -91,7 +93,8 @@
       "type": "area",
       "label": "Extraction & evidence",
       "lens": "technical",
-      "skillCount": 66
+      "skillCount": 66,
+      "img": "extractor"
     },
     {
       "id": "project:extractor",
@@ -134,7 +137,8 @@
       "type": "area",
       "label": "Compliance, security & governance",
       "lens": "technical",
-      "skillCount": 55
+      "skillCount": 55,
+      "img": "sparta-explorer"
     },
     {
       "id": "project:sparta-explorer",
@@ -153,7 +157,8 @@
       "type": "area",
       "label": "Adaptive-lineage hacking",
       "lens": "technical",
-      "skillCount": 1
+      "skillCount": 1,
+      "img": "battle"
     },
     {
       "id": "project:battle",

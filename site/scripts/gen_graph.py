@@ -48,8 +48,16 @@ def main() -> None:
         # constellation shows the technical AND creative halves — the point of
         # the balanced landing view. Areas may have skills but no flagship.
         aid = f"area:{a['id']}"
-        nodes.append({"id": aid, "type": "area", "label": a["title"],
-                      "lens": a["lens"], "skillCount": a["skillCount"]})
+        # Representative image: the area's lead (first) flagship project, so the
+        # oval carries a real image from that area. Skills-only areas (no
+        # flagship) stay imageless — a glow disc — rather than borrow a photo
+        # that would misrepresent them.
+        lead_img = a["systems"][0]["slug"] if a["systems"] else None
+        area_node = {"id": aid, "type": "area", "label": a["title"],
+                     "lens": a["lens"], "skillCount": a["skillCount"]}
+        if lead_img:
+            area_node["img"] = lead_img
+        nodes.append(area_node)
         edges.append({"source": "practice", "target": aid, "rel": "area"})
         for s in a["systems"]:
             slug = s["slug"]

@@ -1,6 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceRadial,
+  forceSimulation,
+  forceX,
+  forceY,
+  type Simulation,
+} from 'd3-force';
 import graph from '@/graph.json';
 
 interface GNode {
@@ -20,6 +31,16 @@ interface GEdge {
   target: string;
   rel: string;
 }
+// Mutable simulation node: d3-force writes x/y/vx/vy/fx/fy onto it in place.
+type SimNode = GNode & {
+  x: number;
+  y: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+};
+type SimEdge = { source: SimNode; target: SimNode; rel: string };
 
 const NODES = graph.nodes as GNode[];
 const EDGES = graph.edges as GEdge[];
@@ -28,8 +49,6 @@ const W = 1120;
 const H = 940;
 const CX = W / 2;
 const CY = H / 2;
-const R_AREA = 214;
-const R_PROJ = 372;
 
 // Concrete colours (drop-shadow glow needs a real colour, not a CSS var).
 const GLOW: Record<string, string> = {
@@ -38,48 +57,131 @@ const GLOW: Record<string, string> = {
   hybrid: '#93a289',
 };
 
-function polar(deg: number, r: number): [number, number] {
-  const a = (deg * Math.PI) / 180;
-  return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
-}
+const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
+// The ring the node settles onto — keeps the physics legible instead of a hairball.
+const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 210 : 366);
 
 /**
- * Capability constellation — image-filled glowing nodes on a dark field, in the
- * spirit of the persona-dream graph. Deterministic radial layout (settles
- * instantly, no physics); explicit edges only; projects carry their real
- * concept image, private work a dashed ring. Warm brass/ember/sage palette.
+ * Capability constellation — a live d3-force graph in the spirit of the
+ * persona-dream node graph: charge repulsion so nodes push apart, collision so
+ * they never overlap, and draggable nodes that re-settle. The practice hub is
+ * pinned at centre; a light radial force biases areas to an inner ring and
+ * projects to an outer one so the structure stays readable. Image-filled
+ * glowing ovals; private work a dashed ring. Warm brass/ember/sage palette.
  */
 export function CapabilityConstellation() {
+  const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const [, force] = useState(0); // bump to re-render from mutated sim positions
+  const drag = useRef<{ id: string } | null>(null);
 
-  const pos = useMemo(() => {
-    const areas = NODES.filter((n) => n.type === 'area');
-    const projByArea = new Map<string, GNode[]>();
-    for (const e of EDGES) {
-      if (e.rel === 'system') {
-        const arr = projByArea.get(e.source) ?? [];
-        arr.push(NODES.find((n) => n.id === e.target)!);
-        projByArea.set(e.source, arr);
-      }
-    }
-    const p = new Map<string, [number, number]>();
-    p.set('practice', [CX, CY]);
-    const lensRank: Record<string, number> = { technical: 0, hybrid: 1, creative: 2 };
-    const ordered = [...areas].sort(
-      (a, b) => (lensRank[a.lens!] - lensRank[b.lens!]) || a.id.localeCompare(b.id),
-    );
-    const n = ordered.length;
-    ordered.forEach((a, i) => {
-      const angle = -90 + (i / n) * 360;
-      p.set(a.id, polar(angle, R_AREA));
-      const projs = projByArea.get(a.id) ?? [];
-      projs.forEach((pr, j) => {
-        const t = projs.length === 1 ? 0 : j / (projs.length - 1) - 0.5;
-        p.set(pr.id, polar(angle + t * (360 / n) * 0.92, R_PROJ));
-      });
+  // Stable simulation nodes/edges (built once; d3 mutates them across ticks).
+  const { simNodes, simEdges, byId } = useMemo(() => {
+    const nodes: SimNode[] = NODES.map((n) => {
+      const orbit = orbitOf(n.type);
+      // Seed on the target ring so the first frame is already close to settled.
+      const a = (NODES.indexOf(n) / NODES.length) * Math.PI * 2;
+      return {
+        ...n,
+        x: CX + orbit * Math.cos(a),
+        y: CY + orbit * Math.sin(a),
+        fx: n.type === 'practice' ? CX : null,
+        fy: n.type === 'practice' ? CY : null,
+      };
     });
-    return p;
+    const map = new Map(nodes.map((n) => [n.id, n]));
+    const edges: SimEdge[] = EDGES.map((e) => ({
+      source: map.get(e.source)!,
+      target: map.get(e.target)!,
+      rel: e.rel,
+    }));
+    return { simNodes: nodes, simEdges: edges, byId: map };
   }, []);
+
+  useEffect(() => {
+    const sim: Simulation<SimNode, SimEdge> = forceSimulation(simNodes)
+      .force(
+        'link',
+        forceLink<SimNode, SimEdge>(simEdges)
+          .id((d) => d.id)
+          .distance((e) => (e.rel === 'area' ? 150 : 96))
+          .strength(0.5),
+      )
+      .force('charge', forceManyBody().strength(-460)) // repulsion (persona-dream uses -200)
+      .force('collide', forceCollide<SimNode>((d) => radiusOf(d.type) + 24).strength(1)) // no overlap
+      .force('radial', forceRadial<SimNode>((d) => orbitOf(d.type), CX, CY).strength(0.28))
+      .force('x', forceX(CX).strength(0.03))
+      .force('y', forceY(CY).strength(0.03))
+      .force('center', forceCenter(CX, CY).strength(0.02));
+
+    // Reduced motion: settle synchronously and render once — no animation,
+    // honouring the site's exhibits-not-theater posture for that audience.
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      sim.stop();
+      for (let i = 0; i < 320; i += 1) sim.tick();
+      force((t) => t + 1);
+    } else {
+      sim.on('tick', () => force((t) => t + 1));
+    }
+    return () => {
+      sim.stop();
+    };
+  }, [simNodes, simEdges]);
+
+  // Convert a pointer event to viewBox coordinates for dragging.
+  const toLocal = (clientX: number, clientY: number): [number, number] => {
+    const svg = svgRef.current!;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const m = svg.getScreenCTM();
+    if (!m) return [CX, CY];
+    const p = pt.matrixTransform(m.inverse());
+    return [p.x, p.y];
+  };
+
+  useEffect(() => {
+    const move = (ev: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      ev.preventDefault();
+      const node = byId.get(d.id);
+      if (!node) return;
+      const [x, y] = toLocal(ev.clientX, ev.clientY);
+      node.fx = x;
+      node.fy = y;
+      force((t) => t + 1);
+    };
+    const up = () => {
+      const d = drag.current;
+      if (d) {
+        const node = byId.get(d.id);
+        // Release everything except the pinned hub.
+        if (node && node.type !== 'practice') {
+          node.fx = null;
+          node.fy = null;
+        }
+      }
+      drag.current = null;
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+  }, [byId]);
+
+  const startDrag = (n: SimNode) => (ev: React.PointerEvent) => {
+    if (n.type === 'practice') return; // hub stays put
+    ev.preventDefault();
+    drag.current = { id: n.id };
+    n.fx = n.x;
+    n.fy = n.y;
+  };
 
   const connected = (id: string) =>
     hover === null ||
@@ -93,80 +195,78 @@ export function CapabilityConstellation() {
     <figure className="constellation" aria-label="How the practice connects">
       <figcaption className="constellation-cap">
         One practice — technical and creative work, connected by real structure.
+        <span className="constellation-hint"> Drag a node.</span>
       </figcaption>
       <div className="constellation-field">
-        <svg viewBox={`0 0 ${W} ${H}`} className="constellation-svg" role="img">
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="constellation-svg" role="img">
           <defs>
-            {NODES.filter((n) => n.img).map((n) => {
-              const xy = pos.get(n.id);
-              if (!xy) return null;
-              return (
-                <clipPath id={`clip-${n.slug}`} key={n.id}>
-                  <circle cx={xy[0]} cy={xy[1]} r={33} />
+            {simNodes
+              .filter((n) => n.img)
+              .map((n) => (
+                <clipPath id={`clip-${n.id}`} key={n.id}>
+                  <circle cx={n.x} cy={n.y} r={radiusOf(n.type)} />
                 </clipPath>
-              );
-            })}
+              ))}
           </defs>
 
-          {EDGES.map((e) => {
-            const s = pos.get(e.source);
-            const t = pos.get(e.target);
-            if (!s || !t) return null;
-            const mx = (s[0] + t[0]) / 2 + (CX - (s[0] + t[0]) / 2) * 0.14;
-            const my = (s[1] + t[1]) / 2 + (CY - (s[1] + t[1]) / 2) * 0.14;
-            const on = connected(e.source) && connected(e.target);
+          {simEdges.map((e) => {
+            const s = e.source;
+            const t = e.target;
+            const mx = (s.x + t.x) / 2 + (CX - (s.x + t.x) / 2) * 0.14;
+            const my = (s.y + t.y) / 2 + (CY - (s.y + t.y) / 2) * 0.14;
+            const on = connected(e.source.id) && connected(e.target.id);
             return (
               <path
-                key={`${e.source}-${e.target}`}
-                d={`M ${s[0]} ${s[1]} Q ${mx} ${my} ${t[0]} ${t[1]}`}
+                key={`${e.source.id}-${e.target.id}`}
+                d={`M ${s.x} ${s.y} Q ${mx} ${my} ${t.x} ${t.y}`}
                 className={`c-edge${on ? ' is-on' : ''}`}
               />
             );
           })}
 
-          {NODES.map((n) => {
-            const xy = pos.get(n.id);
-            if (!xy) return null;
-            const [x, y] = xy;
+          {simNodes.map((n) => {
+            const { x, y } = n;
             const on = connected(n.id);
             const glow = n.lens ? GLOW[n.lens] : '#a99787';
+            const r = radiusOf(n.type);
 
             if (n.type === 'practice') {
               return (
                 <g key={n.id} className={`c-node${on ? '' : ' is-dim'}`}>
-                  <circle cx={x} cy={y} r={52} className="c-core" />
+                  <circle cx={x} cy={y} r={r} className="c-core" />
                   <circle
                     cx={x}
                     cy={y}
-                    r={52}
+                    r={r}
                     className="c-ring c-ring--core"
                     style={{ filter: `drop-shadow(0 0 10px rgba(226,172,98,.55))` }}
                   />
-                  <text x={x} y={y + 5} textAnchor="middle" className="c-practice">
-                    one practice
+                  <text x={x} y={y + 15} textAnchor="middle" className="c-mark">
+                    G
                   </text>
                 </g>
               );
             }
 
             const isProj = n.type === 'project';
-            const r = isProj ? 33 : 24;
             const priv = n.visibility && n.visibility !== 'public';
             const inner = (
               <g
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover(null)}
+                onPointerDown={startDrag(n)}
+                style={{ cursor: 'grab' }}
               >
                 <circle cx={x} cy={y} r={r} className="c-core" />
-                {isProj && n.img && (
+                {n.img && (
                   <image
                     href={`/projects/${n.img}.webp`}
                     x={x - r}
                     y={y - r}
                     width={r * 2}
                     height={r * 2}
-                    clipPath={`url(#clip-${n.slug})`}
+                    clipPath={`url(#clip-${n.id})`}
                     preserveAspectRatio="xMidYMid slice"
                     className="c-img"
                   />
@@ -219,6 +319,21 @@ export function CapabilityConstellation() {
         <span className="cl cl--creative">creative</span>
         <span className="cl-note">dashed ring = private work, public overview only</span>
       </p>
+      {/* Text alternative for the graph (d3 a11y): the same structure, read linearly. */}
+      <ul className="constellation-sr">
+        {NODES.filter((n) => n.type === 'area').map((a) => {
+          const projs = EDGES.filter((e) => e.source === a.id).map(
+            (e) => byId.get(e.target)?.label,
+          );
+          return (
+            <li key={a.id}>
+              {a.label}
+              {a.skillCount ? ` (${a.skillCount} skills)` : ''}
+              {projs.length ? `: ${projs.join(', ')}` : ''}
+            </li>
+          );
+        })}
+      </ul>
     </figure>
   );
 }
