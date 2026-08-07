@@ -1242,6 +1242,22 @@ footer a:hover {
 /* --- responsive ------------------------------------------- */
 @media (max-width: 1080px) {
   .hero-main { grid-column: 1 / span 12; }
+  /* Stacked viewports: put the offer, buyer line and CTA before the long
+     biography so a visitor reaches the value without scrolling past a résumé.
+     Copy is unchanged — only the visual order is. */
+  .hero-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-main > .eyebrow { order: 1; }
+  .hero-main > h1 { order: 2; }
+  .hero-main > .hero-outcomes { order: 3; }
+  .hero-main > .hero-intake { order: 4; }
+  .hero-main > .hero-actions { order: 5; }
+  .hero-main > .hero-bio {
+    order: 6;
+    margin-top: clamp(1.4rem, 4vw, 2.2rem);
+  }
   .hero-side { grid-column: 1 / span 12; padding-top: 0; }
   .figs { grid-template-columns: repeat(3, 1fr); }
   .fig { grid-template-columns: 1fr; border-bottom: 0; gap: 0.25rem; }
