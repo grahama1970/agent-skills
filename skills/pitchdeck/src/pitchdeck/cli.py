@@ -390,6 +390,7 @@ def render_document_cmd(
     output: Annotated[Path, typer.Option(help="Output HTML path (self-contained).")],
     asset_base: Annotated[Path, typer.Option(help="Base dir for relative asset paths (usually the bundle dir).")],
     theme_template: Annotated[Path | None, typer.Option(help="pitchdeck.theme_template.v1 JSON; default house-light.")] = None,
+    preview: Annotated[bool, typer.Option("--preview", help="Allow rendering a preview-stamped document (HTML only, for review).")] = False,
 ) -> None:
     """Render a canonical deck document to house-native self-contained HTML."""
     import json as json_mod
@@ -399,7 +400,7 @@ def render_document_cmd(
 
     try:
         doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
-        html_text = render_document_html(doc, asset_base=asset_base, theme_template=theme_template)
+        html_text = render_document_html(doc, asset_base=asset_base, theme_template=theme_template, preview=preview)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(html_text, encoding="utf-8")
         typer.echo(json_mod.dumps({"status": "PASS", "output": str(output.resolve()), "slides": len(doc.slides)}, indent=1))
@@ -490,6 +491,8 @@ def propose_renderings_cmd(
         for module in model.modules:
             renderings = list(module.renderings)
             for prop in [p for p in agent_props if p["module"] == module.module]:
+                if prop["claim_id"] not in module.candidate_claim_ids:
+                    raise ValueError(f"claim '{prop['claim_id']}' is not among module '{module.module}' candidate claims — cross-scope binding refused")
                 rendering = verify_rendering(
                     AssertionRendering(claim_id=prop["claim_id"], text=prop["text"], transform_class=prop["transform_class"]),
                     claims[prop["claim_id"]],

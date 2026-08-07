@@ -91,6 +91,7 @@ class AssertionRendering(StrictModel):
     transform_class: Literal["truncation", "inflection", "generalization"]
     status: Literal["candidate", "approved"] = "candidate"
     approved_by: str | None = None
+    risk_flags: list[str] = Field(default_factory=list, description="Guarded-span findings shown to the human; never auto-cleared.")
 
     @model_validator(mode="after")
     def approval_provenance(self) -> "AssertionRendering":
@@ -121,7 +122,20 @@ def verify_rendering(rendering: AssertionRendering, claim_text: str) -> Assertio
         raise ValueError(
             f"rendering '{text[:40]}' claims {rendering.transform_class} but is not a word-boundary excerpt of the claim"
         )
-    return rendering.model_copy(update={"transform_class": cls})
+    # Guarded-span check (2026-08-07 review): lexical excerpts can invert
+    # meaning by dropping polarity/modality/scope guards. Flags are shown to
+    # the human and NEVER auto-cleared — classification is not approval.
+    guards = ("not", "no", "without", "never", "unless", "except", "only", "can", "may",
+              "must", "planned", "candidate", "current", "today", "before", "after")
+    flags: list[str] = []
+    lower_claim, lower_text = claim_text.lower(), text.lower()
+    dropped = [g for g in guards if f" {g} " in f" {lower_claim} " and f" {g} " not in f" {lower_text} "]
+    if cls in {"truncation", "inflection"} and dropped:
+        flags.append(f"excerpt drops guard word(s) {dropped} — verify polarity/scope against the full claim")
+    added = [g for g in ("today", "now", "must", "will", "always", "never") if f" {g} " in f" {lower_text} " and f" {g} " not in f" {lower_claim} "]
+    if added:
+        flags.append(f"rendering ADDS guard word(s) {added} not present in the claim")
+    return rendering.model_copy(update={"transform_class": cls, "risk_flags": flags})
 
 
 def propose_truncations(claim_text: str, *, max_words: int = 10) -> list[str]:

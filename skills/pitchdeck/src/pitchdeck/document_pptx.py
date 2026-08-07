@@ -366,6 +366,9 @@ def emit_document_pptx(
     asset_base: Path,
     theme_template: Path | None = None,
 ) -> dict:
+    from .publish_gate import assert_publishable
+
+    assert_publishable(document)
     theme = _load_theme(theme_template)
     palette = theme["palette"]
     scale = theme.get("type_scale_pt", {"body": 20, "support": 16, "title": 28})

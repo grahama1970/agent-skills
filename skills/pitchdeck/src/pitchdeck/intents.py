@@ -106,7 +106,7 @@ def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_rend
     assertion = module.candidate_assertions[0]
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
         raise ValueError(f"LABEL_HEADLINE: module '{module.module}' assertion '{assertion}' is a label, not a takeaway")
-    return assertion, module.candidate_claim_ids[0], "truncation"
+    return assertion, module.candidate_claim_ids[0], "verbatim"
 
 
 def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False) -> DocSlide:
@@ -133,8 +133,10 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                binding_paths=["title"] if claim_id else []))
     if claim_id:
         kind_map = {"truncation": BindingKind.CLAIM_QUOTE, "inflection": BindingKind.CLAIM_QUOTE, "generalization": BindingKind.CLAIM_PARAPHRASE}
+        # verbatim fallback = untransformed quote, never falsely labeled truncation
+        transform_value = None if transform in {"non_claim", "verbatim"} else transform
         bindings.append(TextBinding(path="title", kind=kind_map.get(transform, BindingKind.CLAIM_QUOTE), claim_id=claim_id,
-                                    transform_class=transform if transform != "non_claim" else None))
+                                    transform_class=transform_value))
 
     if "message" in {r.value for r in recipe.required_roles}:
         message_text = tagline or module.purpose

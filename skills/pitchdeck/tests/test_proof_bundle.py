@@ -1198,3 +1198,28 @@ def test_assertion_rendering_flow():
     # auto candidates respect word boundaries and cap
     for candidate in propose_truncations(claim, max_words=10):
         assert len(candidate.split()) <= 10 and not candidate.endswith((",", ";", "-"))
+
+
+def test_publish_gate_and_guarded_spans():
+    """2026-08-07 rendering review: preview documents refuse publishable
+    emission (typed, before any output); guarded-span flags surface dropped
+    or added guard words; negation-stripped excerpts are flagged."""
+    import json
+
+    import pytest as _pytest
+
+    from pitchdeck.document import DeckDocument
+    from pitchdeck.planning import AssertionRendering, verify_rendering
+    from pitchdeck.publish_gate import PublishRefused, assert_publishable
+
+    preview = json.loads(Path("/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/preview-renderings.document.json").read_text())
+    doc = DeckDocument.model_validate(preview)
+    with _pytest.raises(PublishRefused, match="PREVIEW_UNAPPROVED_RENDERINGS"):
+        assert_publishable(doc)
+    assert_publishable(doc, allow_preview=True)  # explicit preview surfaces only
+
+    claim = "Search can identify relevant material without establishing that evidence supports the conclusion."
+    stripped = verify_rendering(AssertionRendering(claim_id="c", text="evidence supports the conclusion", transform_class="truncation"), claim)
+    assert stripped.risk_flags and "without" in stripped.risk_flags[0]
+    temporal = verify_rendering(AssertionRendering(claim_id="c", text="The surfaces exist today", transform_class="generalization"), claim)
+    assert any("ADDS" in f for f in temporal.risk_flags)

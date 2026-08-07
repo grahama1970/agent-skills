@@ -265,8 +265,12 @@ def render_document_html(
     asset_base: Path,
     theme_template: Path | None = None,
     title: str | None = None,
+    preview: bool = False,
 ) -> str:
     """One self-contained HTML page: each slide a 16:9 canvas in house chrome."""
+    from .publish_gate import assert_publishable
+
+    assert_publishable(document, allow_preview=preview)
     theme = _load_theme(theme_template)
     palette = theme["palette"]
     band = theme.get("chrome", {}).get("header_band", {})
