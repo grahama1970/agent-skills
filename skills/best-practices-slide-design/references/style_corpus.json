@@ -1,0 +1,220 @@
+{
+ "schema": "pitchdeck.style_corpus.v1",
+ "exemplars": [
+  {
+   "id": "cybersummit-01-cover",
+   "rule": "cover-brand",
+   "kind": "exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    1
+   ],
+   "audience": "conference",
+   "rationale": "Wordmark + one-phrase tagline + brand glyph; ~5 words.",
+   "image": "assets/cybersummit-01-cover.png",
+   "image_sha256": "53085b52667115561ec824c71b714ce1dfa5ca5566f05480e5f3753cbe67e687",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-04-problem-solution",
+   "rule": "distance-legibility-chrome",
+   "kind": "exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    4
+   ],
+   "audience": "conference",
+   "rationale": "Teal band + white title separates header from body at 5-20ft; color-coded label prefixes.",
+   "image": "assets/cybersummit-04-problem-solution.png",
+   "image_sha256": "2b22868513fcca52a36b922454fc96a1fce18ad91fb6156a996192aec69fc3b7",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-12-how-diagram",
+   "rule": "one-big-diagram",
+   "kind": "exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    12
+   ],
+   "audience": "conference",
+   "rationale": "Process slide carried by ONE large line-art diagram.",
+   "image": "assets/cybersummit-12-how-diagram.png",
+   "image_sha256": "682bb76ac5e1909ce42424a20682cb0ca819b4372e01379d95e7f7c8195fecdb",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-18-multichannel",
+   "rule": "multi-channel-reinforcement",
+   "kind": "exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    18
+   ],
+   "audience": "conference",
+   "rationale": "Headline asserts, chevrons state, diagram shows, badge sets register \u2014 one idea.",
+   "image": "assets/cybersummit-18-multichannel.png",
+   "image_sha256": "95988ea09c990df9f216a6eddcc91102c06eebb643ae3d347a9b627bade7e86d",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-21-ANTIPATTERN-wall",
+   "rule": "density-5x5",
+   "kind": "anti-exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    21
+   ],
+   "audience": "conference",
+   "rationale": "224-word wall; the lint exists because taste alone does not hold.",
+   "image": "assets/cybersummit-21-ANTIPATTERN-wall.png",
+   "image_sha256": "3808c1fc4defc319302d54341b8c21fe26a63d3435a3c6409edb8a1575a88a02",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-42-manual-build-1",
+   "rule": "builds-are-fragments",
+   "kind": "anti-exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    42,
+    43,
+    44,
+    45
+   ],
+   "audience": "conference",
+   "rationale": "Duplicated slides hand-fake a build; fragments replace this.",
+   "image": "assets/cybersummit-42-manual-build-1.png",
+   "image_sha256": "8ebc2004940200f864db81168dd5ace938ef3c2c2fa0b5a3af6e33a6f8e731f2",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-43-manual-build-2",
+   "rule": "builds-are-fragments",
+   "kind": "anti-exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    42,
+    43,
+    44,
+    45
+   ],
+   "audience": "conference",
+   "rationale": "Second frame of the duplicated-slide build run.",
+   "image": "assets/cybersummit-43-manual-build-2.png",
+   "image_sha256": "ba6a1972d2dd1a6854da5c2aa3f5e0feb15199a058c845709fd9b9c7c229769b",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "cybersummit-49-assertion-humor",
+   "rule": "headline-as-assertion",
+   "kind": "exemplar",
+   "source_deck": "SpartaAI_CyberSummitv_v3.pptx",
+   "source_deck_sha256": "b923ca159a2f75994acc8d401f7784a514dd0bac43e011ff464c9e62ef2e43d5",
+   "source_classification": "private-local",
+   "slides": [
+    49
+   ],
+   "audience": "conference",
+   "rationale": "Assertion headline + humor as retention (Pluto as heat sink).",
+   "image": "assets/cybersummit-49-assertion-humor.png",
+   "image_sha256": "3b03483d043562c43e249f8d33697586eea28e1f7bc039f50293d5123fad3fa1",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "ftworth-04-pipeline-position",
+   "rule": "audience-required-slides",
+   "kind": "exemplar",
+   "source_deck": "ACERT_Darpa_PI_Meeting_FtWorth.pptx",
+   "source_deck_sha256": "3a7d8a53782173db133639702fc2fb3d4ad8dfd3cae94ddf9ed1db82d49286d8",
+   "source_classification": "private-local",
+   "slides": [
+    4
+   ],
+   "audience": "program-review",
+   "rationale": "PI reviews require an early pipeline-position slide.",
+   "image": "assets/ftworth-04-pipeline-position.png",
+   "image_sha256": "e77d2058610e334c9911c08fd2c9c31cbb4af52f3d3483692674afe7db794db9",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "reqml-04-pipeline-position",
+   "rule": "audience-required-slides",
+   "kind": "exemplar",
+   "source_deck": "ReqML_GE_Presentation.pptx",
+   "source_deck_sha256": "d45b3153e7d595d388a361663793ede1481972125e544b65d78b68c46c3e01b2",
+   "source_classification": "private-local",
+   "slides": [
+    4
+   ],
+   "audience": "program-review",
+   "rationale": "Same required slide in a second program-review deck.",
+   "image": "assets/reqml-04-pipeline-position.png",
+   "image_sha256": "8c5e88576ba89f1acbd050758ee94c2500e5c6660de3b88831cdb79d8064c0a6",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  },
+  {
+   "id": "reqml-12-statement-slide",
+   "rule": "thesis-as-statement",
+   "kind": "exemplar",
+   "source_deck": "ReqML_GE_Presentation.pptx",
+   "source_deck_sha256": "d45b3153e7d595d388a361663793ede1481972125e544b65d78b68c46c3e01b2",
+   "source_classification": "private-local",
+   "slides": [
+    12
+   ],
+   "audience": "program-review",
+   "rationale": "One 112pt assertion + one icon: the correct thesis form.",
+   "image": "assets/reqml-12-statement-slide.png",
+   "image_sha256": "4de78782d0466309aba2a582902a269166f6d789754350ff81fae825c998420d",
+   "render_tools": {
+    "soffice": "LibreOffice 24.x impress_pdf_Export",
+    "pdftoppm": "poppler -r 55"
+   }
+  }
+ ]
+}
