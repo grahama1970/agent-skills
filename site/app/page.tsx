@@ -104,12 +104,6 @@ export default function Home() {
                   High-end creative and hard technical work — delivered by the
                   same person, shipped as working code, in public.
                 </p>
-                <p className="hero-outcomes rise" style={{ ['--d' as string]: '.34s' }}>
-                  In practice: <b>verifiable audit trails</b>,{' '}
-                  <b>zero-trust execution</b>, <b>no silent failures</b> — for
-                  workflows where &quot;probably fine&quot; isn&apos;t good
-                  enough.
-                </p>
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
                   <a
                     className="btn"
@@ -130,11 +124,6 @@ export default function Home() {
                     Read the code
                   </a>
                 </div>
-                <p className="hero-ip rise" style={{ ['--d' as string]: '.43s' }}>
-                  You own everything I build — standard Python, Rust, Lean 4,
-                  Docker targets, and the audit receipts. No proprietary runtime,
-                  no seat licenses, no dependency on me after the engagement ends.
-                </p>
                 <p className="hero-intake rise" style={{ ['--d' as string]: '.46s' }}>
                   Principal R&amp;D capacity for the agent problems a roadmap
                   can&apos;t prioritize — non-deterministic behavior, formal
