@@ -258,7 +258,15 @@ async function checkLoginStatus(cdp) {
   const result = await evaluate(cdp, `(() => {
     const body = document.body.innerText.toLowerCase();
     const hasLoginButton = !!document.querySelector('a[href*="/login"], [data-testid="loginButton"]');
-    const hasGrokUI = body.includes('ask anything') || body.includes('grok');
+    // Standalone grok.com's authenticated home shows a composer and sidebar nav
+    // ("new chat", "imagine", "projects") but NOT the literal text 'grok'/'ask
+    // anything' (logo is an image). Detect the real logged-in signal, not stale
+    // marketing copy (agent-skills#1265).
+    const isGrokHost = /(^|\\.)grok\\.com$/i.test(location.hostname);
+    const hasComposer = !!document.querySelector('textarea, [contenteditable="true"][role="textbox"], [data-testid="grokComposerInput"]');
+    const hasAuthedNav = body.includes('new chat') || body.includes('imagine') ||
+                         body.includes('ask anything') || body.includes('grok');
+    const hasGrokUI = hasAuthedNav || (isGrokHost && hasComposer);
     const hasPremiumPrompt = body.includes('subscribe') || body.includes('premium required');
 
     return {
