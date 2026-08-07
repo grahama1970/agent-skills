@@ -336,3 +336,35 @@ export type SimulationNodeDatum = {
   fx?: number | null
   fy?: number | null
 }
+
+
+/** Minimal stand-in for d3's ZoomTransform; see SimulationNodeDatum above. */
+export type ZoomTransform = { k: number; x: number; y: number }
+
+
+/** Minimal stand-in for d3's SimulationLinkDatum; see SimulationNodeDatum. */
+export type SimulationLinkDatum<T> = { source: T | string | number; target: T | string | number; index?: number }
+
+
+/**
+ * One row of the provider-contract panel table.
+ *
+ * Two `.map()` branches build these with different shapes, so inference produced
+ * a union whose members lacked each other's fields. Declaring the row once makes
+ * the optional members explicit instead of an accident of which branch ran.
+ */
+export type ProviderContractPanelRow = {
+  panelId: string
+  start?: Record<string, unknown>
+  end?: Record<string, unknown>
+  duration?: unknown
+  selected: boolean
+  sourceEvidence?: Record<string, unknown> | null
+  distillation?: Record<string, unknown> | null
+  dialogue?: Record<string, unknown>[]
+  submittedPrompt?: Record<string, unknown> | null
+  sourceShot?: Record<string, unknown> | null
+  lookLock?: Record<string, unknown> | null
+  panelRequestJson: string
+  panelSummary: string
+}

@@ -1,0 +1,91 @@
+/**
+ * pin styles, split out of the 4,439-line `nvis` object.
+ *
+ * Styles live beside the surface that uses them so a panel can be extracted
+ * with its own visual vocabulary instead of reaching into one global bag.
+ */
+import type { CSSProperties } from 'react'
+
+export const pinStyles: Record<string, CSSProperties> = {
+  pinPillBtn: {
+    height: 28,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'rgba(0,0,0,0.55)',
+    color: '#fff',
+    padding: '0 12px',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    backdropFilter: 'blur(10px)',
+  },
+  pinCallout: {
+    position: 'absolute',
+    left: 'calc(100% + 10px)',
+    top: 0,
+    width: 240,
+    background: '#050505',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    padding: 16,
+    zIndex: 1000,
+    pointerEvents: 'none',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+  },
+  pinHudHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  pinHudTitle: {
+    color: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  pinHudBody: {
+    fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    fontSize: 11,
+    lineHeight: 1.6,
+    color: '#94a3b8',
+  },
+  pinHudFooter: {
+    marginTop: 12,
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontSize: 9,
+    color: '#4a9eff',
+    textTransform: 'uppercase',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  pinTextBtn: {
+    height: 24,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 0,
+    border: 0,
+    background: 'transparent',
+    color: '#4a9eff',
+    padding: 0,
+    fontSize: 9,
+    fontWeight: 800,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+  },
+}
