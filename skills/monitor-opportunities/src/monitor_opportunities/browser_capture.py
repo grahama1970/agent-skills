@@ -467,22 +467,29 @@ def capture_linkedin_advanced_search(
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
         for qi, query in enumerate(queries):
-            if qi > 0:
-                _surf(surf_run, "js", "--tab-id", tab_id, f"(function(){{location.href={json.dumps(query['url'])}; return 'NAV';}})()")
-            _surf(surf_run, "wait", "6")
-            wall = _surf(
-                surf_run,
-                "js",
-                "--tab-id",
-                tab_id,
-                "(function(){return (document.body.innerText.toLowerCase().indexOf('sign in to')>=0 || location.href.indexOf('/login')>=0) ? 'WALL' : 'OK';})()",
-            )
-            if "WALL" in wall:
-                receipt["status"] = "AUTH_REQUIRED"
-                receipt["error"] = "LinkedIn sign-in wall — no authenticated session in the reachable browser"
-                receipt["evidence_path"] = None
-                return receipt
-            rows = _linkedin_scroll_paginate_capture(surf_run, tab_id, max_pages=1)
+            # Per-query resilience: a single hung/slow surf js call (LinkedIn
+            # pages are heavy) must skip that query, not tank the whole batch.
+            try:
+                if qi > 0:
+                    _surf(surf_run, "js", "--tab-id", tab_id, f"(function(){{location.href={json.dumps(query['url'])}; return 'NAV';}})()", timeout=20)
+                _surf(surf_run, "wait", "6")
+                wall = _surf(
+                    surf_run,
+                    "js",
+                    "--tab-id",
+                    tab_id,
+                    "(function(){return (document.body.innerText.toLowerCase().indexOf('sign in to')>=0 || location.href.indexOf('/login')>=0) ? 'WALL' : 'OK';})()",
+                    timeout=20,
+                )
+                if "WALL" in wall:
+                    receipt["status"] = "AUTH_REQUIRED"
+                    receipt["error"] = "LinkedIn sign-in wall — no authenticated session in the reachable browser"
+                    receipt["evidence_path"] = None
+                    return receipt
+                rows = _linkedin_scroll_paginate_capture(surf_run, tab_id, max_pages=1)
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+                logger.warning("advanced-search query {!r} skipped: {}", query["label"], exc)
+                continue
             for r in rows:
                 title = (r.get("title") or "").strip()
                 if not title:
@@ -544,8 +551,14 @@ _SALES_NAV_EXTRACT_JS = (
     "var out=[],seen={};"
     "var rows=[].slice.call(document.querySelectorAll("
     "'[data-x--people-list-entity], li.artdeco-list__item, tr[data-x-search-result]'));"
+    # Fallback: Sales Nav DOM changes often; if the strict row selectors match
+    # nothing, derive rows from the lead/people anchors themselves (closest LI/TR).
+    "if(!rows.length){"
+    "var anchors=[].slice.call(document.querySelectorAll(\"a[href*='/sales/lead/'], a[href*='/sales/people/']\"));"
+    "rows=anchors.map(function(a){return a.closest('li,tr,div[class*=entity],div[class*=result]')||a.parentElement;}).filter(Boolean);"
+    "}"
     "for (var i=0;i<rows.length;i++){"
-    "var lines=rows[i].innerText.split('\\n').map(function(s){return s.trim();}).filter(Boolean);"
+    "var lines=(rows[i].innerText||'').split('\\n').map(function(s){return s.trim();}).filter(Boolean);"
     "var uniq=[]; for(var j=0;j<lines.length;j++){ if(lines[j]!==lines[j-1]) uniq.push(lines[j]); }"
     "var name=uniq[0]||''; if(!name||seen[name]) continue; seen[name]=1;"
     "var a=rows[i].querySelector(\"a[href*='/sales/lead/'], a[href*='/sales/people/']\");"
