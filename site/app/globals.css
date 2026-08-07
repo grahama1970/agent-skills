@@ -2084,6 +2084,64 @@ a.fig:hover .l::after,
   }
 }
 
+/* Phone ledger: a search-first labeled list. Filtering shortens it (only
+   matches render), rows are labeled with a 44px tap target and a sanity dot —
+   no tiny unlabeled cells that need a hover tooltip touch can't give. */
+.ledger-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.ledger-list li + li {
+  border-top: 1px solid var(--line-2);
+}
+.ledger-list a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0.45rem 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.ledger-list a:active {
+  background: rgba(226, 172, 98, 0.09);
+}
+.ledger-list .lr-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brass);
+}
+.ledger-list .lr-dot.out {
+  background: transparent;
+  border: 1px solid var(--faint);
+}
+.ledger-list .lr-name {
+  flex: 1 1 auto;
+}
+.ledger-list .lr-cat {
+  color: var(--faint);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+@media (max-width: 640px) {
+  /* The matrix/categorized toggle has no meaning for the list view. */
+  .ledger-view {
+    display: none;
+  }
+}
+
 /* Phone: keep the three flagship cards full; compact the rest into an index
    (question + repo, no image or rationale) so Work isn't an endless scroll and
    the desktop hierarchy survives. */

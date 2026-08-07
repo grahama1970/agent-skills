@@ -21,7 +21,20 @@ export function SkillMosaic() {
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState('all');
   const [view, setView] = useState<'categorized' | 'matrix'>('categorized');
+  // Phones get a search-first labeled list (filtering shortens it, rows are
+  // tappable and labeled) instead of the 338 tiny unlabeled cells, which need
+  // a hover tooltip touch can't give. Desktop keeps the matrix. Defaults to
+  // false so SSR and first client render agree, then flips on mount if mobile.
+  const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const skills = inventory.skills as SkillCell[];
   const checked = skills.filter((s) => s.s).length;
@@ -142,7 +155,30 @@ export function SkillMosaic() {
           </button>
         ))}
       </div>
-      {view === 'categorized' ? (
+      {isMobile ? (
+        <ul
+          className="ledger-list"
+          aria-label={`${shown} of ${skills.length} skill contracts`}
+        >
+          {skills.filter(matches).map((s) => (
+            <li key={s.n}>
+              <a
+                href={`${GH}/${s.n}/SKILL.md`}
+                data-qid={`ledger:row:${s.n}`}
+                data-qs-action="LEDGER_OPEN_SKILL"
+                title={`Open ${s.n} SKILL.md — ${s.c}${s.s ? ', sanity-checked' : ', contract only'}`}
+              >
+                <span className={`lr-dot${s.s ? '' : ' out'}`} aria-hidden="true" />
+                <span className="lr-name">{s.n}</span>
+                <span className="lr-cat">{s.c}</span>
+                <span className="sr-only">
+                  {s.s ? 'sanity-checked' : 'contract only'}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : view === 'categorized' ? (
         groups.map(([c, list]) => (
           <div className="ledger-group" key={c}>
             <span className="ledger-cat">
