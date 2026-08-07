@@ -305,7 +305,16 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: 0.35rem;
+  margin-left: 0.85rem;
+}
+/* Hairline divider — internal section links vs external platform links.
+   Constrained to ~text cap-height so it reads as a rule, not a full border. */
+.nav-icons::before {
+  content: '';
+  width: 1px;
+  height: 15px;
+  margin-right: 0.85rem;
+  background: var(--line-2);
 }
 .nav-icon {
   display: inline-flex;
