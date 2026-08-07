@@ -22,8 +22,11 @@ const TRACE = [
   'C 22 60, 38 44, 54 44', // → composer
   'C 78 44, 78 98, 96 98', // swing down → Sony
   'C 122 98, 120 22, 150 30', // up → DARPA
-  'C 178 37, 150 66, 134 48', // hook: double back left over the trail
-  'C 156 74, 188 102, 214 102', // down → AFRL
+  // pronounced doubling-back loop after DARPA: swings right, loops back left
+  // across its own upstroke, then advances — a self-crossing a chart can't make
+  'C 182 32, 200 60, 172 68',
+  'C 140 78, 128 44, 160 42',
+  'C 188 40, 200 92, 214 102', // → AFRL
   'C 250 102, 256 58, 286 58', // → Lean 4
   'C 322 58, 336 26, 360 26', // → this practice
   'L 398 26',
