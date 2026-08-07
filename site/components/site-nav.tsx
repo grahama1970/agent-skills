@@ -46,7 +46,7 @@ export function SiteNav() {
             <circle className="brandmark-ring" cx="20" cy="20" r="18" />
             <text className="brandmark-g" x="18.5" y="27" textAnchor="middle">
               G
-              <tspan className="brandmark-c" dx="-2" dy="4">
+              <tspan className="brandmark-c" dx="-0.5" dy="4">
                 c
               </tspan>
             </text>

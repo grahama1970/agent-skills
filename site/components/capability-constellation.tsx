@@ -261,7 +261,7 @@ export function CapabilityConstellation() {
                   {/* G꜀ monogram — "graham·co" as a subscripted variable. */}
                   <text x={x - 7} y={y + 15} textAnchor="middle" className="c-mark">
                     G
-                    <tspan dx={-6} dy={9} className="c-mark-sub">
+                    <tspan dx={-1.5} dy={9} className="c-mark-sub">
                       c
                     </tspan>
                   </text>
