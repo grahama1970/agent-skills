@@ -452,6 +452,101 @@ def make_kling_scene_directions(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+#: The only image lane funded in this environment. $ask defaults to it.
+OAUTH_IMAGE_BACKEND = "ask-codex-oauth"
+
+#: Lanes that authenticate with an API key. They 401 here, so asking for one is
+#: an error rather than something to fall back from -- a silent fallback to a
+#: deterministic placeholder is how a fixture starts passing off flat colour as
+#: generated art.
+API_KEY_IMAGE_BACKENDS = {"scillm", "api-key", "openai", "fal", "google"}
+
+
+def parse_last_json_object(stdout: str) -> dict[str, Any]:
+    """Return the last JSON object printed on stdout, or {} if there is none."""
+    depth = 0
+    start = -1
+    best = ""
+    for index, char in enumerate(stdout):
+        if char == "{":
+            if depth == 0:
+                start = index
+            depth += 1
+        elif char == "}" and depth:
+            depth -= 1
+            if depth == 0 and start >= 0:
+                best = stdout[start : index + 1]
+    try:
+        return json.loads(best) if best else {}
+    except Exception:
+        return {}
+
+
+def write_generation_receipt(
+    *,
+    receipt_path: Path,
+    output_path: Path,
+    model: str,
+    ask_result: dict[str, Any],
+) -> None:
+    """Bind the bytes on disk to the call that produced them."""
+    image_bytes = output_path.read_bytes()
+    with Image.open(output_path) as image:
+        width, height = image.size
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "auth": ask_result.get("auth") or "codex-oauth",
+                "route": "ask --image-generate --image-auth codex-oauth",
+                "model": ask_result.get("model") or model,
+                "path": str(output_path),
+                "source_width": width,
+                "source_height": height,
+                "bytes": len(image_bytes),
+                "sha256": hashlib.sha256(image_bytes).hexdigest(),
+                "api_key_auth_used": False,
+                "ask_id": ask_result.get("ask_id"),
+                "ask_runtime_artifacts": ask_result.get("runtime_artifacts"),
+                "duration_seconds": ask_result.get("duration_seconds"),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+
+
+def normalize_to_size(output_path: Path, size: str, receipt_path: Path) -> None:
+    """Letterbox to the requested size; the provider picks its own dimensions."""
+    target_w, target_h = (int(part) for part in size.lower().split("x", 1))
+    with Image.open(output_path) as existing:
+        image = existing.convert("RGB")
+    if image.size == (target_w, target_h):
+        return
+    contained = ImageOps.contain(image, (target_w, target_h), method=Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (target_w, target_h), "white")
+    canvas.paste(contained, ((target_w - contained.width) // 2, (target_h - contained.height) // 2))
+    canvas.save(output_path, "PNG")
+    try:
+        receipt_payload = json.loads(receipt_path.read_text())
+    except Exception:
+        receipt_payload = {}
+    image_bytes = output_path.read_bytes()
+    receipt_payload.update(
+        {
+            "ok": True,
+            "path": str(output_path),
+            "width": target_w,
+            "height": target_h,
+            "bytes": len(image_bytes),
+            "sha256": hashlib.sha256(image_bytes).hexdigest(),
+            "create_image_fit": "contain",
+        }
+    )
+    receipt_path.write_text(json.dumps(receipt_payload, indent=2, sort_keys=True) + "\n")
+
+
 def run_create_image(
     *,
     repo_root: Path,
@@ -492,32 +587,7 @@ def run_create_image(
         except Exception:
             pass
     if output_path.exists() and output_path.stat().st_size > 0 and receipt_path.exists():
-        target_w, target_h = (int(part) for part in size.lower().split("x", 1))
-        with Image.open(output_path) as existing:
-            image = existing.convert("RGB")
-        if image.size != (target_w, target_h):
-            contained = ImageOps.contain(image, (target_w, target_h), method=Image.Resampling.LANCZOS)
-            canvas = Image.new("RGB", (target_w, target_h), "white")
-            canvas.paste(contained, ((target_w - contained.width) // 2, (target_h - contained.height) // 2))
-            canvas.save(output_path, "PNG")
-            try:
-                receipt_payload = json.loads(receipt_path.read_text())
-            except Exception:
-                receipt_payload = {}
-            image_bytes = output_path.read_bytes()
-            receipt_payload.update(
-                {
-                    "ok": True,
-                    "path": str(output_path),
-                    "width": target_w,
-                    "height": target_h,
-                    "bytes": len(image_bytes),
-                    "sha256": hashlib.sha256(image_bytes).hexdigest(),
-                    "normalized_by": "persona-dream-reuse",
-                    "create_image_fit": "contain",
-                }
-            )
-            receipt_path.write_text(json.dumps(receipt_payload, indent=2, sort_keys=True) + "\n")
+        normalize_to_size(output_path, size, receipt_path)
         return {
             "schema": "persona_dream.generated_image_attempt.v1",
             "attempt_id": attempt_id,
@@ -542,36 +612,52 @@ def run_create_image(
     output_path.unlink(missing_ok=True)
     receipt_path.unlink(missing_ok=True)
     events_path.unlink(missing_ok=True)
+    if backend in API_KEY_IMAGE_BACKENDS:
+        raise RuntimeError(
+            f"refusing image backend {backend!r}: it authenticates with an API key. "
+            f"This environment is OAuth-only, so that lane is unfunded and returns 401. "
+            f"Use {OAUTH_IMAGE_BACKEND!r} (routes through $ask --image-generate --image-auth codex-oauth)."
+        )
+    # Generate through $ask, which owns the codex-oauth image lane. $create-image
+    # is not usable here: it has no scillm backend, no --prompt-file, and no
+    # --auth flag, so the call it was given could never have reached a provider.
     cmd = [
-        "uv",
-        "run",
-        "--script",
-        str(repo_root / "skills" / "create-image" / "generate.py"),
-        "generate",
-        "--prompt-file",
-        str(prompt_path),
-        "--output",
-        str(output_path),
-        "--size",
-        size,
-        "--backend",
-        backend,
-        "--model",
+        str(repo_root / "skills" / "ask" / "run.sh"),
+        "ask",
+        prompt_path.read_text(encoding="utf-8"),
+        "--image-generate",
+        "--image-auth",
+        "codex-oauth",
+        "--image-model",
         model,
+        "--image-size",
+        size,
+        "--image-output",
+        str(output_path),
+        "--image-output-format",
+        "png",
+        "--image-timeout",
+        str(timeout_s),
+        "--json",
     ]
     env = os.environ.copy()
-    env.setdefault("CREATE_IMAGE_FIT", "contain")
-    env.setdefault("CREATE_IMAGE_SCILLM_CALLER", "persona-dream")
-    env.setdefault("CREATE_IMAGE_SCILLM_PREFLIGHT", "1")
-    env.setdefault("CREATE_IMAGE_SCILLM_TIMEOUT_S", str(timeout_s))
     completed = subprocess.run(
         cmd,
         cwd=repo_root,
         env=env,
         capture_output=True,
         text=True,
-        timeout=timeout_s + 45,
+        timeout=timeout_s + 120,
     )
+    ask_result = parse_last_json_object(completed.stdout)
+    if completed.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0:
+        write_generation_receipt(
+            receipt_path=receipt_path,
+            output_path=output_path,
+            model=model,
+            ask_result=ask_result,
+        )
+        normalize_to_size(output_path, size, receipt_path)
     ok = completed.returncode == 0 and output_path.exists() and output_path.stat().st_size > 0
     return {
         "schema": "persona_dream.generated_image_attempt.v1",
@@ -588,6 +674,8 @@ def run_create_image(
         "receipt_exists": receipt_path.exists(),
         "events_path": str(events_path),
         "events_exists": events_path.exists(),
+        "auth": "codex-oauth",
+        "api_key_auth_used": False,
         "returncode": completed.returncode,
         "cmd": cmd,
         "stdout_tail": completed.stdout[-3000:],
@@ -2210,7 +2298,7 @@ def main() -> None:
         default="fixture",
         help="Use deterministic fixture images or call $create-image for reference/storyboard images.",
     )
-    parser.add_argument("--create-image-backend", default="scillm", help="$create-image backend when --image-backend=create-image.")
+    parser.add_argument("--create-image-backend", default=OAUTH_IMAGE_BACKEND, help="Image lane when --image-backend=create-image. Only the OAuth lane is funded here.")
     parser.add_argument("--create-image-model", default="gpt-image-2", help="$create-image model when --image-backend=create-image.")
     parser.add_argument(
         "--strict-generated-images",

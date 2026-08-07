@@ -2354,9 +2354,14 @@ def main(
             print(json.dumps(result, indent=2, default=str))
         else:
             print("\n-- /ask image generation --")
-            for file_info in result["image_generation"]["files"]:
+            # `result` IS the image-generation payload; it has no nested
+            # "image_generation" key, and reaching for one crashed every
+            # non-JSON call with a KeyError after the image was already written.
+            for file_info in result.get("files") or []:
                 print(f"   Image: {file_info['path']}")
-            print(f"   Manifest: {result['artifacts']['image_manifest']}")
+            manifest = (result.get("runtime_artifacts") or {}).get("artifact_manifest")
+            if manifest:
+                print(f"   Manifest: {manifest}")
             print()
         raise typer.Exit(code=0)
 
