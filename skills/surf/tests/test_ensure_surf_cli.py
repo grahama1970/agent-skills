@@ -75,6 +75,93 @@ exit 0
     assert npm_log.read_text(encoding="utf-8").splitlines() == ["ci", "run build"]
 
 
+def test_ensure_surf_cli_skips_build_on_spurious_mtime_with_matching_hash(tmp_path: Path) -> None:
+    """A git/worktree/touch mtime bump with IDENTICAL content must not rebuild.
+
+    This is the root cause of issue #1306: mtime-stale but content-unchanged
+    fired a full npm ci that wedged surf. With a recorded source hash, the
+    second run recognizes the content is unchanged and skips npm entirely.
+    """
+    surf_cli = make_surf_cli(tmp_path, host_newer_than_dist=False)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    npm_log = tmp_path / "npm.log"
+    npm = bin_dir / "npm"
+    npm.write_text(
+        f"""#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "{npm_log}"
+if [[ "$*" == "run build" ]]; then
+  mkdir -p "${{SURF_CLI_PATH}}/dist/service-worker"
+  touch "${{SURF_CLI_PATH}}/dist/manifest.json"
+  touch "${{SURF_CLI_PATH}}/dist/service-worker/index.js"
+fi
+exit 0
+""",
+        encoding="utf-8",
+    )
+    npm.chmod(0o755)
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["SURF_CLI_PATH"] = str(surf_cli)
+
+    # First run: dist manifest already present + content newer, so record the
+    # hash via a build path. Force a build by making host newer than dist.
+    os.utime(surf_cli / "native/host.cjs", ns=(2_000_000_000_000_000_000, 2_000_000_000_000_000_000))
+    first = subprocess.run(["bash", str(ENSURE_SURF_CLI)], text=True, capture_output=True, env=env, check=False)
+    assert first.returncode == 0, first.stderr
+    assert (surf_cli / "dist/.build-source-hash").exists()
+
+    # Now simulate a spurious mtime bump: touch host.cjs newer than dist WITHOUT
+    # changing its content. The build must be skipped (npm not called again).
+    npm_log.unlink(missing_ok=True)
+    dist_js = surf_cli / "dist/service-worker/index.js"
+    dist_mtime = dist_js.stat().st_mtime_ns
+    os.utime(surf_cli / "native/host.cjs", ns=(dist_mtime + 5_000_000_000, dist_mtime + 5_000_000_000))
+    second = subprocess.run(["bash", str(ENSURE_SURF_CLI)], text=True, capture_output=True, env=env, check=False)
+
+    assert second.returncode == 0, second.stderr
+    assert "Building vendored surf-cli" not in second.stderr
+    assert not npm_log.exists(), f"npm was invoked on spurious mtime: {npm_log.read_text()}"
+
+
+def test_ensure_surf_cli_rebuilds_when_content_actually_changes(tmp_path: Path) -> None:
+    """Guard the fix: a real content change must still rebuild."""
+    surf_cli = make_surf_cli(tmp_path, host_newer_than_dist=True)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    npm_log = tmp_path / "npm.log"
+    npm = bin_dir / "npm"
+    npm.write_text(
+        f"""#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "{npm_log}"
+if [[ "$*" == "run build" ]]; then
+  mkdir -p "${{SURF_CLI_PATH}}/dist/service-worker"
+  touch "${{SURF_CLI_PATH}}/dist/manifest.json"
+  touch "${{SURF_CLI_PATH}}/dist/service-worker/index.js"
+fi
+exit 0
+""",
+        encoding="utf-8",
+    )
+    npm.chmod(0o755)
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["SURF_CLI_PATH"] = str(surf_cli)
+
+    first = subprocess.run(["bash", str(ENSURE_SURF_CLI)], text=True, capture_output=True, env=env, check=False)
+    assert first.returncode == 0, first.stderr
+
+    # Change host.cjs CONTENT and bump mtime -> hash differs -> must rebuild.
+    npm_log.unlink(missing_ok=True)
+    (surf_cli / "native/host.cjs").write_text("// host CHANGED\n", encoding="utf-8")
+    dist_mtime = (surf_cli / "dist/service-worker/index.js").stat().st_mtime_ns
+    os.utime(surf_cli / "native/host.cjs", ns=(dist_mtime + 5_000_000_000, dist_mtime + 5_000_000_000))
+    second = subprocess.run(["bash", str(ENSURE_SURF_CLI)], text=True, capture_output=True, env=env, check=False)
+
+    assert second.returncode == 0, second.stderr
+    assert npm_log.read_text(encoding="utf-8").splitlines() == ["ci", "run build"]
+
+
 def test_ensure_surf_cli_serializes_concurrent_builds(tmp_path: Path) -> None:
     surf_cli = make_surf_cli(tmp_path, host_newer_than_dist=True)
     bin_dir = tmp_path / "bin"

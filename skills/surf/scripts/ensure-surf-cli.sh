@@ -17,26 +17,60 @@ src_sw="${SURF_CLI_PATH}/src/service-worker/index.ts"
 dist_sw="${SURF_CLI_PATH}/dist/service-worker/index.js"
 native_host="${SURF_CLI_PATH}/native/host.cjs"
 lock_file="${SURF_CLI_PATH}/.ensure-surf-cli-build.lock"
+hash_file="${SURF_CLI_PATH}/dist/.build-source-hash"
 lock_wait_seconds="${SURF_CLI_BUILD_LOCK_TIMEOUT_SECONDS:-300}"
 build_timeout_seconds="${SURF_CLI_BUILD_TIMEOUT_SECONDS:-600}"
 
+# Content hash of the build inputs whose mtime we compare against dist. Used to
+# distinguish a real source change from a spurious mtime bump (git checkout,
+# worktree switch, touch) that would otherwise trigger the wedge-prone npm ci.
+_source_hash() {
+  local files=()
+  [[ -f "${src_sw}" ]] && files+=("${src_sw}")
+  [[ -f "${native_host}" ]] && files+=("${native_host}")
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "no-source"
+    return 0
+  fi
+  cat "${files[@]}" | sha256sum | cut -d' ' -f1
+}
+
 needs_build() {
+  # Hard triggers: dist genuinely absent -> must build.
   if [[ ! -f "${dist_manifest}" ]]; then
     return 0
   fi
   if [[ -f "${src_sw}" && ! -f "${dist_sw}" ]]; then
     return 0
   fi
+  # Soft triggers: mtime says a source is newer than dist. mtime is fragile —
+  # git checkout / worktree switch / touch all bump it without any content
+  # change — so confirm the content actually differs before paying for a full
+  # npm ci + build (the operation that wedges surf, issue #1306).
+  local mtime_stale=0
   if [[ -f "${src_sw}" && -f "${dist_sw}" && "${src_sw}" -nt "${dist_sw}" ]]; then
-    return 0
+    mtime_stale=1
   fi
   if [[ -f "${native_host}" && -f "${dist_sw}" && "${native_host}" -nt "${dist_sw}" ]]; then
-    return 0
+    mtime_stale=1
   fi
-  return 1
+  if [[ ${mtime_stale} -eq 0 ]]; then
+    return 1
+  fi
+  # mtime is stale but does the CONTENT match the last successful build? If so
+  # the staleness is spurious: realign dist mtime so the check stops firing and
+  # skip the rebuild.
+  if [[ -f "${hash_file}" ]] && [[ "$(_source_hash)" == "$(cat "${hash_file}" 2>/dev/null)" ]]; then
+    touch "${dist_manifest}" "${dist_sw}" 2>/dev/null || true
+    return 1
+  fi
+  return 0
 }
 
 if ! needs_build; then
+  # Record/refresh the baseline hash for an already-current dist so the very
+  # first spurious mtime bump is covered without needing a prior build.
+  [[ -f "${dist_manifest}" && ! -f "${hash_file}" ]] && { _source_hash > "${hash_file}" 2>/dev/null || true; }
   exit 0
 fi
 
@@ -132,6 +166,10 @@ if [[ ${build_rc} -ne 0 ]]; then
   fi
   exit "${build_rc}"
 fi
+
+# Record the source hash so a later spurious mtime bump (git/worktree/touch)
+# with identical content skips the rebuild instead of wedging on npm ci.
+_source_hash > "${hash_file}" 2>/dev/null || true
 
 if needs_build; then
   echo "Error: surf-cli build completed but dist is still stale at ${SURF_CLI_PATH}" >&2
