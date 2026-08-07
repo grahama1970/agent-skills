@@ -1,0 +1,56 @@
+{
+  "attach_files": [],
+  "clean_chars": 38,
+  "clean_contains_sentinel": false,
+  "controlled_tab_id": "837369336",
+  "fallback_summary": null,
+  "finished_at": "2026-08-07T01:43:13Z",
+  "focus_after": {
+    "activeTabId": 837369336,
+    "activeTabUrl": "https://grok.com/c/ad5e360d-be5a-4c24-8db3-ef05282268b3?rid=d29d44ed-64ce-4562-8dec-08216177c639",
+    "focusedWindowId": 837369335,
+    "id": 41
+  },
+  "focus_before": {
+    "activeTabId": 837369336,
+    "activeTabUrl": "https://grok.com/",
+    "focusedWindowId": 837369335,
+    "id": 4
+  },
+  "input": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/sm.md",
+  "no_activate": true,
+  "output": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/g3.md",
+  "proof_status": "response_proven",
+  "provider_busy_cooldown_count": 0,
+  "provider_busy_cooldown_seconds": 120,
+  "provider_busy_retry_attempts": 1,
+  "raw_chars": 80,
+  "raw_contains_sentinel": true,
+  "raw_output": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/gr3.md",
+  "requested_tab_id": "837369336",
+  "requested_url": null,
+  "resolved_url": "https://grok.com/",
+  "sentinel": "<<<GROK_DONE:20260807T014302Z:43db2b65>>>",
+  "started_at": "2026-08-07T01:43:03Z",
+  "status": "completed",
+  "stderr_log": "/tmp/surf-grok-submit-stderr.yYBhOe.log",
+  "submitted_output": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/a9311a35-b7c4-49ab-8315-81b10d794892/scratchpad/g3.md.submitted.md",
+  "submitted_to_grok": true,
+  "tab_bound_control_proof": "exact_tab_prompt_verified_submit_observed",
+  "tab_identity_preflight": {
+    "expected_tab_id": "837369336",
+    "expected_url": null,
+    "live_url": "https://grok.com/",
+    "ok": true,
+    "provider_ok": true,
+    "tab": {
+      "active": true,
+      "id": 837369336,
+      "title": "Grok",
+      "url": "https://grok.com/",
+      "windowId": 837369335
+    },
+    "url_ok": true
+  },
+  "timeout_s": 300
+}
