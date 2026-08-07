@@ -1868,7 +1868,17 @@ footer a:hover {
 .path-line {
   stroke-dasharray: 780;
   stroke-dashoffset: 780;
-  transition: stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Search, backtrack, converge: the tracer probes forward, retracts to prune,
+   accelerates through the hook, backtracks to re-evaluate, then locks onto the
+   final waypoint — graph traversal, not a left-to-right scrub. Plays once. */
+@keyframes trace-converge {
+  0% { stroke-dashoffset: 780; }
+  22% { stroke-dashoffset: 470; }
+  34% { stroke-dashoffset: 545; }
+  56% { stroke-dashoffset: 250; }
+  70% { stroke-dashoffset: 330; }
+  100% { stroke-dashoffset: 0; }
 }
 .path-node {
   opacity: 0;
@@ -1879,6 +1889,7 @@ footer a:hover {
 }
 .is-visible .path-line {
   stroke-dashoffset: 0;
+  animation: trace-converge 3.6s cubic-bezier(0.45, 0, 0.25, 1) forwards;
 }
 .is-visible .path-node {
   opacity: 1;
@@ -1889,14 +1900,28 @@ footer a:hover {
 .is-visible .n4 { transition-delay: 1s; }
 .is-visible .n5 { transition-delay: 1.2s; }
 .is-visible .n6 { transition-delay: 1.45s; }
+/* Goal lock: the final waypoint stays unglowing until the tracer converges on
+   it (~3.3s), then flares once and settles — a resolution, not a HUD claim. */
+.is-visible .path-node.is-final {
+  animation: node-lock 0.9s ease-out 3.3s both;
+}
+@keyframes node-lock {
+  0% { filter: drop-shadow(0 0 0 rgba(226, 172, 98, 0)); }
+  40% { filter: drop-shadow(0 0 11px rgba(255, 240, 214, 0.95)); }
+  100% { filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7)); }
+}
 @media (prefers-reduced-motion: reduce) {
   .path-line {
     stroke-dashoffset: 0;
     transition: none;
+    animation: none;
   }
   .path-node {
     opacity: 1;
     transition: none;
+  }
+  .is-visible .path-node.is-final {
+    animation: none;
   }
 }
 
