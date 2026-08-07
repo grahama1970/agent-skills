@@ -14,7 +14,9 @@ OUT_ROOT="$(mktemp -d)"
 hargs=(); for h in "${HANDLERS[@]}"; do hargs+=(--handler "$h"); done
 
 pass=0
+TRIAL_DELAY="${TRIAL_DELAY:-0}"
 for i in $(seq 1 "$N"); do
+  [ "$i" -gt 1 ] && [ "$TRIAL_DELAY" -gt 0 ] && sleep "$TRIAL_DELAY"
   run_out="$OUT_ROOT/trial-$i"
   printf 'In one short paragraph, name one concrete strength of showing a DAG preview before execution. Then stop.\n' > "$OUT_ROOT/req-$i.md"
   timeout 900 "$ASK_DIR/run.sh" tau-dag "Review: name one concrete strength of showing a DAG preview before execution" \
