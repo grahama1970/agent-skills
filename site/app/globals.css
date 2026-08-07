@@ -2167,6 +2167,20 @@ a.fig:hover .l::after,
   }
 }
 
+/* Private project shown via its public overview — dashed, marked abstract. */
+.evidence-private {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px dashed rgba(226, 172, 98, 0.5);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* Research-area mini-map — a scan layer above the collage. Text + rules. */
 .research-map {
   display: grid;
