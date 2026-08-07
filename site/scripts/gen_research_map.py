@@ -33,6 +33,7 @@ OUT = REPO / "site" / "research-map.json"
 AREAS = [
     {
         "id": "pipelines",
+        "lens": "technical",
         "title": "Agentic pipelines & orchestration",
         "blurb": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
         "disciplines": ["agentic-orchestration", "browser-automation", "developer-tooling", "model-ops"],
@@ -40,6 +41,7 @@ AREAS = [
     },
     {
         "id": "memory",
+        "lens": "hybrid",
         "title": "Agentic memory & persona",
         "blurb": "Durable memory, persona, and voice an agent keeps and re-queries as its own history.",
         "disciplines": ["memory-knowledge", "persona-simulation", "voice-audio"],
@@ -47,6 +49,7 @@ AREAS = [
     },
     {
         "id": "extraction",
+        "lens": "technical",
         "title": "Extraction & evidence",
         "blurb": "Documents, research, and video into one truthful, cited result — no knobs to mislead.",
         "disciplines": ["extraction", "research-retrieval", "data-engineering"],
@@ -54,6 +57,7 @@ AREAS = [
     },
     {
         "id": "compliance",
+        "lens": "technical",
         "title": "Compliance, security & governance",
         "blurb": "Evidence-grounded reasoning where a human, not the model, holds authority.",
         "disciplines": ["compliance-security", "engineering-standards"],
@@ -61,6 +65,7 @@ AREAS = [
     },
     {
         "id": "adaptive-lineage",
+        "lens": "technical",
         "title": "Adaptive-lineage hacking",
         "blurb": "Adversarial evolution and security testing scored by deterministic proof gates.",
         "disciplines": [],  # reached only via taxonomy_route below
@@ -69,6 +74,7 @@ AREAS = [
     },
     {
         "id": "applied-ml",
+        "lens": "technical",
         "title": "Applied ML & formal methods",
         "blurb": "Trained models and machine-checked proofs where a result has to be verifiable.",
         "disciplines": ["ml-training"],
@@ -76,6 +82,7 @@ AREAS = [
     },
     {
         "id": "design-interface",
+        "lens": "creative",
         "title": "Design & interface",
         "blurb": "Interfaces and design systems built to be operated, not just admired.",
         "disciplines": ["ui-design-engineering"],
@@ -83,6 +90,7 @@ AREAS = [
     },
     {
         "id": "creative-media",
+        "lens": "creative",
         "title": "Creative & media research",
         "blurb": "Image, video, voice, and music generation — the creative-production half of the practice.",
         "disciplines": ["content-creation"],
@@ -171,6 +179,7 @@ def main() -> None:
     areas_out = [
         {
             "id": a["id"],
+            "lens": a["lens"],
             "title": a["title"],
             "blurb": a["blurb"],
             "aliases": a["aliases"],

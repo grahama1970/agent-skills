@@ -3,6 +3,7 @@
   "areas": [
     {
       "id": "pipelines",
+      "lens": "technical",
       "title": "Agentic pipelines & orchestration",
       "blurb": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
       "aliases": [
@@ -46,6 +47,7 @@
     },
     {
       "id": "memory",
+      "lens": "hybrid",
       "title": "Agentic memory & persona",
       "blurb": "Durable memory, persona, and voice an agent keeps and re-queries as its own history.",
       "aliases": [
@@ -72,6 +74,7 @@
     },
     {
       "id": "extraction",
+      "lens": "technical",
       "title": "Extraction & evidence",
       "blurb": "Documents, research, and video into one truthful, cited result — no knobs to mislead.",
       "aliases": [
@@ -110,6 +113,7 @@
     },
     {
       "id": "compliance",
+      "lens": "technical",
       "title": "Compliance, security & governance",
       "blurb": "Evidence-grounded reasoning where a human, not the model, holds authority.",
       "aliases": [
@@ -137,6 +141,7 @@
     },
     {
       "id": "adaptive-lineage",
+      "lens": "technical",
       "title": "Adaptive-lineage hacking",
       "blurb": "Adversarial evolution and security testing scored by deterministic proof gates.",
       "aliases": [
@@ -162,6 +167,7 @@
     },
     {
       "id": "applied-ml",
+      "lens": "technical",
       "title": "Applied ML & formal methods",
       "blurb": "Trained models and machine-checked proofs where a result has to be verifiable.",
       "aliases": [
@@ -180,6 +186,7 @@
     },
     {
       "id": "design-interface",
+      "lens": "creative",
       "title": "Design & interface",
       "blurb": "Interfaces and design systems built to be operated, not just admired.",
       "aliases": [
@@ -198,6 +205,7 @@
     },
     {
       "id": "creative-media",
+      "lens": "creative",
       "title": "Creative & media research",
       "blurb": "Image, video, voice, and music generation — the creative-production half of the practice.",
       "aliases": [
@@ -221,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "5fec30084"
+  "sourceCommit": "5b9914583"
 }
