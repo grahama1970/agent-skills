@@ -42,7 +42,6 @@ const DREAM_PHASES = [
   { f: 'phase07-storyboard-content-pane', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase07-content-pane' },
   { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)', dims: '1600×1387', src: 'persona-dream/assets/readme/phase08' },
   { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)', dims: '1280×997', src: 'persona-dream/assets/readme/phase09' },
-  { f: 'dream-panel', n: '10', c: 'a rendered dream — memory review beneath the watching eye', t: 'rgba(209,112,60,.45)', dims: '1536×1024', src: 'persona-dream/provider_media/issue-33-live · 2026-06-29' },
 ];
 
 const TRACK = [

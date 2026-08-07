@@ -158,7 +158,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         const num = parseInt(e.key, 10);
         if (!Number.isNaN(num)) {
           // Frame 00 (overview) sits at idx 0, so phase N is at idx N; 0 jumps
-          // to the finale (last frame).
+          // to the last frame.
           const target = num === 0 ? phases.length - 1 : num;
           if (target >= 0 && target < phases.length) setIdx(target);
         }
@@ -250,7 +250,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         </button>
       </div>
       <p className="stepper-hint stepper-hint--key">
-        ← → or H / L to scrub · 1–9 jump to a phase, 0 to the finale, ← from 01
+        ← → or H / L to scrub · 1–9 jump to a phase, 0 to the last phase, ← from 01
         for the overview · click frame to zoom · every value in the overlay is
         the file&apos;s real path and size
       </p>
