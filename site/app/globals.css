@@ -280,6 +280,22 @@ section {
 }
 .hero-main {
   grid-column: 1 / span 8;
+  /* Offer → outcomes → buyer line → CTA before the biography, at every width
+     (desktop now matches the stronger stacked order). Copy unchanged. */
+  display: flex;
+  flex-direction: column;
+}
+.hero-main > .eyebrow { order: 1; }
+.hero-main > h1 { order: 2; }
+.hero-main > .hero-outcomes { order: 3; }
+.hero-main > .hero-intake { order: 4; }
+.hero-main > .hero-actions { order: 5; }
+.hero-main > .hero-bio { order: 6; }
+/* Keyboard-shortcut helper is application chrome on touch; hide it there. */
+@media (pointer: coarse) {
+  [data-qid='nav:action:shortcuts'] {
+    display: none !important;
+  }
 }
 .hero-side {
   grid-column: 9 / span 4;
@@ -362,33 +378,6 @@ h1 .it::after {
   color: var(--text);
   font-style: normal;
   font-weight: 500;
-}
-/* Boot scan: one-time staggered sweep over the bio credentials on load.
-   Plays once, color/text-shadow only (no layout shift), then locks static. */
-.hero-bio em {
-  color: rgba(236, 226, 211, 0.55);
-  animation: boot-scan 0.45s var(--ease-entrance) forwards;
-  animation-delay: calc(0.55s + var(--i, 0) * 0.12s);
-}
-@keyframes boot-scan {
-  0% {
-    color: rgba(236, 226, 211, 0.55);
-    text-shadow: none;
-  }
-  50% {
-    color: var(--brass);
-    text-shadow: 0 0 8px rgba(226, 172, 98, 0.45);
-  }
-  100% {
-    color: var(--text);
-    text-shadow: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hero-bio em {
-    animation: none;
-    color: var(--text);
-  }
 }
 .hero-actions {
   display: flex;
