@@ -124,13 +124,19 @@ def refresh(commit: bool, push: bool) -> dict:
     prove the build, and optionally commit. Copy (questions/blurbs) is
     never touched — that stays doc-grounded and human/agent-authored."""
     before = {}
-    for f in ("site/inventory.json", "site/artifacts.json", "site/generated/battle-lineage.json"):
+    for f in (
+        "site/inventory.json",
+        "site/artifacts.json",
+        "site/generated/battle-lineage.json",
+        "site/research-map.json",
+    ):
         p = REPO / f
         before[f] = p.read_bytes() if p.exists() else b""
     for script in (
         "site/scripts/gen_inventory.py",
         "site/scripts/gen_artifacts.py",
         "site/scripts/gen_battle_lineage.py",
+        "site/scripts/gen_research_map.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:

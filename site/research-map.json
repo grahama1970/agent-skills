@@ -1,0 +1,93 @@
+{
+  "areas": [
+    {
+      "id": "pipelines",
+      "title": "Agentic pipelines",
+      "blurb": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
+      "systems": [
+        {
+          "slug": "tau",
+          "name": "t'au",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
+        },
+        {
+          "slug": "surf",
+          "name": "surf",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md"
+        },
+        {
+          "slug": "scillm",
+          "name": "scillm",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md"
+        },
+        {
+          "slug": "debugger",
+          "name": "debugger",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md"
+        }
+      ],
+      "skillCount": 27
+    },
+    {
+      "id": "memory",
+      "title": "Agentic memory",
+      "blurb": "Persistent memory, persona, and retrieval agents can re-query as evidence.",
+      "systems": [
+        {
+          "slug": "persona-dream",
+          "name": "persona-dream",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md"
+        },
+        {
+          "slug": "watch",
+          "name": "watch",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
+        },
+        {
+          "slug": "extractor",
+          "name": "extractor",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md"
+        },
+        {
+          "slug": "dogpile",
+          "name": "dogpile",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md"
+        }
+      ],
+      "skillCount": 23
+    },
+    {
+      "id": "compliance",
+      "title": "Compliance & governance",
+      "blurb": "Evidence-grounded reasoning where a human, not the model, holds authority.",
+      "systems": [
+        {
+          "slug": "sparta-explorer",
+          "name": "sparta explorer",
+          "href": "https://github.com/grahama1970/sparta-public"
+        },
+        {
+          "slug": "tau",
+          "name": "t'au",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
+        }
+      ],
+      "skillCount": 18
+    },
+    {
+      "id": "adaptive-lineage",
+      "title": "Adaptive lineage hacking",
+      "blurb": "Adversarial evolution and security testing scored by deterministic proof gates.",
+      "systems": [
+        {
+          "slug": "battle",
+          "name": "battle",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md"
+        }
+      ],
+      "skillCount": 4
+    }
+  ],
+  "projectCount": 10,
+  "sourceCommit": "b8358d4d8"
+}

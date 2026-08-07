@@ -3,6 +3,7 @@ import lineage from '@/generated/battle-lineage.json';
 import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
 import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ReceiptTicket } from '@/components/receipt-ticket';
+import { ResearchMap } from '@/components/research-map';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
@@ -230,6 +231,7 @@ export default function Home() {
               </div>
               <p className="count">01 — 10 · each one a research question</p>
             </div>
+            <ResearchMap />
             <div className="cards">
               {content.projects.map((p, i) => {
                 const meta = CARD_META[p.slug];

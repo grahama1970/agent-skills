@@ -37,10 +37,13 @@ reads `site/content.json`. This skill keeps them honest.
 ./run.sh apply --build
 
 # Regenerate the generated surfaces (inventory.json, artifacts.json,
-# generated/battle-lineage.json) from current repo state, gate on qid +
-# build; --commit/--push are explicit.
+# generated/battle-lineage.json, research-map.json) from current repo state,
+# gate on qid + build; --commit/--push are explicit.
 # battle-lineage.json is derived from the recorded battle-004 live fixture
 # and fails closed if that fixture drifts from its asserted shape.
+# research-map.json groups the projects into a DECLARED research-area taxonomy
+# (areas maintained in gen_research_map.py, not LLM-inferred) and counts
+# matching skills per area — the homepage mini-map is generated, not prose.
 # Copy (questions/blurbs/sections) is NEVER touched by refresh.
 ./run.sh refresh
 ./run.sh refresh --commit --push
