@@ -122,3 +122,12 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  canonical-resume-validation:
+    providers:
+      - resume
+  claim-bound-resume-tailoring:
+    providers:
+      - resume
+  resume-artifact-handoff:
+    providers:
+      - resume

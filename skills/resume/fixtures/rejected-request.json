@@ -1,0 +1,13 @@
+{
+  "opportunity_id": "opp:example-rejected",
+  "target_title": "Principal AI Architect",
+  "claim_keys": ["claim:example:unapproved"],
+  "claims": [
+    {
+      "claim_key": "claim:example:unapproved",
+      "text": "This claim has not been approved.",
+      "approved": false,
+      "evidence_refs": ["fixture://claims/not-approved"]
+    }
+  ]
+}

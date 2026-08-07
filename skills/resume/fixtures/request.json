@@ -1,0 +1,14 @@
+{
+  "opportunity_id": "opp:example",
+  "target_title": "Principal AI Architect",
+  "target_terms": ["agentic systems", "knowledge graphs"],
+  "claim_keys": ["claim:example:leadership"],
+  "claims": [
+    {
+      "claim_key": "claim:example:leadership",
+      "text": "Led delivery of evidence-bound agentic systems.",
+      "approved": true,
+      "evidence_refs": ["fixture://claims/example-leadership"]
+    }
+  ]
+}
