@@ -312,9 +312,9 @@ section {
 .nav-icons::before {
   content: '';
   width: 1px;
-  height: 15px;
+  height: 19px;
   margin-right: 0.85rem;
-  background: var(--line-2);
+  background: rgba(226, 172, 98, 0.35);
 }
 .nav-icon {
   display: inline-flex;
