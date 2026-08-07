@@ -2,12 +2,38 @@
 
 from __future__ import annotations
 
+import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
 GEO_PRIORITY = {"WNY_HYBRID": 300, "WNY_ONSITE": 200, "REMOTE": 100, "NOT_APPLICABLE": 150}
+
+
+def _max_age_days() -> int:
+    """Only recent opportunities count; default window is 2 weeks (Graham 2026-08-07)."""
+    try:
+        return max(1, int(os.environ.get("MONITOR_MAX_AGE_DAYS", "")))
+    except (TypeError, ValueError):
+        return 14
+
+
+def _posting_age_days(candidate: dict[str, Any]) -> float | None:
+    """Age in days from published_at/updated_at, or None if no parseable date."""
+    for key in ("published_at", "updated_at"):
+        raw = candidate.get(key)
+        if not raw:
+            continue
+        try:
+            parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return (datetime.now(UTC) - parsed).total_seconds() / 86400.0
+    return None
 
 
 def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
@@ -19,6 +45,13 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
         return "REJECT_DUPLICATE_OR_ALREADY_APPLIED", ["already_applied=true"]
     if candidate.get("stale") is True:
         return "REJECT_STALE", ["stale=true"]
+    # Recency: we only care about opportunities within the last 2 weeks. A
+    # parseable date older than the window is rejected; a missing/unparseable
+    # date is NOT rejected (many boards omit dates — do not silently drop them).
+    age = _posting_age_days(candidate)
+    max_age = _max_age_days()
+    if age is not None and age > max_age:
+        return "REJECT_STALE_AGE", [f"published {age:.0f}d ago (> {max_age}d window)"]
     if candidate.get("work_authorization_mismatch") is True:
         return "REJECT_WORK_AUTHORIZATION_MISMATCH", ["work_authorization_mismatch=true"]
     if candidate.get("clearance_required") == "UNKNOWN":

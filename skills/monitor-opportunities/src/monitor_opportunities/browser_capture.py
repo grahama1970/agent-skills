@@ -147,8 +147,8 @@ _LINKEDIN_JOB_SEARCH_BASE = "https://www.linkedin.com/jobs/search/"
 _LINKEDIN_WORK_TYPE = {"on-site": "1", "remote": "2", "hybrid": "3"}
 # f_E experience level: 4=mid-senior, 5=director, 6=executive (Graham's floor)
 _LINKEDIN_SENIOR_EXPERIENCE = ["4", "5", "6"]
-# f_TPR posted-within seconds
-_LINKEDIN_POSTED_WEEK = "r604800"
+# f_TPR posted-within seconds — 2 weeks (we only care about recent openings).
+_LINKEDIN_POSTED_WEEK = "r1209600"
 
 
 def build_linkedin_search_url(
