@@ -26,10 +26,10 @@ const DOCS = catalog.documents as Doc[];
 // Field-weighted BM25 (#1292): names and aliases dominate, prose supports.
 function buildIndex() {
   const ms = new MiniSearch<Doc>({
-    fields: ['name', 'aliases', 'area', 'disciplines', 'question', 'summary', 'category'],
+    fields: ['name', 'aliases', 'area', 'disciplines', 'question', 'summary', 'body', 'category'],
     storeFields: ['type', 'name', 'slug', 'area', 'href', 'question', 'summary', 'visibility', 'evidenceAccess'],
     searchOptions: {
-      boost: { name: 4, aliases: 3, area: 2 },
+      boost: { name: 4, aliases: 3, area: 2, question: 1.5, summary: 1.2, body: 0.6 },
       prefix: true,
       fuzzy: (term) => (term.length > 4 ? 0.2 : false),
       combineWith: 'AND',
