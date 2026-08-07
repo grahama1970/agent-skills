@@ -3,7 +3,27 @@ name: site-deploy
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/site-deploy.yml']
+    paths:
+      - README.md
+      - docs/assets/project-cards/**
+      - skills/*/README.md
+      - skills/*/SKILL.md
+      - skills/monitor-website/**
+      - skills/project-taxonomy/**
+      - agents/**
+      - site/**
+      - .github/workflows/site-deploy.yml
+  pull_request:
+    paths:
+      - README.md
+      - docs/assets/project-cards/**
+      - skills/*/README.md
+      - skills/*/SKILL.md
+      - skills/monitor-website/**
+      - skills/project-taxonomy/**
+      - agents/**
+      - site/**
+      - .github/workflows/site-deploy.yml
   workflow_dispatch:
 
 permissions:
@@ -12,12 +32,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: site-deploy
+  group: site-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      source_commit: ${{ steps.source.outputs.short }}
     defaults:
       run: { working-directory: site }
     steps:
@@ -27,14 +49,26 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: site/package-lock.json
-      - run: python3 scripts/verify-data-qid.py
       - run: npm ci
+      - id: source
+        name: Capture repository source commit
+        working-directory: .
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Regenerate site from repository sources
+        working-directory: .
+        run: |
+          skills/monitor-website/run.sh apply
+          skills/monitor-website/run.sh refresh
+          skills/monitor-website/run.sh audit --no-live --json
+      - run: python3 scripts/verify-data-qid.py
+      - run: python3 scripts/copy_audit.py
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/out
 
   deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -43,3 +77,22 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify deployed source and navigation marker
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_SOURCE: ${{ needs.build.outputs.source_commit }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if html="$(curl -fsSL --max-time 20 "$PAGE_URL")"; then
+              if grep -Fq 'data-qid="nav:link:home"' <<<"$html" \
+                && grep -Fq "$EXPECTED_SOURCE" <<<"$html"; then
+                echo "live read-back matched source $EXPECTED_SOURCE"
+                exit 0
+              fi
+            fi
+            echo "live read-back attempt $attempt/12 not current yet"
+            sleep 10
+          done
+          echo "deployed page did not expose expected source $EXPECTED_SOURCE" >&2
+          exit 1
