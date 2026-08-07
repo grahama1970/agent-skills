@@ -212,7 +212,9 @@ export default function Home() {
               loop
               playsInline
               poster="/dream/horus-embry-hero.webp"
-            />
+            >
+              <source src="/dream/horus-embry.mp4" type="video/mp4" />
+            </video>
             <figcaption>
               <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — a persona-dream keyframe
             </figcaption>
