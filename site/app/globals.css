@@ -2423,6 +2423,26 @@ a.fig:hover .l::after,
 .ch-detail { color: var(--muted); }
 .ch-priv { color: var(--ember, #d1703c); }
 .ch-idle { color: var(--faint); }
+/* Land-here highlight: when a constellation node, search hit, or any anchor
+   targets a project card, pulse a brass ring so the visitor sees where they
+   arrived. Pure CSS :target — no JS. Reduced motion holds a static ring. */
+.card:target {
+  animation: card-land 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes card-land {
+  0% {
+    box-shadow: 0 0 0 2px var(--brass), 0 0 26px 5px rgba(226, 172, 98, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(226, 172, 98, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card:target {
+    animation: none;
+    box-shadow: 0 0 0 2px var(--brass);
+  }
+}
 .c-edge {
   fill: none;
   stroke: rgba(236,226,211,0.16);
