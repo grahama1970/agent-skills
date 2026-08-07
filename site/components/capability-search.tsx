@@ -70,7 +70,7 @@ export function CapabilitySearch() {
   return (
     <div className="capsearch" aria-label="Search the practice by problem">
       <label className="capsearch-label" htmlFor="capsearch-input">
-        Find work by problem
+        What interests you?
       </label>
       <input
         id="capsearch-input"

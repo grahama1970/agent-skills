@@ -2286,18 +2286,27 @@ a.fig:hover .l::after,
   font-size: 0.9rem;
 }
 
-/* Capability constellation — deterministic radial graph of the practice.
-   Explicit edges only; settles instantly; art-directed, not administrative. */
+/* Capability constellation — image-filled glowing nodes on a dark field,
+   in the spirit of the persona-dream graph. Deterministic, art-directed. */
 .constellation {
-  margin: 0;
+  margin: 2.4rem 0 0;
 }
 .constellation-cap {
   font-family: var(--serif);
   font-size: clamp(1.1rem, 1.8vw, 1.5rem);
   font-variation-settings: 'SOFT' 50, 'opsz' 40;
   color: var(--muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
   max-width: 52ch;
+}
+.constellation-field {
+  position: relative;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background:
+    radial-gradient(120% 90% at 50% 45%, rgba(226,172,98,0.06), transparent 60%),
+    #0a0705;
+  overflow: hidden;
 }
 .constellation-svg {
   display: block;
@@ -2307,63 +2316,71 @@ a.fig:hover .l::after,
 }
 .c-edge {
   fill: none;
-  stroke: var(--line);
+  stroke: rgba(236,226,211,0.16);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  transition: stroke 0.18s ease, opacity 0.18s ease;
-  opacity: 0.5;
+  transition: stroke 0.18s ease;
 }
 .c-edge.is-on {
-  stroke: rgba(226, 172, 98, 0.5);
-  opacity: 1;
+  stroke: rgba(226,172,98,0.4);
 }
+.c-core {
+  fill: #14100d;
+}
+.c-img {
+  opacity: 0.9;
+  transition: opacity 0.18s ease;
+}
+a:hover .c-img { opacity: 1; }
+.c-ring {
+  fill: none;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  transition: opacity 0.18s ease;
+}
+.c-ring--core {
+  stroke: var(--brass);
+  stroke-width: 2;
+}
+.c-ring--private {
+  stroke-dasharray: 5 4;
+}
+.c-node {
+  transition: opacity 0.2s ease;
+}
+.c-node--project { cursor: pointer; }
+.c-node.is-dim { opacity: 0.28; }
 .c-practice {
   font-family: var(--serif);
   font-style: italic;
-  font-size: 20px;
+  font-size: 19px;
   fill: var(--text);
   font-variation-settings: 'SOFT' 80, 'opsz' 30;
 }
-.c-node {
-  cursor: default;
-  transition: opacity 0.18s ease;
-}
-.c-node--project {
-  cursor: pointer;
-}
-.c-node.is-dim {
-  opacity: 0.32;
-}
-.c-dot {
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-}
-.c-dot--private {
-  stroke-dasharray: 3 2.5;
-}
 .c-alabel {
   font-family: var(--serif);
-  font-size: 13px;
+  font-size: 14px;
   fill: var(--text);
 }
 .c-plabel {
   font-family: var(--mono);
-  font-size: 10.5px;
+  font-size: 11px;
   fill: var(--muted);
 }
-.c-count {
-  fill: var(--faint);
+a:hover .c-plabel { fill: var(--brass); }
+.c-count { fill: var(--faint); font-family: var(--mono); font-size: 9.5px; }
+.c-priv {
   font-family: var(--mono);
-  font-size: 9px;
-}
-a:hover .c-plabel {
-  fill: var(--brass);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--faint);
 }
 .constellation-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  margin: 0.6rem 0 0;
+  margin: 0.7rem 0 0;
   font-family: var(--mono);
   font-size: 0.66rem;
   letter-spacing: 0.06em;
@@ -2373,20 +2390,13 @@ a:hover .c-plabel {
 .cl::before {
   content: '';
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 0.4em;
-  vertical-align: middle;
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 0.4em; vertical-align: middle;
 }
 .cl--technical::before { background: var(--brass); }
 .cl--hybrid::before { background: var(--sage); }
 .cl--creative::before { background: var(--ember); }
 .cl-note { text-transform: none; letter-spacing: 0; }
-@media (max-width: 640px) {
-  /* The graph is a preview on phones; the search + list are the operable path. */
-  .constellation-svg { min-height: 320px; }
-}
 
 /* Private project shown via its public overview — dashed, marked abstract. */
 .evidence-private {
