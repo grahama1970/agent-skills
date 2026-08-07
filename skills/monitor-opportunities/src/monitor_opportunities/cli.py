@@ -590,16 +590,22 @@ def nightly(
 
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
-    from .browser_capture import capture_sam
+    from .browser_capture import capture_linkedin_top_applicant, capture_sam
 
     capture_dir = out / "browser-capture"
     sam_receipt = capture_sam(capture_dir)
     steps["browser_capture_sam"] = {"status": sam_receipt.get("status"), "captured": sam_receipt.get("opportunities_captured")}
     federal_evidence = sam_receipt.get("evidence_path")
 
+    li_receipt = capture_linkedin_top_applicant(capture_dir)
+    steps["browser_capture_linkedin"] = {"status": li_receipt.get("status"), "captured": li_receipt.get("opportunities_captured")}
+    linkedin_evidence = li_receipt.get("evidence_path")
+
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if federal_evidence:
         run_cmd += ["--federal-evidence", str(federal_evidence)]
+    if linkedin_evidence:
+        run_cmd += ["--linkedin-evidence", str(linkedin_evidence)]
     run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:

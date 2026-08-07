@@ -99,6 +99,118 @@ def ensure_browser(surf_run: Path = SURF_RUN_DEFAULT) -> str:
         raise BrowserCaptureError(f"could not start a headed browser: {exc}") from exc
 
 
+_LINKEDIN_TOP_APPLICANT_URL = "https://www.linkedin.com/jobs/collections/top-applicant/"
+
+_LINKEDIN_EXTRACT_JS = (
+    "(function(){"
+    "var out=[],seen={};"
+    "var cards=[].slice.call(document.querySelectorAll("
+    "'li.scaffold-layout__list-item, li[data-occludable-job-id], div.job-card-container'));"
+    "for (var i=0;i<cards.length;i++){"
+    "var lines=cards[i].innerText.split('\\n').map(function(s){return s.trim();}).filter(Boolean);"
+    "var uniq=[]; for(var j=0;j<lines.length;j++){ if(lines[j]!==lines[j-1]) uniq.push(lines[j]); }"
+    "var title=uniq[0]||''; if(!title||seen[title]) continue; seen[title]=1;"
+    "var a=cards[i].querySelector(\"a[href*='/jobs/view/'], a[href*='currentJobId']\");"
+    "out.push({title:title, company:uniq[1]||'', location:uniq[2]||'', href:a?a.href.split('?')[0]:null});"
+    "}"
+    "return JSON.stringify(out);"
+    "})()"
+)
+
+
+def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read-only capture of LinkedIn 'top applicant' jobs from the authenticated session.
+
+    Requires the user's Chrome to be open and logged into LinkedIn (the common
+    case). Navigates a tab to the top-applicant collection and extracts the
+    listings. If a sign-in wall appears (no authenticated session), records
+    AUTH_REQUIRED honestly — never fabricates results. No LinkedIn automation
+    beyond read-only navigation of the human's own authenticated session.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "linkedin_top_applicant",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+    }
+    tab_id = ""
+    try:
+        ensure_browser(surf_run)
+        created = _surf(surf_run, "tab.new", _LINKEDIN_TOP_APPLICANT_URL, "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        _surf(surf_run, "wait", "9")
+        wall = _surf(
+            surf_run,
+            "js",
+            "--tab-id",
+            tab_id,
+            "(function(){return (document.body.innerText.toLowerCase().indexOf('sign in to')>=0 || location.href.indexOf('/login')>=0) ? 'WALL' : 'OK';})()",
+        )
+        if "WALL" in wall:
+            receipt["status"] = "AUTH_REQUIRED"
+            receipt["error"] = "LinkedIn sign-in wall — no authenticated session in the reachable browser"
+            receipt["evidence_path"] = None
+            return receipt
+        raw = _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_EXTRACT_JS)
+        rows = json.loads(json.loads(raw))
+        opps = []
+        seen: set[str] = set()
+        for r in rows:
+            title = (r.get("title") or "").strip()
+            key = title + (r.get("company") or "")
+            if not title or key in seen:
+                continue
+            seen.add(key)
+            opps.append(
+                {
+                    "source": "human_authorized_linkedin_tab",
+                    "observed_at": utc_now(),
+                    "title": title,
+                    "organization": (r.get("company") or "UNKNOWN").strip(),
+                    "location": (r.get("location") or "UNKNOWN").strip(),
+                    "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
+                    "primary_evidence_url": r.get("href") or _LINKEDIN_TOP_APPLICANT_URL,
+                    "top_candidate": True,
+                }
+            )
+        evidence = {
+            "schema_version": "ops-linkedin.opportunity_capture.v1",
+            "source": "human_authorized_linkedin_tab",
+            "capture_method": "surf_read_only_authenticated_session",
+            "automation_policy": "linkedin_authorized_read_only_no_actions",
+            "observed_at": utc_now(),
+            "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
+            "primary_evidence_url": _LINKEDIN_TOP_APPLICANT_URL,
+            "page_title": "Jobs where you're a top applicant",
+            "top_candidate": True,
+            "opportunities": opps,
+        }
+        evidence_path = out_dir / "linkedin-top-applicant-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if opps else "EMPTY"
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["opportunities_captured"] = len(opps)
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.error("LinkedIn top-applicant capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["evidence_path"] = None
+    finally:
+        if tab_id:
+            try:
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            except BrowserCaptureError as exc:
+                logger.warning("could not close LinkedIn capture tab {}: {}", tab_id, exc)
+    (out_dir / "linkedin-capture-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
 def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
     """Read-only capture of SAM.gov active AI opportunities from the website.
 
