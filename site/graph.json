@@ -1,0 +1,284 @@
+{
+  "schema": "grahama.graph.v1",
+  "sourceCommit": "683f9b1f3",
+  "counts": {
+    "nodes": 19,
+    "edges": 18
+  },
+  "nodes": [
+    {
+      "id": "practice",
+      "type": "practice",
+      "label": "one practice",
+      "lens": "hybrid"
+    },
+    {
+      "id": "area:pipelines",
+      "type": "area",
+      "label": "Agentic pipelines & orchestration",
+      "lens": "technical",
+      "skillCount": 49
+    },
+    {
+      "id": "project:tau",
+      "type": "project",
+      "label": "t'au",
+      "slug": "tau",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "tau"
+    },
+    {
+      "id": "project:surf",
+      "type": "project",
+      "label": "surf",
+      "slug": "surf",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
+      "question": "How does an agent prove which browser tab actually answered?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "surf"
+    },
+    {
+      "id": "project:scillm",
+      "type": "project",
+      "label": "scillm",
+      "slug": "scillm",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
+      "question": "How many times should provider glue be written? Once.",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "scillm"
+    },
+    {
+      "id": "project:debugger",
+      "type": "project",
+      "label": "debugger",
+      "slug": "debugger",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
+      "question": "What was true at the moment the bug happened?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "debugger"
+    },
+    {
+      "id": "area:memory",
+      "type": "area",
+      "label": "Agentic memory & persona",
+      "lens": "hybrid",
+      "skillCount": 28
+    },
+    {
+      "id": "project:persona-dream",
+      "type": "project",
+      "label": "persona-dream",
+      "slug": "persona-dream",
+      "lens": "hybrid",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "question": "Can a dream give a persona more than memory can?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "persona-dream"
+    },
+    {
+      "id": "area:extraction",
+      "type": "area",
+      "label": "Extraction & evidence",
+      "lens": "technical",
+      "skillCount": 66
+    },
+    {
+      "id": "project:extractor",
+      "type": "project",
+      "label": "extractor",
+      "slug": "extractor",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "question": "What if extraction had no knobs to mislead you with?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "extractor"
+    },
+    {
+      "id": "project:dogpile",
+      "type": "project",
+      "label": "dogpile",
+      "slug": "dogpile",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
+      "question": "What did the research sweep fail to reach?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "dogpile"
+    },
+    {
+      "id": "project:watch",
+      "type": "project",
+      "label": "watch",
+      "slug": "watch",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
+      "question": "What was on screen at that exact moment?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "watch"
+    },
+    {
+      "id": "area:compliance",
+      "type": "area",
+      "label": "Compliance, security & governance",
+      "lens": "technical",
+      "skillCount": 55
+    },
+    {
+      "id": "project:sparta-explorer",
+      "type": "project",
+      "label": "sparta explorer",
+      "slug": "sparta-explorer",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/sparta-public",
+      "question": "Who decides, when the AI sounds sure? Humans do.",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "img": "sparta-explorer"
+    },
+    {
+      "id": "area:adaptive-lineage",
+      "type": "area",
+      "label": "Adaptive-lineage hacking",
+      "lens": "technical",
+      "skillCount": 1
+    },
+    {
+      "id": "project:battle",
+      "type": "project",
+      "label": "battle",
+      "slug": "battle",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "question": "What do you do with exploit code you can't trust? Breed it.",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "battle"
+    },
+    {
+      "id": "area:applied-ml",
+      "type": "area",
+      "label": "Applied ML & formal methods",
+      "lens": "technical",
+      "skillCount": 19
+    },
+    {
+      "id": "area:design-interface",
+      "type": "area",
+      "label": "Design & interface",
+      "lens": "creative",
+      "skillCount": 19
+    },
+    {
+      "id": "area:creative-media",
+      "type": "area",
+      "label": "Creative & media research",
+      "lens": "creative",
+      "skillCount": 26
+    }
+  ],
+  "edges": [
+    {
+      "source": "practice",
+      "target": "area:pipelines",
+      "rel": "area"
+    },
+    {
+      "source": "area:pipelines",
+      "target": "project:tau",
+      "rel": "system"
+    },
+    {
+      "source": "area:pipelines",
+      "target": "project:surf",
+      "rel": "system"
+    },
+    {
+      "source": "area:pipelines",
+      "target": "project:scillm",
+      "rel": "system"
+    },
+    {
+      "source": "area:pipelines",
+      "target": "project:debugger",
+      "rel": "system"
+    },
+    {
+      "source": "practice",
+      "target": "area:memory",
+      "rel": "area"
+    },
+    {
+      "source": "area:memory",
+      "target": "project:persona-dream",
+      "rel": "system"
+    },
+    {
+      "source": "practice",
+      "target": "area:extraction",
+      "rel": "area"
+    },
+    {
+      "source": "area:extraction",
+      "target": "project:extractor",
+      "rel": "system"
+    },
+    {
+      "source": "area:extraction",
+      "target": "project:dogpile",
+      "rel": "system"
+    },
+    {
+      "source": "area:extraction",
+      "target": "project:watch",
+      "rel": "system"
+    },
+    {
+      "source": "practice",
+      "target": "area:compliance",
+      "rel": "area"
+    },
+    {
+      "source": "area:compliance",
+      "target": "project:sparta-explorer",
+      "rel": "system"
+    },
+    {
+      "source": "practice",
+      "target": "area:adaptive-lineage",
+      "rel": "area"
+    },
+    {
+      "source": "area:adaptive-lineage",
+      "target": "project:battle",
+      "rel": "system"
+    },
+    {
+      "source": "practice",
+      "target": "area:applied-ml",
+      "rel": "area"
+    },
+    {
+      "source": "practice",
+      "target": "area:design-interface",
+      "rel": "area"
+    },
+    {
+      "source": "practice",
+      "target": "area:creative-media",
+      "rel": "area"
+    }
+  ]
+}

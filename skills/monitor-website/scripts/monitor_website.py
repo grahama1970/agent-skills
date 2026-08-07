@@ -131,6 +131,7 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/research-map.json",
         "site/project-visibility.json",
         "site/catalog.json",
+        "site/graph.json",
     ):
         p = REPO / f
         before[f] = p.read_bytes() if p.exists() else b""
@@ -141,6 +142,7 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/scripts/gen_research_map.py",
         "site/scripts/gen_visibility.py",
         "site/scripts/gen_catalog.py",
+        "site/scripts/gen_graph.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:
