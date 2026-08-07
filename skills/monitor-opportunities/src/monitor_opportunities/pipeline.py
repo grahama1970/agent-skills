@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
+
 from .application_packets import build_application_packets
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .discovery import sweep
@@ -14,6 +16,10 @@ from .ranking import rank
 from .report import load_manifest, render_report
 from .tailoring import tailor, tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
+
+
+# How many top jobs get a custom targeted resume + apply-prep packet per run.
+APPLY_PREP_TOP_N = 5
 
 
 def _capability_authority() -> dict[str, str]:
@@ -536,15 +542,46 @@ def run_stage0(
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"
     tailoring_receipt = None
+    apply_prep: list[dict[str, Any]] = []
     if claims_path.exists():
         shortlist_path = ranking_dir / "shortlist.json"
         shortlist = read_json(shortlist_path) if shortlist_path.exists() else []
         if shortlist:
-            tailoring_target = next((candidate for candidate in shortlist if candidate.get("lane") == "A"), shortlist[0])
-            tailoring_receipt = tailor_candidate(tailoring_target, claims_path, tailoring_dir)
+            # A custom targeted resume for each of the top jobs (goal: "custom
+            # targeted resume" for top opportunities), not just the single top
+            # one. Submit stays human-gated: each packet carries the apply_url
+            # and flags the ATS form-inspect/submit as the next human stage.
+            top_jobs = [c for c in shortlist if c.get("lane") == "A"][:APPLY_PREP_TOP_N] or shortlist[:APPLY_PREP_TOP_N]
+            for candidate in top_jobs:
+                cand_id = str(candidate.get("candidate_id") or sha256_json(candidate)[:16])
+                cand_dir = tailoring_dir / cand_id
+                try:
+                    receipt = tailor_candidate(candidate, claims_path, cand_dir)
+                except ValueError as exc:
+                    logger.warning("apply-prep tailoring skipped for {}: {}", cand_id, exc)
+                    continue
+                apply_prep.append(
+                    {
+                        "candidate_id": cand_id,
+                        "title": candidate.get("title"),
+                        "organization": candidate.get("organization"),
+                        "apply_url": candidate.get("apply_url") or candidate.get("posting_url"),
+                        "ats_provider": candidate.get("source_provider") or "not-established",
+                        "resume_variant_id": receipt.get("variant_id"),
+                        "resume_dir": str(cand_dir),
+                        "next_stage": "human_review_then_ats_form_inspect",
+                        "external_effects": False,
+                        "automation_policy": "submit_requires_human_authorization",
+                    }
+                )
+            # Preserve the single primary tailoring_receipt for the report.
+            primary = next((c for c in shortlist if c.get("lane") == "A"), shortlist[0])
+            tailoring_receipt = tailor_candidate(primary, claims_path, tailoring_dir)
         else:
             tailoring_receipt = tailor("fixture:eligible-ai-architect", claims_path, tailoring_dir)
+        write_json(tailoring_dir / "apply-prep.json", apply_prep)
         phases.append({"phase": "TAILORING_COMPLETE", "artifact": str(tailoring_dir / "tailoring-receipt.json")})
+        phases.append({"phase": "APPLY_PREP_COMPLETE", "prepared": len(apply_prep), "artifact": str(tailoring_dir / "apply-prep.json")})
 
     manifest_path = out_dir / "report-manifest.json"
     report_manifest = _report_from_run(
