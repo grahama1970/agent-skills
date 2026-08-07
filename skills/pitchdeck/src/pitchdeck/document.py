@@ -164,25 +164,23 @@ CompositionRecipeId = Literal[
     "roadmap-lanes",
 ]
 
-# Executable house recipes (derived from the style corpus exemplars): each names
-# the element roles a conforming slide MUST carry. This is the composition
-# contract the planner/design-pass generate INTO and validators check AGAINST.
-COMPOSITION_RECIPES: dict[str, dict] = {
-    "cover-brand": {"required_roles": ["title", "message"], "exemplar": "cybersummit-01", "max_words": 24},
-    "statement-thesis": {"required_roles": ["title"], "exemplar": "reqml-12", "max_words": 20},
-    "assertion-chevrons-diagram": {
-        "required_roles": ["title", "chevrons", "diagram"],
-        "exemplar": "cybersummit-18",
-        "max_words": 60,
-    },
-    "one-big-diagram": {"required_roles": ["title", "diagram"], "exemplar": "cybersummit-12", "max_words": 45},
-    "proof-screenshot-callout": {
-        "required_roles": ["title", "visual", "callout"],
-        "exemplar": "cybersummit-04",
-        "max_words": 60,
-    },
-    "roadmap-lanes": {"required_roles": ["title", "chevrons"], "exemplar": "cybersummit-33", "max_words": 70},
-}
+# Executable house recipes are SCHEMA INSTANCES (pitchdeck.composition_recipe.v1,
+# design/recipes/*.json), not Python dicts (#1275). This dict view keeps the
+# DocSlide validator contract stable.
+def _load_recipe_table() -> dict[str, dict]:
+    from .design_system import load_recipes
+
+    return {
+        recipe_id: {
+            "required_roles": [role.value for role in recipe.required_roles],
+            "exemplar": recipe.exemplar_ids[0],
+            "max_words": recipe.max_words,
+        }
+        for recipe_id, recipe in load_recipes().items()
+    }
+
+
+COMPOSITION_RECIPES: dict[str, dict] = _load_recipe_table()
 
 
 class SlideIntent(StrictModel):

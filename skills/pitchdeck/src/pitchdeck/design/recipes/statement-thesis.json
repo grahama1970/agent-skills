@@ -1,0 +1,28 @@
+{
+ "schema": "pitchdeck.composition_recipe.v1",
+ "id": "statement-thesis",
+ "version": 1,
+ "title_binding_required": true,
+ "numeric_requires_span": true,
+ "reveal_order_matches_narrative": true,
+ "pptx_editable_shapes_required": true,
+ "provenance": {
+  "origin": "COMPOSITION_RECIPES python dict, migrated #1275"
+ },
+ "required_roles": [
+  "title"
+ ],
+ "optional_roles": [
+  "visual"
+ ],
+ "allowed_kinds": [
+  "text",
+  "image",
+  "svg"
+ ],
+ "max_words": 20,
+ "visual_weight_min_frac": 0.0,
+ "exemplar_ids": [
+  "reqml-12-statement-slide"
+ ]
+}

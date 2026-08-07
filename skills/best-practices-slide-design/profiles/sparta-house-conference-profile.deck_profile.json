@@ -1,0 +1,78 @@
+{
+ "schema": "pitchdeck.deck_profile.v1",
+ "id": "sparta-house-conference-profile",
+ "version": 1,
+ "audience": "conference",
+ "target_slide_range": [
+  6,
+  20
+ ],
+ "modules": [
+  {
+   "module": "cover",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "toc",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "value_prop",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "problem_solution",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "vision",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "product_modules",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "roadmap",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "discussion",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "boneyard",
+   "required": false,
+   "position": "any"
+  }
+ ],
+ "module_order": [
+  "cover",
+  "toc",
+  "value_prop",
+  "problem_solution",
+  "vision",
+  "product_modules",
+  "roadmap",
+  "discussion",
+  "boneyard"
+ ],
+ "evidence_depth": "standard",
+ "humor": "high",
+ "boneyard_appendix": true,
+ "distribution_notice_slide": false,
+ "recap_devices": false,
+ "density_words_median_target": 16,
+ "density_words_p90_max": 122,
+ "provenance": {
+  "migrated_from": "sparta-house-conference.json"
+ }
+}

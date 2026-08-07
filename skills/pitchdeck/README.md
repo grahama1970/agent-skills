@@ -1,5 +1,7 @@
 # README to Pitch Deck
 
+> **Disciplines:** content-creation
+
 A deterministic, claim-bound compiler for converting product README material into:
 
 - a source manifest;

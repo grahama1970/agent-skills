@@ -1,0 +1,78 @@
+{
+ "schema": "pitchdeck.deck_profile.v1",
+ "id": "sparta-house-sbir-profile",
+ "version": 1,
+ "audience": "sbir",
+ "target_slide_range": [
+  6,
+  20
+ ],
+ "modules": [
+  {
+   "module": "cover",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "value_prop",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "toc",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "problem_solution",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "vision",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "product_modules",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "roadmap",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "ask",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "boneyard",
+   "required": false,
+   "position": "any"
+  }
+ ],
+ "module_order": [
+  "cover",
+  "value_prop",
+  "toc",
+  "problem_solution",
+  "vision",
+  "product_modules",
+  "roadmap",
+  "ask",
+  "boneyard"
+ ],
+ "evidence_depth": "standard",
+ "humor": "low",
+ "boneyard_appendix": true,
+ "distribution_notice_slide": false,
+ "recap_devices": false,
+ "density_words_median_target": 21,
+ "density_words_p90_max": 144,
+ "provenance": {
+  "migrated_from": "sparta-house-sbir.json"
+ }
+}

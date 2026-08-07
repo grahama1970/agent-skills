@@ -895,3 +895,69 @@ def test_pptx_theme_scoped_and_product_neutral(tmp_path):
     build_pptx(deck, ledger, sources, assets, source_manifest_dir=bundle, asset_manifest_dir=bundle, output_path=tmp_path / "deck.pptx")
     assert (Theme.cyan, Theme.font) == before  # restored after the build
     assert (tmp_path / "deck.pptx").exists()
+
+
+def test_design_schema_set_and_migration():
+    """#1275: four strict schemas; migrated instances validate; resolution is
+    deterministic; negatives reject; JSON/YAML round-trips without loss."""
+    import json
+
+    import pytest as _pytest
+    import yaml
+
+    from pitchdeck.design_system import (
+        CompositionRecipe,
+        DeckProfile,
+        DesignSystem,
+        load_recipes,
+        resolve_design,
+        resolve_profile,
+        verify_exemplars,
+    )
+
+    skill = Path(__file__).parent.parent.parent / "best-practices-slide-design"
+    systems = {p.name: DesignSystem.model_validate(json.loads(p.read_text())) for p in (skill / "design-systems").glob("*.json")}
+    profiles = {p.name: DeckProfile.model_validate(json.loads(p.read_text())) for p in (skill / "profiles").glob("*.json")}
+    assert len(systems) == 3 and len(profiles) == 3
+
+    # deterministic resolution
+    for system in systems.values():
+        assert resolve_design(system).model_dump() == resolve_design(system).model_dump()
+    for profile in profiles.values():
+        resolved = resolve_profile(profile)
+        assert resolved.ordered_required_modules and resolved.model_dump() == resolve_profile(profile).model_dump()
+
+    # all six recipes are schema instances; exemplars resolve against the corpus
+    recipes = load_recipes()
+    assert len(recipes) == 6
+    verify_exemplars(recipes, skill / "references" / "style_corpus.json")
+
+    # YAML round-trip without semantic loss
+    sample = next(iter(systems.values()))
+    dumped = sample.model_dump(mode="json", by_alias=True)
+    assert DesignSystem.model_validate(yaml.safe_load(yaml.safe_dump(dumped))).model_dump() == sample.model_dump()
+
+    # negatives
+    base = json.loads(sample.model_dump_json(by_alias=True))
+    bad_role = json.loads(json.dumps(base)); bad_role["header_band"]["fill_role"] = "chartreuse"
+    with _pytest.raises(Exception):
+        DesignSystem.model_validate(bad_role)
+    bad_hex = json.loads(json.dumps(base)); bad_hex["palette"]["primary"] = "petrol"
+    with _pytest.raises(Exception, match="invalid hex"):
+        DesignSystem.model_validate(bad_hex)
+    dangling = json.loads(json.dumps(base))
+    dangling["palette"] = {"canvas": "#FFFFFF", "ink": "#292929", "muted": "#595959", "alert": "#A14240"}
+    with _pytest.raises(Exception, match="not defined"):
+        DesignSystem.model_validate(dangling)
+    profile_doc = json.loads(next(iter(profiles.values())).model_dump_json(by_alias=True))
+    profile_doc["module_order"] = ["cover", "interpretive_dance"]
+    with _pytest.raises(Exception, match="unsupported modules"):
+        DeckProfile.model_validate(profile_doc)
+    recipe_doc = json.loads(next(iter(recipes.values())).model_dump_json(by_alias=True))
+    recipe_doc["exemplar_ids"] = ["no-such-exemplar"]
+    ghost = CompositionRecipe.model_validate(recipe_doc)
+    with _pytest.raises(Exception, match="unresolved exemplar"):
+        verify_exemplars({ghost.id: ghost}, skill / "references" / "style_corpus.json")
+    # migration receipt names dropped prose-only fields
+    receipt = json.loads((skill / "references" / "theme-migration-receipt.json").read_text())
+    assert len(receipt["migrated"]) == 3 and receipt["dropped_prose_fields"]

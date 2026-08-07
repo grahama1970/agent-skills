@@ -1,0 +1,29 @@
+{
+ "schema": "pitchdeck.composition_recipe.v1",
+ "id": "one-big-diagram",
+ "version": 1,
+ "title_binding_required": true,
+ "numeric_requires_span": true,
+ "reveal_order_matches_narrative": true,
+ "pptx_editable_shapes_required": true,
+ "provenance": {
+  "origin": "COMPOSITION_RECIPES python dict, migrated #1275"
+ },
+ "required_roles": [
+  "title",
+  "diagram"
+ ],
+ "optional_roles": [
+  "caption"
+ ],
+ "allowed_kinds": [
+  "text",
+  "diagram",
+  "svg"
+ ],
+ "max_words": 45,
+ "visual_weight_min_frac": 0.4,
+ "exemplar_ids": [
+  "cybersummit-12-how-diagram"
+ ]
+}

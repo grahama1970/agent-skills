@@ -1,0 +1,131 @@
+{
+ "$defs": {
+  "StyleObservation": {
+   "additionalProperties": false,
+   "properties": {
+    "value": {
+     "minLength": 1,
+     "title": "Value",
+     "type": "string"
+    },
+    "count": {
+     "minimum": 1,
+     "title": "Count",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "value",
+    "count"
+   ],
+   "title": "StyleObservation",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "pitchdeck.style_reference.v1",
+   "default": "pitchdeck.style_reference.v1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "id": {
+   "minLength": 1,
+   "title": "Id",
+   "type": "string"
+  },
+  "version": {
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
+  },
+  "source_file": {
+   "minLength": 1,
+   "title": "Source File",
+   "type": "string"
+  },
+  "source_sha256": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Source Sha256"
+  },
+  "slide_count": {
+   "minimum": 1,
+   "title": "Slide Count",
+   "type": "integer"
+  },
+  "fonts": {
+   "items": {
+    "$ref": "#/$defs/StyleObservation"
+   },
+   "title": "Fonts",
+   "type": "array"
+  },
+  "colors": {
+   "items": {
+    "$ref": "#/$defs/StyleObservation"
+   },
+   "title": "Colors",
+   "type": "array"
+  },
+  "sizes_pt": {
+   "items": {
+    "$ref": "#/$defs/StyleObservation"
+   },
+   "title": "Sizes Pt",
+   "type": "array"
+  },
+  "words_median": {
+   "minimum": 0,
+   "title": "Words Median",
+   "type": "integer"
+  },
+  "words_p90": {
+   "minimum": 0,
+   "title": "Words P90",
+   "type": "integer"
+  },
+  "patterns": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Patterns",
+   "type": "array"
+  },
+  "confidence": {
+   "default": "measured",
+   "enum": [
+    "measured",
+    "estimated",
+    "unsupported"
+   ],
+   "title": "Confidence",
+   "type": "string"
+  },
+  "provenance": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Provenance",
+   "type": "object"
+  }
+ },
+ "required": [
+  "id",
+  "version",
+  "source_file",
+  "slide_count",
+  "words_median",
+  "words_p90"
+ ],
+ "title": "StyleReference",
+ "type": "object"
+}

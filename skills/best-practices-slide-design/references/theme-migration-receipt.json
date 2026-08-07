@@ -1,0 +1,56 @@
+{
+ "schema": "pitchdeck.theme_migration_receipt.v1",
+ "migrated": [
+  {
+   "theme": "sparta-house-conference.json",
+   "design_system": "sparta-house-conference",
+   "deck_profile": "sparta-house-conference-profile",
+   "resolved_header_fill": "#065E7C",
+   "resolved_required_modules": [
+    "cover",
+    "value_prop",
+    "problem_solution",
+    "roadmap"
+   ]
+  },
+  {
+   "theme": "sparta-house-program-review.json",
+   "design_system": "sparta-house-program-review",
+   "deck_profile": "sparta-house-program-review-profile",
+   "resolved_header_fill": "#065E7C",
+   "resolved_required_modules": [
+    "cover",
+    "pipeline_position",
+    "accomplishments_since_last_review",
+    "roadmap"
+   ]
+  },
+  {
+   "theme": "sparta-house-sbir.json",
+   "design_system": "sparta-house-sbir",
+   "deck_profile": "sparta-house-sbir-profile",
+   "resolved_header_fill": "#065E7C",
+   "resolved_required_modules": [
+    "cover",
+    "value_prop",
+    "problem_solution",
+    "roadmap"
+   ]
+  }
+ ],
+ "dropped_prose_fields": {
+  "sparta-house-conference.json": [
+   "description",
+   "chrome.header_band.metaphor_badge",
+   "bullet_grammar (prose strings)"
+  ],
+  "sparta-house-program-review.json": [
+   "description",
+   "arc_overrides"
+  ],
+  "sparta-house-sbir.json": [
+   "description",
+   "arc_overrides"
+  ]
+ }
+}

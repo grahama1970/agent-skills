@@ -79,9 +79,13 @@ def render_pptx(pptx_path: Path, output_dir: Path, *, dpi: int = 120) -> Operati
         raise SkillError("--dpi must be between 72 and 300")
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    # Isolated profile: headless conversion must not collide with (or corrupt)
+    # a running GUI LibreOffice holding the shared user profile lock.
+    profile_dir = output_dir / ".lo-profile"
     _run(
         [
             libreoffice,
+            f"-env:UserInstallation=file://{profile_dir.resolve()}",
             "--headless",
             "--convert-to",
             "pdf",

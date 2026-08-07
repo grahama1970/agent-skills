@@ -1,0 +1,29 @@
+{
+ "schema": "pitchdeck.composition_recipe.v1",
+ "id": "roadmap-lanes",
+ "version": 1,
+ "title_binding_required": true,
+ "numeric_requires_span": true,
+ "reveal_order_matches_narrative": true,
+ "pptx_editable_shapes_required": true,
+ "provenance": {
+  "origin": "COMPOSITION_RECIPES python dict, migrated #1275"
+ },
+ "required_roles": [
+  "title",
+  "chevrons"
+ ],
+ "optional_roles": [
+  "visual"
+ ],
+ "allowed_kinds": [
+  "text",
+  "image",
+  "diagram"
+ ],
+ "max_words": 70,
+ "visual_weight_min_frac": 0.0,
+ "exemplar_ids": [
+  "cybersummit-49-assertion-humor"
+ ]
+}

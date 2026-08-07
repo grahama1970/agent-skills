@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "710ed532bdaef4013a7abd18ad11aa23a7be142d",
- "source_tree_sha256": "948ed716c768031ba793a751d94befd3a078aa718c60a5e487bb6963f4d99ad0",
+ "commit": "4c736a073de7f66c3aab677eeeabd63bc5f282ed",
+ "source_tree_sha256": "8f50030ec369f77615e2f9487abbd1c6332ebbe6a19e6b8e233708e73573f6bc",
  "commands": [
   "apply-edit",
   "asset-add",
@@ -39,10 +39,13 @@
     "pitchdeck.asset_manifest.v1",
     "pitchdeck.build_receipt.v1",
     "pitchdeck.claim_ledger.v1",
+    "pitchdeck.composition_recipe.v1",
     "pitchdeck.deck_document.v1",
     "pitchdeck.deck_manifest.v1",
     "pitchdeck.deck_op_receipt.v1",
+    "pitchdeck.deck_profile.v1",
     "pitchdeck.deck_version.v1",
+    "pitchdeck.design_system.v1",
     "pitchdeck.doctor_receipt.v1",
     "pitchdeck.edit_proposal.v1",
     "pitchdeck.emit_html_receipt.v1",
@@ -57,6 +60,7 @@
     "pitchdeck.source_edit_receipt.v1",
     "pitchdeck.source_manifest.v1",
     "pitchdeck.source_state.v1",
+    "pitchdeck.style_reference.v1",
     "pitchdeck.ui_deck_bundle.v1",
     "pitchdeck.validation_report.v1",
     "pitchdeck.verify_receipt.v1",
@@ -74,7 +78,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "53 passed, 1 xfail"
+  "summary": "54 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

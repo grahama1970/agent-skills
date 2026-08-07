@@ -1,0 +1,165 @@
+{
+ "$defs": {
+  "Audience": {
+   "enum": [
+    "conference",
+    "sbir",
+    "program-review"
+   ],
+   "title": "Audience",
+   "type": "string"
+  },
+  "ModuleRequirement": {
+   "additionalProperties": false,
+   "properties": {
+    "module": {
+     "minLength": 1,
+     "title": "Module",
+     "type": "string"
+    },
+    "required": {
+     "default": true,
+     "title": "Required",
+     "type": "boolean"
+    },
+    "position": {
+     "default": "any",
+     "enum": [
+      "early",
+      "mid",
+      "late",
+      "any"
+     ],
+     "title": "Position",
+     "type": "string"
+    }
+   },
+   "required": [
+    "module"
+   ],
+   "title": "ModuleRequirement",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "pitchdeck.deck_profile.v1",
+   "default": "pitchdeck.deck_profile.v1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "id": {
+   "minLength": 1,
+   "title": "Id",
+   "type": "string"
+  },
+  "version": {
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
+  },
+  "audience": {
+   "$ref": "#/$defs/Audience"
+  },
+  "target_slide_range": {
+   "default": [
+    6,
+    20
+   ],
+   "maxItems": 2,
+   "minItems": 2,
+   "prefixItems": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "integer"
+    }
+   ],
+   "title": "Target Slide Range",
+   "type": "array"
+  },
+  "modules": {
+   "items": {
+    "$ref": "#/$defs/ModuleRequirement"
+   },
+   "minItems": 1,
+   "title": "Modules",
+   "type": "array"
+  },
+  "module_order": {
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1,
+   "title": "Module Order",
+   "type": "array"
+  },
+  "evidence_depth": {
+   "default": "standard",
+   "enum": [
+    "light",
+    "standard",
+    "deep"
+   ],
+   "title": "Evidence Depth",
+   "type": "string"
+  },
+  "humor": {
+   "default": "low",
+   "enum": [
+    "off",
+    "low",
+    "high"
+   ],
+   "title": "Humor",
+   "type": "string"
+  },
+  "boneyard_appendix": {
+   "default": true,
+   "title": "Boneyard Appendix",
+   "type": "boolean"
+  },
+  "distribution_notice_slide": {
+   "default": false,
+   "title": "Distribution Notice Slide",
+   "type": "boolean"
+  },
+  "recap_devices": {
+   "default": false,
+   "title": "Recap Devices",
+   "type": "boolean"
+  },
+  "density_words_median_target": {
+   "maximum": 80,
+   "minimum": 5,
+   "title": "Density Words Median Target",
+   "type": "integer"
+  },
+  "density_words_p90_max": {
+   "maximum": 250,
+   "minimum": 10,
+   "title": "Density Words P90 Max",
+   "type": "integer"
+  },
+  "provenance": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Provenance",
+   "type": "object"
+  }
+ },
+ "required": [
+  "id",
+  "version",
+  "audience",
+  "modules",
+  "module_order",
+  "density_words_median_target",
+  "density_words_p90_max"
+ ],
+ "title": "DeckProfile",
+ "type": "object"
+}

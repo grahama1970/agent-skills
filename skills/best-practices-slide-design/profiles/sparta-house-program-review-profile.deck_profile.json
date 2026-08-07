@@ -1,0 +1,72 @@
+{
+ "schema": "pitchdeck.deck_profile.v1",
+ "id": "sparta-house-program-review-profile",
+ "version": 1,
+ "audience": "program-review",
+ "target_slide_range": [
+  6,
+  20
+ ],
+ "modules": [
+  {
+   "module": "cover",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "pipeline_position",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "toc",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "accomplishments_since_last_review",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "product_modules",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "roadmap",
+   "required": true,
+   "position": "any"
+  },
+  {
+   "module": "discussion",
+   "required": false,
+   "position": "any"
+  },
+  {
+   "module": "boneyard",
+   "required": false,
+   "position": "any"
+  }
+ ],
+ "module_order": [
+  "cover",
+  "pipeline_position",
+  "toc",
+  "accomplishments_since_last_review",
+  "product_modules",
+  "roadmap",
+  "discussion",
+  "boneyard"
+ ],
+ "evidence_depth": "standard",
+ "humor": "off",
+ "boneyard_appendix": true,
+ "distribution_notice_slide": true,
+ "recap_devices": true,
+ "density_words_median_target": 33,
+ "density_words_p90_max": 93,
+ "provenance": {
+  "migrated_from": "sparta-house-program-review.json"
+ }
+}

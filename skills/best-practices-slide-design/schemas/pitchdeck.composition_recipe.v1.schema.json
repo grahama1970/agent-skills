@@ -1,0 +1,125 @@
+{
+ "$defs": {
+  "RoleId": {
+   "enum": [
+    "title",
+    "message",
+    "chevrons",
+    "diagram",
+    "visual",
+    "callout",
+    "caption",
+    "footer"
+   ],
+   "title": "RoleId",
+   "type": "string"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "pitchdeck.composition_recipe.v1",
+   "default": "pitchdeck.composition_recipe.v1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "id": {
+   "minLength": 1,
+   "title": "Id",
+   "type": "string"
+  },
+  "version": {
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
+  },
+  "required_roles": {
+   "items": {
+    "$ref": "#/$defs/RoleId"
+   },
+   "minItems": 1,
+   "title": "Required Roles",
+   "type": "array"
+  },
+  "optional_roles": {
+   "items": {
+    "$ref": "#/$defs/RoleId"
+   },
+   "title": "Optional Roles",
+   "type": "array"
+  },
+  "allowed_kinds": {
+   "items": {
+    "enum": [
+     "text",
+     "image",
+     "svg",
+     "figure",
+     "diagram"
+    ],
+    "type": "string"
+   },
+   "minItems": 1,
+   "title": "Allowed Kinds",
+   "type": "array"
+  },
+  "max_words": {
+   "maximum": 200,
+   "minimum": 5,
+   "title": "Max Words",
+   "type": "integer"
+  },
+  "visual_weight_min_frac": {
+   "default": 0.0,
+   "maximum": 1.0,
+   "minimum": 0.0,
+   "title": "Visual Weight Min Frac",
+   "type": "number"
+  },
+  "title_binding_required": {
+   "default": true,
+   "title": "Title Binding Required",
+   "type": "boolean"
+  },
+  "numeric_requires_span": {
+   "default": true,
+   "title": "Numeric Requires Span",
+   "type": "boolean"
+  },
+  "reveal_order_matches_narrative": {
+   "default": true,
+   "title": "Reveal Order Matches Narrative",
+   "type": "boolean"
+  },
+  "pptx_editable_shapes_required": {
+   "default": true,
+   "title": "Pptx Editable Shapes Required",
+   "type": "boolean"
+  },
+  "exemplar_ids": {
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1,
+   "title": "Exemplar Ids",
+   "type": "array"
+  },
+  "provenance": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Provenance",
+   "type": "object"
+  }
+ },
+ "required": [
+  "id",
+  "version",
+  "required_roles",
+  "allowed_kinds",
+  "max_words",
+  "exemplar_ids"
+ ],
+ "title": "CompositionRecipe",
+ "type": "object"
+}

@@ -22,6 +22,9 @@ composes:
   - pitchdeck
 complies:
   - best-practices-skills
+disciplines:
+  - engineering-standards
+  - content-creation
 ---
 
 # Slide Design Best Practices

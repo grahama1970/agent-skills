@@ -1,0 +1,72 @@
+{
+ "schema": "pitchdeck.design_system.v1",
+ "id": "sparta-house-program-review",
+ "version": 1,
+ "mode": "light",
+ "palette": {
+  "primary": "#065E7C",
+  "canvas": "#FFFFFF",
+  "ink": "#2B2B2B",
+  "muted": "#595959",
+  "alert": "#A14240",
+  "secondary": "#26558E",
+  "highlight_warm": "#C36518",
+  "program": "#275791"
+ },
+ "fonts": {
+  "heading": "Calibri",
+  "body": "Calibri",
+  "code": "Consolas",
+  "diagram": "Roboto"
+ },
+ "type_scale_pt": {
+  "hero": 64.0,
+  "statement_hero": 112.0,
+  "section": 36.0,
+  "title": 28.0,
+  "lead": 24.0,
+  "body": 20.0,
+  "support": 16.0,
+  "caption": 10.0
+ },
+ "header_band": {
+  "fill_role": "primary",
+  "title_color": "#FFFFFF",
+  "height_frac": 0.085
+ },
+ "footer": {
+  "rule_role": "primary",
+  "page_number": true,
+  "distribution_statement": true,
+  "sponsor_strip": false
+ },
+ "badge": {
+  "position": "none",
+  "shape": "circle",
+  "stroke_role": "primary"
+ },
+ "bullet_grammar": [
+  {
+   "level": 1,
+   "marker": "chevron",
+   "color_role": "primary"
+  },
+  {
+   "level": 2,
+   "marker": "square",
+   "color_role": "ink"
+  },
+  {
+   "level": 3,
+   "marker": "dash",
+   "color_role": "muted"
+  }
+ ],
+ "accessibility": {
+  "min_body_pt": 14.0,
+  "min_contrast_ratio": 4.5
+ },
+ "provenance": {
+  "migrated_from": "sparta-house-program-review.json"
+ }
+}

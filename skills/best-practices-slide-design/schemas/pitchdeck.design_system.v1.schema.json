@@ -1,0 +1,329 @@
+{
+ "$defs": {
+  "Accessibility": {
+   "additionalProperties": false,
+   "properties": {
+    "min_body_pt": {
+     "minimum": 8.0,
+     "title": "Min Body Pt",
+     "type": "number"
+    },
+    "min_contrast_ratio": {
+     "minimum": 1.0,
+     "title": "Min Contrast Ratio",
+     "type": "number"
+    }
+   },
+   "required": [
+    "min_body_pt",
+    "min_contrast_ratio"
+   ],
+   "title": "Accessibility",
+   "type": "object"
+  },
+  "BulletLevel": {
+   "additionalProperties": false,
+   "properties": {
+    "level": {
+     "maximum": 3,
+     "minimum": 1,
+     "title": "Level",
+     "type": "integer"
+    },
+    "marker": {
+     "enum": [
+      "chevron",
+      "square",
+      "dash"
+     ],
+     "title": "Marker",
+     "type": "string"
+    },
+    "color_role": {
+     "$ref": "#/$defs/ColorRole"
+    }
+   },
+   "required": [
+    "level",
+    "marker",
+    "color_role"
+   ],
+   "title": "BulletLevel",
+   "type": "object"
+  },
+  "ColorRole": {
+   "enum": [
+    "primary",
+    "secondary",
+    "canvas",
+    "ink",
+    "muted",
+    "highlight_warm",
+    "highlight_green",
+    "program",
+    "alert"
+   ],
+   "title": "ColorRole",
+   "type": "string"
+  },
+  "FontRoles": {
+   "additionalProperties": false,
+   "properties": {
+    "heading": {
+     "minLength": 1,
+     "title": "Heading",
+     "type": "string"
+    },
+    "body": {
+     "minLength": 1,
+     "title": "Body",
+     "type": "string"
+    },
+    "code": {
+     "minLength": 1,
+     "title": "Code",
+     "type": "string"
+    },
+    "diagram": {
+     "minLength": 1,
+     "title": "Diagram",
+     "type": "string"
+    }
+   },
+   "required": [
+    "heading",
+    "body",
+    "code",
+    "diagram"
+   ],
+   "title": "FontRoles",
+   "type": "object"
+  },
+  "FooterChrome": {
+   "additionalProperties": false,
+   "properties": {
+    "rule_role": {
+     "$ref": "#/$defs/ColorRole"
+    },
+    "page_number": {
+     "default": true,
+     "title": "Page Number",
+     "type": "boolean"
+    },
+    "distribution_statement": {
+     "default": false,
+     "title": "Distribution Statement",
+     "type": "boolean"
+    },
+    "sponsor_strip": {
+     "default": false,
+     "title": "Sponsor Strip",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "rule_role"
+   ],
+   "title": "FooterChrome",
+   "type": "object"
+  },
+  "HeaderBand": {
+   "additionalProperties": false,
+   "properties": {
+    "fill_role": {
+     "$ref": "#/$defs/ColorRole"
+    },
+    "title_color": {
+     "pattern": "^#[0-9a-fA-F]{6}$",
+     "title": "Title Color",
+     "type": "string"
+    },
+    "height_frac": {
+     "exclusiveMinimum": 0.0,
+     "maximum": 0.2,
+     "title": "Height Frac",
+     "type": "number"
+    }
+   },
+   "required": [
+    "fill_role",
+    "title_color",
+    "height_frac"
+   ],
+   "title": "HeaderBand",
+   "type": "object"
+  },
+  "MetaphorBadge": {
+   "additionalProperties": false,
+   "properties": {
+    "position": {
+     "enum": [
+      "top-right",
+      "top-left",
+      "none"
+     ],
+     "title": "Position",
+     "type": "string"
+    },
+    "shape": {
+     "const": "circle",
+     "default": "circle",
+     "title": "Shape",
+     "type": "string"
+    },
+    "stroke_role": {
+     "$ref": "#/$defs/ColorRole",
+     "default": "primary"
+    }
+   },
+   "required": [
+    "position"
+   ],
+   "title": "MetaphorBadge",
+   "type": "object"
+  },
+  "TypeScalePt": {
+   "additionalProperties": false,
+   "properties": {
+    "hero": {
+     "exclusiveMinimum": 0,
+     "title": "Hero",
+     "type": "number"
+    },
+    "statement_hero": {
+     "exclusiveMinimum": 0,
+     "title": "Statement Hero",
+     "type": "number"
+    },
+    "section": {
+     "exclusiveMinimum": 0,
+     "title": "Section",
+     "type": "number"
+    },
+    "title": {
+     "exclusiveMinimum": 0,
+     "title": "Title",
+     "type": "number"
+    },
+    "lead": {
+     "exclusiveMinimum": 0,
+     "title": "Lead",
+     "type": "number"
+    },
+    "body": {
+     "exclusiveMinimum": 0,
+     "title": "Body",
+     "type": "number"
+    },
+    "support": {
+     "exclusiveMinimum": 0,
+     "title": "Support",
+     "type": "number"
+    },
+    "caption": {
+     "exclusiveMinimum": 0,
+     "title": "Caption",
+     "type": "number"
+    }
+   },
+   "required": [
+    "hero",
+    "statement_hero",
+    "section",
+    "title",
+    "lead",
+    "body",
+    "support",
+    "caption"
+   ],
+   "title": "TypeScalePt",
+   "type": "object"
+  }
+ },
+ "additionalProperties": false,
+ "properties": {
+  "schema": {
+   "const": "pitchdeck.design_system.v1",
+   "default": "pitchdeck.design_system.v1",
+   "title": "Schema",
+   "type": "string"
+  },
+  "id": {
+   "minLength": 1,
+   "title": "Id",
+   "type": "string"
+  },
+  "version": {
+   "minimum": 1,
+   "title": "Version",
+   "type": "integer"
+  },
+  "mode": {
+   "enum": [
+    "light",
+    "dark"
+   ],
+   "title": "Mode",
+   "type": "string"
+  },
+  "palette": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "minProperties": 1,
+   "propertyNames": {
+    "$ref": "#/$defs/ColorRole"
+   },
+   "title": "Palette",
+   "type": "object"
+  },
+  "fonts": {
+   "$ref": "#/$defs/FontRoles"
+  },
+  "type_scale_pt": {
+   "$ref": "#/$defs/TypeScalePt"
+  },
+  "header_band": {
+   "$ref": "#/$defs/HeaderBand"
+  },
+  "footer": {
+   "$ref": "#/$defs/FooterChrome"
+  },
+  "badge": {
+   "$ref": "#/$defs/MetaphorBadge"
+  },
+  "bullet_grammar": {
+   "items": {
+    "$ref": "#/$defs/BulletLevel"
+   },
+   "minItems": 1,
+   "title": "Bullet Grammar",
+   "type": "array"
+  },
+  "accessibility": {
+   "$ref": "#/$defs/Accessibility"
+  },
+  "provenance": {
+   "additionalProperties": {
+    "type": "string"
+   },
+   "title": "Provenance",
+   "type": "object"
+  }
+ },
+ "required": [
+  "id",
+  "version",
+  "mode",
+  "palette",
+  "fonts",
+  "type_scale_pt",
+  "header_band",
+  "footer",
+  "badge",
+  "bullet_grammar",
+  "accessibility"
+ ],
+ "title": "DesignSystem",
+ "type": "object"
+}
