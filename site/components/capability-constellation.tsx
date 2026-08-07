@@ -267,7 +267,7 @@ export function CapabilityConstellation() {
                   <text x={x} y={y + 15} textAnchor="middle" className="c-mark">
                     G
                   </text>
-                  <text x={x + 16} y={y + 23} textAnchor="middle" className="c-mark-sub">
+                  <text x={x + 21} y={y + 23} textAnchor="middle" className="c-mark-sub">
                     c
                   </text>
                 </g>
