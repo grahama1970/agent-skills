@@ -209,7 +209,14 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
     cwd = path.parent
     cases = []
     for case in manifest["cases"]:
-        results = [run_trial(case["command"], cwd, timeout_seconds) for _ in range(trials)]
+        # A case may declare its own timeout (real-world cases that run a live
+        # nightly need minutes, not the 30s default that fits unit-test cases).
+        case_timeout = case.get("timeout_seconds", timeout_seconds)
+        try:
+            case_timeout = max(0.1, float(case_timeout))
+        except (TypeError, ValueError):
+            case_timeout = timeout_seconds
+        results = [run_trial(case["command"], cwd, case_timeout) for _ in range(trials)]
         passed = [trial_passed(case, result) for result in results]
         passed_trials = sum(passed)
         cases.append(

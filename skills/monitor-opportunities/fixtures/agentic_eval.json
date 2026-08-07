@@ -12,6 +12,7 @@
       "name": "live-e2e-nightly-real-world",
       "type": "positive",
       "real_world": true,
+      "timeout_seconds": 1800,
       "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"],
       "expected": {
         "exit_code": 0,
