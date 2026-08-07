@@ -90,6 +90,7 @@ export function CapabilityConstellation() {
   const [hover, setHover] = useState<string | null>(null);
   const [, force] = useState(0); // bump to re-render from mutated sim positions
   const drag = useRef<{ id: string } | null>(null);
+  const moved = useRef(false); // distinguishes a drag from a click on project nodes
 
   // Stable simulation nodes/edges (built once; d3 mutates them across ticks).
   const { simNodes, simEdges, byId } = useMemo(() => {
@@ -170,6 +171,7 @@ export function CapabilityConstellation() {
       const [x, y] = toLocal(ev.clientX, ev.clientY);
       node.fx = x;
       node.fy = y;
+      moved.current = true; // a real drag — suppress the click-through navigation
       force((t) => t + 1);
     };
     const up = () => {
@@ -196,6 +198,7 @@ export function CapabilityConstellation() {
     if (n.type === 'practice') return; // hub stays put
     ev.preventDefault();
     drag.current = { id: n.id };
+    moved.current = false;
     n.fx = n.x;
     n.fy = n.y;
   };
@@ -326,6 +329,9 @@ export function CapabilityConstellation() {
                 data-qs-action="CONSTELLATION_JUMP"
                 title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 aria-label={`${n.label} — ${n.question || ''}`}
+                onClick={(e) => {
+                  if (moved.current) e.preventDefault(); // was a drag, not a click
+                }}
               >
                 {inner}
               </a>
