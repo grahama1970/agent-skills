@@ -1,6 +1,6 @@
 ---
 name: monitor-website
-description: Audit, regenerate, and deploy the public site (grahama.co, site/) from repository sources. Root README.md owns curated project membership and inventory counts; public project README.md files feed the searchable catalog, with SKILL.md as a fallback. Report-only audit detects curated drift and live-site health; apply/refresh regenerate static artifacts without rewriting authored site prose.
+description: Audit, regenerate, and deploy the public site (grahama.co, site/) from repository sources. Root README.md owns curated project membership and inventory counts; public project README.md files feed the searchable catalog, with SKILL.md as a fallback. Report-only audit detects curated drift, catalog source-digest drift, and live-site health; apply/refresh regenerate static artifacts without rewriting authored site prose.
 triggers:
   - "monitor website"
   - "website drift"
@@ -33,7 +33,7 @@ README prose into an unreviewed homepage rewrite.
 ## Commands
 
 ```bash
-# Report-only: root README vs content.json drift + live-site health. Exit 1 on drift.
+# Report-only: curated drift, catalog source digests, and live-site health.
 ./run.sh audit --json
 
 # Skip the live https://grahama.co probes (offline / pre-DNS use)
@@ -92,8 +92,10 @@ publication and should be enabled only when workstation scheduling and explicit
   searchable/project-source text, not the first-person editorial voice.
 - **Public boundary.** Only public README/SKILL sources or explicitly approved
   public overviews may enter catalog/search/graph artifacts.
-- **Proof:** audit JSON reports curated drift; deployment proof is a green
-  `site-deploy` run plus a live read-back of the exact generated source commit.
+- **Proof:** refreshed catalog records carry source path, source kind, and
+  SHA-256 digest. `audit` re-hashes those files and fails on missing or changed
+  sources. Deployment proof adds a live read-back of the exact generated source
+  commit.
 
 ## What audit checks
 
@@ -101,7 +103,10 @@ publication and should be enabled only when workstation scheduling and explicit
 |---|---|---|
 | stats.skills / sanity / agents | root README "At a Glance" table | numbers differ from content.json |
 | project membership | root README project-card names + hrefs | slug present in one side only, or href changed |
+| catalog source integrity | sourcePath/sourceDigest in generated catalog | a public README/SKILL source is missing, escapes the repo, or its digest changed |
 | live site | https://grahama.co, /sitemap.xml | non-200, or homepage missing a nav `data-qid` |
 
-Project README/SKILL changes are covered by the workflow path triggers and
-`refresh` generation gates; they do not silently rewrite curated homepage copy.
+A pre-provenance catalog is reported as `covered: false` rather than treated as
+corruption so an older checkout can migrate by running `refresh`. The Pages
+workflow always refreshes before audit, so a deployed build must have complete
+source-digest coverage.
