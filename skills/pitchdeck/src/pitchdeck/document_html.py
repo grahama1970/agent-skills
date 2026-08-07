@@ -41,6 +41,22 @@ def _data_uri(path: Path) -> str:
     return f"data:{mime};base64,{base64.b64encode(path.read_bytes()).decode()}"
 
 
+def _icon_glyph_svg(icon_id: str, x: float, y: float, size: float, tint: str) -> str:
+    """Inline a library glyph (already sanitized + hash-verified) at position."""
+    try:
+        from .icons import load_manifest
+
+        entry = load_manifest().get(icon_id)
+    except Exception:
+        entry = None
+    if entry is None:
+        return (f'<circle cx="{x + size / 2:.0f}" cy="{y + size / 2:.0f}" r="{size / 2:.0f}" '
+                f'fill="none" stroke="{tint}" stroke-width="2.5"/>')
+    inner = entry["svg"].replace("#000", tint)
+    inner = inner.replace("<svg ", f'<svg x="{x:.0f}" y="{y:.0f}" width="{size:.0f}" height="{size:.0f}" ', 1)
+    return inner
+
+
 def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str, ink: str) -> str:
     """Nodes, connectors, and labels as separate SVG shapes (editability contract)."""
     parts: list[str] = [
@@ -52,13 +68,13 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
         x, y = node.bbox.x * width, node.bbox.y * height
         w, h = node.bbox.w * width, node.bbox.h * height
         centers[node.id] = (x + w / 2, y + h / 2, w, h)
+        icon_size = min(w, h) * 0.34
         parts.append(
             f'<g id="node-{html.escape(node.id)}">'
             f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{h:.0f}" rx="10" '
             f'fill="none" stroke="{primary}" stroke-width="3"/>'
             + (
-                f'<circle cx="{x + w / 2:.0f}" cy="{y + h * 0.32:.0f}" r="{min(w, h) * 0.16:.0f}" '
-                f'fill="none" stroke="{primary}" stroke-width="2.5"/>'
+                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * 0.32 - icon_size / 2, icon_size, primary)
                 if node.icon
                 else ""
             )
@@ -182,6 +198,15 @@ def _element_html(el: DocElement, assets_by_id: dict, asset_base: Path, theme: d
 
         resolved = resolve_icon(el.icon.library_id, require_editable=False)
         tint = palette.get(el.icon.tint_role, palette["primary"])
+        if el.role == "badge":
+            # metaphor badge: white circled glyph inside the band
+            svg = resolved["svg"].replace("#000", tint).replace("stroke='#000'", f"stroke='{tint}'")
+            svg = svg.replace("<svg ", '<svg width="62%" height="62%" style="position:absolute;left:19%;top:19%" ', 1)
+            return (
+                f'<div {qid} data-icon="{html.escape(el.icon.library_id)}" style="{pos}">'
+                f'<div style="position:relative;width:100%;height:100%;border:2.5px solid {tint};'
+                f'border-radius:50%;box-sizing:border-box;">{svg}</div></div>'
+            )
         svg = resolved["svg"].replace("#000", tint).replace("stroke='#000'", f"stroke='{tint}'")
         svg = svg.replace("<svg ", '<svg width="100%" height="100%" ', 1)
         return f'<div {qid} data-icon="{html.escape(el.icon.library_id)}" style="{pos}">{svg}</div>'
@@ -292,8 +317,9 @@ def render_document_html(
                 f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
                 f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;">'
                 f'<span style="color:{band.get("title_color", "#FFFFFF")};font-family:'
-                f'{theme["theme_tokens"]["heading_font"]}, sans-serif;font-size:38px;font-weight:bold;'
-                f'padding-left:2.5%;">{html.escape(band_text)}</span></div>'
+                f'{theme["theme_tokens"]["heading_font"]}, sans-serif;'
+                f'font-size:{38 if len(band_text) <= 58 else 32}px;font-weight:bold;'
+                f'padding-left:2.5%;padding-right:9%;">{html.escape(band_text)}</span></div>'
             )
             if not hero:
                 elements = [e for e in elements if e.role != "title"]

@@ -118,13 +118,11 @@ def _pin_group_xfrm(group, bbox_rect: tuple) -> None:
             node.set(key, value)
 
 
-def _emit_icon(container, element: DocElement, frame: Frame, palette: dict, receipt: dict) -> None:
+def _emit_icon_parts(group, library_id: str, icon_frame: Frame, tint, name_prefix: str) -> None:
+    """Emit a library icon's native mapping (presets + straight freeforms) into a group."""
     from .icons import resolve_icon
 
-    resolved = resolve_icon(element.icon.library_id, require_editable=True)
-    tint = _hex(palette.get(element.icon.tint_role, palette["primary"]))
-    group = container.add_group_shape()
-    icon_frame = frame.sub(element.bbox)
+    resolved = resolve_icon(library_id, require_editable=True)
     for index, part in enumerate(resolved["mapping"]["parts"]):
         if part["kind"] == "preset":
             x, y, w, h = part["bbox"]
@@ -135,17 +133,26 @@ def _emit_icon(container, element: DocElement, frame: Frame, palette: dict, rece
             )
             shape.fill.background()
             shape.line.color.rgb = tint
-            shape.line.width = Pt(2.5)
-            shape.name = f"el:{element.id}:part{index}"
-        else:  # straight-segment freeform
+            shape.line.width = Pt(2.0)
+            shape.name = f"{name_prefix}:part{index}"
+        else:
             vertices = [(Emu(Inches(icon_frame.x + vx * icon_frame.w)), Emu(Inches(icon_frame.y + vy * icon_frame.h))) for vx, vy in part["vertices"]]
             builder = group.shapes.build_freeform(vertices[0][0], vertices[0][1], scale=1)
             builder.add_line_segments(vertices[1:], close=part.get("closed", False))
             shape = builder.convert_to_shape()
             shape.fill.background()
             shape.line.color.rgb = tint
-            shape.line.width = Pt(2.5)
-            shape.name = f"el:{element.id}:part{index}"
+            shape.line.width = Pt(2.0)
+            shape.name = f"{name_prefix}:part{index}"
+
+
+def _emit_icon(container, element: DocElement, frame: Frame, palette: dict, receipt: dict) -> None:
+    from .icons import resolve_icon
+
+    resolved = resolve_icon(element.icon.library_id, require_editable=True)
+    tint = _hex(palette.get(element.icon.tint_role, palette["primary"]))
+    group = container.add_group_shape()
+    _emit_icon_parts(group, element.icon.library_id, frame.sub(element.bbox), tint, f"el:{element.id}")
     _pin_group_xfrm(group, frame.rect(element.bbox))
     group.name = f"el:{element.id}"
     receipt["icons"].append({
@@ -238,6 +245,22 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
         connector.name = f"el:{element.id}"
         return
     if kind is DocElementKind.ICON:
+        if element.role == "badge":
+            tint = _hex(palette.get(element.icon.tint_role, "#FFFFFF"))
+            group = container.add_group_shape()
+            badge_frame = frame.sub(element.bbox)
+            ring = group.shapes.add_shape(MSO_SHAPE.OVAL, Inches(badge_frame.x), Inches(badge_frame.y),
+                                          Inches(badge_frame.w), Inches(badge_frame.h))
+            ring.fill.background()
+            ring.line.color.rgb = tint
+            ring.line.width = Pt(2.25)
+            ring.name = f"el:{element.id}:ring"
+            inner = Frame(badge_frame.x + badge_frame.w * 0.19, badge_frame.y + badge_frame.h * 0.19,
+                          badge_frame.w * 0.62, badge_frame.h * 0.62)
+            _emit_icon_parts(group, element.icon.library_id, inner, tint, f"el:{element.id}")
+            _pin_group_xfrm(group, frame.rect(element.bbox))
+            group.name = f"el:{element.id}"
+            return
         _emit_icon(container, element, frame, palette, receipt)
         return
     if kind is DocElementKind.RICH_TEXT:
@@ -305,15 +328,12 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
         box.line.width = Pt(2.5)
         box.name = f"el:{element.id}:node:{node.id}"
         if node.icon:
-            radius = min(nw, nh) * 0.16
-            icon_circle = group.shapes.add_shape(
-                MSO_SHAPE.OVAL,
-                Inches(nx + nw / 2 - radius), Inches(ny + nh * 0.32 - radius),
-                Inches(radius * 2), Inches(radius * 2),
+            size = min(nw, nh) * 0.36
+            _emit_icon_parts(
+                group, node.icon,
+                Frame(nx + nw / 2 - size / 2, ny + nh * 0.32 - size / 2, size, size),
+                primary, f"el:{element.id}:node:{node.id}:icon",
             )
-            icon_circle.fill.background()
-            icon_circle.line.color.rgb = primary
-            icon_circle.name = f"el:{element.id}:node:{node.id}:icon"
         label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * 0.52), Inches(nw), Inches(nh * 0.44))
         label.name = f"el:{element.id}:node:{node.id}:label"
         tf = label.text_frame
@@ -407,11 +427,11 @@ def emit_document_pptx(
             band.name = "chrome:band"
             title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
             band_text = (document.deck.title.split("—")[0].strip().upper() if hero else (title_el.text if title_el else ""))
-            title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 0.66), Inches(SLIDE_H_IN * 0.10 - 0.1))
+            title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 1.6), Inches(SLIDE_H_IN * 0.10 - 0.1))
             title_box.name = "chrome:band-title" if hero else (f"el:{title_el.id}" if title_el else "chrome:band-title")
             run = title_box.text_frame.paragraphs[0].add_run()
             run.text = band_text or ""
-            run.font.size = Pt(24)
+            run.font.size = Pt(24 if len(band_text or "") <= 58 else 20)
             run.font.bold = True
             run.font.color.rgb = _hex(band_cfg.get("title_color", "#FFFFFF"))
             skip_title = not hero

@@ -134,6 +134,387 @@
    },
    "png_fallback": null,
    "license": "original line-art, house style"
+  },
+  {
+   "id": "database",
+   "svg_file": "database.svg",
+   "svg_sha256": "31a61985186114f0f1d67ff6cddf27f1e88efb304e79fe14f3e44a1a338df4e3",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.15,
+       0.05,
+       0.7,
+       0.25
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.15,
+        0.18
+       ],
+       [
+        0.15,
+        0.82
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.85,
+        0.18
+       ],
+       [
+        0.85,
+        0.82
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.15,
+       0.7,
+       0.7,
+       0.25
+      ],
+      "filled": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "users",
+   "svg_file": "users.svg",
+   "svg_sha256": "3f1d2f0a91f6520a05d207e8fbd65e445ff5470bc5cea1ce6f2afe81d3f5b2c6",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.2,
+       0.15,
+       0.34,
+       0.34
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.08,
+        0.85
+       ],
+       [
+        0.17,
+        0.62
+       ],
+       [
+        0.58,
+        0.62
+       ],
+       [
+        0.66,
+        0.85
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.58,
+       0.24,
+       0.26,
+       0.26
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.66,
+        0.85
+       ],
+       [
+        0.72,
+        0.64
+       ],
+       [
+        0.92,
+        0.7
+       ],
+       [
+        0.92,
+        0.85
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "compass",
+   "svg_file": "compass.svg",
+   "svg_sha256": "503c8b35f7e2c5a18a9c5ec2b5028876b2c789b5b6f647a5e80cfaf16128df52",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.1,
+       0.1,
+       0.8,
+       0.8
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.62,
+        0.38
+       ],
+       [
+        0.54,
+        0.54
+       ],
+       [
+        0.38,
+        0.62
+       ],
+       [
+        0.46,
+        0.46
+       ]
+      ],
+      "closed": true
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "lightbulb",
+   "svg_file": "lightbulb.svg",
+   "svg_sha256": "9f9b33b995f803f5dc6e6c956c68237b9042a858d8a83c376f3c73f67ef6357c",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.22,
+       0.08,
+       0.56,
+       0.56
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.4,
+        0.64
+       ],
+       [
+        0.4,
+        0.86
+       ],
+       [
+        0.6,
+        0.86
+       ],
+       [
+        0.6,
+        0.64
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "route",
+   "svg_file": "route.svg",
+   "svg_sha256": "c44fabc5d158fa79a9f9d37fdf6f8d94d53d1eb3e97c40e5ac9208d66f32571a",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.08,
+       0.72,
+       0.2,
+       0.2
+      ],
+      "filled": false
+     },
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.72,
+       0.08,
+       0.2,
+       0.2
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.28,
+        0.78
+       ],
+       [
+        0.5,
+        0.78
+       ],
+       [
+        0.5,
+        0.28
+       ],
+       [
+        0.72,
+        0.28
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "monitor",
+   "svg_file": "monitor.svg",
+   "svg_sha256": "467553452101013c85f73e1efcc9fd0d5a9842ae935cee8d261f460ca2acd815",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "rounded_rect",
+      "bbox": [
+       0.1,
+       0.12,
+       0.8,
+       0.55
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.5,
+        0.67
+       ],
+       [
+        0.5,
+        0.86
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.35,
+        0.86
+       ],
+       [
+        0.65,
+        0.86
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "flag",
+   "svg_file": "flag.svg",
+   "svg_sha256": "1d2ef947e04553f1d2779314bc2cbd0c7fc9d285624c1b7d212f5ca30306d71b",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.26,
+        0.08
+       ],
+       [
+        0.26,
+        0.92
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.26,
+        0.12
+       ],
+       [
+        0.78,
+        0.26
+       ],
+       [
+        0.26,
+        0.4
+       ]
+      ],
+      "closed": true
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
   }
  ]
 }

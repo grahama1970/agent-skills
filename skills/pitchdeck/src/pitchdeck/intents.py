@@ -21,6 +21,7 @@ from pathlib import Path
 from .design_system import CompositionRecipe, DeckProfile, DesignSystem, load_recipes
 from .document import (
     Bbox,
+    IconSpec,
     DeckDocument,
     DiagramGraph,
     DocElement,
@@ -47,6 +48,18 @@ from .planning import DeckContext, NarrativeOutline, OutlineModule, PlanningCode
 _LABEL_HEADLINES = {
     "the problem", "problem", "solution", "how it works", "architecture",
     "results", "roadmap", "overview", "introduction", "background", "value proposition",
+}
+
+# Metaphor badge per module (cybersummit pattern: circular line-icon top-right
+# setting the slide's emotional register). Cover carries the brand, no badge.
+_MODULE_BADGES: dict[str, str] = {
+    "thesis": "compass",
+    "value_prop": "lightbulb",
+    "problem_solution": "lightbulb",
+    "architecture": "route",
+    "proof": "monitor",
+    "roadmap": "flag",
+    "ask": "users",
 }
 
 # Module -> ordered recipe preferences. Compatibility is checked in order.
@@ -147,17 +160,26 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
 
     if "chevrons" in {r.value for r in recipe.required_roles}:
-        extra = module.candidate_assertions[1:4] or module.candidate_assertions[:1]
+        if recipe.id == "roadmap-lanes":
+            # lanes = the claim's own list items (verbatim clause fragments)
+            import re as _re
+
+            primary = module.candidate_assertions[0]
+            lanes = [c.strip().rstrip(".") for c in _re.split(r",| and ", primary) if 2 <= len(c.split()) <= 8][:5]
+            extra = lanes or module.candidate_assertions[:1]
+        else:
+            extra = module.candidate_assertions[1:4] or module.candidate_assertions[:1]
         for index, text in enumerate(extra):
             el_id = f"chevron-{index}"
             elements.append(DocElement(
                 id=el_id, kind=DocElementKind.TEXT, role="chevrons",
-                bbox=Bbox(x=0.06, y=0.22 + index * 0.09, w=0.88, h=0.08),
+                bbox=Bbox(x=0.06, y=(0.26 if recipe.id == "roadmap-lanes" else 0.22) + index * (0.115 if recipe.id == "roadmap-lanes" else 0.09), w=0.88, h=0.08),
                 text=f"> {_truncate_words(text, 90)}", style=_CHEVRON_STYLE,
                 binding_paths=[f"element:{el_id}"],
                 entrance=DocEntrance(effect="rise", fragment_index=index),
             ))
-            source_claim = module.candidate_claim_ids[min(index + 1, len(module.candidate_claim_ids) - 1)]
+            source_claim = (module.candidate_claim_ids[0] if recipe.id == "roadmap-lanes"
+                            else module.candidate_claim_ids[min(index + 1, len(module.candidate_claim_ids) - 1)])
             bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
                                         claim_id=source_claim, transform_class="truncation"))
             reveal.append(el_id)
@@ -175,8 +197,15 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         reveal.append("diagram")
 
     if "visual" in {r.value for r in recipe.required_roles}:
+        # Corpus ink-envelope fit: screenshots sit at moderate scale on light
+        # canvas in the house style (render-oracle finding, dark product UI).
         elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.34, y=0.24, w=0.6, h=0.62), asset_id=module.visual_asset_id))
+                                   bbox=Bbox(x=0.37, y=0.27, w=0.47, h=0.42), asset_id=module.visual_asset_id))
+        elements.append(DocElement(id="visual-caption", kind=DocElementKind.TEXT, role="caption",
+                                   bbox=Bbox(x=0.37, y=0.71, w=0.47, h=0.05),
+                                   text="Prepared-host capture",
+                                   style=_CAPTION_STYLE, binding_paths=["element:visual-caption"]))
+        bindings.append(TextBinding(path="element:visual-caption", kind=BindingKind.NON_CLAIM))
     if "callout" in {r.value for r in recipe.required_roles}:
         callout_lines = "\n".join(f"> {t[:40]}" for t in module.candidate_assertions[:3])
         elements.append(DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
@@ -184,6 +213,16 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                    style=_CHEVRON_STYLE, binding_paths=["element:callout"]))
         bindings.append(TextBinding(path="element:callout", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=claim_ids[0], transform_class="truncation"))
+
+    badge = _MODULE_BADGES.get(module.module)
+    if badge:
+        from .document import IconSpec as _IconSpec
+
+        elements.append(DocElement(
+            id="metaphor-badge", kind=DocElementKind.ICON, role="badge",
+            bbox=Bbox(x=0.918, y=0.016, w=0.062, h=0.068),
+            icon=_IconSpec(library_id=badge, tint_role="canvas"),
+        ))
 
     # required_qualifier (2026-08-07 review): a claim's mandatory qualifier must
     # be VISIBLE wherever the claim is asserted — rendered as a bound footer.

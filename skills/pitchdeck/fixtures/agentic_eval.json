@@ -48,15 +48,16 @@
     "../run.sh",
     "design-lint",
     "--document",
-    "/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/materialized.document.json"
+    "/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/approved.document.json"
    ],
-   "note": "HONEST current state: the cold deck still fails band-overflow until assertion RENDERINGS land (#1279); this case flips to expect_exit 0 when they do",
+   "note": "FLIPPED 2026-08-07: assertion renderings + chrome parity landed; the cold deck now passes design-lint clean \u2014 real-world: the live cold-materialized sparta deck artifact, not a fixture stub",
    "expected": {
-    "exit_code": 1,
+    "exit_code": 0,
     "stdout_contains": [
-     "DESIGN_BAND_OVERFLOW"
+     "\"status\": \"PASS\""
     ]
-   }
+   },
+   "real_world": true
   }
  ]
 }
