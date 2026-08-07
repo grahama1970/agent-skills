@@ -118,6 +118,59 @@ _LINKEDIN_EXTRACT_JS = (
 )
 
 
+_LINKEDIN_SCROLL_JS = (
+    "(function(){var l=document.querySelector("
+    "'.jobs-search-results-list, div[class*=\"jobs-search-results\"], .scaffold-layout__list, ul.jobs-search__results-list');"
+    "if(l){l.scrollTop+=900;} window.scrollBy(0,900); return 'ok';})()"
+)
+
+
+def _linkedin_next_page_js(page: int) -> str:
+    return (
+        "(function(){"
+        f"var p={page};"
+        "var b=[].slice.call(document.querySelectorAll('button[aria-label]')).filter(function(x){return x.getAttribute('aria-label')==='Page '+p;})[0];"
+        "if(!b){b=[].slice.call(document.querySelectorAll('button')).filter(function(x){return x.innerText.trim()===String(p);})[0];}"
+        "if(b){b.scrollIntoView(); b.click(); return 'CLICKED';} return 'NO_BUTTON';})()"
+    )
+
+
+def _linkedin_scroll_paginate_capture(surf_run: Path, tab_id: str, max_pages: int = 3) -> list[dict[str, Any]]:
+    """Scroll each results page to force LinkedIn's virtualized list to render all
+    cards, accumulating them before they unrender, then advance pages. Robust to
+    virtualization: keeps a running dedup map keyed by title+company.
+    """
+    accumulated: dict[str, dict[str, Any]] = {}
+    for page in range(1, max_pages + 1):
+        stable = 0
+        for _ in range(12):
+            raw = _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_EXTRACT_JS, timeout=30)
+            try:
+                rows = json.loads(json.loads(raw))
+            except (ValueError, json.JSONDecodeError):
+                rows = []
+            new = 0
+            for r in rows:
+                title = (r.get("title") or "").strip()
+                if not title:
+                    continue
+                key = title + "|" + (r.get("company") or "")
+                if key not in accumulated:
+                    accumulated[key] = r
+                    new += 1
+            stable = stable + 1 if new == 0 else 0
+            if stable >= 3:
+                break
+            _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_SCROLL_JS, timeout=20)
+            _surf(surf_run, "wait", "1", timeout=15)
+        if page < max_pages:
+            clicked = _surf(surf_run, "js", "--tab-id", tab_id, _linkedin_next_page_js(page + 1), timeout=20)
+            if "CLICKED" not in clicked:
+                break
+            _surf(surf_run, "wait", "4", timeout=20)
+    return list(accumulated.values())
+
+
 def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
     """Read-only capture of LinkedIn 'top applicant' jobs from the authenticated session.
 
@@ -155,28 +208,20 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
             receipt["error"] = "LinkedIn sign-in wall — no authenticated session in the reachable browser"
             receipt["evidence_path"] = None
             return receipt
-        raw = _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_EXTRACT_JS)
-        rows = json.loads(json.loads(raw))
-        opps = []
-        seen: set[str] = set()
-        for r in rows:
-            title = (r.get("title") or "").strip()
-            key = title + (r.get("company") or "")
-            if not title or key in seen:
-                continue
-            seen.add(key)
-            opps.append(
-                {
-                    "source": "human_authorized_linkedin_tab",
-                    "observed_at": utc_now(),
-                    "title": title,
-                    "organization": (r.get("company") or "UNKNOWN").strip(),
-                    "location": (r.get("location") or "UNKNOWN").strip(),
-                    "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
-                    "primary_evidence_url": r.get("href") or _LINKEDIN_TOP_APPLICANT_URL,
-                    "top_candidate": True,
-                }
-            )
+        rows = _linkedin_scroll_paginate_capture(surf_run, tab_id)
+        opps = [
+            {
+                "source": "human_authorized_linkedin_tab",
+                "observed_at": utc_now(),
+                "title": r["title"],
+                "organization": (r.get("company") or "UNKNOWN").strip() or "UNKNOWN",
+                "location": (r.get("location") or "UNKNOWN").strip() or "UNKNOWN",
+                "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
+                "primary_evidence_url": r.get("href") or _LINKEDIN_TOP_APPLICANT_URL,
+                "top_candidate": True,
+            }
+            for r in rows
+        ]
         evidence = {
             "schema_version": "ops-linkedin.opportunity_capture.v1",
             "source": "human_authorized_linkedin_tab",
@@ -203,7 +248,7 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
         if tab_id:
             try:
                 _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except BrowserCaptureError as exc:
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
                 logger.warning("could not close LinkedIn capture tab {}: {}", tab_id, exc)
     (out_dir / "linkedin-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -264,7 +309,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
         if tab_id:
             try:
                 _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except BrowserCaptureError as exc:
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
                 logger.warning("could not close SAM capture tab {}: {}", tab_id, exc)
     (out_dir / "sam-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
