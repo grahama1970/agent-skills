@@ -2368,6 +2368,11 @@ a:hover .c-img { opacity: 1; }
   font-variation-settings: 'SOFT' 40, 'opsz' 48;
   pointer-events: none;
 }
+.c-mark-sub {
+  font-size: 21px;
+  font-style: italic;
+  fill: var(--ember, #d1703c);
+}
 .constellation-hint {
   font-style: normal;
   font-family: var(--mono);
