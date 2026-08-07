@@ -253,12 +253,12 @@ section {
 }
 @keyframes c-glow {
   0%, 100% {
-    opacity: 0.78;
-    filter: drop-shadow(0 0 0 rgba(209, 112, 60, 0));
+    opacity: 0.9;
+    filter: drop-shadow(0 0 2px rgba(209, 112, 60, 0.5));
   }
   50% {
     opacity: 1;
-    filter: drop-shadow(0 0 4px rgba(209, 112, 60, 0.6));
+    filter: drop-shadow(0 0 6px rgba(209, 112, 60, 0.75));
   }
 }
 .wordmark span {
@@ -2490,6 +2490,7 @@ a:hover .c-img { opacity: 1; }
   font-size: 21px;
   font-style: italic;
   fill: var(--ember, #d1703c);
+  filter: drop-shadow(0 0 2px rgba(209, 112, 60, 0.5));
 }
 .constellation-hint {
   font-style: normal;
