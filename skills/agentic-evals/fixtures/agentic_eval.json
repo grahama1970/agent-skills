@@ -11,19 +11,27 @@
     {
       "name": "happy-path",
       "type": "positive",
-      "command": ["echo", "success"],
+      "command": [
+        "echo",
+        "success"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["success"]
+        "stdout_contains": [
+          "success"
+        ]
       }
     },
     {
       "name": "negative",
       "type": "negative",
-      "command": ["false"],
+      "command": [
+        "false"
+      ],
       "expected": {
         "exit_code": 1
       }
     }
-  ]
+  ],
+  "eval_kind": "runner_selftest"
 }

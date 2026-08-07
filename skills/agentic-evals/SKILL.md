@@ -97,6 +97,32 @@ Optional expectations:
 - `expected.stdout_contains`
 - `expected.stderr_contains`
 
+## Anti-Slop Contract (fail-closed)
+
+A skill evaluation fixture is REJECTED at load time (non-zero exit, no run) if it
+is self-serving deterministic plumbing rather than real-world proof. To pass, a
+skill fixture MUST:
+
+- set `trials` >= 2 (a single trial is not evidence);
+- include at least one `negative` or `adversarial` case (an all-positive fixture
+  is self-serving);
+- include at least one **real-world** case: `"real_world": true` whose command
+  exercises a live path (the skill's `run.sh` / a script / live HTTP / a test
+  runner) and does NOT feed itself `fixtures/` stub inputs;
+- contain no trivial `echo`/constant cases that prove nothing.
+
+Rejection message names every violation. This prevents an eval that passes
+trivially while proving nothing about whether the skill actually works.
+
+Two honestly-declared exemptions bypass the gate — never valid for a real skill
+evaluation:
+
+- `"eval_kind": "runner_selftest"` — a fixture that tests this runner itself or
+  is a documentation example.
+- `"eval_kind": "scaffold"` — the mechanical first-posture fixture emitted by
+  `scaffold-fixture` / `apply-scaffolds`, which the audit still flags as needing
+  real cases.
+
 ## Readiness Mapping
 
 - `READY`: every case passes every trial.

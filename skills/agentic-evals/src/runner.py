@@ -44,7 +44,76 @@ def load_manifest(path: Path) -> dict[str, Any]:
         raise typer.BadParameter("trials must be a positive integer")
     for case in cases:
         validate_case(case)
+    _assert_not_slop(manifest, cases, trials)
     return manifest
+
+
+_TRIVIAL_PROGRAMS = frozenset({"echo", "true", ":", "printf", "test", "[", "cat", "ls", "pwd", "head"})
+
+
+def _command_text(command: list[str]) -> str:
+    """Effective command text, unwrapping bash/sh -c so heuristics see the real work."""
+    if len(command) >= 3 and command[0] in {"bash", "sh"} and command[1] == "-c":
+        return command[2]
+    return " ".join(command)
+
+
+def _is_trivial(command: list[str]) -> bool:
+    """A case that only echoes/returns a constant proves nothing — self-serving slop."""
+    text = _command_text(command).strip()
+    first = text.split()[0] if text.split() else ""
+    if first in _TRIVIAL_PROGRAMS and not any(tok in text for tok in ("&&", "||", ";", "|", ".sh", ".py", "curl", "http")):
+        return True
+    return False
+
+
+def _is_real_world(case: dict[str, Any]) -> bool:
+    """A real-world case is explicitly flagged AND exercises a live path, not a stub.
+
+    It must invoke a substantive program (a skill entrypoint, script, live HTTP,
+    or test runner) and must NOT feed itself canned fixture/stub inputs, which
+    would make it prove plumbing rather than real behavior.
+    """
+    if not case.get("real_world"):
+        return False
+    text = _command_text(case["command"])
+    if "fixtures/" in text or "/fixtures/" in text:
+        return False
+    return any(marker in text for marker in ("run.sh", ".py", "curl", "http://", "https://", "pytest", "nightly", "e2e"))
+
+
+def _assert_not_slop(manifest: dict[str, Any], cases: list[dict[str, Any]], trials: int) -> None:
+    """Fail-closed on self-serving slop fixtures.
+
+    Prevents the failure mode where an eval passes trivially without proving the
+    skill works: it requires repeatability, an adversarial/negative check, and at
+    least one real-world case that exercises a live path without stub inputs.
+    """
+    # Narrow, explicit exemption: fixtures that test the runner itself or serve
+    # as documentation examples are not skill evaluations. They must say so.
+    # This is NEVER valid for a real skill's evaluation fixture.
+    if manifest.get("eval_kind") in {"runner_selftest", "scaffold"}:
+        return
+    problems: list[str] = []
+    if trials < 2:
+        problems.append("trials must be >= 2 for repeatability (a single-trial eval is not evidence)")
+    trivial = [c["name"] for c in cases if _is_trivial(c["command"])]
+    if trivial:
+        problems.append(f"trivial echo/constant cases prove nothing: {trivial}")
+    if not any(c.get("type") in {"negative", "adversarial"} for c in cases):
+        problems.append("no negative or adversarial case — an all-positive fixture is self-serving")
+    if not any(_is_real_world(c) for c in cases):
+        problems.append(
+            "no real-world case: at least one case must set \"real_world\": true and exercise a live "
+            "path (skill entrypoint / script / live HTTP / test runner) WITHOUT feeding itself "
+            "fixtures/ stub inputs"
+        )
+    if problems:
+        raise typer.BadParameter(
+            "fixture rejected as low-value ('slop'): "
+            + "; ".join(problems)
+            + ". An agentic eval must prove real-world behavior, not deterministic plumbing."
+        )
 
 
 def validate_case(case: dict[str, Any]) -> None:
@@ -344,6 +413,7 @@ def scaffold_manifest(skill_dir: Path, fixture_dir: Path) -> dict[str, Any]:
     return {
         "version": 2,
         "skill": skill_name,
+        "eval_kind": "scaffold",
         "trials": 3,
         "proof_scope": "fixture wiring smoke" if entrypoint_backed else "static skill contract validation",
         "claims": {

@@ -37,6 +37,7 @@ cat > "$TIMEOUT_FIXTURE" <<'EOF'
 {
   "version": 2,
   "skill": "agentic-evals-timeout",
+  "eval_kind": "runner_selftest",
   "trials": 1,
   "proof_scope": "timeout receipt serialization",
   "claims": {
@@ -70,6 +71,7 @@ cat > "$ENV_FIXTURE" <<'EOF'
 {
   "version": 2,
   "skill": "agentic-evals-env-scrub",
+  "eval_kind": "runner_selftest",
   "trials": 1,
   "proof_scope": "trial environment isolation",
   "claims": {

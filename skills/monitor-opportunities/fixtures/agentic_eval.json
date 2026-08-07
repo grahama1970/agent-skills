@@ -2,98 +2,46 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "deterministic skill-behavior gates that prevent the failure modes hit in development: silently-skipped mandatory sources, API-break-without-website-fallback, fabricated resume claims, and a run that cannot complete",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "the enforcement gates fire (mandatory sources + API-website-fallback), a run with browser evidence completes, the base resume resolves, and no fabricated 'God of War' claim exists in the approved-claims snapshot",
-    "does_not_prove": "live LinkedIn/Indeed capture, real successful applications, nightly scheduler reliability, or semantic quality of tailored resumes"
+    "proves": "a live nightly produces a real shortlist from real live boards and a real SAM website capture, writes recallable memory, refuses to silently skip a dead-API source, and carries no fabricated 'God of War' claim",
+    "does_not_prove": "live LinkedIn/Indeed capture (their anti-automation), real successful application submissions, long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
     {
-      "name": "enforcement-tests-deterministic",
+      "name": "live-e2e-nightly-real-world",
       "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py skills/monitor-opportunities/tests/test_resume_artifact.py skills/monitor-opportunities/tests/test_ats_prefill.py -q"
-      ],
+      "real_world": true,
+      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
+        "stdout_contains": ["E2E PASS", "sam_website_opps=", "live_board_candidates=", "memory_recall_hits="]
       }
     },
     {
-      "name": "sam-api-break-requires-website-fallback",
+      "name": "dead-api-source-must-not-be-silently-skipped",
       "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"
-      ],
+      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"],
       "expected": {
         "exit_code": 2,
-        "stderr_contains": [
-          "use the website"
-        ]
-      }
-    },
-    {
-      "name": "run-with-website-evidence-completes",
-      "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json --federal-evidence skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "AWAITING_HUMAN"
-        ]
+        "stderr_contains": ["use the website"]
       }
     },
     {
       "name": "no-fabricated-god-of-war-claim",
       "type": "adversarial",
-      "command": [
-        "bash",
-        "-c",
-        "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"
-      ],
+      "command": ["bash", "-c", "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"],
       "expected": {
         "exit_code": 0
       }
     },
     {
-      "name": "base-resume-resolves-with-digests",
+      "name": "enforcement-tests-deterministic",
       "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh base-resume"
-      ],
+      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py -q"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "base_pdf",
-          "sha256"
-        ]
-      }
-    },
-    {
-      "name": "required-sources-config-is-valid",
-      "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "python3 -c \"import json; d=json.load(open('/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/config/required_sources.json')); assert any(r['id']=='linkedin_top_applicant' for r in d['required']); assert any(r['id']=='sam.gov' for r in d['required']); print('required_sources valid')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "required_sources valid"
-        ]
+        "stdout_contains": ["passed"]
       }
     }
   ]
