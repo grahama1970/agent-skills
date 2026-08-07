@@ -4,6 +4,7 @@ import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
 import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 import { ResearchMap } from '@/components/research-map';
+import { ProofLegend } from '@/components/proof-legend';
 import { CapabilitySearch } from '@/components/capability-search';
 import { CapabilityConstellation } from '@/components/capability-constellation';
 import { DreamStepper } from '@/components/dream-stepper';
@@ -236,6 +237,7 @@ export default function Home() {
               <p className="count">01 — 10 · each one a research question</p>
             </div>
             <ResearchMap />
+            <ProofLegend />
             <div className="cards">
               {content.projects.map((p, i) => {
                 const meta = CARD_META[p.slug];

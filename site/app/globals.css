@@ -867,6 +867,81 @@ h1 .it::after {
   border-color: var(--line);
 }
 
+/* --- how proof works (evidence legend) -------------------- */
+.proof-legend {
+  margin: 1.6rem 0 2.4rem;
+  padding: 1.3rem 1.5rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(24, 18, 17, 0.4);
+}
+.proof-legend__intro {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  max-width: 60ch;
+}
+.proof-legend__intro em {
+  color: var(--text);
+  font-style: italic;
+}
+.proof-legend__list {
+  list-style: none;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+@media (min-width: 720px) {
+  .proof-legend__list {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.95rem 2rem;
+  }
+}
+.proof-legend__item {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.proof-legend__chip {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--sage);
+  border: 1px solid rgba(147, 162, 137, 0.32);
+  border-radius: 999px;
+  padding: 0.3em 0.65em;
+}
+.proof-legend__item--contract .proof-legend__chip {
+  color: var(--muted);
+  border-color: var(--line);
+}
+.proof-legend__item--external .proof-legend__chip {
+  color: var(--muted);
+  border-color: var(--line);
+}
+.proof-legend__item--private .proof-legend__chip {
+  color: var(--brass);
+  border-color: rgba(226, 172, 98, 0.4);
+}
+.proof-legend__means {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.proof-legend__foot {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line-2);
+  color: var(--faint);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
 /* --- dream case study ------------------------------------- */
 .dream {
   background: linear-gradient(180deg, transparent, rgba(24, 18, 17, 0.72) 12%, rgba(24, 18, 17, 0.72) 88%, transparent);
