@@ -142,7 +142,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
             elements.append(DocElement(
                 id=el_id, kind=DocElementKind.TEXT, role="chevrons",
                 bbox=Bbox(x=0.06, y=0.22 + index * 0.09, w=0.88, h=0.08),
-                text=f"> {text[:90]}", style=_CHEVRON_STYLE,
+                text=f"> {_truncate_words(text, 90)}", style=_CHEVRON_STYLE,
                 binding_paths=[f"element:{el_id}"],
                 entrance=DocEntrance(effect="rise", fragment_index=index),
             ))
@@ -237,3 +237,11 @@ def materialize_outline(
 
 def _deck_title(context: DeckContext) -> str:
     return context.objective.split(".")[0][:100]
+
+
+def _truncate_words(text: str, limit: int) -> str:
+    """Word-boundary truncation — a truncation transform must never cut mid-word."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip(",;:—-")
+    return f"{cut}…"

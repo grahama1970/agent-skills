@@ -1,0 +1,62 @@
+{
+ "version": 2,
+ "skill": "pitchdeck",
+ "trials": 2,
+ "proof_scope": "design-lint layer: golden document clean, seeded defects detected (recall without invention)",
+ "claims": {
+  "proves": "the deterministic DESIGN_* lint passes the golden document and finds every seeded defect class in the seeded fixture",
+  "does_not_prove": "agent-judgment critique quality, house-style visual fidelity, or human 'recognizably mine' acceptance"
+ },
+ "cases": [
+  {
+   "name": "golden-clean",
+   "type": "positive",
+   "command": [
+    "../run.sh",
+    "design-lint",
+    "--document",
+    "../examples/sparta-golden/deck.document.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"status\": \"PASS\""
+    ]
+   }
+  },
+  {
+   "name": "seeded-defects-found",
+   "type": "negative",
+   "command": [
+    "../run.sh",
+    "design-lint",
+    "--document",
+    "../fixtures/design-lint-seeded.document.json"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "DESIGN_BAND_OVERFLOW",
+     "DESIGN_MIDWORD_TRUNCATION"
+    ]
+   }
+  },
+  {
+   "name": "materialized-cold-deck-clean",
+   "type": "positive",
+   "command": [
+    "../run.sh",
+    "design-lint",
+    "--document",
+    "/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/materialized.document.json"
+   ],
+   "note": "HONEST current state: the cold deck still fails band-overflow until assertion RENDERINGS land (#1279); this case flips to expect_exit 0 when they do",
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "DESIGN_BAND_OVERFLOW"
+    ]
+   }
+  }
+ ]
+}

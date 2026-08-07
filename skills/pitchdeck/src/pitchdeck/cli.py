@@ -407,6 +407,25 @@ def render_document_cmd(
         _abort(exc)
 
 
+@app.command(name="design-lint")
+def design_lint_cmd(
+    document: Annotated[Path, typer.Option(help="deck.document.json to lint.")],
+) -> None:
+    """Deterministic DESIGN_* lint over a canonical document (exit 1 on findings)."""
+    import json as json_mod
+
+    from .design_lint import lint_file
+
+    try:
+        findings, code = lint_file(document)
+        typer.echo(json_mod.dumps({"status": "PASS" if code == 0 else "FINDINGS", "findings": findings}, indent=1))
+        raise typer.Exit(code)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],
