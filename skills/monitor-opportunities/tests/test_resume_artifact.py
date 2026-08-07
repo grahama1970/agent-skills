@@ -69,3 +69,43 @@ def test_role_alignment_selects_only_existing_lines() -> None:
     assert picked and picked[0]["line"].startswith("- LLM agents")
     base_lines = set(base.splitlines())
     assert all(row["line"] in base_lines for row in picked)
+
+
+def test_resume_skill_manifest_composition(tmp_path: Path) -> None:
+    """Live composition of the /resume skill; no network, deterministic."""
+    from monitor_opportunities.resume_artifact import compose_resume_variant_manifest
+
+    snapshot = _snapshot()
+    wordings = approved_wordings(snapshot, [_first_key()])
+    base = tmp_path / "base.md"
+    base.write_text("# Graham Anderson\n\nExperience...\n", encoding="utf-8")
+    manifest = compose_resume_variant_manifest(
+        claim_snapshot=snapshot,
+        opportunity={"opportunity_id": "opp:test:1", "title": "Role", "organization": "Org"},
+        wordings=wordings,
+        base_path=base,
+        out_dir=tmp_path,
+    )
+    assert manifest["schema"] == "resume.variant.v1"
+    assert manifest["seam_validation"]["status"] == "PASS"
+    assert [ref["claim_key"] for ref in manifest["claim_refs"]] == [_first_key()]
+    assert Path(manifest["manifest_path"]).exists()
+
+
+def test_resume_skill_manifest_rejects_evidence_free_claim(tmp_path: Path) -> None:
+    from monitor_opportunities.resume_artifact import compose_resume_variant_manifest
+
+    snapshot = _snapshot()
+    wordings = approved_wordings(snapshot, [_first_key()])
+    for claim in snapshot["claims"]:
+        claim["evidence_refs"] = []
+    base = tmp_path / "base.md"
+    base.write_text("# Graham Anderson\n\nExperience...\n", encoding="utf-8")
+    with pytest.raises(ResumeArtifactError, match="RESUME_SKILL_TAILOR_FAILED"):
+        compose_resume_variant_manifest(
+            claim_snapshot=snapshot,
+            opportunity={"opportunity_id": "opp:test:2", "title": "Role", "organization": "Org"},
+            wordings=wordings,
+            base_path=base,
+            out_dir=tmp_path,
+        )

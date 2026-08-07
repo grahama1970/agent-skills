@@ -10,6 +10,7 @@ binds into the application plan's ``resume_digest``/``attachment_digests``.
 from __future__ import annotations
 
 import hashlib
+import json
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from typing import Any
 from .util import read_json, sha256_json, stable_id
 
 RESUME_REPO_DEFAULT = Path.home() / "workspace" / "experiments" / "resume"
+RESUME_SKILL_DEFAULT = Path(__file__).resolve().parents[3] / "resume"
 
 
 class ResumeArtifactError(ValueError):
@@ -97,6 +99,66 @@ def build_variant_markdown(
     return base_markdown.rstrip() + "\n\n" + "\n".join(sections)
 
 
+def compose_resume_variant_manifest(
+    *,
+    claim_snapshot: dict[str, Any],
+    opportunity: dict[str, Any],
+    wordings: list[dict[str, str]],
+    base_path: Path,
+    out_dir: Path,
+    resume_skill: Path = RESUME_SKILL_DEFAULT,
+) -> dict[str, Any]:
+    """Compose the /resume skill and read back its authoritative variant manifest.
+
+    The resume skill re-validates every selected claim (approved + evidence-backed)
+    at its own boundary and emits ``resume-variant.json``; that manifest is the
+    authoritative claim-binding receipt for the tailored artifact.
+    """
+
+    by_key = {claim["claim_key"]: claim for claim in claim_snapshot.get("claims", [])}
+    request = {
+        "opportunity_id": opportunity["opportunity_id"],
+        "target_title": opportunity["title"],
+        "claim_keys": [row["claim_key"] for row in wordings],
+        "claims": [
+            {
+                "claim_key": row["claim_key"],
+                "text": row["text"],
+                "approved": True,
+                "evidence_refs": list(by_key[row["claim_key"]].get("evidence_refs", [])),
+            }
+            for row in wordings
+        ],
+    }
+    request_path = out_dir / "tailoring-request.json"
+    request_path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
+    variant_dir = out_dir / "resume-variant"
+    proc = subprocess.run(
+        [
+            str(resume_skill / "run.sh"),
+            "tailor",
+            str(base_path),
+            str(request_path),
+            "--output-dir",
+            str(variant_dir),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    manifest_path = variant_dir / "resume-variant.json"
+    if proc.returncode != 0 or not manifest_path.exists():
+        raise ResumeArtifactError(f"RESUME_SKILL_TAILOR_FAILED:{proc.stderr[-300:]}")
+    manifest = read_json(manifest_path)
+    if manifest.get("seam_validation", {}).get("status") != "PASS":
+        raise ResumeArtifactError("RESUME_VARIANT_SEAM_FAILED")
+    manifest_keys = [ref["claim_key"] for ref in manifest.get("claim_refs", [])]
+    if manifest_keys != [row["claim_key"] for row in wordings]:
+        raise ResumeArtifactError("RESUME_VARIANT_CLAIM_MISMATCH")
+    manifest["manifest_path"] = str(manifest_path)
+    return manifest
+
+
 def render_pdf(markdown_path: Path, pdf_path: Path, resume_repo: Path = RESUME_REPO_DEFAULT) -> None:
     proc = subprocess.run(
         [
@@ -139,6 +201,13 @@ def tailor_artifact(
     wordings = approved_wordings(claim_snapshot, list(opportunity.get("claim_keys", [])))
     variant_md = build_variant_markdown(base_path.read_text(encoding="utf-8"), opportunity, wordings, posting_text=posting_text)
     out_dir.mkdir(parents=True, exist_ok=True)
+    variant_manifest = compose_resume_variant_manifest(
+        claim_snapshot=claim_snapshot,
+        opportunity=opportunity,
+        wordings=wordings,
+        base_path=base_path,
+        out_dir=out_dir,
+    )
     slug = opportunity["opportunity_id"].replace(":", "-")
     md_path = out_dir / f"resume-{slug}.md"
     pdf_path = out_dir / f"resume-{slug}.pdf"
@@ -154,6 +223,12 @@ def tailor_artifact(
         "base_markdown_sha256": hashlib.sha256(base_path.read_bytes()).hexdigest(),
         "claim_snapshot_sha256": sha256_json(claim_snapshot),
         "claim_refs": wordings,
+        "resume_variant_manifest": {
+            "schema": variant_manifest.get("schema"),
+            "path": variant_manifest["manifest_path"],
+            "variant_sha256": variant_manifest.get("variant_sha256"),
+            "claim_refs": variant_manifest.get("claim_refs", []),
+        },
         "markdown_path": str(md_path),
         "pdf_path": str(pdf_path),
         "pdf_sha256": pdf_sha,
