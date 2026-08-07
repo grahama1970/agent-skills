@@ -628,6 +628,38 @@ def nightly(
     if run_proc.returncode != 0:
         _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
 
+    # Live ATS form capture: for each top job, read-only capture of the
+    # application-form schema so a human-promoted site policy can later drive
+    # inspect -> plan -> authorize -> commit. Best-effort, read-only, no submit.
+    from .browser_capture import capture_ats_form
+
+    # Resumes are tailored for all top jobs (cheap, local). Browser-DOM ATS form
+    # capture is ~30s each, so bound it to the top-K; the rest are captured on
+    # human demand when a job is greenlit. Env-overridable.
+    import os as _os
+
+    try:
+        ats_capture_top_k = max(0, int(_os.environ.get("MONITOR_ATS_CAPTURE_TOP_K", "12")))
+    except ValueError:
+        ats_capture_top_k = 12
+    apply_prep_path = out / "tailoring" / "apply-prep.json"
+    ats_summary = []
+    if apply_prep_path.exists():
+        packets = json.loads(apply_prep_path.read_text(encoding="utf-8"))
+        for idx, packet in enumerate(packets):
+            apply_url = packet.get("apply_url")
+            if idx >= ats_capture_top_k or not apply_url:
+                packet["ats_form_status"] = "DEFERRED" if apply_url else "NO_URL"
+                continue
+            form_receipt = capture_ats_form(apply_url, capture_dir / "ats-forms")
+            packet["ats_form_status"] = form_receipt.get("status")
+            packet["ats_form_path"] = form_receipt.get("form_path")
+            packet["ats_form_field_count"] = form_receipt.get("field_count")
+            packet["ats_form_human_required"] = form_receipt.get("human_required_fields")
+            ats_summary.append({"candidate_id": packet.get("candidate_id"), "status": form_receipt.get("status"), "fields": form_receipt.get("field_count")})
+        apply_prep_path.write_text(json.dumps(packets, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    steps["ats_form_capture"] = {"captured": len(ats_summary), "top_k": ats_capture_top_k, "results": ats_summary}
+
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a
     # restartable dependency).

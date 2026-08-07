@@ -18,8 +18,25 @@ from .tailoring import tailor, tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
 
 
+import os
+
+# The funnel is a volume game: ~42 applications per interview, 100-200+ cold
+# applications per offer (brave-search 2026-08-07, memory
+# job-application-funnel-metrics-2026), and tailoring is the biggest lever. So
+# surface HUNDREDS of relevant jobs and tailor many, not a top-5 shortlist.
+# Tailoring is local + cheap, so it scales wide; both are env-overridable.
+def _int_env(name: str, default: int) -> int:
+    try:
+        return max(1, int(os.environ.get(name, "")))
+    except (TypeError, ValueError):
+        return default
+
+
+SHORTLIST_LIMIT = _int_env("MONITOR_SHORTLIST_LIMIT", 150)
+# The rendered human-facing report is a digest; Stage-0 contract caps it at 8.
+REPORT_DIGEST_LIMIT = 8
 # How many top jobs get a custom targeted resume + apply-prep packet per run.
-APPLY_PREP_TOP_N = 5
+APPLY_PREP_TOP_N = _int_env("MONITOR_APPLY_PREP_TOP_N", 100)
 
 
 def _capability_authority() -> dict[str, str]:
@@ -280,7 +297,10 @@ def _report_from_run(
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     rejections = read_json(ranking_dir / "rejections.json")
-    opportunities = [_opportunity(candidate) for candidate in shortlist]
+    # The rendered report is a human digest (Stage-0 contract caps it at 8). The
+    # full shortlist stays available for apply-prep + memory at volume; only the
+    # report is truncated to the top REPORT_DIGEST_LIMIT.
+    opportunities = [_opportunity(candidate) for candidate in shortlist[:REPORT_DIGEST_LIMIT]]
     first_opportunity_id = opportunities[0]["opportunity_id"] if opportunities else None
     resume_variants = _resume_variant(tailoring_dir, first_opportunity_id)
     claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
@@ -538,7 +558,7 @@ def run_stage0(
         phases.append({"phase": "REQUIRED_SOURCES_ENFORCED", "checked": required_sources["checked"]})
         _enforce_api_website_fallback(skill_dir, discovery_dir)
         phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
-    ranking_receipt = rank(discovery_dir, 8, ranking_dir)
+    ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"
     tailoring_receipt = None

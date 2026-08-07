@@ -424,6 +424,193 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
     return receipt
 
 
+# --- Live ATS application-form capture (read-only) --------------------------
+# Captures the rendered application form's field schema so a human-promoted
+# site policy can later drive inspect_ats_form -> build_application_plan. This
+# is strictly read-only: a credentialless GET (Greenhouse API) or a read-only
+# DOM element query. No field is written and no application is created.
+
+# Generic read-only form-field element query: returns one row per input.
+_ATS_FORM_EXTRACT_JS = (
+    "(function(){"
+    "var out=[];"
+    "var els=[].slice.call(document.querySelectorAll('input,select,textarea'));"
+    "for (var i=0;i<els.length;i++){"
+    "var e=els[i];"
+    "var t=(e.type||'').toLowerCase();"
+    "if(e.tagName==='INPUT' && (t==='hidden'||t==='submit'||t==='button')) continue;"
+    "var id=e.id||'';"
+    "var label='';"
+    "if(e.getAttribute('aria-label')) label=e.getAttribute('aria-label');"
+    "else if(id){var l=document.querySelector('label[for=\"'+id+'\"]'); if(l) label=l.innerText;}"
+    "if(!label){var lc=e.closest('label'); if(lc) label=lc.innerText;}"
+    "var options=[];"
+    "if(e.tagName==='SELECT'){for(var j=0;j<e.options.length;j++){var ov=e.options[j].text.trim(); if(ov) options.push(ov);}}"
+    "out.push({tag:e.tagName.toLowerCase(), type:t, id:id, name:e.name||'',"
+    "aria:e.getAttribute('aria-label')||'', label:(label||'').trim().slice(0,120),"
+    "required:!!(e.required||e.getAttribute('aria-required')==='true'), options:options.slice(0,40)});"
+    "}"
+    "return JSON.stringify(out.slice(0,120));"
+    "})()"
+)
+
+# HTML/DOM field-type -> neutral vocabulary consumed by application_plan.
+_ATS_SENSITIVE_NEEDLES = (
+    ("work_authorization", ("legally authorized", "work authorization", "sponsorship", "visa")),
+    ("self_identification", ("gender", "race", "veteran", "disability", "ethnicity", "self-identif")),
+    ("salary", ("salary", "compensation")),
+    ("clearance", ("clearance",)),
+)
+
+
+def _ats_provider_from_url(url: str) -> tuple[str, str, str]:
+    """Parse (provider, site, posting_id) from a known ATS apply URL.
+
+    Returns ("unknown", host, "") when the host is not a recognized ATS.
+    """
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    host = parsed.netloc.lower()
+    parts = [p for p in parsed.path.split("/") if p]
+    if "greenhouse.io" in host:
+        # boards.greenhouse.io/<board>/jobs/<id> or job-boards.../<board>/jobs/<id>
+        site = parts[0] if parts else ""
+        posting = parts[parts.index("jobs") + 1] if "jobs" in parts and parts.index("jobs") + 1 < len(parts) else (parts[-1] if parts else "")
+        return "greenhouse", site, posting
+    if "ashbyhq.com" in host:
+        return "ashby", (parts[0] if parts else ""), (parts[-1] if parts else "")
+    if "lever.co" in host:
+        return "lever", (parts[0] if parts else ""), (parts[-1] if parts else "")
+    return "unknown", host, (parts[-1] if parts else "")
+
+
+def _ats_field_type(label: str, tag: str, input_type: str, has_options: bool) -> str:
+    lowered = label.lower()
+    for field_type, needles in _ATS_SENSITIVE_NEEDLES:
+        if any(needle in lowered for needle in needles):
+            return field_type
+    if input_type == "file":
+        return "file"
+    if tag == "textarea":
+        return "free_text"
+    if tag == "select" or has_options:
+        return "choice"
+    if "email" in lowered or input_type == "email":
+        return "email"
+    if "phone" in lowered or input_type == "tel":
+        return "phone"
+    return "text"
+
+
+def _generic_form_from_dom(provider: str, site: str, posting_id: str, url: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+    fields = []
+    accepted_attachments: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        label = str(row.get("label") or row.get("aria") or row.get("name") or "").rstrip("*").strip()
+        if not label or label in seen:
+            continue
+        seen.add(label)
+        tag = str(row.get("tag") or "")
+        input_type = str(row.get("type") or "")
+        options = [str(o) for o in row.get("options", []) if str(o).strip()]
+        field_type = _ats_field_type(label, tag, input_type, bool(options))
+        element_id = row.get("id") or ""
+        fields.append(
+            {
+                "name": label,
+                "field_type": field_type,
+                "required": bool(row.get("required")),
+                "options": options,
+                "selector": f"#{element_id}" if element_id else None,
+            }
+        )
+        if field_type == "file":
+            accepted_attachments.append(label)
+    if not fields:
+        raise BrowserCaptureError("ATS_DOM_CAPTURE_EMPTY")
+    return {
+        "provider": provider,
+        "site": site,
+        "posting_id": posting_id,
+        "url": url,
+        "fields": fields,
+        "accepted_attachments": accepted_attachments,
+        "policy_observations": [
+            "Captured read-only from the rendered application form DOM; no form write, no application created.",
+        ],
+    }
+
+
+def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read-only capture of one top job's ATS application-form schema.
+
+    Greenhouse: credentialless job-board API (no browser). Other providers or
+    an API miss: read-only DOM element query of the rendered form via surf. The
+    captured schema lets a human-promoted site policy later drive
+    inspect_ats_form -> build_application_plan. Strictly read-only.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    provider, site, posting_id = _ats_provider_from_url(apply_url or "")
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.ats_form_capture_receipt.v1",
+        "apply_url": apply_url,
+        "provider": provider,
+        "site": site,
+        "posting_id": posting_id,
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "read_only_no_form_write",
+    }
+    if not apply_url:
+        receipt["status"] = "NO_URL"
+        return receipt
+    form: dict[str, Any] | None = None
+    tab_id = ""
+    try:
+        if provider == "greenhouse" and site and posting_id:
+            from .ats.greenhouse import GreenhouseFormError, fetch_greenhouse_form
+
+            try:
+                form = fetch_greenhouse_form(site, posting_id)
+                receipt["capture_method"] = "greenhouse_api"
+            except GreenhouseFormError as exc:
+                logger.info("greenhouse API miss for {} ({}); falling back to DOM", apply_url, exc)
+        if form is None:
+            ensure_browser(surf_run)
+            created = _surf(surf_run, "tab.new", apply_url, "--json", timeout=30)
+            tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+            if not tab_id:
+                raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+            _surf(surf_run, "wait", "7")
+            raw = _surf(surf_run, "js", "--tab-id", tab_id, _ATS_FORM_EXTRACT_JS, timeout=25)
+            rows = json.loads(json.loads(raw))
+            form = _generic_form_from_dom(provider, site, posting_id, apply_url, rows)
+            receipt["capture_method"] = "surf_read_only_dom"
+        form_path = out_dir / f"ats-form-{(site or 'site')}-{(posting_id or 'id')}.json"
+        form_path.write_text(json.dumps(form, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        required = [f["name"] for f in form["fields"] if f.get("required")]
+        human_required = [f["name"] for f in form["fields"] if f["field_type"] in {"free_text", "choice", "work_authorization", "self_identification", "salary", "clearance"}]
+        receipt["status"] = "OK"
+        receipt["form_path"] = str(form_path)
+        receipt["field_count"] = len(form["fields"])
+        receipt["required_fields"] = required
+        receipt["human_required_fields"] = human_required
+        receipt["accepted_attachments"] = form.get("accepted_attachments", [])
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.warning("ATS form capture failed for {}: {}", apply_url, exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+    finally:
+        if tab_id:
+            try:
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+                logger.warning("could not close ATS form tab {}: {}", tab_id, exc)
+    return receipt
+
+
 def _load_candidate_profile() -> dict[str, Any]:
     path = Path(__file__).resolve().parents[2] / "config" / "candidate_profile.json"
     try:
