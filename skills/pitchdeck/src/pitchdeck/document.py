@@ -462,6 +462,8 @@ class DocSlide(StrictModel):
                 raise ValueError(f"slide '{self.id}': title text must equal the intent assertion")
         words = 0
         for e in iter_tree(self.elements):
+            if e.role == "footer":
+                continue  # mandatory qualifiers are compliance chrome, not argument density
             if e.kind is DocElementKind.TEXT:
                 words += len((e.text or "").split())
             elif e.kind is DocElementKind.RICH_TEXT:

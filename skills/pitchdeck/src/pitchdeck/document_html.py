@@ -278,21 +278,25 @@ def render_document_html(
     slides_html: list[str] = []
     for slide in document.slides:
         recipe = slide.intent.recipe if slide.intent else None
-        # Cover/statement recipes are banner-free (hero composition); everything
-        # else gets the house header band for 5-20ft title/body separation.
-        banded = recipe not in {"cover-brand", "statement-thesis"}
+        # Corpus correction (render-oracle 2026-08-07): every intent slide is
+        # banded; hero recipes carry the deck kicker in the band and keep the
+        # assertion as hero body (reqml-12 pattern).
+        hero = recipe in {"cover-brand", "statement-thesis"}
+        banded = slide.intent is not None
         band_html = ""
         elements = slide.elements
         if banded:
             title_el = next((e for e in elements if e.role == "title"), None)
+            band_text = (document.deck.title.split("—")[0].strip().upper() if hero else (title_el.text if title_el else ""))
             band_html = (
-                f'<div style="position:absolute;left:0;top:0;width:100%;height:8.5%;'
+                f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
                 f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;">'
                 f'<span style="color:{band.get("title_color", "#FFFFFF")};font-family:'
                 f'{theme["theme_tokens"]["heading_font"]}, sans-serif;font-size:38px;font-weight:bold;'
-                f'padding-left:2.5%;">{html.escape(title_el.text if title_el else "")}</span></div>'
+                f'padding-left:2.5%;">{html.escape(band_text)}</span></div>'
             )
-            elements = [e for e in elements if e.role != "title"]
+            if not hero:
+                elements = [e for e in elements if e.role != "title"]
         body = "".join(_element_html(e, assets_by_id, asset_base, theme) for e in sorted(elements, key=lambda e: e.z))
         footer_rule = (
             f'<div style="position:absolute;left:0;bottom:0;width:100%;height:0.6%;background:{palette["primary"]};"></div>'

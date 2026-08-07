@@ -109,7 +109,7 @@ def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_rend
     return assertion, module.candidate_claim_ids[0], "verbatim"
 
 
-def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False) -> DocSlide:
+def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None) -> DocSlide:
     recipe = _resolve_recipe(module, recipes)
     assertion, claim_id, transform = _assertion_for(module, deck_title, use_candidate_renderings=use_candidate_renderings)
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
@@ -185,6 +185,19 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         bindings.append(TextBinding(path="element:callout", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=claim_ids[0], transform_class="truncation"))
 
+    # required_qualifier (2026-08-07 review): a claim's mandatory qualifier must
+    # be VISIBLE wherever the claim is asserted — rendered as a bound footer.
+    required = [q for cid in claim_ids for q in ([qualifiers.get(cid)] if qualifiers else []) if q]
+    if required:
+        elements.append(DocElement(
+            id="qualifier", kind=DocElementKind.TEXT, role="footer",
+            bbox=Bbox(x=0.06, y=0.92, w=0.88, h=0.05),
+            text=" · ".join(dict.fromkeys(required))[:200],
+            style=DocTextStyle(size_pt=12.0, color="#595959"),
+            binding_paths=["footer"],
+        ))
+        bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_ids[0]))
+
     return DocSlide(
         id=f"m-{module.module.replace('_', '-')}",
         order=order,
@@ -222,13 +235,15 @@ def materialize_outline(
         # is provenance-stamped and the publish path must refuse it.
         pass
     else:
-        outline.assert_approved()
+        outline.assert_approved(ledger)
     active = [m for m in outline.modules if not m.omitted]
     recipes = load_recipes()
     title = _deck_title(context)
     tagline = context.objective.split("—")[-1].strip() if "—" in context.objective else context.primary_ask
+    qualifiers = {c.id: c.required_qualifier for c in ledger.claims if getattr(c, "required_qualifier", None)}
     slides = [
-        _materialize_slide(module, order, recipes, title, tagline, use_candidate_renderings=use_candidate_renderings)
+        _materialize_slide(module, order, recipes, title, tagline,
+                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers)
         for order, module in enumerate(active, start=1)
     ]
     return DeckDocument(

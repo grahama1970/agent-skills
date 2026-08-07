@@ -1,0 +1,22 @@
+{
+ "schema": "pitchdeck.render_envelope.v1",
+ "samples": 8,
+ "envelope": {
+  "white_ratio": [
+   0.542,
+   0.833
+  ],
+  "petrol_ratio": [
+   0.1011,
+   0.1225
+  ],
+  "ink_ratio": [
+   0.0,
+   0.1246
+  ],
+  "band_height_frac": [
+   0.106,
+   0.106
+  ]
+ }
+}

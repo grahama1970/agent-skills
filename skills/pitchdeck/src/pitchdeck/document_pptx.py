@@ -384,12 +384,46 @@ def emit_document_pptx(
         "slides": [],
     }
     root = Frame(0.0, 0.0, SLIDE_W_IN, SLIDE_H_IN)
+    band_cfg = theme.get("chrome", {}).get("header_band", {})
     for slide_doc in document.slides:
         if slide_doc.hidden:
             continue
         slide = presentation.slides.add_slide(blank)
+        # House chrome parity with the HTML renderer (render-oracle finding
+        # 2026-08-07: PPTX shipped without the band — cross-target drift):
+        # banded recipes get the petrol band with the white title inside it,
+        # plus the footer rule; hero recipes stay banner-free.
+        # Corpus correction (render-oracle, 2026-08-07): EVERY slide carries the
+        # band in the house style — hero recipes put the deck KICKER in the
+        # band and keep the assertion as the hero body (reqml-12 pattern).
+        hero = bool(slide_doc.intent) and slide_doc.intent.recipe in {"cover-brand", "statement-thesis"}
+        banded = slide_doc.intent is not None
+        skip_title = False
+        if banded:
+            band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(SLIDE_W_IN), Inches(SLIDE_H_IN * 0.10))
+            band.fill.solid()
+            band.fill.fore_color.rgb = _hex(band_cfg.get("fill", palette["primary"]))
+            band.line.fill.background()
+            band.name = "chrome:band"
+            title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
+            band_text = (document.deck.title.split("—")[0].strip().upper() if hero else (title_el.text if title_el else ""))
+            title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 0.66), Inches(SLIDE_H_IN * 0.10 - 0.1))
+            title_box.name = "chrome:band-title" if hero else (f"el:{title_el.id}" if title_el else "chrome:band-title")
+            run = title_box.text_frame.paragraphs[0].add_run()
+            run.text = band_text or ""
+            run.font.size = Pt(24)
+            run.font.bold = True
+            run.font.color.rgb = _hex(band_cfg.get("title_color", "#FFFFFF"))
+            skip_title = not hero
+        rule = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(SLIDE_H_IN - 0.045), Inches(SLIDE_W_IN), Inches(0.045))
+        rule.fill.solid()
+        rule.fill.fore_color.rgb = _hex(palette["primary"])
+        rule.line.fill.background()
+        rule.name = "chrome:footer-rule"
         ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
         for _, element in ordered:
+            if skip_title and element.role == "title":
+                continue
             _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
     output_path.parent.mkdir(parents=True, exist_ok=True)

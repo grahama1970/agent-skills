@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "cfadc5a022b1122545772a0c203b6fadef642dd6",
- "source_tree_sha256": "c5f3f876b5b407442f76a2ad07bcc8d579e6eb68b9de5fb4f14ff720bef8fea0",
+ "commit": "8f3531c3776ae995f50c0a939601742a5ec16f6a",
+ "source_tree_sha256": "e4891a661779c0c31ce3c1df7e9861f93901c78755e328cb38bb0773fca16341",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -66,6 +66,7 @@
     "pitchdeck.narrative_outline.v1",
     "pitchdeck.plan_receipt.v1",
     "pitchdeck.pptx_primitive_receipt.v1",
+    "pitchdeck.render_envelope.v1",
     "pitchdeck.render_receipt.v1",
     "pitchdeck.slide_edit_receipt.v1",
     "pitchdeck.source_edit_receipt.v1",
@@ -90,7 +91,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "60 passed, 1 xfail"
+  "summary": "61 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

@@ -184,6 +184,8 @@ class OutlineApproval(StrictModel):
     approved_by: str = Field(min_length=1)
     approved_at: str = Field(min_length=1)
     content_sha256: str = Field(min_length=64, max_length=64)
+    ledger_sha256: str | None = Field(default=None, min_length=64, max_length=64,
+                                      description="Digest of the claim ledger the approval was made against; a changed ledger invalidates approval.")
 
 
 class NarrativeOutline(StrictModel):
@@ -199,12 +201,16 @@ class NarrativeOutline(StrictModel):
         payload = self.model_dump(mode="json", by_alias=True, exclude={"approval"})
         return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
-    def assert_approved(self) -> None:
+    def assert_approved(self, ledger: "ClaimLedger | None" = None) -> None:
         if self.approval is None:
             raise ValueError(f"{PlanningCode.UNAPPROVED_OUTLINE}: outline has no approval record")
         if self.approval.content_sha256 != self.content_hash():
             raise ValueError(
                 f"{PlanningCode.UNAPPROVED_OUTLINE}: outline changed after approval (hash mismatch) — re-approve"
+            )
+        if ledger is not None and self.approval.ledger_sha256 is not None and self.approval.ledger_sha256 != ledger_digest(ledger):
+            raise ValueError(
+                f"{PlanningCode.UNAPPROVED_OUTLINE}: the claim ledger changed since approval — re-review and re-approve"
             )
         unanswered = [q.question for q in self.questions if q.required and not q.answer]
         if unanswered:
@@ -276,9 +282,14 @@ def draft_outline(context: DeckContext, ledger: ClaimLedger, profile: DeckProfil
     return NarrativeOutline(version=1, context_sha256=context_hash, audience=context.audience, modules=modules, questions=questions)
 
 
-def approve_outline(outline: NarrativeOutline, *, approved_by: str, approved_at: str) -> NarrativeOutline:
+def ledger_digest(ledger: "ClaimLedger") -> str:
+    return hashlib.sha256(ledger.model_dump_json(by_alias=True).encode()).hexdigest()
+
+
+def approve_outline(outline: NarrativeOutline, *, approved_by: str, approved_at: str, ledger: "ClaimLedger | None" = None) -> NarrativeOutline:
     return outline.model_copy(update={"approval": OutlineApproval(
-        approved_by=approved_by, approved_at=approved_at, content_sha256=outline.content_hash()
+        approved_by=approved_by, approved_at=approved_at, content_sha256=outline.content_hash(),
+        ledger_sha256=ledger_digest(ledger) if ledger is not None else None,
     )})
 
 

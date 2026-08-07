@@ -1223,3 +1223,34 @@ def test_publish_gate_and_guarded_spans():
     assert stripped.risk_flags and "without" in stripped.risk_flags[0]
     temporal = verify_rendering(AssertionRendering(claim_id="c", text="The surfaces exist today", transform_class="generalization"), claim)
     assert any("ADDS" in f for f in temporal.risk_flags)
+
+
+def test_render_oracle_and_qualifier_rendering():
+    """#1262 oracle + #1279 qualifier/ledger-digest: envelope measured from the
+    corpus; approved deck carries visible bound qualifiers; stale ledger
+    invalidates approval."""
+    import json
+
+    import pytest as _pytest
+
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import ClaimLedger
+    from pitchdeck.planning import NarrativeOutline, approve_outline, draft_outline  # noqa: F401
+    from pitchdeck.render_oracle import _metrics, measure_corpus
+
+    skill = Path(__file__).parent.parent.parent / "best-practices-slide-design"
+    env = measure_corpus(skill / "assets", skill / "references" / "style_corpus.json")
+    assert env["samples"] >= 8 and env["envelope"]["band_height_frac"][0] > 0.08
+    exemplar = _metrics(skill / "assets" / "cybersummit-04-problem-solution.png")
+    assert 0.08 < exemplar["band_height_frac"] < 0.14  # gap-tolerant detector
+
+    approved = json.loads(Path("/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/approved.document.json").read_text())
+    qualified = [s["id"] for s in approved["slides"] for e in s["elements"] if e.get("role") == "footer"]
+    assert "m-proof" in qualified and "m-problem-solution" in qualified  # required_qualifier VISIBLE
+
+    outline = NarrativeOutline.model_validate(json.loads(Path("/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/approved_outline.json").read_text()))
+    ledger = load_yaml(Path(__file__).parent.parent / "examples" / "sparta-explorer" / "claim_ledger.yaml", ClaimLedger)
+    outline.assert_approved(ledger)  # digest matches
+    mutated = ledger.model_copy(update={"claims": ledger.claims[:-1]})
+    with _pytest.raises(ValueError, match="ledger changed"):
+        outline.assert_approved(mutated)
