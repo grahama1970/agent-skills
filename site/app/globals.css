@@ -942,6 +942,188 @@ h1 .it::after {
   max-width: 62ch;
 }
 
+/* --- how proof works (goal -> receipt walkthrough) -------- */
+.proofx-head {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gut);
+  align-items: end;
+  margin-bottom: 2.2rem;
+}
+.proofx-head > div {
+  grid-column: 1 / span 6;
+}
+.proofx-intro {
+  grid-column: 8 / span 5;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+.proofx-intro em {
+  color: var(--text);
+  font-style: italic;
+}
+@media (max-width: 860px) {
+  .proofx-head > div,
+  .proofx-intro {
+    grid-column: 1 / -1;
+  }
+}
+.proofx {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.proofx-stage {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr;
+  gap: 1.1rem;
+}
+.proofx-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.proofx-dot {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 172, 98, 0.4);
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: rgba(24, 18, 17, 0.5);
+}
+.proofx-line {
+  flex: 1 1 auto;
+  width: 1px;
+  min-height: 1.4rem;
+  margin: 0.35rem 0;
+  background: linear-gradient(180deg, rgba(226, 172, 98, 0.35), var(--line-2));
+}
+.proofx-body {
+  padding-bottom: 1.9rem;
+  min-width: 0;
+}
+.proofx-stage:last-child .proofx-body {
+  padding-bottom: 0;
+}
+.proofx-name {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  line-height: 1.15;
+  margin: 0.15rem 0 0.4rem;
+}
+.proofx-desc {
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  max-width: 60ch;
+}
+.proofx-invariant {
+  margin-top: 0.7rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+.proofx-boundary {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+}
+@media (min-width: 720px) {
+  .proofx-boundary {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem 1.6rem;
+  }
+}
+.proofx-proves,
+.proofx-not {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.proofx-tag {
+  display: inline-block;
+  margin-right: 0.5em;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: 0.12em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.22em 0.55em;
+}
+.proofx-tag--y {
+  color: var(--sage);
+  border-color: rgba(147, 162, 137, 0.4);
+}
+.proofx-tag--n {
+  color: var(--ember);
+  border-color: rgba(209, 112, 60, 0.4);
+}
+.proofx-drawer {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--line-2);
+  padding-top: 0.7rem;
+}
+.proofx-drawer summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--faint);
+  list-style: none;
+}
+.proofx-drawer summary::-webkit-details-marker {
+  display: none;
+}
+.proofx-drawer summary::before {
+  content: '▸ ';
+  color: var(--brass);
+}
+.proofx-drawer[open] summary::before {
+  content: '▾ ';
+}
+.proofx-drawer summary .machine {
+  font-size: 0.76rem;
+}
+.proofx-sha {
+  color: var(--faint);
+}
+.proofx-fields {
+  margin: 0.7rem 0 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.proofx-field {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr;
+  gap: 0.9rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.proofx-field dt {
+  color: var(--brass);
+}
+.proofx-field dd {
+  margin: 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .proofx-field {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
 /* --- dream case study ------------------------------------- */
 .dream {
   background: linear-gradient(180deg, transparent, rgba(24, 18, 17, 0.72) 12%, rgba(24, 18, 17, 0.72) 88%, transparent);

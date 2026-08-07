@@ -5,6 +5,7 @@ import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
+import { ProofExplainer } from '@/components/proof-explainer';
 import { CapabilitySearch } from '@/components/capability-search';
 import { CapabilityConstellation } from '@/components/capability-constellation';
 import { DreamStepper } from '@/components/dream-stepper';
@@ -398,13 +399,39 @@ export default function Home() {
 
         <hr className="rule" />
 
+        {/* ===================== HOW PROOF WORKS ===================== */}
+        <section id="proof">
+          <div className="wrap">
+            <div className="proofx-head">
+              <div>
+                <p className="kicker">
+                  <b>04</b> How proof works
+                </p>
+                <h2 className="h2">
+                  One real run, from goal to receipt.
+                </h2>
+              </div>
+              <p className="proofx-intro">
+                Not a diagram of an idealised pipeline — the actual{' '}
+                <span className="machine">tau</span> roundtable that designed
+                this page, walked stage by stage. Each step resolves to a real
+                immutable artifact you can hash-check, and each one says plainly
+                what it does <em>not</em> prove.
+              </p>
+            </div>
+            <ProofExplainer />
+          </div>
+        </section>
+
+        <hr className="rule" />
+
         {/* ===================== RECEIPTS ===================== */}
         <section id="receipts">
           <div className="wrap">
             <div className="receipts-grid">
               <div className="receipts-copy">
                 <p className="kicker">
-                  <b>04</b> Receipts
+                  <b>05</b> Receipts
                 </p>
                 <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
@@ -461,7 +488,7 @@ export default function Home() {
             <div className="about-grid">
               <div className="about-copy">
                 <p className="kicker">
-                  <b>05</b> About
+                  <b>06</b> About
                 </p>
                 <h2 className="h2">
                   An unusual path, on purpose.
@@ -508,7 +535,7 @@ export default function Home() {
             <div className="closer-inner">
               <div className="a">
                 <p className="kicker">
-                  <b>06</b> Next
+                  <b>07</b> Next
                 </p>
                 <p className="shelved">
                   Bring me the project you <em>shelved</em>.

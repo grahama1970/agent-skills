@@ -1,0 +1,112 @@
+{
+  "run": "ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c",
+  "goal_hash": "sha256:e31c26f1586bbab75304fd79d4eb1cb8e5a9622fa192201b3c562ab83fa59f64",
+  "nodes": 5,
+  "stages": [
+    {
+      "n": 1,
+      "name": "Goal",
+      "desc": "The objective is fixed and hashed before anything runs. Every later step is checked against this exact hash.",
+      "artifact": "dag.json",
+      "digest": "8387f6624b5a79b5",
+      "excerpt": {
+        "immutable_goal": "A prioritized, executable elevation plan for the live grahama.co: harsh critique of the current site, restrained 2026 motion language, unified art direction for the 10 project imag\u2026",
+        "goal_hash": "sha256:e31c26f1586bbab75304fd79d4eb1cb8e5a9622fa192201b3c562ab83fa59f64"
+      },
+      "invariant": "goal_hash is frozen; any drift trips goal_hash_mismatch and the run fails closed.",
+      "proves": "The work was pinned to one stated objective, identified by a content hash.",
+      "not": "That the objective itself is the right thing to build."
+    },
+    {
+      "n": 2,
+      "name": "Bounded context",
+      "desc": "Limits, required evidence, and fail-closed conditions are declared up front \u2014 the agent operates inside a fence.",
+      "artifact": "dag.json",
+      "digest": "8387f6624b5a79b5",
+      "excerpt": {
+        "limits": {
+          "default_timeout_seconds": 300,
+          "max_concurrency": 4,
+          "max_total_attempts": 5,
+          "resume": true
+        },
+        "required_evidence": [
+          "handler_response_receipt",
+          "normalized_handler_receipt",
+          "roundtable_join_receipt"
+        ],
+        "fail_closed_on": "13 conditions incl. goal_hash_mismatch, target_changed, unexpected_node"
+      },
+      "invariant": "Missing any required-evidence artifact aborts the run rather than reporting success.",
+      "proves": "Permissions, timeouts, and stop conditions existed before the agent acted.",
+      "not": "That the chosen bounds are sufficient for every risk."
+    },
+    {
+      "n": 3,
+      "name": "Constrained execution",
+      "desc": "The exact command Tau dispatched, with its side-effect declaration, recorded verbatim.",
+      "artifact": "tau-dispatch-command.json",
+      "digest": "73733cb2c87f6df8",
+      "excerpt": {
+        "mutates": false,
+        "compile_only": false,
+        "requires_network": true,
+        "timeout_s": 3780
+      },
+      "invariant": "mutates:false is a declared contract \u2014 a write would contradict the receipt and fail review.",
+      "proves": "What ran, whether it could mutate state, and its timeout \u2014 captured, not narrated.",
+      "not": "That the reviewer's output is semantically correct."
+    },
+    {
+      "n": 4,
+      "name": "Captured evidence",
+      "desc": "The handler receipt records that a real provider answered live \u2014 not a mock, not a claim.",
+      "artifact": "node-receipt.json",
+      "digest": "e697899eb7dcc021",
+      "excerpt": {
+        "handler": "webclaude",
+        "live": true,
+        "mocked": false,
+        "browser_model_preference": "Fable 5 High",
+        "created_at": "2026-08-05T20:58:04Z"
+      },
+      "invariant": "live:true with mocked:false is required; a mocked lane cannot satisfy the evidence gate.",
+      "proves": "A real model produced this seat's response, on the record, at a stamped time.",
+      "not": "That the response's content is right \u2014 only that it genuinely occurred."
+    },
+    {
+      "n": 5,
+      "name": "Deterministic judgment",
+      "desc": "A join gate \u2014 not a model \u2014 counts usable seats and emits a PASS/FAIL verdict against a typed schema.",
+      "artifact": "node-receipt.json",
+      "digest": "b2e310580f9ef327",
+      "excerpt": {
+        "schema": "ask.tau_dag_roundtable_join_receipt.v1",
+        "status": "PASS",
+        "topology": "concurrent",
+        "usable_response_count": 4,
+        "failed_seat_count": 0
+      },
+      "invariant": "The verdict is computed from seat receipts; it cannot be set by a model asserting success.",
+      "proves": "A deterministic gate ran and recorded how many seats actually returned usable work.",
+      "not": "That the panel's collective judgment is correct."
+    },
+    {
+      "n": 6,
+      "name": "Receipt",
+      "desc": "The top-level receipt carries its own explicit boundary \u2014 what it proves and, just as loudly, what it does not.",
+      "artifact": "execution-status.json",
+      "digest": "1f65826b88b3fa7d",
+      "excerpt": {
+        "status": "PASS",
+        "live": true,
+        "mocked": false,
+        "proves": "Tau's real CLI was invoked against the emitted DAG artifact.",
+        "does_not_prove": "Provider calls occurred unless provider_live is true and provider receipts are present."
+      },
+      "invariant": "The receipt states its own does-not-prove list; the claim can never exceed the evidence.",
+      "proves": "The run reached a typed terminal state with a scoped, self-limiting proof statement.",
+      "not": "That PASS means the design advice was good \u2014 only that the process is accountable."
+    }
+  ]
+}
