@@ -18,6 +18,7 @@ interface GNode {
   id: string;
   type: 'practice' | 'area' | 'project';
   label: string;
+  title?: string;
   lens?: 'technical' | 'creative' | 'hybrid';
   slug?: string;
   href?: string | null;
@@ -59,7 +60,22 @@ const GLOW: Record<string, string> = {
 
 const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
 // The ring the node settles onto — keeps the physics legible instead of a hairball.
-const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 210 : 366);
+const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 234 : 392);
+
+// Per-character width (px) of each node's label, used to reserve enough space in
+// the collision force that LABELS never overlap — not just the circles.
+const charPxOf = (t: string) => (t === 'area' ? 8.4 : 6.9);
+
+// Half-width of a node's footprint (label OR circle, whichever is wider) plus a
+// gap. This is the collision radius, so the simulation spreads nodes until no
+// two labels touch.
+function footprintOf(n: { type: string; label: string; skillCount?: number }): number {
+  const r = radiusOf(n.type);
+  if (n.type === 'practice') return r + 20;
+  const chars = n.label.length + (n.type === 'area' && n.skillCount ? 4 : 0);
+  const halfLabel = (chars * charPxOf(n.type)) / 2;
+  return Math.max(r, halfLabel) + 14;
+}
 
 /**
  * Capability constellation — a live d3-force graph in the spirit of the
@@ -107,11 +123,12 @@ export function CapabilityConstellation() {
           .distance((e) => (e.rel === 'area' ? 150 : 96))
           .strength(0.5),
       )
-      .force('charge', forceManyBody().strength(-460)) // repulsion (persona-dream uses -200)
-      .force('collide', forceCollide<SimNode>((d) => radiusOf(d.type) + 24).strength(1)) // no overlap
-      .force('radial', forceRadial<SimNode>((d) => orbitOf(d.type), CX, CY).strength(0.28))
-      .force('x', forceX(CX).strength(0.03))
-      .force('y', forceY(CY).strength(0.03))
+      .force('charge', forceManyBody().strength(-620)) // repulsion (persona-dream uses -200)
+      // Collide by label footprint so text never overlaps, not just the circles.
+      .force('collide', forceCollide<SimNode>((d) => footprintOf(d)).strength(1).iterations(4))
+      .force('radial', forceRadial<SimNode>((d) => orbitOf(d.type), CX, CY).strength(0.2))
+      .force('x', forceX(CX).strength(0.02))
+      .force('y', forceY(CY).strength(0.02))
       .force('center', forceCenter(CX, CY).strength(0.02));
 
     // Reduced motion: settle synchronously and render once — no animation,
@@ -258,6 +275,7 @@ export function CapabilityConstellation() {
                 onPointerDown={startDrag(n)}
                 style={{ cursor: 'grab' }}
               >
+                {n.type === 'area' && <title>{n.title || n.label}</title>}
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image

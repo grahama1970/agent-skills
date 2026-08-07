@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "8636c7bb5",
+  "sourceCommit": "d792cb764",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -15,7 +15,8 @@
     {
       "id": "area:pipelines",
       "type": "area",
-      "label": "Agentic pipelines & orchestration",
+      "label": "Agentic pipelines",
+      "title": "Agentic pipelines & orchestration",
       "lens": "technical",
       "skillCount": 49,
       "img": "tau"
@@ -71,7 +72,8 @@
     {
       "id": "area:memory",
       "type": "area",
-      "label": "Agentic memory & persona",
+      "label": "Agentic memory",
+      "title": "Agentic memory & persona",
       "lens": "hybrid",
       "skillCount": 28,
       "img": "persona-dream"
@@ -91,7 +93,8 @@
     {
       "id": "area:extraction",
       "type": "area",
-      "label": "Extraction & evidence",
+      "label": "Extraction",
+      "title": "Extraction & evidence",
       "lens": "technical",
       "skillCount": 66,
       "img": "extractor"
@@ -135,7 +138,8 @@
     {
       "id": "area:compliance",
       "type": "area",
-      "label": "Compliance, security & governance",
+      "label": "Compliance",
+      "title": "Compliance, security & governance",
       "lens": "technical",
       "skillCount": 55,
       "img": "sparta-explorer"
@@ -155,7 +159,8 @@
     {
       "id": "area:adaptive-lineage",
       "type": "area",
-      "label": "Adaptive-lineage hacking",
+      "label": "Adaptive lineage",
+      "title": "Adaptive-lineage hacking",
       "lens": "technical",
       "skillCount": 1,
       "img": "battle"
@@ -175,21 +180,24 @@
     {
       "id": "area:applied-ml",
       "type": "area",
-      "label": "Applied ML & formal methods",
+      "label": "Applied ML",
+      "title": "Applied ML & formal methods",
       "lens": "technical",
       "skillCount": 19
     },
     {
       "id": "area:design-interface",
       "type": "area",
-      "label": "Design & interface",
+      "label": "Design",
+      "title": "Design & interface",
       "lens": "creative",
       "skillCount": 19
     },
     {
       "id": "area:creative-media",
       "type": "area",
-      "label": "Creative & media research",
+      "label": "Creative media",
+      "title": "Creative & media research",
       "lens": "creative",
       "skillCount": 26
     }

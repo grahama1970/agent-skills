@@ -21,6 +21,20 @@ REPO = Path(__file__).resolve().parents[2]
 SITE = REPO / "site"
 OUT = SITE / "graph.json"
 
+# Concise node labels for the constellation — the full taxonomy titles are too
+# wide to sit around the ring without label collisions. Full titles still show
+# in the research map and on hover. Keyed by area id; falls back to title.
+SHORT_LABELS = {
+    "pipelines": "Agentic pipelines",
+    "memory": "Agentic memory",
+    "extraction": "Extraction",
+    "compliance": "Compliance",
+    "adaptive-lineage": "Adaptive lineage",
+    "applied-ml": "Applied ML",
+    "design-interface": "Design",
+    "creative-media": "Creative media",
+}
+
 
 def _load(name: str) -> dict:
     return json.loads((SITE / name).read_text(encoding="utf-8"))
@@ -53,8 +67,10 @@ def main() -> None:
         # flagship) stay imageless — a glow disc — rather than borrow a photo
         # that would misrepresent them.
         lead_img = a["systems"][0]["slug"] if a["systems"] else None
-        area_node = {"id": aid, "type": "area", "label": a["title"],
-                     "lens": a["lens"], "skillCount": a["skillCount"]}
+        area_node = {"id": aid, "type": "area",
+                     "label": SHORT_LABELS.get(a["id"], a["title"]),
+                     "title": a["title"], "lens": a["lens"],
+                     "skillCount": a["skillCount"]}
         if lead_img:
             area_node["img"] = lead_img
         nodes.append(area_node)
