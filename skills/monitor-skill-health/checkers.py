@@ -427,6 +427,9 @@ _TSX_CONTROL_FLOW = re.compile(
 #: Lower than Python's 800 because JSX is verbally bulky: one element carrying
 #: data-qid, data-qs-action, title, onClick and style costs six to eight lines,
 #: so the same number would hold far less logic and far more branching.
+#: Directories whose contents are not authored here.
+_VENDORED_DIRS = {".venv", "venv", "node_modules", "site-packages", "dist", "build", ".next", "vendor"}
+
 TSX_LOGIC_MAX_LINES = 400
 TSX_DATA_MAX_LINES = 800
 
@@ -436,6 +439,11 @@ def react_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]]
     violations: list[dict[str, Any]] = []
     for file_path in files:
         if file_path.suffix.lower() not in {".tsx", ".jsx"}:
+            continue
+        # Vendored third-party code is not ours to split, and flagging it would
+        # bury the findings that are. A dry run over 543 files surfaced React
+        # components inside a .venv site-packages tree.
+        if any(part in _VENDORED_DIRS for part in file_path.parts):
             continue
         rel = str(file_path.relative_to(skill_dir))
         lines = safe_read_lines(file_path)
