@@ -281,7 +281,7 @@ def _frontmatter_keys(skill_md: Path) -> set[str]:
 
 def _load_waivers(rule: str) -> set[tuple[str, str]]:
     """Load exact target/file waivers for a monitor rule."""
-    if rule != "style-max-800-lines":
+    if rule not in {"style-max-800-lines", "style-max-lines-tsx"}:
         return set()
     try:
         payload = json.loads(MONOLITH_WAIVERS_FILE.read_text(encoding="utf-8"))
@@ -415,14 +415,49 @@ def kde_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]]:
     return violations
 
 
+#: Anything that branches, loops or renders. A file with none of these is a
+#: lookup table however it is named, so it earns the higher ceiling. Detected
+#: rather than declared: otherwise the limit is dodged by renaming a component.
+_TSX_CONTROL_FLOW = re.compile(
+    r"^\s*(if|for|while|switch|try)\b|\breturn\s*\(|=>\s*\{|\bfunction\b"
+    r"|\bclass\b|<[A-Z][A-Za-z0-9]*[\s/>]|\buse[A-Z]\w*\(",
+    re.M,
+)
+#: See best-practices-react, "File size — capped by contents, not one number".
+#: Lower than Python's 800 because JSX is verbally bulky: one element carrying
+#: data-qid, data-qs-action, title, onClick and style costs six to eight lines,
+#: so the same number would hold far less logic and far more branching.
+TSX_LOGIC_MAX_LINES = 400
+TSX_DATA_MAX_LINES = 800
+
+
 def react_violations(skill_dir: Path, files: list[Path]) -> list[dict[str, Any]]:
-    """Check React/JSX files for accessibility violations."""
+    """Check React/JSX files for accessibility and file-size violations."""
     violations: list[dict[str, Any]] = []
     for file_path in files:
         if file_path.suffix.lower() not in {".tsx", ".jsx"}:
             continue
         rel = str(file_path.relative_to(skill_dir))
-        content = "\n".join(safe_read_lines(file_path))
+        lines = safe_read_lines(file_path)
+        content = "\n".join(lines)
+
+        is_data = not _TSX_CONTROL_FLOW.search(re.sub(r"//[^\n]*|/\*.*?\*/", "", content, flags=re.S))
+        ceiling = TSX_DATA_MAX_LINES if is_data else TSX_LOGIC_MAX_LINES
+        if len(lines) > ceiling and not _is_waived(skill_dir, rel, "style-max-lines-tsx"):
+            violations.append(
+                {
+                    "rule_pack": "best-practices-react",
+                    "rule": "style-max-lines-tsx",
+                    "severity": "high",
+                    "file": rel,
+                    "message": (
+                        f"{len(lines)} lines exceeds the {ceiling}-line ceiling for "
+                        f"{'data' if is_data else 'logic'} files. A component past this "
+                        "size owns more than one concern, which is the blast-radius "
+                        "problem best-practices-react describes."
+                    ),
+                }
+            )
         if "aria-" not in content and "<button" in content:
             violations.append(
                 {
