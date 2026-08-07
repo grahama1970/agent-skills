@@ -587,9 +587,11 @@ h1 .it::after {
 
 /* hero cinematic strip */
 .strip {
-  margin-top: clamp(2.2rem, 5vw, 4rem);
+  margin: clamp(2.2rem, 5vw, 4rem) auto 0;
   position: relative;
-  height: clamp(180px, 26vw, 330px);
+  width: 100%;
+  max-width: min(100%, calc(80vh * 16 / 9)); /* cap size but keep true 16:9 */
+  aspect-ratio: 16 / 9; /* full cinematic frame — nothing cropped, warp eye kept */
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background-color: #160f0d;
