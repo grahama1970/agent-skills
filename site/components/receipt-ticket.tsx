@@ -19,7 +19,7 @@ export function ReceiptTicket({
   body: string;
   caption: string;
 }) {
-  const [raw, setRaw] = useState(true);
+  const [raw, setRaw] = useState(false);
   return (
     <article className="ticket">
       <h3>{title}</h3>
@@ -29,18 +29,18 @@ export function ReceiptTicket({
         type="button"
         data-qid={`receipts:toggle:${id}`}
         data-qs-action="RECEIPTS_TOGGLE_VIEW"
-        title="Toggle between human summary and raw JSON payload"
+        title={raw ? 'Return to the plain summary' : 'Inspect the raw receipt payload'}
         onClick={() => setRaw(!raw)}
         className="ticket-toggle"
       >
-        [ {raw ? 'raw json' : 'human view'} ] switch
+        {raw ? '← return to summary' : 'inspect raw receipt →'}
       </button>
       {raw ? (
         <pre className="json">{body}</pre>
       ) : (
         <p className="human">
-          {caption}. Verdict above; full payload one click away — the summary
-          is never the only evidence.
+          {caption}. The verdict and what it proves are above; the raw payload
+          is one click away — the summary is never the only evidence.
         </p>
       )}
       <p className="foot">{caption}</p>

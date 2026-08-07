@@ -94,13 +94,37 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
     }
   };
 
-  // Preload every frame once on mount so scrubbing never waits on the
-  // network — the first visit to a phase would otherwise flash unrendered.
+  const stepperRef = useRef<HTMLDivElement>(null);
+  // Preload the current frame and its immediate neighbours as you scrub, so a
+  // swap never waits on the network.
   useEffect(() => {
-    for (const p of phases) {
-      const img = new Image();
-      img.src = `/dream/${p.f}.webp`;
+    for (const j of [idx - 1, idx, idx + 1]) {
+      const p = phases[j];
+      if (p) {
+        const img = new Image();
+        img.src = `/dream/${p.f}.webp`;
+      }
     }
+  }, [idx, phases]);
+  // Preload the remaining frames only once the Dream section nears the
+  // viewport — mobile visitors who never scroll this far don't pay for all 11.
+  useEffect(() => {
+    const el = stepperRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          for (const p of phases) {
+            const img = new Image();
+            img.src = `/dream/${p.f}.webp`;
+          }
+          io.disconnect();
+        }
+      },
+      { rootMargin: '600px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, [phases]);
 
   useEffect(() => {
@@ -145,7 +169,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   }, [idx, phases.length]);
 
   return (
-    <div className="stepper" style={{ ['--dir' as string]: dir }}>
+    <div className="stepper" ref={stepperRef} style={{ ['--dir' as string]: dir }}>
       <button
         type="button"
         className="stepper-view"
@@ -225,10 +249,15 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
           next →
         </button>
       </div>
-      <p className="stepper-hint">
+      <p className="stepper-hint stepper-hint--key">
         ← → or H / L to scrub · 1–9 jump to a phase, 0 to the finale, ← from 01
         for the overview · click frame to zoom · every value in the overlay is
         the file&apos;s real path and size
+      </p>
+      <p className="stepper-hint stepper-hint--touch">
+        Swipe, or tap a thumbnail, to move through the pipeline · tap the large
+        frame to expand it · every value in the overlay is the file&apos;s real
+        path and size
       </p>
       {zoom && (
         <div

@@ -30,7 +30,7 @@
   --paper: #f2eadc;
   --text: #ece2d3;
   --muted: #a99787;
-  --faint: #78685b;
+  --faint: #8f7f72; /* raised from #78685b for WCAG AA (~5:1) on --ink */
   --brass: #e2ac62;
   --ember: #d1703c;
   --sage: #93a289;
@@ -1253,7 +1253,7 @@ footer a:hover {
   .foot-a, .foot-b, .foot-c { grid-column: 1 / span 12; }
   .foot-b, .foot-c { margin-top: 1.6rem; }
 }
-@media (max-width: 760px) {
+@media (max-width: 896px) {
   body { font-size: 16px; }
   .cards { gap: clamp(30px, 7vw, 44px); }
   .card { grid-column: 1 / span 12 !important; grid-row: auto !important; margin-top: 0 !important; }
@@ -1261,6 +1261,8 @@ footer a:hover {
   .ticket, .ticket:nth-child(2), .ticket:nth-child(3) { transform: none; }
   .mosaic { grid-template-columns: repeat(13, 1fr); gap: 4px; }
   .figs { grid-template-columns: 1fr 1fr; }
+  /* Three stats in two columns would orphan the third — let it span the row. */
+  .figs > *:last-child { grid-column: 1 / -1; }
   .strip { height: 200px; }
   
   .panel { aspect-ratio: 4/3; }
@@ -1674,7 +1676,7 @@ footer a:hover {
   color: var(--text);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
-@media (max-width: 760px) {
+@media (max-width: 896px) {
   .stepper-controls {
     flex-wrap: wrap;
   }
@@ -1716,6 +1718,18 @@ footer a:hover {
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   color: var(--faint);
+}
+/* Show keyboard hints on precise pointers, touch hints on coarse ones. */
+.stepper-hint--touch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .stepper-hint--key {
+    display: none;
+  }
+  .stepper-hint--touch {
+    display: block;
+  }
 }
 
 /* Lightbox */
@@ -2039,7 +2053,10 @@ a.fig:hover .l::after,
    size; the 338-cell mosaic and raw receipt payloads become bounded,
    scrollable panels ("explore in place") instead of an endless scroll. */
 @media (max-width: 640px) {
-  .ledger-mosaic .mosaic,
+  /* ONE bounded scroll surface, never nested: the matrix mosaic (direct child)
+     in matrix view, or each category block in categorized view — but the mosaic
+     inside a category must not add a second inner scroll. */
+  .ledger-mosaic > .mosaic,
   .ledger-group {
     max-height: 46vh;
     overflow-y: auto;
@@ -2047,6 +2064,12 @@ a.fig:hover .l::after,
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 6px;
+  }
+  .ledger-group .mosaic {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    padding: 0;
   }
   .ticket .json {
     max-height: 40vh;
@@ -2195,7 +2218,10 @@ h1 .proof-origin::after {
   font-family: var(--mono);
   user-select: none;
 }
-@media (min-width: 1024px) {
+/* Only show the lineage instrument once its cross-column bridge can also show
+   (1200px), so a tablet never gets the instrument without the connection that
+   explains it. */
+@media (min-width: 1200px) {
   .proof-lineage {
     display: block;
   }
