@@ -9,6 +9,7 @@ import { CapabilityConstellation } from '@/components/capability-constellation';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
+import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { SkillMosaic } from '@/components/skill-mosaic';
 import content from '@/content.json';
@@ -203,18 +204,9 @@ export default function Home() {
             role="img"
             aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream keyframe"
           >
-            {/* Video hero: poster is the reviewed keyframe; the persona-dream
-                I2V clip drops in as a <source> once the render lands (#1309). */}
-            <video
-              className="strip-video"
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster="/dream/horus-embry-hero.webp"
-            >
-              <source src="/dream/horus-embry.mp4" type="video/mp4" />
-            </video>
+            {/* Video hero: poster keyframe by default; the clip loads + plays
+                only on fine-pointer, motion-allowed, non-save-data devices. */}
+            <StripVideo />
             <figcaption>
               <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — a persona-dream keyframe
             </figcaption>
