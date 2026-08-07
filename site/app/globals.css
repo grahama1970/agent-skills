@@ -2180,6 +2180,10 @@ a.fig:hover .l::after,
   background: var(--ink);
   padding: 1rem 1.2rem 1.1rem;
 }
+/* Odd final area spans the row instead of sitting alone in a two-col grid. */
+.research-map .rm-area:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
 .rm-title {
   display: flex;
   align-items: baseline;

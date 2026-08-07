@@ -26,12 +26,12 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md"
         }
       ],
-      "skillCount": 27
+      "skillCount": 30
     },
     {
       "id": "memory",
       "title": "Agentic memory",
-      "blurb": "Persistent memory, persona, and retrieval agents can re-query as evidence.",
+      "blurb": "Durable memory and persona an agent keeps, dreams on, and re-queries as its own history.",
       "systems": [
         {
           "slug": "persona-dream",
@@ -42,7 +42,15 @@
           "slug": "watch",
           "name": "watch",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
-        },
+        }
+      ],
+      "skillCount": 23
+    },
+    {
+      "id": "extraction",
+      "title": "Extraction & evidence",
+      "blurb": "Turning documents, research, and video into one truthful, cited result — no knobs to mislead.",
+      "systems": [
         {
           "slug": "extractor",
           "name": "extractor",
@@ -54,7 +62,7 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md"
         }
       ],
-      "skillCount": 23
+      "skillCount": 42
     },
     {
       "id": "compliance",
@@ -72,7 +80,7 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
         }
       ],
-      "skillCount": 18
+      "skillCount": 35
     },
     {
       "id": "adaptive-lineage",
@@ -85,9 +93,9 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md"
         }
       ],
-      "skillCount": 4
+      "skillCount": 8
     }
   ],
   "projectCount": 10,
-  "sourceCommit": "b8358d4d8"
+  "sourceCommit": "5785a88c4"
 }
