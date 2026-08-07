@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Audit/sync the public site content against the repo README.
+"""Audit/sync the public site content against repository sources.
 
-README.md is the source of truth for the curated project cards ("Fun Stuff
-I'm Working On") and inventory counts ("At a Glance"). The site reads
-site/content.json. audit reports drift (exit 1); apply rewrites content.json.
+Root README.md is the source of truth for the curated project cards ("Fun Stuff
+I'm Working On") and inventory counts ("At a Glance"). Public project README
+files (SKILL.md fallback) feed the generated search catalog. audit reports drift
+(exit 1); apply rewrites content.json; refresh regenerates source-derived site
+artifacts.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -18,6 +21,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 README = REPO / "README.md"
 CONTENT = REPO / "site" / "content.json"
+CATALOG = REPO / "site" / "catalog.json"
 SITE_URL = "https://grahama.co"
 
 STAT_KEYS = {
@@ -56,6 +60,65 @@ def parse_readme() -> dict:
     return {"stats": stats, "projects": projects}
 
 
+def check_catalog_sources() -> dict:
+    """Verify source digests embedded by gen_catalog.py.
+
+    Catalogs created before README provenance was added are reported as
+    uncovered rather than failed so an existing checkout can run `refresh` to
+    migrate. Once metadata is present, any changed/missing source fails audit.
+    The Pages workflow always refreshes before audit, so deployed receipts have
+    full coverage.
+    """
+    if not CATALOG.exists():
+        return {
+            "ok": False,
+            "covered": False,
+            "checked": 0,
+            "errors": [f"missing {CATALOG.relative_to(REPO)}"],
+            "missing_metadata": [],
+        }
+
+    catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
+    docs = [d for d in catalog.get("documents", []) if d.get("type") in {"project", "skill"}]
+    errors: list[str] = []
+    missing_metadata: list[str] = []
+    checked = 0
+    repo_root = REPO.resolve()
+
+    for doc in docs:
+        doc_id = str(doc.get("id", "unknown"))
+        source_path = doc.get("sourcePath")
+        expected = doc.get("sourceDigest")
+        if not source_path or not expected:
+            missing_metadata.append(doc_id)
+            continue
+
+        source = (REPO / str(source_path)).resolve()
+        if source != repo_root and repo_root not in source.parents:
+            errors.append(f"{doc_id}: source escapes repository: {source_path}")
+            continue
+        if not source.is_file():
+            errors.append(f"{doc_id}: source missing: {source_path}")
+            continue
+
+        actual = hashlib.sha256(source.read_bytes()).hexdigest()
+        checked += 1
+        if actual != expected:
+            errors.append(
+                f"{doc_id}: source digest drift for {source_path}: "
+                f"catalog={expected[:12]} current={actual[:12]}"
+            )
+
+    return {
+        "ok": not errors,
+        "covered": bool(docs) and not missing_metadata,
+        "checked": checked,
+        "errors": errors,
+        "missing_metadata": missing_metadata,
+        "policy": catalog.get("sourcePolicy"),
+    }
+
+
 def check_live() -> dict:
     out = {}
     for label, url, needle in (
@@ -90,7 +153,16 @@ def audit(live: bool) -> dict:
                 f"href changed for {slug}: README={r_by_slug[slug]['href']} "
                 f"site={s_by_slug[slug]['href']}"
             )
-    result = {"drift": drift, "readme": readme, "ok": not drift}
+
+    catalog_sources = check_catalog_sources()
+    drift.extend(f"catalog source: {item}" for item in catalog_sources["errors"])
+
+    result = {
+        "drift": drift,
+        "readme": readme,
+        "catalog_sources": catalog_sources,
+        "ok": not drift,
+    }
     if live:
         result["live"] = check_live()
         result["ok"] = result["ok"] and all(v.get("ok") for v in result["live"].values())
