@@ -1,0 +1,88 @@
+{
+ "schema": "pitchdeck.release_receipt.v1",
+ "commit": "710ed532bdaef4013a7abd18ad11aa23a7be142d",
+ "source_tree_sha256": "948ed716c768031ba793a751d94befd3a078aa718c60a5e487bb6963f4d99ad0",
+ "commands": [
+  "apply-edit",
+  "asset-add",
+  "asset-clear",
+  "bindings-migrate",
+  "build",
+  "claim-decide",
+  "compile-document",
+  "deck-op",
+  "doctor",
+  "drift",
+  "emit-handout",
+  "emit-html",
+  "emit-md",
+  "emit-ui",
+  "image-variations",
+  "memory-sync",
+  "plan",
+  "record-note",
+  "record-transcript",
+  "render",
+  "render-document",
+  "scaffold",
+  "simulate",
+  "source-edit",
+  "undo",
+  "verify",
+  "version",
+  "visual-sync"
+ ],
+ "command_count": 28,
+ "schema_inventory": [
+  {
+   "declared_schemas": [
+    "pitchdeck.asset_manifest.v1",
+    "pitchdeck.build_receipt.v1",
+    "pitchdeck.claim_ledger.v1",
+    "pitchdeck.deck_document.v1",
+    "pitchdeck.deck_manifest.v1",
+    "pitchdeck.deck_op_receipt.v1",
+    "pitchdeck.deck_version.v1",
+    "pitchdeck.doctor_receipt.v1",
+    "pitchdeck.edit_proposal.v1",
+    "pitchdeck.emit_html_receipt.v1",
+    "pitchdeck.emit_md_receipt.v1",
+    "pitchdeck.emit_ui_receipt.v1",
+    "pitchdeck.handout_receipt.v1",
+    "pitchdeck.image_variation_plan.v1",
+    "pitchdeck.memory_sync_receipt.v1",
+    "pitchdeck.plan_receipt.v1",
+    "pitchdeck.render_receipt.v1",
+    "pitchdeck.slide_edit_receipt.v1",
+    "pitchdeck.source_edit_receipt.v1",
+    "pitchdeck.source_manifest.v1",
+    "pitchdeck.source_state.v1",
+    "pitchdeck.ui_deck_bundle.v1",
+    "pitchdeck.validation_report.v1",
+    "pitchdeck.verify_receipt.v1",
+    "pitchdeck.visual_sync_receipt.v1"
+   ],
+   "artifacts": [
+    {
+     "schema": "pitchdeck.deck_document.v1.schema",
+     "sha256": "9fd1cdb4e30dc5ff6143914b6e9fdfcaef5b3b2dcb91d3dd34190d10deb451bc",
+     "visibility": "public"
+    }
+   ]
+  }
+ ],
+ "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
+ "tests": {
+  "exit_code": 0,
+  "summary": "53 passed, 1 xfail"
+ },
+ "known_limitations": [
+  "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",
+  "emitters other than render-document still render from the bundle (#1264)"
+ ],
+ "does_not_prove": [
+  "that any deck is visually approved by a human",
+  "that generated design output matches the house style (gate lives in #1262)",
+  "that live services (RealtimeSTT mic, codex imagegen) are available on another host"
+ ]
+}

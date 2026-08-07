@@ -75,3 +75,6 @@ else
 fi
 
 printf '%s\n' 'PASS: positive control, negative controls, editable PPTX, and receipts validated.'
+
+# #1288: docs and release receipt must match the implementation (stale gate)
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/generate_docs.py" --check
