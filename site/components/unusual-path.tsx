@@ -2,23 +2,37 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// Waypoints map to the published career TRACK (composer → Sony → DARPA → AFRL →
-// Lean 4 → this practice). The real path diverges hard from the flat dashed
-// "expected" line and ends elevated at the practice — the divergence itself is
-// the point of "an unusual path, on purpose." Labels are the stops' own words.
-const STOPS: { x: number; y: number; label: string }[] = [
-  { x: 40, y: 60, label: 'Composer — Adidas, Pepsi, X-Games' },
-  { x: 100, y: 20, label: 'Executive producer, Sony' },
-  { x: 170, y: 80, label: 'DARPA ARCOS — principal data scientist' },
-  { x: 220, y: 42, label: 'AFRL “Hacker” challenge coin' },
-  { x: 290, y: 66, label: 'Lean 4 formal methods' },
-  { x: 362, y: 28, label: 'This practice' },
+// A wandering trail, not a chart. It curves, swings across the straight
+// "expected" route, and doubles back on itself once (a hook a line chart can
+// never make) before ending elevated at this practice. Nodes sit on the trail
+// at the six real published milestones; labels are the stops' own words.
+const NODES: { x: number; y: number; label: string }[] = [
+  { x: 54, y: 44, label: 'Composer — Adidas, Pepsi, X-Games' },
+  { x: 96, y: 98, label: 'Executive producer, Sony' },
+  { x: 150, y: 30, label: 'DARPA ARCOS — principal data scientist' },
+  { x: 214, y: 102, label: 'AFRL “Hacker” challenge coin' },
+  { x: 286, y: 58, label: 'Lean 4 formal methods' },
+  { x: 360, y: 26, label: 'This practice' },
 ];
-const TRACE = `M0 90 L${STOPS.map((s) => `${s.x} ${s.y}`).join(' L')} L400 28`;
 
-/** The non-linear path under "An unusual path, on purpose." A faint dashed
- *  baseline is the conventional route; the brass trace diverges through the
- *  real milestones and ends high on its own. Draws once on scroll-in. */
+// Hand-authored winding trail through the nodes, with a backward hook after
+// the DARPA node so the path visibly crosses and doubles back on itself.
+const TRACE = [
+  'M0 74',
+  'C 22 60, 38 44, 54 44', // → composer
+  'C 78 44, 78 98, 96 98', // swing down → Sony
+  'C 122 98, 120 22, 150 30', // up → DARPA
+  'C 178 37, 150 66, 134 48', // hook: double back left over the trail
+  'C 156 74, 188 102, 214 102', // down → AFRL
+  'C 250 102, 256 58, 286 58', // → Lean 4
+  'C 322 58, 336 26, 360 26', // → this practice
+  'L 398 26',
+].join(' ');
+
+/** The non-linear path under "An unusual path, on purpose." A faint dead-
+ *  straight dashed line is the conventional route; the brass trail wanders,
+ *  crosses it, and doubles back before ending high on its own. Draws on
+ *  scroll-in. */
 export function UnusualPath() {
   const ref = useRef<SVGSVGElement>(null);
   const [visible, setVisible] = useState(false);
@@ -43,22 +57,29 @@ export function UnusualPath() {
     <svg
       ref={ref}
       className={`unusual-path-svg${visible ? ' is-visible' : ''}`}
-      viewBox="0 0 400 108"
+      viewBox="0 0 400 128"
       fill="none"
       role="img"
-      aria-label="Career path: a line diverging from the conventional straight route through six milestones, ending elevated at this practice."
+      aria-label="Career path: a winding trail that crosses and doubles back over the conventional straight route through six milestones, ending elevated at this practice."
     >
-      {/* The conventional path everyone else takes. */}
-      <line className="path-baseline" x1="0" y1="90" x2="400" y2="90" />
-      {/* The actual, divergent path. */}
-      <path className="path-line" d={TRACE} stroke="currentColor" strokeWidth="2" />
-      {STOPS.map((s, i) => (
+      {/* The conventional straight route — faint and dashed. */}
+      <line className="path-baseline" x1="0" y1="74" x2="400" y2="74" />
+      {/* The actual, wandering trail. */}
+      <path
+        className="path-line"
+        d={TRACE}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {NODES.map((s, i) => (
         <circle
           key={s.label}
-          className={`path-node n${i + 1}${i === STOPS.length - 1 ? ' is-final' : ''}`}
+          className={`path-node n${i + 1}${i === NODES.length - 1 ? ' is-final' : ''}`}
           cx={s.x}
           cy={s.y}
-          r={i === STOPS.length - 1 ? 3.4 : 2.4}
+          r={i === NODES.length - 1 ? 3.6 : 2.6}
           fill="currentColor"
         >
           <title>{s.label}</title>

@@ -1791,9 +1791,9 @@ footer a:hover {
   opacity: 0.22;
 }
 .path-line {
-  stroke-dasharray: 480;
-  stroke-dashoffset: 480;
-  transition: stroke-dashoffset 1.7s cubic-bezier(0.16, 1, 0.3, 1);
+  stroke-dasharray: 780;
+  stroke-dashoffset: 780;
+  transition: stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .path-node {
   opacity: 0;
