@@ -49,6 +49,11 @@ class DocElementKind(str, Enum):
     SVG = "svg"
     FIGURE = "figure"
     DIAGRAM = "diagram"
+    GROUP = "group"
+    SHAPE = "shape"
+    LINE = "line"
+    ICON = "icon"
+    RICH_TEXT = "rich_text"
 
 
 class Bbox(StrictModel):
@@ -90,6 +95,130 @@ class FigureSpec(StrictModel):
     engine: Literal["d3", "react-flow", "pixi", "mermaid", "webgl"]
     spec_ref: str = Field(min_length=1, description="Path or id of the figure spec artifact.")
     decorative: bool = False
+
+
+class ShapePreset(str, Enum):
+    RECT = "rect"
+    ROUNDED_RECT = "rounded_rect"
+    ELLIPSE = "ellipse"
+    CHEVRON = "chevron"
+    PILL = "pill"
+    TRIANGLE = "triangle"
+
+
+class StrokeSpec(StrictModel):
+    role: "ColorRoleRef"
+    width_pt: float = Field(default=2.0, gt=0, le=24)
+    dash: Literal["solid", "dashed", "dotted"] = "solid"
+
+
+class ShapeSpec(StrictModel):
+    """Closed preset geometry — native sp in PPTX, styled by design-system roles."""
+
+    preset: ShapePreset
+    fill_role: "ColorRoleRef | None" = None
+    stroke: StrokeSpec | None = None
+
+
+class Point(StrictModel):
+    """A point in the PARENT element frame (fractions)."""
+
+    x: float = Field(ge=0.0, le=1.0)
+    y: float = Field(ge=0.0, le=1.0)
+
+
+class AttachHint(StrictModel):
+    """ADVISORY editing hint (2026-08-07 review): geometry stays authoritative;
+    the PPTX emitter writes stCxn/endCxn only for proven-safe combinations."""
+
+    element_id: str = Field(min_length=1)
+    connection_site: int = Field(ge=0, le=8)
+
+
+class LineSpec(StrictModel):
+    """Canonical endpoints in the parent frame; element bbox is DERIVED."""
+
+    start: Point
+    end: Point
+    route: Literal["straight", "bent", "curved"] = "straight"
+    dash: Literal["solid", "dashed", "dotted"] = "solid"
+    width_pt: float = Field(default=2.0, gt=0, le=24)
+    arrow_start: bool = False
+    arrow_end: bool = True
+    start_hint: AttachHint | None = None
+    end_hint: AttachHint | None = None
+
+
+class IconSpec(StrictModel):
+    """Library reference ONLY (no inline paths): resolves against the
+    hash-pinned icon manifest; fallback is a target-profile branch that fails
+    closed when editable shapes are required."""
+
+    library_id: str = Field(min_length=1)
+    tint_role: "ColorRoleRef" = "primary"
+
+
+class TextStyleRole(str, Enum):
+    HERO = "hero"
+    STATEMENT_HERO = "statement_hero"
+    SECTION = "section"
+    TITLE = "title"
+    LEAD = "lead"
+    BODY = "body"
+    SUPPORT = "support"
+    CAPTION = "caption"
+
+
+class BasicMark(StrictModel):
+    type: Literal["bold", "italic", "underline", "code"]
+
+
+class ColorMark(StrictModel):
+    type: Literal["color"] = "color"
+    role: "ColorRoleRef"
+
+
+class LinkMark(StrictModel):
+    type: Literal["link"] = "link"
+    target_slide_id: str = Field(min_length=1, description="Local slide link only; external URLs deferred.")
+
+
+RichMark = BasicMark | ColorMark | LinkMark
+
+
+class RichRun(StrictModel):
+    text: str = Field(min_length=1)
+    marks: list[RichMark] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def no_duplicate_mark_types(self) -> "RichRun":
+        types = [m.type for m in self.marks]
+        if len(types) != len(set(types)):
+            raise ValueError("duplicate mark types on one run")
+        return self
+
+
+class RichBlock(StrictModel):
+    style_role: TextStyleRole = TextStyleRole.BODY
+    align: Literal["left", "center", "right"] = "left"
+    bullet_level: int | None = Field(default=None, ge=1, le=3)
+    runs: list[RichRun] = Field(min_length=1)
+
+
+class RichTextSpec(StrictModel):
+    blocks: list[RichBlock] = Field(min_length=1)
+
+    def plain_text(self) -> str:
+        """Canonical projection — title equality, density budgets, search, and
+        accessibility all read THIS, so rich text can never evade them."""
+        return "\n".join("".join(run.text for run in block.runs) for block in self.blocks)
+
+
+# Color roles referenced from the design system without a hard import cycle.
+ColorRoleRef = Literal[
+    "primary", "secondary", "canvas", "ink", "muted",
+    "highlight_warm", "highlight_green", "program", "alert",
+]
 
 
 class DiagramNode(StrictModel):
@@ -210,6 +339,13 @@ class DocElement(StrictModel):
     svg: str | None = Field(default=None, description="Inline SVG; validated by the svg_sanitize allowlist gate (#1268).")
     figure: FigureSpec | None = None
     diagram: "DiagramGraph | None" = None
+    children: "list[DocElement] | None" = Field(default=None, description="group members; coordinates are fractions of the group's UNROTATED local frame")
+    child_frame: "Bbox | None" = Field(default=None, description="chOff/chExt as fractions of the group bbox; preserved so padded frames survive python-pptx extent recalculation")
+    shape: ShapeSpec | None = None
+    line: LineSpec | None = None
+    icon: IconSpec | None = None
+    rich_text: RichTextSpec | None = None
+    rotation_deg: float | None = Field(default=None, ge=0.0, lt=360.0, description="clockwise, center-anchored; group/shape/image only")
     binding_paths: list[str] = Field(default_factory=list, description="TextBinding.path values this element renders.")
     entrance: DocEntrance = Field(default_factory=DocEntrance)
 
@@ -219,16 +355,68 @@ class DocElement(StrictModel):
             from .svg_sanitize import assert_safe
 
             assert_safe(self.svg)
-        required = {
-            DocElementKind.TEXT: self.text is not None and bool(self.text.strip()),
-            DocElementKind.IMAGE: bool(self.asset_id),
-            DocElementKind.SVG: bool(self.svg),
-            DocElementKind.FIGURE: self.figure is not None,
-            DocElementKind.DIAGRAM: self.diagram is not None,
-        }[self.kind]
-        if not required:
-            raise ValueError(f"element '{self.id}' ({self.kind.value}) is missing its content field")
+        # Exact-one payload semantics (2026-08-07 review): each kind NAMES its
+        # payload field; every other payload field must be absent. kind=text
+        # silently carrying asset_id/svg/diagram is a contract violation, not
+        # a curiosity for the emitters to resolve.
+        payload_fields = {
+            DocElementKind.TEXT: "text",
+            DocElementKind.IMAGE: "asset_id",
+            DocElementKind.SVG: "svg",
+            DocElementKind.FIGURE: "figure",
+            DocElementKind.DIAGRAM: "diagram",
+            DocElementKind.GROUP: "children",
+            DocElementKind.SHAPE: "shape",
+            DocElementKind.LINE: "line",
+            DocElementKind.ICON: "icon",
+            DocElementKind.RICH_TEXT: "rich_text",
+        }
+        own = payload_fields[self.kind]
+        value = getattr(self, own)
+        filled = value is not None and (not isinstance(value, str) or bool(value.strip()))
+        if not filled:
+            raise ValueError(f"element '{self.id}' ({self.kind.value}) is missing its '{own}' payload")
+        for kind, field_name in payload_fields.items():
+            if field_name != own and getattr(self, field_name) is not None:
+                raise ValueError(
+                    f"element '{self.id}' ({self.kind.value}) illegally carries '{field_name}' "
+                    f"(payload of kind '{kind.value}')"
+                )
+        if self.kind is DocElementKind.GROUP:
+            if self.binding_paths:
+                raise ValueError(f"group '{self.id}': bindings live on leaf content, not containers")
+            if not self.children:
+                raise ValueError(f"group '{self.id}' has no children")
+        if self.child_frame is not None and self.kind is not DocElementKind.GROUP:
+            raise ValueError(f"element '{self.id}': child_frame is group-only")
+        if self.rotation_deg is not None and self.kind not in {
+            DocElementKind.GROUP, DocElementKind.SHAPE, DocElementKind.IMAGE
+        }:
+            raise ValueError(f"element '{self.id}': rotation is group/shape/image-only")
+        if self.kind is DocElementKind.LINE and self.line is not None:
+            # Endpoints are canonical; bbox is DERIVED (never authored) — a
+            # perfectly horizontal connector has zero natural height, which
+            # Bbox forbids, so the hull gets an epsilon extent.
+            eps = 0.002
+            x0, x1 = sorted((self.line.start.x, self.line.end.x))
+            y0, y1 = sorted((self.line.start.y, self.line.end.y))
+            object.__setattr__(self, "bbox", Bbox(
+                x=x0, y=y0,
+                w=max(x1 - x0, eps) if x0 + max(x1 - x0, eps) <= 1.0 else 1.0 - x0,
+                h=max(y1 - y0, eps) if y0 + max(y1 - y0, eps) <= 1.0 else 1.0 - y0,
+            ))
         return self
+
+
+def iter_tree(elements: "list[DocElement]"):
+    """Depth-first traversal of the element tree. All document invariants use
+    this (2026-08-07 review): nested children must never escape validation.
+    Groups (when present) expose children via the `children` attribute."""
+    for element in elements:
+        yield element
+        children = getattr(element, "children", None)
+        if children:
+            yield from iter_tree(children)
 
 
 class DocSlide(StrictModel):
@@ -248,9 +436,9 @@ class DocSlide(StrictModel):
 
     @model_validator(mode="after")
     def unique_element_ids(self) -> "DocSlide":
-        ids = [e.id for e in self.elements]
+        ids = [e.id for e in iter_tree(self.elements)]
         if len(ids) != len(set(ids)):
-            raise ValueError(f"slide '{self.id}' has duplicate element ids")
+            raise ValueError(f"slide '{self.id}' has duplicate element ids (tree-wide)")
         return self
 
     @model_validator(mode="after")
@@ -261,20 +449,27 @@ class DocSlide(StrictModel):
         if self.intent is None:
             return self
         recipe = COMPOSITION_RECIPES[self.intent.recipe]
-        roles = {e.role for e in self.elements if e.role}
+        roles = {e.role for e in iter_tree(self.elements) if e.role}
         missing = [r for r in recipe["required_roles"] if r not in roles]
         if missing:
             raise ValueError(
                 f"slide '{self.id}': recipe '{self.intent.recipe}' requires roles {missing} (exemplar {recipe['exemplar']})"
             )
-        title = next((e for e in self.elements if e.role == "title"), None)
-        if title is not None and title.text != self.intent.assertion:
-            raise ValueError(f"slide '{self.id}': title text must equal the intent assertion")
-        words = sum(len((e.text or "").split()) for e in self.elements if e.kind is DocElementKind.TEXT)
+        title = next((e for e in iter_tree(self.elements) if e.role == "title"), None)
+        if title is not None:
+            title_text = title.rich_text.plain_text() if title.rich_text else title.text
+            if title_text != self.intent.assertion:
+                raise ValueError(f"slide '{self.id}': title text must equal the intent assertion")
+        words = 0
+        for e in iter_tree(self.elements):
+            if e.kind is DocElementKind.TEXT:
+                words += len((e.text or "").split())
+            elif e.kind is DocElementKind.RICH_TEXT:
+                words += len(e.rich_text.plain_text().split())
         budget = min(self.intent.density_budget_words, recipe["max_words"])
         if words > budget:
             raise ValueError(f"slide '{self.id}': {words} words exceeds density budget {budget}")
-        ids = {e.id for e in self.elements}
+        ids = {e.id for e in iter_tree(self.elements)}
         unknown = [i for i in self.intent.reveal_order if i not in ids]
         if unknown:
             raise ValueError(f"slide '{self.id}': reveal_order references unknown elements {unknown}")
@@ -299,7 +494,7 @@ class DeckDocument(StrictModel):
             for cid in slide.claim_ids:
                 if cid not in claim_ids:
                     raise ValueError(f"slide '{slide.id}' references unknown claim '{cid}'")
-            for el in slide.elements:
+            for el in iter_tree(slide.elements):
                 if el.asset_id and el.asset_id not in asset_ids:
                     raise ValueError(f"element '{slide.id}/{el.id}' references unknown asset '{el.asset_id}'")
         return self
@@ -504,7 +699,7 @@ def project_public(document: DeckDocument) -> DeckDocument:
 
     slides = [s for s in document.slides if not s.hidden]
     referenced_claims = {cid for s in slides for cid in s.claim_ids}
-    referenced_assets = {e.asset_id for s in slides for e in s.elements if e.asset_id}
+    referenced_assets = {e.asset_id for s in slides for e in iter_tree(s.elements) if e.asset_id}
 
     claims = []
     for claim in document.claims:

@@ -114,6 +114,49 @@
    "title": "AssetStatus",
    "type": "string"
   },
+  "AttachHint": {
+   "additionalProperties": false,
+   "description": "ADVISORY editing hint (2026-08-07 review): geometry stays authoritative;\nthe PPTX emitter writes stCxn/endCxn only for proven-safe combinations.",
+   "properties": {
+    "element_id": {
+     "minLength": 1,
+     "title": "Element Id",
+     "type": "string"
+    },
+    "connection_site": {
+     "maximum": 8,
+     "minimum": 0,
+     "title": "Connection Site",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "element_id",
+    "connection_site"
+   ],
+   "title": "AttachHint",
+   "type": "object"
+  },
+  "BasicMark": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "enum": [
+      "bold",
+      "italic",
+      "underline",
+      "code"
+     ],
+     "title": "Type",
+     "type": "string"
+    }
+   },
+   "required": [
+    "type"
+   ],
+   "title": "BasicMark",
+   "type": "object"
+  },
   "Bbox": {
    "additionalProperties": false,
    "description": "Fractional geometry on the 16:9 canvas \u2014 x*1920/y*1080 in the browser,\nx*13.333in/y*7.5in in PPTX, so placement round-trips exactly.",
@@ -346,6 +389,37 @@
    ],
    "title": "ClaimStatus",
    "type": "string"
+  },
+  "ColorMark": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "color",
+     "default": "color",
+     "title": "Type",
+     "type": "string"
+    },
+    "role": {
+     "enum": [
+      "primary",
+      "secondary",
+      "canvas",
+      "ink",
+      "muted",
+      "highlight_warm",
+      "highlight_green",
+      "program",
+      "alert"
+     ],
+     "title": "Role",
+     "type": "string"
+    }
+   },
+   "required": [
+    "role"
+   ],
+   "title": "ColorMark",
+   "type": "object"
   },
   "ContentReveal": {
    "description": "Browser-deck content entrance animation for body items.\n\n`step` is click-gated: in Present mode the advance key reveals the next\nbullet/card (a fragment) before it advances the slide \u2014 real-presentation\npacing. Honored by the workbench, presenter, and HTML export; PPTX stays\nanimation-free by design.",
@@ -724,6 +798,93 @@
      ],
      "default": null
     },
+    "children": {
+     "anyOf": [
+      {
+       "items": {
+        "$ref": "#/$defs/DocElement"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "group members; coordinates are fractions of the group's UNROTATED local frame",
+     "title": "Children"
+    },
+    "child_frame": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/Bbox"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "chOff/chExt as fractions of the group bbox; preserved so padded frames survive python-pptx extent recalculation"
+    },
+    "shape": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/ShapeSpec"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "line": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/LineSpec"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "icon": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/IconSpec"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "rich_text": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/RichTextSpec"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "rotation_deg": {
+     "anyOf": [
+      {
+       "exclusiveMaximum": 360.0,
+       "minimum": 0.0,
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "clockwise, center-anchored; group/shape/image only",
+     "title": "Rotation Deg"
+    },
     "binding_paths": {
      "description": "TextBinding.path values this element renders.",
      "items": {
@@ -750,7 +911,12 @@
     "image",
     "svg",
     "figure",
-    "diagram"
+    "diagram",
+    "group",
+    "shape",
+    "line",
+    "icon",
+    "rich_text"
    ],
    "title": "DocElementKind",
    "type": "string"
@@ -1013,6 +1179,317 @@
    "title": "FigureSpec",
    "type": "object"
   },
+  "IconSpec": {
+   "additionalProperties": false,
+   "description": "Library reference ONLY (no inline paths): resolves against the\nhash-pinned icon manifest; fallback is a target-profile branch that fails\nclosed when editable shapes are required.",
+   "properties": {
+    "library_id": {
+     "minLength": 1,
+     "title": "Library Id",
+     "type": "string"
+    },
+    "tint_role": {
+     "default": "primary",
+     "enum": [
+      "primary",
+      "secondary",
+      "canvas",
+      "ink",
+      "muted",
+      "highlight_warm",
+      "highlight_green",
+      "program",
+      "alert"
+     ],
+     "title": "Tint Role",
+     "type": "string"
+    }
+   },
+   "required": [
+    "library_id"
+   ],
+   "title": "IconSpec",
+   "type": "object"
+  },
+  "LineSpec": {
+   "additionalProperties": false,
+   "description": "Canonical endpoints in the parent frame; element bbox is DERIVED.",
+   "properties": {
+    "start": {
+     "$ref": "#/$defs/Point"
+    },
+    "end": {
+     "$ref": "#/$defs/Point"
+    },
+    "route": {
+     "default": "straight",
+     "enum": [
+      "straight",
+      "bent",
+      "curved"
+     ],
+     "title": "Route",
+     "type": "string"
+    },
+    "dash": {
+     "default": "solid",
+     "enum": [
+      "solid",
+      "dashed",
+      "dotted"
+     ],
+     "title": "Dash",
+     "type": "string"
+    },
+    "width_pt": {
+     "default": 2.0,
+     "exclusiveMinimum": 0,
+     "maximum": 24,
+     "title": "Width Pt",
+     "type": "number"
+    },
+    "arrow_start": {
+     "default": false,
+     "title": "Arrow Start",
+     "type": "boolean"
+    },
+    "arrow_end": {
+     "default": true,
+     "title": "Arrow End",
+     "type": "boolean"
+    },
+    "start_hint": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/AttachHint"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "end_hint": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/AttachHint"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "required": [
+    "start",
+    "end"
+   ],
+   "title": "LineSpec",
+   "type": "object"
+  },
+  "LinkMark": {
+   "additionalProperties": false,
+   "properties": {
+    "type": {
+     "const": "link",
+     "default": "link",
+     "title": "Type",
+     "type": "string"
+    },
+    "target_slide_id": {
+     "description": "Local slide link only; external URLs deferred.",
+     "minLength": 1,
+     "title": "Target Slide Id",
+     "type": "string"
+    }
+   },
+   "required": [
+    "target_slide_id"
+   ],
+   "title": "LinkMark",
+   "type": "object"
+  },
+  "Point": {
+   "additionalProperties": false,
+   "description": "A point in the PARENT element frame (fractions).",
+   "properties": {
+    "x": {
+     "maximum": 1.0,
+     "minimum": 0.0,
+     "title": "X",
+     "type": "number"
+    },
+    "y": {
+     "maximum": 1.0,
+     "minimum": 0.0,
+     "title": "Y",
+     "type": "number"
+    }
+   },
+   "required": [
+    "x",
+    "y"
+   ],
+   "title": "Point",
+   "type": "object"
+  },
+  "RichBlock": {
+   "additionalProperties": false,
+   "properties": {
+    "style_role": {
+     "$ref": "#/$defs/TextStyleRole",
+     "default": "body"
+    },
+    "align": {
+     "default": "left",
+     "enum": [
+      "left",
+      "center",
+      "right"
+     ],
+     "title": "Align",
+     "type": "string"
+    },
+    "bullet_level": {
+     "anyOf": [
+      {
+       "maximum": 3,
+       "minimum": 1,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Bullet Level"
+    },
+    "runs": {
+     "items": {
+      "$ref": "#/$defs/RichRun"
+     },
+     "minItems": 1,
+     "title": "Runs",
+     "type": "array"
+    }
+   },
+   "required": [
+    "runs"
+   ],
+   "title": "RichBlock",
+   "type": "object"
+  },
+  "RichRun": {
+   "additionalProperties": false,
+   "properties": {
+    "text": {
+     "minLength": 1,
+     "title": "Text",
+     "type": "string"
+    },
+    "marks": {
+     "items": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/BasicMark"
+       },
+       {
+        "$ref": "#/$defs/ColorMark"
+       },
+       {
+        "$ref": "#/$defs/LinkMark"
+       }
+      ]
+     },
+     "title": "Marks",
+     "type": "array"
+    }
+   },
+   "required": [
+    "text"
+   ],
+   "title": "RichRun",
+   "type": "object"
+  },
+  "RichTextSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "blocks": {
+     "items": {
+      "$ref": "#/$defs/RichBlock"
+     },
+     "minItems": 1,
+     "title": "Blocks",
+     "type": "array"
+    }
+   },
+   "required": [
+    "blocks"
+   ],
+   "title": "RichTextSpec",
+   "type": "object"
+  },
+  "ShapePreset": {
+   "enum": [
+    "rect",
+    "rounded_rect",
+    "ellipse",
+    "chevron",
+    "pill",
+    "triangle"
+   ],
+   "title": "ShapePreset",
+   "type": "string"
+  },
+  "ShapeSpec": {
+   "additionalProperties": false,
+   "description": "Closed preset geometry \u2014 native sp in PPTX, styled by design-system roles.",
+   "properties": {
+    "preset": {
+     "$ref": "#/$defs/ShapePreset"
+    },
+    "fill_role": {
+     "anyOf": [
+      {
+       "enum": [
+        "primary",
+        "secondary",
+        "canvas",
+        "ink",
+        "muted",
+        "highlight_warm",
+        "highlight_green",
+        "program",
+        "alert"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Fill Role"
+    },
+    "stroke": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/StrokeSpec"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "required": [
+    "preset"
+   ],
+   "title": "ShapeSpec",
+   "type": "object"
+  },
   "SlideIntent": {
    "additionalProperties": false,
    "description": "The design-representation layer the 2026-08-06 review named as missing:\nwhat the slide ARGUES and which house composition realizes it \u2014 sits between\nclaims and bounding boxes, generated pre-materialization, human-reviewable.",
@@ -1258,6 +1735,48 @@
    "title": "SourceSpec",
    "type": "object"
   },
+  "StrokeSpec": {
+   "additionalProperties": false,
+   "properties": {
+    "role": {
+     "enum": [
+      "primary",
+      "secondary",
+      "canvas",
+      "ink",
+      "muted",
+      "highlight_warm",
+      "highlight_green",
+      "program",
+      "alert"
+     ],
+     "title": "Role",
+     "type": "string"
+    },
+    "width_pt": {
+     "default": 2.0,
+     "exclusiveMinimum": 0,
+     "maximum": 24,
+     "title": "Width Pt",
+     "type": "number"
+    },
+    "dash": {
+     "default": "solid",
+     "enum": [
+      "solid",
+      "dashed",
+      "dotted"
+     ],
+     "title": "Dash",
+     "type": "string"
+    }
+   },
+   "required": [
+    "role"
+   ],
+   "title": "StrokeSpec",
+   "type": "object"
+  },
   "TextBinding": {
    "additionalProperties": false,
    "description": "Binds one addressable slide string to the ledger.\n\npath addresses a whole string: title | message | footer | body:<i> |\nelement:<id> | visual.items:<i> | visual.caption. Strings without a\nbinding are UNBOUND: a warning in normal builds, an error at publish.",
@@ -1308,6 +1827,20 @@
    ],
    "title": "TextBinding",
    "type": "object"
+  },
+  "TextStyleRole": {
+   "enum": [
+    "hero",
+    "statement_hero",
+    "section",
+    "title",
+    "lead",
+    "body",
+    "support",
+    "caption"
+   ],
+   "title": "TextStyleRole",
+   "type": "string"
   },
   "ThemeTokens": {
    "additionalProperties": false,

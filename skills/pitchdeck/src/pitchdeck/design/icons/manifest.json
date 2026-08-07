@@ -1,0 +1,139 @@
+{
+ "schema": "pitchdeck.icon_library.v1",
+ "icons": [
+  {
+   "id": "search",
+   "svg_file": "search.svg",
+   "svg_sha256": "1d42d7eaf2306379d7e3e6d663585be36eb391fa3078744d298b06f2f4e571ff",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "ellipse",
+      "bbox": [
+       0.08,
+       0.08,
+       0.6,
+       0.6
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.62,
+        0.62
+       ],
+       [
+        0.92,
+        0.92
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "shield-check",
+   "svg_file": "shield-check.svg",
+   "svg_sha256": "0e374a59ea23c3a45b803924b0e644dbb5f12cb181d64dd3516ed4e2198c9c78",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.5,
+        0.05
+       ],
+       [
+        0.85,
+        0.22
+       ],
+       [
+        0.85,
+        0.5
+       ],
+       [
+        0.5,
+        0.95
+       ],
+       [
+        0.15,
+        0.5
+       ],
+       [
+        0.15,
+        0.22
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.32,
+        0.45
+       ],
+       [
+        0.45,
+        0.6
+       ],
+       [
+        0.68,
+        0.32
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  },
+  {
+   "id": "book",
+   "svg_file": "book.svg",
+   "svg_sha256": "933ec56785fbff2c892f876a4f7136b3c0c2a471ab7085d0309b10646962bf73",
+   "native_mapping": {
+    "kind": "group",
+    "parts": [
+     {
+      "kind": "preset",
+      "preset": "rounded_rect",
+      "bbox": [
+       0.12,
+       0.08,
+       0.76,
+       0.84
+      ],
+      "filled": false
+     },
+     {
+      "kind": "freeform",
+      "vertices": [
+       [
+        0.3,
+        0.08
+       ],
+       [
+        0.3,
+        0.92
+       ]
+      ],
+      "closed": false
+     }
+    ]
+   },
+   "png_fallback": null,
+   "license": "original line-art, house style"
+  }
+ ]
+}
