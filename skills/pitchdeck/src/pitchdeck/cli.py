@@ -384,6 +384,29 @@ def compile_document_cmd(
         _abort(exc)
 
 
+@app.command(name="render-document")
+def render_document_cmd(
+    document: Annotated[Path, typer.Option(help="Path to a deck.document.json (pitchdeck.deck_document.v1).")],
+    output: Annotated[Path, typer.Option(help="Output HTML path (self-contained).")],
+    asset_base: Annotated[Path, typer.Option(help="Base dir for relative asset paths (usually the bundle dir).")],
+    theme_template: Annotated[Path | None, typer.Option(help="pitchdeck.theme_template.v1 JSON; default house-light.")] = None,
+) -> None:
+    """Render a canonical deck document to house-native self-contained HTML."""
+    import json as json_mod
+
+    from .document import DeckDocument
+    from .document_html import render_document_html
+
+    try:
+        doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
+        html_text = render_document_html(doc, asset_base=asset_base, theme_template=theme_template)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(html_text, encoding="utf-8")
+        typer.echo(json_mod.dumps({"status": "PASS", "output": str(output.resolve()), "slides": len(doc.slides)}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="record-transcript")
 def record_transcript_cmd(
     timeout_seconds: Annotated[int, typer.Option(help="Max recording window.")] = 120,

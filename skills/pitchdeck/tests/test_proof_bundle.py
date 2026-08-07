@@ -786,3 +786,25 @@ def test_golden_slice_composition_contract():
             el["diagram"]["edges"][0]["decorative"] = False
     with _pytest.raises(Exception, match="non-decorative"):
         DeckDocument.model_validate(naked_edge)
+
+
+def test_render_document_html_house_native():
+    """#1262: the document renderer emits house chrome and diagrams as SEPARATE
+    SVG shapes (editability contract) — never a raster."""
+    import importlib.util
+
+    from pitchdeck.document_html import render_document_html
+
+    spec = importlib.util.spec_from_file_location(
+        "build_golden", Path(__file__).parent.parent / "examples" / "sparta-golden" / "build_golden.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    doc = module.build()
+    theme = Path(__file__).parent.parent.parent / "best-practices-slide-design" / "themes" / "sparta-house-conference.json"
+    html_text = render_document_html(doc, asset_base=Path(__file__).parent.parent / "examples" / "sparta-explorer", theme_template=theme)
+    assert html_text.count("<section") == 6
+    assert "#065E7C" in html_text  # petrol band
+    assert html_text.count('<g id="node-') == 5 and html_text.count('<g id="edge-') == 3
+    assert "relevance does not cross this gap" in html_text  # bound edge label as text, not pixels
+    assert "data:image" in html_text  # self-contained assets
