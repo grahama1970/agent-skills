@@ -149,7 +149,11 @@ def refresh(commit: bool, push: bool) -> dict:
     ]
     result = {"changed": changed, "committed": False, "pushed": False}
     if changed:
-        for check in (["python3", "scripts/verify-data-qid.py"], ["npm", "run", "build"]):
+        for check in (
+            ["python3", "scripts/verify-data-qid.py"],
+            ["python3", "scripts/copy_audit.py"],
+            ["npm", "run", "build"],
+        ):
             proc = subprocess.run(check, cwd=REPO / "site")
             if proc.returncode != 0:
                 raise SystemExit(f"post-refresh gate failed: {' '.join(check)}")
