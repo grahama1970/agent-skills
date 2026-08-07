@@ -18,7 +18,9 @@ animation." The operator has since directed two deliberate, structural
 exceptions — both physical/real, not decorative theater:
 - the capability constellation is a live `d3-force` graph (repulsion +
   collision + drag), matching the persona-dream node graph;
-- the search placeholder rotates through real client-style questions.
+- the search placeholder rotates through real client-style questions;
+- the G꜀ mark's subscript c breathes slowly (~5s) as a quiet runtime signal,
+  brightening on hover.
 Both honour `prefers-reduced-motion` (the constellation settles statically; the
 placeholder stops rotating), so the exhibits-not-theater posture still holds for
 that audience. No animated *evidence* — counters, traces, fake numbers — remains

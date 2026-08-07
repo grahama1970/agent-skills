@@ -227,6 +227,39 @@ section {
   font-size: 10px;
   font-style: italic;
   fill: var(--ember, #d1703c);
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+/* Instant activation: brighten the c and pause the ambient loop on hover. */
+.wordmark:hover .brandmark-c {
+  animation: none;
+  opacity: 1;
+  filter: drop-shadow(0 0 3px rgba(209, 112, 60, 0.9));
+}
+/* The subscript c breathes slowly — a quiet runtime signal, not decoration.
+   Strictly restrained (~5s), and off entirely under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .brandmark-c {
+    animation: c-breathe 5s ease-in-out infinite;
+  }
+  .c-mark-sub {
+    animation: c-glow 5s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+@keyframes c-breathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+@keyframes c-glow {
+  0%, 100% {
+    opacity: 0.78;
+    filter: drop-shadow(0 0 0 rgba(209, 112, 60, 0));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(209, 112, 60, 0.6));
+  }
 }
 .wordmark span {
   color: var(--brass);
