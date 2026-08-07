@@ -301,6 +301,23 @@ section {
 .nav .mailref {
   color: var(--brass);
 }
+.nav-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.nav-icon {
+  display: inline-flex;
+  color: var(--muted);
+  transition: color 0.18s ease;
+}
+.nav-icon:hover {
+  color: var(--brass);
+}
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+}
 @media (max-width: 720px) {
   /* Keep section nav on mobile as a horizontally scrollable strip. */
   .topbar .wrap {
