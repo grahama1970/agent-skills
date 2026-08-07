@@ -19,7 +19,7 @@ import json
 import mimetypes
 from pathlib import Path
 
-from .document import DeckDocument, DiagramGraph, DocElement, DocElementKind
+from .document import DeckDocument, DiagramGraph, DocElement, DocElementKind, LineSpec, RichTextSpec
 from .io import expand_path
 
 CANVAS_W, CANVAS_H = 1920, 1080
@@ -123,8 +123,9 @@ def _element_html(el: DocElement, assets_by_id: dict, asset_base: Path, theme: d
     if el.kind is DocElementKind.IMAGE:
         spec = assets_by_id[el.asset_id]
         path = expand_path(spec.local_path, base_dir=asset_base)
+        rotate = f"transform:rotate({el.rotation_deg}deg);" if el.rotation_deg else ""
         return (
-            f'<div {qid} style="{pos}">'
+            f'<div {qid} style="{pos}{rotate}">'
             f'<img src="{_data_uri(path)}" alt="{html.escape(spec.alt_text)}" '
             f'style="width:100%;height:100%;object-fit:contain;"/></div>'
         )
@@ -133,7 +134,129 @@ def _element_html(el: DocElement, assets_by_id: dict, asset_base: Path, theme: d
     if el.kind is DocElementKind.DIAGRAM:
         svg = _diagram_svg(el.diagram, el.bbox.w * CANVAS_W, el.bbox.h * CANVAS_H, palette["primary"], palette["ink"])
         return f'<div {qid} style="{pos}">{svg}</div>'
+    if el.kind is DocElementKind.GROUP:
+        # Children live in the group's UNROTATED local frame; a padded
+        # child_frame maps children into the inner region (chOff/chExt).
+        rotate = f"transform:rotate({el.rotation_deg}deg);" if el.rotation_deg else ""
+        frame = el.child_frame
+        inner_pos = (
+            f"position:absolute;left:{frame.x * 100:.2f}%;top:{frame.y * 100:.2f}%;"
+            f"width:{frame.w * 100:.2f}%;height:{frame.h * 100:.2f}%;"
+            if frame
+            else "position:absolute;inset:0;"
+        )
+        children_sorted = sorted(enumerate(el.children or []), key=lambda pair: (pair[1].z, pair[0]))
+        body = "".join(_element_html(child, assets_by_id, asset_base, theme) for _, child in children_sorted)
+        return (
+            f'<div {qid} style="{pos}{rotate}">'
+            f'<div style="{inner_pos}">{body}</div></div>'
+        )
+    if el.kind is DocElementKind.SHAPE:
+        spec = el.shape
+        fill = palette.get(spec.fill_role, "none") if spec.fill_role else "none"
+        stroke = palette.get(spec.stroke.role, palette["primary"]) if spec.stroke else "none"
+        stroke_w = spec.stroke.width_pt if spec.stroke else 0
+        dash = {"solid": "", "dashed": "8 6", "dotted": "2 5"}[spec.stroke.dash] if spec.stroke else ""
+        rotate = f"transform:rotate({el.rotation_deg}deg);" if el.rotation_deg else ""
+        shapes = {
+            "rect": '<rect x="1" y="1" width="98" height="98"/>',
+            "rounded_rect": '<rect x="1" y="1" width="98" height="98" rx="12"/>',
+            "ellipse": '<ellipse cx="50" cy="50" rx="49" ry="49"/>',
+            "pill": '<rect x="1" y="20" width="98" height="60" rx="30"/>',
+            "chevron": '<polygon points="1,1 75,1 99,50 75,99 1,99 25,50"/>',
+            "triangle": '<polygon points="50,2 98,98 2,98"/>',
+        }
+        body = shapes[spec.preset.value].replace(
+            "/>", f' fill="{fill}" stroke="{stroke}" stroke-width="{stroke_w}"'
+            + (f' stroke-dasharray="{dash}"' if dash else "") + ' vector-effect="non-scaling-stroke"/>'
+        )
+        return (
+            f'<div {qid} style="{pos}{rotate}">'
+            f'<svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" '
+            f'xmlns="http://www.w3.org/2000/svg">{body}</svg></div>'
+        )
+    if el.kind is DocElementKind.LINE:
+        return _line_html(el, el.line, palette, qid)
+    if el.kind is DocElementKind.ICON:
+        from .icons import resolve_icon
+
+        resolved = resolve_icon(el.icon.library_id, require_editable=False)
+        tint = palette.get(el.icon.tint_role, palette["primary"])
+        svg = resolved["svg"].replace("#000", tint).replace("stroke='#000'", f"stroke='{tint}'")
+        svg = svg.replace("<svg ", '<svg width="100%" height="100%" ', 1)
+        return f'<div {qid} data-icon="{html.escape(el.icon.library_id)}" style="{pos}">{svg}</div>'
+    if el.kind is DocElementKind.RICH_TEXT:
+        return _rich_text_html(el, el.rich_text, palette, theme, qid, pos)
     raise ValueError(f"element '{el.id}': no renderer for kind '{el.kind.value}'")
+
+
+def _line_html(el: DocElement, spec: LineSpec, palette: dict, qid: str) -> str:
+    """Full-canvas SVG overlay positioned at the element bbox; endpoints are
+    canonical parent-frame fractions mapped into the local viewBox."""
+    color = palette["primary"]
+    x0, y0 = el.bbox.x, el.bbox.y
+    w, h = max(el.bbox.w, 1e-6), max(el.bbox.h, 1e-6)
+    sx = (spec.start.x - x0) / w * 100
+    sy = (spec.start.y - y0) / h * 100
+    ex = (spec.end.x - x0) / w * 100
+    ey = (spec.end.y - y0) / h * 100
+    dash = {"solid": "", "dashed": ' stroke-dasharray="8 6"', "dotted": ' stroke-dasharray="2 5"'}[spec.dash]
+    marker_defs = (
+        f'<defs><marker id="ah-{el.id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
+        f'orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="{color}"/></marker></defs>'
+    )
+    markers = (' marker-end="url(#ah-%s)"' % el.id if spec.arrow_end else "") + (
+        ' marker-start="url(#ah-%s)"' % el.id if spec.arrow_start else ""
+    )
+    if spec.route == "bent":
+        mid = f"{sx:.1f},{ey:.1f}"
+        path = f'<polyline points="{sx:.1f},{sy:.1f} {mid} {ex:.1f},{ey:.1f}" fill="none"'
+    elif spec.route == "curved":
+        path = f'<path d="M {sx:.1f} {sy:.1f} Q {(sx+ex)/2:.1f} {sy:.1f} {ex:.1f} {ey:.1f}" fill="none"'
+    else:
+        path = f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}"'
+    pos = (
+        f"position:absolute;left:{x0 * 100:.2f}%;top:{y0 * 100:.2f}%;"
+        f"width:{el.bbox.w * 100:.2f}%;height:{el.bbox.h * 100:.2f}%;z-index:{el.z};overflow:visible;"
+    )
+    return (
+        f'<div {qid} style="{pos}">'
+        f'<svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" style="overflow:visible" '
+        f'xmlns="http://www.w3.org/2000/svg">{marker_defs}'
+        f'{path} stroke="{color}" stroke-width="{spec.width_pt / 2:.1f}"{dash}{markers} vector-effect="non-scaling-stroke"/></svg></div>'
+    )
+
+
+def _rich_text_html(el: DocElement, spec: RichTextSpec, palette: dict, theme: dict, qid: str, pos: str) -> str:
+    scale = theme.get("type_scale_pt", {"body": 20, "support": 16})
+    blocks_html = []
+    for block in spec.blocks:
+        size = scale.get(block.style_role.value, 20) if isinstance(scale, dict) else 20
+        runs_html = []
+        for run in block.runs:
+            css, tag_open, tag_close = [], "", ""
+            for mark in run.marks:
+                if mark.type == "bold":
+                    css.append("font-weight:bold")
+                elif mark.type == "italic":
+                    css.append("font-style:italic")
+                elif mark.type == "underline":
+                    css.append("text-decoration:underline")
+                elif mark.type == "code":
+                    css.append("font-family:Consolas,monospace;background:rgba(0,0,0,0.06);padding:0 3px;border-radius:3px")
+                elif mark.type == "color":
+                    css.append(f"color:{palette.get(mark.role, palette['ink'])}")
+                elif mark.type == "link":
+                    tag_open = f'<a href="#doc:slide:{html.escape(mark.target_slide_id)}" style="color:{palette["primary"]};">'
+                    tag_close = "</a>"
+            runs_html.append(f'{tag_open}<span style="{";".join(css)}">{html.escape(run.text)}</span>{tag_close}')
+        bullet = f'<span style="color:{palette["primary"]};margin-right:6px;">&gt;</span>' if block.bullet_level else ""
+        blocks_html.append(
+            f'<p style="margin:0 0 6px;font-size:{size * 1.6:.0f}px;text-align:{block.align};line-height:1.3;">{bullet}{"".join(runs_html)}</p>'
+        )
+    ink = palette["ink"]
+    return f'<div {qid} style="{pos}color:{ink};font-family:{theme["theme_tokens"]["body_font"]}, sans-serif;">{"".join(blocks_html)}</div>'
+
 
 
 def render_document_html(
