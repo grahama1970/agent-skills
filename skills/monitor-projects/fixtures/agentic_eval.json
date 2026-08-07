@@ -1,0 +1,54 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "monitor-projects",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "discover-positive",
+      "case_type": "positive-control",
+      "command": "./run.sh discover --json --since-hours 24",
+      "assertions": [
+        "exit code 0",
+        "output is a JSON array",
+        "every entry has name, files_changed, commits"
+      ]
+    },
+    {
+      "id": "nightly-dry-run-safety",
+      "case_type": "safety-boundary",
+      "command": "./run.sh nightly --dry-run",
+      "assertions": [
+        "no POST to memory /store occurs",
+        "ask invocation (if any) omits --execute",
+        "receipt.json written under reports/monitor-projects/<run-id>/",
+        "receipt seat_status marks every seat not_run_dry_run"
+      ]
+    },
+    {
+      "id": "no-changes-negative",
+      "case_type": "negative-control",
+      "command": "./run.sh nightly --dry-run --since-hours 0",
+      "assertions": [
+        "status is no_changes",
+        "no roundtable is convened"
+      ]
+    },
+    {
+      "id": "live-nightly",
+      "case_type": "adversarial-live",
+      "command": "./run.sh nightly",
+      "mocked": false,
+      "proof_scope": "live browser roundtable + memory read-back",
+      "claims": {
+        "proves": "five-seat concurrent roundtable executes and receipt is recallable via /memory",
+        "does_not_prove": "quality of seat responses or closure of executable slices"
+      },
+      "assertions": [
+        "receipt status ok requires all five seats responded",
+        "stored_verified true only after /memory recall read-back surfaces the receipt",
+        "missing seat yields NEEDS_ATTENTION and exit code 1, never silent consensus"
+      ]
+    }
+  ],
+  "readiness_vocabulary": ["READY", "USABLE_WITH_GAPS", "NOT_READY", "NOT_ESTABLISHED"]
+}
