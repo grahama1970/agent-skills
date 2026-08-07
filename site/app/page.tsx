@@ -206,10 +206,20 @@ export default function Home() {
           <figure
             className="strip wipe"
             role="img"
-            aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream storyboard panel"
+            aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream keyframe"
           >
+            {/* Video hero: poster is the reviewed keyframe; the persona-dream
+                I2V clip drops in as a <source> once the render lands (#1309). */}
+            <video
+              className="strip-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="/dream/horus-embry-hero.webp"
+            />
             <figcaption>
-              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — re-rendered at 2172px from storyboard run 20260612, via WebGPT
+              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — a persona-dream keyframe
             </figcaption>
           </figure>
         </section>
