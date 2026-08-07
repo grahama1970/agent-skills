@@ -5,6 +5,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
+# Agentic eval passthrough: ./run.sh eval  -> multi-trial behavior gates
+if [ "${1:-}" = "eval" ]; then
+  shift
+  exec "${HOME}/.claude/skills/agentic-evals/run.sh" run "${SCRIPT_DIR}/fixtures/agentic_eval.json" "$@"
+fi
+
+
 # Local untracked environment (e.g. BUZZ_IDENTITY_KEY) for cron runs whose
 # daemon env is empty; safe no-op when absent.
 if [ -f "${SCRIPT_DIR}/local/env" ]; then

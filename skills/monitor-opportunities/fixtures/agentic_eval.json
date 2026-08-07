@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "skill": "monitor-opportunities",
+  "trials": 2,
+  "proof_scope": "deterministic skill-behavior gates that prevent the failure modes hit in development: silently-skipped mandatory sources, API-break-without-website-fallback, fabricated resume claims, and a run that cannot complete",
+  "claims": {
+    "proves": "the enforcement gates fire (mandatory sources + API-website-fallback), a run with browser evidence completes, the base resume resolves, and no fabricated 'God of War' claim exists in the approved-claims snapshot",
+    "does_not_prove": "live LinkedIn/Indeed capture, real successful applications, nightly scheduler reliability, or semantic quality of tailored resumes"
+  },
+  "cases": [
+    {
+      "name": "enforcement-tests-deterministic",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py skills/monitor-opportunities/tests/test_resume_artifact.py skills/monitor-opportunities/tests/test_ats_prefill.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "sam-api-break-requires-website-fallback",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "use the website"
+        ]
+      }
+    },
+    {
+      "name": "run-with-website-evidence-completes",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json --federal-evidence skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "AWAITING_HUMAN"
+        ]
+      }
+    },
+    {
+      "name": "no-fabricated-god-of-war-claim",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "base-resume-resolves-with-digests",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh base-resume"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "base_pdf",
+          "sha256"
+        ]
+      }
+    },
+    {
+      "name": "required-sources-config-is-valid",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "python3 -c \"import json; d=json.load(open('/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/config/required_sources.json')); assert any(r['id']=='linkedin_top_applicant' for r in d['required']); assert any(r['id']=='sam.gov' for r in d['required']); print('required_sources valid')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "required_sources valid"
+        ]
+      }
+    }
+  ]
+}
