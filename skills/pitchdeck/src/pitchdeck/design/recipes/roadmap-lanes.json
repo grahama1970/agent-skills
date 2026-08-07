@@ -1,19 +1,21 @@
 {
  "schema": "pitchdeck.composition_recipe.v1",
  "id": "roadmap-lanes",
- "version": 1,
+ "version": 2,
  "title_binding_required": true,
  "numeric_requires_span": true,
  "reveal_order_matches_narrative": true,
  "pptx_editable_shapes_required": true,
  "provenance": {
-  "origin": "COMPOSITION_RECIPES python dict, migrated #1275"
+  "origin": "COMPOSITION_RECIPES python dict, migrated #1275",
+  "v2": "visual review 2026-08-07: closure gates render as a five-gate illustration, not a text list"
  },
  "required_roles": [
   "title",
-  "chevrons"
+  "diagram"
  ],
  "optional_roles": [
+  "chevrons",
   "visual"
  ],
  "allowed_kinds": [
@@ -22,7 +24,7 @@
   "diagram"
  ],
  "max_words": 70,
- "visual_weight_min_frac": 0.0,
+ "visual_weight_min_frac": 0.3,
  "exemplar_ids": [
   "cybersummit-49-assertion-humor"
  ]

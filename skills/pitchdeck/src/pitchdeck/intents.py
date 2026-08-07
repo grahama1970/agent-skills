@@ -21,6 +21,8 @@ from pathlib import Path
 from .design_system import CompositionRecipe, DeckProfile, DesignSystem, load_recipes
 from .document import (
     Bbox,
+    DiagramEdge,
+    DiagramNode,
     IconSpec,
     DeckDocument,
     DiagramGraph,
@@ -82,7 +84,9 @@ _CAPTION_STYLE = DocTextStyle(size_pt=14.0)
 
 def _compatible(recipe: CompositionRecipe, module: OutlineModule) -> bool:
     roles = set(r.value for r in recipe.required_roles)
-    if "diagram" in roles and module.diagram is None:
+    if "diagram" in roles and module.diagram is None and recipe.id != "roadmap-lanes":
+        # roadmap-lanes SYNTHESIZES its gate diagram deterministically from the
+        # claim's own verbatim list fragments — no approved diagram data needed.
         return False
     if "visual" in roles and not module.visual_asset_id:
         return False
@@ -122,7 +126,7 @@ def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_rend
     return assertion, module.candidate_claim_ids[0], "verbatim"
 
 
-def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None) -> DocSlide:
+def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None, context_ask: str | None = None) -> DocSlide:
     recipe = _resolve_recipe(module, recipes)
     assertion, claim_id, transform = _assertion_for(module, deck_title, use_candidate_renderings=use_candidate_renderings)
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
@@ -140,10 +144,28 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
     reveal: list[str] = []
 
     hero = recipe.id in {"cover-brand", "statement-thesis"}
-    title_bbox = Bbox(x=0.08, y=0.34, w=0.84, h=0.26) if hero else Bbox(x=0.06, y=0.07, w=0.88, h=0.12)
+    if recipe.id == "cover-brand":
+        # One coherent lockup (visual review): wordmark only, generous leading,
+        # tagline on its own clear line — nothing shares a vertical band.
+        assertion = assertion.split("\u2014")[0].split("—")[0].strip()
+        title_bbox = Bbox(x=0.08, y=0.30, w=0.84, h=0.18)
+    elif hero:
+        title_bbox = Bbox(x=0.08, y=0.22, w=0.84, h=0.26)
+    else:
+        title_bbox = Bbox(x=0.06, y=0.07, w=0.88, h=0.12)
+    # Slice 2: thesis statement renders centered TEAL (exemplar reqml-12)
+    thesis_style = DocTextStyle(size_pt=64.0, bold=True, align="center", color="#065E7C")
     elements.append(DocElement(id="title", kind=DocElementKind.TEXT, role="title", bbox=title_bbox,
-                               text=assertion, style=_HERO_STYLE if hero else _TITLE_STYLE,
+                               text=assertion,
+                               style=(thesis_style if recipe.id == "statement-thesis" else _HERO_STYLE) if hero else _TITLE_STYLE,
                                binding_paths=["title"] if claim_id else []))
+    if recipe.id == "statement-thesis":
+        # one large metaphor beneath the assertion (decorative, exemplar pattern)
+        elements.append(DocElement(
+            id="metaphor", kind=DocElementKind.ICON, role="visual",
+            bbox=Bbox(x=0.42, y=0.54, w=0.16, h=0.28),
+            icon=IconSpec(library_id="route", tint_role="primary"),
+        ))
     if claim_id:
         kind_map = {"truncation": BindingKind.CLAIM_QUOTE, "inflection": BindingKind.CLAIM_QUOTE, "generalization": BindingKind.CLAIM_PARAPHRASE}
         # verbatim fallback = untransformed quote, never falsely labeled truncation
@@ -152,29 +174,52 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                     transform_class=transform_value))
 
     if "message" in {r.value for r in recipe.required_roles}:
-        message_text = tagline or module.purpose
+        message_text = (context_ask or tagline or module.purpose) if recipe.id == "cover-brand" else (tagline or module.purpose)
         elements.append(DocElement(id="message", kind=DocElementKind.TEXT, role="message",
-                                   bbox=Bbox(x=0.08, y=0.62, w=0.84, h=0.1), text=message_text,
+                                   bbox=Bbox(x=0.08, y=0.52, w=0.84, h=0.09), text=message_text,
                                    style=DocTextStyle(size_pt=28.0, align="center", color="#595959"),
                                    binding_paths=["message"]))
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
 
-    if "chevrons" in {r.value for r in recipe.required_roles}:
-        if recipe.id == "roadmap-lanes":
-            # lanes = the claim's own list items (verbatim clause fragments)
-            import re as _re
+    if recipe.id == "roadmap-lanes":
+        # Five-gate closure ILLUSTRATION (visual review slice 2): the claim's
+        # own list items become checkpoints on a path ending at the flag.
+        import re as _re
 
-            primary = module.candidate_assertions[0]
-            lanes = [c.strip().rstrip(".") for c in _re.split(r",| and ", primary) if 2 <= len(c.split()) <= 8][:5]
-            extra = lanes or module.candidate_assertions[:1]
-        else:
-            extra = module.candidate_assertions[1:4] or module.candidate_assertions[:1]
+        primary = module.candidate_assertions[0]
+        lanes = [c.strip().rstrip(".") for c in _re.split(r",| and ", primary) if 2 <= len(c.split()) <= 8][:5]
+        lanes = lanes or [primary]
+        count = len(lanes)
+        nodes = []
+        for i, lane in enumerate(lanes):
+            nodes.append(DiagramNode(
+                id=f"gate-{i}",
+                bbox=Bbox(x=0.02 + i * (0.96 / count), y=0.28, w=0.96 / count - 0.02, h=0.44),
+                icon="shield-check" if i < count - 1 else "flag",
+                label=lane[:60],
+                binding_paths=["element:diagram"],
+            ))
+        edges = [DiagramEdge(id=f"g{i}", source=f"gate-{i}", target=f"gate-{i+1}",
+                             line_style="dashed", route="dotted-path",
+                             binding_paths=["element:diagram"]) for i in range(count - 1)]
+        elements.append(DocElement(
+            id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
+            bbox=Bbox(x=0.05, y=0.24, w=0.9, h=0.58),
+            diagram=DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges),
+            binding_paths=["element:diagram"],
+            entrance=DocEntrance(effect="fade"),
+        ))
+        bindings.append(TextBinding(path="element:diagram", kind=BindingKind.CLAIM_QUOTE,
+                                    claim_id=module.candidate_claim_ids[0], transform_class="truncation"))
+    elif "chevrons" in {r.value for r in recipe.required_roles}:
+        # one COMPLETE supporting takeaway; the diagram is the star (visual review)
+        extra = module.candidate_assertions[1:2] or module.candidate_assertions[:1]
         for index, text in enumerate(extra):
             el_id = f"chevron-{index}"
             elements.append(DocElement(
                 id=el_id, kind=DocElementKind.TEXT, role="chevrons",
-                bbox=Bbox(x=0.06, y=(0.26 if recipe.id == "roadmap-lanes" else 0.22) + index * (0.115 if recipe.id == "roadmap-lanes" else 0.09), w=0.88, h=0.08),
-                text=f"> {_truncate_words(text, 90)}", style=_CHEVRON_STYLE,
+                bbox=Bbox(x=0.06, y=0.22 + index * 0.105, w=0.88, h=0.095),
+                text=f"> {_truncate_words(text, 220)}", style=_CHEVRON_STYLE,
                 binding_paths=[f"element:{el_id}"],
                 entrance=DocEntrance(effect="rise", fragment_index=index),
             ))
@@ -184,7 +229,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                         claim_id=source_claim, transform_class="truncation"))
             reveal.append(el_id)
 
-    if "diagram" in {r.value for r in recipe.required_roles}:
+    if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-lanes":
         graph = DiagramGraph.model_validate(module.diagram)
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
@@ -207,9 +252,12 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                    style=_CAPTION_STYLE, binding_paths=["element:visual-caption"]))
         bindings.append(TextBinding(path="element:visual-caption", kind=BindingKind.NON_CLAIM))
     if "callout" in {r.value for r in recipe.required_roles}:
-        callout_lines = "\n".join(f"> {t[:40]}" for t in module.candidate_assertions[:3])
+        # ONE complete complementary takeaway (title already carries the primary
+        # claim; visual-review rule: complete text, never clipped; budget-safe).
+        callout_source = module.candidate_assertions[1:2] or module.candidate_assertions[:1]
+        callout_lines = "\n\n".join(f"> {_truncate_words(t, 200)}" for t in callout_source)
         elements.append(DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
-                                   bbox=Bbox(x=0.06, y=0.24, w=0.25, h=0.4), text=callout_lines,
+                                   bbox=Bbox(x=0.05, y=0.20, w=0.29, h=0.62), text=callout_lines,
                                    style=_CHEVRON_STYLE, binding_paths=["element:callout"]))
         bindings.append(TextBinding(path="element:callout", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=claim_ids[0], transform_class="truncation"))
@@ -282,7 +330,8 @@ def materialize_outline(
     qualifiers = {c.id: c.required_qualifier for c in ledger.claims if getattr(c, "required_qualifier", None)}
     slides = [
         _materialize_slide(module, order, recipes, title, tagline,
-                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers)
+                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers,
+                           context_ask=context.desired_action)
         for order, module in enumerate(active, start=1)
     ]
     return DeckDocument(

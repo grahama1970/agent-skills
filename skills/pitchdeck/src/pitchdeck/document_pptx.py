@@ -272,9 +272,28 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
         box.name = f"el:{element.id}"
         tf = box.text_frame
         tf.word_wrap = True
-        run = tf.paragraphs[0].add_run()
-        run.text = element.text or ""
         style = element.style
+        text = element.text or ""
+        if element.role in {"chevrons", "callout"}:
+            for l_index, line in enumerate(text.split("\n")):
+                if not line.strip():
+                    continue
+                paragraph = tf.paragraphs[0] if l_index == 0 else tf.add_paragraph()
+                body = line
+                if line.startswith("> "):
+                    marker = paragraph.add_run()
+                    marker.text = "\u276F  "
+                    marker.font.bold = True
+                    marker.font.size = Pt((style.size_pt if style else 20) + 2)
+                    marker.font.color.rgb = _hex(palette["primary"])
+                    body = line[2:]
+                run = paragraph.add_run()
+                run.text = body
+                run.font.size = Pt(style.size_pt if style else 20)
+                run.font.color.rgb = _hex("#595959")
+            return
+        run = tf.paragraphs[0].add_run()
+        run.text = text
         run.font.size = Pt(style.size_pt if style else 20)
         run.font.bold = bool(style and style.bold)
         if style and style.color:
@@ -313,26 +332,41 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
     graph = element.diagram
     primary = _hex(palette["primary"])
     ink = _hex(palette["ink"])
+    role_cycle = ["#065E7C", "#6F8E30", "#26558E", "#D39500", "#065E7C"]
+    unboxed = graph.recipe == "pipeline"
     group = container.add_group_shape()
     dframe = frame.sub(element.bbox)
     centers: dict[str, tuple[float, float, float, float]] = {}
-    for node in graph.nodes:
+    for n_index, node in enumerate(graph.nodes):
         nx = dframe.x + node.bbox.x * dframe.w
         ny = dframe.y + node.bbox.y * dframe.h
         nw = node.bbox.w * dframe.w
         nh = node.bbox.h * dframe.h
         centers[node.id] = (nx, ny, nw, nh)
-        box = group.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(nx), Inches(ny), Inches(nw), Inches(nh))
-        box.fill.background()
-        box.line.color.rgb = primary
-        box.line.width = Pt(2.5)
-        box.name = f"el:{element.id}:node:{node.id}"
+        accent = _hex(role_cycle[n_index % len(role_cycle)]) if unboxed else primary
+        terminal = unboxed and n_index == len(graph.nodes) - 1
+        if not unboxed:
+            box = group.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(nx), Inches(ny), Inches(nw), Inches(nh))
+            box.fill.background()
+            box.line.color.rgb = primary
+            box.line.width = Pt(2.5)
+            box.name = f"el:{element.id}:node:{node.id}"
+        else:
+            ring_size = min(nw, nh) * 0.62
+            ring = group.shapes.add_shape(
+                MSO_SHAPE.OVAL,
+                Inches(nx + nw / 2 - ring_size / 2), Inches(ny + nh * 0.32 - ring_size / 2),
+                Inches(ring_size), Inches(ring_size))
+            ring.fill.background()
+            ring.line.color.rgb = accent
+            ring.line.width = Pt(3.25 if terminal else 2.25)
+            ring.name = f"el:{element.id}:node:{node.id}"
         if node.icon:
-            size = min(nw, nh) * 0.36
+            size = min(nw, nh) * (0.4 if unboxed else 0.36)
             _emit_icon_parts(
                 group, node.icon,
                 Frame(nx + nw / 2 - size / 2, ny + nh * 0.32 - size / 2, size, size),
-                primary, f"el:{element.id}:node:{node.id}:icon",
+                accent, f"el:{element.id}:node:{node.id}:icon",
             )
         label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * 0.52), Inches(nw), Inches(nh * 0.44))
         label.name = f"el:{element.id}:node:{node.id}:label"
@@ -341,8 +375,8 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
         run = tf.paragraphs[0].add_run()
         run.text = node.label
         run.font.bold = True
-        run.font.size = Pt(14)
-        run.font.color.rgb = primary
+        run.font.size = Pt(13 if unboxed else 14)
+        run.font.color.rgb = accent
         from pptx.enum.text import PP_ALIGN
 
         tf.paragraphs[0].alignment = PP_ALIGN.CENTER
@@ -426,7 +460,9 @@ def emit_document_pptx(
             band.line.fill.background()
             band.name = "chrome:band"
             title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
-            band_text = (document.deck.title.split("—")[0].strip().upper() if hero else (title_el.text if title_el else ""))
+            is_cover = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
+            tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""
+            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else (title_el.text if title_el else ""))
             title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 1.6), Inches(SLIDE_H_IN * 0.10 - 0.1))
             title_box.name = "chrome:band-title" if hero else (f"el:{title_el.id}" if title_el else "chrome:band-title")
             run = title_box.text_frame.paragraphs[0].add_run()
@@ -434,12 +470,21 @@ def emit_document_pptx(
             run.font.size = Pt(24 if len(band_text or "") <= 58 else 20)
             run.font.bold = True
             run.font.color.rgb = _hex(band_cfg.get("title_color", "#FFFFFF"))
+            from pptx.enum.text import PP_ALIGN as _ALIGN
+
+            title_box.text_frame.paragraphs[0].alignment = _ALIGN.LEFT
             skip_title = not hero
         rule = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(SLIDE_H_IN - 0.045), Inches(SLIDE_W_IN), Inches(0.045))
         rule.fill.solid()
         rule.fill.fore_color.rgb = _hex(palette["primary"])
         rule.line.fill.background()
         rule.name = "chrome:footer-rule"
+        page_box = slide.shapes.add_textbox(Inches(SLIDE_W_IN - 0.7), Inches(SLIDE_H_IN - 0.42), Inches(0.5), Inches(0.3))
+        page_box.name = "chrome:page-number"
+        page_run = page_box.text_frame.paragraphs[0].add_run()
+        page_run.text = str(slide_doc.order)
+        page_run.font.size = Pt(11)
+        page_run.font.color.rgb = _hex("#8a8a8a")
         ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
         for _, element in ordered:
             if skip_title and element.role == "title":

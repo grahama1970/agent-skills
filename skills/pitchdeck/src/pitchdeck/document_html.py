@@ -57,6 +57,9 @@ def _icon_glyph_svg(icon_id: str, x: float, y: float, size: float, tint: str) ->
     return inner
 
 
+_ROLE_CYCLE = ["#065E7C", "#6F8E30", "#26558E", "#D39500", "#065E7C"]
+
+
 def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str, ink: str) -> str:
     """Nodes, connectors, and labels as separate SVG shapes (editability contract)."""
     parts: list[str] = [
@@ -64,17 +67,30 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
         f'xmlns="http://www.w3.org/2000/svg" font-family="Calibri, sans-serif">'
     ]
     centers: dict[str, tuple[float, float, float, float]] = {}
-    for node in graph.nodes:
+    unboxed = graph.recipe == "pipeline"  # visual review: unboxed line-art path, differentiated actors
+    for n_index, node in enumerate(graph.nodes):
         x, y = node.bbox.x * width, node.bbox.y * height
         w, h = node.bbox.w * width, node.bbox.h * height
         centers[node.id] = (x + w / 2, y + h / 2, w, h)
-        icon_size = min(w, h) * 0.34
+        accent = _ROLE_CYCLE[n_index % len(_ROLE_CYCLE)] if unboxed else primary
+        terminal = unboxed and n_index == len(graph.nodes) - 1
+        icon_size = min(w, h) * (0.52 if unboxed else 0.34)
         parts.append(
             f'<g id="node-{html.escape(node.id)}">'
-            f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{h:.0f}" rx="10" '
-            f'fill="none" stroke="{primary}" stroke-width="3"/>'
             + (
-                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * 0.32 - icon_size / 2, icon_size, primary)
+                ""
+                if unboxed
+                else f'<rect x="{x:.0f}" y="{y:.0f}" width="{w:.0f}" height="{h:.0f}" rx="10" '
+                     f'fill="none" stroke="{primary}" stroke-width="3"/>'
+            )
+            + (
+                f'<circle cx="{x + w / 2:.0f}" cy="{y + h * 0.32:.0f}" r="{icon_size * 0.72:.0f}" '
+                f'fill="none" stroke="{accent}" stroke-width="{4 if terminal else 2.5}"/>'
+                if unboxed
+                else ""
+            )
+            + (
+                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * 0.32 - icon_size / 2, icon_size, accent)
                 if node.icon
                 else ""
             )
@@ -312,7 +328,9 @@ def render_document_html(
         elements = slide.elements
         if banded:
             title_el = next((e for e in elements if e.role == "title"), None)
-            band_text = (document.deck.title.split("—")[0].strip().upper() if hero else (title_el.text if title_el else ""))
+            is_cover = recipe == "cover-brand"
+            tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""
+            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else (title_el.text if title_el else ""))
             band_html = (
                 f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
                 f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;">'
@@ -331,7 +349,8 @@ def render_document_html(
             f'<section data-qid="doc:slide:{html.escape(slide.id)}" style="position:relative;'
             f"width:{CANVAS_W}px;height:{CANVAS_H}px;background:{palette['canvas']};"
             f'overflow:hidden;margin:24px auto;box-shadow:0 4px 24px rgba(0,0,0,0.25);">'
-            f"{band_html}{body}{footer_rule}</section>"
+            f"{band_html}{body}{footer_rule}"
+            f'<span style="position:absolute;right:1.2%;bottom:1.2%;font:16px Calibri,sans-serif;color:#8a8a8a;">{slide.order}</span></section>'
         )
     page_title = html.escape(title or document.deck.title)
     return (
