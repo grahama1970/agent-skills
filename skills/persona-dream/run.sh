@@ -10,6 +10,7 @@ Usage: ./run.sh <command> [options]
 
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
+  doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
   check-pctom-measurement-validity-v2  Gate: PCTOM-R measurement must be falsifiable before live spend
   run-pctom-v2-validity-lane  Rebuild the frozen PCTOM-R v2 corpus + estimator and re-prove the validity-v2 gate
@@ -280,6 +281,9 @@ case "$COMMAND" in
     ;;
   generate)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/persona_dream.py" generate "$@"
+    ;;
+  doctor)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/dream_doctor.py" "$@"
     ;;
   research-bakeoff)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/research_bakeoff.py" "$@"
