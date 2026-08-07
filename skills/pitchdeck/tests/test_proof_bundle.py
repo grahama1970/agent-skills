@@ -929,7 +929,7 @@ def test_design_schema_set_and_migration():
 
     # all six recipes are schema instances; exemplars resolve against the corpus
     recipes = load_recipes()
-    assert len(recipes) == 6
+    assert len(recipes) >= 6  # additive recipes may grow the library (roadmap-gates, 2026-08-07)
     verify_exemplars(recipes, skill / "references" / "style_corpus.json")
 
     # YAML round-trip without semantic loss
