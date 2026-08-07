@@ -72,7 +72,7 @@ _MODULE_RECIPES: dict[str, list[str]] = {
     "problem_solution": ["assertion-chevrons-diagram", "roadmap-lanes"],
     "architecture": ["one-big-diagram"],
     "proof": ["proof-screenshot-callout"],
-    "roadmap": ["roadmap-lanes"],
+    "roadmap": ["roadmap-gates", "roadmap-lanes"],
     "ask": ["statement-thesis"],
 }
 
@@ -84,7 +84,7 @@ _CAPTION_STYLE = DocTextStyle(size_pt=14.0)
 
 def _compatible(recipe: CompositionRecipe, module: OutlineModule) -> bool:
     roles = set(r.value for r in recipe.required_roles)
-    if "diagram" in roles and module.diagram is None and recipe.id != "roadmap-lanes":
+    if "diagram" in roles and module.diagram is None and recipe.id != "roadmap-gates":
         # roadmap-lanes SYNTHESIZES its gate diagram deterministically from the
         # claim's own verbatim list fragments — no approved diagram data needed.
         return False
@@ -133,7 +133,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         raise ValueError(f"LABEL_HEADLINE: '{assertion}'")
     text_only_recipes = {"statement-thesis", "cover-brand", "roadmap-lanes"}
     visual_thesis = module.visual_thesis or (
-        "none: text lanes carry the content" if recipe.id in text_only_recipes else None
+        "none: text lanes carry the content" if recipe.id in text_only_recipes else ("gate illustration from claim fragments" if recipe.id == "roadmap-gates" else None)
     )
     if visual_thesis is None:
         raise ValueError(f"MISSING_VISUAL_THESIS: module '{module.module}' (recipe {recipe.id})")
@@ -181,7 +181,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                    binding_paths=["message"]))
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
 
-    if recipe.id == "roadmap-lanes":
+    if recipe.id == "roadmap-gates":
         # Five-gate closure ILLUSTRATION (visual review slice 2): the claim's
         # own list items become checkpoints on a path ending at the flag.
         import re as _re
@@ -229,7 +229,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                         claim_id=source_claim, transform_class="truncation"))
             reveal.append(el_id)
 
-    if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-lanes":
+    if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-gates":
         graph = DiagramGraph.model_validate(module.diagram)
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",

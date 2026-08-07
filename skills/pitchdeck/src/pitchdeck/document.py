@@ -291,6 +291,7 @@ CompositionRecipeId = Literal[
     "one-big-diagram",
     "proof-screenshot-callout",
     "roadmap-lanes",
+    "roadmap-gates",
 ]
 
 # Executable house recipes are SCHEMA INSTANCES (pitchdeck.composition_recipe.v1,

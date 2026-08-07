@@ -1524,7 +1524,8 @@
       "assertion-chevrons-diagram",
       "one-big-diagram",
       "proof-screenshot-callout",
-      "roadmap-lanes"
+      "roadmap-lanes",
+      "roadmap-gates"
      ],
      "title": "Recipe",
      "type": "string"

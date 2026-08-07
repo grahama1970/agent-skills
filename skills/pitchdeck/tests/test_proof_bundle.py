@@ -1153,7 +1153,10 @@ def test_outline_to_materialized_document(tmp_path):
     # approved order + all six house recipes; golden recipe set reproduced
     assert [s.section for s in doc.slides] == arc
     golden_recipes = [s["intent"]["recipe"] for s in golden["slides"]]
-    assert [s.intent.recipe for s in doc.slides] == golden_recipes
+    # roadmap-gates (visual review 2026-08-07) supersedes roadmap-lanes for
+    # NEW materializations; the golden document keeps lanes (bytes unchanged).
+    evolved = [r if r != "roadmap-lanes" else "roadmap-gates" for r in golden_recipes]
+    assert [s.intent.recipe for s in doc.slides] == evolved
     # zero dropped claim ids vs golden contract
     golden_claims = {c for s in golden["slides"] for c in s["claim_ids"]}
     materialized_claims = {c for s in doc.slides for c in s.claim_ids}
