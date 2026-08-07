@@ -304,15 +304,21 @@ section {
 .nav-icons {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
+  margin-left: 0.35rem;
 }
 .nav-icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem; /* widens the hit target to ~30px (Fitts's Law) */
+  border-radius: 6px;
   color: var(--muted);
-  transition: color 0.18s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 .nav-icon:hover {
   color: var(--brass);
+  background-color: rgba(226, 172, 98, 0.1);
 }
 .nav-icon svg {
   width: 18px;
