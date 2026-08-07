@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "c7aefce8e20f16e4c583b74da7d751e57d6f8189",
- "source_tree_sha256": "8f50030ec369f77615e2f9487abbd1c6332ebbe6a19e6b8e233708e73573f6bc",
+ "commit": "38dde91664548dc423cdb4ddcdbb3753308f19b0",
+ "source_tree_sha256": "f35f2b05bd6a1d649561371e4dfca995ed67e1c73b68f70bd305f6f4a524e34c",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -53,6 +53,7 @@
     "pitchdeck.emit_md_receipt.v1",
     "pitchdeck.emit_ui_receipt.v1",
     "pitchdeck.handout_receipt.v1",
+    "pitchdeck.icon_library.v1",
     "pitchdeck.image_variation_plan.v1",
     "pitchdeck.memory_sync_receipt.v1",
     "pitchdeck.plan_receipt.v1",
@@ -71,7 +72,7 @@
    "artifacts": [
     {
      "schema": "pitchdeck.deck_document.v1.schema",
-     "sha256": "9fd1cdb4e30dc5ff6143914b6e9fdfcaef5b3b2dcb91d3dd34190d10deb451bc",
+     "sha256": "d4161c636ae84e9a3c655d3d9152bc80e8c9270d79aac35b35cc3a490841ec36",
      "visibility": "public"
     }
    ]
@@ -80,7 +81,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "55 passed, 1 xfail"
+  "summary": "56 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

@@ -1000,3 +1000,42 @@ def test_style_analyzer_reference_import(tmp_path):
     bad = tmp_path / "bad.pptx"; bad.write_text("nope")
     with _pytest.raises(SkillError, match="not a readable PPTX"):
         analyze_pptx(bad)
+
+
+def test_primitive_gauntlet_validates():
+    """#1271 freeze test, phase 1: the gauntlet document validates strictly,
+    round-trips canonically, and the recursive invariants hold on real nesting."""
+    import importlib.util
+    import json
+
+    import pytest as _pytest
+
+    from pitchdeck.document import DeckDocument, DocElementKind, iter_tree
+
+    spec = importlib.util.spec_from_file_location(
+        "build_gauntlet", Path(__file__).parent.parent / "examples" / "primitive-gauntlet" / "build_gauntlet.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    doc = module.build()
+    tree = list(iter_tree(doc.slides[0].elements))
+    kinds = {e.kind for e in tree}
+    assert {DocElementKind.GROUP, DocElementKind.SHAPE, DocElementKind.LINE,
+            DocElementKind.ICON, DocElementKind.RICH_TEXT, DocElementKind.TEXT,
+            DocElementKind.IMAGE} <= kinds
+    # canonical round-trip
+    dump = doc.model_dump_json(by_alias=True)
+    assert DeckDocument.model_validate(json.loads(dump)).model_dump_json(by_alias=True) == dump
+    # rich text plain projection feeds density; line bbox derived with epsilon
+    flow = next(e for e in tree if e.id == "g-flow")
+    assert flow.bbox.h == 0.002 and flow.line.start.y == flow.line.end.y
+    # tree-wide duplicate id rejected
+    broken = json.loads(dump)
+    broken["slides"][0]["elements"][1]["children"][0]["id"] = "title"
+    with _pytest.raises(Exception, match="duplicate element ids"):
+        DeckDocument.model_validate(broken)
+    # group carrying bindings rejected
+    grouped = json.loads(dump)
+    grouped["slides"][0]["elements"][1]["binding_paths"] = ["element:outer-group"]
+    with _pytest.raises(Exception, match="leaf content"):
+        DeckDocument.model_validate(grouped)

@@ -1,0 +1,715 @@
+{
+ "schema": "pitchdeck.deck_document.v1",
+ "deck": {
+  "id": "primitive-gauntlet",
+  "title": "Primitive Gauntlet",
+  "subtitle": null,
+  "audience": "contract reviewers",
+  "visibility": "public",
+  "target_editor": "google_slides",
+  "theme": "dark_cyan_evidence",
+  "theme_tokens": {
+   "accent": "#22d3ee",
+   "heading_font": "Arial",
+   "body_font": "Arial"
+  },
+  "source_policy": "public_only",
+  "author": null
+ },
+ "sources": [
+  {
+   "id": "gauntlet-src",
+   "title": "Gauntlet fixture source",
+   "path": "gauntlet.md",
+   "visibility": "public",
+   "role": "primary",
+   "required": true,
+   "repo": null,
+   "ref": null,
+   "content_sha": null,
+   "include_sections": [],
+   "exclude_sections": []
+  }
+ ],
+ "claims": [
+  {
+   "id": "gauntlet-relationship",
+   "text": "Stage one output feeds stage two directly",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "gauntlet-src",
+     "section": "pipeline",
+     "locator": null
+    }
+   ],
+   "risk": "low",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "gauntlet-src",
+     "text": "stage one output feeds stage two directly",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  },
+  {
+   "id": "gauntlet-emphasis",
+   "text": "The gate fails closed on unproven content",
+   "kind": "product",
+   "visibility": "public",
+   "source_refs": [
+    {
+     "source_id": "gauntlet-src",
+     "section": "gates",
+     "locator": null
+    }
+   ],
+   "risk": "low",
+   "status": "candidate",
+   "required_qualifier": null,
+   "approval": null,
+   "evidence_spans": [
+    {
+     "source_id": "gauntlet-src",
+     "text": "the gate fails closed on unproven content",
+     "section": null
+    }
+   ],
+   "formula": null,
+   "notes": null
+  }
+ ],
+ "assets": [
+  {
+   "id": "gauntlet-photo",
+   "kind": "screenshot",
+   "visibility": "public",
+   "local_path": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/primitive-gauntlet/assets/gauntlet.png",
+   "source_url": null,
+   "required": false,
+   "alt_text": "gauntlet test image",
+   "target_aspect": "16:9",
+   "status": "present",
+   "generation_brief": null,
+   "source_ref": null
+  }
+ ],
+ "slides": [
+  {
+   "id": "pg-main",
+   "order": 1,
+   "section": "gauntlet",
+   "layout_origin": "freeform",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.0537,
+      "y": 0.0421,
+      "w": 0.8811,
+      "h": 0.09
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Primitive gauntlet",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "outer-group",
+     "kind": "group",
+     "bbox": {
+      "x": 0.0713,
+      "y": 0.1637,
+      "w": 0.5391,
+      "h": 0.6113
+     },
+     "z": 0,
+     "role": null,
+     "text": null,
+     "style": null,
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": [
+      {
+       "id": "g-rect",
+       "kind": "shape",
+       "bbox": {
+        "x": 0.03,
+        "y": 0.05,
+        "w": 0.27,
+        "h": 0.22
+       },
+       "z": 0,
+       "role": null,
+       "text": null,
+       "style": null,
+       "asset_id": null,
+       "svg": null,
+       "figure": null,
+       "diagram": null,
+       "children": null,
+       "child_frame": null,
+       "shape": {
+        "preset": "rounded_rect",
+        "fill_role": "canvas",
+        "stroke": {
+         "role": "primary",
+         "width_pt": 2.0,
+         "dash": "solid"
+        }
+       },
+       "line": null,
+       "icon": null,
+       "rich_text": null,
+       "rotation_deg": null,
+       "binding_paths": [],
+       "entrance": {
+        "effect": "none",
+        "delay_ms": 0,
+        "fragment_index": null
+       }
+      },
+      {
+       "id": "g-ellipse",
+       "kind": "shape",
+       "bbox": {
+        "x": 0.63,
+        "y": 0.05,
+        "w": 0.29,
+        "h": 0.22
+       },
+       "z": 0,
+       "role": null,
+       "text": null,
+       "style": null,
+       "asset_id": null,
+       "svg": null,
+       "figure": null,
+       "diagram": null,
+       "children": null,
+       "child_frame": null,
+       "shape": {
+        "preset": "ellipse",
+        "fill_role": null,
+        "stroke": {
+         "role": "primary",
+         "width_pt": 2.0,
+         "dash": "solid"
+        }
+       },
+       "line": null,
+       "icon": null,
+       "rich_text": null,
+       "rotation_deg": null,
+       "binding_paths": [],
+       "entrance": {
+        "effect": "none",
+        "delay_ms": 0,
+        "fragment_index": null
+       }
+      },
+      {
+       "id": "g-flow",
+       "kind": "line",
+       "bbox": {
+        "x": 0.3,
+        "y": 0.16,
+        "w": 0.33,
+        "h": 0.002
+       },
+       "z": 0,
+       "role": null,
+       "text": null,
+       "style": null,
+       "asset_id": null,
+       "svg": null,
+       "figure": null,
+       "diagram": null,
+       "children": null,
+       "child_frame": null,
+       "shape": null,
+       "line": {
+        "start": {
+         "x": 0.3,
+         "y": 0.16
+        },
+        "end": {
+         "x": 0.63,
+         "y": 0.16
+        },
+        "route": "straight",
+        "dash": "solid",
+        "width_pt": 2.0,
+        "arrow_start": false,
+        "arrow_end": true,
+        "start_hint": {
+         "element_id": "g-rect",
+         "connection_site": 3
+        },
+        "end_hint": {
+         "element_id": "g-ellipse",
+         "connection_site": 1
+        }
+       },
+       "icon": null,
+       "rich_text": null,
+       "rotation_deg": null,
+       "binding_paths": [
+        "element:g-flow"
+       ],
+       "entrance": {
+        "effect": "none",
+        "delay_ms": 0,
+        "fragment_index": null
+       }
+      },
+      {
+       "id": "nested-group",
+       "kind": "group",
+       "bbox": {
+        "x": 0.05,
+        "y": 0.42,
+        "w": 0.55,
+        "h": 0.5
+       },
+       "z": 0,
+       "role": null,
+       "text": null,
+       "style": null,
+       "asset_id": null,
+       "svg": null,
+       "figure": null,
+       "diagram": null,
+       "children": [
+        {
+         "id": "n-chevron",
+         "kind": "shape",
+         "bbox": {
+          "x": 0.02,
+          "y": 0.1,
+          "w": 0.42,
+          "h": 0.33
+         },
+         "z": 0,
+         "role": null,
+         "text": null,
+         "style": null,
+         "asset_id": null,
+         "svg": null,
+         "figure": null,
+         "diagram": null,
+         "children": null,
+         "child_frame": null,
+         "shape": {
+          "preset": "chevron",
+          "fill_role": "highlight_warm",
+          "stroke": null
+         },
+         "line": null,
+         "icon": null,
+         "rich_text": null,
+         "rotation_deg": null,
+         "binding_paths": [],
+         "entrance": {
+          "effect": "none",
+          "delay_ms": 0,
+          "fragment_index": null
+         }
+        },
+        {
+         "id": "n-pill",
+         "kind": "shape",
+         "bbox": {
+          "x": 0.35,
+          "y": 0.22,
+          "w": 0.45,
+          "h": 0.3
+         },
+         "z": 0,
+         "role": null,
+         "text": null,
+         "style": null,
+         "asset_id": null,
+         "svg": null,
+         "figure": null,
+         "diagram": null,
+         "children": null,
+         "child_frame": null,
+         "shape": {
+          "preset": "pill",
+          "fill_role": "highlight_green",
+          "stroke": null
+         },
+         "line": null,
+         "icon": null,
+         "rich_text": null,
+         "rotation_deg": null,
+         "binding_paths": [],
+         "entrance": {
+          "effect": "none",
+          "delay_ms": 0,
+          "fragment_index": null
+         }
+        }
+       ],
+       "child_frame": null,
+       "shape": null,
+       "line": null,
+       "icon": null,
+       "rich_text": null,
+       "rotation_deg": 8.0,
+       "binding_paths": [],
+       "entrance": {
+        "effect": "none",
+        "delay_ms": 0,
+        "fragment_index": null
+       }
+      },
+      {
+       "id": "g-icon",
+       "kind": "icon",
+       "bbox": {
+        "x": 0.68,
+        "y": 0.5,
+        "w": 0.24,
+        "h": 0.4
+       },
+       "z": 0,
+       "role": null,
+       "text": null,
+       "style": null,
+       "asset_id": null,
+       "svg": null,
+       "figure": null,
+       "diagram": null,
+       "children": null,
+       "child_frame": null,
+       "shape": null,
+       "line": null,
+       "icon": {
+        "library_id": "shield-check",
+        "tint_role": "primary"
+       },
+       "rich_text": null,
+       "rotation_deg": null,
+       "binding_paths": [],
+       "entrance": {
+        "effect": "none",
+        "delay_ms": 0,
+        "fragment_index": null
+       }
+      }
+     ],
+     "child_frame": {
+      "x": 0.1,
+      "y": 0.1,
+      "w": 0.8,
+      "h": 0.8
+     },
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "bent",
+     "kind": "line",
+     "bbox": {
+      "x": 0.62,
+      "y": 0.2,
+      "w": 0.19999999999999996,
+      "h": 0.24
+     },
+     "z": 0,
+     "role": null,
+     "text": null,
+     "style": null,
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": {
+      "start": {
+       "x": 0.62,
+       "y": 0.2
+      },
+      "end": {
+       "x": 0.82,
+       "y": 0.44
+      },
+      "route": "bent",
+      "dash": "dashed",
+      "width_pt": 2.0,
+      "arrow_start": true,
+      "arrow_end": true,
+      "start_hint": null,
+      "end_hint": null
+     },
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
+     "id": "rich",
+     "kind": "rich_text",
+     "bbox": {
+      "x": 0.6203,
+      "y": 0.4629,
+      "w": 0.3391,
+      "h": 0.31
+     },
+     "z": 0,
+     "role": null,
+     "text": null,
+     "style": null,
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": {
+      "blocks": [
+       {
+        "style_role": "body",
+        "align": "left",
+        "bullet_level": null,
+        "runs": [
+         {
+          "text": "Gate: ",
+          "marks": [
+           {
+            "type": "bold"
+           },
+           {
+            "type": "color",
+            "role": "highlight_warm"
+           }
+          ]
+         },
+         {
+          "text": "fails closed on ",
+          "marks": []
+         },
+         {
+          "text": "unproven",
+          "marks": [
+           {
+            "type": "underline"
+           }
+          ]
+         },
+         {
+          "text": " content",
+          "marks": []
+         }
+        ]
+       },
+       {
+        "style_role": "support",
+        "align": "left",
+        "bullet_level": 1,
+        "runs": [
+         {
+          "text": "verify_bundle()",
+          "marks": [
+           {
+            "type": "code"
+           }
+          ]
+         },
+         {
+          "text": " — details on the ",
+          "marks": []
+         },
+         {
+          "text": "appendix slide",
+          "marks": [
+           {
+            "type": "link",
+            "target_slide_id": "pg-appendix"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "rotation_deg": null,
+     "binding_paths": [
+      "element:rich"
+     ],
+     "entrance": {
+      "effect": "rise",
+      "delay_ms": 0,
+      "fragment_index": 0
+     }
+    },
+    {
+     "id": "photo",
+     "kind": "image",
+     "bbox": {
+      "x": 0.6203,
+      "y": 0.7907,
+      "w": 0.1523,
+      "h": 0.1471
+     },
+     "z": 0,
+     "role": null,
+     "text": null,
+     "style": null,
+     "asset_id": "gauntlet-photo",
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": 353.5,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [
+    {
+     "path": "element:g-flow",
+     "kind": "claim_paraphrase",
+     "claim_id": "gauntlet-relationship",
+     "transform_class": "inflection"
+    },
+    {
+     "path": "element:rich",
+     "kind": "claim_paraphrase",
+     "claim_id": "gauntlet-emphasis",
+     "transform_class": "inflection"
+    }
+   ],
+   "claim_ids": [
+    "gauntlet-relationship",
+    "gauntlet-emphasis"
+   ],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "",
+   "intent": null
+  },
+  {
+   "id": "pg-appendix",
+   "order": 2,
+   "section": "appendix",
+   "layout_origin": "appendix",
+   "elements": [
+    {
+     "id": "title",
+     "kind": "text",
+     "bbox": {
+      "x": 0.06,
+      "y": 0.07,
+      "w": 0.88,
+      "h": 0.12
+     },
+     "z": 0,
+     "role": "title",
+     "text": "Appendix — link target",
+     "style": {
+      "size_pt": 40.0,
+      "bold": true,
+      "color": null,
+      "align": "left",
+      "font": null
+     },
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": null,
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": null,
+     "binding_paths": [],
+     "entrance": {
+      "effect": "none",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    }
+   ],
+   "bindings": [],
+   "claim_ids": [],
+   "transition": "slide",
+   "transition_duration_ms": 400,
+   "reveal": "stagger_up",
+   "hidden": false,
+   "notes": "",
+   "intent": null
+  }
+ ],
+ "revision": 0,
+ "provenance": {
+  "kind": "primitive-gauntlet",
+  "review": "webgpt-review-1271-2026-08-07"
+ }
+}
