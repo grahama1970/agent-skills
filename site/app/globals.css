@@ -1493,6 +1493,13 @@ footer a:hover {
   font-weight: 500;
 }
 /* Intake sweet spot under the CTA — quiet mono spec line, not a tagline. */
+.hero-ip {
+  margin-top: 1.1rem;
+  max-width: 56ch;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
 .hero-intake {
   margin-top: 1rem;
   max-width: 54ch;

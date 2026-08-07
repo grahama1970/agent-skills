@@ -130,6 +130,11 @@ export default function Home() {
                     Read the code
                   </a>
                 </div>
+                <p className="hero-ip rise" style={{ ['--d' as string]: '.43s' }}>
+                  You own everything I build — standard Python, Rust, Lean 4,
+                  Docker targets, and the audit receipts. No proprietary runtime,
+                  no seat licenses, no dependency on me after the engagement ends.
+                </p>
                 <p className="hero-intake rise" style={{ ['--d' as string]: '.46s' }}>
                   Principal R&amp;D capacity for the agent problems a roadmap
                   can&apos;t prioritize — non-deterministic behavior, formal
@@ -527,11 +532,16 @@ export default function Home() {
                 <ul className="fits">
                   <li>
                     <b>Stalled multi-agent orchestration</b> — pipelines that
-                    demo well and drift in production.
+                    demo well but fail silently or drift in production.
                   </li>
                   <li>
                     <b>Zero-trust &amp; compliance blockers</b> — work that
-                    can&apos;t ship without audit trails and evidence.
+                    can&apos;t ship without audit trails, receipts, and evidence.
+                  </li>
+                  <li>
+                    <b>Platform-independent R&amp;D</b> — you need the work done
+                    inside your stack, delivered as open code you own, with no
+                    agency overhead and no vendor platform to adopt.
                   </li>
                   <li>
                     <b>Bespoke multimodal &amp; generative workflows</b> — where
