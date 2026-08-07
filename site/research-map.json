@@ -1,9 +1,25 @@
 {
+  "schema": "grahama.research_map.v2",
   "areas": [
     {
       "id": "pipelines",
-      "title": "Agentic pipelines",
+      "title": "Agentic pipelines & orchestration",
       "blurb": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
       "systems": [
         {
           "slug": "tau",
@@ -26,30 +42,53 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md"
         }
       ],
-      "skillCount": 30
+      "skillCount": 49
     },
     {
       "id": "memory",
-      "title": "Agentic memory",
-      "blurb": "Durable memory and persona an agent keeps, dreams on, and re-queries as its own history.",
+      "title": "Agentic memory & persona",
+      "blurb": "Durable memory, persona, and voice an agent keeps and re-queries as its own history.",
+      "aliases": [
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent"
+      ],
+      "disciplines": [
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
+      ],
       "systems": [
         {
           "slug": "persona-dream",
           "name": "persona-dream",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md"
-        },
-        {
-          "slug": "watch",
-          "name": "watch",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
         }
       ],
-      "skillCount": 23
+      "skillCount": 28
     },
     {
       "id": "extraction",
       "title": "Extraction & evidence",
-      "blurb": "Turning documents, research, and video into one truthful, cited result — no knobs to mislead.",
+      "blurb": "Documents, research, and video into one truthful, cited result — no knobs to mislead.",
+      "aliases": [
+        "document extraction",
+        "pdf",
+        "ocr",
+        "rag",
+        "retrieval",
+        "research",
+        "citations",
+        "ingestion"
+      ],
+      "disciplines": [
+        "extraction",
+        "research-retrieval",
+        "data-engineering"
+      ],
       "systems": [
         {
           "slug": "extractor",
@@ -60,32 +99,58 @@
           "slug": "dogpile",
           "name": "dogpile",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md"
+        },
+        {
+          "slug": "watch",
+          "name": "watch",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
         }
       ],
-      "skillCount": 42
+      "skillCount": 66
     },
     {
       "id": "compliance",
-      "title": "Compliance & governance",
+      "title": "Compliance, security & governance",
       "blurb": "Evidence-grounded reasoning where a human, not the model, holds authority.",
+      "aliases": [
+        "compliance",
+        "security",
+        "governance",
+        "audit",
+        "policy",
+        "oscal",
+        "assurance",
+        "gate"
+      ],
+      "disciplines": [
+        "compliance-security",
+        "engineering-standards"
+      ],
       "systems": [
         {
           "slug": "sparta-explorer",
           "name": "sparta explorer",
           "href": "https://github.com/grahama1970/sparta-public"
-        },
-        {
-          "slug": "tau",
-          "name": "t'au",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
         }
       ],
-      "skillCount": 35
+      "skillCount": 55
     },
     {
       "id": "adaptive-lineage",
-      "title": "Adaptive lineage hacking",
+      "title": "Adaptive-lineage hacking",
       "blurb": "Adversarial evolution and security testing scored by deterministic proof gates.",
+      "aliases": [
+        "red team",
+        "adversarial",
+        "exploit",
+        "security testing",
+        "fuzzing",
+        "evolution",
+        "arena"
+      ],
+      "disciplines": [
+        "compliance-security"
+      ],
       "systems": [
         {
           "slug": "battle",
@@ -93,9 +158,68 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md"
         }
       ],
-      "skillCount": 8
+      "skillCount": 1
+    },
+    {
+      "id": "applied-ml",
+      "title": "Applied ML & formal methods",
+      "blurb": "Trained models and machine-checked proofs where a result has to be verifiable.",
+      "aliases": [
+        "machine learning",
+        "training",
+        "classifier",
+        "lean4",
+        "formal verification",
+        "proof"
+      ],
+      "disciplines": [
+        "ml-training"
+      ],
+      "systems": [],
+      "skillCount": 19
+    },
+    {
+      "id": "design-interface",
+      "title": "Design & interface",
+      "blurb": "Interfaces and design systems built to be operated, not just admired.",
+      "aliases": [
+        "ux",
+        "ui",
+        "frontend",
+        "react",
+        "design system",
+        "interface"
+      ],
+      "disciplines": [
+        "ui-design-engineering"
+      ],
+      "systems": [],
+      "skillCount": 19
+    },
+    {
+      "id": "creative-media",
+      "title": "Creative & media research",
+      "blurb": "Image, video, voice, and music generation — the creative-production half of the practice.",
+      "aliases": [
+        "video generation",
+        "image generation",
+        "music",
+        "film",
+        "creative ai",
+        "media",
+        "score"
+      ],
+      "disciplines": [
+        "content-creation"
+      ],
+      "systems": [],
+      "skillCount": 26
     }
   ],
+  "supportingDisciplines": [
+    "human-collaboration",
+    "observability-operations"
+  ],
   "projectCount": 10,
-  "sourceCommit": "5785a88c4"
+  "sourceCommit": "5fec30084"
 }

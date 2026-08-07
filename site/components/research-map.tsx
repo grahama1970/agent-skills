@@ -15,7 +15,10 @@ interface Area {
  * only — no animated graph.
  */
 export function ResearchMap() {
-  const areas = map.areas as Area[];
+  // Homepage shows the areas with a flagship project (a scan layer for the
+  // collage below). The full eight-area taxonomy (incl. skills-only areas like
+  // ML, design, media) lives in research-map.json for the /explore/ search.
+  const areas = (map.areas as Area[]).filter((a) => a.systems.length > 0);
   return (
     <div className="research-map" aria-label="Research areas">
       {areas.map((a) => (
