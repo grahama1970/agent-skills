@@ -79,7 +79,7 @@ from .persona_routing import (
     suggest_persona_consultation,
 )
 from .hybrid import ask_hybrid, learn_back
-from .image_generation import generate_image_with_scillm
+from .image_generation import generate_image_with_codex_oauth, generate_image_with_scillm
 from .model_aliases import ModelAliasRoute, resolve_model_alias_route
 
 WEBGPT_DEPRECATION_MESSAGE = (
@@ -1538,6 +1538,7 @@ def main(
     image_output: Optional[str] = typer.Option(None, "--image-output", help="Output file or directory for generated image(s)"),
     image_output_format: str = typer.Option("png", "--image-output-format", help="Image file format: png, jpeg, or webp"),
     image_timeout: float = typer.Option(300.0, "--image-timeout", help="Image generation timeout in seconds"),
+    image_auth: str = typer.Option("codex-oauth", "--image-auth", help="Image backend auth: codex-oauth (default, OAuth) or api-key (scillm images endpoint)"),
     auto_learn: bool = typer.Option(False, help="Auto-discover and learn if no knowledge found"),
     collection: str = typer.Option("behavioral", help="Taxonomy collection for auto-learn (default: behavioral)"),
     hybrid: bool = typer.Option(False, help="Use hybrid RAG+QRA retrieval (separate collection queries)"),
@@ -2300,17 +2301,30 @@ def main(
 
     if image_generate:
         try:
-            result = generate_image_with_scillm(
-                question,
-                run_state=run_state,
-                model=image_model,
-                size=image_size,
-                quality=image_quality,
-                count=image_count,
-                output=image_output,
-                output_format=image_output_format,
-                timeout=image_timeout,
-            )
+            if str(image_auth).strip().lower() in {"codex-oauth", "oauth", "codex"}:
+                result = generate_image_with_codex_oauth(
+                    question,
+                    run_state=run_state,
+                    model=image_model,
+                    size=image_size,
+                    quality=image_quality,
+                    count=image_count,
+                    output=image_output,
+                    output_format=image_output_format,
+                    timeout=image_timeout,
+                )
+            else:
+                result = generate_image_with_scillm(
+                    question,
+                    run_state=run_state,
+                    model=image_model,
+                    size=image_size,
+                    quality=image_quality,
+                    count=image_count,
+                    output=image_output,
+                    output_format=image_output_format,
+                    timeout=image_timeout,
+                )
             result["ask_id"] = run_state.ask_id
             result["runtime_artifacts"] = run_state.artifacts
             run_state.finish(result, state="answered")

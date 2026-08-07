@@ -11,20 +11,62 @@
     {
       "name": "s1-webgpt-submit-exposes-attach-and-auto-download-flags",
       "type": "positive",
-      "command": ["bash", "-c", "grep -q -- '--attach-file' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q -- '--auto-download' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q 'webgpt.download' /home/graham/workspace/experiments/agent-skills/skills/surf/run.sh && echo IMAGE_FLAGS_WIRED"],
-      "expected": {"exit_code": 0, "stdout_contains": ["IMAGE_FLAGS_WIRED"]}
+      "command": [
+        "bash",
+        "-c",
+        "grep -q -- '--attach-file' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q -- '--auto-download' /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt-submit.sh && grep -q 'webgpt.download' /home/graham/workspace/experiments/agent-skills/skills/surf/run.sh && echo IMAGE_FLAGS_WIRED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "IMAGE_FLAGS_WIRED"
+        ]
+      }
     },
     {
       "name": "m1-reference-image-generates-and-is-a-valid-png",
       "type": "positive",
-      "command": ["bash", "-c", "d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; python3 -c \"from PIL import Image; im=Image.open('$d/ref.png'); assert im.size==(512,512); print('VALID_REFERENCE_PNG')\""],
-      "expected": {"exit_code": 0, "stdout_contains": ["VALID_REFERENCE_PNG"]}
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; python3 -c \"from PIL import Image; im=Image.open('$d/ref.png'); assert im.size==(512,512); print('VALID_REFERENCE_PNG')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "VALID_REFERENCE_PNG"
+        ]
+      }
     },
     {
       "name": "a1-live-attach-manipulate-download-produces-a-new-png",
       "type": "adversarial",
-      "command": ["bash", "-c", "if [ -z \"${SURF_WEBGPT_IMAGE_TAB:-}\" ]; then echo 'SKIP: set SURF_WEBGPT_IMAGE_TAB to an authenticated ChatGPT tab id'; echo IMAGE_MANIPULATE_DOWNLOAD_PASS; exit 0; fi; d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; bash /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt_image_manipulate_download.sh $d/ref.png \"$SURF_WEBGPT_IMAGE_TAB\" 'replace the red square with a solid blue circle of similar size, centered'"],
-      "expected": {"exit_code": 0, "stdout_contains": ["IMAGE_MANIPULATE_DOWNLOAD_PASS"]}
+      "command": [
+        "bash",
+        "-c",
+        "if [ -z \"${SURF_WEBGPT_IMAGE_TAB:-}\" ]; then echo 'SKIP: set SURF_WEBGPT_IMAGE_TAB to an authenticated ChatGPT tab id'; echo IMAGE_MANIPULATE_DOWNLOAD_PASS; exit 0; fi; d=$(mktemp -d); python3 -c \"from PIL import Image,ImageDraw; im=Image.new('RGB',(512,512),'white'); dr=ImageDraw.Draw(im); dr.rectangle([156,156,356,356],fill='red'); im.save('$d/ref.png')\"; bash /home/graham/workspace/experiments/agent-skills/skills/surf/scripts/webgpt_image_manipulate_download.sh $d/ref.png \"$SURF_WEBGPT_IMAGE_TAB\" 'replace the red square with a solid blue circle of similar size, centered'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "IMAGE_MANIPULATE_DOWNLOAD_PASS"
+        ]
+      }
+    },
+    {
+      "name": "image-generate-oauth-route-produces-png-1308",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/ask/run.sh ask 'a small blue square on white' --image-generate --image-auth codex-oauth --image-output $d/o.png --json >/dev/null 2>&1; python3 -c \"import sys,os; p='$d/o.png'; sys.exit(0) if os.path.isfile(p) and os.path.getsize(p)>5000 and open(p,'rb').read(8)==b'\\x89PNG\\r\\n\\x1a\\n' else sys.exit(1)\" && echo OAUTH_IMAGE_PNG_OK || echo OAUTH_IMAGE_FAILED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OAUTH_IMAGE_PNG_OK"
+        ]
+      }
     }
   ]
 }

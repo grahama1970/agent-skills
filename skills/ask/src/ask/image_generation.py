@@ -12,6 +12,9 @@ import httpx
 
 from .ask_config import SCILLM_API_KEY, SCILLM_BASE_URL
 
+# skills/ask/src/ask/image_generation.py -> skills/ask
+ASK_SKILL_ROOT = Path(__file__).resolve().parents[2]
+
 
 IMAGE_MIME_BY_FORMAT = {
     "png": "image/png",
@@ -160,3 +163,90 @@ def generate_image_with_scillm(
         "image_generation": manifest,
         "artifacts": artifacts,
     }
+
+
+def generate_image_with_codex_oauth(
+    prompt: str,
+    *,
+    run_state: Any,
+    model: str = "gpt-image-2",
+    size: str = "auto",
+    quality: str = "auto",
+    count: int = 1,
+    output: str | None = None,
+    output_format: str = "png",
+    timeout: float = 300.0,
+) -> dict[str, Any]:
+    """Generate images via the OAuth backend (scillm generate-image --auth codex-oauth).
+
+    #1308: the /ask image API-key lane 401s in OAuth-only environments. This
+    routes through the sanctioned scillm generate-image OAuth backend (Codex
+    built-in image_gen) so /ask stays the entrypoint without dropping below the
+    layering contract. scillm's OAuth image path emits one image per call, so
+    count>1 loops.
+    """
+    import subprocess
+    import tempfile
+
+    if not prompt.strip():
+        raise ValueError("image prompt is empty")
+    if count < 1:
+        raise ValueError("image count must be >= 1")
+    normalized_format = output_format.lower().lstrip(".") or "png"
+    if normalized_format == "jpg":
+        normalized_format = "jpeg"
+    if normalized_format not in IMAGE_MIME_BY_FORMAT:
+        raise ValueError("image output format must be one of: png, jpeg, webp")
+
+    scillm_run = ASK_SKILL_ROOT.parent / "scillm" / "run.sh"
+    if not scillm_run.exists():
+        raise RuntimeError(f"scillm run.sh not found at {scillm_run}")
+
+    run_dir = Path(run_state.run_dir) if getattr(run_state, "run_dir", None) else None
+    output_paths = _output_paths(output, run_dir=run_dir, count=count, output_format=normalized_format)
+
+    run_state.step_started("image_generation", model=model, size=size, quality=quality, count=count, auth="codex-oauth")
+    started = time.monotonic()
+    artifacts: dict[str, str] = {}
+    files: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory() as td:
+        prompt_file = Path(td) / "prompt.txt"
+        prompt_file.write_text(prompt, encoding="utf-8")
+        for index in range(1, count + 1):
+            out_path = output_paths[index - 1]
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            cmd = [
+                str(scillm_run), "generate-image",
+                "--prompt-file", str(prompt_file),
+                "--out", str(out_path),
+                "--auth", "codex-oauth",
+                "--model", model,
+                "--size", size,
+                "--quality", quality,
+                "--output-format", normalized_format,
+            ]
+            proc = subprocess.run(cmd, cwd=str(scillm_run.parent), capture_output=True, text=True, timeout=timeout)
+            if proc.returncode != 0 or not out_path.is_file():
+                raise RuntimeError(
+                    f"codex-oauth image generation failed (rc={proc.returncode}): "
+                    f"{(proc.stderr or proc.stdout or '')[:400]}"
+                )
+            artifacts[f"image_{index:03d}"] = str(out_path)
+            files.append({
+                "index": index - 1,
+                "path": str(out_path),
+                "mime_type": IMAGE_MIME_BY_FORMAT[normalized_format],
+                "revised_prompt": "",
+            })
+
+    result = {
+        "mode": "image-generation",
+        "status": "answered",
+        "auth": "codex-oauth",
+        "model": model,
+        "count": count,
+        "files": files,
+        "duration_seconds": round(time.monotonic() - started, 3),
+    }
+    run_state.artifacts.update(artifacts)
+    return result
