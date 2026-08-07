@@ -95,7 +95,7 @@ export default function Home() {
                   what they did.
                 </h1>
                 <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
-                  A one-person practice with an unusual résumé: commercial
+                  An unusual résumé: commercial
                   composer for <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
                   and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
                   Webby-recognized producer for{' '}
@@ -502,8 +502,8 @@ export default function Home() {
                 </div>
                 <p className="lede" style={{ marginTop: '1.6rem' }}>
                   One person also means direct accountability — the person you
-                  talk to architects, builds, and answers for the result. One
-                  senior rate instead of an army&apos;s overhead. Available for
+                  meet is the person who investigates, architects, builds, and
+                  answers for the result. Available for
                   engagements and full-time roles —{' '}
                   <a
                     href={`${REPO}/blob/main/RESUME.md`}
