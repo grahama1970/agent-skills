@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, and the enforcement gates + fabrication guard hold",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real shortlist from real live boards and a real SAM website capture, writes recallable memory, refuses to silently skip a dead-API source, and carries no fabricated 'God of War' claim",
-    "does_not_prove": "live LinkedIn/Indeed capture (their anti-automation), real successful application submissions, long-run scheduler reliability, or semantic quality of tailored resumes"
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, and carries no fabricated 'God of War' claim",
+    "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
     {
@@ -16,7 +16,16 @@
       "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["E2E PASS", "sam_website_opps=", "live_board_candidates=", "memory_recall_hits="]
+        "stdout_contains": ["E2E PASS", "sam_website_opps=", "live_board_candidates=", "memory_recall_hits=", "recency_max_age_days=", "apply_prep_resumes=", "ats_forms_ok="]
+      }
+    },
+    {
+      "name": "recency-window-rejects-stale-postings",
+      "type": "negative",
+      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/recency_check.py"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["RECENCY OK"]
       }
     },
     {

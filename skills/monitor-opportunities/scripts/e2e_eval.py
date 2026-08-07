@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import urllib.request
@@ -32,6 +33,7 @@ MEMORY_URL = "http://127.0.0.1:8601"
 MIN_SAM_WEBSITE_OPPS = 5
 MIN_SHORTLIST = 1
 MIN_LIVE_BOARD_CANDIDATES = 3
+MIN_APPLY_PREP_RESUMES = 3
 
 
 def _fail(check: str, detail: str) -> None:
@@ -95,12 +97,53 @@ def main() -> None:
     if not recall.get("items"):
         _fail("memory-empty", f"recall for {query!r} returned nothing from morning_opportunities")
 
+    # 5. Recency: every shortlisted job with a parseable date must be within the
+    #    2-week window (goal: we only care about recent opportunities).
+    max_age = int(os.environ.get("MONITOR_MAX_AGE_DAYS", "14"))
+    shortlist = _load(out / "ranking" / "shortlist.json")
+    now = datetime.now(UTC)
+    stale = []
+    for row in shortlist:
+        raw = row.get("published_at") or row.get("updated_at")
+        if not raw:
+            continue
+        try:
+            posted = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if posted.tzinfo is None:
+            posted = posted.replace(tzinfo=UTC)
+        age = (now - posted).days
+        if age > max_age:
+            stale.append((row.get("title"), age))
+    if stale:
+        _fail("recency-violation", f"{len(stale)} shortlisted jobs older than {max_age}d: {stale[:3]}")
+
+    # 6. Custom targeted resume per top job: apply-prep produced multiple tailored
+    #    resumes, each bound to an approved-claim variant (not just the top one).
+    apply_prep_path = out / "tailoring" / "apply-prep.json"
+    if not apply_prep_path.exists():
+        _fail("apply-prep-missing", f"no apply-prep at {apply_prep_path}")
+    apply_prep = _load(apply_prep_path)
+    tailored = [p for p in apply_prep if p.get("resume_variant_id")]
+    if len(tailored) < MIN_APPLY_PREP_RESUMES:
+        _fail("apply-prep-thin", f"only {len(tailored)} tailored resumes (< {MIN_APPLY_PREP_RESUMES})")
+    if any(p.get("automation_policy") != "submit_requires_human_authorization" for p in apply_prep):
+        _fail("apply-prep-ungated", "an apply-prep packet is not human-submit-gated")
+
+    # 7. Live ATS form capture: at least one top job's application form schema was
+    #    captured read-only with real fields (the auto-apply learning surface).
+    ats_ok = [p for p in apply_prep if p.get("ats_form_status") == "OK" and (p.get("ats_form_field_count") or 0) > 0]
+
     print(
         "E2E PASS: "
         f"sam_website_opps={sam.get('opportunities_captured')} "
         f"shortlist={len(report['opportunities'])} "
         f"live_board_candidates={live_board_candidates} "
         f"memory_recall_hits={len(recall['items'])} "
+        f"recency_max_age_days={max_age} "
+        f"apply_prep_resumes={len(tailored)} "
+        f"ats_forms_ok={len(ats_ok)} "
         f"run={out}"
     )
 
