@@ -2394,6 +2394,35 @@ a.fig:hover .l::after,
   height: auto;
   overflow: visible;
 }
+/* Fixed HUD readout — updates on hover without a cursor-following card that
+   would occlude neighbouring nodes. */
+.constellation-hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted);
+  background: linear-gradient(to top, rgba(10, 7, 5, 0.94), rgba(10, 7, 5, 0));
+  pointer-events: none;
+}
+.ch-key {
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.6rem;
+}
+.ch-name { color: var(--brass); }
+.ch-detail { color: var(--muted); }
+.ch-priv { color: var(--ember, #d1703c); }
+.ch-idle { color: var(--faint); }
 .c-edge {
   fill: none;
   stroke: rgba(236,226,211,0.16);

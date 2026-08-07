@@ -334,6 +334,29 @@ export function CapabilityConstellation() {
             );
           })}
         </svg>
+        {(() => {
+          const hn = hover ? byId.get(hover) : null;
+          const detail =
+            hn && hn.type === 'area'
+              ? `${hn.title || hn.label}${hn.skillCount ? ` · ${hn.skillCount} skills` : ''}`
+              : hn?.question || '';
+          return (
+            <div className="constellation-hud" aria-hidden="true">
+              {hn ? (
+                <>
+                  <span className="ch-key">{hn.type}</span>
+                  <span className="ch-name">{hn.label}</span>
+                  {detail && <span className="ch-detail">{detail}</span>}
+                  {hn.visibility && hn.visibility !== 'public' && (
+                    <span className="ch-priv">public overview only</span>
+                  )}
+                </>
+              ) : (
+                <span className="ch-idle">hover a node to inspect · drag to explore</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
       <p className="constellation-legend">
         <span className="cl cl--technical">technical</span>
