@@ -12,7 +12,7 @@ const NODES: { x: number; y: number; label: string }[] = [
   { x: 150, y: 30, label: 'DARPA ARCOS — principal data scientist' },
   { x: 214, y: 102, label: 'AFRL “Hacker” challenge coin' },
   { x: 286, y: 58, label: 'Lean 4 formal methods' },
-  { x: 360, y: 26, label: 'This practice' },
+  { x: 362, y: 26, label: 'This practice' },
 ];
 
 // Hand-authored winding trail through the nodes, with a backward hook after
@@ -28,8 +28,7 @@ const TRACE = [
   'C 140 78, 128 44, 160 42',
   'C 188 40, 200 92, 214 102', // → AFRL
   'C 250 102, 256 58, 286 58', // → Lean 4
-  'C 322 58, 336 26, 360 26', // → this practice
-  'L 398 26',
+  'C 322 58, 340 26, 362 26', // → this practice (the path TERMINATES here)
 ].join(' ');
 
 /** The non-linear path under "An unusual path, on purpose." A faint dead-
@@ -71,6 +70,7 @@ export function UnusualPath() {
       <path
         className="path-line"
         d={TRACE}
+        pathLength={1000}
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

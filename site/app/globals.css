@@ -1888,14 +1888,14 @@ footer a:hover {
   opacity: 0.22;
 }
 .path-line {
-  stroke-dasharray: 780;
-  stroke-dashoffset: 780;
+  stroke-dasharray: 1000; /* matches pathLength — draw always reaches the end */
+  stroke-dashoffset: 1000;
 }
 /* The trail draws in once, forward only. (An earlier non-monotonic version made
    the line's endpoint retract, which read as a glitch — a self-erasing line, not
    a search. Backtracking belongs to a tracer dot, not the trail itself.) */
 @keyframes trace-converge {
-  0% { stroke-dashoffset: 780; }
+  0% { stroke-dashoffset: 1000; }
   100% { stroke-dashoffset: 0; }
 }
 .path-node {
@@ -1907,21 +1907,22 @@ footer a:hover {
 }
 .is-visible .path-line {
   stroke-dashoffset: 0;
-  animation: trace-converge 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: trace-converge 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .is-visible .path-node {
   opacity: 1;
 }
-.is-visible .n1 { transition-delay: 0.4s; }
-.is-visible .n2 { transition-delay: 0.6s; }
-.is-visible .n3 { transition-delay: 0.8s; }
-.is-visible .n4 { transition-delay: 1s; }
-.is-visible .n5 { transition-delay: 1.2s; }
-.is-visible .n6 { transition-delay: 1.45s; }
-/* Goal lock: the final waypoint stays unglowing until the tracer converges on
-   it (~3.3s), then flares once and settles — a resolution, not a HUD claim. */
+/* Waypoints light up only AFTER the line has drawn to them — never a dot
+   floating ahead of the trail. Staggered left→right once the draw completes. */
+.is-visible .n1 { transition-delay: 2s; }
+.is-visible .n2 { transition-delay: 2.1s; }
+.is-visible .n3 { transition-delay: 2.2s; }
+.is-visible .n4 { transition-delay: 2.3s; }
+.is-visible .n5 { transition-delay: 2.4s; }
+.is-visible .n6 { transition-delay: 2.55s; }
+/* Goal lock: the final waypoint flares once as it lights up, then settles. */
 .is-visible .path-node.is-final {
-  animation: node-lock 0.9s ease-out 2.2s both;
+  animation: node-lock 0.9s ease-out 2.55s both;
 }
 @keyframes node-lock {
   0% { filter: drop-shadow(0 0 0 rgba(226, 172, 98, 0)); }
