@@ -15,8 +15,17 @@ digests, selected claim evidence references, and a producer-side seam receipt.
 - This skill does not call an LLM, send messages, submit applications, or access
   ArangoDB directly.
 
+## Composition
+
+- `/monitor-opportunities` composes this skill (commit `5fec30084`, 2026-08-07):
+  `resume_artifact.tailor_artifact` builds a tailoring request from its approved-claim
+  snapshot, invokes `run.sh tailor`, verifies the seam receipt and claim ordering, and
+  binds the `resume.variant.v1` manifest into its `tailored_resume_artifact` receipt.
+  Covered by `skills/monitor-opportunities/tests/test_resume_artifact.py`.
+
 ## Evidence State
 
 - Local deterministic smoke controls are defined in `sanity.sh`.
-- PDF visual quality and live `/monitor-opportunities` integration are not established
-  by this skill's smoke profile.
+- The `/monitor-opportunities` composition seam is exercised by that skill's test
+  gates (live subprocess, no network). PDF visual quality and a full live
+  opportunity-to-artifact run remain unestablished.
