@@ -605,6 +605,28 @@ def nightly(
     if run_proc.returncode != 0:
         _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
 
+    # Self-heal memory: if the service is down, restart its container and wait
+    # for health rather than failing the nightly (no reason to fail on a
+    # restartable dependency).
+    import time as _time
+    import urllib.request as _urlreq
+
+    def _memory_healthy() -> bool:
+        try:
+            with _urlreq.urlopen(f"{memory_url}/health", timeout=5) as resp:
+                return resp.status == 200
+        except Exception:  # noqa: BLE001 - any failure means restart-and-retry
+            return False
+
+    if not _memory_healthy():
+        logger.warning("memory service down; restarting embry-memory container")
+        subprocess.run(["docker", "restart", "embry-memory"], capture_output=True, text=True, timeout=120)
+        for _ in range(30):
+            if _memory_healthy():
+                break
+            _time.sleep(5)
+    steps["memory_healthy"] = _memory_healthy()
+
     sync_proc = subprocess.run(
         [str(run_sh), "memory-sync", "--run", str(out), "--memory-url", memory_url],
         capture_output=True,
