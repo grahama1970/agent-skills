@@ -590,16 +590,33 @@ def nightly(
 
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
-    from .browser_capture import capture_linkedin_top_applicant, capture_sam
+    from .browser_capture import (
+        capture_linkedin_advanced_search,
+        capture_linkedin_top_applicant,
+        capture_sales_navigator_saved,
+        capture_sam,
+    )
 
     capture_dir = out / "browser-capture"
     sam_receipt = capture_sam(capture_dir)
     steps["browser_capture_sam"] = {"status": sam_receipt.get("status"), "captured": sam_receipt.get("opportunities_captured")}
     federal_evidence = sam_receipt.get("evidence_path")
 
+    # LinkedIn jobs: advanced search (primary, server-side filtered) + top-applicant.
+    # Both best-effort; feed the run the evidence that captured the most rows.
+    adv_receipt = capture_linkedin_advanced_search(capture_dir)
+    steps["browser_capture_linkedin_advanced"] = {"status": adv_receipt.get("status"), "captured": adv_receipt.get("opportunities_captured")}
     li_receipt = capture_linkedin_top_applicant(capture_dir)
     steps["browser_capture_linkedin"] = {"status": li_receipt.get("status"), "captured": li_receipt.get("opportunities_captured")}
-    linkedin_evidence = li_receipt.get("evidence_path")
+    linkedin_candidates = [r for r in (adv_receipt, li_receipt) if r.get("evidence_path")]
+    linkedin_candidates.sort(key=lambda r: int(r.get("opportunities_captured") or 0), reverse=True)
+    linkedin_evidence = linkedin_candidates[0].get("evidence_path") if linkedin_candidates else None
+
+    # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
+    # strictly read-only. Best-effort; captured to its own evidence, not fed to the
+    # jobs run. Graham transmits every outreach himself.
+    sn_receipt = capture_sales_navigator_saved(capture_dir)
+    steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if federal_evidence:
