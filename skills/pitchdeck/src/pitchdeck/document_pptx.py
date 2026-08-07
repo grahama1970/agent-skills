@@ -1,0 +1,306 @@
+"""Native-editable PPTX emitter for deck_document.v1 primitives (#1271 phase 3).
+
+Renders the scene graph as REAL PowerPoint objects — nested grpSp, preset sp,
+freeform sp, cxnSp connectors, text runs, and pic — never a raster. Group
+strategy (validated live against python-pptx 1.x): children are placed at
+absolute canvas EMU inside the group (python-pptx recalculates the group's
+off/ext/chOff/chExt from them), then the group xfrm is overridden to the
+AUTHORED bbox with chOff/chExt pinned identical to off/ext. That identity
+mapping means no rescaling ever occurs and a padded child_frame survives as
+literal geometry (margin inside the group) rather than being swallowed by
+extent recalculation.
+
+Capability decisions are receipts, not silences: connector attach hints are
+NOT written as stCxn/endCxn (python-pptx support is experimental); local
+links render as link-styled runs without a jump action. Icons resolve
+fail-closed via the hash-pinned library (editable shape trees required).
+Every emitted object is named ``el:<element-id>`` so reimport can prove
+identity. Failure modes: unknown kinds, unresolvable icons, or assets that
+cannot be read raise — nothing emits partially.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from pptx import Presentation
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.util import Emu, Inches, Pt
+
+from .document import DeckDocument, DocElement, DocElementKind
+from .document_html import _load_theme
+from .io import expand_path
+
+SLIDE_W_IN, SLIDE_H_IN = 13.333, 7.5
+
+_PRESETS = {
+    "rect": MSO_SHAPE.RECTANGLE,
+    "rounded_rect": MSO_SHAPE.ROUNDED_RECTANGLE,
+    "ellipse": MSO_SHAPE.OVAL,
+    "chevron": MSO_SHAPE.CHEVRON,
+    "pill": MSO_SHAPE.ROUNDED_RECTANGLE,  # adjustment 0.5 -> capsule
+    "triangle": MSO_SHAPE.ISOSCELES_TRIANGLE,
+}
+
+_CONNECTOR_ROUTES = {
+    "straight": MSO_CONNECTOR.STRAIGHT,
+    "bent": MSO_CONNECTOR.ELBOW,
+    "curved": MSO_CONNECTOR.CURVE,
+}
+
+_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+
+class Frame:
+    """Absolute inches context: local fractions map into this rectangle."""
+
+    def __init__(self, x: float, y: float, w: float, h: float):
+        self.x, self.y, self.w, self.h = x, y, w, h
+
+    def rect(self, bbox) -> tuple:
+        return (
+            Inches(self.x + bbox.x * self.w),
+            Inches(self.y + bbox.y * self.h),
+            Inches(bbox.w * self.w),
+            Inches(bbox.h * self.h),
+        )
+
+    def point(self, x: float, y: float) -> tuple:
+        return Inches(self.x + x * self.w), Inches(self.y + y * self.h)
+
+    def sub(self, bbox, child_frame=None) -> "Frame":
+        base = Frame(self.x + bbox.x * self.w, self.y + bbox.y * self.h, bbox.w * self.w, bbox.h * self.h)
+        if child_frame is None:
+            return base
+        return Frame(
+            base.x + child_frame.x * base.w,
+            base.y + child_frame.y * base.h,
+            child_frame.w * base.w,
+            child_frame.h * base.h,
+        )
+
+
+def _hex(value: str) -> RGBColor:
+    return RGBColor.from_string(value.lstrip("#").upper())
+
+
+def _set_dash(line, dash: str) -> None:
+    if dash == "solid":
+        return
+    from pptx.enum.dml import MSO_LINE_DASH_STYLE
+
+    line.dash_style = MSO_LINE_DASH_STYLE.DASH if dash == "dashed" else MSO_LINE_DASH_STYLE.ROUND_DOT
+
+
+def _add_arrowheads(connector, *, start: bool, end: bool) -> None:
+    ln = connector.line._get_or_add_ln()
+    for present, tag in ((start, "headEnd"), (end, "tailEnd")):
+        if present:
+            el = ln.makeelement(f"{{{_A}}}{tag}", {"type": "triangle", "w": "med", "len": "med"})
+            ln.append(el)
+
+
+def _pin_group_xfrm(group, bbox_rect: tuple) -> None:
+    """Override off/ext AND chOff/chExt to the authored bbox (identity map):
+    padding inside the group survives as literal geometry."""
+    left, top, width, height = (int(v) for v in bbox_rect)
+    xfrm = group._element.find(f".//{{{_A}}}xfrm")
+    for tag, attrs in (
+        ("off", {"x": str(left), "y": str(top)}),
+        ("ext", {"cx": str(width), "cy": str(height)}),
+        ("chOff", {"x": str(left), "y": str(top)}),
+        ("chExt", {"cx": str(width), "cy": str(height)}),
+    ):
+        node = xfrm.find(f"{{{_A}}}{tag}")
+        for key, value in attrs.items():
+            node.set(key, value)
+
+
+def _emit_icon(container, element: DocElement, frame: Frame, palette: dict, receipt: dict) -> None:
+    from .icons import resolve_icon
+
+    resolved = resolve_icon(element.icon.library_id, require_editable=True)
+    tint = _hex(palette.get(element.icon.tint_role, palette["primary"]))
+    group = container.add_group_shape()
+    icon_frame = frame.sub(element.bbox)
+    for index, part in enumerate(resolved["mapping"]["parts"]):
+        if part["kind"] == "preset":
+            x, y, w, h = part["bbox"]
+            shape = group.shapes.add_shape(
+                _PRESETS[part["preset"]],
+                Inches(icon_frame.x + x * icon_frame.w), Inches(icon_frame.y + y * icon_frame.h),
+                Inches(w * icon_frame.w), Inches(h * icon_frame.h),
+            )
+            shape.fill.background()
+            shape.line.color.rgb = tint
+            shape.line.width = Pt(2.5)
+            shape.name = f"el:{element.id}:part{index}"
+        else:  # straight-segment freeform
+            vertices = [(Emu(Inches(icon_frame.x + vx * icon_frame.w)), Emu(Inches(icon_frame.y + vy * icon_frame.h))) for vx, vy in part["vertices"]]
+            builder = group.shapes.build_freeform(vertices[0][0], vertices[0][1], scale=1)
+            builder.add_line_segments(vertices[1:], close=part.get("closed", False))
+            shape = builder.convert_to_shape()
+            shape.fill.background()
+            shape.line.color.rgb = tint
+            shape.line.width = Pt(2.5)
+            shape.name = f"el:{element.id}:part{index}"
+    _pin_group_xfrm(group, frame.rect(element.bbox))
+    group.name = f"el:{element.id}"
+    receipt["icons"].append({
+        "element": element.id,
+        "library_id": element.icon.library_id,
+        "representation": resolved["representation"],
+        "svg_sha256": resolved["svg_sha256"],
+    })
+
+
+def _emit_rich_text(container, element: DocElement, frame: Frame, palette: dict, scale: dict, receipt: dict) -> None:
+    left, top, width, height = frame.rect(element.bbox)
+    box = container.add_textbox(left, top, width, height)
+    box.name = f"el:{element.id}"
+    tf = box.text_frame
+    tf.word_wrap = True
+    for b_index, block in enumerate(element.rich_text.blocks):
+        paragraph = tf.paragraphs[0] if b_index == 0 else tf.add_paragraph()
+        if block.bullet_level:
+            paragraph.level = block.bullet_level - 1
+        for run_spec in block.runs:
+            run = paragraph.add_run()
+            run.text = run_spec.text
+            run.font.size = Pt(scale.get(block.style_role.value, 20))
+            for mark in run_spec.marks:
+                if mark.type == "bold":
+                    run.font.bold = True
+                elif mark.type == "italic":
+                    run.font.italic = True
+                elif mark.type == "underline":
+                    run.font.underline = True
+                elif mark.type == "code":
+                    run.font.name = "Consolas"
+                elif mark.type == "color":
+                    run.font.color.rgb = _hex(palette.get(mark.role, palette["ink"]))
+                elif mark.type == "link":
+                    run.font.color.rgb = _hex(palette["primary"])
+                    run.font.underline = True
+                    receipt["capability_decisions"].append(
+                        f"{element.id}: local link to '{mark.target_slide_id}' rendered as styled run (no jump action)"
+                    )
+
+
+def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict, scale: dict, assets: dict, asset_base: Path, receipt: dict) -> None:
+    kind = element.kind
+    if kind is DocElementKind.GROUP:
+        group = container.add_group_shape()
+        inner = frame.sub(element.bbox, element.child_frame)
+        ordered = sorted(enumerate(element.children or []), key=lambda pair: (pair[1].z, pair[0]))
+        for _, child in ordered:
+            _emit_element(group.shapes, child, inner, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
+        _pin_group_xfrm(group, frame.rect(element.bbox))
+        if element.rotation_deg:
+            group.rotation = element.rotation_deg
+        group.name = f"el:{element.id}"
+        return
+    if kind is DocElementKind.SHAPE:
+        left, top, width, height = frame.rect(element.bbox)
+        shape = container.add_shape(_PRESETS[element.shape.preset.value], left, top, width, height)
+        if element.shape.preset.value == "pill":
+            shape.adjustments[0] = 0.5
+        if element.shape.fill_role:
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = _hex(palette.get(element.shape.fill_role, "#FFFFFF"))
+        else:
+            shape.fill.background()
+        if element.shape.stroke:
+            shape.line.color.rgb = _hex(palette.get(element.shape.stroke.role, palette["primary"]))
+            shape.line.width = Pt(element.shape.stroke.width_pt)
+            _set_dash(shape.line, element.shape.stroke.dash)
+        else:
+            shape.line.fill.background()
+        if element.rotation_deg:
+            shape.rotation = element.rotation_deg
+        shape.name = f"el:{element.id}"
+        return
+    if kind is DocElementKind.LINE:
+        spec = element.line
+        bx, by = frame.point(spec.start.x, spec.start.y)
+        ex, ey = frame.point(spec.end.x, spec.end.y)
+        connector = container.add_connector(_CONNECTOR_ROUTES[spec.route], bx, by, ex, ey)
+        connector.line.color.rgb = _hex(palette["primary"])
+        connector.line.width = Pt(spec.width_pt)
+        _set_dash(connector.line, spec.dash)
+        _add_arrowheads(connector, start=spec.arrow_start, end=spec.arrow_end)
+        if spec.start_hint or spec.end_hint:
+            receipt["capability_decisions"].append(
+                f"{element.id}: attach hints present but stCxn/endCxn NOT written (python-pptx support experimental); geometry authoritative"
+            )
+        connector.name = f"el:{element.id}"
+        return
+    if kind is DocElementKind.ICON:
+        _emit_icon(container, element, frame, palette, receipt)
+        return
+    if kind is DocElementKind.RICH_TEXT:
+        _emit_rich_text(container, element, frame, palette, scale, receipt)
+        return
+    if kind is DocElementKind.TEXT:
+        left, top, width, height = frame.rect(element.bbox)
+        box = container.add_textbox(left, top, width, height)
+        box.name = f"el:{element.id}"
+        tf = box.text_frame
+        tf.word_wrap = True
+        run = tf.paragraphs[0].add_run()
+        run.text = element.text or ""
+        style = element.style
+        run.font.size = Pt(style.size_pt if style else 20)
+        run.font.bold = bool(style and style.bold)
+        if style and style.color:
+            run.font.color.rgb = _hex(style.color)
+        return
+    if kind is DocElementKind.IMAGE:
+        spec = assets[element.asset_id]
+        path = expand_path(spec.local_path, base_dir=asset_base)
+        left, top, width, height = frame.rect(element.bbox)
+        picture = container.add_picture(str(path), left, top, width=width, height=height)
+        if element.rotation_deg:
+            picture.rotation = element.rotation_deg
+        picture.name = f"el:{element.id}"
+        return
+    raise ValueError(f"element '{element.id}': PPTX emitter has no handler for kind '{kind.value}'")
+
+
+def emit_document_pptx(
+    document: DeckDocument,
+    output_path: Path,
+    *,
+    asset_base: Path,
+    theme_template: Path | None = None,
+) -> dict:
+    theme = _load_theme(theme_template)
+    palette = theme["palette"]
+    scale = theme.get("type_scale_pt", {"body": 20, "support": 16, "title": 28})
+    assets = {a.id: a for a in document.assets}
+    presentation = Presentation()
+    presentation.slide_width = Inches(SLIDE_W_IN)
+    presentation.slide_height = Inches(SLIDE_H_IN)
+    blank = presentation.slide_layouts[6]
+    receipt: dict = {
+        "schema": "pitchdeck.pptx_primitive_receipt.v1",
+        "capability_decisions": [],
+        "icons": [],
+        "slides": [],
+    }
+    root = Frame(0.0, 0.0, SLIDE_W_IN, SLIDE_H_IN)
+    for slide_doc in document.slides:
+        if slide_doc.hidden:
+            continue
+        slide = presentation.slides.add_slide(blank)
+        ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
+        for _, element in ordered:
+            _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
+        receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    presentation.save(str(output_path))
+    receipt["output"] = str(output_path.resolve())
+    (output_path.with_suffix(".receipt.json")).write_text(json.dumps(receipt, indent=1), encoding="utf-8")
+    return receipt

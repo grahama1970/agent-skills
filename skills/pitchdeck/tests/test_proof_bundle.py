@@ -1039,3 +1039,57 @@ def test_primitive_gauntlet_validates():
     grouped["slides"][0]["elements"][1]["binding_paths"] = ["element:outer-group"]
     with _pytest.raises(Exception, match="leaf content"):
         DeckDocument.model_validate(grouped)
+
+
+def test_gauntlet_pptx_native_editable_roundtrip(tmp_path):
+    """#1271 acceptance: the gauntlet emits as a NATIVE editable shape tree —
+    nested grpSp with the padded frame surviving extent recalculation, cxnSp
+    connectors, icon as grouped shapes (zero extra rasters), marked runs,
+    rotations, identity, and stable sibling order."""
+    import importlib.util
+
+    from pptx import Presentation
+    from pptx.shapes.connector import Connector
+    from pptx.shapes.group import GroupShape
+    from pptx.shapes.picture import Picture
+    from pptx.util import Inches
+
+    from pitchdeck.document import iter_tree
+    from pitchdeck.document_pptx import emit_document_pptx
+
+    spec = importlib.util.spec_from_file_location(
+        "build_gauntlet", Path(__file__).parent.parent / "examples" / "primitive-gauntlet" / "build_gauntlet.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    doc = module.build()
+    out = tmp_path / "gauntlet.pptx"
+    receipt = emit_document_pptx(doc, out, asset_base=Path(__file__).parent.parent / "examples" / "primitive-gauntlet")
+    assert receipt["capability_decisions"]  # hints + link decisions recorded, not silent
+
+    presentation = Presentation(str(out))
+    slide = presentation.slides[0]
+
+    def walk(shapes, depth=0):
+        for sh in shapes:
+            yield depth, sh
+            if isinstance(sh, GroupShape):
+                yield from walk(sh.shapes, depth + 1)
+
+    tree = list(walk(slide.shapes))
+    by_name = {sh.name: (d, sh) for d, sh in tree}
+    assert isinstance(by_name["el:outer-group"][1], GroupShape) and by_name["el:nested-group"][0] == 1
+    authored = doc.slides[0].elements[1].bbox
+    og = by_name["el:outer-group"][1]
+    expected = (int(Inches(authored.x * 13.333)), int(Inches(authored.y * 7.5)),
+                int(Inches(authored.w * 13.333)), int(Inches(authored.h * 7.5)))
+    assert all(abs(a - b) <= 2 for a, b in zip(expected, (og.left, og.top, og.width, og.height)))
+    assert isinstance(by_name["el:g-flow"][1], Connector) and by_name["el:g-flow"][1].begin_y == by_name["el:g-flow"][1].end_y
+    icon_group = by_name["el:g-icon"][1]
+    assert isinstance(icon_group, GroupShape) and not any(isinstance(s, Picture) for s in icon_group.shapes)
+    assert abs(by_name["el:nested-group"][1].rotation - 8.0) < 0.01
+    runs = [r for para in by_name["el:rich"][1].text_frame.paragraphs for r in para.runs]
+    assert runs[0].font.bold and any(r.font.name == "Consolas" for r in runs)
+    assert {f"el:{e.id}" for e in iter_tree(doc.slides[0].elements)} <= set(by_name)
+    assert [s.name for s in by_name["el:nested-group"][1].shapes] == ["el:n-chevron", "el:n-pill"]
+    assert [sh.name for d, sh in tree if isinstance(sh, Picture)] == ["el:photo"]

@@ -407,6 +407,27 @@ def render_document_cmd(
         _abort(exc)
 
 
+@app.command(name="emit-document-pptx")
+def emit_document_pptx_cmd(
+    document: Annotated[Path, typer.Option(help="Path to a deck.document.json (pitchdeck.deck_document.v1).")],
+    output: Annotated[Path, typer.Option(help="Output PPTX path.")],
+    asset_base: Annotated[Path, typer.Option(help="Base dir for relative asset paths.")],
+    theme_template: Annotated[Path | None, typer.Option(help="pitchdeck.theme_template.v1 JSON.")] = None,
+) -> None:
+    """Emit a canonical document as NATIVE editable PPTX (nested groups, shapes, connectors, runs)."""
+    import json as json_mod
+
+    from .document import DeckDocument
+    from .document_pptx import emit_document_pptx
+
+    try:
+        doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
+        receipt = emit_document_pptx(doc, output, asset_base=asset_base, theme_template=theme_template)
+        typer.echo(json_mod.dumps({"status": "PASS", **receipt}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="analyze-style")
 def analyze_style_cmd(
     pptx: Annotated[Path, typer.Option(help="Reference PPTX to analyze.")],
