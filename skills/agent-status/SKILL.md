@@ -26,6 +26,9 @@ composes: []
 taxonomy:
   - observability
   - orchestration
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 

@@ -41,6 +41,10 @@ taxonomy:
   - validation
   - precision
   - fragility
+disciplines:
+  - evaluation-quality
+  - browser-automation
+  - ui-design-engineering
 ---
 
 # test-interactions

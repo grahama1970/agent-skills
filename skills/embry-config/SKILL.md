@@ -12,6 +12,8 @@ allowed-tools:
 provides:
   - embry-config
 composes: [task-monitor]
+disciplines:
+  - observability-operations
 ---
 
 # Embry Config

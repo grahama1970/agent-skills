@@ -27,6 +27,9 @@ composes:
   - review-music
 read_before_use:
   - run.sh
+disciplines:
+  - data-engineering
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

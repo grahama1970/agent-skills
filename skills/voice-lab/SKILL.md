@@ -36,6 +36,9 @@ metadata:
 provides:
   - voice-lab
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - evaluation-quality
 ---
 
 # voice-lab

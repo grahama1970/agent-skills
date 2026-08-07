@@ -21,6 +21,8 @@ metadata:
 provides:
   - create-react-designs
 composes: [task-monitor]
+disciplines:
+  - ui-design-engineering
 ---
 
 # Create React Designs

@@ -37,6 +37,8 @@ read_before_use:
   - midi_utils.py
   - battle_score_packet.py
   - run.sh
+disciplines:
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

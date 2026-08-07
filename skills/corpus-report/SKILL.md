@@ -23,6 +23,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - observability-operations
+  - extraction
 ---
 
 # Corpus Report

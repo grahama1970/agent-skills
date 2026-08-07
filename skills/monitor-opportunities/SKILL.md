@@ -56,6 +56,9 @@ taxonomy:
   - precision
   - human-in-the-loop
   - composition
+disciplines:
+  - research-retrieval
+  - observability-operations
 ---
 
 # monitor-opportunities

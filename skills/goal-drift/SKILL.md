@@ -51,6 +51,9 @@ taxonomy:
   - precision
   - resilience
   - human-in-the-loop
+disciplines:
+  - evaluation-quality
+  - observability-operations
 ---
 
 # goal-drift

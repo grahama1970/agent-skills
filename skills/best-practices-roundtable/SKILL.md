@@ -35,6 +35,9 @@ taxonomy:
   - review
   - deliberation
   - validation
+disciplines:
+  - engineering-standards
+  - agentic-orchestration
 ---
 
 # Best Practices: Roundtable

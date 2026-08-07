@@ -33,6 +33,9 @@ taxonomy:
   - conversation
   - validation
 runtime_self_improvement: basic
+disciplines:
+  - persona-simulation
+  - voice-audio
 ---
 
 # personaplex

@@ -40,6 +40,10 @@ taxonomy:
   - memory
   - validation
 runtime_self_improvement: none
+disciplines:
+  - engineering-standards
+  - voice-audio
+  - persona-simulation
 ---
 
 # Best Practices: Converse

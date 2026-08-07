@@ -34,6 +34,8 @@ taxonomy:
   - validation
   - resilience
   - orchestration
+disciplines:
+  - agentic-orchestration
 ---
 
 # Tau

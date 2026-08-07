@@ -22,6 +22,9 @@ composes:
   - consume-movie
   - consume-feed
   - task-monitor
+disciplines:
+  - data-engineering
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

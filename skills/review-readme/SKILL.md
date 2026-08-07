@@ -25,6 +25,9 @@ read_before_use:
 metadata:
   short-description: Adjudicate README quality (read-only)
   version: "0.1.0"
+disciplines:
+  - evaluation-quality
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE RUNNING.

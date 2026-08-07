@@ -59,6 +59,9 @@ composes:
   - memory
   - analytics
   - create-gsn-diagram
+disciplines:
+  - content-creation
+  - ui-design-engineering
 ---
 
 # create-figure

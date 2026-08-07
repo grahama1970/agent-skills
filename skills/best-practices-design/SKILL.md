@@ -22,6 +22,9 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-design
+disciplines:
+  - engineering-standards
+  - ui-design-engineering
 ---
 
 # Best Practices Design

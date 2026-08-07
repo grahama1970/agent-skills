@@ -1,5 +1,7 @@
 # project-watchdog
 
+> **Disciplines:** agentic-orchestration · observability-operations
+
 A cron that keeps registered projects moving without a human babysitting them.
 
 Each tick tries three lanes in order and stops at the first with work.

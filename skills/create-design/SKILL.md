@@ -23,6 +23,9 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-design
+disciplines:
+  - ui-design-engineering
+  - human-collaboration
 ---
 
 # Create Design

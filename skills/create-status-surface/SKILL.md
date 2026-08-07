@@ -29,6 +29,9 @@ taxonomy:
   - orchestration
   - progress-tracking
   - evidence
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 # Create Status Surface

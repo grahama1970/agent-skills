@@ -21,6 +21,9 @@ metadata:
 provides:
   - create-context
 composes: [task-monitor]
+disciplines:
+  - human-collaboration
+  - memory-knowledge
 ---
 
 # create-context

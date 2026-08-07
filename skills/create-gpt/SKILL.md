@@ -27,6 +27,8 @@ provides:
 composes:
   - memory
   - task-monitor
+disciplines:
+  - ml-training
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

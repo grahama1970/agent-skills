@@ -12,6 +12,8 @@ allowed-tools:
 provides:
   - service-status
 composes: [task-monitor]
+disciplines:
+  - observability-operations
 ---
 
 # Service Status

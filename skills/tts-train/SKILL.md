@@ -21,6 +21,9 @@ metadata:
 provides:
   - tts-train
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - ml-training
 ---
 
 # TTS Train Workflow

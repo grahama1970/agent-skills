@@ -23,6 +23,9 @@ taxonomy:
   - review
   - validation
   - browser
+disciplines:
+  - browser-automation
+  - ui-design-engineering
 ---
 
 # Local Page Analysis Capture

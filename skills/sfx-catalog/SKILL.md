@@ -23,6 +23,9 @@ metadata:
 provides:
   - sfx-catalog
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - content-creation
 ---
 
 # sfx-catalog

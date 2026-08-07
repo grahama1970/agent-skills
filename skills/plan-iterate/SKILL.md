@@ -15,6 +15,9 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-plan
+disciplines:
+  - agentic-orchestration
+  - evaluation-quality
 ---
 
 # Plan Iterate

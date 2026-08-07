@@ -45,6 +45,9 @@ taxonomy:
   - orchestration
   - github
   - cron
+disciplines:
+  - agentic-orchestration
+  - observability-operations
 ---
 
 # Project Watchdog

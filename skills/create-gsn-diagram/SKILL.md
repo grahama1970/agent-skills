@@ -21,6 +21,9 @@ composes:
   - taxonomy
   - export-oscal
   - lean4-prove
+disciplines:
+  - compliance-security
+  - content-creation
 ---
 
 # create-gsn-diagram

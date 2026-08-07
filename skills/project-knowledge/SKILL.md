@@ -29,6 +29,9 @@ taxonomy:
   - knowledge-management
   - coordination
   - documentation
+disciplines:
+  - memory-knowledge
+  - human-collaboration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

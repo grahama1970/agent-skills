@@ -1,5 +1,7 @@
 # Battle
 
+> **Disciplines:** compliance-security · agentic-orchestration
+
 ![Battle card](../../docs/assets/project-cards/battle.webp)
 
 Battle is a Red vs Blue security competition skill. It creates isolated target
@@ -173,14 +175,6 @@ Hard invariants:
   family and combination within safety/time budgets; Blue should do the same for
   patch, hardening, configuration, testing, detection, and mitigation
   combinations. Feedback from Docker outcomes determines what gets promoted.
-- Arena creators must attach a `battle.arena_balance_contract.v1` contract to
-  each scenario and receipt before making competitive relevance claims. A
-  scenario is not competitively relevant when Blue automatically wins every
-  generation, Red automatically wins every generation, or either team lacks a
-  plausible live path. Use staged vulnerabilities, decoys, regression
-  constraints, bounded action budgets, Red/Blue timing fields, and a final
-  balance diagnosis so the Judge can classify the arena as too easy for Blue,
-  too easy for Red, balanced, or inconclusive.
 
 Round scoring is environment-outcome based. Red wins when the target goes down,
 crashes, leaks, violates an invariant, or remains exploitable inside the

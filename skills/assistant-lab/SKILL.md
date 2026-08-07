@@ -45,6 +45,9 @@ composes:
   - scillm
   - ops-runpod
   - task-monitor
+disciplines:
+  - ml-training
+  - evaluation-quality
 ---
 
 # assistant-lab

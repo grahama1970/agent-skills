@@ -27,6 +27,9 @@ composes:
   - memory
   - create-music
   - task-monitor
+disciplines:
+  - ml-training
+  - voice-audio
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

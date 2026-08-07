@@ -20,6 +20,9 @@ metadata:
 provides:
   - create-sound-design
 composes: [task-monitor]
+disciplines:
+  - content-creation
+  - voice-audio
 ---
 
 # create-sound-design

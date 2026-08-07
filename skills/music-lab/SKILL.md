@@ -36,6 +36,10 @@ composes:
   - test-interactions
   - scillm
   - scheduler
+disciplines:
+  - content-creation
+  - voice-audio
+  - ml-training
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

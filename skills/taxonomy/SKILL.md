@@ -33,6 +33,8 @@ taxonomy:
   - classification
   - bridging
   - precision
+disciplines:
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -56,6 +56,9 @@ taxonomy:
   - validation
   - precision
   - resilience
+disciplines:
+  - engineering-standards
+  - developer-tooling
 ---
 
 # Rust Best Practices (Project Skill)

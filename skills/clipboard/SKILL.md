@@ -16,6 +16,8 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-kde
+disciplines:
+  - developer-tooling
 ---
 
 # Clipboard

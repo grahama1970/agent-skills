@@ -10,6 +10,9 @@ allowed-tools:
   - Bash
 provides:
   - monitor-website
+disciplines:
+  - observability-operations
+  - content-creation
 ---
 
 # monitor-website

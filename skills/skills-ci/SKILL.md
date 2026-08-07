@@ -26,6 +26,9 @@ composes:
 taxonomy:
   - validation
   - compliance
+disciplines:
+  - developer-tooling
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

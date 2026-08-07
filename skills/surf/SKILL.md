@@ -99,6 +99,8 @@ complies:
   - best-practices-python
   - best-practices-react
   - best-practices-scillm
+disciplines:
+  - browser-automation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -1665,6 +1667,45 @@ cropped = smart_crop(full_page_bytes, region="detail")
 - **Already high-quality**: Professional screenshots, marketing images
 - **Analyzing layout/design**: Preprocessing may alter proportions
 - **Pixel-perfect comparison**: Any transform breaks exact matching
+
+## Inspecting live browser state (use this, not a debugger)
+
+`surf` is the live-state inspector for anything running in the browser. When a
+lane is stuck, confused, or a provider "looks fine but isn't", read the real
+authenticated tab:
+
+```bash
+./run.sh js "JSON.stringify({
+  url: location.href,
+  vis: document.visibilityState,
+  composer: !!document.querySelector('#prompt-textarea, [contenteditable=true]'),
+  loginWall: /log in|sign up/i.test(document.body.innerText.slice(0, 400)),
+  streaming: !!document.querySelector('[data-testid=stop-button]'),
+  turns: document.querySelectorAll('div.markdown').length
+})" --tab-id <ID> --no-activate
+```
+
+That single call distinguishes the states that otherwise get guessed at: auth
+lost, answer still generating, submit surface missing, no turn landed.
+
+Rules learned the expensive way (2026-08-03/04):
+
+- **Do not attach a breakpoint debugger to a live browser lane.** An in-process
+  harness got 0 hits in 10 minutes because the lane was blocked on Chrome.
+  `/debugger` is for the calling skill's own Python; `surf js` is for page state.
+- **Do not launch a separate browser to inspect state.** A fresh profile has no
+  provider session and trips Cloudflare — a probe against one reported
+  `loginWall: true` on a site that was logged in through the extension. Surf
+  already controls the authenticated Chrome; that is the only session that can
+  answer provider questions.
+- **`document.hidden` means "not the selected tab of its window", not "window
+  unfocused".** A tab alone in an unfocused window reports `visible`; a
+  non-selected tab in a shared window reports `hidden`, and providers defer DOM
+  updates while hidden. Give each concurrent provider seat its own unfocused
+  window rather than tabs in one window.
+- **Read `/tmp/surf-host.log` for lease questions.** `"outcome":"acquired"`
+  without a matching release names the holder; `queue-timeout` on `window.new`
+  means something held an unscoped lease.
 
 ## Troubleshooting
 

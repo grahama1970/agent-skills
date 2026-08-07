@@ -34,6 +34,9 @@ taxonomy:
   - agent-runtime
   - receipts
   - terminal-control
+disciplines:
+  - agentic-orchestration
+  - observability-operations
 ---
 
 # Herdr Workstation

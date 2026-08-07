@@ -25,6 +25,9 @@ taxonomy:
   - resilience
   - ingestion
   - security
+disciplines:
+  - compliance-security
+  - data-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

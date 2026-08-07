@@ -18,6 +18,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - observability-operations
+  - data-engineering
 ---
 
 # Batch Report Skill

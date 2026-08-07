@@ -1,5 +1,7 @@
 # tau
 
+> **Disciplines:** agentic-orchestration
+
 ![T'au card](../../docs/assets/project-cards/tau.webp)
 
 Tau is the Memory-First Zero-Trust Agent Harness behind my goal-locked agent

@@ -19,6 +19,9 @@ metadata:
 provides:
   - fixture-tricky
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 # Fixture Tricky Skill

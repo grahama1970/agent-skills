@@ -32,6 +32,9 @@ composes:
   - task-monitor
   - create-figure
   - analytics
+disciplines:
+  - evaluation-quality
+  - persona-simulation
 ---
 
 ## Standard Review Iteration Parameters

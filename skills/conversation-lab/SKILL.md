@@ -29,6 +29,9 @@ taxonomy:
   - validation
   - iteration
   - convergence
+disciplines:
+  - persona-simulation
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

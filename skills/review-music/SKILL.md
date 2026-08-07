@@ -21,6 +21,9 @@ metadata:
 provides:
   - review-music
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

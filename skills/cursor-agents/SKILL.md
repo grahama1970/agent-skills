@@ -25,6 +25,9 @@ taxonomy:
   - external-api
   - verification
 runtime_self_improvement: none
+disciplines:
+  - agentic-orchestration
+  - developer-tooling
 ---
 
 # Cursor Agents

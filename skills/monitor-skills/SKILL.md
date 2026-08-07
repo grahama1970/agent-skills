@@ -25,6 +25,9 @@ composes:
 taxonomy:
   - observability
   - drift-detection
+disciplines:
+  - observability-operations
+  - developer-tooling
 ---
 
 # Monitor Skills

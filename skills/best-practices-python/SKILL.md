@@ -30,6 +30,9 @@ provides:
   - best-practices-python
 composes:
   - task-monitor
+disciplines:
+  - engineering-standards
+  - developer-tooling
 ---
 
 # Python Best Practices (Project Skill)

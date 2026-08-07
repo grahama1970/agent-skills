@@ -26,6 +26,9 @@ provides:
   - best-practices-streamdeck
 composes:
   - task-monitor
+disciplines:
+  - engineering-standards
+  - developer-tooling
 ---
 
 # Stream Deck Best Practices (Project Skill)

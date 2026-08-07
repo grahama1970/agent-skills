@@ -1,5 +1,7 @@
 # Best Practices: Kling Contact Sheet Skill
 
+> **Disciplines:** engineering-standards · content-creation
+
 This bundle is a reusable skill for designing, auditing, and packaging AI-video-ready reference images for Kling-style workflows.
 
 It is optimized for:

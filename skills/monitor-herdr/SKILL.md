@@ -29,6 +29,9 @@ taxonomy:
   - observability
   - orchestration
   - resilience
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 # Monitor Herdr

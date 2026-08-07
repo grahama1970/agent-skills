@@ -9,6 +9,8 @@ provides:
   - create-ksml
 composes:
   - task-monitor
+disciplines:
+  - content-creation
 ---
 
 # create-ksml

@@ -24,6 +24,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - data-engineering
+  - content-creation
 ---
 
 # Analytics Skill

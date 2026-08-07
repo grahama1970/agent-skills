@@ -1,5 +1,7 @@
 # Persona Dream
 
+> **Disciplines:** persona-simulation · memory-knowledge
+
 ![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, and three things return to memory — what she concluded, the imagery and voice the dream produced, and what a human said back, each as a typed record.](assets/readme/research-loop.webp)
 
 Persona Dream gives a persistent multimodal voice persona — a long-lived agent

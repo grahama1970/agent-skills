@@ -28,6 +28,9 @@ taxonomy:
   - design
   - validation
   - coordination
+disciplines:
+  - content-creation
+  - ui-design-engineering
 ---
 
 # Project Infographic

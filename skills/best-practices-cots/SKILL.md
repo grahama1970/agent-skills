@@ -17,6 +17,10 @@ composes:
 provides:
   - cots-compliance-report
   - cots-fix-plan
+disciplines:
+  - engineering-standards
+  - compliance-security
+  - ui-design-engineering
 ---
 
 # /best-practices-cots

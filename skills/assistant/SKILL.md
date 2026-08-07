@@ -27,6 +27,9 @@ composes:
   - scillm
   - memory
   - task-monitor
+disciplines:
+  - model-ops
+  - ml-training
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

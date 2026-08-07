@@ -16,6 +16,9 @@ composes:
   - memory
 provides:
   - evidence-case-convergence
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

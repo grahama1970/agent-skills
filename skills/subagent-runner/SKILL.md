@@ -28,6 +28,8 @@ taxonomy:
   - execution
   - orchestration
   - resilience
+disciplines:
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

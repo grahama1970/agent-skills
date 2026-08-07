@@ -17,6 +17,9 @@ metadata:
 provides:
   - create-code
 composes: [task-monitor]
+disciplines:
+  - agentic-orchestration
+  - developer-tooling
 ---
 
 # Create Code Skill

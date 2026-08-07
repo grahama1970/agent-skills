@@ -26,6 +26,9 @@ metadata:
 provides:
   - monitor-taxonomy
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - memory-knowledge
 ---
 
 # Monitor Taxonomy

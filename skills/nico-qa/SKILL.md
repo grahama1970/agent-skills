@@ -16,6 +16,9 @@ composes:
   - surf
   - test-interactions
   - memory
+disciplines:
+  - evaluation-quality
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

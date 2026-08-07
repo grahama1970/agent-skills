@@ -17,6 +17,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - data-engineering
+  - evaluation-quality
 ---
 
 # Data Audit

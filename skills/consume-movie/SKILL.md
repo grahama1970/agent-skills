@@ -19,6 +19,9 @@ metadata:
 provides:
   - consume-movie
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - content-creation
 ---
 
 # Consume Movie Skill

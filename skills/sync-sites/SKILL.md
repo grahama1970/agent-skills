@@ -11,6 +11,9 @@ allowed-tools:
 provides:
   - sync-sites
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - compliance-security
 ---
 
 # sync-sites

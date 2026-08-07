@@ -27,6 +27,9 @@ complies:
 taxonomy:
   - orchestration
   - validation
+disciplines:
+  - browser-automation
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

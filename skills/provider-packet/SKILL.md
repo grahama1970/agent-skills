@@ -27,6 +27,9 @@ taxonomy:
   - provider
   - receipt
   - fail-closed
+disciplines:
+  - content-creation
+  - evaluation-quality
 ---
 
 # Provider Packet

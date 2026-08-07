@@ -15,6 +15,9 @@ complies:
   - best-practices-security
   - best-practices-sparta
   - best-practices-chat
+disciplines:
+  - engineering-standards
+  - ui-design-engineering
 ---
 
 # Best Practices Chat Skill — Sparta Chat

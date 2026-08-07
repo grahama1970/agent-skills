@@ -28,6 +28,9 @@ metadata:
 provides:
   - ops-chutes
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - model-ops
 ---
 
 # Ops Chutes Skill

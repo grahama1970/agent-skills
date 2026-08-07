@@ -16,6 +16,9 @@ provides:
 composes: []
 taxonomy:
   - operational
+disciplines:
+  - observability-operations
+  - ui-design-engineering
 ---
 
 # /embry-dashboard

@@ -30,6 +30,9 @@ composes:
   - best-practices-python
   - best-practices-skills
   - memory
+disciplines:
+  - engineering-standards
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

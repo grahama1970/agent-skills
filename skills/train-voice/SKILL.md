@@ -22,6 +22,9 @@ metadata:
 provides:
   - train-voice
 composes: [task-monitor]
+disciplines:
+  - ml-training
+  - voice-audio
 ---
 
 # train-voice

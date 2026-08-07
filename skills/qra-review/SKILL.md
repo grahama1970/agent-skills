@@ -33,6 +33,10 @@ requires:
   - taxonomy
   - dogpile
   - create-figure
+disciplines:
+  - compliance-security
+  - human-collaboration
+  - evaluation-quality
 ---
 
 # /qra-review

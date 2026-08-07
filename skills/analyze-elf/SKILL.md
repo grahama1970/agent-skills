@@ -31,6 +31,10 @@ taxonomy:
   - analysis
   - reverse-engineering
   - binary
+disciplines:
+  - developer-tooling
+  - extraction
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

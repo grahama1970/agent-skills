@@ -36,6 +36,8 @@ taxonomy:
   - security
   - corruption
   - stealth
+disciplines:
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

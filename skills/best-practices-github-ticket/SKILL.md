@@ -34,6 +34,9 @@ taxonomy:
   - governance
   - orchestration
   - proof
+disciplines:
+  - engineering-standards
+  - developer-tooling
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE TRIAGING, EDITING, VERIFYING, COMMENTING ON, OR CLOSING A GITHUB TICKET.

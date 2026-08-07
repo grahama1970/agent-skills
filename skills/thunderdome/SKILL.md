@@ -43,6 +43,9 @@ composes:
 taxonomy:
   - precision
   - resilience
+disciplines:
+  - agentic-orchestration
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -30,6 +30,10 @@ composes:
 taxonomy:
   - Detect
   - Model
+disciplines:
+  - evaluation-quality
+  - model-ops
+  - observability-operations
 ---
 
 # dum-dum

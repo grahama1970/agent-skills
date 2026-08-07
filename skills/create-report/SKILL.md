@@ -45,6 +45,9 @@ taxonomy:
   - validation
   - precision
   - project-state
+disciplines:
+  - content-creation
+  - observability-operations
 ---
 
 # create-report

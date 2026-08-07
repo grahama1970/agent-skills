@@ -20,6 +20,9 @@ provides:
 composes:
   - memory
   - task-monitor
+disciplines:
+  - research-retrieval
+  - developer-tooling
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

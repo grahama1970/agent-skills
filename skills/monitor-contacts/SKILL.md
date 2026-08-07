@@ -22,6 +22,9 @@ metadata:
 provides:
   - monitor-contacts
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - research-retrieval
 ---
 
 # monitor-contacts

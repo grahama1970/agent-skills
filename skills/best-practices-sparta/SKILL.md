@@ -24,6 +24,9 @@ complies:
   - best-practices-skills
   - best-practices-sparta
   - best-practices-security
+disciplines:
+  - engineering-standards
+  - compliance-security
 ---
 
 # SPARTA Pipeline Best Practices

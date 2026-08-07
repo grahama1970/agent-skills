@@ -37,6 +37,8 @@ taxonomy:
   - design
   - ui
   - orchestration
+disciplines:
+  - ui-design-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

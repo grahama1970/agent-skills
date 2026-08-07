@@ -25,6 +25,9 @@ provides:
   - judge
   - models
   - seed-memory
+disciplines:
+  - evaluation-quality
+  - model-ops
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

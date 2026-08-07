@@ -26,6 +26,9 @@ taxonomy:
   - monitoring
   - operations
   - llm
+disciplines:
+  - observability-operations
+  - model-ops
 ---
 
 # monitor-ollama

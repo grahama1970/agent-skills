@@ -22,6 +22,9 @@ taxonomy:
   - inference
   - reasoning
   - llm
+disciplines:
+  - model-ops
+  - agentic-orchestration
 ---
 
 # Codex Skill

@@ -1,5 +1,7 @@
 # surf
 
+> **Disciplines:** browser-automation
+
 ![Surf card](../../docs/assets/project-cards/surf.webp)
 
 Browser automation and WebGPT transport for agents.

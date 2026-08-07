@@ -1,5 +1,7 @@
 # review-page skill
 
+> **Disciplines:** evaluation-quality · browser-automation · ui-design-engineering
+
 `review-page` standardizes WebGPT-centered page reviews for UI/product surfaces.
 
 It creates:

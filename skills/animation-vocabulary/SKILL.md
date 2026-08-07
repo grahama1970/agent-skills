@@ -6,6 +6,8 @@ provides:
 composes: []
 complies:
   - best-practices-skills
+disciplines:
+  - ui-design-engineering
 ---
 
 # Animation Vocabulary

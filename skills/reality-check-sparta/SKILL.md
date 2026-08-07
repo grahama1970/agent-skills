@@ -6,6 +6,9 @@ triggers: reality check sparta, sparta check, sparta quality, adversarial check,
 provides:
   - reality-check-sparta
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 # reality-check-sparta

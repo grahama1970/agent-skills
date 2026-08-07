@@ -8,6 +8,10 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - extraction
+  - evaluation-quality
+  - persona-simulation
 ---
 
 # extractor-quality-check

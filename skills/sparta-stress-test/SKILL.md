@@ -11,6 +11,9 @@ composes:
   - sparta-intent
   - create-figure
   - task-monitor
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 # /sparta-stress-test

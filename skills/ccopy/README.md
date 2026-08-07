@@ -1,5 +1,7 @@
 # ccopy
 
+> **Disciplines:** developer-tooling
+
 Copy the last complete Cursor **user + assistant** turn to the clipboard.
 
 ## Install

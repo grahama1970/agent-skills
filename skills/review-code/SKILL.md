@@ -45,6 +45,9 @@ composes: [task-monitor, scillm, ask, project-knowledge]
 taxonomy:
   - validation
   - code-quality
+disciplines:
+  - evaluation-quality
+  - developer-tooling
 ---
 
 ## Standard Review Iteration Parameters

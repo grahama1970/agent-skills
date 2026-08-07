@@ -19,6 +19,9 @@ composes: []
 taxonomy:
   - precision
   - validation
+disciplines:
+  - agentic-orchestration
+  - developer-tooling
 ---
 
 # phart-dag-chart

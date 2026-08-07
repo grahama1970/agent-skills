@@ -18,6 +18,9 @@ metadata:
 provides:
   - ingest-yt-history
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - persona-simulation
 ---
 
 # YouTube History → Horus Music Discovery

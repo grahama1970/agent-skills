@@ -27,6 +27,9 @@ taxonomy:
   - architecture
   - precision
   - compliance
+disciplines:
+  - evaluation-quality
+  - research-retrieval
 ---
 
 # Grounded

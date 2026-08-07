@@ -22,6 +22,8 @@ metadata:
 provides:
   - github-search
 composes: [brave-search, task-monitor]
+disciplines:
+  - research-retrieval
 ---
 
 # GitHub Search

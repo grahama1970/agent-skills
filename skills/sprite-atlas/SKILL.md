@@ -32,6 +32,9 @@ taxonomy:
   - image-processing
   - asset-pipeline
   - validation
+disciplines:
+  - content-creation
+  - ui-design-engineering
 ---
 
 # Sprite Atlas

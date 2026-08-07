@@ -1,5 +1,7 @@
 # agentic-evals
 
+> **Disciplines:** evaluation-quality · agentic-orchestration
+
 Reference skill bundle for deterministic, multi-trial agentic evaluation.
 
 Contents:

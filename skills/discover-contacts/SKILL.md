@@ -27,6 +27,8 @@ metadata:
 provides:
   - discover-contacts
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
 ---
 
 # discover-contacts

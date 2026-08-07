@@ -36,6 +36,9 @@ taxonomy:
   - validation
   - documentation
   - quality-assessment
+disciplines:
+  - evaluation-quality
+  - content-creation
 ---
 
 ## Standard Review Iteration Parameters

@@ -31,6 +31,9 @@ metadata:
 provides:
   - sparta-review
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 # sparta-review

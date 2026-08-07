@@ -37,6 +37,10 @@ composes:
 
 consumers:
   - ask  # $ask webgpt owns WebGPT adjudication
+disciplines:
+  - evaluation-quality
+  - browser-automation
+  - ui-design-engineering
 ---
 
 # review-page

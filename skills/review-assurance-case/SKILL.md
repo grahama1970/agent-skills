@@ -28,6 +28,9 @@ provides:
   - structural-integrity-check
   - evidence-sufficiency-audit
   - defeater-analysis
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

@@ -35,6 +35,8 @@ composes:
 taxonomy:
   - infrastructure
   - llm-completion
+disciplines:
+  - model-ops
 ---
 
 # chutes-call

@@ -18,6 +18,9 @@ metadata:
 provides:
   - rate-limit-recovery
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 # Rate Limit Recovery Skill

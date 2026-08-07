@@ -31,6 +31,9 @@ taxonomy:
   - review
   - quality
   - orchestration
+disciplines:
+  - evaluation-quality
+  - developer-tooling
 ---
 
 # /code-review-runner

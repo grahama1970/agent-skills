@@ -26,6 +26,9 @@ complies:
   - best-practices-python
   - best-practices-scillm
   - best-practices-arangodb
+disciplines:
+  - extraction
+  - data-engineering
 ---
 
 # fact-extractor

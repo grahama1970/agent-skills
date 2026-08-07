@@ -1,5 +1,7 @@
 # herdr-workstation
 
+> **Disciplines:** agentic-orchestration · observability-operations
+
 `herdr-workstation` is a skill for turning long-running project-agent work into visible Herdr workstations.
 
 It is designed for the pattern we discussed:

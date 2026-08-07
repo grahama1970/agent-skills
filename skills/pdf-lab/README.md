@@ -1,5 +1,7 @@
 # pdf-lab
 
+> **Disciplines:** extraction · evaluation-quality
+
 ![pdf-lab overview](assets/pdf-lab-overview.png)
 
 `pdf-lab` is a self-improving PDF extraction convergence loop. It diagnoses

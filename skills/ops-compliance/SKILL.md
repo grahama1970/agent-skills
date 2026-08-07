@@ -22,6 +22,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - compliance-security
+  - observability-operations
 ---
 
 # Compliance-Ops: Compliance Framework Checker

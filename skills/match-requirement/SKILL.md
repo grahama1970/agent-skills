@@ -26,6 +26,9 @@ composes:
 taxonomy:
   - verification
   - compliance
+disciplines:
+  - memory-knowledge
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -28,6 +28,9 @@ composes:
 taxonomy:
   - security
   - compliance
+disciplines:
+  - compliance-security
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

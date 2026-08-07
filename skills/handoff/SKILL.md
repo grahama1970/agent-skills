@@ -18,6 +18,9 @@ metadata:
 provides:
   - handoff
 composes: [task-monitor]
+disciplines:
+  - human-collaboration
+  - observability-operations
 ---
 
 # Handoff Skill

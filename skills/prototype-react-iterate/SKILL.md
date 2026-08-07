@@ -20,6 +20,9 @@ metadata:
 provides:
   - prototype-react-iterate
 composes: [task-monitor]
+disciplines:
+  - ui-design-engineering
+  - persona-simulation
 ---
 
 # Prototype React Iterate

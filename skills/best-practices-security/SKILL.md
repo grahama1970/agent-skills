@@ -32,6 +32,9 @@ taxonomy:
   - resilience
   - precision
   - corruption
+disciplines:
+  - engineering-standards
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

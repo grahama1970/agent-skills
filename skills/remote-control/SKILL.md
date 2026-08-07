@@ -25,6 +25,9 @@ tags:
   - remote
   - iPad
   - mcp
+disciplines:
+  - developer-tooling
+  - agentic-orchestration
 ---
 
 # Remote Control — Open Any Project from iPad

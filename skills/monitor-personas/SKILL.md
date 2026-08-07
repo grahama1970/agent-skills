@@ -23,6 +23,9 @@ composes:
   - memory
   - monitor-skills
   - task-monitor
+disciplines:
+  - observability-operations
+  - persona-simulation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

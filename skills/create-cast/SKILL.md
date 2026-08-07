@@ -26,6 +26,9 @@ composes:
   - create-story
   - memory
   - task-monitor
+disciplines:
+  - content-creation
+  - persona-simulation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -19,6 +19,9 @@ allowed-tools:
   - Python
 metadata:
   short-description: Consume YouTube transcripts - search, index, take notes
+disciplines:
+  - data-engineering
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

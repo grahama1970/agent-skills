@@ -26,6 +26,8 @@ composes:
   - discover-movies
   - dogpile
   - task-monitor
+disciplines:
+  - research-retrieval
 ---
 
 # Discover Music Skill

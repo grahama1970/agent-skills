@@ -13,6 +13,9 @@ triggers:
 provides:
   - ops-nzbgeek
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - observability-operations
 ---
 
 # ops-nzbgeek - General-Purpose NZBGeek/SABnzbd Integration

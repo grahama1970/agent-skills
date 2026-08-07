@@ -19,6 +19,8 @@ metadata:
 provides:
   - security-scan
 composes: [task-monitor]
+disciplines:
+  - compliance-security
 ---
 
 # Security-Scan: Self-Hosted Security Scanning

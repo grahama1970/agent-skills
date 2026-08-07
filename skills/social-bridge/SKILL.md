@@ -24,6 +24,9 @@ metadata:
 provides:
   - social-bridge
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
+  - compliance-security
 ---
 
 # Social Bridge - Security Content Aggregator

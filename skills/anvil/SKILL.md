@@ -21,6 +21,10 @@ taxonomy:
   - hardening
   - validation
   - resilience
+disciplines:
+  - developer-tooling
+  - evaluation-quality
+  - compliance-security
 ---
 
 # Anvil Skill

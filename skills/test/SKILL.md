@@ -21,6 +21,9 @@ provides:
   - test
 composes:
   - task-monitor
+disciplines:
+  - evaluation-quality
+  - developer-tooling
 ---
 
 # /test — Unified Test Runner

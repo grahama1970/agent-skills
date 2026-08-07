@@ -41,6 +41,9 @@ taxonomy:
   - memory
   - validation
 runtime_self_improvement: basic
+disciplines:
+  - voice-audio
+  - agentic-orchestration
 ---
 
 # Embry Voice Control

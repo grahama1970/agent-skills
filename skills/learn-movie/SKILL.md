@@ -10,6 +10,9 @@ provides:
   - learn-movie
 composes:
   - task-monitor
+disciplines:
+  - data-engineering
+  - content-creation
 ---
 
 # learn-movie

@@ -37,6 +37,9 @@ taxonomy:
   - competition
   - selection
   - resilience
+disciplines:
+  - compliance-security
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -126,16 +129,6 @@ Required production invariants:
 - The scorekeeper records objective outcomes: system down, system still up after
   the allotted time, exploit success, crash artifacts, patch timing, regression
   behavior, resource limits, and replay results. It is not an LLM judge.
-- Battle Arena creators must emit a `battle.arena_balance_contract.v1` contract
-  before a scenario can be used for competitive relevance claims. The contract
-  must name the intended difficulty, Red success path, Blue defense path,
-  timing metrics, known shortcuts, and balance diagnosis fields. A scenario
-  where Blue trivially wins every generation, Red trivially wins every
-  generation, or either team has no plausible live path is a canary or fixture
-  only; it is not a relevant Battle Arena. Complex arena candidates should use
-  staged, multi-step vulnerabilities, decoys, regression constraints, and
-  bounded action budgets so Red discovery and Blue patching are both plausible
-  under the same Judge authority.
 
 Based on research into RvB framework, DARPA AIxCC, and Microsoft PyRIT:
 

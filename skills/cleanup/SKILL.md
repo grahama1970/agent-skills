@@ -25,6 +25,9 @@ complies:
   - best-practices-python
   - best-practices-report
   - best-practices-security
+disciplines:
+  - developer-tooling
+  - observability-operations
 ---
 
 # Cleanup Skill

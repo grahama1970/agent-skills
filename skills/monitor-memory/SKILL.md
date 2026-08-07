@@ -19,6 +19,9 @@ metadata:
 provides:
   - monitor-memory
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

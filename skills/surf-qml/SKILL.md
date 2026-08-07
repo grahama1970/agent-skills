@@ -26,6 +26,9 @@ metadata:
 provides:
   - surf-qml
 composes: [task-monitor]
+disciplines:
+  - browser-automation
+  - developer-tooling
 ---
 
 # surf-qml - QML/Qt Application Automation

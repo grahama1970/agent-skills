@@ -43,6 +43,9 @@ taxonomy:
   - precision
   - compliance
   - ux
+disciplines:
+  - engineering-standards
+  - content-creation
 ---
 
 # best-practices-report

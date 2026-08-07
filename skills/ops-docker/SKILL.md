@@ -18,6 +18,8 @@ metadata:
 provides:
   - ops-docker
 composes: [task-monitor]
+disciplines:
+  - observability-operations
 ---
 
 # Docker Ops

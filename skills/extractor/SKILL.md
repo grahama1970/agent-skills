@@ -37,6 +37,8 @@ taxonomy:
   - extraction
   - precision
 runtime_self_improvement: basic
+disciplines:
+  - extraction
 ---
 
 # Extractor

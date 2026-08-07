@@ -48,6 +48,10 @@ taxonomy:
   - corruption
   - precision
   - composition
+disciplines:
+  - data-engineering
+  - compliance-security
+  - research-retrieval
 ---
 
 # mailbox-mining

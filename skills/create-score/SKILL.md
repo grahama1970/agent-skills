@@ -26,6 +26,9 @@ composes:
   - create-sound-design
   - create-story
   - task-monitor
+disciplines:
+  - content-creation
+  - voice-audio
 ---
 
 # create-score

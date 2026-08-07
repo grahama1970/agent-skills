@@ -22,6 +22,8 @@ composes:
   - arxiv
   - ingest-book
   - task-monitor
+disciplines:
+  - data-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

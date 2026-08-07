@@ -24,6 +24,8 @@ metadata:
 taxonomy:
   - precision
   - resilience
+disciplines:
+  - evaluation-quality
 ---
 
 # eval-skills

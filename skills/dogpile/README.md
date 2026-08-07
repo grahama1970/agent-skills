@@ -1,5 +1,7 @@
 # dogpile
 
+> **Disciplines:** research-retrieval
+
 ![Dogpile card](../../docs/assets/project-cards/dogpile.webp)
 
 Dogpile is the broad research lane for agents: search everything useful, keep

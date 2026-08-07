@@ -46,6 +46,12 @@ case "$1" in
         shift
         exec python3 "$SCRIPT_DIR/scripts/assess_usage.py" "$@"
         ;;
+    ingest-skills)
+        # Canonical skill-catalog ingest: SKILL.md frontmatter (incl. disciplines)
+        # -> skill_descriptions for BM25/semantic/graph recall.
+        shift
+        exec uv run --directory "$MEMORY_ROOT" --all-extras memory-agent ingest-skills "$@"
+        ;;
     chain-learn)
         shift
         export PYTHONPATH="$MEMORY_ROOT/src"

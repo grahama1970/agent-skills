@@ -24,6 +24,9 @@ metadata:
 provides:
   - review-story
 composes: [task-monitor]
+disciplines:
+  - content-creation
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

@@ -27,6 +27,9 @@ taxonomy:
   - planning
   - self-improvement
   - validation
+disciplines:
+  - agentic-orchestration
+  - evaluation-quality
 ---
 
 # /governance

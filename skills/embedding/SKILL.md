@@ -28,6 +28,9 @@ composes:
 taxonomy:
   - search
   - similarity
+disciplines:
+  - memory-knowledge
+  - model-ops
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

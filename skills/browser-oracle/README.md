@@ -1,5 +1,7 @@
 # browser-oracle
 
+> **Disciplines:** browser-automation · agentic-orchestration
+
 Maps **directories → browser-oracle project names** (git) and **project names → tab id / URL** (machine-local `~/.pi`).
 
 ## Quick start

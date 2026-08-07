@@ -17,6 +17,9 @@ metadata:
 provides:
   - ingest-training-datalake
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - ml-training
 ---
 
 # ingest-training-datalake

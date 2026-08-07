@@ -16,6 +16,9 @@ metadata:
 provides:
   - mine-transcripts
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - ml-training
 ---
 
 # mine-transcripts

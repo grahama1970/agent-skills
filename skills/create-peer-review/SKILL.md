@@ -30,6 +30,9 @@ composes:
   - review-paper
   - dogpile
   - interview
+disciplines:
+  - evaluation-quality
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

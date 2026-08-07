@@ -187,6 +187,12 @@ def build_packet(ctx: RunContext) -> str:
         timeout=600,
         env={"PROJECT_STATE_ROOT": str(REPO_ROOT)},
     )
+    discipline_check = _context_block(
+        "project-taxonomy discipline check (unmapped skills fail closed)",
+        [str(SKILLS_ROOT / "project-taxonomy" / "run.sh"), "check"],
+        timeout=180,
+        max_chars=2000,
+    )
     workstation = _context_block(
         "ops-workstation quick health",
         [str(SKILLS_ROOT / "ops-workstation" / "run.sh")],
@@ -226,6 +232,7 @@ Target artifacts (amended skills, last 24h):
 
 Current evidence:
 {project_state}
+{discipline_check}
 {workstation}
 External research (shared identically with every seat):
 {chr(10).join(research_parts)}

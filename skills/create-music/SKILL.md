@@ -27,6 +27,9 @@ composes:
   - discover-music
   - learn-artist
   - task-monitor
+disciplines:
+  - content-creation
+  - voice-audio
 ---
 
 # create-music

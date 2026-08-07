@@ -29,6 +29,9 @@ taxonomy:
 provides:
   - monitor-security
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - observability-operations
 ---
 
 # monitor-security

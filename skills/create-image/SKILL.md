@@ -23,6 +23,8 @@ composes:
   - dogpile
   - create-movie
   - task-monitor
+disciplines:
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

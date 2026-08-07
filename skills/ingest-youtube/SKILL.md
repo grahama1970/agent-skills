@@ -27,6 +27,9 @@ composes:
   - taxonomy
   - task-monitor
   - doc2qra
+disciplines:
+  - data-engineering
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -34,6 +34,9 @@ taxonomy:
   - validation
   - resilience
   - artifact
+disciplines:
+  - engineering-standards
+  - human-collaboration
 ---
 
 # Best Practices: Greenfield Collaboration

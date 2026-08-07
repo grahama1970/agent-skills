@@ -23,6 +23,9 @@ composes:
 taxonomy:
   - observability
   - developer-tools
+disciplines:
+  - observability-operations
+  - ui-design-engineering
 ---
 
 # Dashboard Skill

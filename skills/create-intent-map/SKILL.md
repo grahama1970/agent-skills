@@ -20,6 +20,9 @@ metadata:
 provides:
   - create-intent-map
 composes: [task-monitor]
+disciplines:
+  - ml-training
+  - memory-knowledge
 ---
 
 # Create Intent Map

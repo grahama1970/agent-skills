@@ -10,6 +10,8 @@ allowed-tools:
 provides:
   - export-oscal
 composes: [task-monitor]
+disciplines:
+  - compliance-security
 ---
 
 # Export OSCAL

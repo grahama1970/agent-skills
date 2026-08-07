@@ -23,6 +23,9 @@ metadata:
 provides:
   - debug-fetcher
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
+  - developer-tooling
 ---
 
 # Debug-Fetcher Skill

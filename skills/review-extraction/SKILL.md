@@ -34,6 +34,9 @@ taxonomy:
   - validation
   - evidence
   - pdf
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

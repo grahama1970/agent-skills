@@ -50,6 +50,9 @@ taxonomy:
   - symbiogenesis
   - evolution
   - precision
+disciplines:
+  - developer-tooling
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

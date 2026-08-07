@@ -12,6 +12,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - observability-operations
+  - data-engineering
 ---
 
 # monitor-drift-sensors

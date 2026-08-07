@@ -26,6 +26,7 @@ composes:
   - ask
   - memory
   - project-state
+  - project-taxonomy
   - brave-search
   - ops-workstation
   - scheduler
@@ -39,6 +40,10 @@ taxonomy:
   - review
   - deliberation
   - self-improvement
+disciplines:
+  - observability-operations
+  - agentic-orchestration
+  - evaluation-quality
 ---
 
 # Monitor Projects

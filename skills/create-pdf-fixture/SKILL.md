@@ -19,6 +19,9 @@ metadata:
 provides:
   - create-pdf-fixture
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 # create-pdf-fixture

@@ -40,6 +40,9 @@ complies:
   - best-practices-python
   - best-practices-agent
   - best-practices-scillm
+disciplines:
+  - data-engineering
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

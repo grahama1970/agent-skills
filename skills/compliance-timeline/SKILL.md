@@ -10,6 +10,9 @@ allowed-tools:
 provides:
   - compliance-timeline
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - memory-knowledge
 ---
 
 # compliance-timeline

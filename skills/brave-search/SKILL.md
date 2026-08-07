@@ -27,6 +27,8 @@ composes:
 taxonomy:
   - research
   - web
+disciplines:
+  - research-retrieval
 ---
 
 # Brave Search

@@ -42,6 +42,9 @@ taxonomy:
   - orchestration
   - tts
   - validation
+disciplines:
+  - ml-training
+  - voice-audio
 ---
 
 # orpheus-tts-voice-trainer

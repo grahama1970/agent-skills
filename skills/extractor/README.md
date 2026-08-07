@@ -1,5 +1,7 @@
 # extractor
 
+> **Disciplines:** extraction
+
 Extractor is a thin, zero-choice agent-facing wrapper for the canonical
 Extractor project. It accepts one local file, forwards it to
 `extractor extract`, and returns the canonical `extractor.result.v1` payload.

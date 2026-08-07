@@ -28,6 +28,9 @@ metadata:
 provides:
   - argue
 composes: [task-monitor]
+disciplines:
+  - agentic-orchestration
+  - persona-simulation
 ---
 
 # argue

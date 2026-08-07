@@ -30,6 +30,9 @@ taxonomy:
   - knowledge-management
   - validation
   - drift-detection
+disciplines:
+  - evaluation-quality
+  - observability-operations
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE RUNNING OR PATCHING THIS SKILL.

@@ -21,6 +21,9 @@ composes:
   - classifier-lab
   - dogpile
   - task-monitor
+disciplines:
+  - ml-training
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -24,6 +24,9 @@ composes:
   - memory
   - taxonomy
   - task-monitor
+disciplines:
+  - data-engineering
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -50,8 +53,8 @@ cd .pi/skills/ingest-code
 # CWE scan only (legacy mode)
 ./run.sh scan /path/to/codebase --cwe-only
 
-# Full offline artifact export without storing to /memory
-./run.sh scan /path/to/codebase --treesitter --dry-run
+# Preview without storing to /memory
+./run.sh scan /path/to/codebase --dry-run
 
 # Include Tree-sitter structured code symbols for memory's hybrid code index
 ./run.sh scan /path/to/codebase --treesitter
@@ -73,7 +76,7 @@ Options:
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
   --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts to /memory only
+  --no-code-index    Disable structured code-symbol upserts
   --dry-run          Preview without writing to /memory
   --scope            Memory scope (default: "code")
   --batch-size       Files per CWE scan batch (default: 50)
@@ -90,7 +93,7 @@ Options:
   --validate         Run LLM validation
   --treesitter       Run Tree-sitter scan for structured code symbols
   --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts to /memory only
+  --no-code-index    Disable structured code-symbol upserts
   --scope            Memory scope
 ```
 
@@ -124,30 +127,13 @@ Each record includes:
 
 | Field | Purpose |
 |-------|---------|
-| `repo`, `repository_id`, `branch`, `commit`, `path` | Canonical repository identity, scope, and staleness control |
+| `repo`, `branch`, `commit`, `path` | Scope and staleness control |
 | `language`, `symbol_kind`, `symbol_name`, `qualified_name` | Symbol filtering and exact lookup |
 | `start_line`, `end_line`, `code`, `content_hash` | Cited source retrieval and deterministic updates |
 | `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for memory's sparse/hybrid retrieval |
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
 
-`repository_id` is the producer-level identity used for file and symbol IDs. It
-is resolved from an explicit `INGEST_CODE_REPOSITORY_ID` /
-`CODE_SYMBOLS_REPOSITORY_ID` value first, then from normalized
-`remote.origin.url`. Checkout directory basename is not authoritative. If no
-explicit or Git remote identity is available, the scan uses a non-authoritative
-local fallback and marks the code-graph bundle as not reconciliation-eligible.
-Symbol documents publish `identity_algorithm_version` and retain `legacy_key`
-for migration diagnostics.
-
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
-
-Structured code-index success requires a `/memory /upsert` write to
-`collection="code_symbols"` and bounded exact-key readback of a matching
-`symbol_id`, `symbol_version_id`, repository, branch, path, source range, and
-content hash. If structured upsert falls back to `/store` or `/learn`, the
-fallback remains compatibility storage only: `.ingest-code.json` records
-`write_status="degraded"`, keeps fallback counts separate, and does not set
-`code_index.enabled` or `hybrid_retrieval_capable`.
 
 ## Directory Filtering
 
@@ -204,11 +190,6 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
     "collection": "code_symbols",
     "treesitter": true,
     "symbols_stored": 4182,
-    "structured_upsert_stored": 4182,
-    "legacy_fallback_stored": 0,
-    "structured_verified": 4182,
-    "failed": 0,
-    "write_status": "complete",
     "lexical_terms": true,
     "line_ranges": true,
     "content_hashes": true,
@@ -229,57 +210,20 @@ should not query `/memory` during a task:
 
 | Artifact | Purpose |
 |----------|---------|
-| `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, local artifact paths, and accepted bundle hashes |
+| `.ingest-code.json` | Marker with scan status, scope, scan roots, code-index counts, and local artifact paths |
 | `.cleanup-evidence.json` | Per-candidate dependency evidence consumed by `$cleanup` for tracked-file mutation decisions |
 | `artifacts/ingest-code/code-symbols.jsonl` | JSONL code-symbol records with paths, line ranges, signatures, docstrings, lexical terms, and snippets for offline lookup |
-| `artifacts/ingest-code/code-graph/manifest.json` | Bundle schema, artifact schema versions, repository identity, ref/commit, extractor/parser versions, configuration digest, worktree state, authoritative scan roots, counts, coverage status, reconciliation eligibility, and exact artifact list |
+| `artifacts/ingest-code/code-graph/manifest.json` | Bundle metadata, repository identity, scan roots, dirty tracked-worktree state, counts, and artifact list |
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic resolved import edges between scanned files |
-| `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct extraction, parse, read/hash, ignored-file, binary, too-large, unsupported, and skip diagnostics with exact root-relative paths |
-| `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with extractor outcomes, parsed, failed, ignored, unsupported, binary, too-large, unreadable, symbol, edge, and diagnostic counts; incomplete extraction sets `fail_closed=true` |
-| `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle plus the v1 `bundle_digest` over sorted artifact names, schema versions, and non-checksum artifact hashes |
+| `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
+| `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
+| `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
 
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
-
-`scan --treesitter --dry-run` is the full offline artifact-export path for
-reviewers and GMO handoff. `--no-code-index` disables only structured
-`/memory /upsert`; Tree-sitter local artifacts and the code-graph bundle remain
-enabled when `--treesitter` is used. `rescan` is incremental scheduler evidence:
-unless it publishes a complete fresh full bundle, its marker uses
-`coverage_scope=incremental`, `reconciliation_eligible=false`, and cannot make a
-prior full bundle fresh by timestamp alone.
-
-The code-graph bundle is written to a sibling temporary directory, validated,
-and then published as the current artifact directory. The published directory
-must contain exactly the seven allowed files listed above, with no stale files
-from older schemas or interrupted runs. Host-specific absolute paths are not
-portable digest inputs; the manifest represents the repository root as `.`.
-Embedded `memory_document` fields in `symbols.jsonl` are compatibility
-projections only. The top-level symbol fields are canonical.
-
-`coverage.complete=true` is authoritative only when every configured scan root
-has a successful extraction outcome and every relevant discovered source file is
-accounted for. Missing, timed-out, non-zero, malformed, partial, or unexpectedly
-empty Tree-sitter extraction writes `coverage.complete=false`,
-`fail_closed=true`, and `reconciliation_eligible=false`. Read/hash failures,
-binary files, too-large files, unsupported files, Python parse failures, and
-non-Python files not reported by the configured extractor also fail closed.
-Ignored files are recorded as `ignored` diagnostics but do not by themselves
-make coverage incomplete.
-
-Do not use local artifacts for GMO reconciliation, "no callers", dead-code, or
-other absence-based claims unless the bundle checksum, `bundle_digest`,
-manifest `configuration_digest`, source/ref freshness, and
-`coverage.reconciliation_eligible=true` have all been checked.
-
-`.ingest-code.json` records `coverage_scope`, `reconciliation_eligible`,
-commit/ref, the accepted bundle hashes, source freshness status, successful scan
-roots, and failed scan roots. Agents must treat `code-symbols.jsonl` as a
-compatibility artifact unless the marker's `code_graph_freshness.status` is
-`fresh` and `blocks_negative_claims=false`.
 
 ## Related Skills
 

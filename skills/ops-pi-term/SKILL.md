@@ -39,6 +39,9 @@ taxonomy:
   - validation
   - resilience
   - precision
+disciplines:
+  - observability-operations
+  - ui-design-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

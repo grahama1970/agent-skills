@@ -57,6 +57,8 @@ triggers:
 provides:
   - ops-workstation
 composes: [task-monitor]
+disciplines:
+  - observability-operations
 ---
 
 # Workstation Ops

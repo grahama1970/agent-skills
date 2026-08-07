@@ -27,6 +27,8 @@ composes:
 taxonomy:
   - human-in-the-loop
   - collaboration
+disciplines:
+  - human-collaboration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

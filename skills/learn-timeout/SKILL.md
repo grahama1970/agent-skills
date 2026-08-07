@@ -12,6 +12,9 @@ provides:
   - learn-timeout
 composes:
   - task-monitor
+disciplines:
+  - ml-training
+  - observability-operations
 ---
 
 # Learn Timeout

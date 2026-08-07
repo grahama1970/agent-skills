@@ -28,6 +28,9 @@ metadata:
 provides:
   - ops-llm
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - model-ops
 ---
 
 # LLM Ops

@@ -49,6 +49,8 @@ taxonomy:
   - precision
 docs:
   arangodb: /best-practices-arangodb
+disciplines:
+  - memory-knowledge
 ---
 
 > **STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.**

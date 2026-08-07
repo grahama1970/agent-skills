@@ -44,6 +44,9 @@ taxonomy:
   - precision
   - resilience
   - fragility
+disciplines:
+  - observability-operations
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

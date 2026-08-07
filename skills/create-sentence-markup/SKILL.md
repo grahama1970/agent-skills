@@ -22,6 +22,9 @@ provides:
 composes:
   - extract-entities
   - interview
+disciplines:
+  - extraction
+  - ui-design-engineering
 ---
 
 # /create-sentence-markup

@@ -31,12 +31,16 @@ provides:
   - runtime-state-inspection
   - breakpoint-debugging
   - debugger-proof
-composes: []
+composes:
+  - brave-search
+  - dogpile
 taxonomy:
   - validation
   - debugging
   - evidence
   - resilience
+disciplines:
+  - developer-tooling
 ---
 
 # Debugger
@@ -86,6 +90,96 @@ patching a wrong hypothesis. If the observed state contradicts the planned edit,
 the edit must change or stop.
 
 Do not use `$debugger` as busywork for problems already explained by deterministic evidence, such as syntax errors, formatter failures, missing imports, dependency resolution, environment setup, type-checker diagnostics, formatter output, or a test assertion that directly names the incorrect literal value and requires no hidden state. Fix those directly, then test.
+
+## Route To The Right Evidence Layer First (operator 2026-08-04)
+
+A breakpoint is one evidence source, not the only one, and it is the WRONG one
+for most stuck states in this repo. Before setting a breakpoint, run this
+triage. It is a lookup, not a judgement call: the project agent does not get to
+decide which layer to read.
+
+| The stuck state | Read this FIRST | Not this |
+| --- | --- | --- |
+| A `/tau` DAG was rejected before dispatch | The `tau.dag_error.v1` payload: `verdict`, `failure_code`, `severity`, every `evidence.errors[]` entry, and `recommended_action{type,next_agent,reason}` | A breakpoint in the compiler; Tau already named the cause and the next step |
+| A `/tau` node was blocked at runtime | `receipt.alerts[]` — each carries `code`, `message`, and an `evidence` object naming node and handler | Inferring the failure from exit codes |
+| An `/ask` browser lane failed | `lane-diagnostics.json` in the lane artifact dir: the fixed check series plus its derived `diagnosis` | Guessing whether the tab died, drifted, or was rate-limited |
+| A browser page's live state is in question | `surf js --tab-id <id> --no-activate` | Attaching a breakpoint debugger to a lane blocked on Chrome — it gets zero hits |
+| A seam artifact is malformed | The `SeamViolation` error list, which carries the pydantic errors verbatim | Reading the producer's source to imagine what it emitted |
+| Your own Python does something you cannot explain from its receipts | **This skill.** Set the breakpoint | — |
+
+Only the last row is a debugger problem. The rows above it are already answered
+in writing by a tool that fails closed; a breakpoint there is slower, and it
+replaces an authoritative answer with a reconstruction of one.
+
+The rule this encodes: **`/debugger` is for state nothing wrote down.** When a
+contract validator, a receipt, or a diagnostic probe has already recorded the
+answer, reading it is the debugging step. Reach for a breakpoint when the
+failing transition happens inside your own process and left no artifact behind.
+
+### The escalation ladder
+
+The table above is a DISPATCH, not a sequence: exactly one row owns any given
+symptom, and the project agent reads that row's evidence first. Running
+`surf js` against a Tau contract rejection is wasted motion — Tau already wrote
+the cause and the next step into the payload. Escalate only when the owning
+layer did not resolve it.
+
+```text
+0. DISPATCH  - the symptom selects ONE row above. Read that evidence.
+               Most stuck states end here: the artifact names the cause.
+1. BREAKPOINT - the artifact did not explain it, or no artifact exists.
+               $debugger: break at the failing transition, inspect the frame.
+2. RESEARCH  - the observed state is real but its MEANING is unknown
+               (a provider changed, an API contract is unfamiliar, an error
+               string is undocumented). $brave-search or $dogpile, then retry
+               ONCE with what the search returned.
+3. STOP      - report NEEDS_ATTENTION with the evidence from every rung run.
+```
+
+Rung 2 is mandatory, not optional, after two failed focused attempts — the
+same bar `$tau` enforces on its own subagents. Do not take a third attempt
+from the same stale context: a retry with no new input is spray-and-pray, and
+the search exists to supply the new input.
+
+Each rung must produce an artifact before the next one starts. "I looked at the
+receipt" without quoting the field, or "I searched" without the query and what
+it returned, does not advance the ladder — it just relabels a guess.
+
+### The ladder is enforced in code, not by this document
+
+Write a `debugger.ladder.v1` receipt as you climb, and validate it:
+
+```bash
+skills/debugger/scripts/validate_debugger_ladder.py ladder-receipt.json --expect-valid
+```
+
+The validator refuses the receipt when a rung is skipped or reordered, when a
+non-final rung claims to have resolved the problem, when a cited artifact does
+not exist on disk, when a dispatch rung names no field it read, when a
+breakpoint rung cites no `debugger.proof.v1`, when a research rung records no
+query or no result URL, or when `attempts >= 2` with no research rung.
+
+The existence check is the load-bearing one: an agent can assert it read a
+receipt, but it cannot conjure the file it claims to have read.
+
+Schema: `schemas/debugger.ladder.v1.schema.json`. Gate: `./sanity-ladder.sh`.
+The validator has no third-party dependencies and needs no Tau checkout, which
+is what keeps this skill self-contained.
+
+### Running the ladder as a Tau DAG
+
+`templates/debugger-ladder.dag.yaml` expresses the ladder as a
+`tau.dag_contract.v1` (validated against Tau's own `validate_dag_contract`).
+Use it when the stuck work is ALREADY running under Tau and you want the rungs
+scheduled, receipted, and resumable, with `ladder-gate` on every path to a
+terminal node.
+
+The DAG is orchestration, not enforcement — it calls the validator above rather
+than reimplementing it. Note that Tau already ships
+`brave_search_required_after_two_attempts` as a `fail_closed_on` invariant,
+which is Tau's own name for the research rung; the ladder-specific invariants
+stay in the validator, because Tau rejects invented invariant codes before
+dispatch.
 
 ## Self-Contained Scope
 

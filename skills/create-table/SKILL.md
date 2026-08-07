@@ -19,6 +19,9 @@ metadata:
 provides:
   - create-table
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 # create-table

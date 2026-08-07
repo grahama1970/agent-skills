@@ -36,6 +36,8 @@ taxonomy:
   - machine-learning
   - hyperparameter-tuning
   - self-improvement
+disciplines:
+  - ml-training
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -16,6 +16,9 @@ provides:
 composes:
   - doc2qra
   - task-monitor
+disciplines:
+  - extraction
+  - memory-knowledge
 ---
 
 # distill (compatibility)

@@ -1,5 +1,7 @@
 # sprite-atlas
 
+> **Disciplines:** content-creation · ui-design-engineering
+
 Profile-driven sprite atlas compiler. Named `<animation>/<frame>.png` files are
 the preferred authoring truth; fixed-grid atlas PNG/JSON pairs are generated
 runtime compatibility outputs.

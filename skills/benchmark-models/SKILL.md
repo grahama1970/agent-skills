@@ -13,6 +13,10 @@ composes:
   - scillm
   - create-figure
   - task-monitor
+disciplines:
+  - evaluation-quality
+  - model-ops
+  - compliance-security
 ---
 
 # benchmark-models

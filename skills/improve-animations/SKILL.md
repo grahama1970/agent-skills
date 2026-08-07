@@ -7,6 +7,8 @@ provides:
 composes: []
 complies:
   - best-practices-skills
+disciplines:
+  - ui-design-engineering
 ---
 
 # Improving Animations

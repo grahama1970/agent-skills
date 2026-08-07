@@ -25,6 +25,9 @@ metadata:
 provides:
   - review-sparta
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

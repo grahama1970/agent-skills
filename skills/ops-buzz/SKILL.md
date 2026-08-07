@@ -32,6 +32,9 @@ taxonomy:
   - notification
   - agent-orchestration
 runtime_self_improvement: basic
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 # ops-buzz

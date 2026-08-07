@@ -17,6 +17,9 @@ metadata:
 provides:
   - formalize-request
 composes: [task-monitor]
+disciplines:
+  - human-collaboration
+  - agentic-orchestration
 ---
 
 # Formalize Request Skill

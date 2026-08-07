@@ -26,6 +26,9 @@ taxonomy:
   - precision
   - resilience
   - validation
+disciplines:
+  - agentic-orchestration
+  - human-collaboration
 ---
 
 # Goal Helper

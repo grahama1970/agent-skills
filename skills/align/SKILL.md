@@ -32,6 +32,9 @@ taxonomy:
   - coordination
   - validation
   - resilience
+disciplines:
+  - human-collaboration
+  - agentic-orchestration
 ---
 
 # Align

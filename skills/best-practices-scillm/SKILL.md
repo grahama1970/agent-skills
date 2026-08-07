@@ -22,6 +22,9 @@ provides:
   - best-practices-scillm
 composes:
   - scillm
+disciplines:
+  - engineering-standards
+  - model-ops
 ---
 
 # scillm Best Practices — Error Recovery & Anti-Patterns

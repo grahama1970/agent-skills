@@ -45,6 +45,8 @@ read_before_use:
 taxonomy:
   - orchestration
   - planning
+disciplines:
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

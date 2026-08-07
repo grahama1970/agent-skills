@@ -29,6 +29,9 @@ taxonomy:
   - validation
   - extraction
   - precision
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

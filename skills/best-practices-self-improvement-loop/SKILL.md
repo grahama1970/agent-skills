@@ -26,6 +26,9 @@ composes:
 taxonomy:
   - engineering
   - patterns
+disciplines:
+  - engineering-standards
+  - ml-training
 ---
 
 # Deterministic Self-Improvement Loops

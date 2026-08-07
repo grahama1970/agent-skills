@@ -24,6 +24,9 @@ taxonomy:
   - knowledge
   - extraction
   - compliance
+disciplines:
+  - compliance-security
+  - data-engineering
 ---
 
 # /create-qras

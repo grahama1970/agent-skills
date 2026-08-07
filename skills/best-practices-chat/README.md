@@ -1,5 +1,7 @@
 # best-practices-chat skill
 
+> **Disciplines:** engineering-standards · ui-design-engineering
+
 This skill keeps Sparta Chat usable as a modern chat interface while preserving evidence-gated compliance semantics.
 
 Install by copying this folder into your project's skills directory, or point your project agent at `SKILL.md`.

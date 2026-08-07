@@ -14,6 +14,8 @@ triggers:
   - "install embry agent service"
   - "view agent daemon logs"
   - "is pi-dbus running"
+disciplines:
+  - observability-operations
 ---
 
 # ops-embry-agent

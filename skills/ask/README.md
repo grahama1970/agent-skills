@@ -1,5 +1,7 @@
 # ask — Ask, Argue and Roundtable
 
+> **Disciplines:** agentic-orchestration · research-retrieval
+
 <p align="center">
   <img
     src="docs/assets/ask-banner.png"

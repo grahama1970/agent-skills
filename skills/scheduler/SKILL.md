@@ -20,6 +20,9 @@ composes:
 taxonomy:
   - orchestration
   - automation
+disciplines:
+  - observability-operations
+  - agentic-orchestration
 ---
 
 # Scheduler Skill

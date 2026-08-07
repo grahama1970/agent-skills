@@ -32,6 +32,9 @@ metadata:
   short-description: Kling-ready contact sheet and element reference-pack rules
   version: 1.0.0
   last_verified: 2026-06-11
+disciplines:
+  - engineering-standards
+  - content-creation
 ---
 
 # Best Practices: Kling Contact Sheets and Reference Packs

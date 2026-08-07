@@ -15,6 +15,9 @@ metadata:
 provides:
   - monitor-pdfs
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - extraction
 ---
 
 # Monitor PDFs - Harvesting & Processing Dashboard

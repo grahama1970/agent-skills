@@ -25,6 +25,9 @@ provides:
 composes:
   - memory
   - task-monitor
+disciplines:
+  - data-engineering
+  - voice-audio
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

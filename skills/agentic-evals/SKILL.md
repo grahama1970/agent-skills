@@ -28,6 +28,9 @@ taxonomy:
   - validation
   - resilience
   - precision
+disciplines:
+  - evaluation-quality
+  - agentic-orchestration
 ---
 
 # agentic-evals

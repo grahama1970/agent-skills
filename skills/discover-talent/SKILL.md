@@ -21,6 +21,9 @@ metadata:
 provides:
   - discover-talent
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
+  - content-creation
 ---
 
 # Discover Talent Skill

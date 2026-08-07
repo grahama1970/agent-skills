@@ -40,6 +40,9 @@ taxonomy:
   - checkpoint
   - state-management
   - session-continuity
+disciplines:
+  - memory-knowledge
+  - observability-operations
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

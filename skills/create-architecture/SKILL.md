@@ -32,6 +32,9 @@ taxonomy:
 complies:
   - best-practices-skills
   - best-practices-python
+disciplines:
+  - ui-design-engineering
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

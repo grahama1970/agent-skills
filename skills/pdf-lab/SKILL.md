@@ -33,6 +33,9 @@ taxonomy:
   - precision
   - validation
   - resilience
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 # pdf-lab

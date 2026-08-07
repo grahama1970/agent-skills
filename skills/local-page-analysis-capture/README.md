@@ -1,5 +1,7 @@
 # local-page-analysis-capture
 
+> **Disciplines:** browser-automation · ui-design-engineering
+
 Capture a local HTML page or localhost URL into one WebGPT-ready zip.
 
 ## Quick start

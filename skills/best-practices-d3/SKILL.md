@@ -24,6 +24,9 @@ composes:
   - task-monitor
 taxonomy:
   - precision
+disciplines:
+  - engineering-standards
+  - ui-design-engineering
 ---
 
 # D3 Best Practices

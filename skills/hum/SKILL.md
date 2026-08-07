@@ -25,6 +25,9 @@ metadata:
 provides:
   - hum
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - persona-simulation
 ---
 
 # /hum

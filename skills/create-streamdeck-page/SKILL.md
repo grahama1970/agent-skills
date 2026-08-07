@@ -24,6 +24,9 @@ triggers:
   - design page layout
   - optimize deck layout
   - configure streamdeck buttons
+disciplines:
+  - developer-tooling
+  - ui-design-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

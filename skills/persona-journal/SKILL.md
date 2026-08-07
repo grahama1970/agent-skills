@@ -20,6 +20,9 @@ metadata:
 provides:
   - persona-journal
 composes: [task-monitor]
+disciplines:
+  - persona-simulation
+  - content-creation
 ---
 
 # persona-journal

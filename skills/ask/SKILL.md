@@ -61,6 +61,9 @@ allowed-tools:
   - Grep
   - mcp__surf__*
   - mcp__browser_oracle__*
+disciplines:
+  - agentic-orchestration
+  - research-retrieval
 ---
 
 # ask

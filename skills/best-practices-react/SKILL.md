@@ -23,6 +23,9 @@ provides:
   - best-practices-react
 composes:
   - task-monitor
+disciplines:
+  - engineering-standards
+  - ui-design-engineering
 ---
 
 # React Best Practices Collection

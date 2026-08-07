@@ -37,6 +37,9 @@ composes:
   - match-requirement
   - create-evidence-case
   - lean4-prove
+disciplines:
+  - data-engineering
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

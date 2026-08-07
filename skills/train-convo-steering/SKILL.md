@@ -9,6 +9,10 @@ triggers:
 provides:
   - train-convo-steering
 composes: [task-monitor]
+disciplines:
+  - ml-training
+  - persona-simulation
+  - voice-audio
 ---
 
 # train-convo-steering (Skill v2)

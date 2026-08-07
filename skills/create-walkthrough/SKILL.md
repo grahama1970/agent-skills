@@ -22,6 +22,9 @@ metadata:
 provides:
   - create-walkthrough
 composes: [task-monitor]
+disciplines:
+  - human-collaboration
+  - content-creation
 ---
 
 # create-walkthrough

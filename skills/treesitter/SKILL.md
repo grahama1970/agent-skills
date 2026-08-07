@@ -21,6 +21,9 @@ composes:
   - edge-verifier
   - episodic-archiver
   - task-monitor
+disciplines:
+  - developer-tooling
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

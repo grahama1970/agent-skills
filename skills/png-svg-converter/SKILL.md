@@ -21,6 +21,9 @@ taxonomy:
   - precision
   - design
   - tooling
+disciplines:
+  - content-creation
+  - developer-tooling
 ---
 
 # png-svg-converter

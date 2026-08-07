@@ -23,6 +23,8 @@ composes:
   - learn-voice
   - discover-music
   - task-monitor
+disciplines:
+  - voice-audio
 ---
 
 # create-stems

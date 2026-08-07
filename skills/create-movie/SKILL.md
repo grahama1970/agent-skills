@@ -38,6 +38,9 @@ composes:
   - dogpile
   - assess
   - task-monitor
+disciplines:
+  - content-creation
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

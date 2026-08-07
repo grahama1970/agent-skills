@@ -50,6 +50,9 @@ taxonomy:
   - verification
   - evidence
   - quality-assurance
+disciplines:
+  - compliance-security
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

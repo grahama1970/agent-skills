@@ -36,6 +36,9 @@ taxonomy:
   - validation
   - proof
 runtime_self_improvement: basic
+disciplines:
+  - developer-tooling
+  - agentic-orchestration
 ---
 
 # Ticket

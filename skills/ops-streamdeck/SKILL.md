@@ -23,6 +23,9 @@ metadata:
 provides:
   - ops-streamdeck
 composes: [task-monitor]
+disciplines:
+  - developer-tooling
+  - observability-operations
 ---
 
 # Stream Deck Skill

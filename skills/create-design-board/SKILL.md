@@ -32,6 +32,9 @@ taxonomy:
   - visual
   - iteration
   - persona
+disciplines:
+  - ui-design-engineering
+  - content-creation
 ---
 
 # create-design-board

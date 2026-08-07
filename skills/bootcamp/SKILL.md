@@ -13,6 +13,9 @@ composes:
   - service-status
   - data-audit
   - task-monitor
+disciplines:
+  - human-collaboration
+  - persona-simulation
 ---
 
 # Bootcamp

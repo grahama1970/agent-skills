@@ -41,6 +41,9 @@ taxonomy:
   - agents
   - async
   - validation
+disciplines:
+  - engineering-standards
+  - voice-audio
 ---
 
 # Best Practices: Chatterbox Agent

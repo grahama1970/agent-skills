@@ -21,6 +21,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - evaluation-quality
+  - data-engineering
 ---
 
 # Quality Audit Skill

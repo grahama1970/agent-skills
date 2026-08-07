@@ -29,6 +29,9 @@ taxonomy:
   - precision
   - resilience
   - validation
+disciplines:
+  - content-creation
+  - research-retrieval
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

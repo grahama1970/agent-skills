@@ -31,6 +31,9 @@ composes:
   - intent-mapper
   - task-monitor
   - formalize-request
+disciplines:
+  - evaluation-quality
+  - compliance-security
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -16,6 +16,8 @@ metadata:
 provides:
   - create-lut
 composes: [task-monitor]
+disciplines:
+  - content-creation
 ---
 
 # create-lut

@@ -41,6 +41,9 @@ taxonomy:
   - validation
   - assessment
   - fragility
+disciplines:
+  - evaluation-quality
+  - observability-operations
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -19,6 +19,9 @@ metadata:
 provides:
   - create-journal-entry
 composes: [task-monitor]
+disciplines:
+  - persona-simulation
+  - content-creation
 ---
 
 # create-journal-entry

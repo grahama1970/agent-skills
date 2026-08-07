@@ -26,6 +26,9 @@ composes:
   - memory
   - doc2qra
   - task-monitor
+disciplines:
+  - research-retrieval
+  - data-engineering
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

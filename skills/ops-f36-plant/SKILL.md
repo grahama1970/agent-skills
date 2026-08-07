@@ -33,6 +33,9 @@ persona: paul_bevilaqua
 streamdeck:
   buttons_manifest: buttons.yaml
   icons_dir: icons/
+disciplines:
+  - observability-operations
+  - compliance-security
 ---
 
 # F-36 Plant Floor Operations

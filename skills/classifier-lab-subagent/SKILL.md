@@ -35,6 +35,10 @@ taxonomy:
   - orchestration
   - reliability
   - classifier
+disciplines:
+  - ml-training
+  - agentic-orchestration
+  - evaluation-quality
 ---
 
 # /classifier-lab-subagent

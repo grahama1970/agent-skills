@@ -15,6 +15,10 @@ allowed-tools: Bash, Read
 provides:
   - sparta-qra-validator-gpt
 composes: [task-monitor]
+disciplines:
+  - compliance-security
+  - ml-training
+  - evaluation-quality
 ---
 
 # sparta-qra-validator-gpt

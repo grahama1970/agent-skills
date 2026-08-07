@@ -23,6 +23,9 @@ triggers:
   - "skill chain"
   - "compose skills"
   - "what skills do I need"
+disciplines:
+  - memory-knowledge
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -22,6 +22,9 @@ taxonomy:
   - observability
   - self-improvement
   - drift-detection
+disciplines:
+  - observability-operations
+  - evaluation-quality
 ---
 
 # monitor-misuse

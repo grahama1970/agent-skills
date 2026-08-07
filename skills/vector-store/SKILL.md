@@ -30,6 +30,8 @@ composes:
   - embedding
   - edge-verifier
   - task-monitor
+disciplines:
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

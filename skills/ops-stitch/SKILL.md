@@ -15,6 +15,9 @@ provides:
   - stitch-context-bundle
 composes: []
 runner: python
+disciplines:
+  - ui-design-engineering
+  - developer-tooling
 ---
 
 # ops-stitch

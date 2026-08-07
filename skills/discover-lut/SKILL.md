@@ -17,6 +17,9 @@ metadata:
 provides:
   - discover-lut
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
+  - content-creation
 ---
 
 # discover-lut

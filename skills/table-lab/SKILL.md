@@ -22,6 +22,9 @@ metadata:
 provides:
   - table-lab
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 # table-lab v2

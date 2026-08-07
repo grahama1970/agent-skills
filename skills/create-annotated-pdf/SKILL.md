@@ -25,6 +25,9 @@ metadata:
 provides:
   - create-annotated-pdf
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - content-creation
 ---
 
 # create-annotated-pdf

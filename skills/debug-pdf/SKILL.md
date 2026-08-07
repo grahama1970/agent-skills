@@ -22,6 +22,9 @@ composes:
   - ops-claude
   - memory
   - task-monitor
+disciplines:
+  - extraction
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

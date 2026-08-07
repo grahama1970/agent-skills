@@ -17,6 +17,9 @@ composes:
 taxonomy:
   - execution
   - quality
+disciplines:
+  - agentic-orchestration
+  - developer-tooling
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

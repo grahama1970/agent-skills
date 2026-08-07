@@ -24,6 +24,8 @@ composes:
   - dogpile
   - memory
   - task-monitor
+disciplines:
+  - research-retrieval
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

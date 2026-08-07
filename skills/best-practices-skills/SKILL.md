@@ -34,6 +34,9 @@ taxonomy:
   - compliance
   - composition
   - self-improvement
+disciplines:
+  - engineering-standards
+  - developer-tooling
 ---
 
 # Skills Best Practices

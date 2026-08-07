@@ -1,5 +1,7 @@
 # phart-dag-chart
 
+> **Disciplines:** agentic-orchestration · developer-tooling
+
 Validate **ask.dag.v1** / **scillm.exec.graph.v1** JSON and render PHART 1.5 ASCII decision-tree charts.
 
 ## Requirements

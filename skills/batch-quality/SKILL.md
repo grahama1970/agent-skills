@@ -15,6 +15,9 @@ triggers:
 provides:
   - batch-quality
 composes: [task-monitor]
+disciplines:
+  - evaluation-quality
+  - model-ops
 ---
 
 # Batch Quality Skill

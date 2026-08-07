@@ -42,6 +42,10 @@ taxonomy:
   - video
   - continuity
   - research
+disciplines:
+  - content-creation
+  - research-retrieval
+  - persona-simulation
 ---
 
 # Casting Agent

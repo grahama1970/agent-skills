@@ -27,6 +27,9 @@ metadata:
 provides:
   - review-persona
 composes: [task-monitor]
+disciplines:
+  - persona-simulation
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

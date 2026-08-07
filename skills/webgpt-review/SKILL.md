@@ -26,6 +26,9 @@ taxonomy:
   - browser
   - validation
   - resilience
+disciplines:
+  - browser-automation
+  - evaluation-quality
 ---
 
 # WebGPT Review

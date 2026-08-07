@@ -1,5 +1,7 @@
 # debugger—Agents can stop guessing
 
+> **Disciplines:** developer-tooling
+
 ![Debugger card](../../docs/assets/project-cards/debugger.webp)
 
 Agents can read code quickly, but reading code is not the same as knowing what

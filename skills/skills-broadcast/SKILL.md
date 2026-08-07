@@ -28,6 +28,9 @@ complies:
 taxonomy:
   - distribution
   - synchronization
+disciplines:
+  - developer-tooling
+  - observability-operations
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

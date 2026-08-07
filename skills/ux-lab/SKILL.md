@@ -2,6 +2,8 @@
 name: ux-lab
 description: Launch and validate canonical UX Lab adapters and shared UI owned by agent-skills.
 allowed-tools: Bash, Read
+disciplines:
+  - ui-design-engineering
 ---
 
 # ux-lab

@@ -16,6 +16,9 @@ metadata:
 provides:
   - tts-horus
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - ml-training
 ---
 
 # Horus TTS Pipeline

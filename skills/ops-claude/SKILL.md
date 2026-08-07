@@ -37,6 +37,9 @@ composes:
   - rate-limit-recovery
   - memory
   - task-monitor
+disciplines:
+  - observability-operations
+  - developer-tooling
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

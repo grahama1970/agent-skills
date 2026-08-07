@@ -46,6 +46,9 @@ composes:
   - dogpile
   - interview
   - scillm
+disciplines:
+  - content-creation
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

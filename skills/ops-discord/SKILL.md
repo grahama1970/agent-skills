@@ -21,6 +21,9 @@ metadata:
 provides:
   - ops-discord
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - research-retrieval
 ---
 
 # Discord Operations - Notification Monitor Model

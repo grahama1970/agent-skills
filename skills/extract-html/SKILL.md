@@ -10,6 +10,8 @@ provides:
   - extract-html
 composes:
   - task-monitor
+disciplines:
+  - extraction
 ---
 
 # Extract-HTML Skill

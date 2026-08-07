@@ -23,6 +23,9 @@ composes:
   - ops-google
   - ops-runpod
   - task-monitor
+disciplines:
+  - observability-operations
+  - model-ops
 ---
 
 # /ops-costs — Unified Cost Aggregator

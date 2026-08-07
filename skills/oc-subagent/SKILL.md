@@ -25,6 +25,8 @@ taxonomy:
   - orchestration
   - persistence
   - concurrency
+disciplines:
+  - agentic-orchestration
 ---
 
 # oc-subagent

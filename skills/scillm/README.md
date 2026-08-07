@@ -1,5 +1,7 @@
 # scillm
 
+> **Disciplines:** model-ops
+
 ![Scillm card](../../docs/assets/project-cards/scillm.webp)
 
 Scillm is the model and agent execution surface behind my agent work. It gives

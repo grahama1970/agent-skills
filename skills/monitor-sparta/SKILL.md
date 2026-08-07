@@ -22,6 +22,9 @@ provides:
 composes:
   - create-figure
   - task-monitor
+disciplines:
+  - observability-operations
+  - compliance-security
 ---
 
 # Monitor SPARTA

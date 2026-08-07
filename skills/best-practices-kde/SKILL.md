@@ -32,6 +32,9 @@ provides:
   - best-practices-kde
 composes:
   - task-monitor
+disciplines:
+  - engineering-standards
+  - ui-design-engineering
 ---
 
 # KDE / QML Best Practices (Project Skill)

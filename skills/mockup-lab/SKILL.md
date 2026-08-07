@@ -35,6 +35,9 @@ taxonomy:
   - design
   - ui
   - visualization
+disciplines:
+  - ui-design-engineering
+  - content-creation
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

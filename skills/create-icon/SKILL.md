@@ -17,6 +17,9 @@ metadata:
 provides:
   - create-icon
 composes: [task-monitor]
+disciplines:
+  - content-creation
+  - ui-design-engineering
 ---
 
 # create-icon

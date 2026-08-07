@@ -47,6 +47,9 @@ taxonomy:
   - qa
   - conversation
   - evidence-case
+disciplines:
+  - evaluation-quality
+  - persona-simulation
 ---
 
 ## Standard Review Iteration Parameters

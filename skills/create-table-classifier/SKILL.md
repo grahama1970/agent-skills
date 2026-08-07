@@ -17,6 +17,9 @@ metadata:
 provides:
   - create-table-classifier
 composes: [task-monitor]
+disciplines:
+  - ml-training
+  - extraction
 ---
 
 # Create Table Classifier

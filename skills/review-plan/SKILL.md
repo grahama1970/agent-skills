@@ -31,6 +31,9 @@ taxonomy:
 metadata:
   short-description: Validate task files before orchestration
   version: "1.0.0"
+disciplines:
+  - evaluation-quality
+  - agentic-orchestration
 ---
 
 ## Standard Review Iteration Parameters

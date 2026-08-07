@@ -20,6 +20,9 @@ metadata:
 provides:
   - consume-music
 composes: [task-monitor]
+disciplines:
+  - data-engineering
+  - memory-knowledge
 ---
 
 # Consume Music Skill

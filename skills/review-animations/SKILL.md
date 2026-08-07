@@ -7,6 +7,9 @@ composes: []
 complies:
   - best-practices-skills
 disable-model-invocation: true
+disciplines:
+  - ui-design-engineering
+  - evaluation-quality
 ---
 
 # Reviewing Animations

@@ -29,6 +29,9 @@ composes: [scillm, prompt-lab, best-practices-self-improvement-loop, ask, projec
 taxonomy:
   - prompt-engineering
   - llm
+disciplines:
+  - evaluation-quality
+  - model-ops
 ---
 
 ## Standard Review Iteration Parameters

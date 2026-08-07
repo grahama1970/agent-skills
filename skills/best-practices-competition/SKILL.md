@@ -37,6 +37,9 @@ taxonomy:
   - competition
   - review
   - validation
+disciplines:
+  - engineering-standards
+  - agentic-orchestration
 ---
 
 # Best Practices: Competition

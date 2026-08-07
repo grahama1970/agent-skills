@@ -20,6 +20,9 @@ metadata:
 provides:
   - ops-runpod
 composes: [task-monitor]
+disciplines:
+  - model-ops
+  - observability-operations
 ---
 
 # RunPod Operations Skill

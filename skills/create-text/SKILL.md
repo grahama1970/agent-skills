@@ -21,6 +21,8 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-python
+disciplines:
+  - data-engineering
 ---
 
 # /create-text

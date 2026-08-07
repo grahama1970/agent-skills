@@ -35,6 +35,9 @@ taxonomy:
   - orchestration
   - runtime
   - supervision
+disciplines:
+  - agentic-orchestration
+  - observability-operations
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

@@ -56,6 +56,8 @@ composes:
 taxonomy:
   - inference
   - llm
+disciplines:
+  - model-ops
 ---
 
 # scillm — Internal Tau Provider Sidecar

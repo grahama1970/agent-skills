@@ -44,6 +44,9 @@ taxonomy:
   - creativity
   - reflection
   - memory
+disciplines:
+  - persona-simulation
+  - memory-knowledge
 ---
 
 # Persona Dream

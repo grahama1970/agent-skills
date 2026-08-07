@@ -15,6 +15,9 @@ provides:
   - streamdeck-generation
   - streamdeck-push
 composes: [task-monitor]
+disciplines:
+  - developer-tooling
+  - ui-design-engineering
 ---
 
 # /streamdeck-lab

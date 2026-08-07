@@ -15,6 +15,9 @@ triggers:
 provides:
   - pdf-screenshot
 composes: [task-monitor]
+disciplines:
+  - extraction
+  - developer-tooling
 ---
 
 # PDF Screenshot

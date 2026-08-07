@@ -18,6 +18,9 @@ metadata:
 provides:
   - ops-google
 composes: [task-monitor]
+disciplines:
+  - observability-operations
+  - model-ops
 ---
 
 # Ops Google Skill

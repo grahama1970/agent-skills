@@ -24,6 +24,9 @@ metadata:
 provides:
   - ops-darpa
 composes: [task-monitor]
+disciplines:
+  - research-retrieval
+  - compliance-security
 ---
 
 # DARPA Operations Skill

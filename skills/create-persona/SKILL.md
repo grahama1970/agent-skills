@@ -11,6 +11,9 @@ composes:
   - ingest-youtube
   - dogpile
   - task-monitor
+disciplines:
+  - persona-simulation
+  - human-collaboration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

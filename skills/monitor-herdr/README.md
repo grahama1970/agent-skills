@@ -1,5 +1,7 @@
 # Monitor Herdr
 
+> **Disciplines:** observability-operations · agentic-orchestration
+
 ![Monitor Herdr header](assets/monitor-herdr-header.webp)
 
 `monitor-herdr` watches Herdr-visible agent panes for the failure mode that is

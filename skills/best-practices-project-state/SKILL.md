@@ -37,6 +37,9 @@ taxonomy:
   - research
   - documentation
   - validation
+disciplines:
+  - engineering-standards
+  - observability-operations
 ---
 
 # Best Practices: PROJECT_STATE.md

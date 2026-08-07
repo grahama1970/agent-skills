@@ -32,6 +32,9 @@ composes:
 taxonomy:
   - security
   - compliance
+disciplines:
+  - data-engineering
+  - extraction
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

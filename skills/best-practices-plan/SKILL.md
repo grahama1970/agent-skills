@@ -21,6 +21,9 @@ taxonomy:
 metadata:
   short-description: Conventions for orchestration-ready task files
   version: "1.0.0"
+disciplines:
+  - engineering-standards
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

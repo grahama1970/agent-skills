@@ -28,6 +28,9 @@ taxonomy:
   - creation
   - training
   - benchmarking
+disciplines:
+  - ml-training
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

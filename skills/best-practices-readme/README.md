@@ -1,5 +1,7 @@
 # best-practices-readme
 
+> **Disciplines:** engineering-standards · content-creation
+
 `best-practices-readme` is the house style for README files in agent-skills and
 related public project repos. It keeps docs welcoming without turning them into
 pitch decks, and it keeps proof language honest without burying readers in

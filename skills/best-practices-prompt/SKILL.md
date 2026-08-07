@@ -30,6 +30,9 @@ composes:
 taxonomy:
   - prompt-engineering
   - llm
+disciplines:
+  - engineering-standards
+  - model-ops
 ---
 
 # Prompt Best Practices (Project Skill)

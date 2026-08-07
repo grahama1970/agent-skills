@@ -29,6 +29,9 @@ taxonomy:
   - extraction
   - validation
   - audio
+disciplines:
+  - voice-audio
+  - data-engineering
 ---
 
 # voice-segment-selector

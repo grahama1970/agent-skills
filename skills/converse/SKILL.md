@@ -26,6 +26,9 @@ metadata:
 provides:
   - converse
 composes: [task-monitor]
+disciplines:
+  - voice-audio
+  - persona-simulation
 ---
 
 # converse - Real-Time Two-Way Voice Conversation

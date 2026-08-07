@@ -35,6 +35,9 @@ taxonomy:
   - validation
   - observability
   - quality
+disciplines:
+  - observability-operations
+  - evaluation-quality
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.

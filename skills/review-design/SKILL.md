@@ -30,6 +30,9 @@ metadata:
 provides:
   - review-design
 composes: [task-monitor, memory, scillm, ask, project-knowledge, surf, test-interactions]
+disciplines:
+  - ui-design-engineering
+  - evaluation-quality
 ---
 
 ## Standard Review Iteration Parameters

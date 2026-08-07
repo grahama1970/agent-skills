@@ -23,6 +23,9 @@ taxonomy:
   - validation
   - knowledge
   - precision
+disciplines:
+  - memory-knowledge
+  - evaluation-quality
 ---
 
 # Edge Verifier

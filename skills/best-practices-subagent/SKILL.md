@@ -44,6 +44,9 @@ taxonomy:
   - safety
   - composition
   - memory
+disciplines:
+  - engineering-standards
+  - agentic-orchestration
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CREATING, REVIEWING, OR ROUTING A SUBAGENT.

@@ -7,6 +7,8 @@ composes: []
 complies:
   - best-practices-skills
 disable-model-invocation: true
+disciplines:
+  - ui-design-engineering
 ---
 
 # Prototyping Variants

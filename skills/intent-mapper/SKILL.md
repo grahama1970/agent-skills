@@ -16,6 +16,9 @@ provides:
   - intent-mapper
 composes:
   - task-monitor
+disciplines:
+  - ml-training
+  - memory-knowledge
 ---
 
 # Intent Mapper

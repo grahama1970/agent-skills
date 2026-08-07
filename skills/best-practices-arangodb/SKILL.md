@@ -43,6 +43,9 @@ composes:
   - best-practices-python
   - memory
   - ingest-code
+disciplines:
+  - engineering-standards
+  - memory-knowledge
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
