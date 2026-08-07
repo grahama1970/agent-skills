@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "904f8a50bf945e4b0fe3c3ad454355be46dd72be",
- "source_tree_sha256": "cd221109b5ce36373bb3d0754505cabcd5cee586e2a6dfe808bced9c50ee9b68",
+ "commit": "1fc036de252cd8b72d9475a11dec871fccd41d91",
+ "source_tree_sha256": "962fdefa9b8cb641254de3ff7ce112a069763077851b008fe5b169ddd0e30ef0",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -20,7 +20,9 @@
   "emit-md",
   "emit-ui",
   "image-variations",
+  "materialize-outline",
   "memory-sync",
+  "outline",
   "plan",
   "record-note",
   "record-transcript",
@@ -34,7 +36,7 @@
   "version",
   "visual-sync"
  ],
- "command_count": 30,
+ "command_count": 32,
  "schema_inventory": [
   {
    "declared_schemas": [
@@ -42,6 +44,7 @@
     "pitchdeck.build_receipt.v1",
     "pitchdeck.claim_ledger.v1",
     "pitchdeck.composition_recipe.v1",
+    "pitchdeck.deck_context.v1",
     "pitchdeck.deck_document.v1",
     "pitchdeck.deck_manifest.v1",
     "pitchdeck.deck_op_receipt.v1",
@@ -57,6 +60,7 @@
     "pitchdeck.icon_library.v1",
     "pitchdeck.image_variation_plan.v1",
     "pitchdeck.memory_sync_receipt.v1",
+    "pitchdeck.narrative_outline.v1",
     "pitchdeck.plan_receipt.v1",
     "pitchdeck.pptx_primitive_receipt.v1",
     "pitchdeck.render_receipt.v1",
@@ -83,7 +87,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "57 passed, 1 xfail"
+  "summary": "58 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

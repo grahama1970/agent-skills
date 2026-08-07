@@ -261,12 +261,102 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
         spec = assets[element.asset_id]
         path = expand_path(spec.local_path, base_dir=asset_base)
         left, top, width, height = frame.rect(element.bbox)
-        picture = container.add_picture(str(path), left, top, width=width, height=height)
+        source: object = str(path)
+        if path.suffix.lower() in {".webp", ".avif"}:
+            # python-pptx accepts BMP/GIF/JPEG/PNG/TIFF/WMF; convert losslessly.
+            import io
+
+            from PIL import Image
+
+            buffer = io.BytesIO()
+            Image.open(path).convert("RGB").save(buffer, format="PNG")
+            buffer.seek(0)
+            source = buffer
+        picture = container.add_picture(source, left, top, width=width, height=height)
         if element.rotation_deg:
             picture.rotation = element.rotation_deg
         picture.name = f"el:{element.id}"
         return
+    if kind is DocElementKind.DIAGRAM:
+        _emit_diagram(container, element, frame, palette=palette, receipt=receipt)
+        return
     raise ValueError(f"element '{element.id}': PPTX emitter has no handler for kind '{kind.value}'")
+
+
+def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict, receipt: dict) -> None:
+    """DiagramGraph compiles to the SAME primitive contract (#1271 review):
+    a native group of rounded-rect nodes, icon circles, label textboxes, and
+    cxnSp connectors — separately editable, never one raster."""
+    graph = element.diagram
+    primary = _hex(palette["primary"])
+    ink = _hex(palette["ink"])
+    group = container.add_group_shape()
+    dframe = frame.sub(element.bbox)
+    centers: dict[str, tuple[float, float, float, float]] = {}
+    for node in graph.nodes:
+        nx = dframe.x + node.bbox.x * dframe.w
+        ny = dframe.y + node.bbox.y * dframe.h
+        nw = node.bbox.w * dframe.w
+        nh = node.bbox.h * dframe.h
+        centers[node.id] = (nx, ny, nw, nh)
+        box = group.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(nx), Inches(ny), Inches(nw), Inches(nh))
+        box.fill.background()
+        box.line.color.rgb = primary
+        box.line.width = Pt(2.5)
+        box.name = f"el:{element.id}:node:{node.id}"
+        if node.icon:
+            radius = min(nw, nh) * 0.16
+            icon_circle = group.shapes.add_shape(
+                MSO_SHAPE.OVAL,
+                Inches(nx + nw / 2 - radius), Inches(ny + nh * 0.32 - radius),
+                Inches(radius * 2), Inches(radius * 2),
+            )
+            icon_circle.fill.background()
+            icon_circle.line.color.rgb = primary
+            icon_circle.name = f"el:{element.id}:node:{node.id}:icon"
+        label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * 0.52), Inches(nw), Inches(nh * 0.44))
+        label.name = f"el:{element.id}:node:{node.id}:label"
+        tf = label.text_frame
+        tf.word_wrap = True
+        run = tf.paragraphs[0].add_run()
+        run.text = node.label
+        run.font.bold = True
+        run.font.size = Pt(14)
+        run.font.color.rgb = primary
+        from pptx.enum.text import PP_ALIGN
+
+        tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+        if node.sublabel:
+            para = tf.add_paragraph()
+            para.alignment = PP_ALIGN.CENTER
+            sub = para.add_run()
+            sub.text = node.sublabel
+            sub.font.size = Pt(10)
+            sub.font.color.rgb = ink
+    for edge in graph.edges:
+        sx, sy, sw, sh = centers[edge.source]
+        tx, ty, tw, th = centers[edge.target]
+        begin = (Inches(sx + sw), Inches(sy + sh / 2))
+        end = (Inches(tx), Inches(ty + th / 2))
+        route = MSO_CONNECTOR.ELBOW if edge.route == "curve" else MSO_CONNECTOR.STRAIGHT
+        connector = group.shapes.add_connector(route, begin[0], begin[1], end[0], end[1])
+        connector.line.color.rgb = primary
+        connector.line.width = Pt(2.5)
+        _set_dash(connector.line, "dashed" if edge.line_style == "dashed" else ("dotted" if edge.line_style == "dotted" else "solid"))
+        _add_arrowheads(connector, start=False, end=edge.arrowhead)
+        connector.name = f"el:{element.id}:edge:{edge.id}"
+        if edge.label:
+            mid_x = (sx + sw + tx) / 2
+            mid_y = (sy + sh / 2 + ty + th / 2) / 2
+            caption = group.shapes.add_textbox(Inches(mid_x - 1.2), Inches(mid_y - 0.42), Inches(2.4), Inches(0.32))
+            caption.name = f"el:{element.id}:edge:{edge.id}:label"
+            run = caption.text_frame.paragraphs[0].add_run()
+            run.text = edge.label
+            run.font.italic = True
+            run.font.size = Pt(11)
+            run.font.color.rgb = ink
+    _pin_group_xfrm(group, frame.rect(element.bbox))
+    group.name = f"el:{element.id}"
 
 
 def emit_document_pptx(

@@ -1093,3 +1093,85 @@ def test_gauntlet_pptx_native_editable_roundtrip(tmp_path):
     assert {f"el:{e.id}" for e in iter_tree(doc.slides[0].elements)} <= set(by_name)
     assert [s.name for s in by_name["el:nested-group"][1].shapes] == ["el:n-chevron", "el:n-pill"]
     assert [sh.name for d, sh in tree if isinstance(sh, Picture)] == ["el:photo"]
+
+
+def test_outline_to_materialized_document(tmp_path):
+    """#1277/#1278: context -> outline -> approval gates -> deterministic
+    materialization through recipes; negatives are typed; golden contract
+    (recipes, claim ids) is reproduced from outline DATA, not slide Python."""
+    import json
+
+    import pytest as _pytest
+
+    from pitchdeck.design_system import DeckProfile
+    from pitchdeck.intents import materialize_outline
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import AssetManifest, ClaimLedger, SourceManifest
+    from pitchdeck.planning import DeckContext, approve_outline, draft_outline, mark_stale_modules
+
+    root = Path(__file__).parent.parent
+    bundle = root / "examples" / "sparta-explorer"
+    ledger = load_yaml(bundle / "claim_ledger.yaml", ClaimLedger)
+    sources = load_yaml(bundle / "source_manifest.yaml", SourceManifest)
+    assets = load_yaml(bundle / "asset_manifest.yaml", AssetManifest)
+    profile = DeckProfile.model_validate(json.loads(
+        (root.parent / "best-practices-slide-design" / "profiles" / "sparta-house-conference-profile.deck_profile.json").read_text()))
+    context = DeckContext(
+        objective="Sparta Explorer — inspectable space-cyber assurance", desired_action="Book a walkthrough",
+        audience="conference", audience_roles=["leads"], duration_minutes=20, target_slide_range=(6, 8),
+        primary_ask="Become a design partner",
+        required_modules=["thesis", "architecture", "proof", "problem_solution", "roadmap"],
+        design_system_id="sparta-house-conference", deck_profile_id="sparta-house-conference-profile")
+    outline = draft_outline(context, ledger, profile)
+    golden = json.loads((root / "examples" / "sparta-golden" / "deck.document.json").read_text())
+    g = {s["id"]: s for s in golden["slides"]}
+
+    def diagram_of(sid):
+        return next(el["diagram"] for el in g[sid]["elements"] if el["kind"] == "diagram")
+
+    arc = ["cover", "thesis", "problem_solution", "architecture", "proof", "roadmap"]
+    mods = []
+    for m in outline.modules:
+        if m.module == "problem_solution":
+            m = m.model_copy(update={"diagram": diagram_of("g3-problem"), "visual_thesis": "endpoint bridge"})
+        elif m.module == "architecture":
+            m = m.model_copy(update={"diagram": diagram_of("g4-architecture"), "visual_thesis": "pipeline"})
+        elif m.module == "proof":
+            m = m.model_copy(update={"visual_asset_id": "sparta-threat-matrix", "visual_thesis": "screenshot"})
+        elif m.module == "value_prop":
+            m = m.model_copy(update={"omitted": True})
+        mods.append(m)
+    mods = sorted(mods, key=lambda m: arc.index(m.module) if m.module in arc else 99)
+    outline = outline.model_copy(update={"modules": mods})
+
+    # unapproved gate
+    with _pytest.raises(ValueError, match="UNAPPROVED_OUTLINE"):
+        materialize_outline(outline, context, ledger, sources, assets)
+    approved = approve_outline(outline, approved_by="test", approved_at="2026-08-07T00:00:00Z")
+    doc = materialize_outline(approved, context, ledger, sources, assets)
+
+    # approved order + all six house recipes; golden recipe set reproduced
+    assert [s.section for s in doc.slides] == arc
+    golden_recipes = [s["intent"]["recipe"] for s in golden["slides"]]
+    assert [s.intent.recipe for s in doc.slides] == golden_recipes
+    # zero dropped claim ids vs golden contract
+    golden_claims = {c for s in golden["slides"] for c in s["claim_ids"]}
+    materialized_claims = {c for s in doc.slides for c in s.claim_ids}
+    assert golden_claims <= materialized_claims
+    # assertion headlines are bound claim texts, never labels
+    ledger_texts = {c.text for c in ledger.claims}
+    for slide in doc.slides[1:]:
+        assert slide.intent.assertion in ledger_texts
+    # determinism
+    assert doc.model_dump_json(by_alias=True) == materialize_outline(approved, context, ledger, sources, assets).model_dump_json(by_alias=True)
+
+    # negatives: tampered approval; incompatible recipe (diagram removed)
+    with _pytest.raises(ValueError, match="UNAPPROVED_OUTLINE"):
+        materialize_outline(approved.model_copy(update={"modules": approved.modules[:-1]}), context, ledger, sources, assets)
+    naked = [m.model_copy(update={"diagram": None}) if m.module == "architecture" else m for m in mods]
+    with _pytest.raises(ValueError, match="NO_COMPATIBLE_RECIPE"):
+        materialize_outline(approve_outline(outline.model_copy(update={"modules": naked}), approved_by="t", approved_at="x"),
+                            context, ledger, sources, assets)
+    # stale-module scoping
+    staled = mark_stale_modules(approved, {"sparta-public-open-gates"})
+    assert [m.module for m in staled.modules if m.stale] == ["roadmap"]

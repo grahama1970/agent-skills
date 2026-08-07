@@ -407,6 +407,85 @@ def render_document_cmd(
         _abort(exc)
 
 
+@app.command(name="outline")
+def outline_cmd(
+    context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],
+    bundle_dir: Annotated[Path, typer.Option(help="Bundle containing claim_ledger.yaml.")],
+    profile: Annotated[Path, typer.Option(help="deck_profile.v1 JSON.")],
+    output: Annotated[Path, typer.Option(help="Where to write narrative_outline.json.")],
+    approve_by: Annotated[str | None, typer.Option(help="Approve immediately as this reviewer (records hash-bound approval).")] = None,
+) -> None:
+    """Two-stage planning: draft (and optionally approve) a claim-routed narrative outline."""
+    import json as json_mod
+
+    import yaml as yaml_mod
+
+    from .design_system import DeckProfile
+    from .models import ClaimLedger
+    from .planning import DeckContext, approve_outline, draft_outline
+
+    try:
+        raw = context.read_text(encoding="utf-8")
+        data = yaml_mod.safe_load(raw) if context.suffix in {".yaml", ".yml"} else json_mod.loads(raw)
+        ctx = DeckContext.model_validate(data)
+        ledger = load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger)
+        prof = DeckProfile.model_validate(json_mod.loads(profile.read_text(encoding="utf-8")))
+        drafted = draft_outline(ctx, ledger, prof)
+        if approve_by:
+            from datetime import UTC, datetime
+
+            drafted = approve_outline(drafted, approved_by=approve_by, approved_at=datetime.now(UTC).isoformat())
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(drafted.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS",
+            "modules": [m.module for m in drafted.modules],
+            "questions": [q.code for q in drafted.questions],
+            "approved": drafted.approval is not None,
+            "output": str(output.resolve()),
+        }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="materialize-outline")
+def materialize_outline_cmd(
+    outline: Annotated[Path, typer.Option(help="APPROVED narrative_outline.json.")],
+    context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json.")],
+    bundle_dir: Annotated[Path, typer.Option(help="Bundle with claim_ledger/source_manifest/asset_manifest.")],
+    output: Annotated[Path, typer.Option(help="Where to write the materialized deck.document.json.")],
+) -> None:
+    """Materialize an APPROVED outline into an intent-carrying deck document (deterministic)."""
+    import json as json_mod
+
+    import yaml as yaml_mod
+
+    from .intents import materialize_outline
+    from .models import AssetManifest, ClaimLedger, SourceManifest
+    from .planning import DeckContext, NarrativeOutline
+
+    try:
+        raw = context.read_text(encoding="utf-8")
+        ctx = DeckContext.model_validate(yaml_mod.safe_load(raw) if context.suffix in {".yaml", ".yml"} else json_mod.loads(raw))
+        out_model = NarrativeOutline.model_validate(json_mod.loads(outline.read_text(encoding="utf-8")))
+        ledger = load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger)
+        source_path = bundle_dir / "source_manifest.resolved.yaml"
+        if not source_path.exists():
+            source_path = bundle_dir / "source_manifest.yaml"
+        sources = load_yaml(source_path, SourceManifest)
+        assets = load_yaml(bundle_dir / "asset_manifest.yaml", AssetManifest)
+        document = materialize_outline(out_model, ctx, ledger, sources, assets)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(document.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS",
+            "slides": [{"id": s.id, "recipe": s.intent.recipe if s.intent else None} for s in document.slides],
+            "output": str(output.resolve()),
+        }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="emit-document-pptx")
 def emit_document_pptx_cmd(
     document: Annotated[Path, typer.Option(help="Path to a deck.document.json (pitchdeck.deck_document.v1).")],
