@@ -4,6 +4,7 @@ import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
 import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 import { ResearchMap } from '@/components/research-map';
+import { CapabilitySearch } from '@/components/capability-search';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
@@ -219,6 +220,13 @@ export default function Home() {
         </section>
 
         <hr className="rule" />
+
+        {/* ===================== SEARCH ===================== */}
+        <section id="search" className="search-band">
+          <div className="wrap">
+            <CapabilitySearch />
+          </div>
+        </section>
 
         {/* ===================== WORK ===================== */}
         <section id="work">

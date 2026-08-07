@@ -1,0 +1,3166 @@
+{
+  "schema": "grahama.catalog.v1",
+  "sourceCommit": "72f7f0862",
+  "counts": {
+    "areas": 8,
+    "projects": 10,
+    "skills": 338
+  },
+  "documents": [
+    {
+      "id": "area:pipelines",
+      "type": "area",
+      "name": "Agentic pipelines & orchestration",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "summary": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
+      "skillCount": 49
+    },
+    {
+      "id": "area:memory",
+      "type": "area",
+      "name": "Agentic memory & persona",
+      "lens": "hybrid",
+      "aliases": [
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent"
+      ],
+      "disciplines": [
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
+      ],
+      "summary": "Durable memory, persona, and voice an agent keeps and re-queries as its own history.",
+      "skillCount": 28
+    },
+    {
+      "id": "area:extraction",
+      "type": "area",
+      "name": "Extraction & evidence",
+      "lens": "technical",
+      "aliases": [
+        "document extraction",
+        "pdf",
+        "ocr",
+        "rag",
+        "retrieval",
+        "research",
+        "citations",
+        "ingestion"
+      ],
+      "disciplines": [
+        "extraction",
+        "research-retrieval",
+        "data-engineering"
+      ],
+      "summary": "Documents, research, and video into one truthful, cited result — no knobs to mislead.",
+      "skillCount": 66
+    },
+    {
+      "id": "area:compliance",
+      "type": "area",
+      "name": "Compliance, security & governance",
+      "lens": "technical",
+      "aliases": [
+        "compliance",
+        "security",
+        "governance",
+        "audit",
+        "policy",
+        "oscal",
+        "assurance",
+        "gate"
+      ],
+      "disciplines": [
+        "compliance-security",
+        "engineering-standards"
+      ],
+      "summary": "Evidence-grounded reasoning where a human, not the model, holds authority.",
+      "skillCount": 55
+    },
+    {
+      "id": "area:adaptive-lineage",
+      "type": "area",
+      "name": "Adaptive-lineage hacking",
+      "lens": "technical",
+      "aliases": [
+        "red team",
+        "adversarial",
+        "exploit",
+        "security testing",
+        "fuzzing",
+        "evolution",
+        "arena"
+      ],
+      "disciplines": [
+        "compliance-security"
+      ],
+      "summary": "Adversarial evolution and security testing scored by deterministic proof gates.",
+      "skillCount": 1
+    },
+    {
+      "id": "area:applied-ml",
+      "type": "area",
+      "name": "Applied ML & formal methods",
+      "lens": "technical",
+      "aliases": [
+        "machine learning",
+        "training",
+        "classifier",
+        "lean4",
+        "formal verification",
+        "proof"
+      ],
+      "disciplines": [
+        "ml-training"
+      ],
+      "summary": "Trained models and machine-checked proofs where a result has to be verifiable.",
+      "skillCount": 19
+    },
+    {
+      "id": "area:design-interface",
+      "type": "area",
+      "name": "Design & interface",
+      "lens": "creative",
+      "aliases": [
+        "ux",
+        "ui",
+        "frontend",
+        "react",
+        "design system",
+        "interface"
+      ],
+      "disciplines": [
+        "ui-design-engineering"
+      ],
+      "summary": "Interfaces and design systems built to be operated, not just admired.",
+      "skillCount": 19
+    },
+    {
+      "id": "area:creative-media",
+      "type": "area",
+      "name": "Creative & media research",
+      "lens": "creative",
+      "aliases": [
+        "video generation",
+        "image generation",
+        "music",
+        "film",
+        "creative ai",
+        "media",
+        "score"
+      ],
+      "disciplines": [
+        "content-creation"
+      ],
+      "summary": "Image, video, voice, and music generation — the creative-production half of the practice.",
+      "skillCount": 26
+    },
+    {
+      "id": "project:tau",
+      "type": "project",
+      "slug": "tau",
+      "name": "t'au",
+      "area": "Agentic pipelines & orchestration",
+      "areaId": "pipelines",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "summary": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:battle",
+      "type": "project",
+      "slug": "battle",
+      "name": "battle",
+      "area": "Adaptive-lineage hacking",
+      "areaId": "adaptive-lineage",
+      "lens": "technical",
+      "aliases": [
+        "red team",
+        "adversarial",
+        "exploit",
+        "security testing",
+        "fuzzing",
+        "evolution",
+        "arena"
+      ],
+      "disciplines": [
+        "compliance-security"
+      ],
+      "question": "What do you do with exploit code you can't trust? Breed it.",
+      "summary": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:surf",
+      "type": "project",
+      "slug": "surf",
+      "name": "surf",
+      "area": "Agentic pipelines & orchestration",
+      "areaId": "pipelines",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "question": "How does an agent prove which browser tab actually answered?",
+      "summary": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:persona-dream",
+      "type": "project",
+      "slug": "persona-dream",
+      "name": "persona-dream",
+      "area": "Agentic memory & persona",
+      "areaId": "memory",
+      "lens": "hybrid",
+      "aliases": [
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent"
+      ],
+      "disciplines": [
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
+      ],
+      "question": "Can a dream give a persona more than memory can?",
+      "summary": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:extractor",
+      "type": "project",
+      "slug": "extractor",
+      "name": "extractor",
+      "area": "Extraction & evidence",
+      "areaId": "extraction",
+      "lens": "technical",
+      "aliases": [
+        "document extraction",
+        "pdf",
+        "ocr",
+        "rag",
+        "retrieval",
+        "research",
+        "citations",
+        "ingestion"
+      ],
+      "disciplines": [
+        "extraction",
+        "research-retrieval",
+        "data-engineering"
+      ],
+      "question": "What if extraction had no knobs to mislead you with?",
+      "summary": "Zero-choice document extraction: one file in, one truthful result envelope out.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:dogpile",
+      "type": "project",
+      "slug": "dogpile",
+      "name": "dogpile",
+      "area": "Extraction & evidence",
+      "areaId": "extraction",
+      "lens": "technical",
+      "aliases": [
+        "document extraction",
+        "pdf",
+        "ocr",
+        "rag",
+        "retrieval",
+        "research",
+        "citations",
+        "ingestion"
+      ],
+      "disciplines": [
+        "extraction",
+        "research-retrieval",
+        "data-engineering"
+      ],
+      "question": "What did the research sweep fail to reach?",
+      "summary": "Multi-source research with traceable citations and honest used/skipped/degraded provider reporting.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:watch",
+      "type": "project",
+      "slug": "watch",
+      "name": "watch",
+      "area": "Extraction & evidence",
+      "areaId": "extraction",
+      "lens": "technical",
+      "aliases": [
+        "document extraction",
+        "pdf",
+        "ocr",
+        "rag",
+        "retrieval",
+        "research",
+        "citations",
+        "ingestion"
+      ],
+      "disciplines": [
+        "extraction",
+        "research-retrieval",
+        "data-engineering"
+      ],
+      "question": "What was on screen at that exact moment?",
+      "summary": "Video into timestamped frames, transcript, and reports — evidence agents can re-query from memory.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:scillm",
+      "type": "project",
+      "slug": "scillm",
+      "name": "scillm",
+      "area": "Agentic pipelines & orchestration",
+      "areaId": "pipelines",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "question": "How many times should provider glue be written? Once.",
+      "summary": "One execution surface for any model — chat, image, batch, tools, agents, receipts.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:debugger",
+      "type": "project",
+      "slug": "debugger",
+      "name": "debugger",
+      "area": "Agentic pipelines & orchestration",
+      "areaId": "pipelines",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "question": "What was true at the moment the bug happened?",
+      "summary": "Real breakpoints and paused-frame state — prove runtime truth before patching.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:sparta-explorer",
+      "type": "project",
+      "slug": "sparta-explorer",
+      "name": "sparta explorer",
+      "area": "Compliance, security & governance",
+      "areaId": "compliance",
+      "lens": "technical",
+      "aliases": [
+        "compliance",
+        "security",
+        "governance",
+        "audit",
+        "policy",
+        "oscal",
+        "assurance",
+        "gate"
+      ],
+      "disciplines": [
+        "compliance-security",
+        "engineering-standards"
+      ],
+      "question": "Who decides, when the AI sounds sure? Humans do.",
+      "summary": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
+      "href": "https://github.com/grahama1970/sparta-public",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract"
+    },
+    {
+      "id": "skill:agent-inbox",
+      "type": "skill",
+      "name": "agent-inbox",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/agent-inbox/SKILL.md"
+    },
+    {
+      "id": "skill:agent-status",
+      "type": "skill",
+      "name": "agent-status",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/agent-status/SKILL.md"
+    },
+    {
+      "id": "skill:agentic-evals",
+      "type": "skill",
+      "name": "agentic-evals",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/agentic-evals/SKILL.md"
+    },
+    {
+      "id": "skill:agents-registry",
+      "type": "skill",
+      "name": "agents-registry",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/agents-registry/SKILL.md"
+    },
+    {
+      "id": "skill:align",
+      "type": "skill",
+      "name": "align",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/align/SKILL.md"
+    },
+    {
+      "id": "skill:analytics",
+      "type": "skill",
+      "name": "analytics",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/analytics/SKILL.md"
+    },
+    {
+      "id": "skill:analyze-elf",
+      "type": "skill",
+      "name": "analyze-elf",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/analyze-elf/SKILL.md"
+    },
+    {
+      "id": "skill:animation-vocabulary",
+      "type": "skill",
+      "name": "animation-vocabulary",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/animation-vocabulary/SKILL.md"
+    },
+    {
+      "id": "skill:anvil",
+      "type": "skill",
+      "name": "anvil",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/anvil/SKILL.md"
+    },
+    {
+      "id": "skill:apple-design",
+      "type": "skill",
+      "name": "apple-design",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/apple-design/SKILL.md"
+    },
+    {
+      "id": "skill:argue",
+      "type": "skill",
+      "name": "argue",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/argue/SKILL.md"
+    },
+    {
+      "id": "skill:arxiv",
+      "type": "skill",
+      "name": "arxiv",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/arxiv/SKILL.md"
+    },
+    {
+      "id": "skill:ask",
+      "type": "skill",
+      "name": "ask",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ask/SKILL.md"
+    },
+    {
+      "id": "skill:assess",
+      "type": "skill",
+      "name": "assess",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/assess/SKILL.md"
+    },
+    {
+      "id": "skill:assistant",
+      "type": "skill",
+      "name": "assistant",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/assistant/SKILL.md"
+    },
+    {
+      "id": "skill:assistant-lab",
+      "type": "skill",
+      "name": "assistant-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/assistant-lab/SKILL.md"
+    },
+    {
+      "id": "skill:batch-quality",
+      "type": "skill",
+      "name": "batch-quality",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/batch-quality/SKILL.md"
+    },
+    {
+      "id": "skill:batch-report",
+      "type": "skill",
+      "name": "batch-report",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/batch-report/SKILL.md"
+    },
+    {
+      "id": "skill:battle",
+      "type": "skill",
+      "name": "battle",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/SKILL.md"
+    },
+    {
+      "id": "skill:benchmark-models",
+      "type": "skill",
+      "name": "benchmark-models",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/benchmark-models/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-agent",
+      "type": "skill",
+      "name": "best-practices-agent",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-agent/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-arangodb",
+      "type": "skill",
+      "name": "best-practices-arangodb",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-arangodb/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-chat",
+      "type": "skill",
+      "name": "best-practices-chat",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-chat/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-chat-ux",
+      "type": "skill",
+      "name": "best-practices-chat-ux",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-chat-ux/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-chatterbox-agent",
+      "type": "skill",
+      "name": "best-practices-chatterbox-agent",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-chatterbox-agent/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-competition",
+      "type": "skill",
+      "name": "best-practices-competition",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-competition/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-converse",
+      "type": "skill",
+      "name": "best-practices-converse",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-converse/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-cots",
+      "type": "skill",
+      "name": "best-practices-cots",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-cots/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-d3",
+      "type": "skill",
+      "name": "best-practices-d3",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-d3/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-design",
+      "type": "skill",
+      "name": "best-practices-design",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-design/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-github-ticket",
+      "type": "skill",
+      "name": "best-practices-github-ticket",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-github-ticket/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-greenfield",
+      "type": "skill",
+      "name": "best-practices-greenfield",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-greenfield/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-kde",
+      "type": "skill",
+      "name": "best-practices-kde",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-kde/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-kling-contact-sheet",
+      "type": "skill",
+      "name": "best-practices-kling-contact-sheet",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-kling-contact-sheet/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-plan",
+      "type": "skill",
+      "name": "best-practices-plan",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-plan/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-port",
+      "type": "skill",
+      "name": "best-practices-port",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-port/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-project-state",
+      "type": "skill",
+      "name": "best-practices-project-state",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-project-state/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-prompt",
+      "type": "skill",
+      "name": "best-practices-prompt",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-prompt/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-python",
+      "type": "skill",
+      "name": "best-practices-python",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-python/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-react",
+      "type": "skill",
+      "name": "best-practices-react",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-react/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-readme",
+      "type": "skill",
+      "name": "best-practices-readme",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-readme/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-report",
+      "type": "skill",
+      "name": "best-practices-report",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-report/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-roundtable",
+      "type": "skill",
+      "name": "best-practices-roundtable",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-roundtable/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-rust",
+      "type": "skill",
+      "name": "best-practices-rust",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-rust/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-scillm",
+      "type": "skill",
+      "name": "best-practices-scillm",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-scillm/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-security",
+      "type": "skill",
+      "name": "best-practices-security",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-security/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-self-improvement-loop",
+      "type": "skill",
+      "name": "best-practices-self-improvement-loop",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-self-improvement-loop/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-skills",
+      "type": "skill",
+      "name": "best-practices-skills",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-skills/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-sparta",
+      "type": "skill",
+      "name": "best-practices-sparta",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-sparta/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-streamdeck",
+      "type": "skill",
+      "name": "best-practices-streamdeck",
+      "category": "best-practices",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-streamdeck/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-subagent",
+      "type": "skill",
+      "name": "best-practices-subagent",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-subagent/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-tau-dag",
+      "type": "skill",
+      "name": "best-practices-tau-dag",
+      "category": "best-practices",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-tau-dag/SKILL.md"
+    },
+    {
+      "id": "skill:bootcamp",
+      "type": "skill",
+      "name": "bootcamp",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/bootcamp/SKILL.md"
+    },
+    {
+      "id": "skill:brave-search",
+      "type": "skill",
+      "name": "brave-search",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/brave-search/SKILL.md"
+    },
+    {
+      "id": "skill:browser-oracle",
+      "type": "skill",
+      "name": "browser-oracle",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/browser-oracle/SKILL.md"
+    },
+    {
+      "id": "skill:casting-agent",
+      "type": "skill",
+      "name": "casting-agent",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/casting-agent/SKILL.md"
+    },
+    {
+      "id": "skill:ccopy",
+      "type": "skill",
+      "name": "ccopy",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ccopy/SKILL.md"
+    },
+    {
+      "id": "skill:checkpoint",
+      "type": "skill",
+      "name": "checkpoint",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/checkpoint/SKILL.md"
+    },
+    {
+      "id": "skill:chutes-call",
+      "type": "skill",
+      "name": "chutes-call",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/chutes-call/SKILL.md"
+    },
+    {
+      "id": "skill:classifier-lab",
+      "type": "skill",
+      "name": "classifier-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/classifier-lab/SKILL.md"
+    },
+    {
+      "id": "skill:classifier-lab-subagent",
+      "type": "skill",
+      "name": "classifier-lab-subagent",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/classifier-lab-subagent/SKILL.md"
+    },
+    {
+      "id": "skill:clean-text",
+      "type": "skill",
+      "name": "clean-text",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/clean-text/SKILL.md"
+    },
+    {
+      "id": "skill:cleanup",
+      "type": "skill",
+      "name": "cleanup",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/cleanup/SKILL.md"
+    },
+    {
+      "id": "skill:clipboard",
+      "type": "skill",
+      "name": "clipboard",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/clipboard/SKILL.md"
+    },
+    {
+      "id": "skill:clipboard-file",
+      "type": "skill",
+      "name": "clipboard-file",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/clipboard-file/SKILL.md"
+    },
+    {
+      "id": "skill:cmmc-assessor",
+      "type": "skill",
+      "name": "cmmc-assessor",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/cmmc-assessor/SKILL.md"
+    },
+    {
+      "id": "skill:code-review-runner",
+      "type": "skill",
+      "name": "code-review-runner",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/code-review-runner/SKILL.md"
+    },
+    {
+      "id": "skill:code-runner",
+      "type": "skill",
+      "name": "code-runner",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/code-runner/SKILL.md"
+    },
+    {
+      "id": "skill:codex",
+      "type": "skill",
+      "name": "codex",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/codex/SKILL.md"
+    },
+    {
+      "id": "skill:compliance-timeline",
+      "type": "skill",
+      "name": "compliance-timeline",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/compliance-timeline/SKILL.md"
+    },
+    {
+      "id": "skill:consume-book",
+      "type": "skill",
+      "name": "consume-book",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-book/SKILL.md"
+    },
+    {
+      "id": "skill:consume-feed",
+      "type": "skill",
+      "name": "consume-feed",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-feed/SKILL.md"
+    },
+    {
+      "id": "skill:consume-midi",
+      "type": "skill",
+      "name": "consume-midi",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-midi/SKILL.md"
+    },
+    {
+      "id": "skill:consume-movie",
+      "type": "skill",
+      "name": "consume-movie",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-movie/SKILL.md"
+    },
+    {
+      "id": "skill:consume-music",
+      "type": "skill",
+      "name": "consume-music",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-music/SKILL.md"
+    },
+    {
+      "id": "skill:consume-youtube",
+      "type": "skill",
+      "name": "consume-youtube",
+      "category": "consume",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/consume-youtube/SKILL.md"
+    },
+    {
+      "id": "skill:context7",
+      "type": "skill",
+      "name": "context7",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/context7/SKILL.md"
+    },
+    {
+      "id": "skill:conversation-lab",
+      "type": "skill",
+      "name": "conversation-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/conversation-lab/SKILL.md"
+    },
+    {
+      "id": "skill:converse",
+      "type": "skill",
+      "name": "converse",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/converse/SKILL.md"
+    },
+    {
+      "id": "skill:corpus-report",
+      "type": "skill",
+      "name": "corpus-report",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/corpus-report/SKILL.md"
+    },
+    {
+      "id": "skill:create-annotated-pdf",
+      "type": "skill",
+      "name": "create-annotated-pdf",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-annotated-pdf/SKILL.md"
+    },
+    {
+      "id": "skill:create-architecture",
+      "type": "skill",
+      "name": "create-architecture",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-architecture/SKILL.md"
+    },
+    {
+      "id": "skill:create-cast",
+      "type": "skill",
+      "name": "create-cast",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-cast/SKILL.md"
+    },
+    {
+      "id": "skill:create-classifier",
+      "type": "skill",
+      "name": "create-classifier",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-classifier/SKILL.md"
+    },
+    {
+      "id": "skill:create-code",
+      "type": "skill",
+      "name": "create-code",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-code/SKILL.md"
+    },
+    {
+      "id": "skill:create-context",
+      "type": "skill",
+      "name": "create-context",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-context/SKILL.md"
+    },
+    {
+      "id": "skill:create-design",
+      "type": "skill",
+      "name": "create-design",
+      "category": "create",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-design/SKILL.md"
+    },
+    {
+      "id": "skill:create-design-board",
+      "type": "skill",
+      "name": "create-design-board",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-design-board/SKILL.md"
+    },
+    {
+      "id": "skill:create-evidence-case",
+      "type": "skill",
+      "name": "create-evidence-case",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-evidence-case/SKILL.md"
+    },
+    {
+      "id": "skill:create-figure",
+      "type": "skill",
+      "name": "create-figure",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-figure/SKILL.md"
+    },
+    {
+      "id": "skill:create-gpt",
+      "type": "skill",
+      "name": "create-gpt",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-gpt/SKILL.md"
+    },
+    {
+      "id": "skill:create-gsn-diagram",
+      "type": "skill",
+      "name": "create-gsn-diagram",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-gsn-diagram/SKILL.md"
+    },
+    {
+      "id": "skill:create-icon",
+      "type": "skill",
+      "name": "create-icon",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-icon/SKILL.md"
+    },
+    {
+      "id": "skill:create-image",
+      "type": "skill",
+      "name": "create-image",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-image/SKILL.md"
+    },
+    {
+      "id": "skill:create-intent-map",
+      "type": "skill",
+      "name": "create-intent-map",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-intent-map/SKILL.md"
+    },
+    {
+      "id": "skill:create-journal-entry",
+      "type": "skill",
+      "name": "create-journal-entry",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-journal-entry/SKILL.md"
+    },
+    {
+      "id": "skill:create-ksml",
+      "type": "skill",
+      "name": "create-ksml",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-ksml/SKILL.md"
+    },
+    {
+      "id": "skill:create-lut",
+      "type": "skill",
+      "name": "create-lut",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-lut/SKILL.md"
+    },
+    {
+      "id": "skill:create-midi",
+      "type": "skill",
+      "name": "create-midi",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-midi/SKILL.md"
+    },
+    {
+      "id": "skill:create-mockup",
+      "type": "skill",
+      "name": "create-mockup",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-mockup/SKILL.md"
+    },
+    {
+      "id": "skill:create-movie",
+      "type": "skill",
+      "name": "create-movie",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-movie/SKILL.md"
+    },
+    {
+      "id": "skill:create-music",
+      "type": "skill",
+      "name": "create-music",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-music/SKILL.md"
+    },
+    {
+      "id": "skill:create-paper",
+      "type": "skill",
+      "name": "create-paper",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-paper/SKILL.md"
+    },
+    {
+      "id": "skill:create-pdf-fixture",
+      "type": "skill",
+      "name": "create-pdf-fixture",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-pdf-fixture/SKILL.md"
+    },
+    {
+      "id": "skill:create-peer-review",
+      "type": "skill",
+      "name": "create-peer-review",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-peer-review/SKILL.md"
+    },
+    {
+      "id": "skill:create-persona",
+      "type": "skill",
+      "name": "create-persona",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-persona/SKILL.md"
+    },
+    {
+      "id": "skill:create-qras",
+      "type": "skill",
+      "name": "create-qras",
+      "category": "create",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-qras/SKILL.md"
+    },
+    {
+      "id": "skill:create-react-designs",
+      "type": "skill",
+      "name": "create-react-designs",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-react-designs/SKILL.md"
+    },
+    {
+      "id": "skill:create-regressor",
+      "type": "skill",
+      "name": "create-regressor",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-regressor/SKILL.md"
+    },
+    {
+      "id": "skill:create-report",
+      "type": "skill",
+      "name": "create-report",
+      "category": "create",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-report/SKILL.md"
+    },
+    {
+      "id": "skill:create-score",
+      "type": "skill",
+      "name": "create-score",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-score/SKILL.md"
+    },
+    {
+      "id": "skill:create-sentence-markup",
+      "type": "skill",
+      "name": "create-sentence-markup",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-sentence-markup/SKILL.md"
+    },
+    {
+      "id": "skill:create-sound-design",
+      "type": "skill",
+      "name": "create-sound-design",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-sound-design/SKILL.md"
+    },
+    {
+      "id": "skill:create-status-surface",
+      "type": "skill",
+      "name": "create-status-surface",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-status-surface/SKILL.md"
+    },
+    {
+      "id": "skill:create-stems",
+      "type": "skill",
+      "name": "create-stems",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-stems/SKILL.md"
+    },
+    {
+      "id": "skill:create-story",
+      "type": "skill",
+      "name": "create-story",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-story/SKILL.md"
+    },
+    {
+      "id": "skill:create-storyboard",
+      "type": "skill",
+      "name": "create-storyboard",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-storyboard/SKILL.md"
+    },
+    {
+      "id": "skill:create-streamdeck-page",
+      "type": "skill",
+      "name": "create-streamdeck-page",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-streamdeck-page/SKILL.md"
+    },
+    {
+      "id": "skill:create-styleguide",
+      "type": "skill",
+      "name": "create-styleguide",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-styleguide/SKILL.md"
+    },
+    {
+      "id": "skill:create-table",
+      "type": "skill",
+      "name": "create-table",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-table/SKILL.md"
+    },
+    {
+      "id": "skill:create-table-classifier",
+      "type": "skill",
+      "name": "create-table-classifier",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-table-classifier/SKILL.md"
+    },
+    {
+      "id": "skill:create-text",
+      "type": "skill",
+      "name": "create-text",
+      "category": "create",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-text/SKILL.md"
+    },
+    {
+      "id": "skill:create-walkthrough",
+      "type": "skill",
+      "name": "create-walkthrough",
+      "category": "create",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-walkthrough/SKILL.md"
+    },
+    {
+      "id": "skill:cui-marker",
+      "type": "skill",
+      "name": "cui-marker",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/cui-marker/SKILL.md"
+    },
+    {
+      "id": "skill:cursor-agents",
+      "type": "skill",
+      "name": "cursor-agents",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/cursor-agents/SKILL.md"
+    },
+    {
+      "id": "skill:dashboard",
+      "type": "skill",
+      "name": "dashboard",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dashboard/SKILL.md"
+    },
+    {
+      "id": "skill:data-audit",
+      "type": "skill",
+      "name": "data-audit",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/data-audit/SKILL.md"
+    },
+    {
+      "id": "skill:debug-fetcher",
+      "type": "skill",
+      "name": "debug-fetcher",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debug-fetcher/SKILL.md"
+    },
+    {
+      "id": "skill:debug-pdf",
+      "type": "skill",
+      "name": "debug-pdf",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debug-pdf/SKILL.md"
+    },
+    {
+      "id": "skill:debugger",
+      "type": "skill",
+      "name": "debugger",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/SKILL.md"
+    },
+    {
+      "id": "skill:discover-books",
+      "type": "skill",
+      "name": "discover-books",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-books/SKILL.md"
+    },
+    {
+      "id": "skill:discover-contacts",
+      "type": "skill",
+      "name": "discover-contacts",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-contacts/SKILL.md"
+    },
+    {
+      "id": "skill:discover-lut",
+      "type": "skill",
+      "name": "discover-lut",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-lut/SKILL.md"
+    },
+    {
+      "id": "skill:discover-movies",
+      "type": "skill",
+      "name": "discover-movies",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-movies/SKILL.md"
+    },
+    {
+      "id": "skill:discover-music",
+      "type": "skill",
+      "name": "discover-music",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-music/SKILL.md"
+    },
+    {
+      "id": "skill:discover-talent",
+      "type": "skill",
+      "name": "discover-talent",
+      "category": "discover",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/discover-talent/SKILL.md"
+    },
+    {
+      "id": "skill:distill",
+      "type": "skill",
+      "name": "distill",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/distill/SKILL.md"
+    },
+    {
+      "id": "skill:doc2qra",
+      "type": "skill",
+      "name": "doc2qra",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/doc2qra/SKILL.md"
+    },
+    {
+      "id": "skill:dogpile",
+      "type": "skill",
+      "name": "dogpile",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/SKILL.md"
+    },
+    {
+      "id": "skill:dum-dum",
+      "type": "skill",
+      "name": "dum-dum",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dum-dum/SKILL.md"
+    },
+    {
+      "id": "skill:edge-verifier",
+      "type": "skill",
+      "name": "edge-verifier",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/edge-verifier/SKILL.md"
+    },
+    {
+      "id": "skill:embedding",
+      "type": "skill",
+      "name": "embedding",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/embedding/SKILL.md"
+    },
+    {
+      "id": "skill:embry-config",
+      "type": "skill",
+      "name": "embry-config",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/embry-config/SKILL.md"
+    },
+    {
+      "id": "skill:embry-dashboard",
+      "type": "skill",
+      "name": "embry-dashboard",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/embry-dashboard/SKILL.md"
+    },
+    {
+      "id": "skill:embry-voice-control",
+      "type": "skill",
+      "name": "embry-voice-control",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/embry-voice-control/SKILL.md"
+    },
+    {
+      "id": "skill:emil-design-eng",
+      "type": "skill",
+      "name": "emil-design-eng",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/emil-design-eng/SKILL.md"
+    },
+    {
+      "id": "skill:episodic-archiver",
+      "type": "skill",
+      "name": "episodic-archiver",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/episodic-archiver/SKILL.md"
+    },
+    {
+      "id": "skill:eval-skills",
+      "type": "skill",
+      "name": "eval-skills",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/eval-skills/SKILL.md"
+    },
+    {
+      "id": "skill:evidence-case-lab",
+      "type": "skill",
+      "name": "evidence-case-lab",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/evidence-case-lab/SKILL.md"
+    },
+    {
+      "id": "skill:evidence-case-viewer",
+      "type": "skill",
+      "name": "evidence-case-viewer",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/evidence-case-viewer/SKILL.md"
+    },
+    {
+      "id": "skill:export-oscal",
+      "type": "skill",
+      "name": "export-oscal",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/export-oscal/SKILL.md"
+    },
+    {
+      "id": "skill:extract-controls",
+      "type": "skill",
+      "name": "extract-controls",
+      "category": "extract",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extract-controls/SKILL.md"
+    },
+    {
+      "id": "skill:extract-entities",
+      "type": "skill",
+      "name": "extract-entities",
+      "category": "extract",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extract-entities/SKILL.md"
+    },
+    {
+      "id": "skill:extract-html",
+      "type": "skill",
+      "name": "extract-html",
+      "category": "extract",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extract-html/SKILL.md"
+    },
+    {
+      "id": "skill:extract-pdf",
+      "type": "skill",
+      "name": "extract-pdf",
+      "category": "extract",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extract-pdf/SKILL.md"
+    },
+    {
+      "id": "skill:extract-tables",
+      "type": "skill",
+      "name": "extract-tables",
+      "category": "extract",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extract-tables/SKILL.md"
+    },
+    {
+      "id": "skill:extractor",
+      "type": "skill",
+      "name": "extractor",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/SKILL.md"
+    },
+    {
+      "id": "skill:extractor-quality-check",
+      "type": "skill",
+      "name": "extractor-quality-check",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor-quality-check/SKILL.md"
+    },
+    {
+      "id": "skill:fact-extractor",
+      "type": "skill",
+      "name": "fact-extractor",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/fact-extractor/SKILL.md"
+    },
+    {
+      "id": "skill:fetcher",
+      "type": "skill",
+      "name": "fetcher",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/fetcher/SKILL.md"
+    },
+    {
+      "id": "skill:figure-lab",
+      "type": "skill",
+      "name": "figure-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/figure-lab/SKILL.md"
+    },
+    {
+      "id": "skill:find-animation-opportunities",
+      "type": "skill",
+      "name": "find-animation-opportunities",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/find-animation-opportunities/SKILL.md"
+    },
+    {
+      "id": "skill:fixture-tricky",
+      "type": "skill",
+      "name": "fixture-tricky",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/fixture-tricky/SKILL.md"
+    },
+    {
+      "id": "skill:formalize-request",
+      "type": "skill",
+      "name": "formalize-request",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/formalize-request/SKILL.md"
+    },
+    {
+      "id": "skill:get-subtitles",
+      "type": "skill",
+      "name": "get-subtitles",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/get-subtitles/SKILL.md"
+    },
+    {
+      "id": "skill:github-search",
+      "type": "skill",
+      "name": "github-search",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/github-search/SKILL.md"
+    },
+    {
+      "id": "skill:goal-drift",
+      "type": "skill",
+      "name": "goal-drift",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/goal-drift/SKILL.md"
+    },
+    {
+      "id": "skill:goal-helper",
+      "type": "skill",
+      "name": "goal-helper",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/goal-helper/SKILL.md"
+    },
+    {
+      "id": "skill:governance",
+      "type": "skill",
+      "name": "governance",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/governance/SKILL.md"
+    },
+    {
+      "id": "skill:gpt-lab",
+      "type": "skill",
+      "name": "gpt-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/gpt-lab/SKILL.md"
+    },
+    {
+      "id": "skill:grounded",
+      "type": "skill",
+      "name": "grounded",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/grounded/SKILL.md"
+    },
+    {
+      "id": "skill:hack",
+      "type": "skill",
+      "name": "hack",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/hack/SKILL.md"
+    },
+    {
+      "id": "skill:handoff",
+      "type": "skill",
+      "name": "handoff",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/handoff/SKILL.md"
+    },
+    {
+      "id": "skill:herdr-workstation",
+      "type": "skill",
+      "name": "herdr-workstation",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/herdr-workstation/SKILL.md"
+    },
+    {
+      "id": "skill:hum",
+      "type": "skill",
+      "name": "hum",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/hum/SKILL.md"
+    },
+    {
+      "id": "skill:improve-animations",
+      "type": "skill",
+      "name": "improve-animations",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/improve-animations/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-audiobook",
+      "type": "skill",
+      "name": "ingest-audiobook",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-audiobook/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-book",
+      "type": "skill",
+      "name": "ingest-book",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-book/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-code",
+      "type": "skill",
+      "name": "ingest-code",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-code/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-compliance-doc",
+      "type": "skill",
+      "name": "ingest-compliance-doc",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-compliance-doc/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-doc",
+      "type": "skill",
+      "name": "ingest-doc",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-doc/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-kindle",
+      "type": "skill",
+      "name": "ingest-kindle",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-kindle/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-movie",
+      "type": "skill",
+      "name": "ingest-movie",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-movie/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-sparta",
+      "type": "skill",
+      "name": "ingest-sparta",
+      "category": "ingest",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-sparta/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-training-datalake",
+      "type": "skill",
+      "name": "ingest-training-datalake",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-training-datalake/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-website",
+      "type": "skill",
+      "name": "ingest-website",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-website/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-youtube",
+      "type": "skill",
+      "name": "ingest-youtube",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-youtube/SKILL.md"
+    },
+    {
+      "id": "skill:ingest-yt-history",
+      "type": "skill",
+      "name": "ingest-yt-history",
+      "category": "ingest",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-yt-history/SKILL.md"
+    },
+    {
+      "id": "skill:intent-mapper",
+      "type": "skill",
+      "name": "intent-mapper",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/intent-mapper/SKILL.md"
+    },
+    {
+      "id": "skill:interview",
+      "type": "skill",
+      "name": "interview",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/interview/SKILL.md"
+    },
+    {
+      "id": "skill:lean4-prove",
+      "type": "skill",
+      "name": "lean4-prove",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/lean4-prove/SKILL.md"
+    },
+    {
+      "id": "skill:learn-artist",
+      "type": "skill",
+      "name": "learn-artist",
+      "category": "learn",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/learn-artist/SKILL.md"
+    },
+    {
+      "id": "skill:learn-datalake",
+      "type": "skill",
+      "name": "learn-datalake",
+      "category": "learn",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/learn-datalake/SKILL.md"
+    },
+    {
+      "id": "skill:learn-movie",
+      "type": "skill",
+      "name": "learn-movie",
+      "category": "learn",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/learn-movie/SKILL.md"
+    },
+    {
+      "id": "skill:learn-timeout",
+      "type": "skill",
+      "name": "learn-timeout",
+      "category": "learn",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/learn-timeout/SKILL.md"
+    },
+    {
+      "id": "skill:learn-voice",
+      "type": "skill",
+      "name": "learn-voice",
+      "category": "learn",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/learn-voice/SKILL.md"
+    },
+    {
+      "id": "skill:lie-detector",
+      "type": "skill",
+      "name": "lie-detector",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/lie-detector/SKILL.md"
+    },
+    {
+      "id": "skill:llm-eval-lab",
+      "type": "skill",
+      "name": "llm-eval-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/llm-eval-lab/SKILL.md"
+    },
+    {
+      "id": "skill:local-page-analysis-capture",
+      "type": "skill",
+      "name": "local-page-analysis-capture",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/local-page-analysis-capture/SKILL.md"
+    },
+    {
+      "id": "skill:loop",
+      "type": "skill",
+      "name": "loop",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/loop/SKILL.md"
+    },
+    {
+      "id": "skill:mailbox-mining",
+      "type": "skill",
+      "name": "mailbox-mining",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/mailbox-mining/SKILL.md"
+    },
+    {
+      "id": "skill:match-requirement",
+      "type": "skill",
+      "name": "match-requirement",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/match-requirement/SKILL.md"
+    },
+    {
+      "id": "skill:memory",
+      "type": "skill",
+      "name": "memory",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/memory/SKILL.md"
+    },
+    {
+      "id": "skill:mine-transcripts",
+      "type": "skill",
+      "name": "mine-transcripts",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/mine-transcripts/SKILL.md"
+    },
+    {
+      "id": "skill:mockup-lab",
+      "type": "skill",
+      "name": "mockup-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/mockup-lab/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-claude",
+      "type": "skill",
+      "name": "monitor-claude",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-claude/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-codebase",
+      "type": "skill",
+      "name": "monitor-codebase",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-codebase/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-contacts",
+      "type": "skill",
+      "name": "monitor-contacts",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-contacts/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-drift-sensors",
+      "type": "skill",
+      "name": "monitor-drift-sensors",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-drift-sensors/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-episodic-archiver",
+      "type": "skill",
+      "name": "monitor-episodic-archiver",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-episodic-archiver/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-herdr",
+      "type": "skill",
+      "name": "monitor-herdr",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-herdr/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-memory",
+      "type": "skill",
+      "name": "monitor-memory",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-memory/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-misuse",
+      "type": "skill",
+      "name": "monitor-misuse",
+      "category": "monitor",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-misuse/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-ollama",
+      "type": "skill",
+      "name": "monitor-ollama",
+      "category": "monitor",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-ollama/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-opportunities",
+      "type": "skill",
+      "name": "monitor-opportunities",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-opportunities/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-pdfs",
+      "type": "skill",
+      "name": "monitor-pdfs",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-pdfs/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-personas",
+      "type": "skill",
+      "name": "monitor-personas",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-personas/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-pi",
+      "type": "skill",
+      "name": "monitor-pi",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-pi/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-security",
+      "type": "skill",
+      "name": "monitor-security",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-security/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-skill-health",
+      "type": "skill",
+      "name": "monitor-skill-health",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-skill-health/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-skills",
+      "type": "skill",
+      "name": "monitor-skills",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-skills/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-sparta",
+      "type": "skill",
+      "name": "monitor-sparta",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-sparta/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-taxonomy",
+      "type": "skill",
+      "name": "monitor-taxonomy",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-taxonomy/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-website",
+      "type": "skill",
+      "name": "monitor-website",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-website/SKILL.md"
+    },
+    {
+      "id": "skill:monitor-workstation",
+      "type": "skill",
+      "name": "monitor-workstation",
+      "category": "monitor",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-workstation/SKILL.md"
+    },
+    {
+      "id": "skill:music-lab",
+      "type": "skill",
+      "name": "music-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/music-lab/SKILL.md"
+    },
+    {
+      "id": "skill:nico-qa",
+      "type": "skill",
+      "name": "nico-qa",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/nico-qa/SKILL.md"
+    },
+    {
+      "id": "skill:oc-subagent",
+      "type": "skill",
+      "name": "oc-subagent",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/oc-subagent/SKILL.md"
+    },
+    {
+      "id": "skill:ops-arango",
+      "type": "skill",
+      "name": "ops-arango",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-arango/SKILL.md"
+    },
+    {
+      "id": "skill:ops-buzz",
+      "type": "skill",
+      "name": "ops-buzz",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-buzz/SKILL.md"
+    },
+    {
+      "id": "skill:ops-chutes",
+      "type": "skill",
+      "name": "ops-chutes",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-chutes/SKILL.md"
+    },
+    {
+      "id": "skill:ops-claude",
+      "type": "skill",
+      "name": "ops-claude",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-claude/SKILL.md"
+    },
+    {
+      "id": "skill:ops-compliance",
+      "type": "skill",
+      "name": "ops-compliance",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-compliance/SKILL.md"
+    },
+    {
+      "id": "skill:ops-costs",
+      "type": "skill",
+      "name": "ops-costs",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-costs/SKILL.md"
+    },
+    {
+      "id": "skill:ops-darpa",
+      "type": "skill",
+      "name": "ops-darpa",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-darpa/SKILL.md"
+    },
+    {
+      "id": "skill:ops-discord",
+      "type": "skill",
+      "name": "ops-discord",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-discord/SKILL.md"
+    },
+    {
+      "id": "skill:ops-docker",
+      "type": "skill",
+      "name": "ops-docker",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-docker/SKILL.md"
+    },
+    {
+      "id": "skill:ops-embry-agent",
+      "type": "skill",
+      "name": "ops-embry-agent",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-embry-agent/SKILL.md"
+    },
+    {
+      "id": "skill:ops-f36-plant",
+      "type": "skill",
+      "name": "ops-f36-plant",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-f36-plant/SKILL.md"
+    },
+    {
+      "id": "skill:ops-google",
+      "type": "skill",
+      "name": "ops-google",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-google/SKILL.md"
+    },
+    {
+      "id": "skill:ops-llm",
+      "type": "skill",
+      "name": "ops-llm",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-llm/SKILL.md"
+    },
+    {
+      "id": "skill:ops-nzbgeek",
+      "type": "skill",
+      "name": "ops-nzbgeek",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-nzbgeek/SKILL.md"
+    },
+    {
+      "id": "skill:ops-pi-term",
+      "type": "skill",
+      "name": "ops-pi-term",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-pi-term/SKILL.md"
+    },
+    {
+      "id": "skill:ops-runpod",
+      "type": "skill",
+      "name": "ops-runpod",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-runpod/SKILL.md"
+    },
+    {
+      "id": "skill:ops-sam-gov",
+      "type": "skill",
+      "name": "ops-sam-gov",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-sam-gov/SKILL.md"
+    },
+    {
+      "id": "skill:ops-stitch",
+      "type": "skill",
+      "name": "ops-stitch",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-stitch/SKILL.md"
+    },
+    {
+      "id": "skill:ops-streamdeck",
+      "type": "skill",
+      "name": "ops-streamdeck",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-streamdeck/SKILL.md"
+    },
+    {
+      "id": "skill:ops-workstation",
+      "type": "skill",
+      "name": "ops-workstation",
+      "category": "ops",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-workstation/SKILL.md"
+    },
+    {
+      "id": "skill:orchestrate",
+      "type": "skill",
+      "name": "orchestrate",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/orchestrate/SKILL.md"
+    },
+    {
+      "id": "skill:orpheus-tts-voice-trainer",
+      "type": "skill",
+      "name": "orpheus-tts-voice-trainer",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/orpheus-tts-voice-trainer/SKILL.md"
+    },
+    {
+      "id": "skill:paper-lab",
+      "type": "skill",
+      "name": "paper-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/paper-lab/SKILL.md"
+    },
+    {
+      "id": "skill:pdf-lab",
+      "type": "skill",
+      "name": "pdf-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/pdf-lab/SKILL.md"
+    },
+    {
+      "id": "skill:pdf-screenshot",
+      "type": "skill",
+      "name": "pdf-screenshot",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/pdf-screenshot/SKILL.md"
+    },
+    {
+      "id": "skill:perplexity",
+      "type": "skill",
+      "name": "perplexity",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/perplexity/SKILL.md"
+    },
+    {
+      "id": "skill:persona-dream",
+      "type": "skill",
+      "name": "persona-dream",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/SKILL.md"
+    },
+    {
+      "id": "skill:persona-journal",
+      "type": "skill",
+      "name": "persona-journal",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-journal/SKILL.md"
+    },
+    {
+      "id": "skill:personaplex",
+      "type": "skill",
+      "name": "personaplex",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/personaplex/SKILL.md"
+    },
+    {
+      "id": "skill:phart-dag-chart",
+      "type": "skill",
+      "name": "phart-dag-chart",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/phart-dag-chart/SKILL.md"
+    },
+    {
+      "id": "skill:pick-ui-library",
+      "type": "skill",
+      "name": "pick-ui-library",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/pick-ui-library/SKILL.md"
+    },
+    {
+      "id": "skill:pitchdeck",
+      "type": "skill",
+      "name": "pitchdeck",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/pitchdeck/SKILL.md"
+    },
+    {
+      "id": "skill:plan",
+      "type": "skill",
+      "name": "plan",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/plan/SKILL.md"
+    },
+    {
+      "id": "skill:plan-iterate",
+      "type": "skill",
+      "name": "plan-iterate",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/plan-iterate/SKILL.md"
+    },
+    {
+      "id": "skill:png-svg-converter",
+      "type": "skill",
+      "name": "png-svg-converter",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/png-svg-converter/SKILL.md"
+    },
+    {
+      "id": "skill:project-drift",
+      "type": "skill",
+      "name": "project-drift",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-drift/SKILL.md"
+    },
+    {
+      "id": "skill:project-infographic",
+      "type": "skill",
+      "name": "project-infographic",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-infographic/SKILL.md"
+    },
+    {
+      "id": "skill:project-knowledge",
+      "type": "skill",
+      "name": "project-knowledge",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-knowledge/SKILL.md"
+    },
+    {
+      "id": "skill:project-state",
+      "type": "skill",
+      "name": "project-state",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-state/SKILL.md"
+    },
+    {
+      "id": "skill:project-watchdog",
+      "type": "skill",
+      "name": "project-watchdog",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-watchdog/SKILL.md"
+    },
+    {
+      "id": "skill:prompt-lab",
+      "type": "skill",
+      "name": "prompt-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/prompt-lab/SKILL.md"
+    },
+    {
+      "id": "skill:prototype",
+      "type": "skill",
+      "name": "prototype",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/prototype/SKILL.md"
+    },
+    {
+      "id": "skill:prototype-react-iterate",
+      "type": "skill",
+      "name": "prototype-react-iterate",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/prototype-react-iterate/SKILL.md"
+    },
+    {
+      "id": "skill:provider-packet",
+      "type": "skill",
+      "name": "provider-packet",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/provider-packet/SKILL.md"
+    },
+    {
+      "id": "skill:qra-review",
+      "type": "skill",
+      "name": "qra-review",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/qra-review/SKILL.md"
+    },
+    {
+      "id": "skill:quality-audit",
+      "type": "skill",
+      "name": "quality-audit",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/quality-audit/SKILL.md"
+    },
+    {
+      "id": "skill:rate-limit-recovery",
+      "type": "skill",
+      "name": "rate-limit-recovery",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/rate-limit-recovery/SKILL.md"
+    },
+    {
+      "id": "skill:reality-check-sparta",
+      "type": "skill",
+      "name": "reality-check-sparta",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/reality-check-sparta/SKILL.md"
+    },
+    {
+      "id": "skill:recommend-skill-chain",
+      "type": "skill",
+      "name": "recommend-skill-chain",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/recommend-skill-chain/SKILL.md"
+    },
+    {
+      "id": "skill:regressor-lab",
+      "type": "skill",
+      "name": "regressor-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/regressor-lab/SKILL.md"
+    },
+    {
+      "id": "skill:remote-control",
+      "type": "skill",
+      "name": "remote-control",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/remote-control/SKILL.md"
+    },
+    {
+      "id": "skill:review-animations",
+      "type": "skill",
+      "name": "review-animations",
+      "category": "review",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-animations/SKILL.md"
+    },
+    {
+      "id": "skill:review-assurance-case",
+      "type": "skill",
+      "name": "review-assurance-case",
+      "category": "review",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-assurance-case/SKILL.md"
+    },
+    {
+      "id": "skill:review-code",
+      "type": "skill",
+      "name": "review-code",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-code/SKILL.md"
+    },
+    {
+      "id": "skill:review-conversation",
+      "type": "skill",
+      "name": "review-conversation",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-conversation/SKILL.md"
+    },
+    {
+      "id": "skill:review-design",
+      "type": "skill",
+      "name": "review-design",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-design/SKILL.md"
+    },
+    {
+      "id": "skill:review-extraction",
+      "type": "skill",
+      "name": "review-extraction",
+      "category": "review",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-extraction/SKILL.md"
+    },
+    {
+      "id": "skill:review-music",
+      "type": "skill",
+      "name": "review-music",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-music/SKILL.md"
+    },
+    {
+      "id": "skill:review-page",
+      "type": "skill",
+      "name": "review-page",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-page/SKILL.md"
+    },
+    {
+      "id": "skill:review-paper",
+      "type": "skill",
+      "name": "review-paper",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-paper/SKILL.md"
+    },
+    {
+      "id": "skill:review-pdf",
+      "type": "skill",
+      "name": "review-pdf",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-pdf/SKILL.md"
+    },
+    {
+      "id": "skill:review-persona",
+      "type": "skill",
+      "name": "review-persona",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-persona/SKILL.md"
+    },
+    {
+      "id": "skill:review-plan",
+      "type": "skill",
+      "name": "review-plan",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-plan/SKILL.md"
+    },
+    {
+      "id": "skill:review-prompt",
+      "type": "skill",
+      "name": "review-prompt",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-prompt/SKILL.md"
+    },
+    {
+      "id": "skill:review-question",
+      "type": "skill",
+      "name": "review-question",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-question/SKILL.md"
+    },
+    {
+      "id": "skill:review-readme",
+      "type": "skill",
+      "name": "review-readme",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-readme/SKILL.md"
+    },
+    {
+      "id": "skill:review-sparta",
+      "type": "skill",
+      "name": "review-sparta",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-sparta/SKILL.md"
+    },
+    {
+      "id": "skill:review-story",
+      "type": "skill",
+      "name": "review-story",
+      "category": "review",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/review-story/SKILL.md"
+    },
+    {
+      "id": "skill:scheduler",
+      "type": "skill",
+      "name": "scheduler",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scheduler/SKILL.md"
+    },
+    {
+      "id": "skill:scillm",
+      "type": "skill",
+      "name": "scillm",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/SKILL.md"
+    },
+    {
+      "id": "skill:security-scan",
+      "type": "skill",
+      "name": "security-scan",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/security-scan/SKILL.md"
+    },
+    {
+      "id": "skill:service-status",
+      "type": "skill",
+      "name": "service-status",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/service-status/SKILL.md"
+    },
+    {
+      "id": "skill:sfx-catalog",
+      "type": "skill",
+      "name": "sfx-catalog",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sfx-catalog/SKILL.md"
+    },
+    {
+      "id": "skill:skill-lab",
+      "type": "skill",
+      "name": "skill-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/skill-lab/SKILL.md"
+    },
+    {
+      "id": "skill:skills-broadcast",
+      "type": "skill",
+      "name": "skills-broadcast",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/skills-broadcast/SKILL.md"
+    },
+    {
+      "id": "skill:skills-ci",
+      "type": "skill",
+      "name": "skills-ci",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/skills-ci/SKILL.md"
+    },
+    {
+      "id": "skill:social-bridge",
+      "type": "skill",
+      "name": "social-bridge",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/social-bridge/SKILL.md"
+    },
+    {
+      "id": "skill:sparta-qra-validator-gpt",
+      "type": "skill",
+      "name": "sparta-qra-validator-gpt",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sparta-qra-validator-gpt/SKILL.md"
+    },
+    {
+      "id": "skill:sparta-review",
+      "type": "skill",
+      "name": "sparta-review",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sparta-review/SKILL.md"
+    },
+    {
+      "id": "skill:sparta-stress-test",
+      "type": "skill",
+      "name": "sparta-stress-test",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sparta-stress-test/SKILL.md"
+    },
+    {
+      "id": "skill:sprite-atlas",
+      "type": "skill",
+      "name": "sprite-atlas",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sprite-atlas/SKILL.md"
+    },
+    {
+      "id": "skill:story-lab",
+      "type": "skill",
+      "name": "story-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/story-lab/SKILL.md"
+    },
+    {
+      "id": "skill:streamdeck-lab",
+      "type": "skill",
+      "name": "streamdeck-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/streamdeck-lab/SKILL.md"
+    },
+    {
+      "id": "skill:subagent-runner",
+      "type": "skill",
+      "name": "subagent-runner",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/subagent-runner/SKILL.md"
+    },
+    {
+      "id": "skill:surf",
+      "type": "skill",
+      "name": "surf",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/SKILL.md"
+    },
+    {
+      "id": "skill:surf-qml",
+      "type": "skill",
+      "name": "surf-qml",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf-qml/SKILL.md"
+    },
+    {
+      "id": "skill:switchboard",
+      "type": "skill",
+      "name": "switchboard",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/switchboard/SKILL.md"
+    },
+    {
+      "id": "skill:sync-sites",
+      "type": "skill",
+      "name": "sync-sites",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sync-sites/SKILL.md"
+    },
+    {
+      "id": "skill:table-lab",
+      "type": "skill",
+      "name": "table-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/table-lab/SKILL.md"
+    },
+    {
+      "id": "skill:task-monitor",
+      "type": "skill",
+      "name": "task-monitor",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/task-monitor/SKILL.md"
+    },
+    {
+      "id": "skill:tau",
+      "type": "skill",
+      "name": "tau",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/SKILL.md"
+    },
+    {
+      "id": "skill:taxonomy",
+      "type": "skill",
+      "name": "taxonomy",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/taxonomy/SKILL.md"
+    },
+    {
+      "id": "skill:test",
+      "type": "skill",
+      "name": "test",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/test/SKILL.md"
+    },
+    {
+      "id": "skill:test-interactions",
+      "type": "skill",
+      "name": "test-interactions",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/test-interactions/SKILL.md"
+    },
+    {
+      "id": "skill:test-lab",
+      "type": "skill",
+      "name": "test-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/test-lab/SKILL.md"
+    },
+    {
+      "id": "skill:thunderdome",
+      "type": "skill",
+      "name": "thunderdome",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/thunderdome/SKILL.md"
+    },
+    {
+      "id": "skill:ticket",
+      "type": "skill",
+      "name": "ticket",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ticket/SKILL.md"
+    },
+    {
+      "id": "skill:train-convo-steering",
+      "type": "skill",
+      "name": "train-convo-steering",
+      "category": "train",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/train-convo-steering/SKILL.md"
+    },
+    {
+      "id": "skill:train-persona",
+      "type": "skill",
+      "name": "train-persona",
+      "category": "train",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/train-persona/SKILL.md"
+    },
+    {
+      "id": "skill:train-voice",
+      "type": "skill",
+      "name": "train-voice",
+      "category": "train",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/train-voice/SKILL.md"
+    },
+    {
+      "id": "skill:treesitter",
+      "type": "skill",
+      "name": "treesitter",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/treesitter/SKILL.md"
+    },
+    {
+      "id": "skill:tts-horus",
+      "type": "skill",
+      "name": "tts-horus",
+      "category": "tts",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tts-horus/SKILL.md"
+    },
+    {
+      "id": "skill:tts-train",
+      "type": "skill",
+      "name": "tts-train",
+      "category": "tts",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tts-train/SKILL.md"
+    },
+    {
+      "id": "skill:ux-lab",
+      "type": "skill",
+      "name": "ux-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ux-lab/SKILL.md"
+    },
+    {
+      "id": "skill:vector-store",
+      "type": "skill",
+      "name": "vector-store",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/vector-store/SKILL.md"
+    },
+    {
+      "id": "skill:voice-lab",
+      "type": "skill",
+      "name": "voice-lab",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/voice-lab/SKILL.md"
+    },
+    {
+      "id": "skill:voice-segment-selector",
+      "type": "skill",
+      "name": "voice-segment-selector",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/voice-segment-selector/SKILL.md"
+    },
+    {
+      "id": "skill:watch",
+      "type": "skill",
+      "name": "watch",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/SKILL.md"
+    },
+    {
+      "id": "skill:webgpt",
+      "type": "skill",
+      "name": "webgpt",
+      "category": "core",
+      "sanity": true,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/webgpt/SKILL.md"
+    },
+    {
+      "id": "skill:webgpt-review",
+      "type": "skill",
+      "name": "webgpt-review",
+      "category": "core",
+      "sanity": false,
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/webgpt-review/SKILL.md"
+    }
+  ]
+}

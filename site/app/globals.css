@@ -2167,6 +2167,125 @@ a.fig:hover .l::after,
   }
 }
 
+/* Capability search — search-first entry: a client types a problem, gets real
+   work back. Editorial, not a generic command palette. */
+.search-band {
+  padding-block: clamp(2rem, 4vw, 3.2rem);
+}
+.capsearch {
+  max-width: 62ch;
+}
+.capsearch-label {
+  display: block;
+  font-family: var(--serif);
+  font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+  font-variation-settings: 'SOFT' 50, 'opsz' 40;
+  color: var(--text);
+  margin-bottom: 0.7rem;
+}
+.capsearch-input {
+  width: 100%;
+  background: rgba(236, 226, 211, 0.03);
+  border: 1px solid var(--line);
+  border-bottom: 2px solid var(--brass);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 1rem;
+  padding: 0.9rem 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.capsearch-input::placeholder {
+  color: var(--faint);
+}
+.capsearch-input:focus {
+  background: rgba(226, 172, 98, 0.05);
+  border-color: var(--brass);
+}
+.capsearch-examples {
+  margin: 0.7rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--faint);
+}
+.capsearch-example {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+.capsearch-example:hover {
+  color: var(--brass);
+}
+.capsearch-results {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-2);
+}
+.capsearch-hit {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.capsearch-hit a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  text-decoration: none;
+}
+.capsearch-type {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.1rem 0.4rem;
+}
+.capsearch-hit--project .capsearch-type {
+  color: var(--brass);
+  border-color: rgba(226, 172, 98, 0.4);
+}
+.capsearch-name {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.capsearch-area {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--faint);
+}
+.capsearch-evi {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px dashed rgba(226, 172, 98, 0.5);
+  border-radius: 2px;
+  padding: 0.05rem 0.35rem;
+}
+.capsearch-sum {
+  margin: 0.25rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.capsearch-empty {
+  padding: 0.9rem 0;
+  color: var(--faint);
+  font-size: 0.9rem;
+}
+
 /* Private project shown via its public overview — dashed, marked abstract. */
 .evidence-private {
   display: inline-block;
