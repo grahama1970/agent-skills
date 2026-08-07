@@ -352,23 +352,23 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             box.line.width = Pt(2.5)
             box.name = f"el:{element.id}:node:{node.id}"
         else:
-            ring_size = min(nw, nh) * 0.62
+            ring_size = min(nw, nh) * 0.48
             ring = group.shapes.add_shape(
                 MSO_SHAPE.OVAL,
-                Inches(nx + nw / 2 - ring_size / 2), Inches(ny + nh * 0.32 - ring_size / 2),
+                Inches(nx + nw / 2 - ring_size / 2), Inches(ny + nh * 0.28 - ring_size / 2),
                 Inches(ring_size), Inches(ring_size))
             ring.fill.background()
             ring.line.color.rgb = accent
             ring.line.width = Pt(3.25 if terminal else 2.25)
             ring.name = f"el:{element.id}:node:{node.id}"
         if node.icon:
-            size = min(nw, nh) * (0.4 if unboxed else 0.36)
+            size = min(nw, nh) * (0.32 if unboxed else 0.36)
             _emit_icon_parts(
                 group, node.icon,
-                Frame(nx + nw / 2 - size / 2, ny + nh * 0.32 - size / 2, size, size),
+                Frame(nx + nw / 2 - size / 2, ny + nh * (0.28 if unboxed else 0.32) - size / 2, size, size),
                 accent, f"el:{element.id}:node:{node.id}:icon",
             )
-        label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * 0.52), Inches(nw), Inches(nh * 0.44))
+        label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * (0.62 if unboxed else 0.52)), Inches(nw), Inches(nh * (0.38 if unboxed else 0.44)))
         label.name = f"el:{element.id}:node:{node.id}:label"
         tf = label.text_frame
         tf.word_wrap = True
@@ -390,8 +390,9 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
     for edge in graph.edges:
         sx, sy, sw, sh = centers[edge.source]
         tx, ty, tw, th = centers[edge.target]
-        begin = (Inches(sx + sw), Inches(sy + sh / 2))
-        end = (Inches(tx), Inches(ty + th / 2))
+        edge_frac = 0.28 if unboxed else 0.5
+        begin = (Inches(sx + sw), Inches(sy + sh * edge_frac))
+        end = (Inches(tx), Inches(ty + th * edge_frac))
         route = MSO_CONNECTOR.ELBOW if edge.route == "curve" else MSO_CONNECTOR.STRAIGHT
         connector = group.shapes.add_connector(route, begin[0], begin[1], end[0], end[1])
         connector.line.color.rgb = primary
@@ -465,6 +466,11 @@ def emit_document_pptx(
             band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else (title_el.text if title_el else ""))
             title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 1.6), Inches(SLIDE_H_IN * 0.10 - 0.1))
             title_box.name = "chrome:band-title" if hero else (f"el:{title_el.id}" if title_el else "chrome:band-title")
+            # wrap on + no autofit: wrap="none"+spAutoFit makes LibreOffice
+            # re-fit the box symmetrically, which centers the title and
+            # defeats algn="l" (webgpt re-review finding, 2026-08-07).
+            title_box.text_frame.word_wrap = True
+            title_box.text_frame.auto_size = None
             run = title_box.text_frame.paragraphs[0].add_run()
             run.text = band_text or ""
             run.font.size = Pt(24 if len(band_text or "") <= 58 else 20)

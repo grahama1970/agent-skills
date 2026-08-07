@@ -71,10 +71,10 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
     for n_index, node in enumerate(graph.nodes):
         x, y = node.bbox.x * width, node.bbox.y * height
         w, h = node.bbox.w * width, node.bbox.h * height
-        centers[node.id] = (x + w / 2, y + h / 2, w, h)
+        centers[node.id] = (x + w / 2, y + h * (0.28 if unboxed else 0.5), w, h)
         accent = _ROLE_CYCLE[n_index % len(_ROLE_CYCLE)] if unboxed else primary
         terminal = unboxed and n_index == len(graph.nodes) - 1
-        icon_size = min(w, h) * (0.52 if unboxed else 0.34)
+        icon_size = min(w, h) * (0.40 if unboxed else 0.34)
         parts.append(
             f'<g id="node-{html.escape(node.id)}">'
             + (
@@ -84,20 +84,20 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
                      f'fill="none" stroke="{primary}" stroke-width="3"/>'
             )
             + (
-                f'<circle cx="{x + w / 2:.0f}" cy="{y + h * 0.32:.0f}" r="{icon_size * 0.72:.0f}" '
+                f'<circle cx="{x + w / 2:.0f}" cy="{y + h * 0.28:.0f}" r="{icon_size * 0.72:.0f}" '
                 f'fill="none" stroke="{accent}" stroke-width="{4 if terminal else 2.5}"/>'
                 if unboxed
                 else ""
             )
             + (
-                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * 0.32 - icon_size / 2, icon_size, accent)
+                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * (0.28 if unboxed else 0.32) - icon_size / 2, icon_size, accent)
                 if node.icon
                 else ""
             )
-            + f'<text x="{x + w / 2:.0f}" y="{y + h * 0.68:.0f}" text-anchor="middle" '
+            + f'<text x="{x + w / 2:.0f}" y="{y + h * (0.80 if unboxed else 0.68):.0f}" text-anchor="middle" '
             f'font-size="{max(14, h * 0.14):.0f}" font-weight="bold" fill="{primary}">{html.escape(node.label)}</text>'
             + (
-                f'<text x="{x + w / 2:.0f}" y="{y + h * 0.84:.0f}" text-anchor="middle" '
+                f'<text x="{x + w / 2:.0f}" y="{y + h * (0.95 if unboxed else 0.84):.0f}" text-anchor="middle" '
                 f'font-size="{max(11, h * 0.09):.0f}" fill="{ink}">{html.escape(node.sublabel)}</text>'
                 if node.sublabel
                 else ""

@@ -33,7 +33,9 @@ def lint_document(document: DeckDocument) -> list[dict]:
             continue
         tree = list(iter_tree(slide.elements))
         recipe = slide.intent.recipe
-        words = sum(len((e.text or "").split()) for e in tree if e.kind is DocElementKind.TEXT)
+        # role=="footer" is mandatory qualifier chrome, excluded from density
+        # (same rule as deck_document density accounting).
+        words = sum(len((e.text or "").split()) for e in tree if e.kind is DocElementKind.TEXT and e.role != "footer")
         words += sum(len(e.rich_text.plain_text().split()) for e in tree if e.kind is DocElementKind.RICH_TEXT)
         if words > slide.intent.density_budget_words:
             finding("DENSITY_BUDGET", slide.id, f"{words} words > budget {slide.intent.density_budget_words}")

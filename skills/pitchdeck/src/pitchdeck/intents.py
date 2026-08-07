@@ -279,7 +279,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         elements.append(DocElement(
             id="qualifier", kind=DocElementKind.TEXT, role="footer",
             bbox=Bbox(x=0.06, y=0.92, w=0.88, h=0.05),
-            text=" · ".join(dict.fromkeys(required))[:200],
+            text=_truncate_words(" · ".join(dict.fromkeys(required)), 260),
             style=DocTextStyle(size_pt=12.0, color="#595959"),
             binding_paths=["footer"],
         ))
