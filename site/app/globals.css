@@ -183,9 +183,9 @@ section {
   position: sticky;
   top: 0;
   z-index: 500;
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  background: linear-gradient(180deg, rgba(12, 9, 8, 0.86), rgba(12, 9, 8, 0.5));
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  background: linear-gradient(180deg, rgba(12, 9, 8, 0.97), rgba(12, 9, 8, 0.9));
   border-bottom: 1px solid var(--line-2);
 }
 .topbar .wrap {
