@@ -1,6 +1,8 @@
 # Nightly site refresh — DISABLED BY DEFAULT per repo convention.
-# Enable only when the scheduler environment is ready and auto-push of
-# mechanical inventory/artifact regeneration to main is desired.
+# Push-driven GitHub Pages publication is primary: site-deploy rebuilds when the
+# root README, public project README/SKILL docs, taxonomy, assets, agents, or
+# site code change. Enable this workstation fallback only when scheduled
+# commit/push effects are explicitly desired.
 services:
   - name: website-nightly-refresh
     enabled: false
@@ -8,10 +10,11 @@ services:
     command: skills/monitor-website/run.sh refresh --commit --push
     then: skills/monitor-website/run.sh audit --json
     notes: >
-      Regenerates site/inventory.json, site/artifacts.json, and
-      site/generated/battle-lineage.json from repo state, gates on
-      verify-data-qid + npm build, commits/pushes only when
-      content changed (push triggers Pages deploy). Copy (questions,
-      blurbs, sections) is never modified by this job — copy changes stay
-      doc-grounded and agent/human-authored. The audit run after refresh
-      reports drift + live-site health as the receipt.
+      Optional fallback that regenerates inventory, artifacts, battle lineage,
+      research map, visibility, README-backed catalog, and public graph from
+      repo state. It gates on qid, copy audit, and npm build; commits/pushes only
+      when generated content changed. Copy (questions, blurbs, sections) is
+      never modified by this job — copy changes stay human/agent-authored. The
+      normal README-driven website update does not depend on this service:
+      .github/workflows/site-deploy.yml regenerates in its build workspace and
+      performs a post-deploy source-commit read-back.
