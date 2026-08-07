@@ -2084,6 +2084,26 @@ a.fig:hover .l::after,
   }
 }
 
+/* Phone: keep the three flagship cards full; compact the rest into an index
+   (question + repo, no image or rationale) so Work isn't an endless scroll and
+   the desktop hierarchy survives. */
+@media (max-width: 640px) {
+  .card.secondary .shot-link,
+  .card.secondary .d,
+  .card.secondary .why {
+    display: none;
+  }
+  .card.secondary {
+    margin-top: 0 !important;
+  }
+  .card.secondary .card-body {
+    padding-block: 0.9rem;
+  }
+  .card.secondary .q {
+    margin-top: 0.2rem;
+  }
+}
+
 /* Why this project exists — the R&D rationale, from each README. */
 .why {
   grid-column: 2;

@@ -14,6 +14,10 @@ import inventory from '@/inventory.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
+// Flagship systems — already emphasised by the desktop collage; on phones the
+// other projects compact to an index so the Work section isn't an endless scroll.
+const FLAGSHIPS = new Set(['tau', 'persona-dream', 'sparta-explorer']);
+
 const CARD_META: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
@@ -236,7 +240,13 @@ export default function Home() {
                   .replace('/blob/main/skills/', '/…/')
                   .replace('/README.md', '');
                 return (
-                  <article key={p.slug} className={`card ${meta.cls}`} id={`project-${p.slug}`}>
+                  <article
+                    key={p.slug}
+                    className={`card ${meta.cls} ${
+                      FLAGSHIPS.has(p.slug) ? 'flagship' : 'secondary'
+                    }`}
+                    id={`project-${p.slug}`}
+                  >
                     <a
                       href={p.href}
                       data-qid={`work:card:${p.slug}`}
