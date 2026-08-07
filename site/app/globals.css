@@ -2423,6 +2423,26 @@ a.fig:hover .l::after,
   color: var(--faint);
   font-size: 0.9rem;
 }
+/* Why a hit matched — the retrieval showing its work. */
+.capsearch-why {
+  margin: 0.2rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+.capsearch-why b {
+  color: var(--muted);
+  font-weight: 400;
+}
+.capsearch-note {
+  list-style: none;
+  margin: 0 0 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
 
 /* Capability constellation — image-filled glowing nodes on a dark field,
    in the spirit of the persona-dream graph. Deterministic, art-directed. */

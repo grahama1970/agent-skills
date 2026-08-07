@@ -24,16 +24,12 @@ interface Doc {
 const DOCS = catalog.documents as Doc[];
 
 // Field-weighted BM25 (#1292): names and aliases dominate, prose supports.
+const BOOST = { name: 4, aliases: 3, area: 2, question: 1.5, summary: 1.2, body: 0.6 };
+
 function buildIndex() {
   const ms = new MiniSearch<Doc>({
     fields: ['name', 'aliases', 'area', 'disciplines', 'question', 'summary', 'body', 'category'],
     storeFields: ['type', 'name', 'slug', 'area', 'href', 'question', 'summary', 'visibility', 'evidenceAccess'],
-    searchOptions: {
-      boost: { name: 4, aliases: 3, area: 2, question: 1.5, summary: 1.2, body: 0.6 },
-      prefix: true,
-      fuzzy: (term) => (term.length > 4 ? 0.2 : false),
-      combineWith: 'AND',
-    },
     extractField: (doc, field) => {
       const v = (doc as unknown as Record<string, unknown>)[field];
       return Array.isArray(v) ? v.join(' ') : ((v as string) ?? '');
@@ -41,6 +37,61 @@ function buildIndex() {
   });
   ms.addAll(DOCS);
   return ms;
+}
+
+// Which field a hit matched, ranked, so we can tell the visitor *why* it matched.
+const FIELD_RANK = ['name', 'aliases', 'area', 'question', 'disciplines', 'summary', 'body', 'category'];
+const FIELD_LABEL: Record<string, string> = {
+  name: 'the name',
+  aliases: 'an alias',
+  area: 'the area',
+  question: 'the research question',
+  disciplines: 'a discipline',
+  summary: 'the description',
+  body: 'the write-up',
+  category: 'the category',
+};
+
+type Hit = Doc & { score: number; reason?: { terms: string; where: string } | null };
+
+function reasonFor(r: { match?: Record<string, string[]>; terms?: string[] }) {
+  const fields = new Set<string>();
+  Object.values(r.match ?? {}).forEach((fs) => fs.forEach((f) => fields.add(f)));
+  const top = FIELD_RANK.find((f) => fields.has(f));
+  if (!top) return null;
+  const terms = (r.terms ?? []).slice(0, 3).join(' ');
+  return { terms, where: FIELD_LABEL[top] ?? top };
+}
+
+/**
+ * Two-pass retrieval (#1292): precise first — exact/alias/prefix, no fuzz —
+ * and only fall back to controlled fuzzy when the precise pass is thin. Short
+ * codenames (tau, surf, kai) never fuzz. Exact/prefix hits always rank above
+ * fuzzy ones, and every hit carries why it matched.
+ */
+function runSearch(index: MiniSearch<Doc>, q: string): { hits: Hit[]; fuzzed: boolean } {
+  const precise = index.search(q, {
+    boost: BOOST, prefix: true, fuzzy: false, combineWith: 'AND',
+  });
+  let raw = precise;
+  let fuzzed = false;
+  if (precise.length < 3) {
+    // low confidence -> add a controlled fuzzy pass; never fuzz short tokens
+    const loose = index.search(q, {
+      boost: BOOST, prefix: true,
+      fuzzy: (term) => (term.length > 4 ? 0.2 : false),
+      combineWith: 'OR',
+    });
+    const seen = new Set(precise.map((r) => r.id));
+    raw = [...precise, ...loose.filter((r) => !seen.has(r.id))]; // precise stays on top
+    fuzzed = precise.length === 0;
+  }
+  const hits = raw.slice(0, 8).map((r) => ({
+    ...(r as unknown as Doc),
+    score: r.score,
+    reason: reasonFor(r as { match?: Record<string, string[]>; terms?: string[] }),
+  }));
+  return { hits, fuzzed };
 }
 
 const EXAMPLES = [
@@ -88,9 +139,7 @@ export function CapabilitySearch() {
   }, [query]);
 
   const q = query.trim();
-  const results = q
-    ? index.search(q).slice(0, 8).map((r) => r as unknown as Doc & { score: number })
-    : [];
+  const { hits, fuzzed } = q ? runSearch(index, q) : { hits: [] as Hit[], fuzzed: false };
 
   return (
     <div className="capsearch" aria-label="Search the practice by problem">
@@ -138,12 +187,18 @@ export function CapabilitySearch() {
       )}
       {q && (
         <ul className="capsearch-results" aria-live="polite">
-          {results.length === 0 && (
+          {hits.length === 0 && (
             <li className="capsearch-empty">
-              No match — try a capability, a problem, or a project name.
+              No confident match for <b>{q}</b> — try a capability, a problem, or a
+              project name.
             </li>
           )}
-          {results.map((r) => (
+          {hits.length > 0 && fuzzed && (
+            <li className="capsearch-note" aria-hidden="true">
+              no exact match — showing closest results
+            </li>
+          )}
+          {hits.map((r) => (
             <li key={r.id} className={`capsearch-hit capsearch-hit--${r.type}`}>
               <a
                 href={
@@ -164,6 +219,11 @@ export function CapabilitySearch() {
               </a>
               {(r.question || r.summary) && (
                 <p className="capsearch-sum">{r.question || r.summary}</p>
+              )}
+              {r.reason && r.reason.terms && (
+                <p className="capsearch-why">
+                  matched <b>{r.reason.terms}</b> in {r.reason.where}
+                </p>
               )}
             </li>
           ))}
