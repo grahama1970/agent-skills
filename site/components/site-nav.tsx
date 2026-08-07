@@ -42,7 +42,18 @@ export function SiteNav() {
           data-qs-action="NAV_GOTO_TOP"
           title="Back to top"
         >
-          grahama<span>.co</span>
+          <svg className="brandmark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+            <circle className="brandmark-ring" cx="20" cy="20" r="18" />
+            <text className="brandmark-g" x="18.5" y="27" textAnchor="middle">
+              G
+              <tspan className="brandmark-c" dx="-2" dy="4">
+                c
+              </tspan>
+            </text>
+          </svg>
+          <span className="wordmark-text">
+            grahama<span>.co</span>
+          </span>
         </a>
         <nav className="nav" aria-label="Primary">
           {LINKS.map((l) => (
