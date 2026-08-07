@@ -961,3 +961,42 @@ def test_design_schema_set_and_migration():
     # migration receipt names dropped prose-only fields
     receipt = json.loads((skill / "references" / "theme-migration-receipt.json").read_text())
     assert len(receipt["migrated"]) == 3 and receipt["dropped_prose_fields"]
+
+
+def test_style_analyzer_reference_import(tmp_path):
+    """#1276: deterministic PPTX -> style_reference.v1 with house-signal
+    classification; different design does not classify as house; malformed
+    input fails closed."""
+    import json
+
+    import pytest as _pytest
+    from pptx import Presentation
+    from pptx.dml.color import RGBColor
+    from pptx.util import Pt
+
+    from pitchdeck.io import SkillError
+    from pitchdeck.style_analyze import analyze_pptx, analyze_style
+
+    fixture = tmp_path / "other.pptx"
+    p = Presentation()
+    for _ in range(3):
+        s = p.slides.add_slide(p.slide_layouts[6])
+        tf = s.shapes.add_textbox(Pt(40), Pt(40), Pt(600), Pt(300)).text_frame
+        run = tf.add_paragraph().add_run()
+        run.text = "unrelated corporate text " * 12
+        run.font.name = "Arial"; run.font.size = Pt(11); run.font.color.rgb = RGBColor(0xCC, 0, 0x22)
+    p.save(str(fixture))
+
+    system_path = Path(__file__).parent.parent.parent / "best-practices-slide-design" / "design-systems" / "sparta-house-conference.design_system.json"
+    receipt = analyze_style(fixture, tmp_path / "out", system_path, render=False)
+    assert receipt["classification"]["matches_house"] is False
+    reference = json.loads((tmp_path / "out" / "style_reference.json").read_text())
+    assert reference["schema"] == "pitchdeck.style_reference.v1"
+    assert reference["source_sha256"] and reference["slide_count"] == 3
+    # deterministic
+    analyze_style(fixture, tmp_path / "out2", None, render=False)
+    assert (tmp_path / "out" / "style_reference.json").read_text() == (tmp_path / "out2" / "style_reference.json").read_text()
+    # malformed fails closed
+    bad = tmp_path / "bad.pptx"; bad.write_text("nope")
+    with _pytest.raises(SkillError, match="not a readable PPTX"):
+        analyze_pptx(bad)

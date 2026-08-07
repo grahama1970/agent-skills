@@ -407,6 +407,25 @@ def render_document_cmd(
         _abort(exc)
 
 
+@app.command(name="analyze-style")
+def analyze_style_cmd(
+    pptx: Annotated[Path, typer.Option(help="Reference PPTX to analyze.")],
+    output_dir: Annotated[Path, typer.Option(help="Directory for style_reference.json, renders, and receipt.")],
+    design_system: Annotated[Path | None, typer.Option(help="design_system.v1 JSON to classify against (signals only).")] = None,
+    render: Annotated[bool, typer.Option(help="Render representative slides via LibreOffice.")] = True,
+) -> None:
+    """Analyze a reference deck into validated pitchdeck.style_reference.v1 data."""
+    import json as json_mod
+
+    from .style_analyze import analyze_style
+
+    try:
+        receipt = analyze_style(pptx, output_dir, design_system, render=render)
+        typer.echo(json_mod.dumps({"status": "PASS", **receipt}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="record-transcript")
 def record_transcript_cmd(
     timeout_seconds: Annotated[int, typer.Option(help="Max recording window.")] = 120,
