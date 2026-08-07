@@ -1,0 +1,14 @@
+# Files that exceeded the ceiling when it was introduced (2026-08-07).
+#
+# Each entry PINS the current size: the file may stay this big, but growing
+# past it fails the check. This is debt, not an exemption. New files get none.
+#
+# Both remaining large files are one long render body rather than separable
+# declarations, so they need decomposition into sub-components, not another
+# mechanical extraction.
+
+panels/DirectorConsole.tsx: 1075
+DreamWorkspace.tsx: 943
+panels/ScriptConsole.tsx: 674
+panels/ProviderContractPanel.tsx: 509
+panels/TraceGraphOverlay.tsx: 438

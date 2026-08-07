@@ -87,6 +87,30 @@ useRegisterAction('quarantine:action:approve', {
 - They use the SAME action ID (`QUARANTINE_APPROVE`) so intent → action → DOM click is one straight line
 
 **Enforcement**: `verify-data-qid.py` MUST run in CI and `/plan` DoD for any UX task. Exit 1 = not shippable. `/review-plan` MUST FAIL any UX plan without it.
+
+### File size — capped by contents, not one number
+
+A file with logic (components, hooks, helpers) may not exceed **400 lines**. A
+file of pure data (style maps, token tables, fixtures) may not exceed **800**.
+
+Do not reuse a Python line limit here. JSX is verbally bulky — one element with
+`data-qid`, `data-qs-action`, `title`, `onClick` and `style` costs 6–8 lines — so
+800 lines of TSX holds far less logic and far more branching than 800 of Python.
+
+The distinction matters more than either number: a 795-line style map is
+reviewable by scanning and has no control flow; a 500-line component means
+branching and state, which is the blast-radius problem this skill already
+describes. A ceiling only enforces modularity if it fires — measured over a
+99-file React surface, 800 flagged 2 files, 400 flagged the ones worth splitting.
+
+```bash
+python3 scripts/verify-file-size.py src/       # exit 1 on violation
+```
+
+Data files are **detected, not declared**, so the lower ceiling cannot be dodged
+by renaming. Existing violations go in `.file-size-allowlist` as `path: lines` —
+a debt marker that pins the current size, so an allowlisted file may not grow.
+Runs in CI and `/plan` DoD alongside `verify-data-qid.py`.
 - Eliminate request waterfalls (parallel fetching, `Promise.all`)
 - Bundle size (dynamic imports, tree shaking, barrel file avoidance)
 - Accessibility (aria-labels, semantic HTML, keyboard navigation)
@@ -228,7 +252,10 @@ function KioskDistanceView() {
 
 **Why:** Chat wells, voice panels, drawers, artifact inspectors, and other
 high-churn control surfaces need their own component boundary before design
-iteration. Preserve the accepted component or restore it with `git show` /
+iteration. This rule went unenforced for want of a number: one real route
+component reached **14,767 lines with 173 top-level declarations**, including a
+6,280-line root, because nothing failed until someone read it. See the file-size
+ceilings above. Preserve the accepted component or restore it with `git show` /
 `git revert` instead of re-bespoking it inside the page. The parent route should
 compose the well and pass data/actions; it should not own the well's markup,
 prompt copy, timers, visual state machine, and command registry. If the human
