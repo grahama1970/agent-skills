@@ -1,5 +1,5 @@
 # Graham Anderson
-Buffalo, NY | Buffalo-area hybrid/onsite or remote | [graham@grahama.co](mailto:graham@grahama.co) | [Work](https://github.com/grahama1970/agent-skills) | [LinkedIn](https://www.linkedin.com/in/grahamanderson/) | [GitHub](https://github.com/grahama1970) | [PDF](docs/resume/graham-anderson-resume.pdf)
+Buffalo, NY | Buffalo-area hybrid/onsite or remote | [graham@grahama.co](mailto:graham@grahama.co) | [grahama.co](https://grahama.co) | [Work](https://github.com/grahama1970/agent-skills) | [LinkedIn](https://www.linkedin.com/in/grahamanderson/) | [GitHub](https://github.com/grahama1970) | [PDF](docs/resume/graham-anderson-resume.pdf)
 
 U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints.
 
