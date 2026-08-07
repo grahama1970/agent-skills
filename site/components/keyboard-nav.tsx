@@ -122,6 +122,15 @@ export function KeyboardNav() {
       if (e.key === '?') {
         e.preventDefault();
         open ? close() : openModal();
+      } else if (e.key === '/') {
+        // Advertised in the help as "Search the skill ledger" — focus the
+        // capability search and bring it into view.
+        const input = document.getElementById('capsearch-input');
+        if (input) {
+          e.preventDefault();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (input as HTMLInputElement).focus();
+        }
       } else if (e.key === 'j') {
         e.preventDefault();
         pulseKbd('J');
