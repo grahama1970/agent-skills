@@ -467,12 +467,91 @@ def outline_cmd(
         _abort(exc)
 
 
+@app.command(name="propose-renderings")
+def propose_renderings_cmd(
+    outline: Annotated[Path, typer.Option(help="narrative_outline.json to amend (approval is invalidated).")],
+    bundle_dir: Annotated[Path, typer.Option(help="Bundle with claim_ledger.yaml (verification source).")],
+    proposals: Annotated[Path | None, typer.Option(help="JSON list of {module, claim_id, text, transform_class} agent proposals.")] = None,
+    max_words: Annotated[int, typer.Option(help="Band cap for auto truncation candidates.")] = 10,
+) -> None:
+    """Propose tightened assertion RENDERINGS (candidates only; human approval promotes)."""
+    import json as json_mod
+
+    from .models import ClaimLedger
+    from .planning import AssertionRendering, NarrativeOutline, propose_truncations, verify_rendering
+
+    try:
+        model = NarrativeOutline.model_validate(json_mod.loads(outline.read_text(encoding="utf-8")))
+        ledger = load_yaml(bundle_dir / "claim_ledger.yaml", ClaimLedger)
+        claims = {c.id: c.text for c in ledger.claims}
+        agent_props = json_mod.loads(proposals.read_text(encoding="utf-8")) if proposals else []
+        summary = []
+        new_modules = []
+        for module in model.modules:
+            renderings = list(module.renderings)
+            for prop in [p for p in agent_props if p["module"] == module.module]:
+                rendering = verify_rendering(
+                    AssertionRendering(claim_id=prop["claim_id"], text=prop["text"], transform_class=prop["transform_class"]),
+                    claims[prop["claim_id"]],
+                )
+                renderings.append(rendering)
+                summary.append({"module": module.module, "text": rendering.text, "class": rendering.transform_class, "status": "candidate"})
+            if not renderings and module.candidate_claim_ids and len(module.candidate_assertions[0].split()) > max_words:
+                for candidate in propose_truncations(claims[module.candidate_claim_ids[0]], max_words=max_words)[:2]:
+                    rendering = verify_rendering(
+                        AssertionRendering(claim_id=module.candidate_claim_ids[0], text=candidate, transform_class="truncation"),
+                        claims[module.candidate_claim_ids[0]],
+                    )
+                    renderings.append(rendering)
+                    summary.append({"module": module.module, "text": rendering.text, "class": rendering.transform_class, "status": "candidate"})
+            new_modules.append(module.model_copy(update={"renderings": renderings}))
+        amended = model.model_copy(update={"modules": new_modules, "approval": None})
+        outline.write_text(amended.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({"status": "PASS", "proposed": summary, "note": "outline approval invalidated; human approval required"}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="approve-rendering")
+def approve_rendering_cmd(
+    outline: Annotated[Path, typer.Option(help="narrative_outline.json.")],
+    module: Annotated[str, typer.Option(help="Module whose rendering to approve.")],
+    index: Annotated[int, typer.Option(help="Rendering index within the module.")],
+    approved_by: Annotated[str, typer.Option(help="HUMAN approver identity (provenance).")],
+) -> None:
+    """Approve one assertion rendering (human provenance required)."""
+    import json as json_mod
+
+    from .planning import NarrativeOutline
+
+    try:
+        model = NarrativeOutline.model_validate(json_mod.loads(outline.read_text(encoding="utf-8")))
+        new_modules = []
+        hit = None
+        for m in model.modules:
+            if m.module == module:
+                renderings = list(m.renderings)
+                renderings[index] = renderings[index].model_copy(update={"status": "approved", "approved_by": approved_by})
+                hit = renderings[index]
+                m = m.model_copy(update={"renderings": renderings})
+            new_modules.append(m)
+        if hit is None:
+            raise ValueError(f"module '{module}' not found")
+        amended = model.model_copy(update={"modules": new_modules, "approval": None})
+        outline.write_text(amended.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({"status": "PASS", "approved": {"module": module, "text": hit.text, "by": approved_by},
+                                   "note": "outline approval invalidated; re-approve the outline"}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="materialize-outline")
 def materialize_outline_cmd(
     outline: Annotated[Path, typer.Option(help="APPROVED narrative_outline.json.")],
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json.")],
     bundle_dir: Annotated[Path, typer.Option(help="Bundle with claim_ledger/source_manifest/asset_manifest.")],
     output: Annotated[Path, typer.Option(help="Where to write the materialized deck.document.json.")],
+    preview_candidates: Annotated[bool, typer.Option("--preview-candidates", help="PREVIEW ONLY: use candidate renderings; provenance-stamped, never publishable.")] = False,
 ) -> None:
     """Materialize an APPROVED outline into an intent-carrying deck document (deterministic)."""
     import json as json_mod
@@ -493,7 +572,7 @@ def materialize_outline_cmd(
             source_path = bundle_dir / "source_manifest.yaml"
         sources = load_yaml(source_path, SourceManifest)
         assets = load_yaml(bundle_dir / "asset_manifest.yaml", AssetManifest)
-        document = materialize_outline(out_model, ctx, ledger, sources, assets)
+        document = materialize_outline(out_model, ctx, ledger, sources, assets, use_candidate_renderings=preview_candidates)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(document.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
         typer.echo(json_mod.dumps({

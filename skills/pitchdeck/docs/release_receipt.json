@@ -1,10 +1,11 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "a4a2bfe479a4fb4b0058013c847ee9b1abd72c8b",
- "source_tree_sha256": "5525c349f02303604f2f670c2f945ffe86a782c5f210a02263b74fb787d37bee",
+ "commit": "cf8c9b50dbf3cdef0fe960d96c3ad736a5c3cbaf",
+ "source_tree_sha256": "1e8d2d5d48f9bad5f133e85e23fa8337e6d7a0b62788d27a9856461a1b2cf036",
  "commands": [
   "analyze-style",
   "apply-edit",
+  "approve-rendering",
   "asset-add",
   "asset-clear",
   "bindings-migrate",
@@ -25,6 +26,7 @@
   "memory-sync",
   "outline",
   "plan",
+  "propose-renderings",
   "record-note",
   "record-transcript",
   "render",
@@ -37,7 +39,7 @@
   "version",
   "visual-sync"
  ],
- "command_count": 33,
+ "command_count": 35,
  "schema_inventory": [
   {
    "declared_schemas": [
@@ -88,7 +90,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "58 passed, 1 xfail"
+  "summary": "59 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

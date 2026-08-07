@@ -1175,3 +1175,26 @@ def test_outline_to_materialized_document(tmp_path):
     # stale-module scoping
     staled = mark_stale_modules(approved, {"sparta-public-open-gates"})
     assert [m.module for m in staled.modules if m.stale] == ["roadmap"]
+
+
+def test_assertion_rendering_flow():
+    """#1279: renderings verify mechanically, candidates never publish, approved
+    renderings become titles with the correct transform binding."""
+    import pytest as _pytest
+
+    from pitchdeck.planning import AssertionRendering, propose_truncations, verify_rendering
+
+    claim = "Sparta Explorer turns scattered space-cyber, engineering, supplier, and test evidence into one inspectable decision thread."
+    verified = verify_rendering(AssertionRendering(claim_id="c", text="One inspectable decision thread", transform_class="truncation"), claim)
+    assert verified.transform_class == "inflection"  # auto-corrected: case-insensitive excerpt
+    exact = verify_rendering(AssertionRendering(claim_id="c", text="one inspectable decision thread", transform_class="truncation"), claim)
+    assert exact.transform_class == "truncation"
+    with _pytest.raises(ValueError, match="not a word-boundary excerpt"):
+        verify_rendering(AssertionRendering(claim_id="c", text="Fabricated headline", transform_class="truncation"), claim)
+    loose = verify_rendering(AssertionRendering(claim_id="c", text="Fabricated headline", transform_class="generalization"), claim)
+    assert loose.transform_class == "generalization" and loose.status == "candidate"
+    with _pytest.raises(ValueError, match="provenance"):
+        AssertionRendering(claim_id="c", text="x y", transform_class="generalization", status="approved")
+    # auto candidates respect word boundaries and cap
+    for candidate in propose_truncations(claim, max_words=10):
+        assert len(candidate.split()) <= 10 and not candidate.endswith((",", ";", "-"))

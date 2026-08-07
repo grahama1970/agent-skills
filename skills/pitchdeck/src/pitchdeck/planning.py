@@ -77,6 +77,72 @@ class PlanningQuestion(StrictModel):
     answer: str | None = None
 
 
+class AssertionRendering(StrictModel):
+    """A tightened headline RENDERING of a bound claim (#1279 flow).
+
+    Proposals start as candidates — the agent may propose, mechanical
+    verification classifies the transform, and only a HUMAN approval promotes
+    one into a title. truncation/inflection are auto-verifiable (word-boundary
+    substring, case-sensitive/insensitive); generalization can never
+    self-verify and stays candidate until a human approves the meaning."""
+
+    claim_id: str = Field(min_length=1)
+    text: str = Field(min_length=1, max_length=120)
+    transform_class: Literal["truncation", "inflection", "generalization"]
+    status: Literal["candidate", "approved"] = "candidate"
+    approved_by: str | None = None
+
+    @model_validator(mode="after")
+    def approval_provenance(self) -> "AssertionRendering":
+        if self.status == "approved" and not self.approved_by:
+            raise ValueError("approved renderings require approved_by provenance")
+        return self
+
+
+def verify_rendering(rendering: AssertionRendering, claim_text: str) -> AssertionRendering:
+    """Mechanically classify/verify a rendering against its claim text.
+
+    Returns the rendering with a POSSIBLY CORRECTED transform_class; raises if
+    a truncation/inflection claim is false (text not a word-boundary excerpt)."""
+    import re as _re
+
+    def _word_boundary_excerpt(needle: str, haystack: str) -> bool:
+        pattern = r"(?<![A-Za-z0-9])" + _re.escape(needle.strip().rstrip(".")) + r"(?![A-Za-z0-9])"
+        return _re.search(pattern, haystack) is not None
+
+    text = rendering.text.strip()
+    if _word_boundary_excerpt(text, claim_text):
+        cls = "truncation"
+    elif _word_boundary_excerpt(text.lower(), claim_text.lower()):
+        cls = "inflection"
+    else:
+        cls = "generalization"
+    if rendering.transform_class in {"truncation", "inflection"} and cls == "generalization":
+        raise ValueError(
+            f"rendering '{text[:40]}' claims {rendering.transform_class} but is not a word-boundary excerpt of the claim"
+        )
+    return rendering.model_copy(update={"transform_class": cls})
+
+
+def propose_truncations(claim_text: str, *, max_words: int = 10) -> list[str]:
+    """Deterministic clause-boundary truncation candidates within the word cap."""
+    import re as _re
+
+    clauses = [c.strip() for c in _re.split(r"[,;:—]| - ", claim_text) if c.strip()]
+    candidates: list[str] = []
+    for clause in clauses:
+        words = clause.split()
+        if 2 <= len(words) <= max_words:
+            candidates.append(clause.rstrip("."))
+    lead = claim_text.split()
+    for n in (max_words, max_words - 2, 6):
+        if len(lead) > n:
+            head = " ".join(lead[:n]).rstrip(",;:—-")
+            if head not in candidates:
+                candidates.append(head)
+    return candidates[:5]
+
+
 class OutlineModule(StrictModel):
     module: str = Field(min_length=1)
     purpose: str = Field(min_length=1)
@@ -91,6 +157,7 @@ class OutlineModule(StrictModel):
     visual_thesis: str | None = Field(default=None, description="What the visual argues, or 'none: <reason>'.")
     diagram: "object | None" = Field(default=None, description="Approved DiagramGraph payload (dict); consumed verbatim by the materializer.")
     visual_asset_id: str | None = None
+    renderings: list[AssertionRendering] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def module_known(self) -> "OutlineModule":

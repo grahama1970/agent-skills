@@ -88,23 +88,30 @@ def _resolve_recipe(module: OutlineModule, recipes: dict[str, CompositionRecipe]
     )
 
 
-def _assertion_for(module: OutlineModule, deck_title: str) -> tuple[str, str | None]:
-    """(assertion text, claim_id) — verbatim candidate, never a label."""
+def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_renderings: bool = False) -> tuple[str, str | None, str]:
+    """(assertion text, claim_id, transform) — APPROVED rendering if present,
+    else full verbatim claim text. Candidate renderings are used only in
+    explicit preview mode (provenance-stamped, never publishable)."""
     if module.module == "cover":
-        return deck_title, None
+        return deck_title, None, "non_claim"
     if not module.candidate_assertions:
         raise ValueError(
             f"{PlanningCode.NO_COMPATIBLE_RECIPE}: SOURCELESS_ASSERTION — module '{module.module}' has no bound assertion candidates"
         )
+    approved = [r for r in module.renderings if r.status == "approved"]
+    pool = approved or ([r for r in module.renderings] if use_candidate_renderings else [])
+    if pool:
+        chosen = pool[0]
+        return chosen.text, chosen.claim_id, chosen.transform_class
     assertion = module.candidate_assertions[0]
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
         raise ValueError(f"LABEL_HEADLINE: module '{module.module}' assertion '{assertion}' is a label, not a takeaway")
-    return assertion, module.candidate_claim_ids[0]
+    return assertion, module.candidate_claim_ids[0], "truncation"
 
 
-def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None) -> DocSlide:
+def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False) -> DocSlide:
     recipe = _resolve_recipe(module, recipes)
-    assertion, claim_id = _assertion_for(module, deck_title)
+    assertion, claim_id, transform = _assertion_for(module, deck_title, use_candidate_renderings=use_candidate_renderings)
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
         raise ValueError(f"LABEL_HEADLINE: '{assertion}'")
     text_only_recipes = {"statement-thesis", "cover-brand", "roadmap-lanes"}
@@ -125,7 +132,9 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                text=assertion, style=_HERO_STYLE if hero else _TITLE_STYLE,
                                binding_paths=["title"] if claim_id else []))
     if claim_id:
-        bindings.append(TextBinding(path="title", kind=BindingKind.CLAIM_QUOTE, claim_id=claim_id, transform_class="truncation"))
+        kind_map = {"truncation": BindingKind.CLAIM_QUOTE, "inflection": BindingKind.CLAIM_QUOTE, "generalization": BindingKind.CLAIM_PARAPHRASE}
+        bindings.append(TextBinding(path="title", kind=kind_map.get(transform, BindingKind.CLAIM_QUOTE), claim_id=claim_id,
+                                    transform_class=transform if transform != "non_claim" else None))
 
     if "message" in {r.value for r in recipe.required_roles}:
         message_text = tagline or module.purpose
@@ -204,14 +213,20 @@ def materialize_outline(
     assets: AssetManifest,
     *,
     revision: int = 0,
+    use_candidate_renderings: bool = False,
 ) -> DeckDocument:
-    outline.assert_approved()
+    if use_candidate_renderings:
+        # PREVIEW ONLY: candidates + possibly-unapproved outline; the document
+        # is provenance-stamped and the publish path must refuse it.
+        pass
+    else:
+        outline.assert_approved()
     active = [m for m in outline.modules if not m.omitted]
     recipes = load_recipes()
     title = _deck_title(context)
     tagline = context.objective.split("—")[-1].strip() if "—" in context.objective else context.primary_ask
     slides = [
-        _materialize_slide(module, order, recipes, title, tagline)
+        _materialize_slide(module, order, recipes, title, tagline, use_candidate_renderings=use_candidate_renderings)
         for order, module in enumerate(active, start=1)
     ]
     return DeckDocument(
@@ -229,6 +244,7 @@ def materialize_outline(
         revision=revision,
         provenance={
             "kind": "materialized-outline",
+            **({"preview_unapproved_renderings": "true"} if use_candidate_renderings else {}),
             "outline_sha256": outline.content_hash(),
             "context_sha256": outline.context_sha256,
         },
