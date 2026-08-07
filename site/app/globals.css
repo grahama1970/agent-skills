@@ -2175,6 +2175,17 @@ a.fig:hover .l::after,
 .capsearch {
   max-width: 62ch;
 }
+.capsearch-intro {
+  margin: 0 0 0.9rem;
+  max-width: 56ch;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.capsearch-intro em {
+  font-style: italic;
+  color: var(--text);
+}
 .capsearch-label {
   display: block;
   font-family: var(--serif);
@@ -2397,6 +2408,19 @@ a:hover .c-plabel { fill: var(--brass); }
 .cl--hybrid::before { background: var(--sage); }
 .cl--creative::before { background: var(--ember); }
 .cl-note { text-transform: none; letter-spacing: 0; }
+/* Mobile is list-first: the graph is hard to operate on a phone, so hide it —
+   the search results and the research-area list below carry the structure. */
+@media (max-width: 640px) {
+  .constellation-field {
+    display: none;
+  }
+  .constellation-cap {
+    margin-bottom: 0;
+  }
+  .constellation-legend {
+    margin-top: 0.9rem;
+  }
+}
 
 /* Private project shown via its public overview — dashed, marked abstract. */
 .evidence-private {

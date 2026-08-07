@@ -69,6 +69,10 @@ export function CapabilitySearch() {
 
   return (
     <div className="capsearch" aria-label="Search the practice by problem">
+      <p className="capsearch-intro">
+        I gravitate to the experimental, hard-to-staff work — but this is about
+        what <em>you</em> need. Describe a problem or a capability.
+      </p>
       <label className="capsearch-label" htmlFor="capsearch-input">
         What interests you?
       </label>
