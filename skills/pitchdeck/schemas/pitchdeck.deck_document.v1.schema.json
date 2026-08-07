@@ -699,7 +699,7 @@
       }
      ],
      "default": null,
-     "description": "Inline sanitized SVG markup.",
+     "description": "Inline SVG; validated by the svg_sanitize allowlist gate (#1268).",
      "title": "Svg"
     },
     "figure": {

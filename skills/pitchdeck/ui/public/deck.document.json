@@ -20,78 +20,13 @@
   {
    "id": "sparta-public-readme",
    "title": "Sparta Explorer public product overview",
-   "path": "${SPARTA_PUBLIC_ROOT}/README.md",
+   "path": "README.md",
    "visibility": "public",
    "role": "primary",
    "required": true,
    "repo": "grahama1970/sparta-public",
    "ref": "main",
    "content_sha": "github-blob:6d6d59f18d733635b2f39f212ac43a8e8056159e",
-   "include_sections": [],
-   "exclude_sections": []
-  },
-  {
-   "id": "sparta-private-readme",
-   "title": "Sparta Explorer implementation and proof overview",
-   "path": "${SPARTA_ROOT}/README.md",
-   "visibility": "private",
-   "role": "evidence",
-   "required": true,
-   "repo": "grahama1970/sparta",
-   "ref": "main",
-   "content_sha": "github-blob:7c248476126d775678b64843340b92853689a84b",
-   "include_sections": [],
-   "exclude_sections": []
-  },
-  {
-   "id": "sparta-answerability-contract",
-   "title": "SPARTA Answerability Contract",
-   "path": "${SPARTA_ROOT}/docs/architecture/SPARTA_ANSWERABILITY_CONTRACT.md",
-   "visibility": "private",
-   "role": "evidence",
-   "required": false,
-   "repo": "grahama1970/sparta",
-   "ref": "main",
-   "content_sha": null,
-   "include_sections": [],
-   "exclude_sections": []
-  },
-  {
-   "id": "sparta-how-it-works",
-   "title": "How Sparta Works — Deep Dive",
-   "path": "${SPARTA_ROOT}/docs/architecture/HOW_SPARTA_WORKS.md",
-   "visibility": "private",
-   "role": "supporting",
-   "required": false,
-   "repo": "grahama1970/sparta",
-   "ref": "main",
-   "content_sha": null,
-   "include_sections": [],
-   "exclude_sections": []
-  },
-  {
-   "id": "sparta-qra-governance",
-   "title": "QRA governance",
-   "path": "${SPARTA_ROOT}/docs/architecture/QRA_GOVERNANCE.md",
-   "visibility": "private",
-   "role": "evidence",
-   "required": false,
-   "repo": "grahama1970/sparta",
-   "ref": "main",
-   "content_sha": null,
-   "include_sections": [],
-   "exclude_sections": []
-  },
-  {
-   "id": "sparta-client-demo-guide",
-   "title": "Prepared-host client demonstration guide",
-   "path": "${SPARTA_ROOT}/docs/client-demo/README.md",
-   "visibility": "private",
-   "role": "evidence",
-   "required": false,
-   "repo": "grahama1970/sparta",
-   "ref": "main",
-   "content_sha": null,
    "include_sections": [],
    "exclude_sections": []
   }
@@ -404,214 +339,6 @@
    "notes": null
   },
   {
-   "id": "sparta-private-preflight",
-   "text": "A prepared-host client demo preflight passed for one exact commit and closed issue 38.",
-   "kind": "proof",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Current Status and Closure Gates",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "The preflight receipt binds to commit c60318363 only; rerun it against the exact commit demonstrated and do not demonstrate on failure.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "| **Client demo** | **Prepared-host ready:** deterministic route, preflight, route capture, and evidence-bundle tooling exist, and issue #38 closed on a passing preflight bound to commit `c60318363` (`passed=true`, `failed_gates=[]`, `working_tree_clean=true`, `mocked=false`). | Rerun the preflight against each commit actually demonstrated; the receipt binds to one exact commit, not to the branch. |",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-qra-snapshot",
-   "text": "The dated issue 20 proof records 2,180 active canonical QRAs, 2,180 aliases, 5,046 quarantined records, zero duplicate active semantic identities, and expected identity at rank 1.",
-   "kind": "proof",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Dated Proof Points",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "Quote these counts only for the 2026-07-29 population and source artifact; canonical-active does not mean expert-approved or compliance-credited.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "- The issue #20 proof records 2,180 active canonical QRAs, 2,180 aliases, 5,046 quarantined records, zero duplicate active semantic identities, and expected identity at rank 1 for the 2026-07-29 snapshot.",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-review-slice",
-   "text": "The dated issue 6 proof records one accepted decision, one rejected decision, one pending decision, one accepted evidence case, two reviewed overlays, and one compliance-credit unit.",
-   "kind": "proof",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Dated Proof Points",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "This is a bounded 2026-07-29 slice and does not establish corpus-wide review or quality.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "- The issue #6 proof records one accepted decision, one rejected decision, one pending decision, one accepted evidence case, two reviewed overlays, and one compliance-credit unit for the bounded 2026-07-29 slice.",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-chat-campaign",
-   "text": "The dated Sparta Chat aggregate receipt records 115 broad browser cases and 35 interaction cases.",
-   "kind": "proof",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Dated Proof Points",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "This dated local campaign is implementation evidence, not full response-quality or production-readiness proof.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "- The Sparta Chat aggregate receipt records 115 broad browser cases and 35 interaction cases for the dated local campaign.",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-answerability-contract",
-   "text": "The governed response path separates source preservation, candidate construction, current-turn scope, answerability, presentation, and human decision.",
-   "kind": "product",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-answerability-contract",
-     "section": "Semantic contract",
-     "locator": null
-    }
-   ],
-   "risk": "medium",
-   "status": "candidate",
-   "required_qualifier": null,
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "| **Memory + `create-evidence-case`** | On the governed path, scope the current turn, retrieve candidate material, decide answerability, and select answer, clarify, or deflect. |",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-response-gaps",
-   "text": "Direct recall-cache release, raw QuerySpec rendering, legacy Tau fallback, and reviewed-only reuse remain named response-route gaps.",
-   "kind": "status",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Current Status and Closure Gates",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "These named gaps keep the broader response-surface claim in integration rather than closed.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "| **Response path** | **In integration:** bounded answer, clarify, deflect, error, citation, selected-QRA, and visible-answer admission receipts exist on the governed path. | Remove or govern direct recall-cache release, raw QuerySpec rendering, and legacy Tau fallback; extend reviewed-only reuse across governed paths. |",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-deployment-gap",
-   "text": "A verified clean-machine quick start and supported external deployment profile are not yet published.",
-   "kind": "status",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-private-readme",
-     "section": "Evaluate a Prepared Host",
-     "locator": null
-    }
-   ],
-   "risk": "high",
-   "status": "candidate",
-   "required_qualifier": "Prepared-host orchestration is not a clone-and-run installation path or supported external deployment profile.",
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "A verified clean-machine quick start is not yet published.",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
-   "id": "sparta-private-qra-governance",
-   "text": "Candidate QRA generation, human interview and promotion, reasoning repair, and reviewed-only lineage reuse require distinct governance boundaries.",
-   "kind": "product",
-   "visibility": "private",
-   "source_refs": [
-    {
-     "source_id": "sparta-qra-governance",
-     "section": "Governance lifecycle",
-     "locator": null
-    }
-   ],
-   "risk": "medium",
-   "status": "candidate",
-   "required_qualifier": null,
-   "approval": null,
-   "evidence_spans": [
-    {
-     "source_id": "sparta-public-readme",
-     "text": "| **QRA reasoning and reuse** | Complete the reasoning-field repair and add reviewed-only predicates to remaining lineage-reuse paths. |",
-     "section": null
-    }
-   ],
-   "formula": null,
-   "notes": null
-  },
-  {
    "id": "non-claim-f36-synthetic",
    "text": "The F-36 corpus and program world are fictional and synthetic.",
    "kind": "non_claim",
@@ -774,27 +501,10 @@
  ],
  "assets": [
   {
-   "id": "sparta-helmet-mark",
-   "kind": "logo",
-   "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-front-helmet-cyan.svg",
-   "source_url": null,
-   "required": false,
-   "alt_text": "Sparta Explorer cyan helmet mark",
-   "target_aspect": "1:1",
-   "status": "present",
-   "generation_brief": "Export a transparent PNG fallback at 1024 by 1024 if the SVG import changes in Google Slides.",
-   "source_ref": {
-    "source_id": "sparta-public-readme",
-    "section": "Introduction",
-    "locator": null
-   }
-  },
-  {
    "id": "sparta-threat-matrix",
    "kind": "screenshot",
    "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp",
+   "local_path": "assets/sparta-threat-matrix.webp",
    "source_url": null,
    "required": true,
    "alt_text": "Sparta Explorer Threat Matrix showing tactic coverage, mapping state, mission context, and candidate versus reviewed state",
@@ -811,7 +521,7 @@
    "id": "sparta-global-posture",
    "kind": "screenshot",
    "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp",
+   "local_path": "assets/sparta-global-posture.webp",
    "source_url": null,
    "required": true,
    "alt_text": "Global Posture showing degraded readiness, evidence gaps, threat context, and supplier lineage",
@@ -828,7 +538,7 @@
    "id": "sparta-chat-console",
    "kind": "screenshot",
    "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp",
+   "local_path": "assets/sparta-chat-console.webp",
    "source_url": null,
    "required": true,
    "alt_text": "Sparta Chat docked beside Supply Chain with an inspectable response pipeline and cited answer",
@@ -845,7 +555,7 @@
    "id": "sparta-embry-os-foundation",
    "kind": "diagram",
    "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-embry-os-value-prop-header.webp",
+   "local_path": "assets/sparta-embry-os-foundation.webp",
    "source_url": null,
    "required": true,
    "alt_text": "Conceptual Embry OS foundation connecting plant and warfighter program profiles through separated evidence, identity, policy, data scope, and authority boundaries",
@@ -855,74 +565,6 @@
    "source_ref": {
     "source_id": "sparta-public-readme",
     "section": "Built on Embry OS",
-    "locator": null
-   }
-  },
-  {
-   "id": "sparta-response-flow",
-   "kind": "diagram",
-   "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-response-flow.webp",
-   "source_url": null,
-   "required": false,
-   "alt_text": "Conceptual response flow from source material through answerability to human workflow",
-   "target_aspect": "16:9",
-   "status": "regenerate",
-   "generation_brief": "Prefer native PowerPoint flow shapes; use the image only as design reference.",
-   "source_ref": {
-    "source_id": "sparta-public-readme",
-    "section": "How Sparta Works",
-    "locator": null
-   }
-  },
-  {
-   "id": "sparta-supply-chain",
-   "kind": "screenshot",
-   "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp",
-   "source_url": null,
-   "required": false,
-   "alt_text": "Supply-chain topology showing a simulated service loss through suppliers, mission threads, and candidate requirements",
-   "target_aspect": "16:9",
-   "status": "present",
-   "generation_brief": "Optional appendix capture; recapture with the main set if used.",
-   "source_ref": {
-    "source_id": "sparta-public-readme",
-    "section": "Product Tour — Supply Chain",
-    "locator": null
-   }
-  },
-  {
-   "id": "sparta-qra-review",
-   "kind": "screenshot",
-   "visibility": "public",
-   "local_path": "${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-qras-20260730.webp",
-   "source_url": null,
-   "required": false,
-   "alt_text": "QRA review queue showing candidate records, evidence gates, review state, and adjudication actions",
-   "target_aspect": "16:9",
-   "status": "stale",
-   "generation_brief": "Keep in the private appendix or recapture after the named reasoning-field defect is repaired.",
-   "source_ref": {
-    "source_id": "sparta-public-readme",
-    "section": "Product Tour — QRAs",
-    "locator": null
-   }
-  },
-  {
-   "id": "sparta-problem-fragmentation",
-   "kind": "illustration",
-   "visibility": "public",
-   "local_path": null,
-   "source_url": null,
-   "required": false,
-   "alt_text": "Disconnected frameworks, engineering records, supplier data, tests, and human review converging on an unsupported answer",
-   "target_aspect": "16:9",
-   "status": "planned",
-   "generation_brief": "Create a restrained dark 16:9 conceptual illustration with six disconnected source classes; do not include text or fake product UI.",
-   "source_ref": {
-    "source_id": "sparta-public-readme",
-    "section": "Why Sparta Explorer",
     "locator": null
    }
   }
@@ -956,6 +598,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -987,6 +630,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -1012,6 +656,7 @@
      "asset_id": "sparta-threat-matrix",
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [],
      "entrance": {
       "effect": "none",
@@ -1041,7 +686,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Public design-partner opener. Keep the proposition intact and do not add deployment, customer, or readiness language."
+   "notes": "Public design-partner opener. Keep the proposition intact and do not add deployment, customer, or readiness language.",
+   "intent": null
   },
   {
    "id": "04-product",
@@ -1071,6 +717,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -1102,6 +749,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -1133,6 +781,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -1164,6 +813,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -1195,6 +845,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -1226,6 +877,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -1282,7 +934,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Use native slide shapes for the decision-thread visual; do not paste the README's long workflow verbatim."
+   "notes": "Use native slide shapes for the decision-thread visual; do not paste the README's long workflow verbatim.",
+   "intent": null
   },
   {
    "id": "02-problem",
@@ -1312,6 +965,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -1343,6 +997,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -1374,6 +1029,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -1405,6 +1061,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -1436,6 +1093,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -1467,6 +1125,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -1523,7 +1182,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Frame the problem as evidence and authority fragmentation, not as a generic search or chatbot problem."
+   "notes": "Frame the problem as evidence and authority fragmentation, not as a generic search or chatbot problem.",
+   "intent": null
   },
   {
    "id": "03-thesis",
@@ -1553,6 +1213,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -1584,6 +1245,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -1615,6 +1277,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -1646,6 +1309,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -1677,6 +1341,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -1729,7 +1394,8 @@
    "transition_duration_ms": 400,
    "reveal": "step",
    "hidden": false,
-   "notes": "This is the deck's intellectual center. Preserve the three distinctions exactly enough that later slides cannot imply stronger authority."
+   "notes": "This is the deck's intellectual center. Preserve the three distinctions exactly enough that later slides cannot imply stronger authority.",
+   "intent": null
   },
   {
    "id": "05-f36-demo",
@@ -1759,6 +1425,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -1790,6 +1457,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -1821,6 +1489,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -1852,6 +1521,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -1883,6 +1553,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -1914,6 +1585,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -1945,6 +1617,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:4"
      ],
@@ -1976,6 +1649,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:5"
      ],
@@ -2007,6 +1681,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "visual.items:0",
       "visual.items:1",
@@ -2116,7 +1791,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Say explicitly that F-36 is a fictional synthetic program world. The demo tests separation and lineage; it does not represent operational program truth."
+   "notes": "Say explicitly that F-36 is a fictional synthetic program world. The demo tests separation and lineage; it does not represent operational program truth.",
+   "intent": null
   },
   {
    "id": "06-embry-os",
@@ -2146,6 +1822,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -2177,6 +1854,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -2208,6 +1886,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -2239,6 +1918,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -2270,6 +1950,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -2295,6 +1976,7 @@
      "asset_id": "sparta-embry-os-foundation",
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [],
      "entrance": {
       "effect": "none",
@@ -2324,6 +2006,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer"
      ],
@@ -2379,7 +2062,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment."
+   "notes": "Embry OS is a planned local operating foundation; it is not flight-control software and this claim does not establish deployment.",
+   "intent": null
   },
   {
    "id": "07-threat-matrix",
@@ -2409,6 +2093,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -2440,6 +2125,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -2471,6 +2157,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -2502,6 +2189,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -2533,6 +2221,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -2558,6 +2247,7 @@
      "asset_id": "sparta-threat-matrix",
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [],
      "entrance": {
       "effect": "none",
@@ -2587,6 +2277,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer"
      ],
@@ -2643,7 +2334,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it."
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.",
+   "intent": null
   },
   {
    "id": "08-global-posture",
@@ -2673,6 +2365,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -2704,6 +2397,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -2735,6 +2429,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -2766,6 +2461,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -2797,6 +2493,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -2822,6 +2519,7 @@
      "asset_id": "sparta-global-posture",
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [],
      "entrance": {
       "effect": "none",
@@ -2851,6 +2549,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer"
      ],
@@ -2906,7 +2605,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it."
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.",
+   "intent": null
   },
   {
    "id": "09-sparta-chat",
@@ -2936,6 +2636,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -2967,6 +2668,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -2998,6 +2700,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -3029,6 +2732,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -3060,6 +2764,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -3091,6 +2796,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -3116,6 +2822,7 @@
      "asset_id": "sparta-chat-console",
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [],
      "entrance": {
       "effect": "none",
@@ -3145,6 +2852,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer"
      ],
@@ -3206,7 +2914,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it."
+   "notes": "The governed path is bounded and transitional branches are still being converged; do not claim every visible response uses it.",
+   "intent": null
   },
   {
    "id": "10-proof-today",
@@ -3236,6 +2945,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -3267,6 +2977,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -3298,6 +3009,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -3329,6 +3041,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -3360,6 +3073,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -3391,6 +3105,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -3422,6 +3137,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer",
       "footer"
@@ -3491,7 +3207,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.\nThe offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nKeep exact private counts and receipt paths in the private appendix."
+   "notes": "Treat this as a prepared-host late-stage prototype claim and verify the exact commit, preflight, and current screenshots before presenting it.\nThe offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nKeep exact private counts and receipt paths in the private appendix.",
+   "intent": null
   },
   {
    "id": "11-open-gates",
@@ -3521,6 +3238,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -3552,6 +3270,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -3583,6 +3302,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -3614,6 +3334,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -3645,6 +3366,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -3676,6 +3398,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:3"
      ],
@@ -3707,6 +3430,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:4"
      ],
@@ -3738,6 +3462,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:5"
      ],
@@ -3805,7 +3530,8 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "Do not soften open gates into vague roadmap language. The credibility of this slide comes from naming what remains unresolved."
+   "notes": "Do not soften open gates into vague roadmap language. The credibility of this slide comes from naming what remains unresolved.",
+   "intent": null
   },
   {
    "id": "12-collaboration",
@@ -3835,6 +3561,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "title"
      ],
@@ -3866,6 +3593,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "message"
      ],
@@ -3897,6 +3625,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:0"
      ],
@@ -3928,6 +3657,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:1"
      ],
@@ -3959,6 +3689,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "body:2"
      ],
@@ -3990,6 +3721,7 @@
      "asset_id": null,
      "svg": null,
      "figure": null,
+     "diagram": null,
      "binding_paths": [
       "footer"
      ],
@@ -4050,12 +3782,13 @@
    "transition_duration_ms": 400,
    "reveal": "stagger_up",
    "hidden": false,
-   "notes": "The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nThe F-36 corpus and program world are fictional and synthetic.\nCandidate visibility is not compliance credit.\nA model may explain; authorized people retain approval, risk, certification, and signoff authority.\nPrepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.\nThis deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement."
+   "notes": "The offer is a late-stage prototype and prepared-host evaluation, not a turnkey production deployment.\nThe F-36 corpus and program world are fictional and synthetic.\nCandidate visibility is not compliance credit.\nA model may explain; authorized people retain approval, risk, certification, and signoff authority.\nPrepared-host receipts bind to the exact demonstrated commit and must be rerun before a live demonstration.\nThis deck does not establish production readiness, accreditation, certification, customer deployment, or endorsement.",
+   "intent": null
   }
  ],
  "revision": 10,
  "provenance": {
-  "bundle_dir": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/examples/sparta-explorer",
-  "deck_manifest": "deck.public.yaml"
+  "projection": "public",
+  "source_revision": "10"
  }
 }

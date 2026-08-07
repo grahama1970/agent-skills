@@ -340,7 +340,7 @@ def _add_image_fit(
         return False
 
 
-def _render_cover(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) -> None:
+def _render_cover(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path, *, deck_kicker: str = "", deck_tagline: str | None = None) -> None:
     # Quiet visual depth without rasterizing the narrative.
     for x, y, w, h, color in (
         (8.7, -0.35, 5.1, 3.1, Theme.panel_alt),
@@ -354,20 +354,11 @@ def _render_cover(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) 
         shape.fill.fore_color.rgb = _rgb(color)
         shape.line.fill.background()
         shape.rotation = -6
-    _add_text(slide, "SPARTA EXPLORER", 0.7, 0.62, 5.1, 0.35, size=10, bold=True, color=Theme.cyan)
+    _add_text(slide, deck_kicker, 0.7, 0.62, 5.1, 0.35, size=10, bold=True, color=Theme.cyan)
     _add_text(slide, spec.title, 0.7, 1.32, 7.5, 1.35, size=38, bold=True)
     _add_text(slide, spec.message, 0.72, 3.05, 7.0, 1.6, size=22, color=Theme.muted)
-    _add_text(
-        slide,
-        "Inspectable evidence · explicit uncertainty · human authority",
-        0.72,
-        5.65,
-        7.0,
-        0.46,
-        size=12,
-        bold=True,
-        color=Theme.teal,
-    )
+    if deck_tagline:
+        _add_text(slide, deck_tagline, 0.72, 5.65, 7.0, 0.46, size=12, bold=True, color=Theme.teal)
     if spec.visual.asset_id and spec.visual.asset_id in asset_map:
         _add_image_fit(
             slide,
@@ -423,7 +414,7 @@ def _render_split(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) 
         )
     else:
         _add_panel(slide, 6.65, 1.65, 5.95, 4.9)
-        _add_text(slide, "ONE INSPECTABLE\nDECISION THREAD", 7.18, 2.25, 4.85, 1.1, size=24, bold=True)
+        _add_text(slide, spec.title.upper(), 7.18, 2.25, 4.85, 1.1, size=24, bold=True)
         stages = spec.body[:4] or ["Source", "Relationship", "Evidence", "Human decision"]
         for index, stage in enumerate(stages[:4]):
             y = 3.65 + index * 0.62
@@ -638,11 +629,11 @@ def _render_freeform(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Pat
             )
 
 
-def _render_slide(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) -> None:
+def _render_slide(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path, *, deck_kicker: str = "", deck_tagline: str | None = None) -> None:
     if spec.layout == SlideLayout.FREEFORM:
         _render_freeform(slide, spec, asset_map, asset_base_dir, temp_dir)
     elif spec.layout == SlideLayout.COVER:
-        _render_cover(slide, spec, asset_map, asset_base_dir, temp_dir)
+        _render_cover(slide, spec, asset_map, asset_base_dir, temp_dir, deck_kicker=deck_kicker, deck_tagline=deck_tagline)
     elif spec.layout == SlideLayout.STATEMENT:
         _render_statement(slide, spec)
     elif spec.layout == SlideLayout.SPLIT:
@@ -693,12 +684,41 @@ def build_pptx(
     draft_watermark: bool = False,
 ) -> tuple[OperationReceipt, ValidationReport]:
     # Theme tokens (DeckMeta.theme_tokens) are the shared accent/font source
-    # with the browser renderer; only non-default tokens override the palette.
+    # with the browser renderer; overrides are SCOPED to this build and always
+    # restored (#1269) — sequential builds in one process must not inherit a
+    # previous deck's design state.
     tokens = deck.deck.theme_tokens
+    theme_defaults = {"cyan": Theme.cyan, "font": Theme.font}
     if tokens.accent.lower() != "#22d3ee":
         Theme.cyan = tokens.accent.lstrip("#").upper()
     if tokens.body_font != "Arial":
         Theme.font = tokens.body_font
+    try:
+        return _build_pptx_inner(
+            deck, ledger, sources, assets,
+            source_manifest_dir=source_manifest_dir,
+            asset_manifest_dir=asset_manifest_dir,
+            output_path=output_path,
+            require_approved_claims=require_approved_claims,
+            draft_watermark=draft_watermark,
+        )
+    finally:
+        Theme.cyan = theme_defaults["cyan"]
+        Theme.font = theme_defaults["font"]
+
+
+def _build_pptx_inner(
+    deck: DeckManifest,
+    ledger: ClaimLedger,
+    sources: SourceManifest,
+    assets: AssetManifest,
+    *,
+    source_manifest_dir: Path,
+    asset_manifest_dir: Path,
+    output_path: Path,
+    require_approved_claims: bool = False,
+    draft_watermark: bool = False,
+) -> tuple[OperationReceipt, ValidationReport]:
     report = validate_bundle(
         deck,
         ledger,
@@ -727,7 +747,15 @@ def build_pptx(
         for spec in visible_specs:
             slide = presentation.slides.add_slide(blank)
             _set_background(slide)
-            _render_slide(slide, spec, asset_map, asset_manifest_dir, temp_dir)
+            _render_slide(
+                slide,
+                spec,
+                asset_map,
+                asset_manifest_dir,
+                temp_dir,
+                deck_kicker=deck.deck.title.split("—")[0].strip().upper(),
+                deck_tagline=deck.deck.subtitle,
+            )
             _add_footer(slide, deck.deck.title, spec.order, spec.visibility)
             if draft_watermark:
                 _add_text(

@@ -808,3 +808,90 @@ def test_render_document_html_house_native():
     assert html_text.count('<g id="node-') == 5 and html_text.count('<g id="edge-') == 3
     assert "relevance does not cross this gap" in html_text  # bound edge label as text, not pixels
     assert "data:image" in html_text  # self-contained assets
+
+
+def test_public_projection_and_staged_publish(tmp_path):
+    """#1266 + #1267: public UI output carries only visible-slide-reachable
+    public records with provenance stripped, published as a staged set."""
+    import json
+
+    from pitchdeck.document import assert_public_document, compile_document, project_public
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import AssetManifest, ClaimLedger, DeckManifest, SourceManifest, Visibility
+    from pitchdeck.ui_emitter import emit_ui_bundle
+
+    bundle = Path(__file__).parent.parent / "examples" / "sparta-explorer"
+    doc = compile_document(bundle)
+    pub = project_public(doc)
+    assert_public_document(pub)
+    assert all(c.visibility is Visibility.PUBLIC for c in pub.claims)
+    assert all("/" not in s.path for s in pub.sources)
+    assert all((a.local_path or "assets/").startswith("assets/") for a in pub.assets)
+    referenced = {cid for s in pub.slides for cid in s.claim_ids}
+    assert {c.id for c in pub.claims} == referenced
+    # full document still has private records; projection is a strict subset
+    assert len(pub.claims) < len(doc.claims) and len(pub.sources) < len(doc.sources)
+
+    # staged publish: emitted tree contains the PROJECTED document; no staging remains
+    deck = load_yaml(bundle / "deck.public.yaml", DeckManifest)
+    ledger = load_yaml(bundle / "claim_ledger.yaml", ClaimLedger)
+    source_path = bundle / "source_manifest.resolved.yaml"
+    if not source_path.exists():
+        source_path = bundle / "source_manifest.yaml"
+    sources = load_yaml(source_path, SourceManifest)
+    assets = load_yaml(bundle / "asset_manifest.yaml", AssetManifest)
+    out = tmp_path / "public"
+    (out / "unrelated").mkdir(parents=True)  # sibling content must survive
+    emit_ui_bundle(deck, ledger, sources, assets, source_manifest_dir=bundle, asset_manifest_dir=bundle, output_dir=out)
+    emitted = json.loads((out / "deck.document.json").read_text())
+    assert emitted["provenance"]["projection"] == "public"
+    assert not list(out.parent.glob(".public.staging*"))
+    assert (out / "unrelated").exists()
+
+
+def test_svg_sanitizer_gate():
+    """#1268: DocElement.svg passes through the strict allowlist gate."""
+    import pytest as _pytest
+
+    from pitchdeck.document import Bbox, DocElement, DocElementKind
+    from pitchdeck.svg_sanitize import SvgRejected, assert_safe
+
+    good = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 4"><rect width="2" height="2"/></svg>'
+    el = DocElement(id="x", kind=DocElementKind.SVG, bbox=Bbox(x=0, y=0, w=0.5, h=0.5), svg=good)
+    assert el.svg == good
+    for attack in (
+        "<svg><script>1</script></svg>",
+        '<svg onload="x"><rect/></svg>',
+        '<svg><image href="https://e/x"/></svg>',
+        '<svg><foreignObject/></svg>',
+    ):
+        with _pytest.raises(Exception):
+            DocElement(id="x", kind=DocElementKind.SVG, bbox=Bbox(x=0, y=0, w=0.5, h=0.5), svg=attack)
+    with _pytest.raises(SvgRejected):
+        assert_safe('<?xml version="1.0"?><!DOCTYPE svg []><svg/>')
+
+
+def test_pptx_theme_scoped_and_product_neutral(tmp_path):
+    """#1269: no product literals in the builder; theme overrides restore."""
+    from pitchdeck.pptx_builder import Theme, build_pptx
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import AssetManifest, ClaimLedger, DeckManifest, SourceManifest
+
+    source = Path(__file__).parent.parent / "src" / "pitchdeck" / "pptx_builder.py"
+    text = source.read_text()
+    for literal in ("SPARTA EXPLORER", "ONE INSPECTABLE", "Inspectable evidence · explicit uncertainty"):
+        assert literal not in text
+    bundle = Path(__file__).parent.parent / "examples" / "sparta-explorer"
+    deck = load_yaml(bundle / "deck.public.yaml", DeckManifest)
+    deck.deck.theme_tokens.accent = "#ff00ff"
+    deck.deck.theme_tokens.body_font = "Georgia"
+    before = (Theme.cyan, Theme.font)
+    ledger = load_yaml(bundle / "claim_ledger.yaml", ClaimLedger)
+    source_path = bundle / "source_manifest.resolved.yaml"
+    if not source_path.exists():
+        source_path = bundle / "source_manifest.yaml"
+    sources = load_yaml(source_path, SourceManifest)
+    assets = load_yaml(bundle / "asset_manifest.yaml", AssetManifest)
+    build_pptx(deck, ledger, sources, assets, source_manifest_dir=bundle, asset_manifest_dir=bundle, output_path=tmp_path / "deck.pptx")
+    assert (Theme.cyan, Theme.font) == before  # restored after the build
+    assert (tmp_path / "deck.pptx").exists()

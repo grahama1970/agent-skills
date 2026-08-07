@@ -114,6 +114,43 @@ class UiDeckBundle(StrictModel):
     )
 
 
+def _publish_staged(staging: Path, final_dir: Path) -> None:
+    """Validate the staged artifact set, then publish it near-atomically.
+
+    The assets directory swaps as one unit (rename), data/document files
+    os.replace() individually (atomic per file), and staging is removed only
+    after every artifact landed. Validation failures abort BEFORE any byte
+    of the served tree changes."""
+    import json as _json
+
+    for required in ("deck.data.json", "deck.document.json"):
+        candidate = staging / required
+        if not candidate.exists():
+            raise ValueError(f"staged export incomplete: missing {required}")
+        _json.loads(candidate.read_text(encoding="utf-8"))  # must parse
+
+    staged_assets = staging / "assets"
+    final_assets = final_dir / "assets"
+    old_assets = final_dir / ".assets.old"
+    if old_assets.exists():
+        shutil.rmtree(old_assets)
+    if staged_assets.exists():
+        if final_assets.exists():
+            final_assets.rename(old_assets)
+        staged_assets.rename(final_assets)
+        if old_assets.exists():
+            shutil.rmtree(old_assets)
+    elif final_assets.exists():  # cleared assets stop being served
+        shutil.rmtree(final_assets)
+
+    import os as _os
+
+    for item in sorted(staging.iterdir()):
+        if item.is_file():
+            _os.replace(item, final_dir / item.name)
+    shutil.rmtree(staging, ignore_errors=True)
+
+
 def emit_ui_bundle(
     deck: DeckManifest,
     claim_ledger: ClaimLedger,
@@ -143,10 +180,18 @@ def emit_ui_bundle(
     claims_by_id = {claim.id: claim for claim in claim_ledger.claims}
     assets_by_id = {asset.id: asset for asset in asset_manifest.assets}
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Staged export transaction (#1267): every artifact is built into a
+    # sibling staging directory, validated there, and published as a set —
+    # a late failure can never leave the served tree half-updated or mixing
+    # revisions. Per-file replacement alone is not a coherent revision.
+    final_dir = output_dir
+    final_dir.mkdir(parents=True, exist_ok=True)
+    staging = final_dir.parent / f".{final_dir.name}.staging"
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True)
+    output_dir = staging  # all build writes below land in staging
     assets_out = output_dir / "assets"
-    if assets_out.exists():  # remove stale copies so cleared assets stop being served
-        shutil.rmtree(assets_out)
     gaps: list[str] = [
         f"{issue.code}: {issue.message}" for issue in report.issues if issue.severity == "warning"
     ]
@@ -273,14 +318,25 @@ def emit_ui_bundle(
     if private_leak:  # validate_bundle already errors on this; belt-and-braces.
         raise ValueError("public deck references private claims")
 
-    # The canonical whole-deck document (#1263) is materialized on EVERY emit —
-    # deck.data.json is the renderer view; deck.document.json is the datastore.
-    from .document import compile_document
+    # The canonical whole-deck document (#1263) is materialized on EVERY emit.
+    # The UI output is a PUBLIC surface: it receives the public PROJECTION
+    # (#1266) — visible-slide-reachable records only, provenance stripped and
+    # asserted. The full document stays available via compile-document.
+    from .document import assert_public_document, compile_document, project_public
 
     document = compile_document(asset_manifest_dir)
+    from .models import Visibility as _Vis
+
+    published = project_public(document) if deck.deck.visibility is _Vis.PUBLIC else document
+    if deck.deck.visibility is _Vis.PUBLIC:
+        assert_public_document(published)
     (output_dir / "deck.document.json").write_text(
-        document.model_dump_json(by_alias=True, indent=1), encoding="utf-8"
+        published.model_dump_json(by_alias=True, indent=1), encoding="utf-8"
     )
+
+    _publish_staged(staging, final_dir)
+    output_dir = final_dir
+    assets_out = final_dir / "assets"
 
     receipt = OperationReceipt(
         schema="pitchdeck.emit_ui_receipt.v1",

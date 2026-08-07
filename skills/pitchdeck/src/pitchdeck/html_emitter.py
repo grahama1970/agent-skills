@@ -289,7 +289,12 @@ def emit_html(
 </html>
 """
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(document, encoding="utf-8")
+    # Atomic single-file publish (#1267): never serve a half-written export.
+    tmp = output_path.parent / f".{output_path.name}.tmp"
+    tmp.write_text(document, encoding="utf-8")
+    import os as _os
+
+    _os.replace(tmp, output_path)
     from .artifact_scan import scan_artifact
 
     scan_artifact(output_path, deck, claim_ledger, source_manifest)

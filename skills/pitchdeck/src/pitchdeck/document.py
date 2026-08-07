@@ -209,7 +209,7 @@ class DocElement(StrictModel):
     text: str | None = None
     style: DocTextStyle | None = None
     asset_id: str | None = None
-    svg: str | None = Field(default=None, description="Inline sanitized SVG markup.")
+    svg: str | None = Field(default=None, description="Inline SVG; validated by the svg_sanitize allowlist gate (#1268).")
     figure: FigureSpec | None = None
     diagram: "DiagramGraph | None" = None
     binding_paths: list[str] = Field(default_factory=list, description="TextBinding.path values this element renders.")
@@ -217,6 +217,10 @@ class DocElement(StrictModel):
 
     @model_validator(mode="after")
     def validate_content(self) -> "DocElement":
+        if self.svg is not None:
+            from .svg_sanitize import assert_safe
+
+            assert_safe(self.svg)
         required = {
             DocElementKind.TEXT: self.text is not None and bool(self.text.strip()),
             DocElementKind.IMAGE: bool(self.asset_id),
@@ -485,3 +489,82 @@ def compile_document(bundle_dir: Path, deck_name: str = "deck.public.yaml") -> D
 def export_json_schema() -> dict:
     """The committed JSON Schema artifact is generated, never hand-edited."""
     return DeckDocument.model_json_schema(by_alias=True)
+
+
+def project_public(document: DeckDocument) -> DeckDocument:
+    """Public-output projection (#1266): only what visible public slides reach.
+
+    Statically served outputs must never carry private claims/sources, hidden
+    slides, unreferenced records, or local filesystem provenance. Fail-closed:
+    projecting a private deck raises; a visible slide referencing a private
+    claim raises (belt-and-braces over validate_bundle).
+    """
+    from .models import Visibility
+
+    if document.deck.visibility is not Visibility.PUBLIC:
+        raise ValueError("cannot project a non-public deck for public output")
+
+    slides = [s for s in document.slides if not s.hidden]
+    referenced_claims = {cid for s in slides for cid in s.claim_ids}
+    referenced_assets = {e.asset_id for s in slides for e in s.elements if e.asset_id}
+
+    claims = []
+    for claim in document.claims:
+        if claim.id not in referenced_claims:
+            continue
+        if claim.visibility is not Visibility.PUBLIC:
+            raise ValueError(f"visible slide references private claim '{claim.id}'")
+        claims.append(claim)
+
+    sources = []
+    for source in document.sources:
+        if source.visibility is not Visibility.PUBLIC:
+            continue
+        # Strip local-path provenance: keep only the basename for display.
+        sources.append(source.model_copy(update={"path": Path(source.path).name}))
+
+    assets = []
+    for asset in document.assets:
+        if asset.id not in referenced_assets:
+            continue
+        if asset.visibility is not Visibility.PUBLIC:
+            raise ValueError(f"visible slide references private asset '{asset.id}'")
+        suffix = Path(asset.local_path).suffix if asset.local_path else ""
+        assets.append(asset.model_copy(update={"local_path": f"assets/{asset.id}{suffix}" if asset.local_path else None}))
+
+    return DeckDocument(
+        deck=document.deck,
+        sources=sources,
+        claims=claims,
+        assets=assets,
+        slides=slides,
+        revision=document.revision,
+        provenance={"projection": "public", "source_revision": str(document.revision)},
+    )
+
+
+def assert_public_document(document: DeckDocument) -> None:
+    """Reject a document that is not a safe public projection."""
+    from .models import Visibility
+
+    problems: list[str] = []
+    if document.provenance.get("projection") != "public":
+        problems.append("document is not marked as a public projection")
+    for slide in document.slides:
+        if slide.hidden:
+            problems.append(f"hidden slide '{slide.id}' present")
+    for claim in document.claims:
+        if claim.visibility is not Visibility.PUBLIC:
+            problems.append(f"private claim '{claim.id}' present")
+    for source in document.sources:
+        if source.visibility is not Visibility.PUBLIC:
+            problems.append(f"private source '{source.id}' present")
+        if "/" in source.path or source.path.startswith("$"):
+            problems.append(f"source '{source.id}' carries path provenance")
+    for asset in document.assets:
+        if asset.visibility is not Visibility.PUBLIC:
+            problems.append(f"private asset '{asset.id}' present")
+        if asset.local_path and not asset.local_path.startswith("assets/"):
+            problems.append(f"asset '{asset.id}' carries a local filesystem path")
+    if problems:
+        raise ValueError("not a public projection: " + "; ".join(problems))
