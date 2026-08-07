@@ -2570,6 +2570,20 @@ a.fig:hover .l::after,
   font-style: italic;
   color: var(--text);
 }
+.capsearch-nodemo {
+  margin: 0 0 1.2rem;
+  max-width: 56ch;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(226, 172, 98, 0.45);
+  font-family: var(--serif);
+  font-size: 1.06rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+.capsearch-nodemo em {
+  font-style: italic;
+  color: var(--brass);
+}
 .capsearch-label {
   display: block;
   font-family: var(--serif);

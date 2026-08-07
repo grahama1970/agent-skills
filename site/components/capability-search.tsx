@@ -56,6 +56,11 @@ export function CapabilitySearch() {
         I gravitate to the experimental, hard-to-staff work — but this is about
         what <em>you</em> need. Describe a problem or a capability.
       </p>
+      <p className="capsearch-nodemo">
+        No &ldquo;book a demo.&rdquo; Find something here that fits — every match
+        is real, working code you can use for free — <em>then</em> let&rsquo;s
+        talk.
+      </p>
       <label className="capsearch-label" htmlFor="capsearch-input">
         What interests you?
       </label>
