@@ -129,6 +129,7 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/artifacts.json",
         "site/generated/battle-lineage.json",
         "site/research-map.json",
+        "site/project-visibility.json",
     ):
         p = REPO / f
         before[f] = p.read_bytes() if p.exists() else b""
@@ -137,6 +138,7 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/scripts/gen_artifacts.py",
         "site/scripts/gen_battle_lineage.py",
         "site/scripts/gen_research_map.py",
+        "site/scripts/gen_visibility.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:

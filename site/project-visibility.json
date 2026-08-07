@@ -1,0 +1,87 @@
+{
+  "schema": "grahama.project_visibility.v1",
+  "projects": [
+    {
+      "slug": "tau",
+      "name": "t'au",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "battle",
+      "name": "battle",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "surf",
+      "name": "surf",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "persona-dream",
+      "name": "persona-dream",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "extractor",
+      "name": "extractor",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "dogpile",
+      "name": "dogpile",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "watch",
+      "name": "watch",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "scillm",
+      "name": "scillm",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "debugger",
+      "name": "debugger",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "sparta-explorer",
+      "name": "sparta explorer",
+      "visibility": "public-overview",
+      "evidence_access": "abstract",
+      "href": "https://github.com/grahama1970/sparta-public",
+      "abstract": null,
+      "note": "Public product overview; underlying system and evidence are private."
+    }
+  ],
+  "hidden": []
+}

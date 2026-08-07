@@ -1,0 +1,15 @@
+{
+  "_comment": "Curated, safe public abstracts for PRIVATE projects. A private project appears on grahama.co ONLY as the abstract below, and ONLY when approved_by/approved_at are set. Visibility is detected automatically (gh repo view) by gen_visibility.py; when a repo flips public<->private the nightly monitor-website refresh flips the site. Abstract text is curated-safe (never auto-derived from private content): no client/program names, private repos, source paths, or evidence counts.",
+  "abstracts": {
+    "sparta-explorer": {
+      "name": "SPARTA — space-cyber evidence workbench",
+      "area": "compliance",
+      "lens": "technical",
+      "evidence_access": "abstract",
+      "abstract": "A governed evidence workbench for space-system cyber compliance: every claim traces back to the human decision that owns it, so relevance never silently becomes authority. The reasoning methodology is public; the deployed application and its evidence base are private.",
+      "disclosure_boundary": "No client or program names, private repositories, source paths, or evidence counts. Methodology is public; the deployed system and its data are not.",
+      "approved_by": null,
+      "approved_at": null
+    }
+  }
+}
