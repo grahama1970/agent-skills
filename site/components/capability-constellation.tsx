@@ -261,12 +261,14 @@ export function CapabilityConstellation() {
                     className="c-ring c-ring--core"
                     style={{ filter: `drop-shadow(0 0 10px rgba(226,172,98,.55))` }}
                   />
-                  {/* G꜀ monogram — "graham·co" as a subscripted variable. */}
-                  <text x={x - 7} y={y + 15} textAnchor="middle" className="c-mark">
+                  {/* G꜀ monogram — G (the visual mass) locked to the exact node
+                      centre; c hangs off it as an external subscript so it never
+                      pulls G off-centre. */}
+                  <text x={x} y={y + 15} textAnchor="middle" className="c-mark">
                     G
-                    <tspan dx={-1.5} dy={9} className="c-mark-sub">
-                      c
-                    </tspan>
+                  </text>
+                  <text x={x + 16} y={y + 23} textAnchor="middle" className="c-mark-sub">
+                    c
                   </text>
                 </g>
               );
