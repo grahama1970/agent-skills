@@ -529,6 +529,35 @@ def find_layout_cmd(
         _abort(exc)
 
 
+@app.command(name="variations")
+def variations_cmd(
+    output_dir: Annotated[Path, typer.Option(help="Where candidates, contact sheet, and receipt go.")],
+    prompt: Annotated[str | None, typer.Option(help="Describe the visual you want.")] = None,
+    image: Annotated[Path | None, typer.Option(help="Existing image to reinterpret.")] = None,
+    table: Annotated[Path | None, typer.Option(help="JSON data file to chart.")] = None,
+    count: Annotated[int, typer.Option(min=1, max=8, help="How many candidates.")] = 4,
+    title: Annotated[str, typer.Option(help="Chart title (table lane).")] = "Candidate",
+    execute: Annotated[bool, typer.Option("--execute", help="Actually produce candidates (default plans only).")] = False,
+) -> None:
+    """N candidate visuals from a prompt, an image, or a table — one command."""
+    import json as json_mod
+
+    from .variations import generate_variations
+
+    try:
+        receipt = generate_variations(
+            output_dir=output_dir, prompt=prompt, image=image, table=table,
+            count=count, title=title, execute=execute,
+        )
+        typer.echo(json_mod.dumps(receipt, indent=1))
+        if receipt.get("status") == "NEEDS_ATTENTION":
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],
@@ -786,7 +815,7 @@ def image_variations(
     slide_id: Annotated[str, typer.Option(help="Slide to generate visual variations for.")],
     output_dir: Annotated[Path, typer.Option(help="Directory for the plan, variants, and contact sheet.")],
     count: Annotated[int, typer.Option(help="Number of variations.")] = 4,
-    execute: Annotated[bool, typer.Option("--execute", help="Run live via the system imagegen CLI (needs OPENAI_API_KEY).")] = False,
+    execute: Annotated[bool, typer.Option("--execute", help="Run live via codex exec + the imagegen skill (OAuth session; no API key).")] = False,
     deck_name: Annotated[str, typer.Option(help="Deck manifest filename inside the bundle.")] = "deck.public.yaml",
 ) -> None:
     """Compile a theme-aware brief and fan out N image variations (plan always; live with --execute)."""

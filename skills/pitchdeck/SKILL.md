@@ -31,6 +31,9 @@ provides:
 composes:
   - memory
   - embedding
+  - codex
+  - imagegen
+  - create-figure
   - best-practices-slide-design
   - ux-lab
   - browser-oracle
@@ -138,13 +141,14 @@ skill actually calls, not what it could plausibly use.
 | `browser-oracle` + `surf` + `ask` | Visual review of rendered slides by a browser oracle | `.ask/browser-oracles.yaml` (project `pitchdeck-review`) |
 | `agentic-evals` | Seeded-defect evaluation of the design gates | `fixtures/agentic_eval.json` |
 | `project-knowledge` | Shared current-state document for human + agent | `docs/PROJECT_KNOWLEDGE.md` |
+| `codex` + `imagegen` | Candidate IMAGE fan-out: N theme-locked prompts generated under an OAuth session, contact-sheeted for human selection | `image_variations.py` |
 
 **Considered and rejected, with reasons** (so the next agent does not re-litigate):
 
-- `create-figure` / `figure-lab` — produce raster or Mermaid output. The PPTX
-  contract requires natively editable shapes, so a generated figure would have
-  to be embedded as a picture and would fail the editability gate. Use them for
-  README/report figures, not for slide diagrams.
+- `create-figure` — raster/Mermaid output cannot be a slide DIAGRAM, which must
+  stay natively editable shapes. It IS the right backend for the table lane of
+  `variations`, where a chart is an illustration asset like any screenshot, so
+  it is composed for that purpose only. `figure-lab` remains unused.
 - `create-icon` — produces 72x72 Stream Deck PNGs, not vector line art.
 - `tau` — the creator/reviewer loop for slide critique SHOULD run as a tau DAG
   rather than hand-orchestrated subagents. Not yet wired; tracked in #1315.
@@ -154,6 +158,61 @@ Icons come from **lucide** (ISC), imported into the hash-pinned library by
 PowerPoint objects are imported; curve-bearing icons are skipped rather than
 approximated, because silently degrading a curve to a polygon would be a lie
 about editability that `resolve_icon()` could not detect.
+
+## Candidate figures and images
+
+Two different problems, two different mechanisms — and neither uses
+`/create-figure`, whose raster/Mermaid output cannot satisfy the
+native-editable-shape contract.
+
+**Diagrams and scenes are composed deterministically, not generated.** A slide's
+illustration is built from the hash-pinned icon library by `scenes.py`, so every
+part stays an editable PowerPoint object and nothing is invented. Candidates
+come from three deterministic sources:
+
+- **recipe alternatives** — a module may be compatible with several composition
+  recipes (`roadmap-gates` vs `roadmap-lanes`), each a different slide shape;
+- **scene compositions** — six semantic scenes, each with its own weight and
+  spacing structure;
+- **nearest real slides** — `find-layout` returns the top-k slides from the
+  author's own corpus, so a layout candidate is a slide that actually exists
+  rather than a guess.
+
+**Photographic/illustrative IMAGES fan out through `imagegen`, run by `codex`
+under an OAuth session** (this house has no funded API-key lane). `image-variations`
+compiles a theme-locked brief from the deck's own palette — so variants do not
+drift into generic AI art — emits N prompt variants across four style axes, and
+contact-sheets the results for human selection. A selected image enters through
+the NORMAL asset intake (magic bytes, alt text) as an ILLUSTRATION asset whose
+`generation_brief` marks it for the `GENERATED_ASSET_CLAIM_SURFACE` gate: a
+generated image can decorate a claim, never evidence one.
+
+One command covers all three inputs — you do not have to know which backend fits:
+
+```bash
+./run.sh variations --prompt "an evidence thread from guidance to human review" \
+  --output-dir out/candidates --count 4 --execute      # imagegen via codex (OAuth)
+./run.sh variations --image shot.png --output-dir out/candidates --execute
+./run.sh variations --table metrics.json --output-dir out/candidates \
+  --title "QRA corpus" --execute                       # create-figure: bar/hbar/pie/line
+```
+
+Without `--execute` it plans only. Every lane writes numbered candidates, a
+`contact-sheet.png` to choose from, and `candidates.json` recording the exact
+command behind each. `create-figure` is the correct backend for the TABLE lane
+(a chart is an illustration asset, not a native slide diagram) — the rejection
+above applies only to slide diagrams, which must stay editable shapes.
+
+The deck-coupled form, when you want variations for a specific slide:
+
+```bash
+./run.sh image-variations --bundle-dir docs/pitch/product \
+  --slide-id 04-how-it-works --output-dir out/variations --count 4   # plan only
+./run.sh image-variations ... --execute                              # live, via codex
+```
+
+Missing `codex`, or a failed generation, reports `NEEDS_ATTENTION` — never a
+fabricated image and never a silent skip.
 
 ## House-style measurement
 
