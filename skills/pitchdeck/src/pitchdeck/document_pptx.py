@@ -459,22 +459,22 @@ def emit_document_pptx(
             band.fill.fore_color.rgb = _hex(band_cfg.get("fill", palette["primary"]))
             band.line.fill.background()
             band.name = "chrome:band"
-            # Corpus band carries faint diagonal technical linework on its right
-            # half (cybersummit-32/47, sbir-38) — emitted as native freeform
-            # lines so the band stays editable, never a raster overlay.
-            band_h = SLIDE_H_IN * 0.10
-            for i in range(6):
-                x0 = SLIDE_W_IN * 0.70 + i * 0.62
-                line = slide.shapes.add_connector(
-                    MSO_CONNECTOR.STRAIGHT,
-                    Inches(min(x0, SLIDE_W_IN)), Inches(band_h),
-                    Inches(min(x0 + 0.95, SLIDE_W_IN)), Inches(0.0),
+            # The author's OWN band (Graham_Pittsburg layout, slideLayout22):
+            # a solid petrol bar with the house turbine strip stretched over it
+            # at alphaModFix amt=10000 (10% opacity). Emitted as a real picture
+            # so the band is the same object the author edits, not an imitation.
+            texture = (Path(__file__).resolve().parents[3] / "best-practices-slide-design"
+                       / "assets" / "house-band-texture.png")
+            if texture.is_file():
+                pic = slide.shapes.add_picture(
+                    str(texture), Inches(-1.2), Inches(-0.08),
+                    Inches(SLIDE_W_IN + 2.4), Inches(SLIDE_H_IN * 0.10 + 0.08),
                 )
-                # lighter petrol, not white: the corpus swooshes are a tonal
-                # shift within the band, never a contrasting overlay.
-                line.line.color.rgb = _hex("#1D7694")
-                line.line.width = Pt(1.25)
-                line.name = f"chrome:band-texture:{i}"
+                pic.name = "chrome:band-texture"
+                blip = pic._element.find(f".//{{{_A}}}blip")
+                if blip is not None:
+                    alpha = blip.makeelement(f"{{{_A}}}alphaModFix", {"amt": "10000"})
+                    blip.append(alpha)
             title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
             is_cover = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
             tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""

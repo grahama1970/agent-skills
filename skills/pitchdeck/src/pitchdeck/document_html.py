@@ -66,17 +66,22 @@ _TITLE_CASE_LOWER = {"a", "an", "the", "and", "or", "but", "for", "nor", "of", "
 
 # Band texture measured off the corpus renders (cybersummit-32/47, sbir-38):
 # faint diagonal technical linework sweeping across the band's right half.
-_BAND_TEXTURE_SVG = (
-    '<svg viewBox="0 0 400 40" preserveAspectRatio="none" '
-    'style="position:absolute;right:0;top:0;height:100%;width:46%;opacity:.18" '
-    'xmlns="http://www.w3.org/2000/svg">'
-    + "".join(
-        f'<path d="M {170 + i * 24} 44 C {205 + i * 24} 27, {250 + i * 24} 13, {330 + i * 24} 4" '
-        f'fill="none" stroke="#ffffff" stroke-width="1"/>'
-        for i in range(8)
+_BAND_TEXTURE_ASSET = Path(__file__).resolve().parents[3] / "best-practices-slide-design" / "assets" / "house-band-texture.png"
+
+
+def _band_texture_html() -> str:
+    """The author's OWN band: solid petrol with the house turbine strip at 10%.
+
+    Decoded from the Graham_Pittsburg layout (slideLayout22): Rectangle 3 is a
+    solid #076889 bar and Rectangle 7 stretches media/image12.png over it with
+    alphaModFix amt=10000 — i.e. 10% opacity. Blind judges named the flat band
+    as the strongest remaining tell; this is the real asset, not an imitation."""
+    if not _BAND_TEXTURE_ASSET.is_file():
+        return ""
+    return (
+        f'<div style="position:absolute;inset:0;background-image:url({_data_uri(_BAND_TEXTURE_ASSET)});'
+        f'background-size:120% 100%;background-position:center;opacity:0.10;"></div>'
     )
-    + "</svg>"
-)
 
 
 def house_title_case(text: str) -> str:
@@ -383,7 +388,7 @@ def render_document_html(
             band_html = (
                 f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
                 f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;'
-                f'overflow:hidden;">' + _BAND_TEXTURE_SVG +
+                f'overflow:hidden;">' + _band_texture_html() +
                 f'<span style="position:relative;color:{band.get("title_color", "#FFFFFF")};font-family:'
                 f'{theme["theme_tokens"]["heading_font"]}, sans-serif;'
                 f'font-size:{38 if len(band_text) <= 58 else 32}px;font-weight:bold;'
