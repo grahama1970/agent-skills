@@ -13,11 +13,6 @@ An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized 
 
 I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution.
 
-Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:
-
-- tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action. (pdf_oxide, agent-skills, and scillm are detailed under Public Work.)
-- Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
-
 Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room.
 
 15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily. Creative systems thinking — from leading 80+ person interactive productions — is why my AI systems are architected, not stapled together.

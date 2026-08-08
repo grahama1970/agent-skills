@@ -128,32 +128,6 @@
      "inline": [
       {
        "t": "text",
-       "v": "Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:"
-      }
-     ]
-    },
-    {
-     "kind": "ul",
-     "items": [
-      [
-       {
-        "t": "text",
-        "v": "tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action. (pdf_oxide, agent-skills, and scillm are detailed under Public Work.)"
-       }
-      ],
-      [
-       {
-        "t": "text",
-        "v": "Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval."
-       }
-      ]
-     ]
-    },
-    {
-     "kind": "p",
-     "inline": [
-      {
-       "t": "text",
        "v": "Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room."
       }
      ]
@@ -535,10 +509,10 @@
    ]
   }
  ],
- "sourceCommit": "7adac9892",
+ "sourceCommit": "07805fdf3",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "ec9a4f17bf5ad98f461c9d52465a61314cc66999bae3856de30dc019173da76b",
+ "sourceSha256": "69559515d56c26ccfa15340e26f1c6e44124410ef83f95eb1eba53c0e23c9f6a",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -616,6 +590,6 @@
    }
   ]
  },
- "pdfSha256": "91402c9ae4b0dd4102e3d3aef6ddae5de96873dbe14e55a9b61b31fcc4977857",
- "pdfBytes": 160318
+ "pdfSha256": "51ebb800d450ff0f704e3b17e857433e299aa03228ccff5c042d97bd1e444aa8",
+ "pdfBytes": 159386
 }

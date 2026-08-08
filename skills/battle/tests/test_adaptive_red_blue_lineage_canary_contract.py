@@ -22,6 +22,7 @@ from battle_skill.adaptive_red_blue_lineage_canary import (
     _docker_image_id,
     _generation_2_objective,
     _judge_fingerprint,
+    _normalize_parent_spawn_request,
     _preserve_selected_artifact,
     _reviewed_manifest,
     _run_exact_judge_replay,
@@ -132,6 +133,29 @@ def test_campaign_status_fails_closed_without_exact_integrity_sets() -> None:
     values = _passing_campaign_values()
     values["g1_judge"]["status"] = "INSUFFICIENT_EVIDENCE"  # type: ignore[index]
     assert _campaign_status(**values) == ("BLOCKED", "judge_status_not_pass")
+
+
+def test_parent_spawn_request_normalizes_stop_into_bounded_child() -> None:
+    request = {
+        "requested_action": "STOP",
+        "requested_research_questions": [],
+        "requested_budget": {"child_count": 0, "provider_attempts": 0},
+    }
+
+    normalized = _normalize_parent_spawn_request(
+        team="blue",
+        request=request,
+        judge={"verdict": "BLUE_SUCCESS"},
+    )
+
+    assert normalized["requested_action"] == "SPAWN_CHILD"
+    assert normalized["requested_budget"] == {"child_count": 1, "provider_attempts": 1}
+    assert normalized["requested_research_questions"]
+    assert normalized["battle_policy_override"]["status"] == "APPLIED"
+    assert (
+        normalized["battle_policy_override"]["reason"]
+        == "bounded_two_generation_canary_requires_one_child_per_team"
+    )
 
 
 def test_preserved_slot_survives_source_mutation_and_detects_slot_mutation(

@@ -765,7 +765,11 @@ def _parent_spawn_request(
         ]
     )
     tau_receipt = _read_json(tau_receipt_path)
-    request = tau_receipt.get("request")
+    request = _normalize_parent_spawn_request(
+        team=team,
+        request=tau_receipt.get("request"),
+        judge=judge,
+    )
     status = (
         "PASS"
         if tau_receipt.get("status") == "PASS" and isinstance(request, dict)
@@ -789,7 +793,9 @@ def _parent_spawn_request(
         },
         "request": request,
         "authorship": {
-            "authored_by": "tau_parent",
+            "authored_by": "tau_parent"
+            if not request.get("battle_policy_override")
+            else "battle_policy_normalized_tau_parent",
             "agentic": True,
             "provider_live": tau_receipt.get("provider_live") is True,
             "model": model,
@@ -797,7 +803,9 @@ def _parent_spawn_request(
             "provider_response_sha256": tau_receipt.get("provider_response_sha256"),
         },
         "claims": {
-            "proves": ["A live Tau parent authored the bounded reproduction request."]
+            "proves": [
+                "A live Tau parent reflection was recorded for the bounded reproduction request."
+            ]
             if status == "PASS"
             else [],
             "does_not_prove": ["Battle authorized the request or the child improved."],
@@ -807,6 +815,44 @@ def _parent_spawn_request(
     result["path"] = str(path)
     result["sha256"] = _sha(path)
     return result, path
+
+
+def _normalize_parent_spawn_request(
+    *,
+    team: str,
+    request: Any,
+    judge: dict[str, Any],
+) -> dict[str, Any]:
+    normalized = dict(request) if isinstance(request, dict) else {}
+    questions = normalized.get("requested_research_questions")
+    has_questions = isinstance(questions, list) and any(str(item).strip() for item in questions)
+    if normalized.get("requested_action") == "SPAWN_CHILD" and has_questions:
+        return normalized
+    override_question = (
+        "What public patch variation should be tested after the parent Judge outcome?"
+        if team == "blue"
+        else "What public exploit mutation should be tested after the parent Judge outcome?"
+    )
+    normalized.setdefault("rationale", "")
+    normalized.setdefault("reason_codes", [])
+    normalized.setdefault("proposed_child_mission", "")
+    normalized.setdefault("requested_mutation_directions", [])
+    normalized.setdefault("expected_observation", "")
+    normalized["requested_action"] = "SPAWN_CHILD"
+    normalized["requested_budget"] = {"child_count": 1, "provider_attempts": 1}
+    normalized["requested_research_questions"] = [override_question]
+    normalized["battle_policy_override"] = {
+        "status": "APPLIED",
+        "reason": "bounded_two_generation_canary_requires_one_child_per_team",
+        "original_requested_action": request.get("requested_action")
+        if isinstance(request, dict)
+        else None,
+        "original_research_question_count": len(questions)
+        if isinstance(questions, list)
+        else 0,
+        "judge_verdict": judge.get("verdict"),
+    }
+    return normalized
 
 
 def _spawn_decision(
