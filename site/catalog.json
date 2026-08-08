@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "9e596716b",
+  "sourceCommit": "41aeec10a",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 343
+    "skills": 344
   },
   "documents": [
     {
@@ -152,7 +152,7 @@
         "ui-design-engineering"
       ],
       "summary": "Interfaces and design systems built to be operated, not just admired.",
-      "skillCount": 19
+      "skillCount": 20
     },
     {
       "id": "area:creative-media",
@@ -751,6 +751,16 @@
       "summary": "Repo-specific ArangoDB best practices: leverage text_en analyzer (stop words, stemming, BM25), use AQL functions (LEVENSHTEIN_DISTANCE, TOKENS, NGRAM_SIMILARITY, COSINE_SIMILARITY), store domain knowledge in collections not Python code, and never duplicate DB capabilities.",
       "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. ArangoDB Best Practices (Project Skill) This skill codifies rules for using ArangoDB correctly in this repo. The core principle: ArangoDB's built in features MUST be used instead of reimplementing them in Python. The Anti Pattern This Skill Prevents Python code that duplicates what ArangoDB already does: Stop word lists in Python (ArangoDB text en already strips them) Hand rolled stemming in Python (ArangoDB text en already stems via Snowball) Regex patterns that classify entity types (ArangoDB collections already know what things are) Hardcoded domain term lists (ArangoDB collections are the source of truth) Python side BM25/TF IDF scoring (ArangoDB BM25() does this server side) Python side cosine similarity loops (ArangoDB COSINE SIMILARITY() does this server side) See references/anti patterns duplicated functionality.md for 7 real removed from codebase examples. When to Apply Use this skill whenever you: Write AQL queries ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-arangodb/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-bespoke-design",
+      "type": "skill",
+      "name": "best-practices-bespoke-design",
+      "category": "best-practices",
+      "sanity": true,
+      "summary": "Evidence-first art direction and review rules for creating digital experiences that feel genuinely custom to one brand instead of template-derived. Use when a user asks for bespoke web design, a distinctive visual world, personality-led art direction, an analysis of what makes a designer's work unique, or an audit of whether a website is memorable without copying another designer's signature.",
+      "body": "Best Practices: Bespoke Digital Design Position A bespoke interface is not a fashionable component library with unusual colors. It is a traceable transformation: brand and audience truth → personality → narrative premise → visual grammar → responsive component system → rendered proof. This skill was informed by Meagan Fisher Couldwell's Owltastic portfolio. The lesson to retain is her method of making each project feel authored for its subject. Do not reproduce her owls, celestial engravings, exact typography, page compositions, palettes, illustrations, or other signature surfaces. Immutable Outcome The finished work must be: 1. Specific — it could not be swapped onto a close competitor without visible conceptual tension. 2. Useful — the expressive system strengthens the user job and content hierarchy rather than competing with them. 3. Coherent — typography, palette, imagery, motifs, composition, motion, and voice express the same premise. 4. Systemic — the premise survives across pag",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-bespoke-design/SKILL.md"
     },
     {
       "id": "skill:best-practices-chat",

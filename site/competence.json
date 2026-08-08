@@ -1,14 +1,14 @@
 {
-  "commit": "9e596716b",
+  "commit": "41aeec10a",
   "as_of": "2026-08-08",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 343,
+  "totalSkills": 344,
   "disciplineCount": 18,
   "disciplines": [
     {
       "id": "evaluation-quality",
       "label": "Evaluation quality",
-      "skillCount": 73,
+      "skillCount": 74,
       "lenses": [],
       "areas": [],
       "projects": []
@@ -60,7 +60,7 @@
     {
       "id": "content-creation",
       "label": "Content creation",
-      "skillCount": 49,
+      "skillCount": 50,
       "lenses": [
         "creative"
       ],
@@ -75,7 +75,7 @@
     {
       "id": "ui-design-engineering",
       "label": "UI design engineering",
-      "skillCount": 41,
+      "skillCount": 42,
       "lenses": [
         "creative"
       ],

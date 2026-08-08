@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "9e596716b",
+  "sourceCommit": "41aeec10a",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -191,7 +191,7 @@
       "label": "Design",
       "title": "Design & interface",
       "lens": "creative",
-      "skillCount": 19
+      "skillCount": 20
     },
     {
       "id": "area:creative-media",

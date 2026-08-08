@@ -174,9 +174,9 @@ Latest sweep: `msh-20260628-084135`
 
 | Inventory | Count |
 |---|---:|
-| Skills | 343 |
+| Skills | 344 |
 | With `run.sh` | 292 |
-| With `sanity.sh` | 289 |
+| With `sanity.sh` | 290 |
 | Agent directories | 92 |
 | With `AGENTS.md` | 86 |
 | With `persona.yaml` | 51 |
@@ -211,7 +211,7 @@ agent-skills/
 
 ## Skills
 
-`skills/` holds 343 capabilities. Each durable skill is a directory with a
+`skills/` holds 344 capabilities. Each durable skill is a directory with a
 contract, entrypoint, and proof surface:
 
 ```text
@@ -383,7 +383,7 @@ no exercise of runtime behavior.
 
 | What was checked | What was not |
 |---|---|
-| 343 skills via `monitor-skill-health audit` | Semantic correctness of each skill |
+| 344 skills via `monitor-skill-health audit` | Semantic correctness of each skill |
 | Shallow `agents/` metadata inventory | Runtime behavior of each agent |
 | | Live scheduler daemon registration |
 | | Live GitHub issue mutation |

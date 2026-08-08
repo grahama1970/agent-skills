@@ -201,7 +201,7 @@
         "ui-design-engineering"
       ],
       "systems": [],
-      "skillCount": 19
+      "skillCount": 20
     },
     {
       "id": "creative-media",
@@ -229,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "9e596716b"
+  "sourceCommit": "41aeec10a"
 }
