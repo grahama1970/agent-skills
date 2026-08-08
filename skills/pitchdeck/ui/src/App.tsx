@@ -21,6 +21,8 @@ import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterActio
 import { useTopNavShortcuts } from './useTopNavShortcuts'
 import { FragmentContext, SlideBody, fragmentCount } from './layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './components/ui/button'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
   const [value, setValue] = useState<boolean>(() => {
@@ -78,7 +80,7 @@ function Overview({ deck, onSelect }: { deck: UiDeckBundle; onSelect: (index: nu
     <ul className="m-0 grid list-none content-start gap-6 overflow-y-auto p-8 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
       {deck.slides.map((slide, index) => (
         <li key={slide.id}>
-          <button
+          <Button
             type="button"
             data-qid={`deck:overview:slide:${slide.id}`}
             data-qs-action="DECK_GOTO_SLIDE"
@@ -89,7 +91,7 @@ function Overview({ deck, onSelect }: { deck: UiDeckBundle; onSelect: (index: nu
             <span className="font-mono text-xs text-slate-500">#{slide.order} · {slide.layout}</span>
             <span className="mt-1 block text-sm font-medium text-slate-200">{slide.title}</span>
             <span className="mt-1 block truncate text-xs text-slate-400">{slide.message}</span>
-          </button>
+          </Button>
         </li>
       ))}
     </ul>
@@ -152,7 +154,7 @@ function EditPanel({
         </p>
       ) : null}
       <div className="mt-2 flex gap-2">
-        <button
+        <Button
           type="button"
           data-qid="deck:edit:panel:save"
           data-qs-action="DECK_EDIT_SAVE"
@@ -162,8 +164,8 @@ function EditPanel({
           className="cursor-pointer rounded-lg border border-cyan-600 bg-cyan-600/20 px-3 py-1.5 text-sm text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? 'Validating…' : 'Save'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           data-qid="deck:edit:panel:cancel"
           data-qs-action="DECK_EDIT_CANCEL"
@@ -172,7 +174,7 @@ function EditPanel({
           className="cursor-pointer rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </section>
   )
@@ -414,7 +416,7 @@ export function App() {
         <div className="flex min-w-0 items-center gap-3">
           {editing ? (
             <>
-              <button
+              <Button
                 type="button"
                 aria-label="Toggle slide navigator"
                 aria-pressed={railCollapsed}
@@ -425,8 +427,8 @@ export function App() {
                 className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${railCollapsed ? 'text-slate-500' : 'text-cyan-300'}`}
               >
                 <PanelLeft aria-hidden className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 aria-label="Toggle deck source pane"
                 aria-pressed={showSource}
@@ -437,8 +439,8 @@ export function App() {
                 className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${showSource ? 'text-cyan-300' : 'text-slate-300'}`}
               >
                 <FileCode2 aria-hidden className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 aria-label="Toggle layout inspector"
                 aria-pressed={!chatCollapsed && sheetTab === 'layout'}
@@ -452,7 +454,7 @@ export function App() {
                 className={`inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-1.5 hover:border-slate-600 hover:text-cyan-300 ${!chatCollapsed && sheetTab === 'layout' ? 'text-cyan-300' : 'text-slate-500'}`}
               >
                 <PanelRight aria-hidden className="h-4 w-4" />
-              </button>
+              </Button>
               <select
                 aria-label="Zoom"
                 data-qid="deck:toolbar:zoom"
@@ -506,7 +508,7 @@ export function App() {
             ).map(([id, label, hint, Icon], modeIndex) => (
               <React.Fragment key={id}>
               {modeIndex === 2 ? <span aria-hidden className="my-1 w-px self-stretch bg-slate-700" /> : null}
-              <button
+              <Button
                 type="button"
                 role="radio"
                 aria-checked={mode === id}
@@ -521,11 +523,11 @@ export function App() {
               >
                 <Icon aria-hidden className="h-4 w-4" />
                 <span className="hidden lg:inline">{label}</span>
-              </button>
+              </Button>
               </React.Fragment>
             ))}
           </div>
-          <button
+          <Button
             type="button"
             data-qid="deck:view:overview"
             data-qs-action="DECK_TOGGLE_OVERVIEW"
@@ -535,9 +537,9 @@ export function App() {
             className={navButton}
           >
             <LayoutGrid aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Overview</span>
-          </button>
+          </Button>
           <span aria-hidden className="mx-1 h-5 w-px bg-slate-700" />
-          <button
+          <Button
             type="button"
             data-qid="deck:view:chat"
             data-qs-action="DECK_TOGGLE_CHAT"
@@ -550,8 +552,8 @@ export function App() {
             className={`${navButton} ${!chatCollapsed && sheetTab === 'chat' ? 'border-cyan-500/80 text-cyan-200' : ''}`}
           >
             <MessageSquare aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Chat</span>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid="deck:view:notes"
             data-qs-action="DECK_TOGGLE_NOTES"
@@ -564,7 +566,7 @@ export function App() {
             className={`${navButton} ${!chatCollapsed && sheetTab === 'notes' ? 'border-cyan-500/80 text-cyan-200' : ''}`}
           >
             <StickyNote aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Notes</span>
-          </button>
+          </Button>
           <ExportMenu />
         </nav>
       </header>
@@ -615,7 +617,7 @@ export function App() {
                   overlay the rail or the right sheet. */}
               {editing && !showSource ? (
                 <div className="absolute left-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
-                  <button
+                  <Button
                     type="button"
                     aria-label="Expand source pane"
                     data-qid="deck:restore:source"
@@ -625,12 +627,12 @@ export function App() {
                     className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
                   >
                     <PanelLeftOpen aria-hidden className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               ) : null}
               {editing ? (
                 <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/80 p-1 backdrop-blur">
-                  <button
+                  <Button
                     type="button"
                     aria-label="Toggle focus mode"
                     data-qid="deck:restore:focus"
@@ -640,7 +642,7 @@ export function App() {
                     className="cursor-pointer rounded p-1.5 text-slate-300 hover:bg-slate-700"
                   >
                     <Maximize2 aria-hidden className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               ) : null}
               <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
@@ -667,7 +669,7 @@ export function App() {
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />
           ) : null}
           <footer className="flex items-center justify-between gap-4 border-t border-slate-800 px-4 py-2">
-            <button
+            <Button
               type="button"
               data-qid="deck:nav:prev"
               data-qs-action="DECK_PREV_SLIDE"
@@ -677,11 +679,11 @@ export function App() {
               className={navButton}
             >
               <ChevronLeft aria-hidden className="h-4 w-4" /> Prev
-            </button>
+            </Button>
             <span className="font-mono text-xs text-slate-500">
               {slide.order} / {navSlides.length} · {slide.id}{slide.hidden ? ' · hidden' : ''}
             </span>
-            <button
+            <Button
               type="button"
               data-qid="deck:nav:next"
               data-qs-action="DECK_NEXT_SLIDE"
@@ -691,7 +693,7 @@ export function App() {
               className={navButton}
             >
               Next <ChevronRight aria-hidden className="h-4 w-4" />
-            </button>
+            </Button>
           </footer>
         </main>
       )}

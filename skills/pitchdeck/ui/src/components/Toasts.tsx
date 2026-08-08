@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Minimal toast bus (Gemini spec, adapted): toast() dispatches a DOM event so
 // any module can raise one without prop drilling; the container renders them
@@ -48,7 +50,7 @@ export function Toasts() {
           }`}
         >
           <span className="min-w-0 flex-1 break-words">{item.message}</span>
-          <button
+          <Button
             type="button"
             data-qid={`deck:toast:dismiss:${item.id}`}
             data-qs-action="DECK_TOAST_DISMISS"
@@ -57,7 +59,7 @@ export function Toasts() {
             className="cursor-pointer rounded p-0.5 opacity-70 hover:opacity-100"
           >
             <X aria-hidden className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       ))}
     </div>

@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { FragmentContext, SlideBody, fragmentCount } from '../layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiSlide } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Presenter view (user spec, adapted): REAL slide renders (SlideBody scaled)
 // for current and next slide, elapsed timer + wall clock, speaker notes with
@@ -234,7 +236,7 @@ export function PresenterOverlay({
           <span className="flex items-center gap-2 font-mono text-sm">
             <Clock aria-hidden className="h-3.5 w-3.5 text-amber-400" />
             <span className="w-16 font-bold text-amber-200">{timer.formatted}</span>
-            <button
+            <Button
               type="button"
               data-qid="deck:presenter:timer-toggle"
               data-qs-action="DECK_PRESENTER_TIMER_TOGGLE"
@@ -243,8 +245,8 @@ export function PresenterOverlay({
               className="cursor-pointer rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
             >
               {timer.running ? <Pause aria-hidden className="h-3 w-3" /> : <Play aria-hidden className="h-3 w-3" />}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               data-qid="deck:presenter:timer-reset"
               data-qs-action="DECK_PRESENTER_TIMER_RESET"
@@ -253,14 +255,14 @@ export function PresenterOverlay({
               className="cursor-pointer rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
             >
               <RotateCcw aria-hidden className="h-3 w-3" />
-            </button>
+            </Button>
           </span>
           <span className="h-4 w-px bg-slate-800" aria-hidden />
           <span className="font-mono text-xs font-semibold text-slate-200">{timer.wallClock}</span>
         </div>
         <div className="flex flex-col gap-1 rounded-lg border border-slate-800 bg-slate-950 p-1.5 font-mono text-xs">
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
               data-qid="deck:presenter:autoplay"
               data-qs-action="DECK_PRESENTER_AUTOPLAY"
@@ -271,10 +273,10 @@ export function PresenterOverlay({
             >
               {auto.playing ? <Pause aria-hidden className="h-3 w-3" /> : <Play aria-hidden className="h-3 w-3" />}
               Auto
-            </button>
+            </Button>
             <FastForward aria-hidden className="h-3 w-3 text-slate-500" />
             {INTERVALS.map((seconds) => (
-              <button
+              <Button
                 key={seconds}
                 type="button"
                 data-qid={`deck:presenter:interval:${seconds}`}
@@ -285,9 +287,9 @@ export function PresenterOverlay({
                 className={`cursor-pointer rounded px-1.5 py-0.5 text-[10px] ${auto.interval === seconds ? 'border border-slate-600 bg-slate-700 font-bold text-slate-100' : 'text-slate-400 hover:bg-slate-800'}`}
               >
                 {seconds}s
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
               type="button"
               data-qid="deck:presenter:loop"
               data-qs-action="DECK_PRESENTER_LOOP"
@@ -297,7 +299,7 @@ export function PresenterOverlay({
               className={`cursor-pointer rounded p-1 ${auto.loop ? 'border border-emerald-500/30 bg-emerald-500/20 text-emerald-400' : 'text-slate-500 hover:bg-slate-800'}`}
             >
               <Repeat aria-hidden className="h-3 w-3" />
-            </button>
+            </Button>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-slate-800">
             <div style={{ width: `${auto.playing ? auto.progress : 0}%` }} className="h-full rounded-full bg-cyan-400 transition-[width] duration-75 ease-linear" />
@@ -307,7 +309,7 @@ export function PresenterOverlay({
           <span className="flex items-center gap-1 rounded-md border border-slate-800 bg-slate-950 p-1 text-xs">
             <Type aria-hidden className="mx-1 h-3 w-3 text-slate-500" />
             {NOTE_SIZES.map((size) => (
-              <button
+              <Button
                 key={size}
                 type="button"
                 data-qid={`deck:presenter:notesize:${size}`}
@@ -320,10 +322,10 @@ export function PresenterOverlay({
                 }`}
               >
                 {size}
-              </button>
+              </Button>
             ))}
           </span>
-          <button
+          <Button
             type="button"
             data-qid="deck:presenter:evidence"
             data-qs-action="DECK_PRESENTER_EVIDENCE"
@@ -333,8 +335,8 @@ export function PresenterOverlay({
             className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${showEvidence ? 'border-cyan-600 bg-cyan-600/20 text-cyan-200' : 'border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700'}`}
           >
             <Database aria-hidden className="h-3 w-3" /> Evidence
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid="deck:presenter:popout"
             data-qs-action="DECK_PRESENTER_POPOUT"
@@ -344,8 +346,8 @@ export function PresenterOverlay({
           >
             {poppedOut ? <Minimize2 aria-hidden className="h-3 w-3" /> : <ExternalLink aria-hidden className="h-3 w-3" />}
             {poppedOut ? 'Embed' : 'Pop out'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid="deck:presenter:exit"
             data-qs-action="DECK_PRESENTER_EXIT"
@@ -354,7 +356,7 @@ export function PresenterOverlay({
             className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20"
           >
             <X aria-hidden className="h-3.5 w-3.5" /> Exit
-          </button>
+          </Button>
         </div>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-6 overflow-hidden p-6">
@@ -366,7 +368,7 @@ export function PresenterOverlay({
             <div className="flex w-1/3 flex-col justify-between rounded-xl border border-slate-800 bg-slate-900 p-3">
               <span className="font-mono text-[10px] font-semibold uppercase text-slate-500">Slide controls</span>
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
                   data-qid="deck:presenter:prev"
                   data-qs-action="DECK_PRESENTER_PREV"
@@ -376,8 +378,8 @@ export function PresenterOverlay({
                   className="flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-slate-800 py-3 text-slate-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronLeft aria-hidden className="h-5 w-5" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   data-qid="deck:presenter:next"
                   data-qs-action="DECK_PRESENTER_NEXT"
@@ -387,7 +389,7 @@ export function PresenterOverlay({
                   className="flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-cyan-700 py-3 text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <ChevronRight aria-hidden className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </div>
             <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-slate-800 bg-slate-900 p-3">
@@ -429,7 +431,7 @@ export function PresenterOverlay({
         <span className="flex items-center gap-2 font-mono text-xs font-semibold uppercase text-cyan-400">
           <Database aria-hidden className="h-3.5 w-3.5" /> Claim evidence
         </span>
-        <button
+        <Button
           type="button"
           data-qid="deck:presenter:evidence-close"
           data-qs-action="DECK_PRESENTER_EVIDENCE_CLOSE"
@@ -438,7 +440,7 @@ export function PresenterOverlay({
           className="cursor-pointer rounded p-1 text-slate-400 hover:text-slate-100"
         >
           <X aria-hidden className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
       <p className="m-0 my-2 truncate text-xs font-bold text-slate-200">{slide.title}</p>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">

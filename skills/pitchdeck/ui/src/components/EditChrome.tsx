@@ -1,6 +1,8 @@
 import { Copy, MoveLeft, MoveRight, Play, Plus, Trash2, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import type { UiDeckBundle, UiSlide } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Keynote-pattern edit chrome: a top toolbar for slide-level actions and a
 // left rail for slide navigation. Every mutation posts /api/deck-op, which
@@ -65,7 +67,7 @@ export function EditToolbar({
       aria-label="Slide actions"
       className="flex items-center justify-center gap-0.5"
     >
-      <button
+      <Button
         type="button"
         aria-label="Undo last change"
         data-qid="deck:toolbar:undo"
@@ -76,8 +78,8 @@ export function EditToolbar({
         className={button}
       >
         <Undo2 aria-hidden className="h-5 w-5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         aria-label="Add slide"
         data-qid="deck:toolbar:add-slide"
@@ -88,8 +90,8 @@ export function EditToolbar({
         className={button}
       >
         <Plus aria-hidden className="h-5 w-5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         aria-label="Duplicate slide"
         data-qid="deck:toolbar:duplicate-slide"
@@ -100,8 +102,8 @@ export function EditToolbar({
         className={button}
       >
         <Copy aria-hidden className="h-5 w-5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         aria-label="Move slide earlier"
         data-qid="deck:toolbar:move-left"
@@ -112,8 +114,8 @@ export function EditToolbar({
         className={button}
       >
         <MoveLeft aria-hidden className="h-5 w-5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         aria-label="Move slide later"
         data-qid="deck:toolbar:move-right"
@@ -124,8 +126,8 @@ export function EditToolbar({
         className={button}
       >
         <MoveRight aria-hidden className="h-5 w-5" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
         aria-label="Delete slide"
         data-qid="deck:toolbar:delete-slide"
@@ -136,9 +138,9 @@ export function EditToolbar({
         className={`${button} hover:border-rose-500/60 hover:text-rose-300`}
       >
         <Trash2 aria-hidden className="h-5 w-5" />
-      </button>
+      </Button>
       <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden />
-      <button
+      <Button
         type="button"
         aria-label="Present"
         data-qid="deck:toolbar:present"
@@ -148,7 +150,7 @@ export function EditToolbar({
         className={`${button} border-cyan-700 text-cyan-200`}
       >
         <Play aria-hidden className="h-5 w-5" />
-      </button>
+      </Button>
       {busy ? <span className="text-xs text-slate-500">Validating…</span> : null}
       {error ? (
         <span role="alert" className="text-xs text-rose-300">
@@ -175,7 +177,7 @@ export function SlideRail({
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {deck.slides.map((slide, index) => (
           <li key={slide.id}>
-            <button
+            <Button
               type="button"
               data-qid={`deck:rail:slide:${slide.id}`}
               data-qs-action="DECK_RAIL_GOTO_SLIDE"
@@ -190,7 +192,7 @@ export function SlideRail({
             >
               <span className="font-mono text-[10px] text-slate-500">{slide.order} · {slide.layout}</span>
               <span className="mt-0.5 block truncate text-xs text-slate-200">{slide.title}</span>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

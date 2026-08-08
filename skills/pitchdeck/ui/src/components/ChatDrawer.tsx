@@ -1,6 +1,8 @@
 import { useRef } from 'react'
 import { X } from 'lucide-react'
 import { useRegisterAction } from '../hooks'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Right side sheet (3-pane spec): auxiliary tools — Chat and Notes — anchor
 // exclusively to the right as tabs of ONE drawer, pushing the canvas without
@@ -49,7 +51,7 @@ export function RightSheet({
     layout: { label: 'Layout', action: 'DECK_SHEET_TAB_LAYOUT', title: 'Layout inspector for the current slide' },
   }
   const tabButton = (id: RightSheetTab) => (
-    <button
+    <Button
       key={id}
       type="button"
       data-qid={`deck:sheet:tab:${id}`}
@@ -64,7 +66,7 @@ export function RightSheet({
       }`}
     >
       {TAB_META[id].label}
-    </button>
+    </Button>
   )
 
   return (
@@ -89,7 +91,7 @@ export function RightSheet({
       <div className="flex h-full flex-col" style={{ width: DRAWER_WIDTH }}>
         <div className="flex h-11 shrink-0 items-center border-b border-slate-800 bg-slate-950/60">
           {(['chat', 'notes', ...(layout ? (['layout'] as RightSheetTab[]) : [])] as RightSheetTab[]).map(tabButton)}
-          <button
+          <Button
             type="button"
             data-qid="deck:chat:collapse"
             data-qs-action="DECK_CHAT_COLLAPSE"
@@ -99,7 +101,7 @@ export function RightSheet({
             className="mx-1.5 cursor-pointer rounded-md p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
           >
             <X aria-hidden className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
         {/* All panes stay mounted; hidden ones keep their state. */}
         <div className={`min-h-0 flex-1 ${tab === 'chat' ? '' : 'hidden'}`}>{chat}</div>

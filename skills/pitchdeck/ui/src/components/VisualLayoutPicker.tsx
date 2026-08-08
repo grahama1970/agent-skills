@@ -1,3 +1,5 @@
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 // Phase 3 (Gemini spec): wireframe layout gallery replacing the text dropdown.
 // One thumbnail per real SlideLayout value in the manifest schema.
 
@@ -107,7 +109,7 @@ export function VisualLayoutPicker({
       <span className="block text-xs font-medium text-slate-400">Layout</span>
       <div className="mt-1 grid grid-cols-2 gap-2">
         {Object.entries(WIREFRAMES).map(([id, wireframe]) => (
-          <button
+          <Button
             key={id}
             type="button"
             data-qid={`deck:inspector:layout:${id}`}
@@ -126,7 +128,7 @@ export function VisualLayoutPicker({
             <span className={`mt-1 block text-center text-[11px] font-medium ${currentLayout === id ? 'text-cyan-200' : 'text-slate-400'}`}>
               {id.replace('_', ' ')}
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { AArrowDown, AArrowUp, AlignCenter, AlignLeft, AlignRight, Bold, Trash2 } from 'lucide-react'
 import { revisionStore } from '../hooks'
 import type { UiElement } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Phase 2 (Gemini spec) adapted: contextual toolbar for the selected freeform
 // element, wired to REAL manifest ops (element:<id>:bold|size|align, del) —
@@ -46,7 +48,7 @@ export function FloatingToolbar({
     >
       {isText ? (
         <>
-          <button
+          <Button
             type="button"
             data-qid={`deck:eltoolbar:bold:${element.id}`}
             data-qs-action="DECK_ELEMENT_BOLD"
@@ -56,8 +58,8 @@ export function FloatingToolbar({
             className={`${button} ${element.bold ? 'bg-slate-700 text-cyan-300' : ''}`}
           >
             <Bold aria-hidden className="h-3.5 w-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid={`deck:eltoolbar:size-up:${element.id}`}
             data-qs-action="DECK_ELEMENT_SIZE_UP"
@@ -66,8 +68,8 @@ export function FloatingToolbar({
             className={button}
           >
             <AArrowUp aria-hidden className="h-3.5 w-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid={`deck:eltoolbar:size-down:${element.id}`}
             data-qs-action="DECK_ELEMENT_SIZE_DOWN"
@@ -76,7 +78,7 @@ export function FloatingToolbar({
             className={button}
           >
             <AArrowDown aria-hidden className="h-3.5 w-3.5" />
-          </button>
+          </Button>
           <span aria-hidden className="mx-0.5 h-4 w-px bg-slate-700" />
           {(
             [
@@ -85,7 +87,7 @@ export function FloatingToolbar({
               ['right', AlignRight],
             ] as const
           ).map(([align, Icon]) => (
-            <button
+            <Button
               key={align}
               type="button"
               data-qid={`deck:eltoolbar:align-${align}:${element.id}`}
@@ -96,7 +98,7 @@ export function FloatingToolbar({
               className={`${button} ${element.align === align ? 'bg-slate-700 text-cyan-300' : ''}`}
             >
               <Icon aria-hidden className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           ))}
           <span aria-hidden className="mx-0.5 h-4 w-px bg-slate-700" />
         </>
@@ -115,7 +117,7 @@ export function FloatingToolbar({
         <option value="rise">Rise</option>
         <option value="zoom">Zoom</option>
       </select>
-      <button
+      <Button
         type="button"
         data-qid={`deck:eltoolbar:delete:${element.id}`}
         data-qs-action="DECK_ELEMENT_DELETE"
@@ -124,7 +126,7 @@ export function FloatingToolbar({
         className={`${button} text-rose-400 hover:bg-rose-500/20`}
       >
         <Trash2 aria-hidden className="h-3.5 w-3.5" />
-      </button>
+      </Button>
     </div>
   )
 }

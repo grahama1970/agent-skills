@@ -18,6 +18,8 @@ import { useState } from 'react'
 import { revisionStore } from '../hooks'
 import { SlideBody } from '../layouts/SlideLayouts'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Slide navigation drawer (user spec, adapted): dnd-kit sortable thumbnails
 // with DragOverlay, hover quick actions, and derived status badges. All
@@ -125,7 +127,7 @@ export function SlideThumbnail({
         ) : null}
       </div>
       <div className="absolute right-2 flex items-center gap-1 rounded border border-slate-700/80 bg-slate-900/95 p-1 opacity-0 shadow-lg backdrop-blur transition-opacity group-hover:opacity-100">
-        <button
+        <Button
           type="button"
           data-qid={`deck:rail:hide:${slide.id}`}
           data-qs-action="DECK_TOGGLE_SLIDE_HIDDEN"
@@ -138,8 +140,8 @@ export function SlideThumbnail({
           className="cursor-pointer rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:opacity-40"
         >
           <HideIcon aria-hidden className="h-3 w-3" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           data-qid={`deck:rail:duplicate:${slide.id}`}
           data-qs-action="DECK_DUPLICATE_SLIDE"
@@ -152,8 +154,8 @@ export function SlideThumbnail({
           className="cursor-pointer rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:opacity-40"
         >
           <Copy aria-hidden className="h-3 w-3" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           data-qid={`deck:rail:delete:${slide.id}`}
           data-qs-action="DECK_DELETE_SLIDE"
@@ -166,7 +168,7 @@ export function SlideThumbnail({
           className="cursor-pointer rounded p-1 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 disabled:opacity-40"
         >
           <Trash2 aria-hidden className="h-3 w-3" />
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -259,7 +261,7 @@ export function SlideDrawer({
       >
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto py-2">
           {deck.slides.map((s, i) => (
-            <button
+            <Button
               key={s.id}
               type="button"
               data-qid={`deck:rail:strip:${s.id}`}
@@ -272,12 +274,12 @@ export function SlideDrawer({
               }`}
             >
               {s.order}
-            </button>
+            </Button>
           ))}
         </div>
         {onToggleCollapsed ? (
           <div className="border-t border-slate-800 p-1.5">
-            <button
+            <Button
               type="button"
               data-qid="deck:rail:expand"
               data-qs-action="DECK_RAIL_EXPAND"
@@ -287,7 +289,7 @@ export function SlideDrawer({
               className="flex w-full cursor-pointer items-center justify-center rounded py-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-300"
             >
               <ChevronsRight aria-hidden className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         ) : null}
       </nav>
@@ -303,7 +305,7 @@ export function SlideDrawer({
       <div className="flex items-center justify-between border-b border-slate-800/60 p-2.5">
         <span className="flex items-center gap-1 whitespace-nowrap font-mono text-[10px] font-semibold uppercase text-slate-500">
           {onToggleCollapsed ? (
-            <button
+            <Button
               type="button"
               data-qid="deck:rail:collapse"
               data-qs-action="DECK_RAIL_COLLAPSE"
@@ -313,11 +315,11 @@ export function SlideDrawer({
               className="cursor-pointer rounded p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200"
             >
               <ChevronsLeft aria-hidden className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           ) : null}
           {deck.slides.length}
         </span>
-        <button
+        <Button
           type="button"
           data-qid="deck:rail:add-slide"
           data-qs-action="DECK_ADD_SLIDE"
@@ -327,7 +329,7 @@ export function SlideDrawer({
           className="cursor-pointer rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white disabled:opacity-40"
         >
           <Plus aria-hidden className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       </div>
       {error ? (
         <p role="alert" className="m-2 rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-300">

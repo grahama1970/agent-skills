@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { revisionStore } from '../hooks'
 import type { UiSlide } from '../types'
 import { VisualLayoutPicker } from './VisualLayoutPicker'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Keynote-pattern selection-scoped inspector: properties of the CURRENT slide,
 // every change routed through /api/slide-edit → apply-edit → full fail-closed
@@ -56,7 +58,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
           <p className="m-0 mt-0.5 font-mono text-xs text-slate-500">{slide.id}</p>
         </div>
         {onCollapse ? (
-          <button
+          <Button
             type="button"
             aria-label="Collapse inspector"
             data-qid="deck:inspector:collapse"
@@ -66,7 +68,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
             className="cursor-pointer rounded-md border border-transparent p-1 text-slate-400 hover:border-slate-600 hover:text-cyan-300"
           >
             <PanelRightClose aria-hidden className="h-4 w-4" />
-          </button>
+          </Button>
         ) : null}
       </header>
 
@@ -86,7 +88,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
 
       {slide.layout === 'freeform' ? (
         <section>
-          <button
+          <Button
             type="button"
             data-qid="deck:inspector:add-textbox"
             data-qs-action="DECK_ADD_TEXTBOX"
@@ -96,7 +98,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
             className="w-full cursor-pointer rounded-lg border border-cyan-700 bg-cyan-600/10 px-3 py-2 text-sm text-cyan-200 hover:border-cyan-500 disabled:opacity-40"
           >
             + Add text box
-          </button>
+          </Button>
         </section>
       ) : null}
 
@@ -230,7 +232,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
               <span className="min-w-0 flex-1 truncate rounded-lg border border-slate-800 bg-slate-950 px-2 py-1.5 text-xs text-slate-300">
                 {line}
               </span>
-              <button
+              <Button
                 type="button"
                 data-qid={`deck:inspector:bullet-del:${index}`}
                 data-qs-action="DECK_INSPECTOR_DELETE_BULLET"
@@ -240,7 +242,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
                 className="cursor-pointer rounded-md border border-slate-700 p-1.5 text-slate-400 hover:border-rose-500/60 hover:text-rose-300 disabled:opacity-40"
               >
                 <Trash2 aria-hidden className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -253,7 +255,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
             placeholder="Add a bullet…"
             className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-100"
           />
-          <button
+          <Button
             type="button"
             data-qid="deck:inspector:bullet-add"
             data-qs-action="DECK_INSPECTOR_ADD_BULLET"
@@ -266,7 +268,7 @@ export function Inspector({ slide, onChanged, onCollapse, width }: { slide: UiSl
             className="cursor-pointer rounded-md border border-slate-700 p-1.5 text-slate-300 hover:border-cyan-500/60 disabled:opacity-40"
           >
             <Plus aria-hidden className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       </section>
 

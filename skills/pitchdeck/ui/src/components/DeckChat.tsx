@@ -4,6 +4,8 @@ import { ChatWell } from '@ux-lab/ui/ChatWell'
 import type { ChatMessage } from '@ux-lab/ui/ChatWell'
 import { revisionStore } from '../hooks'
 import type { UiDeckBundle } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Claim-review chat over the shared ux-lab ChatWell. The interpreter is
 // deterministic: it answers from the emitted (seam-validated) bundle and
@@ -311,7 +313,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
               {pending.preview.would_pass ? 'PASS' : pending.preview.gate_codes[0] || 'REJECT'}
             </span>
           ) : null}
-          <button
+          <Button
             type="button"
             data-qid="deck:chat:proposal:apply"
             data-qs-action="DECK_CHAT_APPLY_PROPOSAL"
@@ -321,8 +323,8 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
             className="inline-flex cursor-pointer items-center gap-1 rounded bg-cyan-600 px-2 py-1 font-medium text-white hover:bg-cyan-500 disabled:opacity-40"
           >
             <Check aria-hidden className="h-3 w-3" /> Apply
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             data-qid="deck:chat:proposal:dismiss"
             data-qs-action="DECK_CHAT_DISMISS_PROPOSAL"
@@ -332,7 +334,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
             className="inline-flex cursor-pointer items-center rounded p-1 text-cyan-300 hover:bg-cyan-900/60"
           >
             <X aria-hidden className="h-3 w-3" />
-          </button>
+          </Button>
         </div>
   ) : null
 

@@ -1,5 +1,7 @@
 import { FileDown, FileText, Globe, MoreHorizontal, Presentation } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Keynote-pattern "…" system menu: export the CURRENT validated bundle as
 // editable PPTX, rendered PDF, or Marp Markdown via /api/export (each runs
@@ -53,7 +55,7 @@ export function ExportMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <Button
         type="button"
         aria-label="Export and more"
         aria-expanded={open}
@@ -64,7 +66,7 @@ export function ExportMenu() {
         className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-transparent p-2 text-slate-300 transition-colors hover:border-slate-600 hover:text-cyan-300"
       >
         <MoreHorizontal aria-hidden className="h-5 w-5" />
-      </button>
+      </Button>
       {open ? (
         <div
           role="menu"
@@ -72,7 +74,7 @@ export function ExportMenu() {
           className="absolute right-0 top-full z-20 mt-1 w-64 rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-2xl"
         >
           {FORMATS.map(({ format, label, icon: Icon, qid, action }) => (
-            <button
+            <Button
               key={format}
               type="button"
               role="menuitem"
@@ -85,7 +87,7 @@ export function ExportMenu() {
             >
               <Icon aria-hidden className="h-4 w-4 text-cyan-300" />
               {busy === format ? 'Building…' : label}
-            </button>
+            </Button>
           ))}
           {error ? (
             <p role="alert" className="m-0 px-3 py-2 text-xs text-rose-300">

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, ShieldAlert, X } from 'lucide-react'
 import { toast } from './Toasts'
 import type { UiDeckBundle } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Writable claim triage (#1227): risk-ordered keyboard queue with the claim
 // beside its verbatim evidence spans. Decisions post /api/claim-decide — the
@@ -148,7 +150,7 @@ export function TriageQueue({ deck, onChanged }: { deck: UiDeckBundle; onChanged
         </div>
       </div>
       <footer className="mt-3 flex items-center gap-2">
-        <button
+        <Button
           type="button"
           data-qid="deck:triage:approve"
           data-qs-action="DECK_TRIAGE_APPROVE"
@@ -158,8 +160,8 @@ export function TriageQueue({ deck, onChanged }: { deck: UiDeckBundle; onChanged
           className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-emerald-600 bg-emerald-600/20 px-3 py-1.5 text-sm text-emerald-200 disabled:opacity-40"
         >
           <Check aria-hidden className="h-4 w-4" /> Approve (a)
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           data-qid="deck:triage:reject"
           data-qs-action="DECK_TRIAGE_REJECT"
@@ -169,7 +171,7 @@ export function TriageQueue({ deck, onChanged }: { deck: UiDeckBundle; onChanged
           className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-rose-600 bg-rose-600/20 px-3 py-1.5 text-sm text-rose-200 disabled:opacity-40"
         >
           <X aria-hidden className="h-4 w-4" /> Reject (r)
-        </button>
+        </Button>
         <span className="ml-auto text-xs text-slate-500">j/k navigate · a approve · r reject — every decision re-validates the bundle</span>
       </footer>
     </section>

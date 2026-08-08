@@ -1,6 +1,8 @@
 import { ImagePlus } from 'lucide-react'
 import { useState, type DragEvent, type ReactNode } from 'react'
 import type { UiSlide } from '../types'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Drag-and-drop asset attach for the current slide (edit mode). The dropped
 // file goes through /api/asset-drop → asset-add: copied into the bundle,
@@ -122,7 +124,7 @@ export function AssetDropZone({
               </p>
             ) : null}
             <div className="mt-3 flex gap-2">
-              <button
+              <Button
                 type="button"
                 data-qid="deck:asset-drop:attach"
                 data-qs-action="DECK_ASSET_ATTACH"
@@ -132,8 +134,8 @@ export function AssetDropZone({
                 className="cursor-pointer rounded-lg border border-cyan-600 bg-cyan-600/20 px-3 py-1.5 text-sm text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? 'Validating…' : 'Attach'}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 data-qid="deck:asset-drop:cancel"
                 data-qs-action="DECK_ASSET_CANCEL"
@@ -142,7 +144,7 @@ export function AssetDropZone({
                 className="cursor-pointer rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </section>
         </div>

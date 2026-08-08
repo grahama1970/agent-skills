@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+// Direct import, never a barrel file (best-practices-react).
+import { Button } from './ui/button'
 
 // Phase 1 (Gemini spec) adapted: dual-pane source editor over the REAL
 // document model — the deck manifest YAML — not a lossy Markdown projection.
@@ -56,7 +58,7 @@ export function SourcePane({ version, onSaved, onClose, width }: { version: numb
         <span className="flex items-center gap-2">
           <span className="text-slate-600">Ctrl+\ toggles</span>
           {onClose ? (
-            <button
+            <Button
               type="button"
               aria-label="Close source pane"
               data-qid="deck:source:close"
@@ -66,7 +68,7 @@ export function SourcePane({ version, onSaved, onClose, width }: { version: numb
               className="cursor-pointer rounded border border-transparent px-1 text-slate-400 hover:border-slate-600 hover:text-cyan-300"
             >
               ×
-            </button>
+            </Button>
           ) : null}
         </span>
       </header>
@@ -84,7 +86,7 @@ export function SourcePane({ version, onSaved, onClose, width }: { version: numb
         </p>
       ) : null}
       <footer className="flex items-center gap-2 border-t border-slate-800 px-3 py-2">
-        <button
+        <Button
           type="button"
           data-qid="deck:source:save"
           data-qs-action="DECK_SOURCE_SAVE"
@@ -94,8 +96,8 @@ export function SourcePane({ version, onSaved, onClose, width }: { version: numb
           className="cursor-pointer rounded-lg border border-cyan-600 bg-cyan-600/20 px-3 py-1.5 text-xs text-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? 'Validating…' : 'Apply source'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           data-qid="deck:source:revert"
           data-qs-action="DECK_SOURCE_REVERT"
@@ -105,7 +107,7 @@ export function SourcePane({ version, onSaved, onClose, width }: { version: numb
           className="cursor-pointer rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Revert
-        </button>
+        </Button>
         {dirty ? <span className="text-[11px] text-amber-400">unsaved changes</span> : null}
       </footer>
     </section>
