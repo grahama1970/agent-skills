@@ -137,10 +137,15 @@ img {
   border: 0;
   margin: 0;
 }
+/* Section eyebrows are HUMAN labels, not machine output — so they leave the
+   mono family (mono is reserved for program-emitted values per the site rule,
+   and mono-everywhere is the "generated dashboard" tell both roundtable seats
+   flagged). Editorial sans small-caps instead. */
 .kicker {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.22em;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
   display: flex;
@@ -549,9 +554,10 @@ h1 .it::after {
   padding-top: 1rem;
 }
 .rail-title {
-  font-family: var(--mono);
+  font-family: var(--sans);
+  font-weight: 500;
   font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
 }
@@ -1486,9 +1492,10 @@ footer {
 .foot-b { grid-column: 6 / span 3; }
 .foot-c { grid-column: 9 / span 4; }
 footer .lab {
-  font-family: var(--mono);
+  font-family: var(--sans);
+  font-weight: 500;
   font-size: 0.64rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
   margin-bottom: 0.7rem;
