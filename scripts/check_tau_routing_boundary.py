@@ -109,6 +109,11 @@ ALLOWLIST: dict[str, str] = {
         "calls purely to verify the scillm proxy's own transport/concurrency (as_completed) semantics, not "
         "to produce pipeline artifacts. Routing this through Tau would defeat the transport proof. "
         "Not imported or wired into any live lane / run.sh / sanity path.",
+    "skills/persona-dream/scripts/dream_doctor.py":
+        "DIAGNOSTIC: preflight health probe. Names the scillm base URL only to GET {SCILLM}/health for a "
+        "readiness report (required=False); it obtains no model inference and produces no pipeline artifact. "
+        "Probing a service's health endpoint is not model routing — checking whether scillm is reachable "
+        "cannot itself route through Tau. Not a live-lane inference caller.",
 }
 
 # ---------------------------------------------------------------------------
