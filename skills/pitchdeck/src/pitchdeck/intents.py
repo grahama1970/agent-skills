@@ -213,7 +213,11 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                     claim_id=module.candidate_claim_ids[0], transform_class="truncation"))
     elif "chevrons" in {r.value for r in recipe.required_roles}:
         # one COMPLETE supporting takeaway; the diagram is the star (visual review)
-        extra = module.candidate_assertions[1:2] or module.candidate_assertions[:1]
+        # density-5x5: up to three takeaways, each included ONLY if it fits
+        # whole (drop-not-clip; corpus voice is short assertions, and a
+        # trailing ellipsis is the strongest machine tell).
+        pool = module.candidate_assertions[1:] or module.candidate_assertions[:1]
+        extra = [t for t in pool if len(t) <= 110][:3] or [pool[0]]
         for index, text in enumerate(extra):
             el_id = f"chevron-{index}"
             elements.append(DocElement(

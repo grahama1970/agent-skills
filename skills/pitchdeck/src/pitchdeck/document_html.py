@@ -74,7 +74,10 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
         centers[node.id] = (x + w / 2, y + h * (0.28 if unboxed else 0.5), w, h)
         accent = _ROLE_CYCLE[n_index % len(_ROLE_CYCLE)] if unboxed else primary
         terminal = unboxed and n_index == len(graph.nodes) - 1
-        icon_size = min(w, h) * (0.40 if unboxed else 0.34)
+        # asymmetry (corpus: hand-arranged, never uniform): terminal node
+        # emphasized, interior nodes alternate scale.
+        _scale = (1.22 if (unboxed and n_index == len(graph.nodes) - 1) else (1.0 if n_index % 2 == 0 else 0.86))
+        icon_size = min(w, h) * ((0.40 if unboxed else 0.34) * _scale)
         parts.append(
             f'<g id="node-{html.escape(node.id)}">'
             + (
@@ -115,11 +118,15 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
         tx, ty, tw, _ = centers[edge.target]
         x1, x2 = sx + sw / 2, tx - tw / 2
         dash = {"solid": "", "dashed": ' stroke-dasharray="10 8"', "dotted": ' stroke-dasharray="3 6"'}[edge.line_style]
+        if unboxed and edge.line_style == "solid":
+            dash = ' stroke-dasharray="2 7" stroke-linecap="round"'  # corpus: dotted meander arrows
         arrow = ' marker-end="url(#arrow)"' if edge.arrowhead else ""
         parts.append(
             f'<g id="edge-{html.escape(edge.id)}">'
-            f'<line x1="{x1:.0f}" y1="{sy:.0f}" x2="{x2:.0f}" y2="{ty:.0f}" '
-            f'stroke="{primary}" stroke-width="3"{dash}{arrow}/>'
+            + (f'<path d="M {x1:.0f} {sy:.0f} Q {(x1 + x2) / 2:.0f} {sy - 14:.0f} {x2:.0f} {ty:.0f}" fill="none" '
+             f'stroke="{primary}" stroke-width="3"{dash}{arrow}/>' if unboxed else
+             f'<line x1="{x1:.0f}" y1="{sy:.0f}" x2="{x2:.0f}" y2="{ty:.0f}" '
+             f'stroke="{primary}" stroke-width="3"{dash}{arrow}/>')
             + (
                 f'<text x="{(x1 + x2) / 2:.0f}" y="{(sy + ty) / 2 - 12:.0f}" text-anchor="middle" '
                 f'font-size="15" font-style="italic" fill="{ink}">{html.escape(edge.label)}</text>'

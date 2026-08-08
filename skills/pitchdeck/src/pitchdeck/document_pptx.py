@@ -352,7 +352,8 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             box.line.width = Pt(2.5)
             box.name = f"el:{element.id}:node:{node.id}"
         else:
-            ring_size = min(nw, nh) * 0.48
+            _scale = 1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86)
+            ring_size = min(nw, nh) * 0.48 * _scale
             ring = group.shapes.add_shape(
                 MSO_SHAPE.OVAL,
                 Inches(nx + nw / 2 - ring_size / 2), Inches(ny + nh * 0.28 - ring_size / 2),
@@ -362,7 +363,8 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             ring.line.width = Pt(3.25 if terminal else 2.25)
             ring.name = f"el:{element.id}:node:{node.id}"
         if node.icon:
-            size = min(nw, nh) * (0.32 if unboxed else 0.36)
+            _iscale = (1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86)) if unboxed else 1.0
+            size = min(nw, nh) * (0.32 if unboxed else 0.36) * _iscale
             _emit_icon_parts(
                 group, node.icon,
                 Frame(nx + nw / 2 - size / 2, ny + nh * (0.28 if unboxed else 0.32) - size / 2, size, size),
@@ -397,7 +399,7 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
         connector = group.shapes.add_connector(route, begin[0], begin[1], end[0], end[1])
         connector.line.color.rgb = primary
         connector.line.width = Pt(2.5)
-        _set_dash(connector.line, "dashed" if edge.line_style == "dashed" else ("dotted" if edge.line_style == "dotted" else "solid"))
+        _set_dash(connector.line, "dashed" if edge.line_style == "dashed" else ("dotted" if (edge.line_style == "dotted" or (unboxed and edge.line_style == "solid")) else "solid"))
         _add_arrowheads(connector, start=False, end=edge.arrowhead)
         connector.name = f"el:{element.id}:edge:{edge.id}"
         if edge.label:
