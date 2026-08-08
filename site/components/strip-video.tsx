@@ -14,12 +14,31 @@ export function StripVideo() {
   const ref = useRef<HTMLVideoElement>(null);
   const [play, setPlay] = useState(false);
 
+  // Defer the ~1 MB clip until the strip nears the viewport, so it never sits on
+  // the initial-load critical path (the hero above it must paint fast). Honours
+  // reduced-motion and save-data — those keep the static poster.
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const saveData =
       (navigator as unknown as { connection?: { saveData?: boolean } }).connection
         ?.saveData ?? false;
-    if (!reduce && !saveData) setPlay(true);
+    if (reduce || saveData) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setPlay(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setPlay(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '400px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
