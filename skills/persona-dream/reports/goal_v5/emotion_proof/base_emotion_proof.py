@@ -1,3 +1,9 @@
+"""base_emotion_proof - emotion_proof.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import json, torch, torchaudio, torchaudio.functional as AF
 from chatterbox.tts import ChatterboxTTS
 TEXT = "I already told you where I stand. Do not ask me again."

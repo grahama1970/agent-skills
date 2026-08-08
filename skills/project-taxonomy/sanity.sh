@@ -67,6 +67,20 @@ if failures:
 print(json.dumps({"status": "PASS", "gates": ["mapping-complete", "vocabulary-18", "idempotent", "negative-unmapped", "negative-vocabulary", "noise-dirs"]}))
 PY
 
+./run.sh crosswalk | uv run --project "$SCRIPT_DIR" python -c "
+import json, sys
+r = json.load(sys.stdin)
+if r['status'] != 'IN_SYNC':
+    print('FAIL: crosswalk drift:', r); raise SystemExit(1)
+print('PASS: crosswalk in sync,', r['disagreements'], 'rows pending human review')
+"
+./run.sh portfolio | uv run --project "$SCRIPT_DIR" python -c "
+import json, sys
+r = json.load(sys.stdin)
+if r['status'] != 'PASS':
+    print('FAIL: portfolio gate:', r.get('errors')); raise SystemExit(1)
+print('PASS: portfolio registry valid, age', r['registry_age_days'], 'days, unclassified:', r['unclassified_active_repos'])
+"
 if ./run.sh list not-a-discipline >/dev/null 2>&1; then
     echo "FAIL: list accepted an unknown discipline" >&2; exit 1
 fi

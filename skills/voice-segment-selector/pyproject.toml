@@ -2,13 +2,14 @@
 name = "voice-segment-selector"
 version = "0.1.0"
 description = "Select clean gender-bucketed voice segments with transcripts for TTS training"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
   "typer>=0.12",
   "librosa>=0.10",
   "soundfile>=0.12",
   "numpy>=1.26",
   "pytest>=8.0",
+    "httpx>=0.24",
 ]
 
 [project.optional-dependencies]

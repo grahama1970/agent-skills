@@ -188,10 +188,10 @@ def build_packet(ctx: RunContext) -> str:
         env={"PROJECT_STATE_ROOT": str(REPO_ROOT)},
     )
     discipline_check = _context_block(
-        "project-taxonomy discipline check (unmapped skills fail closed)",
-        [str(SKILLS_ROOT / "project-taxonomy" / "run.sh"), "check"],
-        timeout=180,
-        max_chars=2000,
+        "project-taxonomy ci (disciplines + crosswalk drift + portfolio freshness/coverage)",
+        [str(SKILLS_ROOT / "project-taxonomy" / "run.sh"), "ci"],
+        timeout=300,
+        max_chars=3000,
     )
     workstation = _context_block(
         "ops-workstation quick health",

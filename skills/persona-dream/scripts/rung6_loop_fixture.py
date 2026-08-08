@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung6_loop_fixture - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import json
 import subprocess
 import sys

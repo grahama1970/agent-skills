@@ -3,7 +3,7 @@ name = "agent-skills-project-watchdog"
 version = "0.2.0"
 requires-python = ">=3.11,<3.13"
 dependencies = [
-  "loguru>=0.7.0",
+  "loguru>=0.7.0,<0.7.3",
   "python-dotenv>=1.0.0",
   "typer>=0.12.0",
 ]

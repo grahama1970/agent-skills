@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""validate_phase02_story_contract_prompt - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import argparse

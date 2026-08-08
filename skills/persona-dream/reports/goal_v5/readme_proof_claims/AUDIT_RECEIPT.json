@@ -112,7 +112,7 @@
       "boundary": "Interactive dream discussion",
       "ok": true,
       "readme_evidence_cell": "`reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json`",
-      "readme_state": "Append-only writer live-proven; return into memory blocked upstream",
+      "readme_state": "Append-only writer live-proven; carried back into memory as attributed speech",
       "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
       "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd",
       "receipt_status": "PASS_CONVERSATION_APPENDED"
@@ -163,12 +163,12 @@
       "boundaries with no receipt are declared unproven and use no positive-result language"
     ]
   },
-  "created_at": "2026-08-04T18:00:44Z",
+  "created_at": "2026-08-04T20:06:03Z",
   "failed_gates": [],
   "live": false,
   "mocked": false,
   "readme": "skills/persona-dream/docs/EVIDENCE.md",
-  "readme_sha256": "sha256:a306917b32a7cb8e48eb4cf29eab01130fb018a38c7201523ebca6d07b69ec69",
+  "readme_sha256": "sha256:b1de57ea4f323744fdb220102b91a70d9523f3db4f4c591a61849c3476fbc027",
   "rows_checked": 17,
   "schema": "persona_dream.readme_proof_claim_audit.v1",
   "status": "PASS_README_PROOF_CLAIMS_BOUND"

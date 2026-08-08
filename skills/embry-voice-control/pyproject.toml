@@ -2,11 +2,11 @@
 name = "embry-voice-control"
 version = "0.1.0"
 description = "Live sanity harness for the Embry voice control-plane contract."
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
   "fastapi>=0.115.0",
   "httpx>=0.24.0",
-  "loguru>=0.7.0",
+  "loguru>=0.7.0,<0.7.3",
   "pydantic>=2.0.0",
   "pytest>=8.0.0",
   "typer>=0.9.0",

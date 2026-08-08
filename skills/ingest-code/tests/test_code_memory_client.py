@@ -26,19 +26,14 @@ from code_symbol_record import CodeSymbolRecord
 
 
 class FakeResponse:
-    def __init__(self, status_code: int, text: str = "", payload: dict | None = None) -> None:
+    def __init__(self, status_code: int, text: str = "") -> None:
         self.status_code = status_code
         self.text = text
-        self._payload = payload or {}
-
-    def json(self) -> dict:
-        return self._payload
 
 
 class FakeHttpClient:
     def __init__(self) -> None:
         self.batch_sizes: list[int] = []
-        self.documents: dict[str, dict] = {}
 
     def __enter__(self):
         return self
@@ -47,16 +42,11 @@ class FakeHttpClient:
         return False
 
     def post(self, path: str, json: dict):
-        if path == "/get":
-            key = json["key"]
-            return FakeResponse(200, payload={"document": self.documents[key]})
         assert path == "/upsert"
         size = len(json["documents"])
         self.batch_sizes.append(size)
         if size > 1:
             return FakeResponse(500, "embed batch failed")
-        for document in json["documents"]:
-            self.documents[document["_key"]] = document
         return FakeResponse(200)
 
 
@@ -91,9 +81,6 @@ def test_upsert_code_symbols_splits_failed_batches_before_legacy_fallback(monkey
 
     assert result.stored == 2
     assert result.attempted == 2
-    assert result.structured_upsert_stored == 2
-    assert result.legacy_fallback_stored == 0
-    assert result.write_status == "complete"
     assert result.errors == []
     assert fake.batch_sizes == [2, 1, 1]
 

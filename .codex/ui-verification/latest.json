@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-04T18:24:52.589258+00:00",
-  "cwd": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1216-battle-byte-binding",
-  "root": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1216-battle-byte-binding",
-  "output_root": "/tmp/codex-ui-verification/issue-1216-battle-byte-binding",
-  "url": "file:///home/graham/workspace/experiments/agent-skills/.worktrees/issue-1216-battle-byte-binding/reports/battle/battle-1216-adaptive-lineage-report.html",
-  "name": "battle-1216-adaptive-lineage-report",
+  "verified_at": "2026-08-01T15:38:55.463996+00:00",
+  "cwd": "/home/graham/.local/state/project-watchdog/repair-worktrees/agent-skills-1143-integrate",
+  "root": "/home/graham/.local/state/project-watchdog/repair-worktrees/agent-skills-1143-integrate",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-1143-integrate",
+  "url": "http://127.0.0.1:3026/#battle/receipt?engine=pixi&fixture=battle-004-pause-after-round-accepted",
+  "name": "battle-human-interjection-panel",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/issue-1216-battle-byte-binding/battle-1216-adaptive-lineage-report/20260804T182445Z.png",
-  "read_json": "/tmp/codex-ui-verification/issue-1216-battle-byte-binding/battle-1216-adaptive-lineage-report/20260804T182445Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-1143-integrate/battle-human-interjection-panel/20260801T153847Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-1143-integrate/battle-human-interjection-panel/20260801T153847Z.read.json"
 }

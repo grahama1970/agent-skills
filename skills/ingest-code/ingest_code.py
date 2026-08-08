@@ -24,7 +24,6 @@ import subprocess
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -33,12 +32,8 @@ import httpx
 from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient
-from code_graph_artifact import (
-    calculate_configuration_digest,
-    validate_code_graph_bundle,
-    write_code_graph_bundle,
-)
-from code_symbol_record import IDENTITY_ALGORITHM_VERSION, CodeSymbolRecord
+from code_graph_artifact import write_code_graph_bundle
+from code_symbol_record import CodeSymbolRecord
 from ingest_code_cwe import scan_file_cwe
 
 load_dotenv(override=False)
@@ -84,24 +79,6 @@ SKIP_DIRS = {
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
-MARKER_SCHEMA_VERSION = "ingest-code.marker.v2"
-
-
-@dataclass(frozen=True)
-class TreeSitterScanResult:
-    """Structured Tree-sitter extraction result used for fail-closed coverage."""
-
-    records: list[CodeSymbolRecord]
-    outcome: dict[str, Any]
-
-
-@dataclass(frozen=True)
-class RepositoryIdentity:
-    """Repository identity selected for symbol and file IDs."""
-
-    repository_id: str
-    authoritative: bool
-    source: str
 
 
 def load_taxonomy_module():
@@ -212,7 +189,6 @@ def _write_ingest_marker(
     code_symbols_stored: int,
     treesitter: bool,
     scope: str,
-    code_symbols_write_status: dict[str, Any] | None = None,
     run_status: str = "complete",
     started_at: str | None = None,
     scan_roots: list[str | Path] | None = None,
@@ -220,45 +196,10 @@ def _write_ingest_marker(
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
     code_graph_artifact: dict[str, Any] | None = None,
-    coverage_scope: str = "full",
-    reconciliation_eligible: bool | None = None,
-    failed_scan_roots: list[str | Path] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
-    write_status = code_symbols_write_status or {
-        "attempted": code_symbols_stored,
-        "structured_upsert_stored": code_symbols_stored,
-        "legacy_fallback_stored": 0,
-        "structured_verified": code_symbols_stored,
-        "failed": 0,
-        "write_status": "complete" if code_symbols_stored > 0 else "complete",
-        "record_results": [],
-    }
-    structured_count = int(write_status.get("structured_upsert_stored", 0) or 0)
-    structured_healthy = structured_count > 0 and write_status.get("write_status") == "complete"
-    artifact_reconciliation_eligible = bool((code_graph_artifact or {}).get("reconciliation_eligible"))
-    marker_reconciliation_eligible = (
-        artifact_reconciliation_eligible
-        if reconciliation_eligible is None
-        else bool(reconciliation_eligible)
-    )
-    artifact_binding = (
-        {
-            "manifest": code_graph_artifact.get("manifest"),
-            "manifest_hash": code_graph_artifact.get("manifest_hash"),
-            "checksums": code_graph_artifact.get("checksums"),
-            "checksums_hash": code_graph_artifact.get("checksums_hash"),
-            "bundle_digest": code_graph_artifact.get("bundle_digest"),
-            "commit": code_graph_artifact.get("commit"),
-            "configuration_digest": code_graph_artifact.get("configuration_digest"),
-            "coverage_complete": code_graph_artifact.get("coverage_complete"),
-            "reconciliation_eligible": code_graph_artifact.get("reconciliation_eligible"),
-        }
-        if code_graph_artifact else None
-    )
     marker = {
-        "schema_version": MARKER_SCHEMA_VERSION,
         "ingested_at": now,
         "started_at": started_at or now,
         "completed_at": now if run_status == "complete" else None,
@@ -269,37 +210,22 @@ def _write_ingest_marker(
         "cwe_stored": cwe_stored,
         "edges_stored": edges_stored,
         "code_index": {
-            "enabled": structured_healthy,
+            "enabled": code_symbols_stored > 0,
             "backend": "memory",
-            "collection": "code_symbols" if structured_healthy else None,
-            "treesitter": bool(treesitter and structured_healthy),
-            "symbols_stored": structured_count,
-            "structured_upsert_stored": structured_count,
-            "legacy_fallback_stored": int(write_status.get("legacy_fallback_stored", 0) or 0),
-            "structured_verified": int(write_status.get("structured_verified", 0) or 0),
-            "failed": int(write_status.get("failed", 0) or 0),
-            "attempted": int(write_status.get("attempted", code_symbols_stored) or 0),
-            "write_status": str(write_status.get("write_status", "complete")),
-            "lexical_terms": structured_healthy,
-            "line_ranges": structured_healthy,
-            "content_hashes": structured_healthy,
-            "hybrid_retrieval_capable": structured_healthy,
+            "collection": "code_symbols",
+            "treesitter": bool(treesitter),
+            "symbols_stored": code_symbols_stored,
+            "lexical_terms": code_symbols_stored > 0,
+            "line_ranges": code_symbols_stored > 0,
+            "content_hashes": code_symbols_stored > 0,
+            "hybrid_retrieval_capable": code_symbols_stored > 0,
         },
         "scope": scope,
         "run_status": run_status,
         "completed": run_status == "complete",
-        "coverage_scope": coverage_scope,
-        "reconciliation_eligible": marker_reconciliation_eligible,
-        "source_freshness_status": "fresh_at_write" if artifact_binding else "not_authoritative_without_full_bundle",
         "scan_roots": [str(Path(root).resolve()) for root in (scan_roots or [])],
         "completed_scan_roots": [
             str(Path(root).resolve()) for root in (completed_scan_roots or [])
-        ],
-        "successful_scan_roots": [
-            str(Path(root).resolve()) for root in (completed_scan_roots or [])
-        ],
-        "failed_scan_roots": [
-            str(Path(root).resolve()) for root in (failed_scan_roots or [])
         ],
         "local_artifacts": {
             "code_symbols_jsonl": (
@@ -308,8 +234,6 @@ def _write_ingest_marker(
             ),
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
-            "code_symbols_write_status": write_status,
-            "code_graph_binding": artifact_binding,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -336,223 +260,6 @@ def _append_local_code_symbols(artifact: Path, records: list[CodeSymbolRecord]) 
     return len(records)
 
 
-def _sha256_file(path: Path) -> str:
-    hasher = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
-
-
-def _read_json_file(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError(f"{path.name} is not a JSON object")
-    return data
-
-
-def _read_jsonl_file(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-
-
-def _code_graph_scan_config(
-    codebase_root: Path,
-    *,
-    patterns: list[str],
-    treesitter: bool,
-    code_index: bool,
-    dry_run: bool,
-    cwe_only: bool,
-) -> dict[str, Any]:
-    return {
-        "glob_patterns": patterns,
-        "exclude_dirs": sorted(SKIP_DIRS),
-        "ignore_rules": "git_exclude_standard",
-        "monitor_config": _load_monitor_config(codebase_root) or {},
-        "treesitter": treesitter,
-        "code_index": code_index,
-        "dry_run": dry_run,
-        "cwe_only": cwe_only,
-    }
-
-
-def _current_configuration_digest_for_manifest(path: Path, manifest: dict[str, Any]) -> str:
-    config = manifest.get("configuration") if isinstance(manifest.get("configuration"), dict) else {}
-    patterns = [str(pattern) for pattern in config.get("glob_patterns", DEFAULT_GLOB_PATTERNS)]
-    feature_flags = config.get("feature_flags") if isinstance(config.get("feature_flags"), dict) else {}
-    files = collect_files(path, patterns)
-    scan_roots = _extract_configured_scan_roots(path)
-    extractor_outcomes = [{
-        "declared_languages": list(config.get("language_support", _configured_language_support())),
-    }]
-    scan_config = _code_graph_scan_config(
-        path,
-        patterns=patterns,
-        treesitter=bool(feature_flags.get("treesitter", True)),
-        code_index=bool(feature_flags.get("code_index", True)),
-        dry_run=bool(feature_flags.get("dry_run", False)),
-        cwe_only=bool(feature_flags.get("cwe_only", False)),
-    )
-    return calculate_configuration_digest(
-        root=path,
-        scan_roots=scan_roots,
-        files=files,
-        extractor_outcomes=extractor_outcomes,
-        scan_config=scan_config,
-    )
-
-
-def _source_hashes_match_bundle(path: Path, bundle_dir: Path) -> tuple[bool, list[str]]:
-    mismatches: list[str] = []
-    for record in _read_jsonl_file(bundle_dir / "files.jsonl"):
-        rel_path = str(record.get("path") or "")
-        if not rel_path or rel_path == "." or str(record.get("status")) == "ignored":
-            continue
-        expected_hash = str(record.get("source_hash") or "")
-        if not expected_hash:
-            mismatches.append(rel_path)
-            continue
-        source_path = path / rel_path
-        if not source_path.is_file():
-            mismatches.append(rel_path)
-            continue
-        if _sha256_file(source_path) != expected_hash:
-            mismatches.append(rel_path)
-    return not mismatches, mismatches
-
-
-def _local_code_symbols_freshness(marker: dict[str, Any]) -> dict[str, Any]:
-    local = marker.get("local_artifacts") if isinstance(marker.get("local_artifacts"), dict) else {}
-    artifact_path = local.get("code_symbols_jsonl")
-    if not artifact_path:
-        return {"status": "not_present", "authoritative_for_modification": False}
-    path = Path(str(artifact_path))
-    if not path.exists():
-        return {"status": "missing", "authoritative_for_modification": False, "path": str(path)}
-    return {
-        "status": "compatibility_only",
-        "authoritative_for_modification": False,
-        "path": str(path),
-        "line_count": sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip()),
-    }
-
-
-def _code_graph_freshness(path: Path, marker: dict[str, Any]) -> dict[str, Any]:
-    local = marker.get("local_artifacts") if isinstance(marker.get("local_artifacts"), dict) else {}
-    binding = local.get("code_graph_binding") if isinstance(local.get("code_graph_binding"), dict) else None
-    if not binding:
-        return {
-            "status": "not_present",
-            "checksum_valid": False,
-            "source_hashes_match": False,
-            "configuration_digest_match": False,
-            "commit_match": False,
-            "coverage_complete": False,
-            "reconciliation_eligible": False,
-            "blocks_negative_claims": True,
-            "reasons": ["no_full_code_graph_bundle_binding"],
-        }
-
-    reasons: list[str] = []
-    manifest_path = Path(str(binding.get("manifest") or ""))
-    checksums_path = Path(str(binding.get("checksums") or ""))
-    if not manifest_path.is_absolute():
-        manifest_path = path / manifest_path
-    if not checksums_path.is_absolute():
-        checksums_path = path / checksums_path
-    bundle_dir = manifest_path.parent
-    try:
-        validation = validate_code_graph_bundle(bundle_dir)
-        manifest = _read_json_file(manifest_path)
-        coverage = _read_json_file(bundle_dir / "coverage.json")
-    except Exception as exc:
-        return {
-            "status": "invalid",
-            "checksum_valid": False,
-            "source_hashes_match": False,
-            "configuration_digest_match": False,
-            "commit_match": False,
-            "coverage_complete": False,
-            "reconciliation_eligible": False,
-            "blocks_negative_claims": True,
-            "reasons": [f"bundle_validation_failed:{exc}"],
-        }
-
-    checksum_valid = True
-    if validation.get("manifest_hash") != binding.get("manifest_hash"):
-        reasons.append("marker_manifest_hash_mismatch")
-    if validation.get("checksums_hash") != binding.get("checksums_hash"):
-        reasons.append("marker_checksums_hash_mismatch")
-    if validation.get("bundle_digest") != binding.get("bundle_digest"):
-        reasons.append("marker_bundle_digest_mismatch")
-
-    current_commit = _current_commit(path)
-    commit_match = current_commit == str(binding.get("commit") or manifest.get("commit"))
-    if not commit_match:
-        reasons.append("commit_mismatch")
-
-    current_branch = _current_branch(path)
-    ref_match = current_branch == str(manifest.get("ref") or manifest.get("branch"))
-    if not ref_match:
-        reasons.append("ref_mismatch")
-
-    try:
-        current_configuration_digest = _current_configuration_digest_for_manifest(path, manifest)
-        configuration_digest_match = current_configuration_digest == str(binding.get("configuration_digest") or "")
-    except Exception as exc:
-        current_configuration_digest = ""
-        configuration_digest_match = False
-        reasons.append(f"configuration_digest_unavailable:{exc}")
-    if not configuration_digest_match:
-        reasons.append("configuration_digest_mismatch")
-
-    source_hashes_match, source_mismatches = _source_hashes_match_bundle(path, bundle_dir)
-    if not source_hashes_match:
-        reasons.append("source_hash_mismatch")
-
-    coverage_complete = bool(coverage.get("complete"))
-    coverage_reconciliation_eligible = bool(coverage.get("reconciliation_eligible"))
-    if not coverage_complete:
-        reasons.append("coverage_incomplete")
-    if not coverage_reconciliation_eligible:
-        reasons.append("coverage_not_reconciliation_eligible")
-
-    hashes_match = not any(reason.startswith("marker_") for reason in reasons)
-    eligible = (
-        checksum_valid
-        and hashes_match
-        and commit_match
-        and ref_match
-        and configuration_digest_match
-        and source_hashes_match
-        and coverage_complete
-        and coverage_reconciliation_eligible
-    )
-    return {
-        "status": "fresh" if eligible else "stale",
-        "checksum_valid": checksum_valid,
-        "manifest_hash_match": validation.get("manifest_hash") == binding.get("manifest_hash"),
-        "checksums_hash_match": validation.get("checksums_hash") == binding.get("checksums_hash"),
-        "bundle_digest_match": validation.get("bundle_digest") == binding.get("bundle_digest"),
-        "source_hashes_match": source_hashes_match,
-        "source_mismatches": source_mismatches,
-        "configuration_digest_match": configuration_digest_match,
-        "current_configuration_digest": current_configuration_digest,
-        "expected_configuration_digest": binding.get("configuration_digest"),
-        "commit_match": commit_match,
-        "current_commit": current_commit,
-        "expected_commit": binding.get("commit") or manifest.get("commit"),
-        "ref_match": ref_match,
-        "current_ref": current_branch,
-        "expected_ref": manifest.get("ref") or manifest.get("branch"),
-        "coverage_complete": coverage_complete,
-        "reconciliation_eligible": eligible,
-        "blocks_negative_claims": not eligible,
-        "bundle_digest": validation.get("bundle_digest"),
-        "reasons": sorted(set(reasons)),
-    }
-
-
 def build_marker_status(path: Path) -> dict[str, Any]:
     """Return normalized status for a repository's local ingest marker."""
     marker_path = path / ".ingest-code.json"
@@ -573,29 +280,7 @@ def build_marker_status(path: Path) -> dict[str, Any]:
             "error": str(exc),
             "code_index": {"enabled": False},
         }
-    marker.setdefault("schema_version", "ingest-code.marker.legacy")
-    marker.setdefault("coverage_scope", "full")
-    marker.setdefault("reconciliation_eligible", False)
-    marker.setdefault("successful_scan_roots", marker.get("completed_scan_roots", []))
-    marker.setdefault("failed_scan_roots", [])
-    local = marker.setdefault("local_artifacts", {})
-    local["code_symbols_jsonl_freshness"] = _local_code_symbols_freshness(marker)
-    code_graph_status = _code_graph_freshness(path.resolve(), marker)
-    local["code_graph_freshness"] = code_graph_status
-
-    complete_marker = marker.get("run_status") == "complete" and marker.get("completed") is True
-    if not complete_marker:
-        status = "running"
-    elif marker.get("coverage_scope") == "incremental":
-        status = "incremental"
-    elif code_graph_status["status"] in {"invalid", "stale"}:
-        status = "stale"
-    else:
-        status = "fresh"
-    marker["source_freshness_status"] = code_graph_status["status"]
-    marker["reconciliation_eligible"] = bool(marker.get("reconciliation_eligible")) and bool(
-        code_graph_status.get("reconciliation_eligible")
-    )
+    status = "fresh" if marker.get("run_status") == "complete" and marker.get("completed") is True else "running"
     marker["status"] = status
     return marker
 
@@ -998,51 +683,8 @@ def _git_value(cwd: Path, args: list[str], default: str) -> str:
     return default
 
 
-def _normalize_repository_id(value: str) -> str:
-    """Normalize configured or Git-derived repository identity."""
-    raw = value.strip()
-    if not raw:
-        return ""
-    raw = raw.replace("\\", "/")
-    raw = re.sub(r"^[a-z]+://", "", raw)
-    raw = re.sub(r"^git@", "", raw)
-    raw = raw.replace(":", "/", 1) if "/" in raw and ":" in raw.split("/", 1)[0] else raw
-    raw = re.sub(r"^([^@/]+@)", "", raw)
-    raw = raw.rstrip("/")
-    if raw.endswith(".git"):
-        raw = raw[:-4]
-    raw = raw.lower()
-    raw = re.sub(r"/+", "/", raw)
-    return raw
-
-
-def resolve_repository_identity(codebase_root: Path) -> RepositoryIdentity:
-    """Resolve repository identity without trusting the checkout directory name."""
-    explicit = (
-        os.environ.get("INGEST_CODE_REPOSITORY_ID")
-        or os.environ.get("CODE_SYMBOLS_REPOSITORY_ID")
-        or ""
-    )
-    normalized_explicit = _normalize_repository_id(explicit)
-    if normalized_explicit:
-        return RepositoryIdentity(normalized_explicit, True, "explicit")
-
-    remote = _git_value(codebase_root, ["config", "--get", "remote.origin.url"], "")
-    normalized_remote = _normalize_repository_id(remote)
-    if normalized_remote:
-        return RepositoryIdentity(normalized_remote, True, "git_remote_origin")
-
-    fallback_basis = str(codebase_root.resolve())
-    fallback = f"local:{codebase_root.resolve().name}:{hashlib.sha256(fallback_basis.encode('utf-8')).hexdigest()[:16]}"
-    return RepositoryIdentity(fallback, False, "local_checkout_fallback")
-
-
 def _current_branch(codebase_root: Path) -> str:
-    branch = _git_value(codebase_root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
-    if branch == "HEAD":
-        commit = _current_commit(codebase_root)
-        return f"detached:{commit[:12]}" if commit != "unknown" else "detached:unknown"
-    return branch
+    return _git_value(codebase_root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
 
 
 def _current_commit(codebase_root: Path) -> str:
@@ -1074,12 +716,9 @@ def _language_for_path(filepath: Path) -> str:
 
 def _relative_path(filepath: Path, codebase_root: Path) -> str:
     try:
-        rel_path = filepath.resolve().relative_to(codebase_root.resolve()).as_posix()
-    except ValueError as exc:
-        raise ValueError(f"symbol path is outside codebase root: {filepath}") from exc
-    if rel_path.startswith("../") or rel_path == ".." or Path(rel_path).is_absolute():
-        raise ValueError(f"symbol path is outside codebase root: {filepath}")
-    return rel_path
+        return filepath.resolve().relative_to(codebase_root.resolve()).as_posix()
+    except ValueError:
+        return filepath.as_posix()
 
 
 def _content_hash(text: str) -> str:
@@ -1108,18 +747,14 @@ def _name_from_call(node: ast.AST) -> str:
 
 
 def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) -> Optional[str]:
-    parents: list[tuple[int, int, str]] = []
     for candidate in ast.walk(tree):
-        if not isinstance(candidate, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+        if not isinstance(candidate, ast.ClassDef):
             continue
         candidate_start = getattr(candidate, "lineno", 0)
         candidate_end = getattr(candidate, "end_lineno", 0)
         if candidate_start <= start_line <= candidate_end and candidate is not node:
-            parents.append((candidate_start, candidate_end, candidate.name))
-    if not parents:
-        return None
-    parents.sort(key=lambda item: (item[0], -(item[1] - item[0])))
-    return ".".join(name for _, _, name in parents)
+            return candidate.name
+    return None
 
 
 def _extract_python_symbol_details(
@@ -1190,7 +825,6 @@ def _build_code_symbol_record(
     branch: str,
     commit: str,
     imports: list[dict],
-    repository_identity: RepositoryIdentity | None = None,
 ) -> Optional[CodeSymbolRecord]:
     raw_kind = symbol.get("kind", "")
     kind = _normalize_symbol_kind(raw_kind)
@@ -1224,18 +858,17 @@ def _build_code_symbol_record(
         qualified_name = name
 
     rel_path = _relative_path(filepath, codebase_root)
-    identity = repository_identity or RepositoryIdentity(repo, True, "legacy_repo")
     tags = _build_symbol_tags(kind, name, filepath.stem)
     tags.extend([
         "code_symbol",
-        f"repo:{identity.repository_id}",
+        f"repo:{repo}",
         f"lang:{_language_for_path(filepath)}",
         f"path:{rel_path}",
     ])
 
     return CodeSymbolRecord(
         scope=scope,
-        repo=identity.repository_id,
+        repo=repo,
         root=str(codebase_root.resolve()),
         branch=branch,
         commit=commit,
@@ -1255,40 +888,8 @@ def _build_code_symbol_record(
         called_symbols=called_symbols,
         string_literals=string_literals,
         content_hash=_content_hash(code or signature or docstring or name),
-        repository_id=identity.repository_id,
-        repository_id_authoritative=identity.authoritative,
-        identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
         tags=tags,
     )
-
-
-def _with_duplicate_identity_discriminators(records: list[CodeSymbolRecord]) -> list[CodeSymbolRecord]:
-    """Add deterministic discriminators when producer shaping fields collide."""
-    groups: dict[tuple[str, str, str, str, str, str], list[CodeSymbolRecord]] = {}
-    for record in records:
-        key = (
-            record.effective_repository_id,
-            record.branch,
-            record.normalized_path,
-            record.language,
-            record.symbol_kind,
-            record.qualified_name,
-        )
-        groups.setdefault(key, []).append(record)
-
-    result: list[CodeSymbolRecord] = []
-    for group in groups.values():
-        if len(group) == 1:
-            result.extend(group)
-            continue
-        ordered = sorted(group, key=lambda item: (item.start_line, item.end_line, item.signature, item.symbol_name))
-        for index, record in enumerate(ordered, start=1):
-            if record.identity_discriminator:
-                result.append(record)
-            else:
-                discriminator = f"decl:{index}:{record.start_line}:{record.end_line}"
-                result.append(replace(record, identity_discriminator=discriminator))
-    return sorted(result, key=lambda item: (item.normalized_path, item.qualified_name, item.start_line))
 
 
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
@@ -1316,69 +917,24 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     return [codebase_path.resolve()]
 
 
-def _parse_treesitter_scan_output(stdout: str) -> tuple[list[dict[str, Any]], str]:
+def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
     """Parse treesitter scan output, skipping human summary lines."""
     payload = stdout.strip()
     if not payload:
-        return [], "empty_output"
+        return []
 
     json_start = payload.find("[")
     if json_start < 0:
-        return [], "missing_json_array"
+        return []
 
     try:
         data = json.loads(payload[json_start:])
-    except json.JSONDecodeError as exc:
-        return [], f"malformed_json:{exc}"
+    except json.JSONDecodeError:
+        return []
 
     if isinstance(data, list):
-        return data, ""
-    return [], "json_root_not_array"
-
-
-def _rel_path_for_outcome(path: Path, root: Path) -> str:
-    path = path.resolve()
-    root = root.resolve()
-    if path == root:
-        return "."
-    try:
-        return path.relative_to(root).as_posix()
-    except ValueError:
-        return path.as_posix()
-
-
-def _configured_language_support() -> list[str]:
-    return sorted({
-        _language_for_path(Path(f"file{pattern.removeprefix('*')}"))
-        for pattern in DEFAULT_GLOB_PATTERNS
-    })
-
-
-def _treesitter_outcome(
-    *,
-    directory: Path,
-    codebase_root: Path,
-    status: str,
-    reason: str,
-    command: list[str],
-    discovered_files: list[Path],
-    reported_paths: list[str] | None = None,
-    stderr: str = "",
-) -> dict[str, Any]:
-    reported = sorted(set(reported_paths or []))
-    return {
-        "root": _rel_path_for_outcome(directory, codebase_root),
-        "status": status,
-        "reason": reason,
-        "extractor": "treesitter",
-        "extractor_version": "treesitter_skill_run_sh",
-        "command": command,
-        "declared_languages": _configured_language_support(),
-        "discovered_file_count": len(discovered_files),
-        "reported_file_count": len(reported),
-        "reported_paths": reported,
-        "stderr": stderr[:2000],
-    }
+        return data
+    return []
 
 
 def _store_treesitter_symbols_for_directory(
@@ -1398,15 +954,14 @@ def _store_treesitter_symbols_for_directory(
     for error in result.errors[:5]:
         print(f"  [WARN] {error}", file=sys.stderr, flush=True)
 
-    structured_records = tuple(getattr(result, "structured_records", records[: getattr(result, "stored", 0)]))
     if verification_samples is not None:
-        for record in structured_records:
+        for record in records[:result.stored]:
             verification_samples.append({
                 "name": record.symbol_name,
                 "problem": record.problem,
             })
 
-    return int(getattr(result, "structured_upsert_stored", getattr(result, "stored", 0)))
+    return result.stored
 
 
 def _scan_treesitter_symbol_records_for_directory(
@@ -1415,36 +970,12 @@ def _scan_treesitter_symbol_records_for_directory(
     scope: str,
 ) -> list[CodeSymbolRecord]:
     """Scan one directory and return CodeSymbolRecord instances without writing Memory."""
-    return _scan_treesitter_symbol_records_with_outcome(
-        directory,
-        codebase_root,
-        scope,
-        discovered_files=None,
-    ).records
-
-
-def _scan_treesitter_symbol_records_with_outcome(
-    directory: Path,
-    codebase_root: Path,
-    scope: str,
-    discovered_files: list[Path] | None,
-) -> TreeSitterScanResult:
-    """Scan one directory and return symbols plus a fail-closed extraction outcome."""
     directory = directory.resolve()
     codebase_root = codebase_root.resolve()
-    discovered = sorted(discovered_files or [], key=lambda item: item.resolve().as_posix())
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
-        outcome = _treesitter_outcome(
-            directory=directory,
-            codebase_root=codebase_root,
-            status="unavailable",
-            reason="treesitter_skill_not_found",
-            command=[],
-            discovered_files=discovered,
-        )
-        return TreeSitterScanResult(records=[], outcome=outcome)
+        return []
 
     cmd = [
         "bash",
@@ -1469,62 +1000,22 @@ def _scan_treesitter_symbol_records_with_outcome(
         )
     except subprocess.TimeoutExpired:
         print(f"Treesitter scan timed out for {directory}", file=sys.stderr, flush=True)
-        outcome = _treesitter_outcome(
-            directory=directory,
-            codebase_root=codebase_root,
-            status="timed_out",
-            reason="treesitter_scan_timeout",
-            command=cmd,
-            discovered_files=discovered,
-        )
-        return TreeSitterScanResult(records=[], outcome=outcome)
+        return []
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
         if stderr:
             print(f"Treesitter scan failed for {directory}: {stderr}", file=sys.stderr, flush=True)
-        outcome = _treesitter_outcome(
-            directory=directory,
-            codebase_root=codebase_root,
-            status="failed",
-            reason=f"treesitter_exit_{result.returncode}",
-            command=cmd,
-            discovered_files=discovered,
-            stderr=stderr,
-        )
-        return TreeSitterScanResult(records=[], outcome=outcome)
+        return []
 
-    scan_results, parse_error = _parse_treesitter_scan_output(result.stdout)
-    if parse_error and parse_error != "empty_output":
-        outcome = _treesitter_outcome(
-            directory=directory,
-            codebase_root=codebase_root,
-            status="invalid_output",
-            reason=parse_error,
-            command=cmd,
-            discovered_files=discovered,
-            stderr=result.stderr.strip(),
-        )
-        return TreeSitterScanResult(records=[], outcome=outcome)
-    if not scan_results and discovered:
-        outcome = _treesitter_outcome(
-            directory=directory,
-            codebase_root=codebase_root,
-            status="partial",
-            reason="unexpected_empty_output",
-            command=cmd,
-            discovered_files=discovered,
-            stderr=result.stderr.strip(),
-        )
-        return TreeSitterScanResult(records=[], outcome=outcome)
+    scan_results = _parse_treesitter_scan_output(result.stdout)
+    if not scan_results:
+        return []
 
-    repository_identity = resolve_repository_identity(codebase_root)
-    repo = repository_identity.repository_id
+    repo = codebase_root.resolve().name
     branch = _current_branch(codebase_root)
     commit = _current_commit(codebase_root)
     records: list[CodeSymbolRecord] = []
-    reported_paths: list[str] = []
-    discovered_set = {_relative_path(path, codebase_root) for path in discovered}
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
         if not file_path_raw:
@@ -1533,10 +1024,6 @@ def _scan_treesitter_symbol_records_with_outcome(
         filepath = Path(file_path_raw)
         if not filepath.is_absolute():
             filepath = codebase_root / filepath
-        rel_path = _relative_path(filepath, codebase_root)
-        if discovered_set and rel_path not in discovered_set:
-            continue
-        reported_paths.append(rel_path)
         symbol_context = _extract_symbol_context(filepath)
 
         for symbol in file_entry.get("symbols", []):
@@ -1549,31 +1036,12 @@ def _scan_treesitter_symbol_records_with_outcome(
                 branch=branch,
                 commit=commit,
                 imports=symbol_context["imports"],
-                repository_identity=repository_identity,
             )
             if record is None:
                 continue
             records.append(record)
 
-    status = "succeeded"
-    reason = ""
-    reported_set = set(reported_paths)
-    if discovered_set and not reported_set.issuperset(discovered_set):
-        status = "partial"
-        missing_count = len(discovered_set - reported_set)
-        reason = f"reported_files_missing:{missing_count}"
-
-    outcome = _treesitter_outcome(
-        directory=directory,
-        codebase_root=codebase_root,
-        status=status,
-        reason=reason,
-        command=cmd,
-        discovered_files=discovered,
-        reported_paths=reported_paths,
-        stderr=result.stderr.strip(),
-    )
-    return TreeSitterScanResult(records=_with_duplicate_identity_discriminators(records), outcome=outcome)
+    return records
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -1925,7 +1393,6 @@ def scan(
     # inspectable extraction evidence even when later upserts fail.
     code_symbol_scan_roots: list[Path] = []
     code_symbol_records: list[CodeSymbolRecord] = []
-    code_symbol_extractor_outcomes: list[dict[str, Any]] = []
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
@@ -1935,30 +1402,12 @@ def scan(
         code_symbol_scan_roots = _extract_configured_scan_roots(path)
         local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
         for scan_root in code_symbol_scan_roots:
-            root_files = [
-                filepath for filepath in files
-                if filepath.resolve() == scan_root.resolve()
-                or scan_root.resolve() in filepath.resolve().parents
-            ]
-            root_result = _scan_treesitter_symbol_records_with_outcome(
-                scan_root,
-                path,
-                scope,
-                discovered_files=root_files,
-            )
-            root_records = root_result.records
+            root_records = _scan_treesitter_symbol_records_for_directory(scan_root, path, scope)
             code_symbol_records.extend(root_records)
-            code_symbol_extractor_outcomes.append(root_result.outcome)
-            print(
-                "Code graph: "
-                f"{len(root_records)} symbols extracted from {scan_root} "
-                f"({root_result.outcome['status']})",
-                flush=True,
-            )
+            print(f"Code graph: {len(root_records)} symbols extracted from {scan_root}", flush=True)
         local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
         precomputed_edges = extract_edges(files, path)
-        repository_identity = resolve_repository_identity(path)
-        repo_name = repository_identity.repository_id
+        repo_name = path.resolve().name
         code_graph_artifact = write_code_graph_bundle(
             codebase_root=path,
             repo=repo_name,
@@ -1968,31 +1417,8 @@ def scan(
             files=files,
             symbols=code_symbol_records,
             edges=precomputed_edges,
-            extractor_outcomes=code_symbol_extractor_outcomes,
-            repository_id_authoritative=repository_identity.authoritative,
-            repository_id_source=repository_identity.source,
-            identity_algorithm_version=IDENTITY_ALGORITHM_VERSION,
-            scan_config={
-                **_code_graph_scan_config(
-                    path,
-                    patterns=patterns,
-                    treesitter=treesitter,
-                    code_index=code_index,
-                    dry_run=dry_run,
-                    cwe_only=cwe_only,
-                )
-            },
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
-
-    successful_code_symbol_scan_roots = [
-        root for root, outcome in zip(code_symbol_scan_roots, code_symbol_extractor_outcomes)
-        if outcome.get("status") == "succeeded"
-    ]
-    failed_code_symbol_scan_roots = [
-        root for root, outcome in zip(code_symbol_scan_roots, code_symbol_extractor_outcomes)
-        if outcome.get("status") != "succeeded"
-    ]
 
     # --- Phase 1: Functional knowledge extraction ---
     knowledge_stored = 0
@@ -2121,7 +1547,6 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
-    code_symbols_write_status: dict[str, Any] | None = None
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
@@ -2129,31 +1554,15 @@ def scan(
         else:
             verification_samples: list[dict[str, str]] = []
             memory_result = CodeMemoryClient().upsert_code_symbols(code_symbol_records)
-            code_symbols_stored = memory_result.structured_upsert_stored
-            code_symbols_write_status = {
-                "attempted": memory_result.attempted,
-                "structured_upsert_stored": memory_result.structured_upsert_stored,
-                "legacy_fallback_stored": memory_result.legacy_fallback_stored,
-                "structured_verified": memory_result.structured_verified,
-                "failed": memory_result.failed,
-                "write_status": memory_result.write_status,
-                "record_results": list(memory_result.record_results),
-            }
+            code_symbols_stored = memory_result.stored
             for error in memory_result.errors[:5]:
                 print(f"  [WARN] {error}", file=sys.stderr, flush=True)
-            for record in memory_result.structured_records:
+            for record in code_symbol_records[:memory_result.stored]:
                 verification_samples.append({
                     "name": record.symbol_name,
                     "problem": record.problem,
                 })
-            print(
-                "Code index: "
-                f"{memory_result.structured_upsert_stored} structured, "
-                f"{memory_result.legacy_fallback_stored} legacy fallback, "
-                f"{memory_result.failed} failed "
-                f"({memory_result.write_status})",
-                flush=True,
-            )
+            print(f"Code index: {code_symbols_stored} symbols stored", flush=True)
 
     # Output summary
     result = {
@@ -2167,7 +1576,6 @@ def scan(
         "edges_found": edges_total,
         "edges_stored": edges_stored,
         "code_symbols_stored": code_symbols_stored,
-        "code_symbols_write_status": code_symbols_write_status,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,
@@ -2188,17 +1596,11 @@ def scan(
                 code_symbols_stored=code_symbols_stored,
                 treesitter=bool(treesitter and code_index and code_symbols_stored > 0),
                 scope=scope,
-                code_symbols_write_status=code_symbols_write_status,
                 scan_roots=scan_roots,
-                completed_scan_roots=successful_code_symbol_scan_roots,
+                completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
                 code_graph_artifact=code_graph_artifact,
-                coverage_scope="full",
-                reconciliation_eligible=bool(
-                    code_graph_artifact and code_graph_artifact.get("reconciliation_eligible")
-                ),
-                failed_scan_roots=failed_code_symbol_scan_roots,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -2308,82 +1710,28 @@ def rescan(
         # Treesitter symbol extraction (per codebase, not per file)
         code_symbol_scan_roots: list[Path] = []
         completed_code_symbol_scan_roots: list[Path] = []
-        failed_code_symbol_scan_roots: list[Path] = []
         local_code_symbols_artifact = None
         local_code_symbols_written = 0
         codebase_ts_symbols = 0
-        code_symbols_write_status: dict[str, Any] | None = None
         if treesitter and code_index:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
-            aggregate_attempted = 0
-            aggregate_structured = 0
-            aggregate_legacy = 0
-            aggregate_verified = 0
-            aggregate_failed = 0
-            aggregate_record_results: list[dict[str, Any]] = []
             for scan_root in code_symbol_scan_roots:
-                root_files = [
-                    filepath for filepath in files
-                    if filepath.resolve() == scan_root.resolve()
-                    or scan_root.resolve() in filepath.resolve().parents
-                ]
-                root_result = _scan_treesitter_symbol_records_with_outcome(
+                root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
                     path,
                     scope,
-                    discovered_files=root_files,
+                    verification_samples=verifiable_samples,
+                    local_artifact_path=local_code_symbols_artifact,
                 )
-                _append_local_code_symbols(local_code_symbols_artifact, root_result.records)
-                memory_result = CodeMemoryClient().upsert_code_symbols(root_result.records)
-                for error in memory_result.errors[:5]:
-                    print(f"  [WARN] {error}", file=sys.stderr, flush=True)
-                for record in memory_result.structured_records:
-                    verifiable_samples.append({
-                        "name": record.symbol_name,
-                        "problem": record.problem,
-                    })
-
-                aggregate_attempted += memory_result.attempted
-                aggregate_structured += memory_result.structured_upsert_stored
-                aggregate_legacy += memory_result.legacy_fallback_stored
-                aggregate_verified += memory_result.structured_verified
-                aggregate_failed += memory_result.failed
-                aggregate_record_results.extend(memory_result.record_results)
-
-                root_stored = memory_result.structured_upsert_stored
                 codebase_ts_symbols += root_stored
-                if root_result.outcome.get("status") == "succeeded":
-                    completed_code_symbol_scan_roots.append(scan_root)
-                else:
-                    failed_code_symbol_scan_roots.append(scan_root)
-                print(
-                    "Treesitter: "
-                    f"{root_stored} symbols stored from {scan_root} "
-                    f"({root_result.outcome.get('status')}, {memory_result.write_status})",
-                    flush=True,
-                )
+                completed_code_symbol_scan_roots.append(scan_root)
+                print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
                 )
             total_ts_symbols += codebase_ts_symbols
-            if aggregate_attempted or code_symbol_scan_roots:
-                if aggregate_failed == 0 and len(completed_code_symbol_scan_roots) == len(code_symbol_scan_roots):
-                    aggregate_status = "complete"
-                elif aggregate_structured or aggregate_legacy:
-                    aggregate_status = "degraded"
-                else:
-                    aggregate_status = "failed"
-                code_symbols_write_status = {
-                    "attempted": aggregate_attempted,
-                    "structured_upsert_stored": aggregate_structured,
-                    "legacy_fallback_stored": aggregate_legacy,
-                    "structured_verified": aggregate_verified,
-                    "failed": aggregate_failed,
-                    "write_status": aggregate_status,
-                    "record_results": aggregate_record_results,
-                }
 
         marker_path = _write_ingest_marker(
             path,
@@ -2394,15 +1742,11 @@ def rescan(
             code_symbols_stored=codebase_ts_symbols,
             treesitter=bool(completed_code_symbol_scan_roots),
             scope=scope,
-            code_symbols_write_status=code_symbols_write_status,
             started_at=started_at,
             scan_roots=code_symbol_scan_roots,
             completed_scan_roots=completed_code_symbol_scan_roots,
-            failed_scan_roots=failed_code_symbol_scan_roots,
             local_code_symbols_artifact=local_code_symbols_artifact,
             local_code_symbols_written=local_code_symbols_written,
-            coverage_scope="incremental",
-            reconciliation_eligible=False,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})

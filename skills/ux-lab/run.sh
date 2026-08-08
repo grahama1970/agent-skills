@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
+unset VIRTUAL_ENV
 set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "${SKILL_DIR}/../../.." && pwd)}"

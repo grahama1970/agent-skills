@@ -1,3 +1,9 @@
+"""prompt - persona_dream_nava_lane.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

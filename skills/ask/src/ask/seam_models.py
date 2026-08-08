@@ -100,7 +100,44 @@ class ExecutionResult(_SeamModel):
         return []
 
 
+class LaneDiagnosticCheck(_SeamModel):
+    check: str
+    status: Literal["PASS", "FAIL", "SKIPPED"]
+
+
+class LaneDiagnostics(_SeamModel):
+    """Live-state evidence for a failed provider lane.
+
+    The seam exists so a lane failure cannot be reported without the fixed
+    diagnostic series having actually run. An empty ``checks`` list means the
+    probe was skipped, which is the exact drift this contract forbids.
+    """
+
+    schema_name: str = Field(alias="schema")
+    handler: str
+    failure_code: str = ""
+    checks: list[LaneDiagnosticCheck] = Field(default_factory=list)
+    diagnosis: str = ""
+
+    def require_live_evidence(self) -> list[str]:
+        problems: list[str] = []
+        if not self.checks:
+            problems.append(
+                f"lane {self.handler!r} failed with no diagnostic checks run; "
+                "a provider failure must carry live state, not a theory"
+            )
+        if not self.diagnosis:
+            problems.append(f"lane {self.handler!r} diagnostics carry no derived diagnosis")
+        if self.checks and not any(c.check == "surf_transport" for c in self.checks):
+            problems.append(
+                f"lane {self.handler!r} diagnostics skipped the surf_transport check; "
+                "the series is fixed and may not be partially run"
+            )
+        return problems
+
+
 _SEAMS: dict[str, type[_SeamModel]] = {
+    "ask.lane_diagnostics.v1": LaneDiagnostics,
     "ask.tau_dag_bundle.v1": TauDagBundle,
     "ask.browser_tab_lifecycle.v1": BrowserTabLifecycle,
     "ask.tau_dag_execution.v1": ExecutionResult,
@@ -110,6 +147,7 @@ _EXTRA_CHECKS = {
     "ask.tau_dag_bundle.v1": "require_ready_artifacts",
     "ask.browser_tab_lifecycle.v1": "require_ready_tabs",
     "ask.tau_dag_execution.v1": "require_receipt_truth",
+    "ask.lane_diagnostics.v1": "require_live_evidence",
 }
 
 

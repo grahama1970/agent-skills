@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""verify_nava_output - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import argparse

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung23_voice_executor_dry_run - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import argparse
 import hashlib
 import json

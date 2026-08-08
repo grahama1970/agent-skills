@@ -7,8 +7,6 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-IDENTITY_ALGORITHM_VERSION = "ingest-code.symbol-identity.v2"
-
 
 def split_identifier(value: str) -> list[str]:
     """Split code identifiers into lexical search terms."""
@@ -40,12 +38,6 @@ def _normalize_repo_path(value: str) -> str:
     normalized = re.sub(r"/+", "/", value.replace("\\", "/").strip())
     while normalized.startswith("./"):
         normalized = normalized[2:]
-    if not normalized or normalized.startswith("/") or normalized == ".." or normalized.startswith("../"):
-        raise ValueError(f"unsafe repository-relative path: {value}")
-    if normalized.startswith("~") or re.match(r"^[A-Za-z]:/", normalized):
-        raise ValueError(f"unsafe repository-relative path: {value}")
-    if "/../" in f"/{normalized}/":
-        raise ValueError(f"unsafe repository-relative path: {value}")
     return normalized
 
 
@@ -87,16 +79,8 @@ class CodeSymbolRecord:
     called_symbols: list[str] = field(default_factory=list)
     string_literals: list[str] = field(default_factory=list)
     content_hash: str = ""
-    repository_id: str = ""
-    repository_id_authoritative: bool = True
     identity_discriminator: str = ""
-    identity_algorithm_version: str = IDENTITY_ALGORITHM_VERSION
     tags: list[str] = field(default_factory=list)
-
-    @property
-    def effective_repository_id(self) -> str:
-        """Return the canonical repository identity used for logical identity."""
-        return (self.repository_id or self.repo).strip()
 
     @property
     def normalized_path(self) -> str:
@@ -117,8 +101,7 @@ class CodeSymbolRecord:
         return _sha256_id(
             "cs",
             [
-                self.identity_algorithm_version.strip(),
-                self.effective_repository_id,
+                self.repo.strip(),
                 self.branch.strip(),
                 self.normalized_path,
                 self.language.strip().lower(),
@@ -222,8 +205,6 @@ class CodeSymbolRecord:
             "type": "code_symbol",
             "scope": self.scope,
             "repo": self.repo,
-            "repository_id": self.effective_repository_id,
-            "repository_id_authoritative": self.repository_id_authoritative,
             "root": self.root,
             "branch": self.branch,
             "commit": self.commit,
@@ -245,7 +226,6 @@ class CodeSymbolRecord:
             "content_hash": self.effective_content_hash,
             "symbol_id": self.symbol_id,
             "symbol_version_id": self.symbol_version_id,
-            "identity_algorithm_version": self.identity_algorithm_version,
             "identity_discriminator": self.identity_discriminator,
             "legacy_key": self.legacy_key,
             "lexical_terms": self.lexical_terms,
@@ -267,8 +247,6 @@ class CodeSymbolRecord:
             "metadata": {
                 "type": "code_symbol",
                 "repo": self.repo,
-                "repository_id": self.effective_repository_id,
-                "repository_id_authoritative": self.repository_id_authoritative,
                 "branch": self.branch,
                 "commit": self.commit,
                 "path": self.normalized_path,
@@ -281,7 +259,6 @@ class CodeSymbolRecord:
                 "content_hash": self.effective_content_hash,
                 "symbol_id": self.symbol_id,
                 "symbol_version_id": self.symbol_version_id,
-                "identity_algorithm_version": self.identity_algorithm_version,
                 "identity_discriminator": self.identity_discriminator,
                 "legacy_key": self.legacy_key,
                 "lexical_terms": self.lexical_terms,

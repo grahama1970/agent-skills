@@ -99,6 +99,24 @@
      "v": "U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints."
     }
    ]
+  },
+  {
+   "kind": "p",
+   "inline": [
+    {
+     "t": "text",
+     "v": "This is the two-page version. The longer one — full project detail and the live capability inventory — is at "
+    },
+    {
+     "t": "link",
+     "v": "grahama.co/resume",
+     "href": "https://grahama.co/resume"
+    },
+    {
+     "t": "text",
+     "v": "."
+    }
+   ]
   }
  ],
  "sections": [
@@ -507,12 +525,55 @@
      ]
     }
    ]
+  },
+  {
+   "title": "DEEPER DETAIL",
+   "blocks": [
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Omitted from the two-page PDF; kept here for anyone who wants to dig."
+      }
+     ]
+    },
+    {
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "text",
+        "v": "tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks, and ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Much of my current client work is export-controlled, so client and program details are withheld; the publicly releasable engineering is at github.com/grahama1970."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Live capability inventory — skills, sanity coverage, bounded agents, and the research-area map — is generated from the repository at each deploy and published on grahama.co, so the numbers on this page are checkable rather than asserted."
+       }
+      ]
+     ]
+    }
+   ]
   }
  ],
- "sourceCommit": "07805fdf3",
+ "sourceCommit": "78f37c43c",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "69559515d56c26ccfa15340e26f1c6e44124410ef83f95eb1eba53c0e23c9f6a",
+ "sourceSha256": "de37b2a3c403109d375658405a40d177c9a6d5e8bb426d0931b95c00580fb116",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -590,6 +651,6 @@
    }
   ]
  },
- "pdfSha256": "51ebb800d450ff0f704e3b17e857433e299aa03228ccff5c042d97bd1e444aa8",
- "pdfBytes": 159386
+ "pdfSha256": "719f82cc104fef923b0565f759060698981d2a6d622647be29fbd794a1453df7",
+ "pdfBytes": 159609
 }

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""test_ping_pong_live_e2e - tests.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 #!/usr/bin/env python3
 # --- dotenv (MUST be before any os.getenv / os.environ) ---
 import sys

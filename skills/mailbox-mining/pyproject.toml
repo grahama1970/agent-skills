@@ -6,5 +6,5 @@ build-backend = "hatchling.build"
 name = "pi-skill-ops-gmail"
 version = "0.1.0"
 description = "Documented layer over the claude.ai Gmail MCP connector with enforced redaction"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = ["typer>=0.12", "httpx>=0.28", "jsonschema>=4.0"]

@@ -73,6 +73,7 @@ class PdfBuildConfig:
     output_path: Path
     css_path: Path | None
     font_dir: Path | None
+    omit_sections: tuple[str, ...]
     title: str
     author: str
     toc_level: int
@@ -88,6 +89,18 @@ def parse_args(argv: list[str]) -> PdfBuildConfig:
     parser.add_argument("markdown", type=Path, help="Input Markdown file")
     parser.add_argument("output", type=Path, help="Output PDF file")
     parser.add_argument("--css", type=Path, default=None, help="Optional CSS file")
+    parser.add_argument(
+        "--omit-section",
+        action="append",
+        default=[],
+        dest="omit_sections",
+        metavar="HEADING",
+        help=(
+            "Drop this level-2 section from the PDF only (repeatable). Lets one "
+            "Markdown source produce a short attachable PDF and a fuller web page "
+            "without maintaining two documents that can drift."
+        ),
+    )
     parser.add_argument(
         "--font-dir",
         type=Path,
@@ -114,6 +127,7 @@ def parse_args(argv: list[str]) -> PdfBuildConfig:
         output_path=args.output,
         css_path=args.css,
         font_dir=args.font_dir,
+        omit_sections=tuple(args.omit_sections),
         title=args.title,
         author=args.author,
         toc_level=args.toc_level,
@@ -132,6 +146,34 @@ def read_css(config: PdfBuildConfig) -> str:
             raise FileNotFoundError(f"CSS file does not exist: {config.css_path}")
         css_parts.append(config.css_path.read_text(encoding="utf-8"))
     return "\n".join(css_parts)
+
+
+def drop_sections(markdown_text: str, headings: tuple[str, ...]) -> str:
+    """Remove named level-2 sections, failing closed if one is not present.
+
+    A silent no-op here would ship a PDF quietly longer than intended, so a
+    heading that does not match is an error rather than a shrug.
+    """
+    if not headings:
+        return markdown_text
+    wanted = {h.strip().casefold() for h in headings}
+    seen: set[str] = set()
+    kept: list[str] = []
+    dropping = False
+    for line in markdown_text.splitlines():
+        if line.startswith("## "):
+            title = line[3:].strip()
+            dropping = title.casefold() in wanted
+            if dropping:
+                seen.add(title.casefold())
+        elif line.startswith("# ") and not line.startswith("##"):
+            dropping = False
+        if not dropping:
+            kept.append(line)
+    missing = sorted(wanted - seen)
+    if missing:
+        raise ValueError(f"--omit-section heading not found: {', '.join(missing)}")
+    return "\n".join(kept)
 
 
 def build_pdf(config: PdfBuildConfig) -> None:
@@ -153,6 +195,7 @@ def build_pdf(config: PdfBuildConfig) -> None:
     markdown_text = config.markdown_path.read_text(encoding="utf-8")
     if not markdown_text.strip():
         raise ValueError(f"Markdown file is empty: {config.markdown_path}")
+    markdown_text = drop_sections(markdown_text, config.omit_sections)
 
     pdf = MarkdownPdf(toc_level=config.toc_level, optimize=config.optimize)
     section = Section(

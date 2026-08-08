@@ -61,6 +61,11 @@ jobs:
           if [[ -d docs/resume/fonts ]]; then
             css_args+=(--font-dir docs/resume/fonts)
           fi
+          # The attachable PDF is the two-page cut; DEEPER DETAIL renders only on
+          # grahama.co/resume, from this same source, so the two cannot drift.
+          if grep -q '^## DEEPER DETAIL' RESUME.md; then
+            css_args+=(--omit-section "DEEPER DETAIL")
+          fi
           uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
             RESUME.md \
             docs/resume/graham-anderson-resume.pdf \

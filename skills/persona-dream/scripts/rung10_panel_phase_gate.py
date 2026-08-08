@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung10_panel_phase_gate - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import argparse
 import hashlib
 import json

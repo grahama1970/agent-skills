@@ -1,5 +1,5 @@
 {
-  "source_commit": "7adac9892",
+  "source_commit": "07805fdf3",
   "as_of": "2026-08-08",
   "stats": {
     "skills": 343,
@@ -9,53 +9,61 @@
   "inputs": {
     "../README.md": "8fc7500a05a062cb25c455ff2a2367235781bbc527528886a95ec6b13aed2d3c",
     "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f",
-    "../RESUME.md": "ec9a4f17bf5ad98f461c9d52465a61314cc66999bae3856de30dc019173da76b"
+    "../RESUME.md": "69559515d56c26ccfa15340e26f1c6e44124410ef83f95eb1eba53c0e23c9f6a"
   },
   "outputs": {
     "inventory.json": {
-      "sha256": "347f94debd8a77f4e37001d52146218ded2c5d72d47bed8ac472ca5671611299",
+      "sha256": "18d3afbc70f1fe3416a67ae3aedac1eb679f5ffa7bdf295983bcc8118eec420d",
       "inputs": {}
     },
     "artifacts.json": {
-      "sha256": "0593291d2697e85cc113eb4a77f75ade23250e6e518b34fa2658d111d485177a",
+      "sha256": "eefa282089abd273692fdee529c91c84fb4c20111d15c0d1a8d1790eb7a92442",
       "inputs": {
-        "inventory.json": "347f94debd8a77f4e37001d52146218ded2c5d72d47bed8ac472ca5671611299"
+        "inventory.json": "18d3afbc70f1fe3416a67ae3aedac1eb679f5ffa7bdf295983bcc8118eec420d"
       }
     },
     "catalog.json": {
-      "sha256": "a64a09498a67cd65d4d3dbec0ff332f64871c91336a8ff18f45d2c9bc4f0eaa9",
+      "sha256": "10002789f1c821cba84bb964ac2441cf9c96193a099d49893c61de1bb697307f",
       "inputs": {
-        "inventory.json": "347f94debd8a77f4e37001d52146218ded2c5d72d47bed8ac472ca5671611299",
-        "project-visibility.json": "7ef10d8e883d3cebda618eb6918f673d20ea0e9eb2be4e78d2301c850c9175cf",
-        "research-map.json": "a55f14fc6598d2e2c682314ff6341789b777831134f75062757c3b60c8667106",
+        "inventory.json": "18d3afbc70f1fe3416a67ae3aedac1eb679f5ffa7bdf295983bcc8118eec420d",
+        "project-visibility.json": "af5ac590bf009028e613773dade42cfa510a365023b79cfe33d9725eb907355c",
+        "research-map.json": "ee8d784c834cf3fbc107a8c641d8ee5a19d9fea679051a4ff80dd348f78dd835",
         "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f"
       }
     },
     "research-map.json": {
-      "sha256": "a55f14fc6598d2e2c682314ff6341789b777831134f75062757c3b60c8667106",
+      "sha256": "ee8d784c834cf3fbc107a8c641d8ee5a19d9fea679051a4ff80dd348f78dd835",
       "inputs": {
         "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f"
       }
     },
     "graph.json": {
-      "sha256": "7672d7040de8267b770b6dcc54ab6470a35f8368be1c088b0126d7b524c4eeb4",
+      "sha256": "7fe7fc9284f6ae444ebd71bf015ad4163d4b361523463c63d11ddb8705069c54",
       "inputs": {
-        "project-visibility.json": "7ef10d8e883d3cebda618eb6918f673d20ea0e9eb2be4e78d2301c850c9175cf",
-        "research-map.json": "a55f14fc6598d2e2c682314ff6341789b777831134f75062757c3b60c8667106",
+        "project-visibility.json": "af5ac590bf009028e613773dade42cfa510a365023b79cfe33d9725eb907355c",
+        "research-map.json": "ee8d784c834cf3fbc107a8c641d8ee5a19d9fea679051a4ff80dd348f78dd835",
         "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f"
       }
     },
     "project-visibility.json": {
-      "sha256": "7ef10d8e883d3cebda618eb6918f673d20ea0e9eb2be4e78d2301c850c9175cf",
+      "sha256": "af5ac590bf009028e613773dade42cfa510a365023b79cfe33d9725eb907355c",
       "inputs": {
         "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f",
         "private-abstracts.json": "063d4114cf57fce15c27ff07db1a6aa15dcd909e2a04cd86788286926868f704"
       }
     },
     "resume.json": {
-      "sha256": "93dbb8353a44343437a5d51e93e0a1444f0ade25236e35b1fcbe01e50def6492",
+      "sha256": "b2a2cd37417543a0f40c77376ab40e628d2cdff5dafa72e3b7c9a408996d51ca",
       "inputs": {
-        "../RESUME.md": "ec9a4f17bf5ad98f461c9d52465a61314cc66999bae3856de30dc019173da76b"
+        "../RESUME.md": "69559515d56c26ccfa15340e26f1c6e44124410ef83f95eb1eba53c0e23c9f6a"
+      }
+    },
+    "competence.json": {
+      "sha256": "23054c16141f21dcdb9556000595042c253a4c03d8d1e1a10a4da25bdb521e33",
+      "inputs": {
+        "inventory.json": "18d3afbc70f1fe3416a67ae3aedac1eb679f5ffa7bdf295983bcc8118eec420d",
+        "research-map.json": "ee8d784c834cf3fbc107a8c641d8ee5a19d9fea679051a4ff80dd348f78dd835",
+        "content.json": "fe9f299df17000d22b05d6fd5ec4eff4b04545157b2a382bef4ff71a8261903f"
       }
     }
   },

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung20_story_executor_readonly - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import argparse
 import hashlib
 import json

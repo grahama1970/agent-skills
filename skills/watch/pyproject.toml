@@ -2,15 +2,16 @@
 name = "watch"
 version = "0.1.0"
 description = "Video analysis: scene-change frames, transcripts, SRT emotion analysis"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "httpx",
     "rich",
-    "loguru",
+    "loguru>=0.7.0,<0.7.3",
     "typer",
     "pillow",
     "faster-whisper",
     "jsonschema",
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]

@@ -416,3 +416,54 @@ skills:
   watch: [data-engineering, extraction]
   webgpt: [browser-automation]
   webgpt-review: [browser-automation, evaluation-quality]
+
+# Portfolio layer crosswalk.
+# The repo-level research taxonomy (3 families -> 10 areas) lives in
+# portfolio/research-taxonomy.yaml (source: WebGPT portfolio review 2026-08-07,
+# deliverables in references/portfolio/). Disciplines are the operational
+# skill-catalog layer; areas are the portfolio/research narrative layer.
+# area_crosswalk maps each research area to the disciplines it may contain;
+# a labeled skill whose disciplines share nothing with its area's row is a
+# review-queue candidate (see references/portfolio/discipline-area-disagreements.csv).
+area_crosswalk:
+  agent-systems:
+  - agentic-orchestration
+  - browser-automation
+  - observability-operations
+  - developer-tooling
+  - human-collaboration
+  memory-knowledge:
+  - memory-knowledge
+  extraction-document-intelligence:
+  - extraction
+  - data-engineering
+  research-intelligence:
+  - research-retrieval
+  security-adaptive-defense:
+  - compliance-security
+  governance-compliance:
+  - compliance-security
+  - evaluation-quality
+  verification-formal-methods:
+  - evaluation-quality
+  - ml-training
+  model-systems-learning:
+  - ml-training
+  - model-ops
+  multimodal-persona-interaction:
+  - persona-simulation
+  - voice-audio
+  - human-collaboration
+  creative-media-design:
+  - content-creation
+  - ui-design-engineering
+
+# Portfolio freshness-gate overrides (portfolio-check). aliases map a local
+# canonical repo name to its registry name; ignore lists repos that are not
+# independent research lines (third-party upstreams count only via their
+# adapted-delta entries, per governance rule 6).
+portfolio_repo_overrides:
+  aliases: {}
+  ignore:
+    - impeccable      # third-party upstream (pbakaus/impeccable)
+    - pi              # third-party upstream (earendil-works/pi); adapted line is pi-mono

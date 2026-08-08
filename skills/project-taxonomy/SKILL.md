@@ -58,7 +58,18 @@ cd skills/project-taxonomy
 ./run.sh apply          # write disciplines: frontmatter + README banners (idempotent)
 ./run.sh sync           # apply + canonical /memory ingest (skill_descriptions)
 ./run.sh list <disc>    # skills labeled with a discipline, from disciplines.yml
+./run.sh crosswalk      # drift gate: committed disagreements CSV vs regenerated (exit 2 on drift)
+./run.sh crosswalk --write  # regenerate the disagreements CSV deterministically
+./run.sh portfolio      # registry validator + quarterly-freshness + active-repo coverage (exit 2 on gaps)
+./run.sh ci             # check + crosswalk + portfolio — the /monitor-projects nightly gate
 ```
+
+`portfolio` keeps the project classification current by construction: it
+fails when the registry exceeds the 90-day quarterly-review cap or when a
+locally active primary checkout (recent commits, has an origin remote, not a
+worktree; canonicalized by origin URL so lane clones count once) is missing
+from `portfolio/research-taxonomy.json` and not covered by
+`portfolio_repo_overrides` in `references/disciplines.yml`.
 
 ## Retrieval
 
@@ -77,6 +88,28 @@ would be a silo; `skill_descriptions` is the single recall surface.
   `./run.sh check`, so a newly added skill without a discipline label
   surfaces in the roundtable packet instead of drifting.
 - `/skills-ci` may use `check` as a deterministic gate.
+
+## Portfolio layer (repo-level)
+
+The repo-level research taxonomy is a separate, complementary layer adopted
+from the WebGPT portfolio review (2026-08-07): umbrella "Evidence-Bearing AI
+Systems" → 3 program families → 10 canonical research areas, with a 14-repo
+classification (one primary area, ≤1 secondary, `boundary_to_preserve`,
+counting rules for forks/fixtures/projections).
+
+- Authoritative registry: `portfolio/research-taxonomy.yaml` (+ `.json`) at
+  the repo root, per the report's implementation order.
+- Validator: `references/portfolio/validate-research-taxonomy.py` (run in CI
+  against the JSON registry; PASS = 14 projects, 10 areas, 3 families).
+- Full deliverables (report, per-skill classification, GitHub labels, repo
+  topics, schema, source notes): `references/portfolio/`.
+- `area_crosswalk` in `references/disciplines.yml` maps each research area
+  to admissible disciplines. Disagreements between WebGPT's per-skill areas
+  and the local discipline labels are queued for human review in
+  `references/portfolio/discipline-area-disagreements.csv` (46 rows), plus
+  WebGPT's own 23-row `skill-classification-review-queue.csv`. Per
+  governance, these change labels only after human signoff — never
+  automatically.
 
 ## Governance
 

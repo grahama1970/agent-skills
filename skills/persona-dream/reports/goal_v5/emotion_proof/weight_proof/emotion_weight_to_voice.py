@@ -1,3 +1,9 @@
+"""emotion_weight_to_voice - weight_proof.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 # Connective tissue: verdict -> emotion -> intensity WEIGHT -> (exaggeration, cfg_weight)
 # -> base ChatterboxTTS render with the production Embry ref clip.
 # Proves the persona-dream weighting model produces measurably different tone.

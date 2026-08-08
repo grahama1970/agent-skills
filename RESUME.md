@@ -8,6 +8,8 @@ Principal AI Engineer | Machine Learning Engineer | AI Architect | Agentic AI ·
 
 U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints.
 
+This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
+
 ## ABOUT
 An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA technical lead alongside Lockheed Martin and MIT. High-end creative and hard technical work — delivered by the same person, shipped as working code, in public.
 
@@ -76,3 +78,11 @@ Client work is mostly export-controlled, so here is the public, verifiable side 
 - Interfaces & Visualization: React, TypeScript, D3, Data-Dense & Graph UI, Design Systems, Deterministic UI Interaction Testing
 - Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing, Stakeholder Collaboration
 - ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux
+
+## DEEPER DETAIL
+Omitted from the two-page PDF; kept here for anyone who wants to dig.
+
+- tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action.
+- ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks, and ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
+- Much of my current client work is export-controlled, so client and program details are withheld; the publicly releasable engineering is at github.com/grahama1970.
+- Live capability inventory — skills, sanity coverage, bounded agents, and the research-area map — is generated from the repository at each deploy and published on grahama.co, so the numbers on this page are checkable rather than asserted.

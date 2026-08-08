@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung13_yaml_stop_dry_run - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import argparse
 import json
 import subprocess

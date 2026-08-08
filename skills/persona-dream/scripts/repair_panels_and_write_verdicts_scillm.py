@@ -1,3 +1,9 @@
+"""repair_panels_and_write_verdicts_scillm - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import os
 import json
 import subprocess

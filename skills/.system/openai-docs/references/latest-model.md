@@ -6,16 +6,20 @@ This file is a curated helper. Every recommendation here must be verified agains
 
 | Model ID | Use for |
 | --- | --- |
-| `gpt-5.4` | Default text plus reasoning for most new apps |
-| `gpt-5.4-pro` | Only when the user explicitly asks for maximum reasoning or quality; substantially slower and more expensive |
-| `gpt-5-mini` | Cheaper and faster reasoning with good quality |
-| `gpt-5-nano` | High-throughput simple tasks and classification |
-| `gpt-5.4` | Explicit no-reasoning text path via `reasoning.effort: none` |
+| `gpt-5.6` | Latest/default GPT-5.6 alias; routes to Sol |
+| `gpt-5.6-sol` | Flagship GPT-5.6 tier for hardest quality-first, coding, and reasoning workflows |
+| `gpt-5.6-terra` | Mini-like GPT-5.6 tier for balanced cost, latency, and quality |
+| `gpt-5.6-luna` | Nano-like GPT-5.6 tier for high-throughput, simple, or strict-latency tasks |
+| `gpt-5.5` | Previous default text and reasoning model; use for existing GPT-5.5 integrations |
+| `gpt-5.4` | Older default text and reasoning model; use for existing GPT-5.4 integrations |
+| `gpt-5.4-mini` | Older lower-cost testing and lighter production workflows |
+| `gpt-5.4-nano` | Older high-throughput simple tasks and classification |
 | `gpt-4.1-mini` | Cheaper no-reasoning text |
 | `gpt-4.1-nano` | Fastest and cheapest no-reasoning text |
 | `gpt-5.3-codex` | Agentic coding, code editing, and tool-heavy coding workflows |
 | `gpt-5.1-codex-mini` | Cheaper coding workflows |
-| `gpt-image-1.5` | Best image generation and edit quality |
+| `gpt-image-2` | Best image generation and edit quality |
+| `gpt-image-1.5` | Less expensive image generation and edit quality |
 | `gpt-image-1-mini` | Cost-optimized image generation |
 | `gpt-4o-mini-tts` | Text-to-speech |
 | `gpt-4o-mini-transcribe` | Speech-to-text, fast and cost-efficient |
@@ -31,5 +35,6 @@ This file is a curated helper. Every recommendation here must be verified agains
 
 ## Maintenance notes
 
+- GPT-5.6 Pro is a Responses reasoning mode on the base model, not a separate `gpt-5.6-pro` slug. Verify the live model guide before recommending its request shape.
 - This file will drift unless it is periodically re-verified against current OpenAI docs.
 - If this file conflicts with current docs, the docs win.

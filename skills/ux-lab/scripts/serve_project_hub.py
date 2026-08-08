@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""serve_project_hub - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import html

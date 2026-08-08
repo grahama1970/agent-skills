@@ -2141,7 +2141,7 @@ const handleClient = (socket) => {
           tool,
           deadlineMs,
           requiresLease: toolRequiresBrowserLease(tool),
-          leaseKey: sessionManager.leaseKeyFromRequest(msg),
+          leaseKey: sessionManager.leaseKeyFromRequest(msg, tool),
         });
         request.context = context;
       } catch (error) {

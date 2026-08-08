@@ -187,4 +187,9 @@ finally:
     client.selector.close()
 PY
 
+# The escalation ladder gate: prose about reading receipts first is
+# ignorable, so the ladder ships with a validator and this proves it rejects
+# the ways an agent would route around it.
+"$SCRIPT_DIR/sanity-ladder.sh"
+
 echo "debugger sanity passed"

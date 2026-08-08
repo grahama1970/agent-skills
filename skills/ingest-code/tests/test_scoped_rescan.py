@@ -185,61 +185,13 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: True)
     monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: None)
     monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
-
-    record = ingest_code.CodeSymbolRecord(
-        scope="memory",
-        repo="repo",
-        repository_id="repo",
-        root=str(repo),
-        branch="main",
-        commit="abc123",
-        path="app.py",
-        language="python",
-        symbol_kind="function",
-        symbol_name="app",
-        qualified_name="app",
-        start_line=1,
-        end_line=2,
-        code=source.read_text(),
-        content_hash="hash-app",
-    )
     monkeypatch.setattr(
         ingest_code,
-        "_scan_treesitter_symbol_records_with_outcome",
-        lambda scan_root, codebase_root, scope, discovered_files: ingest_code.TreeSitterScanResult(
-            records=[record],
-            outcome={
-                "root": ".",
-                "status": "succeeded",
-                "reason": "",
-                "extractor": "treesitter",
-                "extractor_version": "test",
-                "command": ["test-treesitter"],
-                "declared_languages": ["python"],
-                "discovered_file_count": 1,
-                "reported_file_count": 1,
-                "reported_paths": ["app.py"],
-                "stderr": "",
-            },
-        ),
+        "_store_treesitter_symbols_for_directory",
+        lambda scan_root, codebase_root, scope, verification_samples, local_artifact_path=None: (
+            local_artifact_path.write_text('{"symbol_name": "app"}\n'), 2
+        )[1],
     )
-
-    class FakeClient:
-        def upsert_code_symbols(self, records):
-            return SimpleNamespace(
-                stored=len(records),
-                attempted=len(records),
-                errors=[],
-                structured_upsert_stored=len(records),
-                legacy_fallback_stored=0,
-                structured_verified=len(records),
-                failed=0,
-                write_status="complete",
-                structured_records=tuple(records),
-                record_results=(),
-            )
-
-    monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
 
     ingest_code.rescan(
         since=None,
@@ -253,82 +205,13 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
 
     status = ingest_code.build_marker_status(repo)
 
-    assert status["status"] == "incremental"
+    assert status["status"] == "fresh"
     assert status["run_status"] == "complete"
     assert status["completed"] is True
-    assert status["coverage_scope"] == "incremental"
-    assert status["reconciliation_eligible"] is False
     assert status["scope"] == "memory"
     assert status["code_index"]["collection"] == "code_symbols"
     assert status["code_index"]["treesitter"] is True
-    assert status["code_index"]["symbols_stored"] == 1
+    assert status["code_index"]["symbols_stored"] == 2
     assert status["completed_scan_roots"] == [str(repo.resolve())]
     assert status["local_artifacts"]["code_symbols_written"] == 1
     assert status["local_artifacts"]["code_symbols_jsonl"].endswith("code-symbols.jsonl")
-    assert status["local_artifacts"]["code_graph_freshness"]["status"] == "not_present"
-
-
-def test_rescan_failed_extraction_root_is_not_completed(monkeypatch, tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    (repo / "app.py").write_text("def app():\n    return 1\n")
-
-    monkeypatch.setattr(ingest_code, "find_memory_skill", lambda: tmp_path / "memory.sock")
-    monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: True)
-    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: None)
-    monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
-    monkeypatch.setattr(
-        ingest_code,
-        "_scan_treesitter_symbol_records_with_outcome",
-        lambda scan_root, codebase_root, scope, discovered_files: ingest_code.TreeSitterScanResult(
-            records=[],
-            outcome={
-                "root": ".",
-                "status": "unavailable",
-                "reason": "treesitter_skill_not_found",
-                "extractor": "treesitter",
-                "extractor_version": "test",
-                "command": [],
-                "declared_languages": ["python"],
-                "discovered_file_count": 1,
-                "reported_file_count": 0,
-                "reported_paths": [],
-                "stderr": "",
-            },
-        ),
-    )
-
-    class FakeClient:
-        def upsert_code_symbols(self, records):
-            return SimpleNamespace(
-                stored=0,
-                attempted=0,
-                errors=[],
-                structured_upsert_stored=0,
-                legacy_fallback_stored=0,
-                structured_verified=0,
-                failed=0,
-                write_status="complete",
-                structured_records=(),
-                record_results=(),
-            )
-
-    monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
-
-    ingest_code.rescan(
-        since=None,
-        validate=False,
-        treesitter=True,
-        code_index=True,
-        verify_embeddings=False,
-        scope="memory",
-        codebase=[str(repo)],
-    )
-
-    status = ingest_code.build_marker_status(repo)
-
-    assert status["status"] == "incremental"
-    assert status["completed_scan_roots"] == []
-    assert status["successful_scan_roots"] == []
-    assert status["failed_scan_roots"] == [str(repo.resolve())]
-    assert status["reconciliation_eligible"] is False

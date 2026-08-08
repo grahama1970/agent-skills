@@ -24,6 +24,10 @@ const PROVIDER_DEFAULT_TIMEOUT_SECONDS = {
   grok: 300,
   perplexity: 120,
 };
+//: Tools that create a new tab or window. They do not touch an existing tab,
+//: so they take a dedicated "spawn" lease instead of the exclusive global one.
+const SPAWN_TOOLS = new Set(["tab.new", "window.new"]);
+
 const LEASE_BYPASS_TOOLS = new Set([
   "extension.ping",
   "focus.state",
@@ -60,12 +64,19 @@ class HostSessionManager {
     this.streams = new Set();
   }
 
-  leaseKeyFromRequest(msg) {
+  leaseKeyFromRequest(msg, tool) {
     const args = msg?.params?.args || {};
     const tabId = msg?.tabId || args["target-tab-id"] || args["tab-id"];
     if (tabId) return `tab:${tabId}`;
     const windowId = msg?.windowId || args["window-id"];
     if (windowId) return `window:${windowId}`;
+    // Creating a tab or window touches no existing tab, so it must not need
+    // the exclusive global lease: requiring one meant a single long-running
+    // per-tab submit stalled every new panel for its whole duration
+    // (agent-skills#1139; reproduced 2026-08-03 as window.new queue-timeout
+    // behind submits 829s and 1735s old). Spawns serialize against each
+    // other and still yield to a genuine global owner.
+    if (SPAWN_TOOLS.has(tool)) return "spawn";
     return "global";
   }
 
@@ -77,6 +88,15 @@ class HostSessionManager {
   }
 
   canGrantLease(context, leaseKey) {
+    if (leaseKey === "spawn") {
+      // Spawns conflict only with each other. Creating a new unfocused window
+      // mutates no existing tab, so yielding to a global owner just recreated
+      // the stall it was meant to fix: an unscoped `js` on the active tab held
+      // global for minutes and blocked every new panel (observed 2026-08-03,
+      // trial 10 blocked window_create_failed behind concurrent provider work).
+      const spawnOwner = this.leaseOwners.get("spawn");
+      return !spawnOwner || spawnOwner === context;
+    }
     if (leaseKey === "global") {
       return (
         this.leaseOwners.size === 0

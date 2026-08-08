@@ -36,6 +36,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 SKILLS_ROOT = SKILL_DIR.parent
 DISCIPLINES_YML = SKILL_DIR / "references" / "disciplines.yml"
+PORTFOLIO_DIR = SKILL_DIR / "references" / "portfolio"
+REPO_ROOT = SKILLS_ROOT.parent
+PORTFOLIO_REGISTRY_JSON = REPO_ROOT / "portfolio" / "research-taxonomy.json"
+PORTFOLIO_REGISTRY_YAML = REPO_ROOT / "portfolio" / "research-taxonomy.yaml"
+DISAGREEMENTS_CSV = PORTFOLIO_DIR / "discipline-area-disagreements.csv"
+PORTFOLIO_MAX_AGE_DAYS = 90  # governance: quarterly review
+WORKSPACE_ROOT = Path.home() / "workspace" / "experiments"
+ACTIVITY_WINDOW_DAYS = 30
 BANNER_PREFIX = "> **Disciplines:**"
 
 
@@ -196,6 +204,168 @@ def run(
     if memory_sync:
         report["memory"] = sync_memory(vocabulary, mapping)
     typer.echo(json.dumps(report, indent=2))
+
+
+@app.command()
+def crosswalk(
+    write: bool = typer.Option(False, "--write", help="Regenerate the disagreements CSV"),
+) -> None:
+    """Deterministically diff portfolio per-skill areas against local disciplines.
+
+    Uses area_crosswalk from disciplines.yml and the committed
+    references/portfolio/skill-classification.csv. Fail closed: an area in the
+    classification missing from the crosswalk, or a crosswalk discipline
+    outside the vocabulary, is an error. Without --write, verifies the
+    committed CSV matches the regenerated one (drift gate for sanity/CI).
+    """
+    import csv
+    import io
+
+    config = yaml.safe_load(DISCIPLINES_YML.read_text(encoding="utf-8"))
+    vocabulary = set(config["vocabulary"])
+    mapping = {k: list(v) for k, v in config["skills"].items()}
+    xw = config.get("area_crosswalk") or {}
+    errors = [
+        f"crosswalk area '{area}' maps to unknown discipline '{d}'"
+        for area, discs in xw.items()
+        for d in discs
+        if d not in vocabulary
+    ]
+    rows = list(csv.DictReader((PORTFOLIO_DIR / "skill-classification.csv").open(encoding="utf-8")))
+    for area in sorted({r["research_area"] for r in rows if r["research_area"]}):
+        if area not in xw:
+            errors.append(f"classification area '{area}' missing from area_crosswalk")
+    if errors:
+        typer.echo(json.dumps({"status": "FAIL", "errors": errors}, indent=2))
+        raise typer.Exit(code=2)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(["skill", "webgpt_area", "webgpt_confidence", "local_disciplines", "resolution"])
+    count = 0
+    for row in rows:
+        area, name = row["research_area"], row["skill"]
+        if area and name in mapping and not (set(mapping[name]) & set(xw[area])):
+            writer.writerow([name, area, row["confidence"], "|".join(mapping[name]), "PENDING_HUMAN_REVIEW"])
+            count += 1
+    generated = buf.getvalue()
+    if write:
+        DISAGREEMENTS_CSV.write_text(generated, encoding="utf-8")
+        status = "WRITTEN"
+    elif not DISAGREEMENTS_CSV.is_file():
+        typer.echo(json.dumps({"status": "FAIL", "errors": ["disagreements CSV missing; run crosswalk --write"]}))
+        raise typer.Exit(code=2)
+    elif DISAGREEMENTS_CSV.read_text(encoding="utf-8") != generated:
+        typer.echo(json.dumps({"status": "FAIL", "errors": ["disagreements CSV is stale; run crosswalk --write"]}))
+        raise typer.Exit(code=2)
+    else:
+        status = "IN_SYNC"
+    typer.echo(json.dumps({"status": status, "disagreements": count, "csv": str(DISAGREEMENTS_CSV)}))
+
+
+def _active_local_repos(window_days: int) -> set[str]:
+    """Canonical names of active primary checkouts under ~/workspace/experiments.
+
+    Worktrees and lane clones must not inflate the portfolio: directories
+    whose .git is a file (linked worktrees) are skipped, and each remaining
+    clone is canonicalized to its origin URL basename, so N clones of one
+    repo count once under the repo's real name.
+    """
+    active: set[str] = set()
+    for repo in sorted(WORKSPACE_ROOT.iterdir()):
+        git_meta = repo / ".git"
+        if not git_meta.is_dir():  # absent, or a file -> linked worktree
+            continue
+        recent = subprocess.run(
+            ["git", "-C", str(repo), "log", "-1", f"--since={window_days} days ago", "--pretty=%h"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if recent.returncode != 0 or not recent.stdout.strip():
+            continue
+        origin = subprocess.run(
+            ["git", "-C", str(repo), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        url = origin.stdout.strip()
+        if origin.returncode != 0 or not url:
+            continue  # origin-less local clones are fixtures/scratch, not portfolio lines
+        active.add(url.rstrip("/").rsplit("/", 1)[-1].removesuffix(".git").lower())
+    return active
+
+
+@app.command("portfolio-check")
+def portfolio_check() -> None:
+    """Validate the repo-level portfolio registry and its freshness (fail closed).
+
+    Gates: bundled validator passes on portfolio/research-taxonomy.json; the
+    YAML twin exists; the registry is younger than the quarterly-review cap;
+    and every locally active repo (commits in the last 30 days under
+    ~/workspace/experiments) appears in the registry — unclassified active
+    repos are named so the project classification stays up to date.
+    """
+    from datetime import UTC, date, datetime
+
+    validator = PORTFOLIO_DIR / "validate-research-taxonomy.py"
+    errors = [
+        f"missing: {f}"
+        for f in (validator, PORTFOLIO_REGISTRY_JSON, PORTFOLIO_REGISTRY_YAML)
+        if not f.is_file()
+    ]
+    if errors:
+        typer.echo(json.dumps({"status": "FAIL", "errors": errors}, indent=2))
+        raise typer.Exit(code=2)
+
+    result = subprocess.run(
+        ["python3", str(validator), str(PORTFOLIO_REGISTRY_JSON)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    if result.returncode != 0:
+        logger.error("portfolio validator failed: {}", (result.stdout + result.stderr).strip()[-500:])
+        typer.echo(json.dumps({"status": "FAIL", "errors": [(result.stdout + result.stderr).strip()[-300:]]}))
+        raise typer.Exit(code=2)
+
+    registry = json.loads(PORTFOLIO_REGISTRY_JSON.read_text(encoding="utf-8"))
+    generated_on = date.fromisoformat(str(registry.get("generated_on")))
+    age_days = (datetime.now(UTC).date() - generated_on).days
+    known_repos = {
+        str(p.get("repository", "")).split("/")[-1].lower() for p in registry.get("projects", [])
+    }
+    config = yaml.safe_load(DISCIPLINES_YML.read_text(encoding="utf-8"))
+    overrides = config.get("portfolio_repo_overrides") or {}
+    aliases = {str(k).lower(): str(v).lower() for k, v in (overrides.get("aliases") or {}).items()}
+    ignored = {str(v).lower() for v in overrides.get("ignore") or []}
+    active = {aliases.get(name, name) for name in _active_local_repos(ACTIVITY_WINDOW_DAYS)}
+    unclassified = sorted(active - known_repos - ignored)
+
+    report = {
+        "status": "PASS",
+        "validator": result.stdout.strip(),
+        "registry_generated_on": str(generated_on),
+        "registry_age_days": age_days,
+        "unclassified_active_repos": unclassified,
+    }
+    if age_days > PORTFOLIO_MAX_AGE_DAYS:
+        report["status"] = "FAIL"
+        report["errors"] = [
+            f"registry is {age_days} days old (> {PORTFOLIO_MAX_AGE_DAYS}); quarterly review due"
+        ]
+    if unclassified:
+        report["status"] = "FAIL"
+        report.setdefault("errors", []).append(
+            "active repos missing from portfolio registry: " + ", ".join(unclassified)
+        )
+    typer.echo(json.dumps(report, indent=2))
+    if report["status"] != "PASS":
+        raise typer.Exit(code=2)
 
 
 if __name__ == "__main__":

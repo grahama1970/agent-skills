@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""rung3_pipeline_spine - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import json
 import subprocess
 import sys

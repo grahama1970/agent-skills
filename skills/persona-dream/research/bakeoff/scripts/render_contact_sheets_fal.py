@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""render_contact_sheets_fal - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import argparse
