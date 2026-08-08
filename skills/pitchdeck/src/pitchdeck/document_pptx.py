@@ -451,6 +451,7 @@ def emit_document_pptx(
         # band in the house style — hero recipes put the deck KICKER in the
         # band and keep the assertion as the hero body (reqml-12 pattern).
         hero = bool(slide_doc.intent) and slide_doc.intent.recipe in {"cover-brand", "statement-thesis"}
+        is_cover_slide = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
         banded = slide_doc.intent is not None
         skip_title = False
         if banded:
@@ -508,7 +509,8 @@ def emit_document_pptx(
         from .identity import ledger_from_document, strip_texts
 
         identity = strip_texts(ledger_from_document(document.deck.title))
-        if identity.get("wordmark"):
+        # the cover IS the wordmark; repeating it in the footer reads as a bug
+        if identity.get("wordmark") and not is_cover_slide:
             mark_box = slide.shapes.add_textbox(Inches(0.33), Inches(SLIDE_H_IN - 0.44),
                                                 Inches(4.0), Inches(0.32))
             mark_box.name = "chrome:identity-wordmark"

@@ -413,7 +413,7 @@ def render_document_html(
             f'overflow:hidden;margin:24px auto;box-shadow:0 4px 24px rgba(0,0,0,0.25);">'
             f"{band_html}{body}{footer_rule}"
             f'<span style="position:absolute;left:2.5%;bottom:1.2%;font:bold 15px Calibri,sans-serif;'
-            f'color:{palette["primary"]};">{html.escape(_identity_wordmark(document))}</span>'
+            f'color:{palette["primary"]};">{"" if recipe == "cover-brand" else html.escape(_identity_wordmark(document))}</span>'
             f'<span style="position:absolute;right:1.2%;bottom:1.2%;font:16px Calibri,sans-serif;color:#8a8a8a;">{slide.order}</span></section>'
         )
     page_title = html.escape(title or document.deck.title)

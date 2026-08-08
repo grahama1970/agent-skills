@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "c7b29cfd3ea0743005d23d077be47e6609a97210",
- "source_tree_sha256": "f27422c8c104939e2821f3cc92f3dad4cdeb2b81f5c480047c701f03a05d058b",
+ "commit": "198a1361a24ae46e5d770cf03138bbf1c2931e6c",
+ "source_tree_sha256": "2c5de4fd675ea6d18d9fa625ef1140c1c05173e85ed35ff6c9f80f2ad76ca444",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -12,6 +12,7 @@
   "build",
   "claim-decide",
   "compile-document",
+  "compile-voice-profile",
   "deck-op",
   "design-lint",
   "doctor",
@@ -39,7 +40,7 @@
   "version",
   "visual-sync"
  ],
- "command_count": 35,
+ "command_count": 36,
  "schema_inventory": [
   {
    "declared_schemas": [
@@ -60,8 +61,11 @@
     "pitchdeck.emit_md_receipt.v1",
     "pitchdeck.emit_ui_receipt.v1",
     "pitchdeck.handout_receipt.v1",
+    "pitchdeck.house_spec.v1",
     "pitchdeck.icon_library.v1",
+    "pitchdeck.identity_ledger.v1",
     "pitchdeck.image_variation_plan.v1",
+    "pitchdeck.layout_signature.v1",
     "pitchdeck.memory_sync_receipt.v1",
     "pitchdeck.narrative_outline.v1",
     "pitchdeck.plan_receipt.v1",
@@ -74,10 +78,12 @@
     "pitchdeck.source_state.v1",
     "pitchdeck.style_analysis_receipt.v1",
     "pitchdeck.style_reference.v1",
+    "pitchdeck.transform_mapping.v1",
     "pitchdeck.ui_deck_bundle.v1",
     "pitchdeck.validation_report.v1",
     "pitchdeck.verify_receipt.v1",
-    "pitchdeck.visual_sync_receipt.v1"
+    "pitchdeck.visual_sync_receipt.v1",
+    "pitchdeck.voice_profile.v1"
    ],
    "artifacts": [
     {
@@ -91,7 +97,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "61 passed, 1 xfail"
+  "summary": "68 passed, 1 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

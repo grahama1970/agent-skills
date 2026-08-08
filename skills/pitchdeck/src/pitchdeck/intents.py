@@ -127,6 +127,18 @@ def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_rend
     return assertion, module.candidate_claim_ids[0], "verbatim"
 
 
+def _after_chevrons(reveal: list[str], floor: float) -> float:
+    """Top of the illustration zone: just under the last chevron.
+
+    Corpus slides have no dead band between the takeaways and the artwork
+    (cybersummit-32/47), so the illustration follows the text rather than
+    sitting at a fixed offset."""
+    chevrons = [r for r in reveal if r.startswith("chevron-")]
+    if not chevrons:
+        return floor
+    return round(0.19 + len(chevrons) * 0.082 + 0.04, 3)
+
+
 def _fill_diagram_canvas(graph):
     """Single-row diagrams fill their box vertically (corpus: the author's
     diagrams occupy the canvas; ours floated in a narrow band with dead space
@@ -196,6 +208,34 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                                    binding_paths=["message"]))
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
 
+    # Corpus content slides are title + chevron band + illustration on ONE
+    # slide (cybersummit-32/47, reqml-49). Chevrons are therefore independent
+    # of the illustration, not an alternative to it, and are built first so the
+    # illustration can position itself beneath the band it must clear.
+    if "chevrons" in ({r.value for r in recipe.required_roles} | {r.value for r in recipe.optional_roles}):
+        # one COMPLETE supporting takeaway; the diagram is the star (visual review)
+        # density-5x5: up to three takeaways, each included ONLY if it fits
+        # whole (drop-not-clip; corpus voice is short assertions, and a
+        # trailing ellipsis is the strongest machine tell).
+        pool = module.candidate_assertions[1:] or module.candidate_assertions[:1]
+        # Corpus content slides carry 3-5 chevron takeaways ABOVE the
+        # illustration; each is included only if it fits whole (drop-not-clip).
+        extra = [t for t in pool if len(t) <= 150][:4] or [pool[0]]
+        for index, text in enumerate(extra):
+            el_id = f"chevron-{index}"
+            elements.append(DocElement(
+                id=el_id, kind=DocElementKind.TEXT, role="chevrons",
+                bbox=Bbox(x=0.06, y=0.19 + index * 0.082, w=0.88, h=0.078),
+                text=f"> {_truncate_words(text, 220)}", style=_CHEVRON_STYLE,
+                binding_paths=[f"element:{el_id}"],
+                entrance=DocEntrance(effect="rise", fragment_index=index),
+            ))
+            source_claim = (module.candidate_claim_ids[0] if recipe.id == "roadmap-lanes"
+                            else module.candidate_claim_ids[min(index + 1, len(module.candidate_claim_ids) - 1)])
+            bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
+                                        claim_id=source_claim, transform_class="truncation"))
+            reveal.append(el_id)
+
     if recipe.id == "roadmap-gates":
         # Five-gate closure ILLUSTRATION (visual review slice 2): the claim's
         # own list items become checkpoints on a path ending at the flag.
@@ -219,40 +259,18 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                              binding_paths=["element:diagram"]) for i in range(count - 1)]
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
-            bbox=Bbox(x=0.05, y=0.30, w=0.9, h=0.58),
+            bbox=Bbox(x=0.05, y=_after_chevrons(reveal, 0.30), w=0.9, h=0.90 - _after_chevrons(reveal, 0.30)),
             diagram=_fill_diagram_canvas(DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
             binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade"),
         ))
         bindings.append(TextBinding(path="element:diagram", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=module.candidate_claim_ids[0], transform_class="truncation"))
-    elif "chevrons" in {r.value for r in recipe.required_roles}:
-        # one COMPLETE supporting takeaway; the diagram is the star (visual review)
-        # density-5x5: up to three takeaways, each included ONLY if it fits
-        # whole (drop-not-clip; corpus voice is short assertions, and a
-        # trailing ellipsis is the strongest machine tell).
-        pool = module.candidate_assertions[1:] or module.candidate_assertions[:1]
-        extra = [t for t in pool if len(t) <= 110][:3] or [pool[0]]
-        for index, text in enumerate(extra):
-            el_id = f"chevron-{index}"
-            elements.append(DocElement(
-                id=el_id, kind=DocElementKind.TEXT, role="chevrons",
-                bbox=Bbox(x=0.06, y=0.22 + index * 0.105, w=0.88, h=0.095),
-                text=f"> {_truncate_words(text, 220)}", style=_CHEVRON_STYLE,
-                binding_paths=[f"element:{el_id}"],
-                entrance=DocEntrance(effect="rise", fragment_index=index),
-            ))
-            source_claim = (module.candidate_claim_ids[0] if recipe.id == "roadmap-lanes"
-                            else module.candidate_claim_ids[min(index + 1, len(module.candidate_claim_ids) - 1)])
-            bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
-                                        claim_id=source_claim, transform_class="truncation"))
-            reveal.append(el_id)
-
     if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-gates":
         graph = _fill_diagram_canvas(DiagramGraph.model_validate(module.diagram))
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
-            bbox=Bbox(x=0.06, y=0.42 if reveal else 0.24, w=0.88, h=0.46 if reveal else 0.64),
+            bbox=Bbox(x=0.06, y=_after_chevrons(reveal, 0.24), w=0.88, h=0.90 - _after_chevrons(reveal, 0.24)),
             diagram=graph, binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade", fragment_index=len(reveal)) if reveal else DocEntrance(),
         ))
@@ -297,7 +315,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
     if required:
         elements.append(DocElement(
             id="qualifier", kind=DocElementKind.TEXT, role="footer",
-            bbox=Bbox(x=0.06, y=0.92, w=0.88, h=0.05),
+            bbox=Bbox(x=0.06, y=0.845, w=0.88, h=0.075),
             text=_truncate_words(" · ".join(dict.fromkeys(required)), 260),
             style=DocTextStyle(size_pt=HOUSE_CAPTION_PT, color="#595959"),
             binding_paths=["footer"],

@@ -7,21 +7,24 @@
  "reveal_order_matches_narrative": true,
  "pptx_editable_shapes_required": true,
  "provenance": {
-  "origin": "COMPOSITION_RECIPES python dict, migrated #1275"
+  "origin": "COMPOSITION_RECIPES python dict, migrated #1275",
+  "chevrons_optional": "corpus how-it-works slides carry takeaways above the illustration (cybersummit-12/32)",
+  "density_budget_words": "corpus slides with a visual: median 19.5, p75 51, p90 99 (n=258) \u2014 55 keeps the slide inside the upper quartile while allowing takeaways above the illustration"
  },
  "required_roles": [
   "title",
   "diagram"
  ],
  "optional_roles": [
-  "caption"
+  "caption",
+  "chevrons"
  ],
  "allowed_kinds": [
   "text",
   "diagram",
   "svg"
  ],
- "max_words": 45,
+ "max_words": 55,
  "visual_weight_min_frac": 0.4,
  "exemplar_ids": [
   "cybersummit-12-how-diagram"
