@@ -1,5 +1,5 @@
 {
-  "commit": "201eec1f8",
+  "commit": "cc7a9ff6b",
   "as_of": "2026-08-08",
   "artifacts": [
     {
@@ -11,8 +11,8 @@
     {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
-      "caption": "site/inventory.json \u00b7 sha256 6ae08c7e81f50da6\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"201eec1f8\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 343,\n    \"sanity\": 289,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 ac0341823463e3d7\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"cc7a9ff6b\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 343,\n    \"sanity\": 289,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }

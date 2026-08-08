@@ -138,19 +138,7 @@
       [
        {
         "t": "text",
-        "v": "tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action."
-       }
-      ],
-      [
-       {
-        "t": "text",
-        "v": "pdf_oxide — my heavily diverged fork of yfedoseev/pdf_oxide (independent since Mar 2026): 430 commits and ~137K lines added, including Rust-core changes, a full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling."
-       }
-      ],
-      [
-       {
-        "t": "text",
-        "v": "agent-skills — 340+ reusable agent skills (~85% carrying deterministic sanity gates) and 90+ bounded worker roles, portable across Claude Code, Codex, and Gemini. Public repo, private runtime — effectively my living resume."
+        "v": "tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action. (pdf_oxide, agent-skills, and scillm are detailed under Public Work.)"
        }
       ],
       [
@@ -430,7 +418,13 @@
       [
        {
         "t": "text",
-        "v": "scillm, extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public."
+        "v": "scillm — LLM gateway/proxy: provider routing and fallback across hosted and local models, batch pools, structured-output repair, and streaming transport for agent runtimes."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public."
        }
       ]
      ]
@@ -468,31 +462,49 @@
       [
        {
         "t": "text",
-        "v": "Agentic AI: Agentic AI, AI Agents, Multi-Agent Systems, Model Context Protocol (MCP), Prompt Engineering"
+        "v": "Evals & Quality: LLM Evaluation, Agentic Evaluation Harnesses, Adversarial/Blind Testing, Regression Gates, Ground-Truth Fixtures, Judge Panels"
        }
       ],
       [
        {
         "t": "text",
-        "v": "LLM & Retrieval: Large Language Models (LLM), Generative AI, Retrieval-Augmented Generation (RAG), GraphRAG, LLM Evaluation, LLMOps"
+        "v": "Observability & LLMOps: AI Observability, Drift Detection, Health Monitoring, Audit Trails & Receipts, Scheduled Pipelines, LLMOps"
        }
       ],
       [
        {
         "t": "text",
-        "v": "Knowledge & Data: Knowledge Graphs, ArangoDB, Vector Databases, Machine Learning"
+        "v": "Agentic Orchestration: Multi-Agent Systems, AI Agents, DAG Contracts, State Tracking, Tool Calling, Model Context Protocol (MCP), Bounded Agent Roles, Prompt Engineering"
        }
       ],
       [
        {
         "t": "text",
-        "v": "Verification & Compliance: Formal Verification, Lean 4, NIST Frameworks, AI Governance"
+        "v": "LLM Platform: Large Language Models (LLM), Generative AI, LLM Gateway/Routing, Provider Fallback, Structured Outputs, Batch Inference, Guardrails"
        }
       ],
       [
        {
         "t": "text",
-        "v": "Platform: Python, Rust, Docker, Linux"
+        "v": "Retrieval & Knowledge: Retrieval-Augmented Generation (RAG), GraphRAG, Knowledge Graphs, ArangoDB, Vector Databases, Hybrid BM25 + Vector Search"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Verification & Compliance: Formal Verification, Lean 4, NIST 800-53/171, MITRE ATT&CK, AI Governance"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Document AI: PDF Extraction, Layout & Table Extraction, Fixture Generation, Extraction Calibration"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux"
        }
       ]
      ]
@@ -500,10 +512,10 @@
    ]
   }
  ],
- "sourceCommit": "201eec1f8",
+ "sourceCommit": "cc7a9ff6b",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "3c32511f74403522863075547d52d912209b36b58f9aadea5085f289974e6414",
+ "sourceSha256": "b679309d53d27a4332b4fbc6225594af0b06bbc70b1fc1d25eb05388652500c7",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -581,6 +593,6 @@
    }
   ]
  },
- "pdfSha256": "2dfc1822a51c7e999bee524760828d9d32cc6f3ea5beb26c032dd89a22dab061",
- "pdfBytes": 158860
+ "pdfSha256": "b378635ff7b6676e97d69ae79c1778c88a2db942a5e35c3a51cfc64c559c9440",
+ "pdfBytes": 159294
 }

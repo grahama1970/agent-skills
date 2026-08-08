@@ -15,9 +15,7 @@ I build verifiable agentic AI systems for defense, aerospace, and compliance. On
 
 Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:
 
-- tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action.
-- pdf_oxide — my heavily diverged fork of yfedoseev/pdf_oxide (independent since Mar 2026): 430 commits and ~137K lines added, including Rust-core changes, a full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling.
-- agent-skills — 340+ reusable agent skills (~85% carrying deterministic sanity gates) and 90+ bounded worker roles, portable across Claude Code, Codex, and Gemini. Public repo, private runtime — effectively my living resume.
+- tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts with state tracking; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action. (pdf_oxide, agent-skills, and scillm are detailed under Public Work.)
 - Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
 
 Presented Agentic Cybersecurity research to Air Force Research Laboratory and received an AFRL "Hacker" challenge coin following the presentation.
@@ -64,15 +62,19 @@ Client work is mostly export-controlled, so here is the public, verifiable side 
 - [agent-skills](https://github.com/grahama1970/agent-skills) — my living resume: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime.
 - [tau](https://github.com/grahama1970/tau) — receipt-gated multi-agent harness. "Agents hallucinate. Tau contains them."
 - [pdf_oxide](https://github.com/grahama1970/pdf_oxide) — heavily diverged fork of yfedoseev's Rust PDF toolkit (430 commits, ~137K lines added: Rust-core changes, Python pipeline, PDF cloning, NIST validation).
-- scillm, extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public.
+- scillm — LLM gateway/proxy: provider routing and fallback across hosted and local models, batch pools, structured-output repair, and streaming transport for agent runtimes.
+- extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public.
 
 ## EDUCATION
 - Metis Data Science Program | 2017
 - Trinity University | BS, Finance and Marketing | 1994
 
 ## CORE COMPETENCIES
-- Agentic AI: Agentic AI, AI Agents, Multi-Agent Systems, Model Context Protocol (MCP), Prompt Engineering
-- LLM & Retrieval: Large Language Models (LLM), Generative AI, Retrieval-Augmented Generation (RAG), GraphRAG, LLM Evaluation, LLMOps
-- Knowledge & Data: Knowledge Graphs, ArangoDB, Vector Databases, Machine Learning
-- Verification & Compliance: Formal Verification, Lean 4, NIST Frameworks, AI Governance
-- Platform: Python, Rust, Docker, Linux
+- Evals & Quality: LLM Evaluation, Agentic Evaluation Harnesses, Adversarial/Blind Testing, Regression Gates, Ground-Truth Fixtures, Judge Panels
+- Observability & LLMOps: AI Observability, Drift Detection, Health Monitoring, Audit Trails & Receipts, Scheduled Pipelines, LLMOps
+- Agentic Orchestration: Multi-Agent Systems, AI Agents, DAG Contracts, State Tracking, Tool Calling, Model Context Protocol (MCP), Bounded Agent Roles, Prompt Engineering
+- LLM Platform: Large Language Models (LLM), Generative AI, LLM Gateway/Routing, Provider Fallback, Structured Outputs, Batch Inference, Guardrails
+- Retrieval & Knowledge: Retrieval-Augmented Generation (RAG), GraphRAG, Knowledge Graphs, ArangoDB, Vector Databases, Hybrid BM25 + Vector Search
+- Verification & Compliance: Formal Verification, Lean 4, NIST 800-53/171, MITRE ATT&CK, AI Governance
+- Document AI: PDF Extraction, Layout & Table Extraction, Fixture Generation, Extraction Calibration
+- ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux

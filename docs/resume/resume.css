@@ -42,7 +42,7 @@ h1 {
   font-family: "Fraunces Display", Georgia, serif;
   font-size: 25pt;
   font-weight: normal;
-  margin: 0 0 1.5pt;
+  margin: 0 0 1pt;
 }
 
 /* Section rules: brass hairline, the site's accent used structurally. */
@@ -69,12 +69,12 @@ p {
 }
 
 ul {
-  margin: 2pt 0 4.5pt 13pt;
+  margin: 2pt 0 4pt 13pt;
   padding: 0;
 }
 
 li {
-  margin: 0 0 1.5pt;
+  margin: 0 0 1pt;
 }
 
 /* !important is load-bearing: PyMuPDF >= 1.28 ships its own anchor rule that
