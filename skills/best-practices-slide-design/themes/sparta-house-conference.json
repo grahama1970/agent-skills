@@ -12,7 +12,7 @@
  "type_scale_pt": { "hero": 64, "section": 36, "title": 28, "lead": 24, "body": 20, "support": 16, "caption": 12 },
  "code_font": "Consolas",
  "chrome": {
-  "header_band": { "fill": "#065E7C", "title_color": "#FFFFFF", "metaphor_badge": "top-right circular line-icon, emotional register of the slide" },
+  "header_band": { "fill": "#076889", "title_color": "#FFFFFF", "metaphor_badge": "top-right BARE line-icon (no enclosing ring — corpus slideLayout22)" },
   "footer": { "left": "sponsor logo strip", "right": "distribution statement + page number", "rule": "#065E7C thin" }
  },
  "bullet_grammar": ["teal chevron >", "small square", "em-dash"],
