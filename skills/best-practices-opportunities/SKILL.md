@@ -24,6 +24,7 @@ provides:
 composes:
   - memory
   - brave-search
+  - extract-entities
 complies:
   - best-practices-skills
 runtime_self_improvement: none
@@ -86,6 +87,16 @@ MUST cite a JD/source quote:
 | document-extraction | PDF, OCR, layout understanding, IDP, multimodal documents, extraction, provenance |
 | agentic pipelines / LLM systems | orchestration, tool-use, memory, retrieval, multi-agent, guardrails, observability |
 | verification-oriented AI | evaluation harnesses, model verification, red-team/assurance, correctness |
+
+**Relevance is vocabulary-driven, NOT regex.** Mandate matching uses
+`/extract-entities` (deterministic Flashtext + fuzzy, zero LLM) against the
+`opportunity_vocabulary` ArangoDB collection — never substring regex, which
+mis-fires ("ai" inside unrelated words). Tune relevance by editing the
+vocabulary (concepts + aliases) in `/memory`, not by editing code
+(`best-practices-python` regex-only-known-grammar; `best-practices-arangodb`
+domain-terms-in-ArangoDB). This is a cheap first-pass filter; residual fuzzy
+false positives (e.g. "Agency"→"agentic") are resolved by the JD-reading
+evaluator (§1), which is the authoritative second pass.
 
 ## 4. Seniority & ownership
 

@@ -16,15 +16,18 @@ from __future__ import annotations
 import re
 from typing import Any
 
-# Mandate relevance for a federal/commercial signal (Graham's service areas).
-_MANDATE_RE = re.compile(
+from .relevance import mandate_hits as _entity_mandate_hits
+
+# Fallback ONLY when /extract-entities or /memory is unavailable. The primary
+# path is vocabulary-based whole-phrase matching via relevance.mandate_hits
+# (best-practices-python: no regex for classifying unknown text).
+_FALLBACK_MANDATE_RE = re.compile(
     r"artificial intelligence|machine learning|\bai\b|\bml\b|\bllm\b|autonom|"
     r"document|extraction|\bocr\b|\bidp\b|complian|assurance|verif|evaluat|"
-    r"cyber|software|\bdata\b|analytics|modern|digital|information technology|"
-    r"\br&d\b|research|model|algorithm|knowledge|language",
+    r"cyber|software|analytics|modern|digital|\br&d\b|research|model",
     re.I,
 )
-# Facilities/construction/services junk a raw SAM sweep returns — never a prospect.
+# Facilities/construction junk safety net (only bites the regex fallback path).
 _JUNK_RE = re.compile(
     r"floor|paint|hvac|abatement|roof|plumb|janitor|landscap|construct|renovat|"
     r"elevator|pavement|boiler|carpet|window replace|door replace|grounds|"
@@ -34,7 +37,11 @@ _JUNK_RE = re.compile(
 
 
 def _mandate_hits(text: str) -> list[str]:
-    return sorted({m.group(0).lower() for m in _MANDATE_RE.finditer(text or "")})
+    """Vocabulary match via /extract-entities; regex fallback if unavailable."""
+    hits = _entity_mandate_hits(text)
+    if hits is not None:
+        return hits
+    return sorted({m.group(0).lower() for m in _FALLBACK_MANDATE_RE.finditer(text or "")})
 
 
 def _is_real_opportunity_url(url: str) -> bool:

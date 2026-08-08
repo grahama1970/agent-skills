@@ -1,0 +1,36 @@
+"""Relevance module: fail-soft behavior (deterministic, no live skill needed)."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import monitor_opportunities.relevance as rel
+
+
+def test_empty_text_returns_none() -> None:
+    assert rel.mandate_hits("") is None
+    assert rel.mandate_hits("   ") is None
+
+
+def test_missing_extractor_fails_soft(monkeypatch) -> None:
+    # If /extract-entities is not present, return None (caller falls back), never raise.
+    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+    assert rel.mandate_hits("Staff AI Engineer") is None
+    assert rel.is_mandate_relevant("Staff AI Engineer") is None
+
+
+def test_prospect_queue_falls_back_to_regex_when_extractor_missing(monkeypatch) -> None:
+    # With the extractor unavailable, prospect_queue must still filter via regex fallback.
+    import monitor_opportunities.prospect_queue as pq
+
+    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+    sam = {
+        "opportunities": [
+            {"title": "Flooring Abatement", "url": "https://sam.gov/workspace/contract/opp/a/view"},
+            {"title": "Artificial Intelligence Document Extraction", "url": "https://sam.gov/workspace/contract/opp/b/view"},
+        ]
+    }
+    fed = pq.federal_prospects(sam)
+    orgs = [p["organization"] for p in fed]
+    assert "Artificial Intelligence Document Extraction" in orgs
+    assert not any("Flooring" in o for o in orgs)
