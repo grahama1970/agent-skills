@@ -19,6 +19,7 @@ export interface Doc {
   href?: string;
   visibility?: string;
   evidenceAccess?: string;
+  scoutState?: string;
   category?: string;
 }
 

@@ -2683,6 +2683,28 @@ a.fig:hover .l::after,
   border-radius: 2px;
   padding: 0.05rem 0.35rem;
 }
+.capsearch-scout {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.05rem 0.35rem;
+}
+.capsearch-scout--run-now {
+  color: var(--sage);
+  border-color: rgba(147, 162, 137, 0.45);
+}
+.capsearch-scout--setup-required {
+  color: var(--brass);
+  border-color: rgba(226, 172, 98, 0.4);
+}
+.capsearch-scout--abstract-only {
+  color: var(--faint);
+  border-style: dashed;
+}
 .capsearch-sum {
   margin: 0.25rem 0 0;
   font-size: 0.84rem;

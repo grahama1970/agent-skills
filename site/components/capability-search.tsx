@@ -3,6 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, runSearch, type Hit } from '@/lib/search';
 
+// Honest scout-readiness labels (webgpt Criterion 4): whether the public code
+// runs on a fresh clone or needs setup. No project claims "run now" without a
+// passing quickstart receipt, so a visitor knows what to expect before leaving.
+const SCOUT_LABEL: Record<string, string> = {
+  'run-now': 'runs on a fresh clone',
+  'setup-required': 'public code · setup required',
+  'public-blueprint': 'public blueprint',
+  'abstract-only': 'private · overview only',
+};
+
 const EXAMPLES = [
   'voice agent that remembers',
   'red team',
@@ -128,6 +138,11 @@ export function CapabilitySearch() {
                 <span className="capsearch-type">{r.type}</span>
                 <span className="capsearch-name">{r.name}</span>
                 {r.area && <span className="capsearch-area">{r.area}</span>}
+                {r.type === 'project' && r.scoutState && (
+                  <span className={`capsearch-scout capsearch-scout--${r.scoutState}`}>
+                    {SCOUT_LABEL[r.scoutState] ?? r.scoutState}
+                  </span>
+                )}
                 {r.visibility && r.visibility !== 'public' && (
                   <span className="capsearch-evi">evidence private</span>
                 )}

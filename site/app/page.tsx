@@ -110,12 +110,12 @@ export default function Home() {
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
                   <a
                     className="btn"
-                    href="mailto:graham@grahama.co"
-                    data-qid="hero:action:email"
-                    data-qs-action="HERO_EMAIL"
-                    title="Email graham@grahama.co"
+                    href="#search"
+                    data-qid="hero:action:search"
+                    data-qs-action="HERO_OPEN_SEARCH"
+                    title="Describe your problem — find a project that fits, free to try"
                   >
-                    Bring me the project you shelved <span className="arrow">→</span>
+                    Describe your problem <span className="arrow">↓</span>
                   </a>
                   <a
                     className="btn ghost"

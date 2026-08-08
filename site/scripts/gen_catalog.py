@@ -139,6 +139,14 @@ def main() -> None:
                 "href": v.get("href") or p.get("href"),
                 "visibility": v.get("visibility", "public"),
                 "evidenceAccess": v.get("evidence_access", "source"),
+                # Honest scout-readiness (webgpt Criterion 4). NONE claims
+                # "run-now": that requires a passing fresh-clone quickstart
+                # receipt, which no project has yet. Public working code needs
+                # named infra/credentials -> setup-required; private -> abstract.
+                "scoutState": (
+                    "abstract-only" if v.get("visibility", "public") != "public"
+                    else "setup-required"
+                ),
             }
         )
 

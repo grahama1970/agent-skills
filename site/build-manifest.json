@@ -1,5 +1,5 @@
 {
-  "source_commit": "3bd3cfdbc",
+  "source_commit": "caa60079b",
   "as_of": "2026-08-07",
   "stats": {
     "skills": 342,
@@ -11,10 +11,10 @@
     "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
   },
   "outputs": {
-    "inventory.json": "091310917d66039e6321b4f29f610bb23a84b8f94e65815df9b77b69dd833841",
-    "artifacts.json": "7da6ad51d84142adb929e389fa1ca49e24b8ad02dd3325f1e0b3937cdba0a1d6",
-    "catalog.json": "8d72a4ef4d2f37b8e2368ddd3c5fedac2c712be829d84bba3c4394f8c0c40250",
-    "research-map.json": "aa67d97a9f93d390ce79b3338d9cc42373abc9b48ffc9df21bc52cb9d91a440e",
-    "graph.json": "75c4646e9082c115e3d78c724cb70c7341557a15bf928553f4aa7523758e71aa"
+    "inventory.json": "6487c15965d3f7a6ef9c39a1c1a4b8e556446d3a3cdf43081f2c7ce3bdfc5277",
+    "artifacts.json": "8606dc148622376cdec0670ff35dfa3484ca17f8858b1d370bbfbfaafb97afbd",
+    "catalog.json": "216ef20872879adbf6b5ab9a985e0ff5e92340fe1536119a6ee891ede4ec7d0f",
+    "research-map.json": "950463cc2bced469e48dc5f9dd54d22ce0de3115211d3f1f079c7772840c2ea7",
+    "graph.json": "83a8a4bad14069ecd37db0bf510011c22c40835ae7082ac367cfc7ad6dec61d5"
   }
 }
