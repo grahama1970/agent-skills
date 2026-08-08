@@ -257,12 +257,20 @@ cd skills/persona-dream
 ./run.sh generate --persona embry --about "SPARTA evidence cases and orbital telemetry"
 
 # Deterministic 30-second planning run for short dream video generation.
+# video_plan is FAIL-CLOSED on phase_03_crew casting: it blocks with
+# reason: crew_casting_required unless --crew-dir points at the crew bundle:
+# crew_contract.json (a director/producer/scriptwriter selected from the candidate
+# pool) + technique_selection.json + script_dna_selection.json + look_lock.json.
+# The pipeline never fabricates the crew or those selections in code, never borrows
+# another run's crew, and never lets you skip the step; it requires and validates
+# them before composing a storyboard. Run crew casting first, pass its dir here.
 ./run.sh generate \
   --mode video_plan \
   --persona horus \
   --secondary-persona embry \
   --about "creating the SPARTA Explorer app" \
   --scene "Horus and Embry have tea under a patio umbrella on a 40k void world while Tyranids play in the background." \
+  --crew-dir /path/to/phase_03_crew \
   --duration-seconds 30
 
 # Live memory recall with explicit memory writeback.
@@ -308,8 +316,10 @@ and the memory API returned a successful response.
 dream_story.md
 dream_story.json
 character_scene_bible.json
+crew_contract.json
 technique_selection.json
 script_dna_selection.json
+look_lock.json
 storyboard.json
 timed_transcript.json
 multimodal_prompts.json
@@ -352,6 +362,18 @@ If the 7.5-second path is unstable, fall back to six 5-second clips:
 ## Fail-Closed Rules
 
 - If no residue is recalled, return `blocked` with `reason: no_dream`.
+- In `video_plan` mode, if the phase_03_crew casting bundle is absent from
+  `--crew-dir` or fails validation, return `blocked` with
+  `reason: crew_casting_required` and `required_step: phase_03_crew_casting`, and
+  do NOT compose a storyboard. The bundle is `crew_contract.json` (a
+  director/producer/scriptwriter selected from the candidate pool; schema
+  `persona_dream.phase_03_crew_contract.v1`) plus `technique_selection.json`,
+  `script_dna_selection.json`, and `look_lock.json`. crew_contract is upstream —
+  `selection_order` is producer→scriptwriter→director and its `downstream_required`
+  feeds `$cinematic-technique-selector`. This enforces the crew→technique/script-DNA
+  →storyboard order deterministically in code. The pipeline requires a real,
+  selected crew; hand-picking a crew, borrowing another run's crew, or skipping
+  the step is bespoking and is forbidden — the gate refuses it.
 - If `--about` is provided, use it to bias memory recall and dream prompts; do
   not treat the topic itself as residue unless memory returns supporting items.
 - Do not fabricate residue. Fixture residue is allowed only for tests and is

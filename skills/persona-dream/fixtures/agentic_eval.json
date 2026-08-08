@@ -2,12 +2,67 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring plus blinded listener-study collection surface smoke",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, and the video_plan crew-casting fail-closed gate (anti-bespoking guard)",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status and the listener rater page renderer can produce a blinded static collection artifact",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, and video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
+    {
+      "name": "video-plan-blocks-without-crew-casting",
+      "type": "adversarial",
+      "real_world": true,
+      "notes": "Anti-bespoking guard. A live video_plan run with NO crew-casting artifacts must fail closed with reason crew_casting_required and must NOT write a storyboard. This is the exact bypass an agent would take to skip $cinematic-technique-selector and hand-compose the storyboard; the skill must refuse it in code, not rely on operator discipline.",
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-eval-nocrew.XXXXXX); bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-nocrew --no-write-memory; RC=$?; echo \"gate_exit=$RC\"; test ! -f \"$D/storyboard.json\" && echo no_storyboard_written; exit $RC"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stdout_contains": [
+          "crew_casting_required",
+          "phase_03_crew_casting",
+          "no_storyboard_written"
+        ]
+      }
+    },
+    {
+      "name": "video-plan-blocks-when-crew-roster-skipped",
+      "type": "adversarial",
+      "real_world": true,
+      "notes": "The specific bespoking I committed: dismissing crew casting and treating the style artifacts (technique_selection/script_dna/look_lock) as sufficient. This run supplies ONLY those style artifacts -- NO crew_contract.json -- and video_plan must still block with crew_casting_required naming crew_contract.json missing, and write no storyboard. Encodes 'you may not skip or hand-pick the director/producer/scriptwriter; the phase_03_crew step must have run.'",
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-eval-noroster.XXXXXX); C=$(mktemp -d /tmp/persona-dream-eval-crewpartial.XXXXXX); for f in technique_selection.json script_dna_selection.json look_lock.json; do cp ../scripts/fixtures/crew/$f \"$C/$f\"; done; bash ../run.sh generate --mode video_plan --persona horus --secondary-persona embry --fixture ../scripts/fixtures/sample_residue.json --crew-dir \"$C\" --about 'creating the SPARTA Explorer app' --scene 'Horus and Embry have tea under a patio umbrella on a void world.' --duration-seconds 30 --output-dir \"$D\" --run-id eval-noroster --no-write-memory; RC=$?; test ! -f \"$D/storyboard.json\" && echo no_storyboard_written; exit $RC"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stdout_contains": [
+          "crew_casting_required",
+          "crew_contract.json",
+          "no_storyboard_written"
+        ]
+      }
+    },
+    {
+      "name": "video-plan-crew-gate-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "notes": "Runs the deterministic crew-gate suite (blocks without crew, blocks when roster missing, blocks on incomplete roster, blocks on schema-invalid crew, passes with the full phase_03_crew bundle) through the real run.sh entrypoint.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_video_plan_crew_gate.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      }
+    },
     {
       "name": "render-blinded-listener-rater-page",
       "type": "positive",

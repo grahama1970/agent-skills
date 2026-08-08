@@ -58,11 +58,46 @@ PY
 
 VIDEO_OUT_DIR="$(mktemp -d /tmp/persona-dream-video-plan-sanity.XXXXXX)"
 
+# Fail-closed gate: video_plan must BLOCK when the crew-casting artifacts
+# (Look Lock + Script DNA) are absent. This proves the storyboard cannot be
+# composed without $cinematic-technique-selector output.
+NOCREW_OUT_DIR="$(mktemp -d /tmp/persona-dream-nocrew-sanity.XXXXXX)"
+set +e
 "${SCRIPT_DIR}/run.sh" generate \
   --mode video_plan \
   --persona horus \
   --secondary-persona embry \
   --fixture "${SCRIPT_DIR}/scripts/fixtures/sample_residue.json" \
+  --about "creating the SPARTA Explorer app" \
+  --scene "Horus and Embry have tea under a patio table with an umbrella on a 40k void world where Tyranids are playing in the background." \
+  --duration-seconds 30 \
+  --output-dir "${NOCREW_OUT_DIR}" \
+  --run-id video-plan-nocrew-sanity \
+  --no-write-memory >/dev/null 2>&1
+NOCREW_RC=$?
+set -e
+"${PYTHON[@]}" - "${NOCREW_OUT_DIR}" "${NOCREW_RC}" <<'PY'
+import json, sys
+from pathlib import Path
+out, rc = Path(sys.argv[1]), int(sys.argv[2])
+if rc != 3:
+    raise SystemExit(f"expected exit 3 (crew_casting_required block), got {rc}")
+resp = json.loads((out / "response.json").read_text())
+assert resp["status"] == "blocked", resp
+assert resp["reason"] == "crew_casting_required", resp
+assert resp["required_step"] == "phase_03_crew_casting", resp
+assert "crew_contract.json" in resp["crew_casting"]["missing"], resp
+# The gate must NOT have composed a storyboard.
+assert not (out / "storyboard.json").exists(), "storyboard written despite missing crew casting"
+print(json.dumps({"status": "ok", "gate": "crew_casting_required", "exit": rc}, indent=2))
+PY
+
+"${SCRIPT_DIR}/run.sh" generate \
+  --mode video_plan \
+  --persona horus \
+  --secondary-persona embry \
+  --fixture "${SCRIPT_DIR}/scripts/fixtures/sample_residue.json" \
+  --crew-dir "${SCRIPT_DIR}/scripts/fixtures/crew" \
   --about "creating the SPARTA Explorer app" \
   --scene "Horus and Embry have tea under a patio table with an umbrella on a 40k void world where Tyranids are playing in the background." \
   --duration-seconds 30 \
@@ -80,6 +115,10 @@ required = [
     "dream_story.md",
     "dream_story.json",
     "character_scene_bible.json",
+    "crew_contract.json",
+    "technique_selection.json",
+    "script_dna_selection.json",
+    "look_lock.json",
     "storyboard.json",
     "timed_transcript.json",
     "multimodal_prompts.json",

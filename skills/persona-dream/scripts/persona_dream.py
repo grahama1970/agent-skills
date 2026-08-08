@@ -78,6 +78,23 @@ OPPOSITIONS = {
 
 PERSONA_MEDIA_ROOT = Path("/mnt/storage12tb/media/personas")
 COMFYUI_ROOT = Path("/home/graham/workspace/experiments/ComfyUI")
+SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
+
+# phase_03_crew casting artifacts that MUST exist before video_plan may compose a
+# storyboard. crew_contract.json is UPSTREAM (selection_order producer->scriptwriter->
+# director over a candidate pool; downstream_required feeds cinematic-technique-selector),
+# so it is the first-class artifact naming the crew. technique_selection / script_dna /
+# look_lock are the style/script-DNA selections it feeds. The pipeline NEVER fabricates
+# any of these in-code; it requires them and validates them, then fails closed. Skipping
+# crew casting (or hand-picking a crew) is the exact bespoking this gate forbids.
+CREW_CASTING_REQUIRED = [
+    ("crew_contract.json", None),  # phase_03_crew_contract.v1; roster shape-checked below
+    ("technique_selection.json", "cinematic_technique_selection.v1.schema.json"),
+    ("script_dna_selection.json", "cinematic_script_dna.v1.schema.json"),
+    ("look_lock.json", None),  # presence-checked; its schema is embedded in technique_selection
+]
+# Named crew roles the phase_03 casting step must select from the persona candidate pool.
+CREW_REQUIRED_ROLES = ("director", "producer", "scriptwriter")
 DEFAULT_SCILLM_BASE_URL = "http://localhost:4001"
 DEFAULT_COMFYUI_BASE_URL = "http://127.0.0.1:8188"
 DEFAULT_CHUTES_TURBOWANI2V_URL = "https://vonkaiser-turbowani2v.chutes.ai/generate"
@@ -1450,6 +1467,70 @@ def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any],
         "failed_gates": failed,
     }
 
+def _require_crew_casting(crew_dir: Path | None, out: Path) -> tuple[bool, dict[str, Any] | list[str]]:
+    """Fail-closed gate: video_plan may not compose a storyboard without the phase_03_crew
+    casting bundle (crew roster + Look Lock + Script DNA) produced upstream by the crew
+    casting / ``$cinematic-technique-selector`` step.
+
+    This enforces the SKILL.md order (crew_contract -> technique_selection / script_dna ->
+    storyboard). The gate is deterministic: it requires the artifacts to exist, be
+    schema-valid, and name a director/producer/scriptwriter selected from the candidate
+    pool. It does NOT synthesize the crew or the director's creative choices in code --
+    hand-picking a crew is bespoking and is exactly what this gate forbids. On success the
+    artifacts are copied into ``out`` and their names returned. On failure a ``blocked``
+    response dict is returned, mirroring the ``no_dream`` fail-closed pattern.
+    """
+    import jsonschema  # pinned dependency; imported locally to keep module import light
+
+    missing: list[str] = []
+    invalid: list[dict[str, str]] = []
+    if crew_dir is None:
+        missing = [name for name, _ in CREW_CASTING_REQUIRED]
+    else:
+        for name, schema_name in CREW_CASTING_REQUIRED:
+            src = crew_dir / name
+            if not src.is_file():
+                missing.append(name)
+                continue
+            try:
+                doc = json.loads(src.read_text())
+            except (json.JSONDecodeError, OSError) as exc:
+                invalid.append({"artifact": name, "error": f"unreadable: {exc}"})
+                continue
+            if schema_name is not None:
+                schema = json.loads((SCHEMA_DIR / schema_name).read_text())
+                try:
+                    jsonschema.Draft202012Validator(schema).validate(doc)
+                except jsonschema.ValidationError as exc:
+                    invalid.append({"artifact": name, "error": exc.message})
+            if name == "crew_contract.json":
+                # No standalone schema file for phase_03_crew_contract.v1; validate the
+                # load-bearing shape: a named crew selected from the candidate pool.
+                if doc.get("schema") != "persona_dream.phase_03_crew_contract.v1":
+                    invalid.append({"artifact": name, "error": "schema is not persona_dream.phase_03_crew_contract.v1"})
+                roster = doc.get("selected_crew")
+                if not isinstance(roster, dict):
+                    invalid.append({"artifact": name, "error": "selected_crew missing or not an object"})
+                else:
+                    for role in CREW_REQUIRED_ROLES:
+                        member = roster.get(role)
+                        if not isinstance(member, dict) or not str(member.get("name", "")).strip():
+                            invalid.append({"artifact": name, "error": f"selected_crew.{role}.name is missing"})
+
+    if missing or invalid:
+        return False, {
+            "missing": missing,
+            "invalid": invalid,
+            "crew_dir": str(crew_dir) if crew_dir else None,
+        }
+
+    copied: list[str] = []
+    for name, _ in CREW_CASTING_REQUIRED:
+        (out / name).write_text((crew_dir / name).read_text())  # type: ignore[union-attr]
+        copied.append(name)
+    return True, copied
+
+
 @app.command("generate")
 def generate(
     mode: str = typer.Option("static_dream", "--mode", help="Run mode: static_dream or video_plan."),
@@ -1458,6 +1539,7 @@ def generate(
     about: str | None = typer.Option(None, "--about", help="Optional topic to bias memory recall and dream prompts."),
     day: str | None = typer.Option(None, "--day", help="YYYY-MM-DD; blend that day's events in from memory. Ingest them first with ./run.sh ingest-day."),
     scene: str | None = typer.Option(None, "--scene", help="Explicit scene description for video_plan mode."),
+    crew_dir: Path | None = typer.Option(None, "--crew-dir", help="Directory holding the crew-casting artifacts (technique_selection.json, script_dna_selection.json, look_lock.json) from $cinematic-technique-selector. REQUIRED for video_plan: the storyboard is fail-closed on Look Lock + Script DNA."),
     duration_seconds: int = typer.Option(30, "--duration-seconds", min=12, max=60, help="Target video duration for video_plan mode."),
     limit: int = typer.Option(6, "--limit", min=1, max=12, help="Maximum residue items to use."),
     frames: int = typer.Option(6, "--frames", min=1, max=9, help="Number of frame prompts/contact-sheet cells."),
@@ -1483,6 +1565,7 @@ def generate(
         "limit": limit,
         "about": about,
         "scene": scene,
+        "crew_dir": str(crew_dir) if crew_dir else None,
         "duration_seconds": duration_seconds,
         "frames": frames,
         "fixture": str(fixture) if fixture else None,
@@ -1591,6 +1674,32 @@ def generate(
                 "where Tyranids are playing in the background. Horus and Embry are talking about creating "
                 "the SPARTA Explorer app in a friendly, personal way."
             )
+        ok, crew_result = _require_crew_casting(crew_dir, out)
+        if not ok:
+            response = {
+                "schema": "persona_dream.response.v1",
+                "status": "blocked",
+                "reason": "crew_casting_required",
+                "message": (
+                    "video_plan requires the phase_03_crew casting bundle before the "
+                    "storyboard: crew_contract.json (a director/producer/scriptwriter selected "
+                    "from the candidate pool) plus technique_selection.json, "
+                    "script_dna_selection.json, and look_lock.json. Run the crew casting / "
+                    "$cinematic-technique-selector step, then pass its directory with "
+                    "--crew-dir. The pipeline will not compose a storyboard without a real, "
+                    "selected crew; hand-picking or skipping the crew is forbidden."
+                ),
+                "required_step": "phase_03_crew_casting",
+                "required_artifacts": [name for name, _ in CREW_CASTING_REQUIRED],
+                "crew_casting": crew_result,
+                "run_id": run_id,
+                "output_dir": str(out),
+            }
+            _write_json(out / "response.json", response)
+            typer.echo(json.dumps(response, indent=2))
+            raise typer.Exit(3)
+        artifacts.extend(crew_result)  # type: ignore[arg-type]
+
         persona_ids = [persona.id] + ([secondary_persona.id] if secondary_persona else [])
         persona_source_context = _persona_context(persona_ids)
         sparta_source_context = _sparta_context()

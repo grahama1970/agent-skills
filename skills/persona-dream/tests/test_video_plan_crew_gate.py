@@ -1,0 +1,128 @@
+"""video_plan is fail-closed on crew casting (Look Lock + Script DNA).
+
+SKILL.md mandates that Kling/dialogue video runs obtain a structured Look Lock
+and Script DNA from ``$cinematic-technique-selector`` BEFORE any storyboard panel
+is composed. The deterministic enforcement lives in ``generate``'s video_plan
+branch: it requires ``technique_selection.json`` + ``script_dna_selection.json``
++ ``look_lock.json`` (the first two schema-validated) and blocks otherwise. The
+pipeline never fabricates these creative selections in code -- it requires them.
+
+This guards against the bespoking anti-pattern: composing a storyboard without
+the crew-casting step and reporting ``ok`` on an incomplete artifact set.
+
+The test drives ``run.sh`` (the real operator surface), not an in-process CLI
+runner, so it exercises the same path sanity.sh and operators use.
+"""
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+RUN = SKILL_ROOT / "run.sh"
+SCRIPTS = SKILL_ROOT / "scripts"
+RESIDUE = SCRIPTS / "fixtures" / "sample_residue.json"
+CREW = SCRIPTS / "fixtures" / "crew"
+
+
+def _run(out: Path, *extra: str) -> subprocess.CompletedProcess:
+    args = [
+        str(RUN), "generate",
+        "--mode", "video_plan",
+        "--persona", "horus",
+        "--secondary-persona", "embry",
+        "--fixture", str(RESIDUE),
+        "--about", "creating the SPARTA Explorer app",
+        "--scene", "Horus and Embry have tea under a patio umbrella on a void world.",
+        "--duration-seconds", "30",
+        "--output-dir", str(out),
+        "--run-id", "crew-gate-test",
+        "--no-write-memory",
+        *extra,
+    ]
+    return subprocess.run(args, capture_output=True, text=True, timeout=300)
+
+
+def test_video_plan_blocks_without_crew_casting(tmp_path):
+    out = tmp_path / "nocrew"
+    proc = _run(out)
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    resp = json.loads((out / "response.json").read_text())
+    assert resp["status"] == "blocked"
+    assert resp["reason"] == "crew_casting_required"
+    assert resp["required_step"] == "phase_03_crew_casting"
+    assert set(resp["crew_casting"]["missing"]) == {
+        "crew_contract.json",
+        "technique_selection.json",
+        "script_dna_selection.json",
+        "look_lock.json",
+    }
+    assert not (out / "storyboard.json").exists()
+
+
+def test_video_plan_blocks_when_crew_roster_missing(tmp_path):
+    """The named crew is mandatory: style artifacts present but NO crew_contract must
+    still block. This is the exact bespoking path -- skipping crew casting and going
+    straight to the storyboard -- and it must fail closed."""
+    partial = tmp_path / "stylenocrew"
+    partial.mkdir()
+    for name in ("technique_selection.json", "script_dna_selection.json", "look_lock.json"):
+        (partial / name).write_text((CREW / name).read_text())
+    out = tmp_path / "out"
+    proc = _run(out, "--crew-dir", str(partial))
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    resp = json.loads((out / "response.json").read_text())
+    assert resp["reason"] == "crew_casting_required"
+    assert resp["crew_casting"]["missing"] == ["crew_contract.json"]
+    assert not (out / "storyboard.json").exists()
+
+
+def test_video_plan_blocks_when_crew_roster_incomplete(tmp_path):
+    """A crew_contract present but missing a role (e.g. no director) must block --
+    a partial roster is not a cast crew."""
+    bad = tmp_path / "badroster"
+    bad.mkdir()
+    for name in ("technique_selection.json", "script_dna_selection.json", "look_lock.json"):
+        (bad / name).write_text((CREW / name).read_text())
+    contract = json.loads((CREW / "crew_contract.json").read_text())
+    contract["selected_crew"].pop("director", None)
+    (bad / "crew_contract.json").write_text(json.dumps(contract))
+    out = tmp_path / "out"
+    proc = _run(out, "--crew-dir", str(bad))
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    resp = json.loads((out / "response.json").read_text())
+    invalid = [i["error"] for i in resp["crew_casting"]["invalid"]]
+    assert any("director" in e for e in invalid), resp
+    assert not (out / "storyboard.json").exists()
+
+
+def test_video_plan_passes_with_valid_crew_casting(tmp_path):
+    out = tmp_path / "crew"
+    proc = _run(out, "--crew-dir", str(CREW))
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for name in ("crew_contract.json", "technique_selection.json",
+                 "script_dna_selection.json", "look_lock.json", "storyboard.json"):
+        assert (out / name).exists(), f"{name} missing from passing run"
+    resp = json.loads((out / "response.json").read_text())
+    assert resp["status"] != "blocked", resp
+
+
+def test_video_plan_blocks_when_technique_selection_schema_invalid(tmp_path):
+    bad = tmp_path / "badcrew"
+    bad.mkdir()
+    (bad / "technique_selection.json").write_text(json.dumps({"schema": "wrong"}))
+    (bad / "script_dna_selection.json").write_text(
+        (CREW / "script_dna_selection.json").read_text()
+    )
+    (bad / "look_lock.json").write_text((CREW / "look_lock.json").read_text())
+    out = tmp_path / "out"
+    proc = _run(out, "--crew-dir", str(bad))
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    resp = json.loads((out / "response.json").read_text())
+    assert resp["reason"] == "crew_casting_required"
+    invalid = [i["artifact"] for i in resp["crew_casting"]["invalid"]]
+    assert "technique_selection.json" in invalid
+    assert not (out / "storyboard.json").exists()
