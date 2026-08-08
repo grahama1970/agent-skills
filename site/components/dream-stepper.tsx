@@ -175,7 +175,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         className="stepper-view"
         data-qid="dream:action:zoom"
         data-qs-action="DREAM_ZOOM_FRAME"
-        title={`Open phase ${cur.n} frame full-screen`}
+        title="Zoom this dream frame"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -201,10 +201,10 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
             />
           ) : null,
         )}
-        <span className="hud hud-tl">
+        <span className="hud hud-tl" aria-hidden="true">
           [{cur.n}/{String(phases.length).padStart(2, '0')}] {cur.c}
         </span>
-        <span className="hud hud-br">
+        <span className="hud hud-br" aria-hidden="true">
           {cur.src} · {cur.dims}
         </span>
       </button>
