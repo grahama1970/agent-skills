@@ -211,7 +211,7 @@
      "title": [
       {
        "t": "text",
-       "v": "Lead Research Scientist (Agentic Formal Methods) | Self-Employed / Various Clients | Buffalo, NY"
+       "v": "Lead Research Scientist, Agentic Formal Methods | grahamaco (independent practice) | Buffalo, NY"
       }
      ],
      "period": "Jan 2024 - Feb 2025",
@@ -287,7 +287,7 @@
      "title": [
       {
        "t": "text",
-       "v": "Data Scientist | grahama | NYC · Remote"
+       "v": "Data Scientist | grahama (independent practice) | NYC · Remote"
       }
      ],
      "period": "Sep 2011 - Sep 2020",
@@ -547,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "0a085be9c",
+ "sourceCommit": "62fdc749f",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "f73fca220bbac37e74e29aaa0d4da5af6bb5fa8dfbaccffb6e02356ecb510494",
+ "sourceSha256": "10de1ab9e2cae9370d33d8b54671492152994373a772cacf7e14923fc5b8348f",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -568,7 +568,7 @@
    "end": "2020",
    "period": "Sep 2011 - Sep 2020",
    "label": "Data Scientist",
-   "org": "grahama"
+   "org": "grahama (independent practice)"
   },
   {
    "start": 2020,
@@ -581,8 +581,8 @@
    "start": 2024,
    "end": "2025",
    "period": "Jan 2024 - Feb 2025",
-   "label": "Lead Research Scientist (Agentic Formal Methods)",
-   "org": "Self-Employed"
+   "label": "Lead Research Scientist, Agentic Formal Methods",
+   "org": "grahamaco (independent practice)"
   },
   {
    "start": 2025,
@@ -628,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "2a52b917c37586fe7e88421aedbe9abbb50d2ee9137892d5d12fabcb651fd10c",
- "pdfBytes": 159457
+ "pdfSha256": "a2e596543be2302aca94d7d2d678cc059ffd38397f6682049141331f1aebfeb6",
+ "pdfBytes": 159466
 }

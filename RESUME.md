@@ -32,7 +32,7 @@ Independent AI engineering practice. Clients are primarily export-controlled (IT
 - Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records across 7K+ security-control records; hybrid BM25 + vector + multi-hop graph recall over 2.2M source chunks; ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
 - Core contributor to pi-mono (open-source agent framework/TUI): extension system, agent runtime, and TUI harness work, Feb–Jul 2026.
 
-### Lead Research Scientist (Agentic Formal Methods) | Self-Employed / Various Clients | Buffalo, NY
+### Lead Research Scientist, Agentic Formal Methods | grahamaco (independent practice) | Buffalo, NY
 Jan 2024 - Feb 2025
 - Designed verifiable agentic systems: a process-driven autoformalization workflow translating engineering requirements into Lean 4 proofs for safety-critical workflows.
 - Built probabilistic-deterministic self-correcting loops where LLM generation is validated by compiler/prover feedback.
@@ -45,7 +45,7 @@ Sep 2020 - Dec 2023
 - Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards.
 - Briefed the program and its collaborators at reviews and conferences nationally; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code, authoring the decks and demos myself.
 
-### Data Scientist | grahama | NYC · Remote
+### Data Scientist | grahama (independent practice) | NYC · Remote
 Sep 2011 - Sep 2020
 - Freelance data science practice across gaming, manufacturing, entertainment, education, health, and e-commerce; ITAR-rated work included.
 - Clients included Toyota, Sony, Fox, Boehringer Ingelheim, UCLA Med, Dartmouth (edu-tech prediction), and Domain Industries (manufacturing intelligence).
