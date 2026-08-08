@@ -48,7 +48,7 @@ Sep 2020 - Dec 2023
 - Briefed the program and its collaborators at reviews and conferences nationally; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code, authoring the decks and demos myself.
 
 ### Data Scientist | grahama | NYC · Remote
-Sep 2011 - Feb 2020
+Sep 2011 - Sep 2020
 - Freelance data science practice across gaming, manufacturing, entertainment, education, health, and e-commerce; ITAR-rated work included.
 - Clients included Toyota, Sony, Fox, Boehringer Ingelheim, UCLA Med, Dartmouth (edu-tech prediction), and Domain Industries (manufacturing intelligence).
 

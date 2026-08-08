@@ -299,7 +299,7 @@
        "v": "Data Scientist | grahama | NYC · Remote"
       }
      ],
-     "period": "Sep 2011 - Feb 2020",
+     "period": "Sep 2011 - Sep 2020",
      "blocks": [
       {
        "kind": "ul",
@@ -556,10 +556,10 @@
    ]
   }
  ],
- "sourceCommit": "71e6153c0",
+ "sourceCommit": "1f2fded1d",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "a81f0bd48bb62556b19e221a4945f1b37b8746fb2372830ac55b86c08a71d138",
+ "sourceSha256": "24877e5c223c3a0d10e1bed8762cbb0e2593e242a929c99be9a9087eae0c33be",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -575,7 +575,7 @@
   {
    "start": 2011,
    "end": "2020",
-   "period": "Sep 2011 - Feb 2020",
+   "period": "Sep 2011 - Sep 2020",
    "label": "Data Scientist",
    "org": "grahama"
   },
@@ -637,6 +637,6 @@
    }
   ]
  },
- "pdfSha256": "09758d70529de72395ad90eaf5cdbbdb786beea4d5d4f2dfcb9a95661742a61f",
- "pdfBytes": 159645
+ "pdfSha256": "5cc99f32a7a1394f2791f3876e2d08c616212a8f38130fda310483e87469c396",
+ "pdfBytes": 159652
 }
