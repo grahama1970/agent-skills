@@ -1,5 +1,5 @@
 {
-  "source_commit": "0a085be9c",
+  "source_commit": "1224eb28e",
   "as_of": "2026-08-08",
   "stats": {
     "skills": 344,
@@ -9,60 +9,60 @@
   "inputs": {
     "../README.md": "989c2d48e08ec095f5bc8edc58e1c75c29030dfaae16331c6d2c86638f7c82c2",
     "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c",
-    "../RESUME.md": "f73fca220bbac37e74e29aaa0d4da5af6bb5fa8dfbaccffb6e02356ecb510494"
+    "../RESUME.md": "117a7581de58377a3120a3d0d354d75ff5ca464fcb74340631015a49b146a29f"
   },
   "outputs": {
     "inventory.json": {
-      "sha256": "3b2b056bb5d6d89d87e547bd9f7255bae2591c52b3f20821714736f5a5adfcfc",
+      "sha256": "eafae9277c3c7de06fe87bcd09dab5b66d224e03b2fda6494380103ba722ed0c",
       "inputs": {}
     },
     "artifacts.json": {
-      "sha256": "9808ab3e5f5bc98539fee15e8e587d4c8fbc58d9fcafa83004591bec87c16780",
+      "sha256": "89f962bb25a8f0a119c899a5589984bbfce9c9db3bf79f74abc24efd1b857057",
       "inputs": {
-        "inventory.json": "3b2b056bb5d6d89d87e547bd9f7255bae2591c52b3f20821714736f5a5adfcfc"
+        "inventory.json": "eafae9277c3c7de06fe87bcd09dab5b66d224e03b2fda6494380103ba722ed0c"
       }
     },
     "catalog.json": {
-      "sha256": "9d947e0d56b4be6c6690853d76d68a7324bc676171ea9b983f1312639f9845c6",
+      "sha256": "4df93cbeafd9f78709e6f725502522ebf4a84520191e3633113a33fedfd34de4",
       "inputs": {
-        "inventory.json": "3b2b056bb5d6d89d87e547bd9f7255bae2591c52b3f20821714736f5a5adfcfc",
-        "project-visibility.json": "f2afe7c702a710cd058e9714fcda25a5035f4d7c1cd4817c472e535714445607",
-        "research-map.json": "286029e0d7185585144ac43711aa07b2a99a7ec9fbe40c0cd0a6b895f45a7d35",
+        "inventory.json": "eafae9277c3c7de06fe87bcd09dab5b66d224e03b2fda6494380103ba722ed0c",
+        "project-visibility.json": "6f6450250a00d3034d3ff700834c3e6021130a1b32543a0c7aca6750588759fa",
+        "research-map.json": "947362e41737fb8155ce9dba7d212030dfe5ad2fffc6efd67ae4367d83f75721",
         "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c"
       }
     },
     "research-map.json": {
-      "sha256": "286029e0d7185585144ac43711aa07b2a99a7ec9fbe40c0cd0a6b895f45a7d35",
+      "sha256": "947362e41737fb8155ce9dba7d212030dfe5ad2fffc6efd67ae4367d83f75721",
       "inputs": {
         "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c"
       }
     },
     "graph.json": {
-      "sha256": "882f6d0d285da0028f5ca80907349e05dc17fe0ae645d6968285df0d8288b38b",
+      "sha256": "35a1eae7df5b0b38f03f9800788157d6dd4b8c997fab75c3c151fb66ace7e201",
       "inputs": {
-        "project-visibility.json": "f2afe7c702a710cd058e9714fcda25a5035f4d7c1cd4817c472e535714445607",
-        "research-map.json": "286029e0d7185585144ac43711aa07b2a99a7ec9fbe40c0cd0a6b895f45a7d35",
+        "project-visibility.json": "6f6450250a00d3034d3ff700834c3e6021130a1b32543a0c7aca6750588759fa",
+        "research-map.json": "947362e41737fb8155ce9dba7d212030dfe5ad2fffc6efd67ae4367d83f75721",
         "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c"
       }
     },
     "project-visibility.json": {
-      "sha256": "f2afe7c702a710cd058e9714fcda25a5035f4d7c1cd4817c472e535714445607",
+      "sha256": "6f6450250a00d3034d3ff700834c3e6021130a1b32543a0c7aca6750588759fa",
       "inputs": {
         "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c",
         "private-abstracts.json": "063d4114cf57fce15c27ff07db1a6aa15dcd909e2a04cd86788286926868f704"
       }
     },
     "resume.json": {
-      "sha256": "6a07fb574aac35fbcd0db349a21e9406280fc9e645a344aa44c281f8b692d0bc",
+      "sha256": "9eaf180e4cdb989eed85fbce7e52c719a5e33ae13cb97e4f9334433dd4ab2bee",
       "inputs": {
-        "../RESUME.md": "f73fca220bbac37e74e29aaa0d4da5af6bb5fa8dfbaccffb6e02356ecb510494"
+        "../RESUME.md": "117a7581de58377a3120a3d0d354d75ff5ca464fcb74340631015a49b146a29f"
       }
     },
     "competence.json": {
-      "sha256": "d6c674466090ce6c5381da9a02dd2fed1f1fb103ff8e039a190c9b4be73c21e0",
+      "sha256": "f6108ee67fbcc6964963162401e390520fb5111feff66c1e9616fcffd62a111d",
       "inputs": {
-        "inventory.json": "3b2b056bb5d6d89d87e547bd9f7255bae2591c52b3f20821714736f5a5adfcfc",
-        "research-map.json": "286029e0d7185585144ac43711aa07b2a99a7ec9fbe40c0cd0a6b895f45a7d35",
+        "inventory.json": "eafae9277c3c7de06fe87bcd09dab5b66d224e03b2fda6494380103ba722ed0c",
+        "research-map.json": "947362e41737fb8155ce9dba7d212030dfe5ad2fffc6efd67ae4367d83f75721",
         "content.json": "39ea674acb46d31e56c65a7c9cf2144396e87df9c7308c8c0deba92a90bef71c"
       }
     }

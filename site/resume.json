@@ -547,7 +547,7 @@
    ]
   }
  ],
- "sourceCommit": "088c9b7d5",
+ "sourceCommit": "1224eb28e",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
  "sourceSha256": "117a7581de58377a3120a3d0d354d75ff5ca464fcb74340631015a49b146a29f",
@@ -628,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "a2e596543be2302aca94d7d2d678cc059ffd38397f6682049141331f1aebfeb6",
- "pdfBytes": 159466
+ "pdfSha256": "e5e6390620e6e69d927a4a6ecb066e4f4e83c751736d1b354ab99f7090f93b06",
+ "pdfBytes": 159469
 }
