@@ -7,9 +7,16 @@ Inputs/Outputs/Failures: See functions below.
 
 from __future__ import annotations
 
+import hashlib
+
+import pytest
+
 from battle_skill.adaptive_red_blue_lineage_canary import (
+    _assert_pipeline_slots,
     _campaign_status,
     _generation_2_objective,
+    _preserve_selected_artifact,
+    _reviewed_manifest,
 )
 
 
@@ -68,3 +75,209 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
         "BLOCKED",
         "spawn_inheritance_or_selection_blocked",
     )
+
+
+def test_preserved_slot_survives_source_mutation_and_detects_slot_mutation(
+    tmp_path,
+) -> None:
+    source = tmp_path / "pipeline" / "selected.py"
+    source.parent.mkdir()
+    source.write_bytes(b"ORIGINAL\n")
+    expected = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    slot = _preserve_selected_artifact(
+        generation_dir=tmp_path / "generation-1",
+        generation=1,
+        team="blue",
+        source=source,
+        expected_sha256=expected,
+    )
+
+    slot_path = (
+        tmp_path
+        / "generation-1"
+        / "reviewed"
+        / "immutable-slots"
+        / "generation-1-blue.py"
+    )
+    assert slot["slot_key"] == "generation-1:blue"
+    assert slot["generation"] == 1
+    assert slot["team"] == "blue"
+    assert slot["path"] == str(slot_path)
+    assert slot["source_path"] == str(source)
+    assert slot["expected_sha256"] == expected
+    assert slot["preserved_sha256"] == hashlib.sha256(
+        slot_path.read_bytes()
+    ).hexdigest()
+    assert slot["regular_file"] is True
+
+    pipeline = {
+        "selected_artifact_sha256": expected,
+        "immutable_slot": slot,
+    }
+    source.write_bytes(b"MUTATED SOURCE\n")
+    _assert_pipeline_slots({"red": pipeline, "blue": pipeline})
+
+    slot_path.chmod(0o644)
+    slot_path.write_bytes(b"MUTATED SLOT\n")
+    with pytest.raises(RuntimeError, match="immutable slot changed"):
+        _assert_pipeline_slots({"red": pipeline, "blue": pipeline})
+
+
+def test_immutable_slot_blocks_hash_mismatch_symlink_and_overwrite(tmp_path) -> None:
+    source = tmp_path / "pipeline" / "selected.py"
+    source.parent.mkdir()
+    source.write_bytes(b"ORIGINAL\n")
+    expected = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    with pytest.raises(RuntimeError, match="changed before slot preservation"):
+        _preserve_selected_artifact(
+            generation_dir=tmp_path / "generation-1",
+            generation=1,
+            team="red",
+            source=source,
+            expected_sha256="0" * 64,
+        )
+
+    symlink = tmp_path / "pipeline" / "selected-link.py"
+    symlink.symlink_to(source)
+    with pytest.raises(RuntimeError, match="not a regular file"):
+        _preserve_selected_artifact(
+            generation_dir=tmp_path / "generation-1",
+            generation=1,
+            team="red",
+            source=symlink,
+            expected_sha256=expected,
+        )
+
+    slot = _preserve_selected_artifact(
+        generation_dir=tmp_path / "generation-1",
+        generation=1,
+        team="red",
+        source=source,
+        expected_sha256=expected,
+    )
+    with pytest.raises(FileExistsError):
+        _preserve_selected_artifact(
+            generation_dir=tmp_path / "generation-1",
+            generation=1,
+            team="red",
+            source=source,
+            expected_sha256=expected,
+        )
+    slot_path = (
+        tmp_path
+        / "generation-1"
+        / "reviewed"
+        / "immutable-slots"
+        / "generation-1-red.py"
+    )
+    assert hashlib.sha256(slot_path.read_bytes()).hexdigest() == slot[
+        "preserved_sha256"
+    ]
+
+
+def test_reviewed_manifest_uses_immutable_slot_not_mutable_source(
+    tmp_path, monkeypatch
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    provider_paths = {}
+    pipeline_results = {}
+    teams = []
+
+    for team in ("red", "blue"):
+        provider = source_root / f"{team}-provider.py"
+        provider.write_bytes(f"{team} provider\n".encode("utf-8"))
+        receipt = source_root / f"{team}-subagent-receipt.json"
+        receipt.write_text("{}\n", encoding="utf-8")
+        materialization = source_root / team / "materialized-artifact-receipt.json"
+        materialization.parent.mkdir()
+        materialization.write_text("{}\n", encoding="utf-8")
+        provider_paths[team] = provider
+        teams.append(
+            {
+                "team": team,
+                "subagent_receipt": str(receipt),
+                "materialized_artifact": {
+                    "status": "PASS",
+                    "path": str(provider),
+                },
+            }
+        )
+
+    def fake_pipeline(**kwargs):
+        team = kwargs["team"]
+        selected = tmp_path / "pipeline" / team / "selected.py"
+        selected.parent.mkdir(parents=True, exist_ok=True)
+        selected.write_bytes(f"{team} selected\n".encode("utf-8"))
+        handoff = tmp_path / "pipeline" / team / "handoff.json"
+        compile_receipt = tmp_path / "pipeline" / team / "compile.json"
+        review_receipt = tmp_path / "pipeline" / team / "review.json"
+        for path in (handoff, compile_receipt, review_receipt):
+            path.write_text("{}\n", encoding="utf-8")
+        result = {
+            "status": "PASS",
+            "selected_artifact_path": selected,
+            "selected_artifact_sha256": hashlib.sha256(
+                selected.read_bytes()
+            ).hexdigest(),
+            "handoff_path": handoff,
+            "compile_receipt_path": compile_receipt,
+            "review_receipt_path": review_receipt,
+        }
+        pipeline_results[team] = result
+        return result
+
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary.run_team_artifact_pipeline",
+        fake_pipeline,
+    )
+
+    reviewed, pipelines = _reviewed_manifest(
+        battle_id="battle-004",
+        run_id="run-1",
+        generation=2,
+        generation_dir=tmp_path / "generation-2",
+        manifest={"teams": teams},
+        target_identity_sha256="a" * 64,
+        docker_image="python:3.12-slim",
+        genomes={
+            "red": {"sha256": "b" * 64},
+            "blue": {"sha256": "c" * 64},
+        },
+    )
+
+    for entry in reviewed["teams"]:
+        team = entry["team"]
+        materialized = entry["materialized_artifact"]
+        slot = pipelines[team]["immutable_slot"]
+        slot_path = (
+            tmp_path
+            / "generation-2"
+            / "reviewed"
+            / "immutable-slots"
+            / f"generation-2-{team}.py"
+        )
+        assert slot["slot_key"] == f"generation-2:{team}"
+        assert slot["generation"] == 2
+        assert slot["team"] == team
+        assert slot["path"] == str(slot_path)
+        assert slot["source_path"] == str(
+            pipeline_results[team]["selected_artifact_path"]
+        )
+        assert materialized["path"] == str(slot_path)
+        assert materialized["immutable_slot"] == slot
+        assert pipelines[team]["selected_artifact_path"] == str(slot_path)
+        assert pipelines[team]["selected_artifact_source_path"] == str(
+            pipeline_results[team]["selected_artifact_path"]
+        )
+        assert materialized["path"] != str(provider_paths[team])
+        assert materialized["path"] != str(
+            pipeline_results[team]["selected_artifact_path"]
+        )
+        assert hashlib.sha256(slot_path.read_bytes()).hexdigest() == pipelines[team][
+            "selected_artifact_sha256"
+        ]
+
+    _assert_pipeline_slots(pipelines)

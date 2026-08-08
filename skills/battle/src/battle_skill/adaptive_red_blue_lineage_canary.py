@@ -1172,9 +1172,17 @@ def _reviewed_manifest(
         )
         if pipeline["status"] != "PASS":
             raise RuntimeError(f"{team} artifact pipeline blocked")
+        slot = _preserve_selected_artifact(
+            generation_dir=generation_dir,
+            generation=generation,
+            team=team,
+            source=Path(pipeline["selected_artifact_path"]),
+            expected_sha256=str(pipeline["selected_artifact_sha256"]),
+        )
         materialized["raw_provider_path"] = materialized["path"]
-        materialized["path"] = str(pipeline["selected_artifact_path"])
+        materialized["path"] = slot["path"]
         materialized["pipeline_handoff"] = str(pipeline["handoff_path"])
+        materialized["immutable_slot"] = slot
         entry["materialized"] = materialized
         pipelines[team] = {
             "status": pipeline["status"],
@@ -1183,7 +1191,9 @@ def _reviewed_manifest(
             "compile_receipt_sha256": _sha(pipeline["compile_receipt_path"]),
             "review_receipt_sha256": _sha(pipeline["review_receipt_path"]),
             "handoff_path": str(pipeline["handoff_path"]),
-            "selected_artifact_path": str(pipeline["selected_artifact_path"]),
+            "selected_artifact_source_path": str(pipeline["selected_artifact_path"]),
+            "selected_artifact_path": slot["path"],
+            "immutable_slot": slot,
         }
     _write_json(generation_dir / "reviewed" / "reviewed-manifest.json", reviewed)
     return reviewed, pipelines
@@ -1223,6 +1233,7 @@ def _judge_reviewed_generation(
     input_path = _write_json(
         generation_dir / "judge" / "reviewed-judge-pair-input.json", judge_input
     )
+    _assert_pipeline_slots(pipelines)
     judge = _judge_tau_artifacts(
         out_dir=generation_dir,
         scenario=scenario,
@@ -1242,6 +1253,61 @@ def _judge_reviewed_generation(
         }
     )
     return judge
+
+
+def _preserve_selected_artifact(
+    *,
+    generation_dir: Path,
+    generation: int,
+    team: str,
+    source: Path,
+    expected_sha256: str,
+) -> dict[str, Any]:
+    if team not in {"red", "blue"}:
+        raise RuntimeError(f"invalid immutable slot team: {team}")
+    if source.is_symlink() or not source.is_file():
+        raise RuntimeError(f"selected artifact is not a regular file: {source}")
+    payload = source.read_bytes()
+    actual_sha256 = hashlib.sha256(payload).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise RuntimeError(f"{team} selected artifact changed before slot preservation")
+    suffix = source.suffix or ".bin"
+    slot_path = (
+        generation_dir
+        / "reviewed"
+        / "immutable-slots"
+        / f"generation-{generation}-{team}{suffix}"
+    )
+    slot_path.parent.mkdir(parents=True, exist_ok=True)
+    with slot_path.open("xb") as handle:
+        handle.write(payload)
+    slot_path.chmod(0o444)
+    slot_sha256 = _sha(slot_path)
+    if slot_sha256 != expected_sha256:
+        raise RuntimeError(f"{team} immutable slot differs from selected artifact")
+    return {
+        "slot_key": f"generation-{generation}:{team}",
+        "generation": generation,
+        "team": team,
+        "path": str(slot_path),
+        "expected_sha256": expected_sha256,
+        "preserved_sha256": slot_sha256,
+        "source_path": str(source),
+        "regular_file": slot_path.is_file() and not slot_path.is_symlink(),
+    }
+
+
+def _assert_pipeline_slots(pipelines: dict[str, dict[str, Any]]) -> None:
+    for team in ("red", "blue"):
+        pipeline = pipelines[team]
+        slot = pipeline.get("immutable_slot")
+        if not isinstance(slot, dict):
+            raise RuntimeError(f"{team} immutable slot is missing")
+        path = Path(str(slot.get("path") or ""))
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError(f"{team} immutable slot is not a regular file")
+        if _sha(path) != pipeline.get("selected_artifact_sha256"):
+            raise RuntimeError(f"{team} immutable slot changed during Judge")
 
 
 def _provider_genomes(
