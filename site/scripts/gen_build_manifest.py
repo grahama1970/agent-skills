@@ -32,6 +32,7 @@ SURFACES = {
     "research-map.json": "sourceCommit",
     "graph.json": "sourceCommit",
     "project-visibility.json": "sourceCommit",
+    "resume.json": "sourceCommit",
 }
 # Immutable historical fixtures the page renders: NOT regenerated per commit —
 # they capture a real PAST run. They carry their own evidence-source (a run id /
@@ -41,7 +42,7 @@ FIXTURES = {
     "proof-explainer.json": "run",          # the real Tau run that designed the site
     "generated/battle-lineage.json": "sourceSha256",  # recorded battle-004 fixture
 }
-INPUTS = ["../README.md", "content.json"]
+INPUTS = ["../README.md", "content.json", "../RESUME.md"]
 
 # Direct upstream inputs each output consumes. Recording their digests in the
 # manifest makes a green gate prove not just "generated at HEAD" but "generated
@@ -54,6 +55,9 @@ INPUT_DEPS = {
     "catalog.json": ["inventory.json", "project-visibility.json", "research-map.json", "content.json"],
     "graph.json": ["project-visibility.json", "research-map.json", "content.json"],
     "artifacts.json": ["inventory.json"],
+    # RESUME.md is the resume's only upstream; digesting it here means a green
+    # gate proves /resume was generated from exactly the committed Markdown.
+    "resume.json": ["../RESUME.md"],
 }
 
 

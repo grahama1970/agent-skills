@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-const REPO = 'https://github.com/grahama1970/agent-skills';
-
 const LINKS = [
   { id: 'work', label: 'Work' },
   { id: 'dream', label: 'Dream' },
@@ -12,7 +10,12 @@ const LINKS = [
   { id: 'about', label: 'About' },
 ];
 
-export function SiteNav() {
+/**
+ * `hrefBase` lets a subpage (e.g. /resume) reuse this nav: the section links
+ * are homepage anchors, so from anywhere but `/` they must resolve to `/#id`
+ * instead of a dead in-page fragment.
+ */
+export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
   const [active, setActive] = useState('');
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export function SiteNav() {
       <div className="wrap">
         <a
           className="wordmark"
-          href="#top"
+          href={`${hrefBase}#top`}
           data-qid="nav:link:home"
           data-qs-action="NAV_GOTO_TOP"
           title="Back to top"
@@ -61,7 +64,7 @@ export function SiteNav() {
           {LINKS.map((l) => (
             <a
               key={l.id}
-              href={`#${l.id}`}
+              href={`${hrefBase}#${l.id}`}
               data-qid={`nav:link:${l.id}`}
               data-qs-action={`NAV_GOTO_${l.id.toUpperCase()}`}
               title={`Go to ${l.label}`}
@@ -118,9 +121,7 @@ export function SiteNav() {
             </a>
             <a
               className="nav-icon"
-              href={`${REPO}/blob/main/RESUME.md`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/resume"
               data-qid="nav:link:resume"
               data-qs-action="NAV_RESUME"
               title="Résumé"

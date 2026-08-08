@@ -92,7 +92,11 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Build resume PDF [skip ci]"
+          # No [skip ci]: site-deploy watches docs/resume/**, and grahama.co/resume
+          # serves this exact file. Skipping CI here would deploy the site from the
+          # RESUME.md commit — new page text, previous PDF. This workflow does not
+          # trigger on the generated PDF path, so the commit cannot re-trigger it.
+          git commit -m "Build resume PDF"
           git push origin HEAD:main
 
       - uses: actions/upload-artifact@v4

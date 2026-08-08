@@ -3671,3 +3671,285 @@ h1 .proof-origin::after {
     background: var(--brass);
   }
 }
+
+/* ============================================================
+   /resume — the formal résumé surface.
+
+   Deliberately the calmest page on the site: no constellation, no
+   motion, no hero. It reuses the shared tokens and the site nav, so
+   it reads as the same publication, but a recruiter skimming for
+   twenty seconds meets a document rather than an exhibit.
+
+   The print block below is load-bearing: the screen surface is dark,
+   and someone who hits Cmd+P must get ink-on-paper, not a black
+   flood. Print inverts to the same light treatment the PDF uses.
+   ============================================================ */
+
+.cv {
+  width: min(78ch, 92vw);
+  margin: 0 auto;
+  padding: calc(var(--gut) * 2.4) 0 calc(var(--gut) * 2);
+}
+
+.cv-head h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1.02;
+  margin: 0 0 0.5rem;
+}
+
+.cv-contact {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 0 0 0.9rem;
+}
+
+/* The site's hero claim, restated in the display face. */
+.cv-lede {
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  line-height: 1.35;
+  margin: 0 0 1.4rem;
+}
+
+/* Sticks just beneath the 58px .topbar so the download stays reachable
+   through a long resume without a second row of navigation. */
+.cv-actions {
+  background: var(--ink);
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  padding: 0.7rem 0;
+  position: sticky;
+  top: 58px;
+  z-index: 400;
+}
+
+.cv .cv-btn {
+  align-items: center;
+  border: 1px solid var(--line);
+  display: inline-flex;
+  gap: 0.45rem;
+  min-height: 36px; /* comfortable touch target on mobile */
+  border-radius: 2px;
+  color: var(--text);
+  display: inline-block;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  padding: 0.5rem 1.05rem;
+  text-decoration: none;
+  transition: background var(--dur-state) var(--ease-state),
+    border-color var(--dur-state) var(--ease-state);
+}
+
+.cv .cv-btn svg {
+  height: 15px;
+  width: 15px;
+  flex: none;
+}
+
+.cv .cv-btn:hover {
+  background: #e2ac621a;
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+/* Solid brass carries the primary action; the site's accent does the work a
+   neutral white button would do elsewhere. Ink text keeps AA on brass. */
+.cv .cv-btn-primary {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cv .cv-btn-primary:hover {
+  background: #efc07c;
+  border-color: #efc07c;
+  color: var(--ink);
+}
+
+/* The global `section` rule gives the homepage's full-bleed bands 64-140px of
+   vertical padding. A resume is a continuous document, not a series of bands,
+   so these sections opt out and use ordinary document rhythm instead. */
+.cv-intro,
+.cv-section {
+  margin-top: 2.1rem;
+  padding-block: 0;
+}
+
+.cv-section > h2 {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.cv p {
+  color: var(--text);
+  line-height: 1.62;
+  margin: 0 0 0.85rem;
+}
+
+.cv ul {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+}
+
+.cv li {
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0 0 0.5rem;
+  padding-left: 1.05rem;
+  position: relative;
+}
+
+.cv li strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.cv li::before {
+  color: var(--brass);
+  content: '·';
+  left: 0.25rem;
+  position: absolute;
+}
+
+.cv-role {
+  margin: 0 0 1.6rem;
+}
+
+.cv-role h3 {
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 0.15rem;
+}
+
+/* A date is machine-ish metadata, so it takes the mono voice. */
+.cv-period {
+  color: var(--faint);
+  font-size: 0.82rem;
+  margin: 0 0 0.55rem !important;
+}
+
+.cv a {
+  color: var(--brass);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.cv a:hover {
+  border-bottom-color: var(--brass);
+}
+
+.cv-foot {
+  border-top: 1px solid var(--line-2);
+  margin-top: 2.6rem;
+  padding-top: 1rem;
+}
+
+.cv-foot p {
+  color: var(--faint);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .cv {
+    width: 92vw;
+    padding-top: calc(var(--gut) * 1.4);
+  }
+  .cv .cv-btn {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.7rem;
+  }
+  /* Tighter rhythm keeps a section heading visually attached to its first
+     entry instead of floating in whitespace on a small screen. */
+  .cv-intro,
+  .cv-section {
+    margin-top: 1.6rem;
+  }
+  .cv-section > h2 {
+    letter-spacing: 0.14em;
+    line-height: 1.35;
+    margin-bottom: 0.7rem;
+  }
+}
+
+/* Below this the two labels crowd the row, so the secondary goes icon-only
+   and the primary call to action keeps its words. */
+@media (max-width: 400px) {
+  .cv .cv-btn:not(.cv-btn-primary) span {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 12mm 15mm;
+  }
+  /* Chrome honours this for background/ink fidelity. */
+  html,
+  body,
+  .cv {
+    background: #fff !important;
+    color: #0c0908 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Chrome, nav, and anything that is not the document itself. */
+  .topbar,
+  .cv-actions,
+  .cv-foot,
+  .grain,
+  .ambient {
+    display: none !important;
+  }
+  .cv {
+    width: auto;
+    padding: 0;
+  }
+  .cv p,
+  .cv li,
+  .cv-role h3,
+  .cv-lede {
+    color: #0c0908 !important;
+  }
+  .cv-contact,
+  .cv-period,
+  .cv-foot p {
+    color: #5d5147 !important;
+  }
+  .cv-section > h2 {
+    border-bottom-color: #e2ac62 !important;
+    color: #0c0908 !important;
+  }
+  /* Print keeps the AA-measured ember, matching the PDF stylesheet. */
+  .cv a {
+    color: #a8501f !important;
+  }
+  .cv li::before {
+    color: #e2ac62 !important;
+  }
+  .cv-role {
+    break-inside: avoid;
+  }
+  .cv-section > h2 {
+    break-after: avoid;
+  }
+}

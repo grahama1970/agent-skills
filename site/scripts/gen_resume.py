@@ -1,0 +1,284 @@
+#!/usr/bin/env python3
+"""Regenerate site/resume.json (and the two download assets) from RESUME.md.
+
+RESUME.md at the repo root is the single source of truth for the resume. This
+generator parses it into a structured surface the /resume route renders, and
+copies the two export artifacts into site/public/:
+
+    public/resume.md   <- RESUME.md verbatim
+    public/resume.pdf  <- docs/resume/graham-anderson-resume.pdf
+
+so grahama.co/resume, grahama.co/resume.md, and grahama.co/resume.pdf are all
+the same content at one commit. The PDF is copied, never rebuilt here: the
+resume-pdf workflow owns that build, and copying keeps the file served at
+/resume.pdf byte-identical to the one served from GitHub.
+
+Inline markup is emitted as token arrays rather than HTML so the page renders
+through React elements and never needs dangerouslySetInnerHTML.
+
+Run from anywhere; writes site/resume.json.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+SITE = REPO / "site"
+SOURCE = REPO / "RESUME.md"
+PDF_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.pdf"
+OUT = SITE / "resume.json"
+
+# A role's first line is its employment period when it looks like one; pulling
+# it out lets the page render dates as their own meta line instead of burying
+# them in the opening sentence.
+PERIOD_RE = re.compile(r"^[A-Z][a-z]{2} \d{4}\s*[-–]\s*(Present|[A-Z][a-z]{2} \d{4}|\d{4})$")
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+STRONG_RE = re.compile(r"\*\*([^*]+)\*\*")
+CODE_RE = re.compile(r"`([^`]+)`")
+# Ordered so the outer alternation never splits a link's label or target.
+INLINE_RE = re.compile(
+    f"{LINK_RE.pattern}|{STRONG_RE.pattern}|{CODE_RE.pattern}"
+)
+
+
+def inline(text: str) -> list[dict[str, str]]:
+    """Split one line of Markdown into renderable inline tokens."""
+    tokens: list[dict[str, str]] = []
+    pos = 0
+    for m in INLINE_RE.finditer(text):
+        if m.start() > pos:
+            tokens.append({"t": "text", "v": text[pos : m.start()]})
+        if m.group(1) is not None:  # [label](href)
+            tokens.append({"t": "link", "v": m.group(1), "href": m.group(2)})
+        elif m.group(3) is not None:  # **bold**
+            tokens.append({"t": "strong", "v": m.group(3)})
+        else:  # `code`
+            tokens.append({"t": "code", "v": m.group(4)})
+        pos = m.end()
+    if pos < len(text):
+        tokens.append({"t": "text", "v": text[pos:]})
+    return [t for t in tokens if t.get("v")]
+
+
+def _flush(buf: list[str], blocks: list[dict]) -> None:
+    """Emit buffered paragraph lines as one paragraph block."""
+    if buf:
+        blocks.append({"kind": "p", "inline": inline(" ".join(buf))})
+        buf.clear()
+
+
+def parse(md: str) -> dict:
+    """Parse the resume Markdown into the structure the page renders."""
+    lines = md.splitlines()
+    doc: dict = {"name": "", "contact": [], "lede": "", "intro": [], "sections": []}
+    section: dict | None = None
+    role: dict | None = None
+    buf: list[str] = []
+    items: list[list[dict]] | None = None
+
+    def target_blocks() -> list[dict]:
+        if role is not None:
+            return role["blocks"]
+        if section is not None:
+            return section["blocks"]
+        return doc["intro"]
+
+    def close_list() -> None:
+        nonlocal items
+        if items:
+            target_blocks().append({"kind": "ul", "items": items})
+        items = None
+
+    for raw in lines:
+        line = raw.rstrip()
+        stripped = line.strip()
+
+        if not stripped:
+            _flush(buf, target_blocks())
+            close_list()
+            continue
+
+        if stripped.startswith("# ") and not stripped.startswith("##"):
+            doc["name"] = stripped[2:].strip()
+            continue
+
+        if stripped.startswith("## "):
+            _flush(buf, target_blocks())
+            close_list()
+            role = None
+            section = {"title": stripped[3:].strip(), "blocks": []}
+            doc["sections"].append(section)
+            continue
+
+        if stripped.startswith("### "):
+            _flush(buf, target_blocks())
+            close_list()
+            if section is None:
+                raise SystemExit("resume parse failed: role before any section heading")
+            role = {"kind": "role", "title": inline(stripped[4:].strip()), "period": "", "blocks": []}
+            section["blocks"].append(role)
+            continue
+
+        if stripped.startswith("> "):
+            _flush(buf, target_blocks())
+            doc["lede"] = stripped[2:].strip()
+            continue
+
+        if stripped.startswith("- "):
+            _flush(buf, target_blocks())
+            if items is None:
+                items = []
+            items.append(inline(stripped[2:].strip()))
+            continue
+
+        # The contact line is the first body line, immediately under the name.
+        if doc["name"] and not doc["contact"] and not doc["sections"] and not buf:
+            doc["contact"] = inline(stripped)
+            continue
+
+        if role is not None and not role["period"] and not role["blocks"] and PERIOD_RE.match(stripped):
+            role["period"] = stripped
+            continue
+
+        close_list()
+        buf.append(stripped)
+
+    _flush(buf, target_blocks())
+    close_list()
+
+    if not doc["name"]:
+        raise SystemExit("resume parse failed: no top-level heading")
+    if not doc["sections"]:
+        raise SystemExit("resume parse failed: no sections")
+    return doc
+
+
+def build_jsonld(doc: dict) -> dict:
+    """Derive schema.org Person/ProfilePage from the resume itself.
+
+    Every field is read out of RESUME.md — never hand-typed here — so the
+    structured data cannot drift from the document or invent a job title,
+    location, or social profile that the resume does not actually claim.
+    """
+    email = ""
+    same_as: list[str] = []
+    for tok in doc["contact"]:
+        href = tok.get("href", "")
+        if href.startswith("mailto:"):
+            email = href[len("mailto:") :]
+        # sameAs means "the same identity elsewhere", so only profile roots
+        # qualify — a link to one repository is a work sample, not a profile.
+        elif re.fullmatch(r"https://(www\.)?(github\.com|linkedin\.com/in)/[^/]+/?", href):
+            if href not in same_as:
+                same_as.append(href)
+
+    # "Buffalo, NY | ..." — the contact line leads with the location.
+    first_text = next((t["v"] for t in doc["contact"] if t["t"] == "text"), "")
+    locality, _, region = first_text.split("|")[0].strip().partition(", ")
+
+    # The headline paragraph leads with the primary title.
+    headline = ""
+    for block in doc["intro"]:
+        if block["kind"] == "p":
+            headline = "".join(t["v"] for t in block["inline"])
+            break
+    job_title = headline.split("|")[0].strip() if headline else ""
+
+    knows: list[str] = []
+    for section in doc["sections"]:
+        if section["title"].upper().startswith("TOP SKILLS"):
+            text = " ".join(
+                "".join(t["v"] for t in b["inline"])
+                for b in section["blocks"]
+                if b["kind"] == "p"
+            )
+            knows = [s.strip() for s in text.split(",") if s.strip()]
+
+    person: dict = {
+        "@type": "Person",
+        "@id": "https://grahama.co/#person",
+        "name": doc["name"],
+        "givenName": doc["name"].split()[0],
+        "familyName": doc["name"].split()[-1],
+        "url": "https://grahama.co",
+    }
+    if job_title:
+        person["jobTitle"] = job_title
+    if doc.get("lede"):
+        person["description"] = doc["lede"]
+    if email:
+        person["email"] = email
+    if same_as:
+        person["sameAs"] = same_as
+    if locality:
+        person["address"] = {
+            "@type": "PostalAddress",
+            "addressLocality": locality,
+            "addressRegion": region or None,
+            "addressCountry": "US",
+        }
+        person["address"] = {k: v for k, v in person["address"].items() if v}
+    if knows:
+        person["knowsAbout"] = knows
+
+    return {
+        "@context": "https://schema.org",
+        "@graph": [
+            person,
+            {
+                "@type": "ProfilePage",
+                "@id": "https://grahama.co/resume",
+                "name": f"Résumé — {doc['name']}",
+                "mainEntity": {"@id": "https://grahama.co/#person"},
+                "primaryImageOfPage": "https://grahama.co/og.png",
+                "inLanguage": "en-US",
+            },
+        ],
+    }
+
+
+def git(*args: str) -> str:
+    return subprocess.check_output(["git", *args], cwd=REPO, text=True).strip()
+
+
+def main() -> int:
+    if not SOURCE.is_file():
+        print(f"error: missing resume source: {SOURCE}", file=sys.stderr)
+        return 1
+    md = SOURCE.read_text(encoding="utf-8")
+    doc = parse(md)
+
+    doc["sourceCommit"] = git("rev-parse", "--short", "HEAD")
+    doc["asOf"] = git("log", "-1", "--format=%cs")
+    doc["generator"] = "site/scripts/gen_resume.py"
+    doc["sourceSha256"] = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
+    doc["downloads"] = {"pdf": "/resume.pdf", "markdown": "/resume.md"}
+    doc["jsonLd"] = build_jsonld(doc)
+
+    public = SITE / "public"
+    public.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(SOURCE, public / "resume.md")
+    if PDF_SOURCE.is_file():
+        shutil.copyfile(PDF_SOURCE, public / "resume.pdf")
+        doc["pdfSha256"] = hashlib.sha256(PDF_SOURCE.read_bytes()).hexdigest()
+        doc["pdfBytes"] = PDF_SOURCE.stat().st_size
+    else:
+        # Fail closed rather than ship a /resume page whose download 404s.
+        print(f"error: missing resume PDF: {PDF_SOURCE}", file=sys.stderr)
+        return 1
+
+    OUT.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    roles = sum(1 for s in doc["sections"] for b in s["blocks"] if b.get("kind") == "role")
+    print(f"{OUT} — {len(doc['sections'])} sections, {roles} roles, commit {doc['sourceCommit']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

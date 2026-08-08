@@ -523,7 +523,7 @@ export default function Home() {
                   answers for the result. Available for
                   engagements and full-time roles —{' '}
                   <a
-                    href={`${REPO}/blob/main/RESUME.md`}
+                    href="/resume"
                     data-qid="about:link:resume"
                     data-qs-action="ABOUT_OPEN_RESUME"
                     title="Open RESUME.md on GitHub"
@@ -619,7 +619,7 @@ export default function Home() {
                   github.com/grahama1970/agent-skills
                 </a>
                 <a
-                  href={`${REPO}/blob/main/RESUME.md`}
+                  href="/resume"
                   data-qid="footer:link:resume"
                   data-qs-action="FOOTER_OPEN_RESUME"
                   title="Open RESUME.md"

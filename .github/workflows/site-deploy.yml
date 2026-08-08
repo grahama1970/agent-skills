@@ -8,6 +8,10 @@ on:
     paths:
       - 'site/**'
       - 'README.md'
+      # RESUME.md feeds /resume, and docs/resume/** carries the PDF that page
+      # offers for download — without these the resume surface silently lags.
+      - 'RESUME.md'
+      - 'docs/resume/**'
       - 'skills/**'
       - 'agents/**'
       - '.github/workflows/site-deploy.yml'
@@ -47,6 +51,9 @@ jobs:
           python3 scripts/gen_catalog.py
           python3 scripts/gen_graph.py
           python3 scripts/gen_artifacts.py
+          # No site-file inputs (reads RESUME.md + the committed PDF), so order
+          # relative to the others does not matter.
+          python3 scripts/gen_resume.py
       - run: python3 scripts/gen_build_manifest.py
       - run: python3 scripts/verify-data-qid.py
       - run: python3 scripts/copy_audit.py

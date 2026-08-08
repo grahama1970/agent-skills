@@ -1,0 +1,479 @@
+{
+ "name": "Graham Anderson",
+ "contact": [
+  {
+   "t": "text",
+   "v": "Buffalo, NY | Buffalo-area hybrid/onsite or remote | "
+  },
+  {
+   "t": "link",
+   "v": "graham@grahama.co",
+   "href": "mailto:graham@grahama.co"
+  },
+  {
+   "t": "text",
+   "v": " | "
+  },
+  {
+   "t": "link",
+   "v": "grahama.co",
+   "href": "https://grahama.co"
+  },
+  {
+   "t": "text",
+   "v": " | "
+  },
+  {
+   "t": "link",
+   "v": "Work",
+   "href": "https://github.com/grahama1970/agent-skills"
+  },
+  {
+   "t": "text",
+   "v": " | "
+  },
+  {
+   "t": "link",
+   "v": "LinkedIn",
+   "href": "https://www.linkedin.com/in/grahamanderson/"
+  },
+  {
+   "t": "text",
+   "v": " | "
+  },
+  {
+   "t": "link",
+   "v": "GitHub",
+   "href": "https://github.com/grahama1970"
+  },
+  {
+   "t": "text",
+   "v": " | "
+  },
+  {
+   "t": "link",
+   "v": "PDF",
+   "href": "docs/resume/graham-anderson-resume.pdf"
+  }
+ ],
+ "lede": "I build agent systems that can prove what they did.",
+ "intro": [
+  {
+   "kind": "p",
+   "inline": [
+    {
+     "t": "text",
+     "v": "Principal AI Engineer | Machine Learning Engineer | AI Architect | Agentic AI · LLM/RAG · Knowledge Graphs | Defense & Aerospace | Founder, grahamaco | Buffalo, NY · Remote"
+    }
+   ]
+  },
+  {
+   "kind": "p",
+   "inline": [
+    {
+     "t": "text",
+     "v": "U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints."
+    }
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "title": "ABOUT",
+   "blocks": [
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA technical lead alongside Lockheed Martin and MIT. High-end creative and hard technical work — delivered by the same person, shipped as working code, in public."
+      }
+     ]
+    },
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS, I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution: the responsible technical/project lead for knowledge-graph and LLM reasoning delivery for automated certification of mission-critical software, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators."
+      }
+     ]
+    },
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Much of my current client work is export-controlled, so client and program details are withheld. Publicly releasable independent engineering is at github.com/grahama1970:"
+      }
+     ]
+    },
+    {
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "text",
+        "v": "tau — receipt-gated multi-agent harness: agent work compiles to typed DAG contracts; every handoff needs a schema-valid receipt or validator result before the next step runs. No receipt, no action."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "pdf_oxide — my heavily diverged fork of yfedoseev/pdf_oxide (independent since Mar 2026): 430 commits and ~137K lines added, including Rust-core changes, a full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "agent-skills — 340+ reusable agent skills (~85% carrying deterministic sanity gates) and 90+ bounded worker roles, portable across Claude Code, Codex, and Gemini. Public repo, private runtime — effectively my living resume."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Private, regulated side: an ArangoDB agent-memory platform — approximately 219K evidence-grounded question–reasoning–answer records across 7K+ security-control records (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND, SPARTA), hybrid BM25 + vector + graph recall over 2.2M source chunks; a corpus of ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval."
+       }
+      ]
+     ]
+    },
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Presented Agentic Cybersecurity research to Air Force Research Laboratory and received an AFRL \"Hacker\" challenge coin following the presentation."
+      }
+     ]
+    },
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily. Creative systems thinking — from leading 80+ person interactive productions — is why my AI systems are architected, not stapled together."
+      }
+     ]
+    },
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Buffalo, NY based (hybrid/onsite there, or remote). Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "EXPERIENCE",
+   "blocks": [
+    {
+     "kind": "role",
+     "title": [
+      {
+       "t": "text",
+       "v": "Founder & Principal AI Engineer / Architect | grahamaco | Buffalo–Niagara Falls Area · Remote"
+      }
+     ],
+     "period": "Feb 2025 - Present",
+     "blocks": [
+      {
+       "kind": "p",
+       "inline": [
+        {
+         "t": "text",
+         "v": "Independent AI engineering practice. Clients are primarily export-controlled (ITAR) defense/aerospace — names withheld; publicly releasable engineering is at github.com/grahama1970."
+        }
+       ]
+      },
+      {
+       "kind": "ul",
+       "items": [
+        [
+         {
+          "t": "text",
+          "v": "Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every agent handoff must produce a schema-valid receipt, hashed evidence artifact, or validator result — no receipt, no action."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Authored agent-skills: 340+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 90+ bounded worker roles, ~85% of them gated by deterministic sanity checks — public repo, private runtime."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records across 7K+ security-control records; hybrid BM25 + vector + multi-hop graph recall over 2.2M source chunks; ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Core contributor to pi-mono (open-source agent framework/TUI): extension system, agent runtime, and TUI harness work, Feb–Jul 2026."
+         }
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "role",
+     "title": [
+      {
+       "t": "text",
+       "v": "Lead Research Scientist (Agentic Formal Methods) | Self-Employed / Various Clients | Buffalo, NY"
+      }
+     ],
+     "period": "Jan 2024 - Feb 2025",
+     "blocks": [
+      {
+       "kind": "ul",
+       "items": [
+        [
+         {
+          "t": "text",
+          "v": "Designed verifiable agentic systems: a process-driven autoformalization workflow translating engineering requirements into Lean 4 proofs for safety-critical workflows."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Built probabilistic-deterministic self-correcting loops where LLM generation is validated by compiler/prover feedback."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Consulted in aerospace/defense settings under export-controlled / ITAR constraints."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Presented Agentic Cybersecurity work to Air Force Research Laboratory; received an AFRL \"Hacker\" challenge coin."
+         }
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "role",
+     "title": [
+      {
+       "t": "text",
+       "v": "Principal Data Scientist & ACERT Technical Lead | CS Group (DARPA ARCOS)"
+      }
+     ],
+     "period": "Sep 2020 - Dec 2023",
+     "blocks": [
+      {
+       "kind": "ul",
+       "items": [
+        [
+         {
+          "t": "text",
+          "v": "Responsible technical/project lead for CS Group's contribution to the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Worked with government and aerospace program stakeholders; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code."
+         }
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "role",
+     "title": [
+      {
+       "t": "text",
+       "v": "Executive Producer / Marketing Executive / Professional Composer | Los Angeles, CA"
+      }
+     ],
+     "period": "Mar 2005 - 2016",
+     "blocks": [
+      {
+       "kind": "ul",
+       "items": [
+        [
+         {
+          "t": "text",
+          "v": "Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized); led cross-functional teams (80+) on large-scale interactive productions."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Commercial composer for major consumer brands (Adidas, X-Games, Pepsi, Taco Bell, Nestle)."
+         }
+        ]
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "PUBLIC WORK (non-ITAR) — github.com/grahama1970",
+   "blocks": [
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:"
+      }
+     ]
+    },
+    {
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "link",
+        "v": "agent-skills",
+        "href": "https://github.com/grahama1970/agent-skills"
+       },
+       {
+        "t": "text",
+        "v": " — my living resume: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime."
+       }
+      ],
+      [
+       {
+        "t": "link",
+        "v": "tau",
+        "href": "https://github.com/grahama1970/tau"
+       },
+       {
+        "t": "text",
+        "v": " — receipt-gated multi-agent harness. \"Agents hallucinate. Tau contains them.\""
+       }
+      ],
+      [
+       {
+        "t": "link",
+        "v": "pdf_oxide",
+        "href": "https://github.com/grahama1970/pdf_oxide"
+       },
+       {
+        "t": "text",
+        "v": " — heavily diverged fork of yfedoseev's Rust PDF toolkit (430 commits, ~137K lines added: Rust-core changes, Python pipeline, PDF cloning, NIST validation)."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "scillm, extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public."
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "TOP SKILLS",
+   "blocks": [
+    {
+     "kind": "p",
+     "inline": [
+      {
+       "t": "text",
+       "v": "Machine Learning, Generative AI, Large Language Models (LLM), Agentic AI, AI Agents, Multi-Agent Systems, Retrieval-Augmented Generation (RAG), Knowledge Graphs, GraphRAG, ArangoDB, Vector Databases, Prompt Engineering, LLM Evaluation, LLMOps, Formal Verification, Lean 4, Python, Rust, Model Context Protocol (MCP), NIST Frameworks, AI Governance, Docker, Linux"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "sourceCommit": "8c55853d4",
+ "asOf": "2026-08-08",
+ "generator": "site/scripts/gen_resume.py",
+ "sourceSha256": "6915a6b3a2baf24a55684774b7ef2897f1408216d9b8b124e2e46cbf777caf5d",
+ "downloads": {
+  "pdf": "/resume.pdf",
+  "markdown": "/resume.md"
+ },
+ "jsonLd": {
+  "@context": "https://schema.org",
+  "@graph": [
+   {
+    "@type": "Person",
+    "@id": "https://grahama.co/#person",
+    "name": "Graham Anderson",
+    "givenName": "Graham",
+    "familyName": "Anderson",
+    "url": "https://grahama.co",
+    "jobTitle": "Principal AI Engineer",
+    "description": "I build agent systems that can prove what they did.",
+    "email": "graham@grahama.co",
+    "sameAs": [
+     "https://www.linkedin.com/in/grahamanderson/",
+     "https://github.com/grahama1970"
+    ],
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Buffalo",
+     "addressRegion": "NY",
+     "addressCountry": "US"
+    },
+    "knowsAbout": [
+     "Machine Learning",
+     "Generative AI",
+     "Large Language Models (LLM)",
+     "Agentic AI",
+     "AI Agents",
+     "Multi-Agent Systems",
+     "Retrieval-Augmented Generation (RAG)",
+     "Knowledge Graphs",
+     "GraphRAG",
+     "ArangoDB",
+     "Vector Databases",
+     "Prompt Engineering",
+     "LLM Evaluation",
+     "LLMOps",
+     "Formal Verification",
+     "Lean 4",
+     "Python",
+     "Rust",
+     "Model Context Protocol (MCP)",
+     "NIST Frameworks",
+     "AI Governance",
+     "Docker",
+     "Linux"
+    ]
+   },
+   {
+    "@type": "ProfilePage",
+    "@id": "https://grahama.co/resume",
+    "name": "Résumé — Graham Anderson",
+    "mainEntity": {
+     "@id": "https://grahama.co/#person"
+    },
+    "primaryImageOfPage": "https://grahama.co/og.png",
+    "inLanguage": "en-US"
+   }
+  ]
+ },
+ "pdfSha256": "ba4f977757a55315f0c62b2b1d26c906a10ffa56cc7e5f1c832753defea977ef",
+ "pdfBytes": 158590
+}

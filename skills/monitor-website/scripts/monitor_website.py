@@ -61,6 +61,11 @@ def check_live() -> dict:
     for label, url, needle in (
         ("home", SITE_URL + "/", 'data-qid="nav:link:home"'),
         ("sitemap", SITE_URL + "/sitemap.xml", "<urlset"),
+        # /resume is a public entry point people are given directly, so a 404
+        # there is as serious as a broken homepage.
+        ("resume", SITE_URL + "/resume", 'data-qid="resume:link:pdf"'),
+        ("resume_pdf", SITE_URL + "/resume.pdf", "%PDF"),
+        ("resume_md", SITE_URL + "/resume.md", "# Graham Anderson"),
     ):
         try:
             with urllib.request.urlopen(url, timeout=15) as r:
@@ -87,6 +92,7 @@ def _surface_coherence_drift() -> list[str]:
         "inventory.json": "commit", "artifacts.json": "commit",
         "catalog.json": "sourceCommit", "research-map.json": "sourceCommit",
         "graph.json": "sourceCommit",
+        "resume.json": "sourceCommit",
     }
     out = []
     for fname, key in surfaces.items():
@@ -97,6 +103,17 @@ def _surface_coherence_drift() -> list[str]:
         stamped = json.loads(p.read_text()).get(key)
         if stamped != head:
             out.append(f"{fname} stamped {stamped}, HEAD is {head} (stale — refresh)")
+    # A commit stamp alone cannot catch RESUME.md being edited and committed in
+    # the same commit that regenerated nothing; compare the recorded digest too.
+    resume_surface = site_dir / "resume.json"
+    resume_src = site_dir.parent / "RESUME.md"
+    if resume_surface.exists() and resume_src.exists():
+        import hashlib
+        recorded = json.loads(resume_surface.read_text()).get("sourceSha256")
+        actual = hashlib.sha256(resume_src.read_bytes()).hexdigest()
+        if recorded != actual:
+            out.append("resume.json sourceSha256 != RESUME.md digest (stale — refresh)")
+
     inv = json.loads((site_dir / "inventory.json").read_text()).get("stats", {})
     site_stats = json.loads(CONTENT.read_text()).get("stats", {})
     if site_stats and inv and site_stats != inv:
@@ -180,6 +197,7 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/scripts/gen_graph.py",
         "site/scripts/gen_artifacts.py",
         "site/scripts/gen_battle_lineage.py",
+        "site/scripts/gen_resume.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:
