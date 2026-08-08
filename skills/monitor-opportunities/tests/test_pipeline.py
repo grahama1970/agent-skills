@@ -135,8 +135,10 @@ def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevan
     assert linked["posting_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
     assert linked["apply_url"] is None
     assert not any(row["title"] == "Founders Associate" for row in manifest["opportunities"])
+    # "Founders Associate" is now dropped by the role-type filter (off-mandate
+    # founder gig) before the location check — a more specific, correct reason.
     assert any(
-        row["title"] == "Founders Associate" and row["reason_code"] == "HUMAN_REVIEW_LOCATION_AMBIGUOUS"
+        row["title"] == "Founders Associate" and row["reason_code"] == "REJECT_ROLE_TYPE"
         for row in manifest["eligibility_rejections"]
     )
 
