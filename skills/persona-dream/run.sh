@@ -9,6 +9,10 @@ usage() {
 Usage: ./run.sh <command> [options]
 
 Commands:
+  dream                THE PIPELINE. Compile the spine to a Tau DAG and run it.
+                       Given an idea, this is the only command you run.
+  dream-spec           Compile the DAG spec without executing it
+  write-dream-journal  Write the persona_journal.v1 entry (spine step)
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
@@ -308,6 +312,37 @@ case "$COMMAND" in
     ;;
   pipeline-loop-status)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/pipeline_loop_status.py" "$@"
+    ;;
+  dream)
+    # THE PIPELINE. Compile contracts/dream_spine.v1.yaml into a
+    # tau.generic_dag_spec.v1 and hand it to Tau to execute.
+    #
+    # Tau owns execution deliberately. Its generic DAG runner already rejects
+    # cycles and unknown dependencies, runs nodes in dependency order, gates
+    # every downstream node on a schema-valid PASS receipt, resumes from valid
+    # receipts, and fails closed on timeout, non-zero exit, missing receipt,
+    # invalid receipt, or a blocked verdict. A second orchestrator living here
+    # would be exactly the bespoke solution this pipeline exists to prevent.
+    #
+    # Given an idea, this is the only command you run.
+    TAU_ROOT="${TAU_ROOT:-${HOME}/workspace/experiments/tau}"
+    if [[ ! -d "${TAU_ROOT}" ]]; then
+      echo "BLOCKED_TAU_NOT_FOUND: ${TAU_ROOT}" >&2
+      echo "  Tau executes this pipeline; set TAU_ROOT to its checkout." >&2
+      exit 1
+    fi
+    DREAM_SPEC="$("${PYTHON[@]}" "${SCRIPT_DIR}/scripts/build_dream_dag.py" "$@")"
+    echo "spec: ${DREAM_SPEC}"
+    exec uv run --project "${TAU_ROOT}" tau dag-run "${DREAM_SPEC}"
+    ;;
+  dream-spec)
+    # Compile only: inspect or diff the DAG without executing it.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/build_dream_dag.py" "$@"
+    ;;
+  write-dream-journal)
+    # Was unreachable through run.sh entirely, despite being the artifact the
+    # pipeline terminates at. That gap is why journal writing got bespoked.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_journal.py" "$@"
     ;;
   pipeline-loop-run)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/pipeline_loop_run.py" "$@"
