@@ -23,6 +23,10 @@ from .util import utc_now
 
 MEMORY_URL = "http://127.0.0.1:8601"
 LABELS_COLLECTION = "opportunity_labels"
+# A text relevance classifier needs hundreds of balanced examples; below this the
+# vocabulary corpus + JD evaluator carry relevance. When the flywheel crosses it,
+# /classifier-lab trains (same pattern as monitor-sparta's auto-train threshold).
+MIN_LABELS_TO_TRAIN = 300
 ADVERSARIAL_FIXTURE = Path(__file__).resolve().parents[2] / "fixtures" / "relevance_adversarial.json"
 
 
@@ -73,6 +77,35 @@ def label_from_verdict(text: str, verdict: str, memory_url: str = MEMORY_URL) ->
     if verdict in negative:
         return append_label(text, 0, "evaluator", {"verdict": verdict}, memory_url)
     return False  # NEEDS_REVIEW is not a training signal
+
+
+def label_count(memory_url: str = MEMORY_URL) -> int | None:
+    """Count accumulated labels via /memory /count; None if unavailable."""
+    body = json.dumps({"collection": LABELS_COLLECTION}).encode()
+    req = urllib.request.Request(f"{memory_url}/count", data=body, headers={"Content-Type": "application/json"})
+    try:
+        return int(json.loads(urllib.request.urlopen(req, timeout=15).read()).get("count", 0))
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def training_readiness(memory_url: str = MEMORY_URL) -> dict[str, Any]:
+    """Report whether the label flywheel has enough data to train a classifier.
+
+    status: READY_TO_TRAIN (>= threshold -> hand off to /classifier-lab),
+    ACCUMULATING (below threshold), or UNKNOWN (count unavailable).
+    """
+    count = label_count(memory_url)
+    if count is None:
+        return {"status": "UNKNOWN", "count": None, "threshold": MIN_LABELS_TO_TRAIN, "trainer": "classifier-lab"}
+    ready = count >= MIN_LABELS_TO_TRAIN
+    return {
+        "status": "READY_TO_TRAIN" if ready else "ACCUMULATING",
+        "count": count,
+        "threshold": MIN_LABELS_TO_TRAIN,
+        "remaining": max(0, MIN_LABELS_TO_TRAIN - count),
+        "trainer": "classifier-lab",
+    }
 
 
 def label_from_board_state(text: str, state: str, memory_url: str = MEMORY_URL) -> bool:
