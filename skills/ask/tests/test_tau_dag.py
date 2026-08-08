@@ -3624,6 +3624,32 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
     assert "no_tau_execution" not in payload["execution"]
 
 
+def test_browser_availability_blocked_execution_preserves_surf_socket_recovery() -> None:
+    report = {
+        "schema": "ask.browser_provider_availability.v1",
+        "status": "ERROR",
+        "mocked": False,
+        "live": True,
+        "error": "surf_tab_list_failed",
+        "failure_code": "surf_browser_connection_unavailable",
+        "recovery_kind": "surf_extension_socket_missing",
+        "human_action": "Open Chrome chrome://extensions and Load unpacked Surf.",
+        "next_command": "cd skills/surf && ./run.sh tab.list --json",
+        "ticket_instruction": "If reload fails, file a $ticket to $surf.",
+        "providers": {},
+    }
+
+    execution = tau_dag_cli.browser_availability_blocked_execution(report)
+
+    assert execution["status"] == "NEEDS_ATTENTION"
+    assert execution["failure_code"] == "surf_browser_connection_unavailable"
+    assert execution["recovery_kind"] == "surf_extension_socket_missing"
+    assert execution["human_action"] == "Open Chrome chrome://extensions and Load unpacked Surf."
+    assert execution["next_command"] == "cd skills/surf && ./run.sh tab.list --json"
+    assert "not a provider cooldown" in execution["message"]
+    assert execution["ticket_instruction"] == "If reload fails, file a $ticket to $surf."
+
+
 def test_compete_browser_availability_rate_limit_continues_to_tau(monkeypatch, tmp_path: Path) -> None:
     captured: dict[str, Any] = {}
 

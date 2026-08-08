@@ -131,6 +131,7 @@ def probe(
     if tab_proc.returncode != 0:
         report["status"] = "ERROR"
         report["error"] = "surf_tab_list_failed"
+        report.update(_surf_tab_list_failure_recovery(tab_proc, surf_run=surf_run))
         return report
     tabs, tab_list_error = _parse_tab_list_stdout(tab_proc.stdout)
     if tab_list_error:
@@ -171,6 +172,40 @@ def probe(
         report["error"] = "browser_provider_probe_failed"
     report["finished_at_unix"] = int(time.time())
     return report
+
+
+def _surf_tab_list_failure_recovery(
+    proc: subprocess.CompletedProcess[str],
+    *,
+    surf_run: Path,
+) -> dict[str, Any]:
+    combined = "\n".join(part for part in (proc.stdout, proc.stderr) if part)
+    lower = combined.lower()
+    if "socket_missing_after_recovery" in lower or "/tmp/surf.sock" in lower:
+        return {
+            "failure_code": "surf_browser_connection_unavailable",
+            "recovery_kind": "surf_extension_socket_missing",
+            "human_action": (
+                "Open Chrome chrome://extensions, reload the Surf extension, or use Load unpacked "
+                "with /home/graham/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli/dist. "
+                "If the native host was just installed, restart Chrome so the service worker reconnects."
+            ),
+            "next_command": f"cd {surf_run.parent} && ./run.sh tab.list --json",
+            "ticket_instruction": (
+                "If the human reloads or loads the Surf extension and this command still reports "
+                "socket_missing_after_recovery, file a $ticket to $surf with browser-provider-availability.json, "
+                "the Surf extension id, /tmp/surf-host.log, and the native messaging host manifest."
+            ),
+        }
+    return {
+        "failure_code": "surf_tab_list_failed",
+        "recovery_kind": "surf_tab_inventory_unavailable",
+        "next_command": f"cd {surf_run.parent} && ./run.sh tab.list --json",
+        "ticket_instruction": (
+            "If tab.list keeps failing without a provider cooldown, file a $ticket to $surf with "
+            "browser-provider-availability.json and the Surf stderr."
+        ),
+    }
 
 
 def _probe_provider(

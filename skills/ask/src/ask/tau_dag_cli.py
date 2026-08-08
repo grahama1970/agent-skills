@@ -1144,7 +1144,30 @@ def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, 
             for name, payload in providers.items()
             if isinstance(payload, dict) and payload.get("provider_limited") is True
         ]
-    failure_code = "browser_provider_rate_limited" if limited else "browser_provider_availability_probe_failed"
+    failure_code = str(report.get("failure_code") or "")
+    if not failure_code:
+        failure_code = "browser_provider_rate_limited" if limited else "browser_provider_availability_probe_failed"
+    next_command = str(report.get("next_command") or "")
+    if not next_command:
+        next_command = (
+            "Wait for the named provider cooldown to clear, rerun `skills/ask/run.sh browser-availability "
+            "--provider <provider> --json`, then rerun the Ask DAG with the same immutable goal."
+        )
+    message = (
+        "Ask did not launch Tau or submit browser prompts because the read-only browser provider "
+        "availability preflight found a visible cooldown/throttle state or could not complete."
+    )
+    if failure_code == "surf_browser_connection_unavailable":
+        message = (
+            "Ask did not launch Tau or submit browser prompts because Surf could not list Chrome tabs. "
+            "This is local browser transport setup, not a provider cooldown."
+        )
+    ticket_instruction = str(report.get("ticket_instruction") or "")
+    if not ticket_instruction:
+        ticket_instruction = (
+            "If this report is missing the provider, tab id, visible text excerpt, failure_code, or next_command, "
+            "file a $ticket to $ask at agent-skills@main with the Ask run_dir and browser-provider-availability.json."
+        )
     return {
         "schema": "ask.tau_dag_execution.v1",
         "status": "NEEDS_ATTENTION",
@@ -1154,21 +1177,14 @@ def browser_availability_blocked_execution(report: dict[str, Any]) -> dict[str, 
         "provider_live": False,
         "blocked_reason": "browser_provider_unavailable_preflight",
         "failure_code": failure_code,
+        "recovery_kind": report.get("recovery_kind"),
+        "human_action": report.get("human_action"),
         "limited_providers": limited,
         "no_tau_execution": True,
-        "message": (
-            "Ask did not launch Tau or submit browser prompts because the read-only browser provider "
-            "availability preflight found a visible cooldown/throttle state or could not complete."
-        ),
+        "message": message,
         "browser_provider_availability": report,
-        "next_command": (
-            "Wait for the named provider cooldown to clear, rerun `skills/ask/run.sh browser-availability "
-            "--provider <provider> --json`, then rerun the Ask DAG with the same immutable goal."
-        ),
-        "ticket_instruction": (
-            "If this report is missing the provider, tab id, visible text excerpt, failure_code, or next_command, "
-            "file a $ticket to $ask at agent-skills@main with the Ask run_dir and browser-provider-availability.json."
-        ),
+        "next_command": next_command,
+        "ticket_instruction": ticket_instruction,
     }
 
 
