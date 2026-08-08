@@ -204,15 +204,32 @@ export default function Home() {
           <figure
             className="strip wipe"
             role="img"
-            aria-label="Horus Lupercal and Embry taking tea on a terrace — persona-dream keyframe"
+            aria-label="Horus Lupercal and Embry taking tea on a void-world terrace — a rendered persona-dream"
           >
-            {/* Video hero: poster keyframe by default; the clip loads + plays
-                only on fine-pointer, motion-allowed, non-save-data devices. */}
+            {/* Atmospheric dream band: poster by default; the clip loads + plays
+                only on motion-allowed, non-save-data devices. */}
             <StripVideo />
             <figcaption>
-              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b> — a persona-dream keyframe
+              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b>
             </figcaption>
           </figure>
+          <p className="strip-note">
+            Not a keyframe — a <em>rendered persona-dream</em>. Embry dreams a
+            quiet argument with Horus about building SPARTA Explorer as a{' '}
+            <em>campaign of proof</em>: no unsupported claim past the perimeter,
+            no receipt pretending to be a verdict. The pipeline dreams it from her
+            own memory residue, checks it&apos;s still her, and writes it back to
+            memory —{' '}
+            <a
+              href="#dream"
+              data-qid="strip:link:dream-study"
+              data-qs-action="STRIP_OPEN_DREAM_STUDY"
+              title="Jump to the persona-dream study (section 02)"
+            >
+              the study is below
+            </a>
+            .
+          </p>
         </section>
 
         <hr className="rule" />

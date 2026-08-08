@@ -590,12 +590,20 @@ h1 .it::after {
   margin: clamp(2.2rem, 5vw, 4rem) auto 0;
   position: relative;
   width: 100%;
-  max-width: min(100%, calc(80vh * 16 / 9)); /* cap size but keep true 16:9 */
-  aspect-ratio: 16 / 9; /* full cinematic frame — nothing cropped, warp eye kept */
+  max-width: min(100%, calc(80vh * 16 / 9));
+  aspect-ratio: 16 / 9; /* mobile: taller frame */
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background-color: #160f0d;
   overflow: hidden;
+}
+/* Desktop: crop to a reduced-height atmospheric band. The dream reads here as
+   mood/colour, not a full frame — the story is told in words below + section 02. */
+@media (min-width: 760px) {
+  .strip {
+    max-width: 100%;
+    aspect-ratio: 16 / 4.2;
+  }
 }
 /* Video hero layer — shows the keyframe poster until the I2V clip lands. */
 .strip-video {
@@ -635,6 +643,23 @@ h1 .it::after {
 .strip figcaption b {
   color: var(--brass);
   font-weight: 400;
+}
+/* Explanation below the dream band — what the dream actually is. */
+.strip-note {
+  max-width: 62ch;
+  margin: 1rem auto 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.strip-note em {
+  font-style: italic;
+  color: var(--text);
+}
+.strip-note a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* --- ledger / mosaic -------------------------------------- */
