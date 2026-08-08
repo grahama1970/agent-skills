@@ -239,6 +239,17 @@ class DiagramNode(StrictModel):
     decoration: Literal["ring", "principal", "support", "ground"] = "ring"
     scale: float = Field(default=1.0, gt=0.2, le=2.5, description="Glyph weight within its scene.")
 
+    @model_validator(mode="after")
+    def labelled_node_is_bound(self) -> "DiagramNode":
+        # A node label is a visible assertion, so it needs provenance for the
+        # same reason an edge does (#1328). A blank label is a bare decorative
+        # glyph and carries no claim.
+        if self.label.strip() and not self.binding_paths:
+            raise ValueError(
+                f"node '{self.id}': label '{self.label[:40]}' is a visible assertion and requires binding_paths"
+            )
+        return self
+
 
 class DiagramEdge(StrictModel):
     """Connectors are first-class and factual by default: a meaningful edge is a
@@ -443,6 +454,36 @@ class DocSlide(StrictModel):
     hidden: bool = False
     notes: str = ""
     intent: SlideIntent | None = None
+
+    @model_validator(mode="after")
+    def diagram_labels_resolve_to_bindings(self) -> "DocSlide":
+        """Every diagram label string must resolve to a real TextBinding (#1328).
+
+        Element-level binding was too coarse: a diagram bound as one unit let a
+        label like 'relevance does not cross this gap' reach a slide with no
+        string-level provenance. Declaring a binding_path that no TextBinding
+        satisfies is the same failure wearing a receipt, so the path must
+        resolve, not merely exist."""
+        declared = {binding.path for binding in self.bindings}
+        for element in iter_tree(self.elements):
+            if element.diagram is None:
+                continue
+            for node in element.diagram.nodes:
+                if node.label.strip():
+                    missing = [p for p in node.binding_paths if p not in declared]
+                    if missing:
+                        raise ValueError(
+                            f"slide '{self.id}': node '{node.id}' declares unbound path(s) {missing}"
+                        )
+            for edge in element.diagram.edges:
+                if edge.decorative:
+                    continue
+                missing = [p for p in edge.binding_paths if p not in declared]
+                if missing:
+                    raise ValueError(
+                        f"slide '{self.id}': edge '{edge.id}' declares unbound path(s) {missing}"
+                    )
+        return self
 
     @model_validator(mode="after")
     def unique_element_ids(self) -> "DocSlide":

@@ -88,6 +88,62 @@ class PublishReceipt(StrictModel):
     does_not_prove: list[str] = Field(default_factory=list)
 
 
+class AssertionAtom(StrictModel):
+    """One emitted string with its provenance (#1328).
+
+    The compiler knows what every string is and where it came from. Re-deriving
+    that from the ledger at publish time cannot work for paraphrase or
+    generalization — "Retrieval" is a legal generalization of a claim about
+    search and embeddings, but it is not an excerpt of it. So the manifest is
+    EMITTED from the approved document rather than reconstructed, and a human
+    never types a diagram label into an approvals file to make it pass."""
+
+    schema_: Literal["pitchdeck.assertion_atom.v1"] = Field(
+        default="pitchdeck.assertion_atom.v1", alias="schema"
+    )
+    text: str
+    canonical_id: str
+    role: str
+    claim_id: str | None = None
+    transform_class: str | None = None
+    binding_kind: str | None = None
+
+
+def atoms_from_document(document) -> list[AssertionAtom]:
+    """Every visible string the document emits, with its binding provenance."""
+    from .document import iter_tree
+
+    atoms: list[AssertionAtom] = []
+    for slide in document.slides:
+        by_path = {b.path: b for b in slide.bindings}
+
+        def record(text: str, canonical_id: str, role: str, paths: list[str]) -> None:
+            if not (text or "").strip():
+                return
+            binding = next((by_path[p] for p in paths if p in by_path), None)
+            atoms.append(AssertionAtom(
+                text=text, canonical_id=f"{slide.id}/{canonical_id}", role=role,
+                claim_id=getattr(binding, "claim_id", None),
+                transform_class=getattr(binding, "transform_class", None),
+                binding_kind=getattr(getattr(binding, "kind", None), "value", None),
+            ))
+
+        for element in iter_tree(slide.elements):
+            record(element.text or "", element.id, element.role or element.kind.value,
+                   list(element.binding_paths))
+            if element.diagram is None:
+                continue
+            for node in element.diagram.nodes:
+                record(node.label, f"{element.id}:{node.id}:label", "diagram-node-label",
+                       list(node.binding_paths))
+                record(node.sublabel or "", f"{element.id}:{node.id}:sublabel",
+                       "diagram-node-sublabel", list(node.binding_paths))
+            for edge in element.diagram.edges:
+                record(edge.label or "", f"{element.id}:{edge.id}:label",
+                       "diagram-edge-label", list(edge.binding_paths))
+    return atoms
+
+
 def _walk_shapes(shapes, prefix: str):
     """Yield (location, shape) including group children — a claim can hide in a group."""
     for shape in shapes:
@@ -123,11 +179,22 @@ def _word_boundary_excerpt(needle: str, haystack: str) -> bool:
     return re.search(pattern, haystack, flags=re.IGNORECASE) is not None
 
 
-def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprovals) -> bool:
-    """A visible string is licensed by an approval, a claim excerpt, or chrome."""
+def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprovals,
+                    atom_index: dict[str, AssertionAtom] | None = None) -> bool:
+    """A visible string is licensed by a compiler ATOM, an approval, a claim excerpt, or chrome."""
     stripped = text.strip()
+    if atom_index is not None:
+        key = " ".join(stripped.split()).casefold().lstrip("❯>•- ")
+        atom = atom_index.get(key)
+        if atom is not None and atom.claim_id:
+            return True
     if len(stripped) <= _CHROME_MAX_CHARS or stripped.isdigit():
         return True
+    # A diagram node renders its label and sublabel into a single text frame, so
+    # a multi-line string is several assertions; each line must stand on its own.
+    lines = [ln.strip() for ln in stripped.splitlines() if ln.strip()]
+    if len(lines) > 1:
+        return all(_is_claim_bound(line, claim_texts, approvals, atom_index) for line in lines)
     normalised = " ".join(stripped.split())
     for allowed in (*approvals.approved_renderings, *approvals.non_claim_text):
         if normalised.casefold() == " ".join(allowed.split()).casefold():
@@ -171,6 +238,7 @@ def verify_publish(
     claim_texts: list[str],
     approvals: PublishApprovals,
     template_contract: TemplateContract | None = None,
+    document=None,
 ) -> PublishReceipt:
     """Re-prove the delivered artifact, not the manifest that produced it."""
     from pptx import Presentation
@@ -178,9 +246,15 @@ def verify_publish(
     digest = hashlib.sha256(pptx_path.read_bytes()).hexdigest()
     findings: list[PublishFinding] = []
     visible = extract_visible_strings(pptx_path)
+    atom_index: dict[str, AssertionAtom] | None = None
+    if document is not None:
+        atom_index = {
+            " ".join(a.text.split()).casefold().lstrip("❯>•- "): a
+            for a in atoms_from_document(document)
+        }
 
     for where, text in visible:
-        if not _is_claim_bound(text, claim_texts, approvals):
+        if not _is_claim_bound(text, claim_texts, approvals, atom_index):
             findings.append(PublishFinding(
                 code="UNCLAIMED_TEXT", where=where,
                 detail=f"visible text is not a legal transform of any claim: {text[:70]!r}"))

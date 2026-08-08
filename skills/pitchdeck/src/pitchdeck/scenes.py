@@ -139,7 +139,9 @@ def compose_scene(
                 label=label,
                 decoration=decoration,  # type: ignore[arg-type]
                 scale=scale,
-                binding_paths=list(binding_paths or []),
+                # per-LABEL provenance (#1328): a labelled glyph asserts something,
+                # so it carries its own path rather than sharing the element's.
+                binding_paths=([f"{node_prefix}-{index}:label"] if label.strip() else []),
             )
         )
     assert_not_mechanical(nodes)

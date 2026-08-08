@@ -34,7 +34,7 @@ def test_mechanical_row_is_refused():
     """The exact composition blind judges called out: identical, evenly pitched."""
     row = [
         DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
-                    icon="shield-check", label="gate")
+                    icon="shield-check", label="gate", binding_paths=[f"n{i}:label"])
         for i in range(4)
     ]
     with pytest.raises(SceneError, match="scale hierarchy"):
@@ -44,7 +44,8 @@ def test_mechanical_row_is_refused():
 def test_even_pitch_is_refused_even_when_scales_differ():
     row = [
         DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
-                    icon="shield-check", label="gate", scale=1.0 + 0.1 * i)
+                    icon="shield-check", label="gate", scale=1.0 + 0.1 * i,
+                    binding_paths=[f"n{i}:label"])
         for i in range(4)
     ]
     with pytest.raises(SceneError, match="evenly pitched"):

@@ -163,6 +163,49 @@ def _gate_scene(nodes):
         return None  # fall back to the row rather than emit a broken scene
 
 
+def _bind_and_return(graph, claim_id: str, bindings: list):
+    """Bind every label, then hand the graph back for placement."""
+    _bind_diagram_labels(graph, claim_id, bindings)
+    return graph
+
+
+def _bind_diagram_labels(graph, claim_id: str, bindings: list) -> None:
+    """Declare a TextBinding for EVERY labelled node and edge (#1328).
+
+    A diagram used to carry one element-level binding, which let a label such as
+    'relevance does not cross this gap' render with no string-level provenance.
+    Each label now names its own path and gets a matching binding carrying the
+    source claim and transform class, so verify-publish can prove the string
+    from the ledger instead of an approvals file enumerating it by hand."""
+    declared = {b.path for b in bindings}
+    for node in graph.nodes:
+        if not node.label.strip():
+            continue
+        # An element-level path IS the P0 defect, not a satisfied binding: it
+        # proves the diagram came from a claim, never that THIS label did.
+        # Upgrade it to a per-label path rather than accepting it.
+        # Assign ONCE: validate_assignment re-runs the model validator on every
+        # write, so stripping the coarse path before adding the specific one
+        # would momentarily leave a labelled node unbound and trip its guard.
+        kept = [q for q in node.binding_paths if not q.startswith("element:")]
+        node.binding_paths = kept + ([f"{node.id}:label"] if f"{node.id}:label" not in kept else [])
+        for path in node.binding_paths:
+            if path not in declared:
+                bindings.append(TextBinding(path=path, kind=BindingKind.CLAIM_QUOTE,
+                                            claim_id=claim_id, transform_class="truncation"))
+                declared.add(path)
+    for edge in graph.edges:
+        if edge.decorative or not (edge.label or "").strip():
+            continue
+        kept = [q for q in edge.binding_paths if not q.startswith("element:")]
+        edge.binding_paths = kept + ([f"{edge.id}:label"] if f"{edge.id}:label" not in kept else [])
+        for path in edge.binding_paths:
+            if path not in declared:
+                bindings.append(TextBinding(path=path, kind=BindingKind.CLAIM_PARAPHRASE,
+                                            claim_id=claim_id, transform_class="generalization"))
+                declared.add(path)
+
+
 def _fill_diagram_canvas(graph):
     """Single-row diagrams fill their box vertically (corpus: the author's
     diagrams occupy the canvas; ours floated in a narrow band with dead space
@@ -284,7 +327,9 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
             bbox=Bbox(x=0.05, y=_after_chevrons(reveal, 0.30), w=0.9, h=0.90 - _after_chevrons(reveal, 0.30)),
-            diagram=_gate_scene(nodes) or _fill_diagram_canvas(DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
+            diagram=_bind_and_return(_gate_scene(nodes) or _fill_diagram_canvas(
+                DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
+                module.candidate_claim_ids[0], bindings),
             binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade"),
         ))
@@ -309,7 +354,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                 node_prefix="scene",
                 binding_paths=["element:diagram"],
             )
-        graph = _fill_diagram_canvas(graph)
+        graph = _bind_and_return(_fill_diagram_canvas(graph), claim_id or claim_ids[0], bindings)
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
             bbox=Bbox(x=0.06, y=_after_chevrons(reveal, 0.24), w=0.88, h=0.90 - _after_chevrons(reveal, 0.24)),
