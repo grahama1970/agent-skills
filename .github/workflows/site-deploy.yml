@@ -33,6 +33,22 @@ jobs:
       run: { working-directory: site }
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # Build the resume PDF here rather than trusting the committed artifact.
+      # resume-pdf.yml commits its rebuild with GITHUB_TOKEN, and GitHub does not
+      # let a GITHUB_TOKEN push trigger another workflow — so this deploy would
+      # otherwise serve whatever PDF happened to be committed, which is how a
+      # stale two-page file reached /resume.pdf once already.
+      - name: Build resume PDF from RESUME.md at this commit
+        working-directory: .
+        run: |
+          args=(--css docs/resume/resume.css --no-default-css --font-dir docs/resume/fonts)
+          if grep -q '^## DEEPER DETAIL' RESUME.md; then
+            args+=(--omit-section "DEEPER DETAIL")
+          fi
+          uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
+            RESUME.md docs/resume/graham-anderson-resume.pdf \
+            --title "Graham Anderson Resume" --author "Graham Anderson" "${args[@]}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
