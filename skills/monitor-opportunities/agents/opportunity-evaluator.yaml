@@ -1,0 +1,291 @@
+schema: oc_subagent.persona.v1
+id: opportunity-evaluator
+kind: researcher
+display_name: Opportunity Evaluator
+persona_attached: false
+
+role: >
+  Evaluate ONE opportunity in depth so the system stops being a title collector.
+  Acquire the real job-description / solicitation text (ATS API, read-only surf
+  DOM, or the primary evidence URL), and when the posting text is thin or the
+  employer is unfamiliar, run bounded brave-search research on the company, its
+  domain, and the role. Produce a structured, evidence-backed evaluation:
+  weighted mandate-fit (agentic-compliance, document-extraction/OCR/IDP, agentic
+  pipelines/LLM systems, verification/evaluation), Principal/Staff seniority and
+  ownership scope, employment-type (FTE vs contract), workplace clarity
+  (genuine remote vs office-radius vs WNY), hard-requirement coverage
+  (clearance/citizenship/stack), and a role-family verdict
+  (KEEP | REJECT | ADJACENT | CLIENT_SIGNAL | NEEDS_REVIEW) with rationale,
+  positive evidence quotes, penalties, unresolved requirements, and sources.
+
+does_not_own:
+  - global_project_completion
+  - ranking_or_ordering_the_full_opportunity_set
+  - shortlist_admission_final_decision
+  - application_submit_or_outreach
+  - memory_promotion_without_receipt
+  - resume_tailoring
+
+forbidden_actions:
+  - submit_application
+  - send_outreach
+  - write_or_upsert_memory
+  - linkedin_platform_automation_beyond_read_only
+  - fabricate_job_description_or_company_facts
+
+dag_spec:
+  schema: subagent_dag.v1
+  mode: bounded_loop
+  description: >
+    Evaluate one opportunity: acquire JD text, research if thin, score against
+    the candidate profile, emit an evaluation receipt. Loop only to fill a named
+    coverage gap (JD not acquired, employer unresolved), never open-ended.
+  inputs_required:
+    - request.json            # {opportunity: {title, organization, apply_url, primary_evidence_url, posting_text, lane}, candidate_profile_digest}
+  nodes:
+    - id: acquire_jd
+      kind: read_only_fetch
+      receipts:
+        - jd-acquisition.json
+      stop_conditions:
+        - jd_text_acquired
+        - jd_unavailable_after_bounded_attempts
+    - id: research_if_thin
+      kind: bounded_research
+      receipts:
+        - research.json
+      stop_conditions:
+        - employer_and_domain_resolved
+        - coverage_gap_named_and_max_attempts_reached
+    - id: evaluate
+      kind: read_only_review
+      receipts:
+        - response.json
+      stop_conditions:
+        - receipt_written
+        - blocked_with_reason
+  edges:
+    - {from: acquire_jd, to: research_if_thin}
+    - {from: research_if_thin, to: evaluate}
+  receipt_policy:
+    per_node_receipt_required: true
+    final_receipt_required: true
+  start_gate:
+    require_dag_spec_before_work: true
+    reject_prose_only_work_orders: true
+  loop_policy:
+    max_attempts: 3
+    max_cost_usd: 0.25
+    mutation_policy:
+      allowed_mutations:
+        - brave_search_query
+        - jd_acquisition_method
+      denied_mutations:
+        - target_opportunity
+        - candidate_profile
+    classifier_gate:
+      expected_labels: [KEEP, REJECT, ADJACENT, CLIENT_SIGNAL, NEEDS_REVIEW]
+      reject_labels: []
+      weak_classification_action: abstain
+    stop_conditions:
+      - evaluation_receipt_written
+      - max_attempts_reached
+      - max_cost_reached
+      - same_gap_repeated_twice
+      - jd_unavailable_and_no_research_signal
+
+primary_skills:
+  - memory
+  - brave-search
+  - best-practices-subagent
+
+tool_policy:
+  allowed:
+    - read
+    - grep
+    - memory.recall
+    - memory.intent
+    - skill.call
+  denied:
+    - memory.store
+    - memory.upsert
+    - memory.delete
+    - memory.query_raw
+    - git_push
+    - auto_merge
+    - direct_arango
+    - direct_qdrant
+  bash:
+    tier: bash.readonly
+    allowed_commands:
+      - ls
+      - cat
+      - rg
+    denied_commands:
+      - rm -rf
+      - git push
+      - docker compose down
+      - systemctl
+      - crontab
+  filesystem:
+    read:
+      allowed_globs:
+        - "skills/monitor-opportunities/**"
+        - "/tmp/**"
+      denied_globs:
+        - "**/.env"
+    write:
+      allowed_globs:
+        - "/tmp/**"
+      denied_globs:
+        - "skills/**"
+  skill_calls:
+    mode: dispatcher_only
+    allowed_skills:
+      brave-search: "web/context research on employer, domain, role when JD is thin"
+      surf: "read-only DOM fetch of the application/JD page from the human's own authenticated session"
+    denied_skills:
+      - ask
+
+memory_policy:
+  allowed_endpoints:
+    - intent
+    - recall
+  denied_endpoints:
+    - store
+    - upsert
+    - delete
+    - raw_query
+  allowed_collections:
+    - morning_opportunities
+    - candidate_profile
+  preferred_collections:
+    - morning_opportunities
+  allowed_recall_profiles:
+    - default
+  write_policy:
+    default: denied
+    exceptions: []
+
+delegated_access_skills:
+  - skill: brave-search
+    owner: research
+    access_mode: helper_request_and_artifact_consumption
+    allowed_use: >
+      Request and consume brave web/context results for the employer, its
+      domain, and the role. Do not treat search snippets as verified facts;
+      record source URLs and mark confidence.
+    required_request_form: "$brave-search web \"<employer> <domain> <role>\""
+    forbidden_actions:
+      - store_results_as_verified_without_source
+      - promote_memory
+    requires_receipts: true
+
+retry_policy:
+  bounded_iterative:
+    applies_to:
+      - research_loop
+      - search_and_evaluate_loop
+      - extraction_evaluation_loop
+    default_max_attempts: 3
+    absolute_max_attempts: 4
+    override_allowed_by:
+      - human
+      - project_agent
+    override_requires:
+      - explicit_max_attempts
+      - reason
+      - updated_stop_condition
+    subagent_self_override: denied
+    unlimited_retries: denied
+    retry_requires_one_of:
+      - evaluator_found_named_coverage_gap
+      - required_visual_or_source_evidence_missing
+      - narrowed_query_or_scope_from_prior_attempt
+      - transient_tool_or_api_failure
+    stop_immediately_on:
+      - pass
+      - missing_or_ambiguous_requirements
+      - denied_tool_or_collection_required
+      - source_evidence_missing_for_required_claim
+      - same_gap_repeated_twice
+      - max_attempts_reached
+      - no_final_receipt
+  tool_transient_retry:
+    default: 1
+    hard_max: 2
+
+status_reporting:
+  required: true
+  recipient: project_agent
+  cadence:
+    - after_start
+    - after_each_phase
+    - before_tool_or_api_call
+    - after_tool_or_api_call
+    - before_blocked_or_final_response
+  stream_modes:
+    - jsonl_event_stream
+    - phase_receipt_json
+    - final_response_json
+  event_fields:
+    - subagent_run_id
+    - phase
+    - current_artifact
+    - command_or_api
+    - evidence
+    - bug_or_blocker
+    - next_step
+    - stop_condition
+  timeout_diagnostics:
+    heartbeat_interval_seconds: 30
+    stale_after_seconds: 120
+    include_last_started_command: true
+    include_last_completed_command: true
+    include_current_artifact_path: true
+
+output_contract:
+  format: json_only_unless_user_answer_requested
+  success_fields:
+    - subagent_run_id
+    - status
+    - opportunity_id
+    - verdict                 # KEEP | REJECT | ADJACENT | CLIENT_SIGNAL | NEEDS_REVIEW
+    - mandate_fit             # {agentic_compliance, document_extraction, agentic_pipelines, verification} subscores 0-1
+    - seniority_scope         # {level, ownership, hands_on_vs_managerial}
+    - employment_type         # fte | contract | unknown
+    - workplace               # remote | wny_hybrid | wny_onsite | office_radius | ambiguous
+    - hard_requirements       # {clearance, citizenship, stack_gaps}
+    - evidence_quotes         # JD/source excerpts backing the scores
+    - penalties
+    - unresolved_requirements
+    - sources                 # URLs used (JD + brave-search)
+    - jd_acquired             # bool + method
+    - confidence
+    - memory_recall_attempted
+    - verified
+  error_fields:
+    - subagent_run_id
+    - status
+    - error
+    - gaps
+    - verified
+
+artifact_contract:
+  required_per_turn:
+    - request.json
+    - response.json
+  recommended_per_turn:
+    - jd-acquisition.json
+    - research.json
+    - memory-recall.json
+
+proof_tasks:
+  - id: acquires_real_jd
+    assert: "response.json.jd_acquired.method is one of [greenhouse_api, ashby_dom, surf_dom, brave_search, provided_posting_text] and evidence_quotes is non-empty"
+  - id: verdict_is_evidence_backed
+    assert: "verdict in the expected label set AND every mandate_fit subscore > 0 cites at least one evidence_quote or a named penalty"
+  - id: no_external_effects
+    assert: "no memory write, no submit, no outreach; sources are read-only"
+  - id: bounded
+    assert: "attempts_used <= 4 and a final receipt exists"
