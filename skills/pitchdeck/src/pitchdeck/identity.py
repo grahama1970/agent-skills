@@ -32,7 +32,7 @@ class IdentityRefused(RuntimeError):
 class IdentityFact(StrictModel):
     """One attributable identity element with its source."""
 
-    kind: Literal["wordmark", "release_marking", "sponsor_mark", "deck_family"]
+    kind: Literal["wordmark", "release_marking", "sponsor_mark", "deck_family", "disclaimer"]
     text: str = Field(min_length=1)
     provenance: str = Field(
         min_length=1,
@@ -43,12 +43,32 @@ class IdentityFact(StrictModel):
     def marking_needs_authority(self) -> "IdentityFact":
         # A release marking asserts an authorization decision. Derivations from
         # deck metadata are not authorization; only a named human approval is.
-        if self.kind == "release_marking" and "approval" not in self.provenance.lower():
+        if self.kind in {"release_marking", "disclaimer"} and "approval" not in self.provenance.lower():
             raise IdentityRefused(
-                f"release marking '{self.text}' has provenance '{self.provenance}' — "
-                "a release marking requires explicit author approval, never derivation"
+                f"{self.kind} '{self.text[:48]}' has provenance '{self.provenance}' — "
+                "an ownership or release assertion requires explicit author approval, never derivation"
             )
         return self
+
+
+DISCLAIMER_TEMPLATE = (
+    "This document is the property of {owner} and cannot be communicated or "
+    "disclosed without {owner}'s authorization."
+)
+
+
+def ownership_disclaimer(owner: str, *, approved_by: str) -> IdentityFact:
+    """A footer disclaimer asserting who owns the document.
+
+    Ownership is a legal assertion, so the owner must be named explicitly and
+    the fact carries the approval that licensed it. The export-control sentence
+    some house templates append is NOT included: it is a claim about the
+    document's contents that only the author can make."""
+    return IdentityFact(
+        kind="disclaimer",
+        text=DISCLAIMER_TEMPLATE.format(owner=owner),
+        provenance=f"author approval: {approved_by}",
+    )
 
 
 class IdentityLedger(StrictModel):
@@ -76,7 +96,7 @@ def ledger_from_document(deck_title: str) -> IdentityLedger:
 def strip_texts(ledger: IdentityLedger) -> dict[str, str]:
     """Resolve what the footer strip may actually print."""
     resolved: dict[str, str] = {}
-    for kind in ("wordmark", "deck_family", "release_marking"):
+    for kind in ("wordmark", "deck_family", "release_marking", "disclaimer"):
         fact = ledger.of_kind(kind)
         if fact is not None:
             resolved[kind] = fact.text

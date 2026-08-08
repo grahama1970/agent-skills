@@ -430,6 +430,9 @@ def emit_document_pptx(
     *,
     asset_base: Path,
     theme_template: Path | None = None,
+    house_template: Path | None = None,
+    disclaimer: str | None = None,
+    stale_owner_markers: tuple[str, ...] = (),
 ) -> dict:
     from .publish_gate import assert_publishable
 
@@ -438,22 +441,70 @@ def emit_document_pptx(
     palette = theme["palette"]
     scale = theme.get("type_scale_pt", {"body": 20, "support": 16, "title": 28})
     assets = {a.id: a for a in document.assets}
-    presentation = Presentation()
-    presentation.slide_width = Inches(SLIDE_W_IN)
-    presentation.slide_height = Inches(SLIDE_H_IN)
-    blank = presentation.slide_layouts[6]
+    # Template-as-base: opening the author's own deck inherits theme, master,
+    # and layouts, so band/texture/logo/footer/page-number are correct by
+    # construction instead of being measured and redrawn.
+    layout_profile = None
+    pending_disclaimer_receipt = None
+    if house_template is not None:
+        from .template_deck import open_stripped_template, profile_template
+
+        presentation = open_stripped_template(house_template)
+        layout_profile = profile_template(house_template)
+        # A house template LOCKS its disclaimer by design, so inheriting one
+        # onto a different owner's deck silently asserts the wrong ownership.
+        # Retarget it, then FAIL CLOSED if any stale owner marker survives —
+        # a leftover marker is a false legal claim, not a cosmetic defect.
+        if disclaimer:
+            from .template_deck import retarget_disclaimer
+
+            markers = stale_owner_markers or ("CSINC", "CS Communication")
+            disclaimer_receipt = retarget_disclaimer(presentation, disclaimer, stale_markers=markers)
+            if disclaimer_receipt["residual_markers"]:
+                raise ValueError(
+                    "STALE_OWNER_DISCLAIMER: the template's original owner still appears at "
+                    f"{disclaimer_receipt['residual_markers']} — refusing to emit a deck that "
+                    "asserts ownership by someone other than its owner"
+                )
+            pending_disclaimer_receipt = disclaimer_receipt
+        blank = next((presentation.slide_layouts[l.index] for l in layout_profile.layouts
+                      if l.role == "blank"), presentation.slide_layouts[-1])
+    else:
+        presentation = Presentation()
+        presentation.slide_width = Inches(SLIDE_W_IN)
+        presentation.slide_height = Inches(SLIDE_H_IN)
+        blank = presentation.slide_layouts[6]
     receipt: dict = {
         "schema": "pitchdeck.pptx_primitive_receipt.v1",
         "capability_decisions": [],
         "icons": [],
         "slides": [],
     }
+    if pending_disclaimer_receipt is not None:
+        receipt["disclaimer"] = pending_disclaimer_receipt
     root = Frame(0.0, 0.0, SLIDE_W_IN, SLIDE_H_IN)
     band_cfg = theme.get("chrome", {}).get("header_band", {})
     for slide_doc in document.slides:
         if slide_doc.hidden:
             continue
-        slide = presentation.slides.add_slide(blank)
+        inherited_chrome = False
+        if layout_profile is not None:
+            from .template_deck import drop_unused_placeholders, fill_title, pick_layout
+
+            house_layout = pick_layout(layout_profile, prefer_named="Graham", needs_body=True)
+            slide = presentation.slides.add_slide(presentation.slide_layouts[house_layout.index])
+            title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
+            assertion = house_title_case(title_el.text) if (title_el and title_el.text) else ""
+            filled = fill_title(slide, house_layout, assertion) if assertion else False
+            drop_unused_placeholders(slide, {house_layout.title_idx} if filled else set())
+            inherited_chrome = True
+            receipt.setdefault("template", {
+                "house_template": str(house_template),
+                "layout": house_layout.name,
+                "inherits": ["theme", "slide_master", "band", "footer", "logo", "page_number"],
+            })
+        else:
+            slide = presentation.slides.add_slide(blank)
         # House chrome parity with the HTML renderer (render-oracle finding
         # 2026-08-07: PPTX shipped without the band — cross-target drift):
         # banded recipes get the petrol band with the white title inside it,
@@ -462,9 +513,10 @@ def emit_document_pptx(
         # band in the house style — hero recipes put the deck KICKER in the
         # band and keep the assertion as the hero body (reqml-12 pattern).
         hero = bool(slide_doc.intent) and slide_doc.intent.recipe in {"cover-brand", "statement-thesis"}
+        banded_by_template = inherited_chrome  # band/footer/page number come from the layout
         is_cover_slide = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
-        banded = slide_doc.intent is not None
-        skip_title = False
+        banded = slide_doc.intent is not None and not banded_by_template
+        skip_title = inherited_chrome  # the layout's placeholder already carries it
         if banded:
             band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(SLIDE_W_IN), Inches(SLIDE_H_IN * 0.10))
             band.fill.solid()
@@ -507,6 +559,15 @@ def emit_document_pptx(
 
             title_box.text_frame.paragraphs[0].alignment = _ALIGN.LEFT
             skip_title = not hero
+        if inherited_chrome:
+            ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
+            for _, element in ordered:
+                if element.role in {"title", "footer"} or (skip_title and element.role == "title"):
+                    continue
+                _emit_element(slide.shapes, element, root, palette=palette, scale=scale,
+                              assets=assets, asset_base=asset_base, receipt=receipt)
+            receipt["slides"].append({"id": slide_doc.id, "elements": len(slide_doc.elements)})
+            continue
         rule = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(SLIDE_H_IN - 0.045), Inches(SLIDE_W_IN), Inches(0.045))
         rule.fill.solid()
         rule.fill.fore_color.rgb = _hex(palette["primary"])

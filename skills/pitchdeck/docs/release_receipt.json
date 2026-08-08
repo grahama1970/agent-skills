@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "aed948303ea10c906427d99c8d854c0e89ba6163",
- "source_tree_sha256": "1b6f35b0afb51805776280e03f386b441a06497d0dd8c94101557be0a8939f4a",
+ "commit": "97cf50ffd1f10317bc535fd259b04bec038db5b9",
+ "source_tree_sha256": "58199c7a72bedfc1d0836f4aa8f03f16508e4bb2c03e2cc94e91ef5bf64e774d",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -70,6 +70,7 @@
     "pitchdeck.icon_library.v1",
     "pitchdeck.identity_ledger.v1",
     "pitchdeck.image_variation_plan.v1",
+    "pitchdeck.layout_profile.v1",
     "pitchdeck.layout_signature.v1",
     "pitchdeck.memory_sync_receipt.v1",
     "pitchdeck.narrative_outline.v1",

@@ -724,6 +724,9 @@ def emit_document_pptx_cmd(
     output: Annotated[Path, typer.Option(help="Output PPTX path.")],
     asset_base: Annotated[Path, typer.Option(help="Base dir for relative asset paths.")],
     theme_template: Annotated[Path | None, typer.Option(help="pitchdeck.theme_template.v1 JSON.")] = None,
+    house_template: Annotated[Path | None, typer.Option(help="House .pptx to inherit theme/master/layouts from (band, logo, footer come free).")] = None,
+    disclaimer_owner: Annotated[str | None, typer.Option(help="Owner named in the footer disclaimer; retargets the template's inherited one.")] = None,
+    disclaimer_approved_by: Annotated[str | None, typer.Option(help="Who approved the ownership assertion (required with --disclaimer-owner).")] = None,
 ) -> None:
     """Emit a canonical document as NATIVE editable PPTX (nested groups, shapes, connectors, runs)."""
     import json as json_mod
@@ -733,7 +736,17 @@ def emit_document_pptx_cmd(
 
     try:
         doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
-        receipt = emit_document_pptx(doc, output, asset_base=asset_base, theme_template=theme_template)
+        disclaimer_text = None
+        if disclaimer_owner:
+            from .identity import ownership_disclaimer
+
+            if not disclaimer_approved_by:
+                raise SkillError("--disclaimer-owner requires --disclaimer-approved-by: "
+                                 "ownership is a legal assertion, never a derivation")
+            disclaimer_text = ownership_disclaimer(disclaimer_owner, approved_by=disclaimer_approved_by).text
+        receipt = emit_document_pptx(doc, output, asset_base=asset_base,
+                                     theme_template=theme_template, house_template=house_template,
+                                     disclaimer=disclaimer_text)
         typer.echo(json_mod.dumps({"status": "PASS", **receipt}, indent=1))
     except Exception as exc:
         _abort(exc)
