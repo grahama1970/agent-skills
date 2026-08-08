@@ -2,29 +2,29 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-/** The dream-hero video. Renders the poster keyframe by default and only loads
- *  + plays the clip on fine-pointer devices with motion allowed and no save-data
- *  — so phones, reduced-motion, and metered connections never fetch the ~9 MB
- *  mp4. Degrades to the exact static frame everywhere else. */
+/** The dream-hero video. Autoplays muted + loops on real devices; falls back to
+ *  the static poster only for the two constraints worth respecting: reduced
+ *  motion (accessibility) and save-data (metered connections). Everything else —
+ *  including touch devices — gets the clip, now that it's a lean ~1.1 MB H.264
+ *  (a fresh-clone re-encode; the original was a 9.3 MB, ~14 Mbps file that
+ *  stalled real buffering). Uses the native `autoplay` attribute plus a belt-
+ *  and-suspenders play() call so it starts reliably without a fragile
+ *  pointer-type gate. */
 export function StripVideo() {
   const ref = useRef<HTMLVideoElement>(null);
-  const [enabled, setEnabled] = useState(false);
+  const [play, setPlay] = useState(false);
 
   useEffect(() => {
-    const fine = window.matchMedia('(pointer: fine)').matches;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const saveData =
       (navigator as unknown as { connection?: { saveData?: boolean } }).connection
         ?.saveData ?? false;
-    if (fine && !reduce && !saveData) setEnabled(true);
+    if (!reduce && !saveData) setPlay(true);
   }, []);
 
   useEffect(() => {
-    if (enabled && ref.current) {
-      ref.current.load();
-      ref.current.play().catch(() => {});
-    }
-  }, [enabled]);
+    if (play) ref.current?.play?.().catch(() => {});
+  }, [play]);
 
   return (
     <video
@@ -33,10 +33,11 @@ export function StripVideo() {
       muted
       loop
       playsInline
-      preload="none"
+      autoPlay={play}
+      preload={play ? 'auto' : 'none'}
       poster="/dream/horus-embry-hero.webp"
     >
-      {enabled && <source src="/dream/horus-embry.mp4" type="video/mp4" />}
+      {play && <source src="/dream/horus-embry.mp4" type="video/mp4" />}
     </video>
   );
 }
