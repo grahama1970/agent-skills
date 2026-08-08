@@ -17,9 +17,7 @@ virtual display (Xvfb) — headed to avoid bot detection, virtual so no window p
 from __future__ import annotations
 
 import json
-import os
 import subprocess
-import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -61,43 +59,36 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     return proc.stdout.strip()
 
 
-def _start_xvfb(display: str = ":99") -> None:
-    """Start a virtual X display if none is on `display` (idempotent)."""
-    probe = subprocess.run(["bash", "-c", f"xdpyinfo -display {display}"], capture_output=True, text=True)
-    if probe.returncode == 0:
-        return
-    subprocess.Popen(
-        ["Xvfb", display, "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    time.sleep(2)
-
-
 def ensure_browser(surf_run: Path = SURF_RUN_DEFAULT) -> str:
-    """Guarantee surf has a reachable browser; launch a HEADED Chrome if not.
+    """Guarantee surf has a reachable browser; create a fresh window if not.
 
-    Headed (not headless): headless Chrome sets navigator.webdriver and trips
-    bot detection. We run a real headed Chrome on a virtual display (Xvfb) so it
-    has a genuine browser fingerprint with no visible window — undetectable and
-    non-intrusive. This removes the dependency on the user's Chrome being open
-    at 2 AM for public sources like SAM.gov. Returns the browser mode used.
+    Uses the same mechanism /ask uses for browser-tab-lifecycle=auto: when no
+    surf tab is reachable, `surf window.new` opens a fresh window in the
+    extension-connected Chrome. This is the correct path — a CDP-launched Chrome
+    can NOT be used, because Chrome blocks `--load-extension`, so the surf
+    extension never binds and every surf command fails. Returns the mode used.
+
+    Fails honestly if the surf extension host is not connected at all (Chrome
+    fully closed / extension unloaded) — that is a real environment gap to
+    surface, not something a headless Chrome can paper over.
     """
     try:
         _surf(surf_run, "tab.list", "--json", timeout=25)
         return "existing"
     except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-        logger.warning("no reachable browser ({}); launching HEADED Chrome on a virtual display", exc)
-    if not os.environ.get("DISPLAY"):
-        _start_xvfb(":99")
-        os.environ["DISPLAY"] = ":99"
+        logger.warning("no reachable surf tab ({}); creating a fresh window via surf window.new", exc)
     try:
-        # No --headless: headed Chrome avoids the webdriver/headless bot-detection tell.
-        _surf(surf_run, "cdp", "start", timeout=90)
+        # The /ask auto-lifecycle mechanism: a fresh window in the connected Chrome.
+        _surf(surf_run, "window.new", "about:blank", "--unfocused", timeout=60)
         _surf(surf_run, "tab.list", "--json", timeout=25)
-        return "cdp_headed"
+        return "fresh_window"
     except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-        raise BrowserCaptureError(f"could not start a headed browser: {exc}") from exc
+        raise BrowserCaptureError(
+            f"no surf-connected browser and window.new failed: {exc}. "
+            "Chrome must be running with the surf extension loaded "
+            "(chrome://extensions -> Load unpacked -> surf/vendor/surf-cli/dist); "
+            "a CDP/headless Chrome cannot bind the extension."
+        ) from exc
 
 
 _LINKEDIN_TOP_APPLICANT_URL = "https://www.linkedin.com/jobs/collections/top-applicant/"
