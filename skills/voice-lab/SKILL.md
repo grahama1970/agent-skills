@@ -35,7 +35,9 @@ metadata:
 
 provides:
   - voice-lab
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
   - evaluation-quality

@@ -41,6 +41,7 @@ composes:
   - goal-helper
   - scheduler
   - task-monitor
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

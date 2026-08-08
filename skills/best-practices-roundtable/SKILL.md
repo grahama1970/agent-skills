@@ -27,6 +27,7 @@ composes:
   - best-practices-tau-dag
   - brave-search
   - dogpile
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-tau-dag

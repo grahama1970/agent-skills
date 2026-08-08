@@ -17,7 +17,9 @@ metadata:
 
 provides:
   - handoff
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - human-collaboration
   - observability-operations

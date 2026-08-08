@@ -22,7 +22,7 @@ composes:
   - dogpile
   - create-figure
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - creation
   - training

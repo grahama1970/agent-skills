@@ -10,6 +10,7 @@ provides:
   - extract-html
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
 ---

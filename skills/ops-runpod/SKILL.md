@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - ops-runpod
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - model-ops
   - observability-operations

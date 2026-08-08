@@ -13,6 +13,7 @@ provides:
   - clipboard-verification
 composes:
   - clipboard-file
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-kde

@@ -53,6 +53,7 @@ composes:
   - memory
   - dogpile
   - debugger
+  - agentic-evals
 taxonomy:
   - inference
   - llm

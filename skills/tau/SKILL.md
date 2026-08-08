@@ -24,6 +24,7 @@ composes:
   - memory
   - project-watchdog
   - test-interactions
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

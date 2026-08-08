@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - formalize-request
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - human-collaboration
   - agentic-orchestration

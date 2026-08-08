@@ -40,6 +40,7 @@ composes:
   - best-practices-streamdeck
   - review-prompt
   - create-figure
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

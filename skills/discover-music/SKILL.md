@@ -26,6 +26,7 @@ composes:
   - discover-movies
   - dogpile
   - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
 ---

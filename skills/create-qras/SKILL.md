@@ -20,6 +20,7 @@ composes:
   - memory
   - scillm
   - create-evidence-case
+  - agentic-evals
 taxonomy:
   - knowledge
   - extraction

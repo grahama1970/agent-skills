@@ -14,7 +14,9 @@ metadata:
 
 provides:
   - monitor-pdfs
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - extraction

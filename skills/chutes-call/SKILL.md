@@ -32,6 +32,7 @@ composes:
   - ops-chutes
   - rate-limit-recovery
   - service-status
+  - agentic-evals
 taxonomy:
   - infrastructure
   - llm-completion

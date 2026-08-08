@@ -9,6 +9,7 @@ composes:
   - ingest-youtube
   - memory
   - task-monitor
+  - agentic-evals
 triggers:
   - consume youtube
   - search youtube

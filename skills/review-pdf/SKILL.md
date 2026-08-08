@@ -24,7 +24,7 @@ composes:
   - memory
   - create-figure
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - validation
   - extraction

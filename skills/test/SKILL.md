@@ -21,6 +21,7 @@ provides:
   - test
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - developer-tooling

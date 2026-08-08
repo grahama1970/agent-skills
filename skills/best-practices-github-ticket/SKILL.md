@@ -27,6 +27,7 @@ provides:
 composes:
   - memory
   - ask
+  - agentic-evals
 complies:
   - best-practices-skills
 taxonomy:

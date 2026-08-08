@@ -19,6 +19,7 @@ provides:
 composes:
   - ask
   - surf
+  - agentic-evals
 complies:
   - best-practices-skills
 taxonomy:

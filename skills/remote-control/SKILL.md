@@ -18,6 +18,7 @@ tools:
   - Read
 composes:
   - agent-inbox
+  - agentic-evals
 provides:
   - remote-project-access
 tags:

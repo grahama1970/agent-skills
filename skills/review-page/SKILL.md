@@ -34,7 +34,7 @@ taxonomy:
   - validation
 composes:
   - test-interactions
-
+  - agentic-evals
 consumers:
   - ask  # $ask webgpt owns WebGPT adjudication
 disciplines:

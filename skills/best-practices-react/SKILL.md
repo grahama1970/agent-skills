@@ -23,6 +23,7 @@ provides:
   - best-practices-react
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - engineering-standards
   - ui-design-engineering

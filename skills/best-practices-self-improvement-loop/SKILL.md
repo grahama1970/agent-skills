@@ -23,6 +23,7 @@ provides:
 composes:
   - classifier-lab
   - best-practices-python
+  - agentic-evals
 taxonomy:
   - engineering
   - patterns

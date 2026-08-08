@@ -36,6 +36,7 @@ composes:
   - test-interactions
   - scillm
   - scheduler
+  - agentic-evals
 disciplines:
   - content-creation
   - voice-audio

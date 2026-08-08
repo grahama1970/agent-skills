@@ -20,6 +20,7 @@ composes:
   - dogpile
   - ask
   - ux-lab
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-design

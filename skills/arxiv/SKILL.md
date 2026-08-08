@@ -19,7 +19,7 @@ composes:
   - memory
   - fetcher
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - research
   - academic

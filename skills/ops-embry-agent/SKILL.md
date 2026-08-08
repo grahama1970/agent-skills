@@ -4,7 +4,8 @@ description: Manage the Embry Agent D-Bus daemon (embry-agent.service) for syste
 version: "1.0"
 provides:
   - embry-agent-daemon-management
-composes: []
+composes:
+  - agentic-evals
 triggers:
   - "start the agent daemon"
   - "stop the agent daemon"

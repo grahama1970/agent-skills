@@ -22,6 +22,7 @@ composes:
   - ops-claude
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

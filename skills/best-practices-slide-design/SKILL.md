@@ -20,6 +20,7 @@ provides:
   - style-reference-analysis
 composes:
   - pitchdeck
+  - agentic-evals
 complies:
   - best-practices-skills
 disciplines:

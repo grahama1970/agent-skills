@@ -323,14 +323,22 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
     for skill_dir in skills:
         posture = classify_eval_posture(skill_dir)
         skill_findings = run_validator(skill_dir, skills_root, validator, timeout_seconds)
-        eval_findings = [finding for finding in skill_findings if finding.get("rule") == "EVAL001"]
-        recommended_action = recommended_action_for(skill_dir, posture, bool(eval_findings))
+        eval_findings = [finding for finding in skill_findings if finding.get("rule") in {"EVAL001", "EVAL002"}]
+        eval001_findings = [finding for finding in eval_findings if finding.get("rule") == "EVAL001"]
+        eval002_findings = [finding for finding in eval_findings if finding.get("rule") == "EVAL002"]
+        recommended_action = recommended_action_for(
+            skill_dir,
+            posture,
+            needs_fixture=bool(eval001_findings),
+            needs_composition=bool(eval002_findings),
+        )
         findings.extend(skill_findings)
         skill_reports.append(
             {
                 "skill": skill_dir.name,
                 "eval_posture": posture,
                 "eval_required": bool(eval_findings),
+                "needs_agentic_evals_composition": bool(eval002_findings),
                 "recommended_action": recommended_action,
                 "eval_findings": eval_findings,
             }
@@ -346,13 +354,14 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
         action_counts[action] = action_counts.get(action, 0) + 1
 
     eval001 = [finding for finding in findings if finding.get("rule") == "EVAL001"]
+    eval002 = [finding for finding in findings if finding.get("rule") == "EVAL002"]
     return {
         "schema": "agentic_evals.skill_posture_audit.v1",
         "mocked": False,
         "live": False,
         "proof_scope": "static repository eval posture audit",
         "claims": {
-            "proves": "which top-level skills currently declare an eval posture or emit EVAL001",
+            "proves": "which top-level skills currently declare eval posture and compose agentic-evals",
             "does_not_prove": "per-skill semantic behavior, live service behavior, or fixture quality",
         },
         "skills_root": str(skills_root),
@@ -361,18 +370,31 @@ def audit_skills_report(skills_root: Path, validator: Path, timeout_seconds: flo
             "skills_checked": len(skills),
             "total_findings": len(findings),
             "eval001_count": len(eval001),
+            "eval002_count": len(eval002),
             "posture_counts": posture_counts,
             "recommended_action_counts": action_counts,
             "eval001_skills": sorted({finding["skill"] for finding in eval001}),
+            "eval002_skills": sorted({finding["skill"] for finding in eval002}),
         },
         "skills": skill_reports,
         "findings": findings,
     }
 
 
-def recommended_action_for(skill_dir: Path, posture: str, eval_required: bool) -> str:
-    if not eval_required:
+def recommended_action_for(
+    skill_dir: Path,
+    posture: str,
+    needs_fixture: bool,
+    needs_composition: bool,
+) -> str:
+    if not needs_fixture and not needs_composition:
         return "none"
+    if needs_composition and not needs_fixture:
+        return "compose_agentic_evals"
+    if needs_composition and needs_fixture:
+        if (skill_dir / "sanity.sh").exists() or (skill_dir / "run.sh").exists():
+            return "compose_agentic_evals_and_scaffold_fixture"
+        return "compose_agentic_evals_and_scaffold_static_validation_fixture"
     if posture != "missing":
         return "strengthen_existing_eval"
     if (skill_dir / "sanity.sh").exists() or (skill_dir / "run.sh").exists():
@@ -468,7 +490,13 @@ def apply_scaffolds_report(
     eligible = [
         item
         for item in audit["skills"]
-        if item["recommended_action"] in {"scaffold_fixture", "scaffold_static_validation_fixture"}
+        if item["recommended_action"]
+        in {
+            "scaffold_fixture",
+            "scaffold_static_validation_fixture",
+            "compose_agentic_evals_and_scaffold_fixture",
+            "compose_agentic_evals_and_scaffold_static_validation_fixture",
+        }
     ]
     selected = eligible[:limit] if limit is not None else eligible
     results = []

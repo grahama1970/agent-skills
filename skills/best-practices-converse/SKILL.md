@@ -30,6 +30,7 @@ composes:
   - best-practices-python
   - best-practices-skills
   - converse
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

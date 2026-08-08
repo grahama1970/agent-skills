@@ -15,7 +15,8 @@ triggers:
 provides:
   - dag-ascii-chart
   - dag-validate
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - precision
   - validation

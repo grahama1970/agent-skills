@@ -13,6 +13,7 @@ composes:
   - scillm
   - taxonomy
   - task-monitor
+  - agentic-evals
 taxonomy:
   - composition
   - recommendation

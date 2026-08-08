@@ -20,6 +20,7 @@ composes:
   - ux-lab
   - memory
   - task-monitor
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

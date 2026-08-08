@@ -12,6 +12,7 @@ composes:
   - review-plan
   - scillm
   - ask
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-plan

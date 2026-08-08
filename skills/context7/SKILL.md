@@ -20,6 +20,7 @@ provides:
 composes:
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - developer-tooling

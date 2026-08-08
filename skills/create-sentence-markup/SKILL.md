@@ -22,6 +22,7 @@ provides:
 composes:
   - extract-entities
   - interview
+  - agentic-evals
 disciplines:
   - extraction
   - ui-design-engineering

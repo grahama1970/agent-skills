@@ -23,6 +23,7 @@ composes:
   - memory
   - monitor-skills
   - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - persona-simulation

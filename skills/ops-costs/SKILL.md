@@ -23,6 +23,7 @@ composes:
   - ops-google
   - ops-runpod
   - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - model-ops

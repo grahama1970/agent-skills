@@ -19,6 +19,7 @@ composes:
   - persona-dream
   - create-storyboard
   - contact-sheet
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - create-sound-design
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - voice-audio

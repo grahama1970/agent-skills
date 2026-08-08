@@ -17,7 +17,9 @@ metadata:
   short-description: Google Gemini API management and budget safety
 provides:
   - ops-google
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - model-ops

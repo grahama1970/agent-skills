@@ -28,6 +28,7 @@ composes:
   - ask
   - dogpile
   - interview
+  - agentic-evals
 taxonomy:
   - coordination
   - validation

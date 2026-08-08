@@ -24,7 +24,9 @@ metadata:
 
 provides:
   - create-annotated-pdf
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - content-creation

@@ -21,7 +21,8 @@ provides:
   - progress-tracking
   - goal-definition
   - blocker-reporting
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

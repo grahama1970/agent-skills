@@ -22,6 +22,7 @@ composes:
   - arxiv
   - ingest-book
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
 ---

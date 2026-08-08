@@ -18,7 +18,9 @@ metadata:
 
 provides:
   - fixture-tricky
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

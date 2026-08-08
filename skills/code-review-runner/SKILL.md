@@ -27,6 +27,7 @@ composes:
   - best-practices-skills
   - review-code
   - memory
+  - agentic-evals
 taxonomy:
   - review
   - quality

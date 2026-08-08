@@ -59,6 +59,7 @@ composes:
   - memory
   - analytics
   - create-gsn-diagram
+  - agentic-evals
 disciplines:
   - content-creation
   - ui-design-engineering

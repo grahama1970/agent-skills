@@ -122,7 +122,8 @@ triggers:
   - covered eval fixture
 provides:
   - task-orchestration
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
 ---
@@ -179,14 +180,17 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "agentic_evals.skill_posture_audit.v1"
 assert report["summary"]["skills_checked"] == 3
 assert report["summary"]["eval001_count"] == 2
-assert report["summary"]["recommended_action_counts"]["scaffold_fixture"] == 1
-assert report["summary"]["recommended_action_counts"]["scaffold_static_validation_fixture"] == 1
+assert report["summary"]["eval002_count"] == 2
+assert report["summary"]["recommended_action_counts"]["compose_agentic_evals_and_scaffold_fixture"] == 1
+assert report["summary"]["recommended_action_counts"]["compose_agentic_evals_and_scaffold_static_validation_fixture"] == 1
 assert report["summary"]["posture_counts"]["agentic_fixture"] == 1
 assert report["summary"]["posture_counts"]["missing"] == 2
 missing = next(item for item in report["skills"] if item["skill"] == "missing")
-assert missing["recommended_action"] == "scaffold_fixture"
+assert missing["needs_agentic_evals_composition"] is True
+assert missing["recommended_action"] == "compose_agentic_evals_and_scaffold_fixture"
 static_missing = next(item for item in report["skills"] if item["skill"] == "static-missing")
-assert static_missing["recommended_action"] == "scaffold_static_validation_fixture"
+assert static_missing["needs_agentic_evals_composition"] is True
+assert static_missing["recommended_action"] == "compose_agentic_evals_and_scaffold_static_validation_fixture"
 PY
 
 SCAFFOLD_OUT="$AUDIT_ROOT/missing/fixtures/agentic_eval.json"

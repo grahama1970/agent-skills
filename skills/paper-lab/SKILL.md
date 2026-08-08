@@ -39,7 +39,7 @@ composes:
   - dogpile
   - arxiv
   - scillm
-
+  - agentic-evals
 taxonomy:
   - creation
   - iteration

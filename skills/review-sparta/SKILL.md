@@ -24,7 +24,9 @@ metadata:
 
 provides:
   - review-sparta
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
   - evaluation-quality

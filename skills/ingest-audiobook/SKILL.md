@@ -25,6 +25,7 @@ provides:
 composes:
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - voice-audio

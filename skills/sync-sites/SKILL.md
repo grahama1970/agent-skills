@@ -10,7 +10,9 @@ allowed-tools:
   - Bash
 provides:
   - sync-sites
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - compliance-security

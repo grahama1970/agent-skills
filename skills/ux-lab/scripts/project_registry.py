@@ -8,7 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 
+load_dotenv(override=False)
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 REPO_ROOT = SKILL_DIR.parents[1]

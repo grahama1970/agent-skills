@@ -26,6 +26,7 @@ composes:
   - memory
   - doc2qra
   - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - data-engineering

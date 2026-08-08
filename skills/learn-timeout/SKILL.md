@@ -12,6 +12,7 @@ provides:
   - learn-timeout
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - observability-operations

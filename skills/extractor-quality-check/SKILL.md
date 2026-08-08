@@ -8,6 +8,7 @@ provides:
 composes:
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

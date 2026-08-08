@@ -14,6 +14,7 @@ metadata:
 composes:
   - create-evidence-case
   - memory
+  - agentic-evals
 provides:
   - evidence-case-convergence
 disciplines:

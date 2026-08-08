@@ -42,7 +42,7 @@ composes:
   - task-monitor
   - scillm
   - scheduler
-
+  - agentic-evals
 taxonomy:
   - creation
   - composition

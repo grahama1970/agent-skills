@@ -35,6 +35,7 @@ composes:
   - task-monitor
   - voice-segment-selector # Orpheus candidate review/export and synthetic SFX gap-fill
   - unsloth-studio       # downstream train/eval loop ownership
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

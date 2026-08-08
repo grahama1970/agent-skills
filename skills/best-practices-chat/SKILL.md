@@ -10,6 +10,7 @@ composes:
   - best-practices-design
   - best-practices-sparta
   - review-design
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-security

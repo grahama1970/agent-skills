@@ -27,6 +27,7 @@ composes:
   - dogpile
   - hack
   - security-scan
+  - agentic-evals
 taxonomy:
   - security
   - resilience

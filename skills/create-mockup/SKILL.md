@@ -33,6 +33,7 @@ composes:
   - test-interactions
   - create-design-board
   - create-styleguide
+  - agentic-evals
 taxonomy:
   - design
   - ui

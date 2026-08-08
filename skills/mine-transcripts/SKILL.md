@@ -15,7 +15,9 @@ metadata:
 
 provides:
   - mine-transcripts
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - ml-training

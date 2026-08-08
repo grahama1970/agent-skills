@@ -18,6 +18,7 @@ composes:
   - ingest-doc
   - extract-pdf
   - best-practices-python
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

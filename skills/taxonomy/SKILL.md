@@ -28,7 +28,7 @@ composes:
   - memory
   - scillm
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - classification
   - bridging

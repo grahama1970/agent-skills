@@ -24,6 +24,7 @@ composes:
   - create-figure
   - review-design
   - surf
+  - agentic-evals
 taxonomy:
   - design
   - validation

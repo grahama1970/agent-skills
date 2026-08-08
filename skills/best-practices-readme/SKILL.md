@@ -28,6 +28,7 @@ composes:
   - best-practices-agent
   - best-practices-security
   - project-knowledge
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-agent

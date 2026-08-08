@@ -21,7 +21,7 @@ provides:
 composes:
   - ops-llm
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - monitoring
   - operations

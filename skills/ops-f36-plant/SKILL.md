@@ -29,6 +29,7 @@ composes:
   - data-audit
   - sparta-review
   - task-monitor
+  - agentic-evals
 persona: paul_bevilaqua
 streamdeck:
   buttons_manifest: buttons.yaml

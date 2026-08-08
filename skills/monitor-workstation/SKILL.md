@@ -27,6 +27,7 @@ composes:
   - create-figure
   - memory
   - scheduler
+  - agentic-evals
 taxonomy:
   - monitoring
   - operations

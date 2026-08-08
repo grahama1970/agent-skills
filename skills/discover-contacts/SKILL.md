@@ -26,7 +26,9 @@ metadata:
 
 provides:
   - discover-contacts
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
 ---

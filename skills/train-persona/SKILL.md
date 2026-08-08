@@ -5,7 +5,9 @@ triggers: train persona, persona training, lora persona, persona adapter, train 
 
 provides:
   - train-persona
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - persona-simulation

@@ -4,7 +4,8 @@ description: Apple's approach to interface design and fluid, physical motion, tr
 provides:
   - apple-interface-design-guidance
   - fluid-motion-guidance
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
 disciplines:

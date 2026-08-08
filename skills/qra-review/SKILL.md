@@ -24,6 +24,7 @@ composes:
   - dogpile
   - create-figure
   - create-qras
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-sparta

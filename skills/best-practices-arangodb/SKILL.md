@@ -43,6 +43,7 @@ composes:
   - best-practices-python
   - memory
   - ingest-code
+  - agentic-evals
 disciplines:
   - engineering-standards
   - memory-knowledge

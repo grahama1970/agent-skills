@@ -30,6 +30,7 @@ provides:
 composes:
   - create-figure
   - memory
+  - agentic-evals
 taxonomy:
   - creation
   - iteration

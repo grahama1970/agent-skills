@@ -34,6 +34,7 @@ composes:
   - review-plan
   - recommend-skill-chain
   - orchestrate
+  - agentic-evals
 read_before_use:
   - plan.py
   - src/plan_skill/code_runner_contract.py

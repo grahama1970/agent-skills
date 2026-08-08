@@ -16,6 +16,7 @@ composes:
   - surf
   - test-interactions
   - memory
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - compliance-security

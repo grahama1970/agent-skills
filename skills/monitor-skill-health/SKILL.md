@@ -30,7 +30,7 @@ composes:
   - task-monitor
   - ticket
   - tau
-
+  - agentic-evals
 taxonomy:
   - validation
   - observability

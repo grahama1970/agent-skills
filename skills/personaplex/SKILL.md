@@ -24,6 +24,7 @@ composes:
   - voice-segment-selector
   - tts-voice
   - memory
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

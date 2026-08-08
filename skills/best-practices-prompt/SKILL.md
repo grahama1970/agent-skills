@@ -26,7 +26,7 @@ provides:
 composes:
   - review-prompt
   - prompt-lab
-
+  - agentic-evals
 taxonomy:
   - prompt-engineering
   - llm

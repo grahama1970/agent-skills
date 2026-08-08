@@ -34,6 +34,7 @@ composes:
   - scillm
   - ops-discord
   - interview
+  - agentic-evals
 disciplines:
   - agentic-orchestration
   - observability-operations

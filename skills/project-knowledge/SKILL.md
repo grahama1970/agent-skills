@@ -25,6 +25,7 @@ composes:
   - project-state
   - checkpoint
   - memory
+  - agentic-evals
 taxonomy:
   - knowledge-management
   - coordination

@@ -16,6 +16,7 @@ provides:
   - plan-linting
 composes:
   - memory
+  - agentic-evals
 taxonomy:
   - precision
 metadata:

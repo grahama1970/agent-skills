@@ -32,6 +32,7 @@ composes:
   - interview
   - best-practices-react
   - best-practices-cots
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

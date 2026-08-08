@@ -24,6 +24,7 @@ composes:
   - memory
   - taxonomy
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - memory-knowledge

@@ -37,6 +37,7 @@ composes:
   - match-requirement
   - create-evidence-case
   - lean4-prove
+  - agentic-evals
 disciplines:
   - data-engineering
   - agentic-orchestration

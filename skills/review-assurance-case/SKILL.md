@@ -23,6 +23,7 @@ composes:
   - create-gsn-diagram
   - extract-entities
   - taxonomy
+  - agentic-evals
 provides:
   - assurance-case-review-report
   - structural-integrity-check

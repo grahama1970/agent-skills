@@ -30,6 +30,7 @@ composes:
   - embedding
   - edge-verifier
   - task-monitor
+  - agentic-evals
 disciplines:
   - memory-knowledge
 ---

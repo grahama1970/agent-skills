@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - create-code
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - agentic-orchestration
   - developer-tooling

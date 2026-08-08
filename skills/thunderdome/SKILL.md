@@ -39,7 +39,7 @@ composes:
   - memory
   - classifier-lab
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

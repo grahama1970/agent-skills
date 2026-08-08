@@ -31,6 +31,7 @@ provides:
 composes:
   - best-practices-react
   - best-practices-codex-design
+  - agentic-evals
 taxonomy:
   - design
   - ui

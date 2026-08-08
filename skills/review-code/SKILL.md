@@ -40,7 +40,12 @@ metadata:
   short-description: Multi-provider AI code review CLI
 provides:
   - code-review
-composes: [task-monitor, scillm, ask, project-knowledge]
+composes:
+  - task-monitor
+  - scillm
+  - ask
+  - project-knowledge
+  - agentic-evals
 
 taxonomy:
   - validation

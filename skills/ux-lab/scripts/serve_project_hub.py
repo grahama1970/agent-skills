@@ -8,9 +8,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from dotenv import load_dotenv
 from project_registry import expand_url, load_registry, workspace_path
 
 
+load_dotenv(override=False)
 HOST = os.environ.get("UX_LAB_HOST", "127.0.0.1")
 PORT = int(os.environ.get("UX_LAB_PORT", "3002"))
 

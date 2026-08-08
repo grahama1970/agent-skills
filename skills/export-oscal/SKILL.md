@@ -9,7 +9,9 @@ allowed-tools:
   - Bash
 provides:
   - export-oscal
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
 ---

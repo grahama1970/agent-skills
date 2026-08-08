@@ -37,6 +37,7 @@ composes:
   - learn-voice
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - voice-audio

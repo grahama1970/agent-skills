@@ -15,7 +15,9 @@ metadata:
   short-description: Multi-agent Thunderdome for judging and fixing complex bugs
 provides:
   - hardening
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 
 taxonomy:
   - hardening

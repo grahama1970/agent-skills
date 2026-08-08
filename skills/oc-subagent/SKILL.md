@@ -19,7 +19,8 @@ provides:
   - opencode-subagent-control
   - child-session-persistence-proof
   - concurrent-subagent-probe
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - validation
   - orchestration

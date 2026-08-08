@@ -18,7 +18,9 @@ metadata:
 
 provides:
   - create-pdf-fixture
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

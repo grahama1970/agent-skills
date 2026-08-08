@@ -21,7 +21,9 @@ metadata:
 
 provides:
   - table-lab
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

@@ -16,7 +16,8 @@ metadata:
   short-description: Convert monochrome PNG icons into cleaned SVGs
 provides:
   - png-svg-conversion
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - precision
   - design

@@ -17,7 +17,9 @@ metadata:
 
 provides:
   - rate-limit-recovery
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - agentic-orchestration

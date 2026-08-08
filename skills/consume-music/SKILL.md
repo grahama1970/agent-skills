@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - consume-music
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - memory-knowledge

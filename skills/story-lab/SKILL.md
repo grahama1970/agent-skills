@@ -46,6 +46,7 @@ composes:
   - dogpile
   - interview
   - scillm
+  - agentic-evals
 disciplines:
   - content-creation
   - evaluation-quality

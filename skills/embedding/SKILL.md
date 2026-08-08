@@ -24,7 +24,7 @@ composes:
   - edge-verifier
   - scillm
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - search
   - similarity

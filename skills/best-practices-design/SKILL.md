@@ -19,6 +19,7 @@ composes:
   - review-design
   - ask
   - memory
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-design

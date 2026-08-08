@@ -18,7 +18,9 @@ metadata:
 
 provides:
   - security-scan
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
 ---

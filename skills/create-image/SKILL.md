@@ -23,6 +23,7 @@ composes:
   - dogpile
   - create-movie
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
 ---

@@ -24,6 +24,7 @@ provides:
 composes:
   - best-practices-python
   - best-practices-skills
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

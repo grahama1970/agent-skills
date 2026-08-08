@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - persona-journal
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - persona-simulation
   - content-creation

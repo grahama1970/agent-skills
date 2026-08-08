@@ -11,6 +11,7 @@ composes:
   - ingest-youtube
   - dogpile
   - task-monitor
+  - agentic-evals
 disciplines:
   - persona-simulation
   - human-collaboration

@@ -12,7 +12,9 @@ triggers:
 
 provides:
   - ops-nzbgeek
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - observability-operations

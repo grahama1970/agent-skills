@@ -18,6 +18,7 @@ triggers:
 composes:
   - prompt-lab
   - scillm
+  - agentic-evals
 provides:
   - find-minimum
   - grid-eval

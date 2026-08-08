@@ -22,6 +22,7 @@ composes:
   - extract-audiobook
   - ingest-youtube
   - tts-train
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

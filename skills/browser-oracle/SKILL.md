@@ -21,6 +21,7 @@ provides:
   - browser-oracle-registry
 composes:
   - surf
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

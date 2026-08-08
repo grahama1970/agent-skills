@@ -11,7 +11,9 @@ allowed-tools:
 
 provides:
   - service-status
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
 ---

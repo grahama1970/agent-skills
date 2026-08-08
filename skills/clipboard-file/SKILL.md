@@ -14,6 +14,7 @@ provides:
   - clipboard-target-verification
 composes:
   - best-practices-kde
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-kde

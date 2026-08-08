@@ -35,6 +35,7 @@ composes:
   - skills-ci
   - loop
   - scillm
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-subagent

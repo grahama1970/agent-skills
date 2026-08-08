@@ -28,6 +28,7 @@ composes:
   - consume-book
   - doc2qra
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
 ---

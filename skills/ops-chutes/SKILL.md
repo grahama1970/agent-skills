@@ -27,7 +27,9 @@ metadata:
 
 provides:
   - ops-chutes
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - model-ops

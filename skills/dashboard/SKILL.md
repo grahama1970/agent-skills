@@ -20,6 +20,7 @@ composes:
   - ops-chutes
   - task-monitor
   - monitor-skill-health
+  - agentic-evals
 taxonomy:
   - observability
   - developer-tools

@@ -16,6 +16,7 @@ provides:
 composes:
   - doc2qra
   - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - memory-knowledge

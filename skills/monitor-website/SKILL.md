@@ -10,6 +10,8 @@ allowed-tools:
   - Bash
 provides:
   - monitor-website
+composes:
+  - agentic-evals
 disciplines:
   - observability-operations
   - content-creation

@@ -21,7 +21,9 @@ metadata:
 
 provides:
   - monitor-contacts
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - research-retrieval

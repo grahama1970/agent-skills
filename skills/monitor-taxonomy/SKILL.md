@@ -25,7 +25,9 @@ metadata:
 
 provides:
   - monitor-taxonomy
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - memory-knowledge

@@ -21,6 +21,7 @@ composes:
   - classifier-lab
   - dogpile
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - extraction

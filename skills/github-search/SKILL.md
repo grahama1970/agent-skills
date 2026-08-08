@@ -21,7 +21,10 @@ metadata:
 
 provides:
   - github-search
-composes: [brave-search, task-monitor]
+composes:
+  - brave-search
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
 ---

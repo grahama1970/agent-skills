@@ -30,6 +30,7 @@ composes:
   - pdf-screenshot
   - scillm
   - memory
+  - agentic-evals
 taxonomy:
   - validation
   - evidence

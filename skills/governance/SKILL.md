@@ -22,6 +22,7 @@ composes:
   - dogpile
   - create-walkthrough
   - best-practices-self-improvement-loop
+  - agentic-evals
 taxonomy:
   - governance
   - planning

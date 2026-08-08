@@ -16,7 +16,7 @@ composes:
   - memory
   - scheduler
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - observability
   - orchestration

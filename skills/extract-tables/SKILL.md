@@ -34,7 +34,7 @@ composes:
   - table-lab      # Parameter tuning convergence loop
   - create-table-classifier  # MobileNetV2 strategy predictor (Tier 0.5)
   - extractor      # Pipeline consumer (s05 integration point)
-
+  - agentic-evals
 taxonomy:
   - extraction
   - precision

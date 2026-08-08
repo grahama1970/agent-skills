@@ -13,6 +13,7 @@ composes:
   - scillm
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - model-ops

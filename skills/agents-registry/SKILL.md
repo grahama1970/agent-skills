@@ -22,6 +22,7 @@ provides:
   - persona-metadata
 composes:
   - memory
+  - agentic-evals
 taxonomy:
   - precision
   - composition

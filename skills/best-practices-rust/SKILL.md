@@ -50,7 +50,8 @@ metadata:
 
 provides:
   - best-practices-rust
-composes: []
+composes:
+  - agentic-evals
 
 taxonomy:
   - validation

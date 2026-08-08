@@ -27,6 +27,7 @@ composes:
   - memory
   - scheduler
   - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - memory-knowledge

@@ -38,6 +38,7 @@ composes:
   - dogpile
   - assess
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - agentic-orchestration

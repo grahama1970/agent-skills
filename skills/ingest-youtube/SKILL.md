@@ -27,6 +27,7 @@ composes:
   - taxonomy
   - task-monitor
   - doc2qra
+  - agentic-evals
 disciplines:
   - data-engineering
   - extraction

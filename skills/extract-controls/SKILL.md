@@ -19,6 +19,7 @@ composes:
   - extractor
   - lean4-prove
   - task-monitor
+  - agentic-evals
 taxonomy:
   - precision
   - compliance

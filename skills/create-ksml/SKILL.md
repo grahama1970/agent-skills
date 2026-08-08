@@ -9,6 +9,7 @@ provides:
   - create-ksml
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
 ---

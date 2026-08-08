@@ -27,7 +27,8 @@ provides:
   - artifact-contract
   - drift-prevention
   - artifact-inspection
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - collaboration
   - greenfield

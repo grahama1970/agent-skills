@@ -11,6 +11,7 @@ composes:
   - sparta-intent
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
   - evaluation-quality

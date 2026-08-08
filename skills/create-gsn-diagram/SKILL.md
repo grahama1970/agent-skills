@@ -21,6 +21,7 @@ composes:
   - taxonomy
   - export-oscal
   - lean4-prove
+  - agentic-evals
 disciplines:
   - compliance-security
   - content-creation

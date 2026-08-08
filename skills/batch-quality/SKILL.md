@@ -14,7 +14,9 @@ triggers:
 
 provides:
   - batch-quality
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - model-ops

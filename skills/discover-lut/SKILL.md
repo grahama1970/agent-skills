@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - discover-lut
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - content-creation

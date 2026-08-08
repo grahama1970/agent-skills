@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - prototype-react-iterate
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ui-design-engineering
   - persona-simulation

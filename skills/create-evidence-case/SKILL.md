@@ -46,6 +46,7 @@ composes:
   - interview
   - prompt-lab
   - analytics
+  - agentic-evals
 taxonomy:
   - verification
   - evidence

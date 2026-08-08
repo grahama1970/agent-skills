@@ -25,6 +25,7 @@ composes:
   - memory
   - brave-search
   - extract-entities
+  - agentic-evals
 complies:
   - best-practices-skills
 runtime_self_improvement: none

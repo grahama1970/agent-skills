@@ -13,7 +13,8 @@ metadata:
   short-description: Embry Dashboard (Tauri) launcher and navigator
 provides:
   - dashboard-gui
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - operational
 disciplines:

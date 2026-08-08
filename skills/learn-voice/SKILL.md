@@ -27,6 +27,7 @@ composes:
   - memory
   - create-music
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - voice-audio

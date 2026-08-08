@@ -13,7 +13,8 @@ triggers:
   - ops-stitch
 provides:
   - stitch-context-bundle
-composes: []
+composes:
+  - agentic-evals
 runner: python
 disciplines:
   - ui-design-engineering

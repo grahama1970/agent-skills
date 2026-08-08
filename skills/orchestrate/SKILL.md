@@ -32,6 +32,7 @@ composes:
   - review-plan
   - task-monitor
   - test-lab
+  - agentic-evals
 read_before_use:
   - structured_execute.py
   - run.sh

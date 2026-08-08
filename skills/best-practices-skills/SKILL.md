@@ -22,7 +22,7 @@ composes:
   - task-monitor
   - monitor-misuse
   - memory
-
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python
@@ -543,9 +543,10 @@ include Docker deployment:
 
 ## Agentic Evaluation Gate
 
-All skills in `agent-skills` default to an explicit evaluation posture. A skill
-must either provide an eval fixture, delegate to an evaluation skill, or state
-why an eval is not required.
+All skills in `agent-skills` default to an explicit evaluation posture. Every
+skill MUST list `agentic-evals` in `composes:` so skill selection, maintenance,
+and CI can load the standard gate with the skill. Eval provider skills such as
+`agentic-evals` and `eval-skills` are exempt to avoid self-composition.
 
 Use `/agentic-evals` as the default gate when a skill claims durable agent
 behavior beyond one-shot CLI output. This includes skills that orchestrate
@@ -565,15 +566,9 @@ The minimum agentic eval contract is:
 - A readiness state using `READY`, `USABLE_WITH_GAPS`, `NOT_READY`, or
   `NOT_ESTABLISHED`.
 
-Simple one-shot skills may opt out only by documenting an explicit
-`eval_not_required` rationale in `SKILL.md` or project knowledge. The rationale
-must be concrete, for example "static prompt template only; covered by
-frontmatter validation and fixture-free import check". Absence of an eval
-fixture is not an opt-out.
-
-`best-practices-skills` does not list `agentic-evals` in `composes:` because it
-does not call that skill at runtime. The binding is a standards and CI
-recommendation, represented in `references/rules.yml`.
+Simple one-shot skills may still document an explicit `eval_not_required`
+rationale for fixture depth, but that is not an exemption from composing
+`agentic-evals`. Absence of an eval fixture is not an opt-out.
 
 ## Checklist (creation/review)
 
@@ -605,9 +600,10 @@ recommendation, represented in `references/rules.yml`.
   self-heal-with-record or raise — never warn-and-continue; validated
   artifacts carry a `seam_validation` receipt; emitted commands are checked
   runnable before emission.
-- Skills that require evals provide `fixtures/agentic_eval.json` or delegate to
-  an evaluation skill such as `agentic-evals`; skills that do not require evals
-  document a concrete `eval_not_required` rationale.
+- Skills that require evals list `agentic-evals` in `composes:` and provide
+  `fixtures/agentic_eval.json`; scaffold fixtures are first posture only and
+  must be strengthened with real-world positive, negative, and adversarial
+  cases.
 - Complex, high-risk, UI-facing, security, compliance, orchestration, or
   subagent skills include `.ask/browser-oracles.yaml` so `$browser-oracle`
   can resolve the correct WebGPT review project by directory walk-up.

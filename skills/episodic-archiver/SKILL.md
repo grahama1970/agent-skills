@@ -28,6 +28,7 @@ composes:
   - treesitter
   - interview
   - task-monitor
+  - agentic-evals
 disciplines:
   - memory-knowledge
 ---

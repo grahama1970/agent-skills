@@ -23,7 +23,9 @@ metadata:
 
 provides:
   - social-bridge
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - compliance-security

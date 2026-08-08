@@ -23,6 +23,7 @@ provides:
 composes:
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - extraction

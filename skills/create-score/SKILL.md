@@ -26,6 +26,7 @@ composes:
   - create-sound-design
   - create-story
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - voice-audio

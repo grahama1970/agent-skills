@@ -27,7 +27,7 @@ composes:
   - memory
   - task-monitor
   - review-prompt
-
+  - agentic-evals
 taxonomy:
   - creation
   - iteration

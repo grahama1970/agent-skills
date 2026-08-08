@@ -10,6 +10,7 @@ provides:
   - learn-movie
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - content-creation

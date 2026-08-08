@@ -18,7 +18,9 @@ metadata:
 
 provides:
   - consume-movie
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - content-creation

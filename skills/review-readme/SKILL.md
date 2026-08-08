@@ -19,6 +19,7 @@ provides:
 composes:
   - ask
   - surf
+  - agentic-evals
 read_before_use:
   - review_readme.py
   - references/readme_review_rubric.md

@@ -24,6 +24,7 @@ composes:
   - recommend-skill-chain
   - skills-ci
   - task-monitor
+  - agentic-evals
 read_before_use:
   - review_plan.py
 taxonomy:

@@ -13,6 +13,7 @@ composes:
   - service-status
   - data-audit
   - task-monitor
+  - agentic-evals
 disciplines:
   - human-collaboration
   - persona-simulation

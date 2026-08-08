@@ -25,6 +25,7 @@ composes:
   - scillm
   - memory
   - task-monitor
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

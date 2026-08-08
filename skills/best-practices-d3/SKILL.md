@@ -22,6 +22,7 @@ provides:
   - best-practices-d3
 composes:
   - task-monitor
+  - agentic-evals
 taxonomy:
   - precision
 disciplines:

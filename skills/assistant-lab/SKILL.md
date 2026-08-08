@@ -45,6 +45,7 @@ composes:
   - scillm
   - ops-runpod
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - evaluation-quality

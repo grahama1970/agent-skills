@@ -27,7 +27,7 @@ composes:
   - ops-embry-agent
   - scheduler
   - memory
-
+  - agentic-evals
 taxonomy:
   - monitoring
   - operations

@@ -26,7 +26,7 @@ composes:
   - treesitter
   - memory
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - analysis
   - reverse-engineering

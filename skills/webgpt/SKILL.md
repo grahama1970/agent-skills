@@ -18,6 +18,7 @@ provides:
   - webgpt-listen
 composes:
   - surf
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

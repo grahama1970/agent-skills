@@ -30,6 +30,7 @@ provides:
   - best-practices-python
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - engineering-standards
   - developer-tooling

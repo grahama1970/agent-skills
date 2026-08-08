@@ -23,7 +23,7 @@ provides:
 composes:
   - dogpile
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - research
   - web

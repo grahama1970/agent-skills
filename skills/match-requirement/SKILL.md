@@ -23,6 +23,7 @@ provides:
 composes:
   - memory  # All logic lives in memory service /match/* endpoints
   - create-evidence-case  # Evidence case provides glossary, crosswalks, QRA evidence
+  - agentic-evals
 taxonomy:
   - verification
   - compliance

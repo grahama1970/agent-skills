@@ -14,7 +14,9 @@ triggers:
 
 provides:
   - pdf-screenshot
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - developer-tooling

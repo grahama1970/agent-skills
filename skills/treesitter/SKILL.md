@@ -21,6 +21,7 @@ composes:
   - edge-verifier
   - episodic-archiver
   - task-monitor
+  - agentic-evals
 disciplines:
   - developer-tooling
   - extraction

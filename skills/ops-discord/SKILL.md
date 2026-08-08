@@ -20,7 +20,9 @@ metadata:
 
 provides:
   - ops-discord
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - research-retrieval

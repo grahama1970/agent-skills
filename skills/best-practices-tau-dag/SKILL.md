@@ -6,6 +6,8 @@ description: >
   subagent roles, declaring immutable goals, adding skill gates such as
   best-practices-prompt/react/python, specifying provider/model policy, or
   diagnosing project-agent DAG failures and tau.dag_error.v1 course-corrections.
+composes:
+  - agentic-evals
 disciplines:
   - engineering-standards
   - agentic-orchestration

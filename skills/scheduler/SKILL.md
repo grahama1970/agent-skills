@@ -16,7 +16,7 @@ provides:
   - scheduling
 composes:
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - orchestration
   - automation

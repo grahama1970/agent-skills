@@ -24,6 +24,7 @@ provides:
 composes:
   - ux-lab
   - memory
+  - agentic-evals
 metadata:
   short-description: Programmatic architecture diagram creation for UX Lab Excalidraw canvas
 taxonomy:

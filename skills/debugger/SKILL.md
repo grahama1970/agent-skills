@@ -34,6 +34,7 @@ provides:
 composes:
   - brave-search
   - dogpile
+  - agentic-evals
 taxonomy:
   - validation
   - debugging

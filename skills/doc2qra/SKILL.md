@@ -30,6 +30,7 @@ composes:
   - scillm
   - taxonomy
   - task-monitor
+  - agentic-evals
 taxonomy:
   - ingestion
   - knowledge

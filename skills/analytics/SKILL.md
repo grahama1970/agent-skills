@@ -24,6 +24,7 @@ provides:
 composes:
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - content-creation

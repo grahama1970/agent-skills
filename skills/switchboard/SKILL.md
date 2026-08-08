@@ -30,7 +30,7 @@ provides:
 composes:
   - memory
   - scillm
-
+  - agentic-evals
 taxonomy:
   - orchestration
   - runtime

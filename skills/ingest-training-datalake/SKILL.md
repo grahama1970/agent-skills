@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - ingest-training-datalake
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - ml-training

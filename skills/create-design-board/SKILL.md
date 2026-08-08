@@ -16,6 +16,7 @@ composes:
   - create-figure
   - create-gsn-diagram
   - create-image
+  - agentic-evals
 triggers:
   - create design board
   - design board

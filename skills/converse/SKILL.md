@@ -25,7 +25,9 @@ metadata:
 
 provides:
   - converse
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
   - persona-simulation

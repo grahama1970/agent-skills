@@ -23,7 +23,9 @@ metadata:
 
 provides:
   - review-story
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - evaluation-quality

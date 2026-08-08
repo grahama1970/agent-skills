@@ -26,6 +26,7 @@ composes:
   - taxonomy
   - embedding
   - task-monitor
+  - agentic-evals
 taxonomy:
   - operational
 disciplines:

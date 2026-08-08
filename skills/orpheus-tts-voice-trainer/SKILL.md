@@ -33,6 +33,7 @@ composes:
   - ops-huggingface
   - tts-voice
   - unsloth-studio
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

@@ -28,7 +28,7 @@ composes:
   - analytics      # EDA before training
   - learn-timeout  # Domain consumer (timeout prediction uses create-regressor)
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - precision
   - resilience

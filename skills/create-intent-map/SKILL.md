@@ -19,7 +19,9 @@ metadata:
 
 provides:
   - create-intent-map
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - memory-knowledge

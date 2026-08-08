@@ -22,7 +22,9 @@ metadata:
 
 provides:
   - sfx-catalog
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
   - content-creation

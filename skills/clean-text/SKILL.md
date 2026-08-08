@@ -23,7 +23,9 @@ metadata:
 provides:
   - clean-text
   - sanitize-for-validation
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 
 taxonomy:
   - preprocessing

@@ -30,6 +30,7 @@ composes:
   - review-paper
   - dogpile
   - interview
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - content-creation

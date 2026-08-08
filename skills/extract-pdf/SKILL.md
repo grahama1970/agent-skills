@@ -34,7 +34,7 @@ composes:
   - task-monitor    # Progress tracking for batch extraction
   - pdf-lab         # Convergence loop: extract -> compare -> tune
   - analytics       # Prediction accuracy metrics across corpus
-
+  - agentic-evals
 taxonomy:
   - extraction
   - precision

@@ -21,7 +21,7 @@ composes:
   - extractor
   - memory
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - web
   - ingestion

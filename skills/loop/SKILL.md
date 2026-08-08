@@ -14,6 +14,7 @@ composes:
   - review-code
   - task-monitor
   - best-practices-python
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

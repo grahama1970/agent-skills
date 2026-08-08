@@ -13,6 +13,7 @@ composes:
   - create-design-board
   - review-design
   - memory
+  - agentic-evals
 triggers:
   - create styleguide
   - build styleguide

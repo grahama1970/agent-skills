@@ -20,6 +20,7 @@ composes:
   - brave-search
   - memory
   - ingest-movie
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

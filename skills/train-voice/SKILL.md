@@ -21,7 +21,9 @@ metadata:
 
 provides:
   - train-voice
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - voice-audio

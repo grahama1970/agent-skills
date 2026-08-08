@@ -24,7 +24,8 @@ provides:
   - pixijs-spritesheet-manifest
   - sprite-frame-repair-plan
   - named-sprite-frame-extraction
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

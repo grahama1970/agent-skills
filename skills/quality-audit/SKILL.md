@@ -21,6 +21,7 @@ provides:
 composes:
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - data-engineering

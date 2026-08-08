@@ -25,6 +25,7 @@ composes:
   - episodic-archiver
   - task-monitor
   - memory
+  - agentic-evals
 taxonomy:
   - validation
   - iteration

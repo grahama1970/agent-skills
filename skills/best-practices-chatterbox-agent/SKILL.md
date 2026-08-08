@@ -33,6 +33,7 @@ composes:
   - best-practices-python
   - best-practices-skills
   - best-practices-subagent
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

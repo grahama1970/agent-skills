@@ -22,6 +22,7 @@ provides:
 composes:
   - create-figure
   - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
   - observability-operations

@@ -17,7 +17,9 @@ metadata:
 
 provides:
   - ingest-yt-history
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - persona-simulation

@@ -23,7 +23,7 @@ composes:
   - episodic-archiver
   - scillm
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - human-in-the-loop
   - collaboration

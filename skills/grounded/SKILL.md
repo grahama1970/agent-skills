@@ -21,7 +21,8 @@ provides:
   - architecture-evidence-gate
   - recommendation-readiness
   - source-grounded-analysis
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - validation
   - architecture

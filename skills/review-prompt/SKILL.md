@@ -24,7 +24,14 @@ provides:
   - prompt-review
   - prompt-contract-review
   - deterministic-prompt-improvement
-composes: [scillm, prompt-lab, best-practices-self-improvement-loop, ask, project-knowledge, surf]
+composes:
+  - scillm
+  - prompt-lab
+  - best-practices-self-improvement-loop
+  - ask
+  - project-knowledge
+  - surf
+  - agentic-evals
 
 taxonomy:
   - prompt-engineering

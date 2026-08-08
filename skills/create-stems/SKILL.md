@@ -23,6 +23,7 @@ composes:
   - learn-voice
   - discover-music
   - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
 ---

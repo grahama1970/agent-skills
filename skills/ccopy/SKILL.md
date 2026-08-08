@@ -13,7 +13,8 @@ triggers:
 provides:
   - cursor-turn-export
   - clipboard-copy
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - precision
 disciplines:

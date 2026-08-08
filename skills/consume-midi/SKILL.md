@@ -25,6 +25,7 @@ composes:
   - memory
   - consume-music
   - review-music
+  - agentic-evals
 read_before_use:
   - run.sh
 disciplines:

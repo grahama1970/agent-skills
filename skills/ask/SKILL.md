@@ -41,6 +41,7 @@ composes:
   - interview
   - best-practices-roundtable
   - best-practices-competition
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-tau-dag

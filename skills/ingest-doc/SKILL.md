@@ -29,6 +29,7 @@ composes:
   - taxonomy
   - memory
   - task-monitor
+  - agentic-evals
 taxonomy:
   - security
   - compliance

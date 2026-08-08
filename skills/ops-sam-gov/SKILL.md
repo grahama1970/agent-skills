@@ -21,7 +21,9 @@ metadata:
 
 provides:
   - ops-sam-gov
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - compliance-security

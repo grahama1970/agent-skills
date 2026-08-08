@@ -15,7 +15,8 @@ provides:
   - cursor-agents-api-control
   - cursor-agent-run-inspection
   - cursor-agent-usage-inspection
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

@@ -25,6 +25,7 @@ composes:
   - memory
   - scillm
   - task-monitor
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

@@ -4,7 +4,8 @@ description: This skill encodes Emil Kowalski's philosophy on UI polish, compone
 provides:
   - design-engineering-guidance
   - ui-polish-guidance
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
 disciplines:

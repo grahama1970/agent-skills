@@ -32,6 +32,7 @@ composes:
   - task-monitor
   - create-figure
   - analytics
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - persona-simulation

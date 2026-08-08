@@ -20,7 +20,9 @@ metadata:
 
 provides:
   - tts-train
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
   - ml-training

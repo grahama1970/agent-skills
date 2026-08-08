@@ -25,7 +25,7 @@ composes:
   - scheduler
   - task-monitor
   - code-runner
-
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

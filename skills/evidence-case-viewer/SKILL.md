@@ -19,6 +19,7 @@ composes:
   - scillm
   - extract-entities
   - memory
+  - agentic-evals
 disciplines:
   - compliance-security
   - ui-design-engineering

@@ -21,7 +21,9 @@ metadata:
 
 provides:
   - create-walkthrough
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - human-collaboration
   - content-creation

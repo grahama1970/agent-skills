@@ -35,6 +35,7 @@ composes:
   - best-practices-rust
   - task-monitor
   - memory
+  - agentic-evals
 taxonomy:
   - validation
   - resilience

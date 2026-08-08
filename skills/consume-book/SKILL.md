@@ -22,6 +22,7 @@ composes:
   - consume-movie
   - consume-feed
   - task-monitor
+  - agentic-evals
 disciplines:
   - data-engineering
   - memory-knowledge

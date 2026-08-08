@@ -37,6 +37,7 @@ composes:
   - review-code
   - review-prompt
   - plan-iterate
+  - agentic-evals
 taxonomy:
   - reporting
   - validation

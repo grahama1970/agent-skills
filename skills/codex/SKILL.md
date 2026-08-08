@@ -16,7 +16,8 @@ metadata:
   short-description: High-reasoning agentic bridge (gpt-5.3-codex)
 provides:
   - llm-completion
-composes: []
+composes:
+  - agentic-evals
 
 taxonomy:
   - inference

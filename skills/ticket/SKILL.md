@@ -26,6 +26,7 @@ provides:
   - github-actions-ticket-verification
 composes:
   - best-practices-github-ticket
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-github-ticket

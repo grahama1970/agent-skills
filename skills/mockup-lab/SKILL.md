@@ -30,7 +30,7 @@ composes:
   - interview
   - memory
   - scillm
-
+  - agentic-evals
 taxonomy:
   - design
   - ui

@@ -26,7 +26,9 @@ metadata:
 
 provides:
   - review-persona
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - persona-simulation
   - evaluation-quality

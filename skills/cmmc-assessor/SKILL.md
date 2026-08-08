@@ -25,6 +25,7 @@ composes:
   - ops-compliance
   - create-figure
   - task-monitor
+  - agentic-evals
 taxonomy:
   - security
   - compliance

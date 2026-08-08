@@ -18,6 +18,7 @@ composes:
   - assistant-lab
   - create-figure
   - task-monitor
+  - agentic-evals
 taxonomy:
   - ml-ops
   - regression

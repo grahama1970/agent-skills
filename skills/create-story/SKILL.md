@@ -30,6 +30,7 @@ composes:
   - memory
   - dogpile
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - persona-simulation

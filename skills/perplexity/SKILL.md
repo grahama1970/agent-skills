@@ -24,6 +24,7 @@ composes:
   - dogpile
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
 ---

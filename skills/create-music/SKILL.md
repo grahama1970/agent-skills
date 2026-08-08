@@ -27,6 +27,7 @@ composes:
   - discover-music
   - learn-artist
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - voice-audio

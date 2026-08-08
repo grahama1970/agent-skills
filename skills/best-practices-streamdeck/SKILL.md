@@ -26,6 +26,7 @@ provides:
   - best-practices-streamdeck
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - engineering-standards
   - developer-tooling

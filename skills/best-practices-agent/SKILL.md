@@ -30,6 +30,7 @@ composes:
   - best-practices-python
   - best-practices-skills
   - memory
+  - agentic-evals
 disciplines:
   - engineering-standards
   - agentic-orchestration

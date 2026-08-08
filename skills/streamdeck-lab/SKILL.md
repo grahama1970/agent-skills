@@ -14,7 +14,9 @@ provides:
   - streamdeck-evaluation
   - streamdeck-generation
   - streamdeck-push
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - developer-tooling
   - ui-design-engineering

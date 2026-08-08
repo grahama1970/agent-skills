@@ -23,6 +23,7 @@ provides:
   - provider-reference-pack
 composes:
   - best-practices-skills
+  - agentic-evals
 taxonomy:
   - video
   - visual-reference

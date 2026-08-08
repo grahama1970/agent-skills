@@ -23,6 +23,7 @@ composes:
   - memory
   - taxonomy
   - analytics
+  - agentic-evals
 disciplines:
   - extraction
   - memory-knowledge

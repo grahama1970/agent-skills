@@ -37,6 +37,7 @@ composes:
   - rate-limit-recovery
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - observability-operations
   - developer-tooling

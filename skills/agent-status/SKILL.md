@@ -22,7 +22,8 @@ triggers:
 provides:
   - agent-status
   - progress-tracking
-composes: []
+composes:
+  - agentic-evals
 taxonomy:
   - observability
   - orchestration

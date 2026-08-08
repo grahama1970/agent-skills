@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - create-icon
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - ui-design-engineering

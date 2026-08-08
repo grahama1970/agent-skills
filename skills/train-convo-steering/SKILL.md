@@ -8,7 +8,9 @@ triggers:
 
 provides:
   - train-convo-steering
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - persona-simulation

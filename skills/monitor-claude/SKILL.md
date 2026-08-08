@@ -25,7 +25,7 @@ composes:
   - ops-claude
   - memory
   - scheduler
-
+  - agentic-evals
 taxonomy:
   - monitoring
   - operations

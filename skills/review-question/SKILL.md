@@ -38,6 +38,7 @@ composes:
   - create-figure
   - lean4-prove
   - assistant
+  - agentic-evals
 metadata:
   short-description: "F36-grounded persona question generation + conversation execution + evidence case builder"
   version: "1.1.0"

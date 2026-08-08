@@ -28,7 +28,9 @@ taxonomy:
 
 provides:
   - monitor-security
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
   - observability-operations

@@ -20,6 +20,7 @@ composes:
   - create-evidence-case
   - ops-arango
   - best-practices-security
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-sparta

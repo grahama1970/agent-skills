@@ -34,6 +34,7 @@ provides:
   - ticket-resolution
 composes:
   - tau
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

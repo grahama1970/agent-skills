@@ -26,6 +26,7 @@ composes:
   - project-knowledge
   - memory
   - scillm
+  - agentic-evals
 taxonomy:
   - knowledge-management
   - validation

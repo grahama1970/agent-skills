@@ -16,6 +16,7 @@ provides:
 composes:
   - surf
   - clipboard
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

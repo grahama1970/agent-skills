@@ -20,7 +20,9 @@ metadata:
 
 provides:
   - create-context
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - human-collaboration
   - memory-knowledge

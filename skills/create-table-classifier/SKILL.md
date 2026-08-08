@@ -16,7 +16,9 @@ metadata:
 
 provides:
   - create-table-classifier
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - extraction

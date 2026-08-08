@@ -25,6 +25,7 @@ composes:
   - extractor
   - learn-datalake
   - task-monitor
+  - agentic-evals
 taxonomy:
   - security
   - compliance

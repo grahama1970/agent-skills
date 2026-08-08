@@ -15,6 +15,7 @@ composes:
   - memory
   - taxonomy
   - task-monitor
+  - agentic-evals
 taxonomy:
   - hardware-control
   - automation

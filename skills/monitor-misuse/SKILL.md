@@ -18,6 +18,7 @@ composes:
   - scheduler
   - monitor-skills
   - task-monitor
+  - agentic-evals
 taxonomy:
   - observability
   - self-improvement

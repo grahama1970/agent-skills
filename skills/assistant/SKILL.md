@@ -27,6 +27,7 @@ composes:
   - scillm
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - model-ops
   - ml-training

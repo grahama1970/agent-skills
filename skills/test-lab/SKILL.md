@@ -15,6 +15,7 @@ composes:
   - best-practices-kde
   - best-practices-skills
   - task-monitor
+  - agentic-evals
 triggers:
   - test-lab
   - blind test

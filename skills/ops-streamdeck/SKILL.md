@@ -22,7 +22,9 @@ metadata:
 
 provides:
   - ops-streamdeck
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - developer-tooling
   - observability-operations

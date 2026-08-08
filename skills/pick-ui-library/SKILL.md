@@ -3,7 +3,8 @@ name: pick-ui-library
 description: Pick the right library for a given frontend task from a curated, opinionated list — numbers, OTP inputs, charts, command menus, virtualization, drag and drop, toasts, state, styling, and more. Only runs when explicitly invoked; it does not trigger on its own.
 provides:
   - ui-library-selection
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
 disable-model-invocation: true

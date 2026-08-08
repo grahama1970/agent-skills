@@ -35,7 +35,7 @@ composes:
   - recommend-skill-chain
   - episodic-archiver
   - mine-transcripts
-
+  - agentic-evals
 taxonomy:
   - checkpoint
   - state-management

@@ -22,7 +22,8 @@ provides:
   - buzz-message-query
   - buzz-config-readiness
   - buzz-agent-request
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

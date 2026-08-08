@@ -16,6 +16,7 @@ provides:
   - intent-mapper
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
   - memory-knowledge

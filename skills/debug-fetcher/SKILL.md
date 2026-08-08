@@ -22,7 +22,9 @@ metadata:
 
 provides:
   - debug-fetcher
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - research-retrieval
   - developer-tooling

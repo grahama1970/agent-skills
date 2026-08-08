@@ -26,6 +26,7 @@ composes:
   - create-story
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - content-creation
   - persona-simulation

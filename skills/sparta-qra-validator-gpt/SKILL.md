@@ -14,7 +14,9 @@ allowed-tools: Bash, Read
 
 provides:
   - sparta-qra-validator-gpt
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - compliance-security
   - ml-training

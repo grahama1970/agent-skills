@@ -22,7 +22,7 @@ composes:
   - create-figure
   - memory
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - validation
   - compliance

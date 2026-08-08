@@ -36,6 +36,7 @@ composes:
   - ops-runpod
   - create-gpt
   - episodic-archiver
+  - agentic-evals
 disciplines:
   - ml-training
   - evaluation-quality

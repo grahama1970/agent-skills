@@ -14,6 +14,7 @@ provides:
 composes:
   - scillm
   - project-knowledge
+  - agentic-evals
 taxonomy:
   - execution
   - quality

@@ -31,6 +31,7 @@ composes:
   - intent-mapper
   - task-monitor
   - formalize-request
+  - agentic-evals
 disciplines:
   - evaluation-quality
   - compliance-security

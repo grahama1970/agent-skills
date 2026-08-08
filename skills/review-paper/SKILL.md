@@ -31,7 +31,7 @@ provides:
 composes:
   - scillm
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - validation
   - documentation

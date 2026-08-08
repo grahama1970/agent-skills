@@ -29,7 +29,7 @@ composes:
   - scillm
   - scillm
   - test-lab
-
+  - agentic-evals
 taxonomy:
   - agents
   - orchestration

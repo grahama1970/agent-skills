@@ -27,6 +27,7 @@ provides:
 composes:
   - memory
   - task-monitor
+  - agentic-evals
 disciplines:
   - ml-training
 ---

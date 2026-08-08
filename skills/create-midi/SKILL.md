@@ -29,6 +29,7 @@ composes:
   - consume-midi
   - prompt-lab
   - review-music
+  - agentic-evals
 complies:
   - best-practices-skills
   - best-practices-python

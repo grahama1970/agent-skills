@@ -14,6 +14,7 @@ triggers:
 composes:
   - common/vlm_image.py
   - scillm
+  - agentic-evals
 provides:
   - cots-compliance-report
   - cots-fix-plan

@@ -22,6 +22,7 @@ provides:
   - best-practices-scillm
 composes:
   - scillm
+  - agentic-evals
 disciplines:
   - engineering-standards
   - model-ops

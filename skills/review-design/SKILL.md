@@ -29,7 +29,15 @@ metadata:
 
 provides:
   - review-design
-composes: [task-monitor, memory, scillm, ask, project-knowledge, surf, test-interactions]
+composes:
+  - task-monitor
+  - memory
+  - scillm
+  - ask
+  - project-knowledge
+  - surf
+  - test-interactions
+  - agentic-evals
 disciplines:
   - ui-design-engineering
   - evaluation-quality

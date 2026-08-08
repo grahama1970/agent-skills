@@ -225,10 +225,16 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
     if requires_eval and not has_eval_posture:
         _add(
             "EVAL001",
-            "warning",
+            "error",
             "Skill has runtime/orchestration surface but no agentic eval posture "
             "(add fixtures/agentic_eval.json, compose/delegate to agentic-evals, "
             "or document eval_not_required)",
+        )
+    if skill_dir.name not in EVAL_PROVIDER_SKILLS and "agentic-evals" not in composes_list:
+        _add(
+            "EVAL002",
+            "error",
+            "Skill must list 'agentic-evals' in composes:",
         )
 
     # --- Storage checks ---

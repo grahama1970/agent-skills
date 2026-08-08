@@ -4,7 +4,8 @@ description: Survey a codebase's animation and motion code as a senior motion ad
 provides:
   - animation-audit
   - animation-improvement-plan
-composes: []
+composes:
+  - agentic-evals
 complies:
   - best-practices-skills
 disciplines:

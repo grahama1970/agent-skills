@@ -18,7 +18,9 @@ metadata:
 
 provides:
   - create-table
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - extraction
   - evaluation-quality

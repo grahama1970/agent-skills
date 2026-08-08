@@ -19,6 +19,7 @@ composes:
   - orchestrate
   - codex
   - task-monitor
+  - agentic-evals
 read_before_use:
   - models.py
   - session_store.py

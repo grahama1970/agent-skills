@@ -27,6 +27,7 @@ composes:
   - mine-transcripts
   - benchmark-models
   - create-figure
+  - agentic-evals
 taxonomy:
   - Detect
   - Model

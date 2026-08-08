@@ -32,6 +32,7 @@ provides:
   - best-practices-kde
 composes:
   - task-monitor
+  - agentic-evals
 disciplines:
   - engineering-standards
   - ui-design-engineering

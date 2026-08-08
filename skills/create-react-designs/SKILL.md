@@ -20,7 +20,9 @@ metadata:
 
 provides:
   - create-react-designs
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - ui-design-engineering
 ---

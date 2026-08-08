@@ -15,7 +15,9 @@ metadata:
 
 provides:
   - tts-horus
-composes: [task-monitor]
+composes:
+  - task-monitor
+  - agentic-evals
 disciplines:
   - voice-audio
   - ml-training

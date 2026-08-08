@@ -21,7 +21,7 @@ composes:
   - common
   - create-figure
   - task-monitor
-
+  - agentic-evals
 taxonomy:
   - observability
   - drift-detection
