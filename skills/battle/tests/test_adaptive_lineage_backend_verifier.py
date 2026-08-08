@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT = (
     Path(__file__).resolve().parents[1]
@@ -17,16 +19,18 @@ SCRIPT = (
 
 def test_backend_verifier_accepts_rehashed_receipts(tmp_path: Path) -> None:
     run_dir = _write_minimal_run(tmp_path / "run")
-    completed = subprocess.run(
-        [sys.executable, str(SCRIPT), str(run_dir)],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    completed = _run_verifier(run_dir)
     assert completed.returncode == 0, completed.stdout + completed.stderr
     result = json.loads(completed.stdout)
     assert result["status"] == "PASS"
     assert result["checked_file_count"] > 10
+    assert result["slot_hashes_matched"] == 4
+    assert result["exact_replays_matched"] == 2
+    report_path = Path(result["battle_report_path"])
+    assert report_path.is_file()
+    report = report_path.read_text(encoding="utf-8")
+    assert "slots_verified: 4/4" in report
+    assert "exact_replays_verified: 2/2" in report
 
 
 def test_backend_verifier_rejects_rewired_blue_execution_bytes(tmp_path: Path) -> None:
@@ -35,16 +39,172 @@ def test_backend_verifier_rejects_rewired_blue_execution_bytes(tmp_path: Path) -
         run_dir.glob("generation-2/judge/replays/red-0__blue-0/patched/app.py")
     )
     blue_exec.write_text("def import_zip(): return 'tampered'\n", encoding="utf-8")
-    completed = subprocess.run(
-        [sys.executable, str(SCRIPT), str(run_dir)],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    completed = _run_verifier(run_dir)
     assert completed.returncode == 1
     result = json.loads(completed.stdout)
     assert result["status"] == "FAIL"
     assert any("execution_hash_mismatch:blue_patched_app" in error for error in result["errors"])
+
+
+def test_backend_verifier_rejects_each_slot_byte_tamper(tmp_path: Path) -> None:
+    for generation in (1, 2):
+        for team in ("red", "blue"):
+            run_dir = _write_minimal_run(tmp_path / f"slot-{generation}-{team}")
+            slot = (
+                run_dir
+                / f"generation-{generation}"
+                / "reviewed"
+                / "immutable-slots"
+                / f"generation-{generation}-{team}.py"
+            )
+            slot.write_text("tampered\n", encoding="utf-8")
+            result = json.loads(_run_verifier(run_dir).stdout)
+            assert result["status"] == "FAIL"
+            assert f"slot_hash_mismatch:generation-{generation}:{team}" in result["errors"]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("status", "FAIL", "campaign_status_not_pass"),
+        ("mocked", True, "campaign_mocked_not_false"),
+        ("live", False, "campaign_live_not_true"),
+        ("fixture_fallback_used", True, "fixture_fallback_used"),
+    ],
+)
+def test_backend_verifier_rejects_campaign_non_live_or_non_pass(
+    tmp_path: Path,
+    field: str,
+    value: object,
+    error: str,
+) -> None:
+    run_dir = _write_minimal_run(tmp_path / field)
+    campaign_path = run_dir / "campaign-receipt.json"
+    campaign = json.loads(campaign_path.read_text(encoding="utf-8"))
+    campaign[field] = value
+    _write_json(campaign_path, campaign)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert error in result["errors"]
+
+
+def test_backend_verifier_rejects_campaign_to_artifact_sha_mismatch(
+    tmp_path: Path,
+) -> None:
+    run_dir = _write_minimal_run(tmp_path / "integrity-binding")
+    campaign_path = run_dir / "campaign-receipt.json"
+    campaign = json.loads(campaign_path.read_text(encoding="utf-8"))
+    campaign["artifact_integrity"]["sha256"] = "0" * 64
+    _write_json(campaign_path, campaign)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert "campaign_artifact_integrity_sha_mismatch" in result["errors"]
+
+
+def test_backend_verifier_rejects_replay_byte_tamper_and_duplicate_replay(
+    tmp_path: Path,
+) -> None:
+    run_dir = _write_minimal_run(tmp_path / "replay-tamper")
+    replay = run_dir / "generation-1" / "judge-exact-replay" / "exact-replay-receipt.json"
+    replay.write_text('{"status": "PASS", "matched": true}\n', encoding="utf-8")
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert any("replay_hash_mismatch:g1" in error for error in result["errors"])
+
+    run_dir = _write_minimal_run(tmp_path / "duplicate-replay")
+    integrity_path = run_dir / "artifact-integrity-receipt.json"
+    integrity = json.loads(integrity_path.read_text(encoding="utf-8"))
+    integrity["judge_replays"][1]["path"] = integrity["judge_replays"][0]["path"]
+    integrity["judge_replays"][1]["expected_sha256"] = integrity["judge_replays"][0][
+        "expected_sha256"
+    ]
+    integrity["judge_replays"][1]["actual_sha256"] = integrity["judge_replays"][0][
+        "actual_sha256"
+    ]
+    _rewrite_integrity_and_campaign(run_dir, integrity)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert "replay_paths_not_unique" in result["errors"]
+
+
+def test_backend_verifier_rejects_duplicate_missing_external_and_symlink_slots(
+    tmp_path: Path,
+) -> None:
+    run_dir = _write_minimal_run(tmp_path / "duplicate-slot")
+    integrity_path = run_dir / "artifact-integrity-receipt.json"
+    integrity = json.loads(integrity_path.read_text(encoding="utf-8"))
+    integrity["slots"][1]["path"] = integrity["slots"][0]["path"]
+    integrity["slots"][1]["expected_sha256"] = integrity["slots"][0]["expected_sha256"]
+    integrity["slots"][1]["actual_sha256"] = integrity["slots"][0]["actual_sha256"]
+    _rewrite_integrity_and_campaign(run_dir, integrity)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert "slot_paths_not_unique" in result["errors"]
+
+    run_dir = _write_minimal_run(tmp_path / "missing-slot")
+    Path(json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))["slots"][0]["path"]).unlink()
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert any("slot_not_regular:generation-1:red" in error for error in result["errors"])
+
+    run_dir = _write_minimal_run(tmp_path / "external-slot")
+    integrity = json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))
+    external = tmp_path / "external.py"
+    external.write_text("outside\n", encoding="utf-8")
+    digest = _sha(external)
+    integrity["slots"][0].update(
+        {"path": str(external), "expected_sha256": digest, "actual_sha256": digest}
+    )
+    _rewrite_integrity_and_campaign(run_dir, integrity)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert "slot_outside_run:generation-1:red" in result["errors"]
+
+    run_dir = _write_minimal_run(tmp_path / "symlink-slot")
+    integrity = json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))
+    slot = Path(integrity["slots"][0]["path"])
+    target = slot.with_suffix(".target.py")
+    slot.rename(target)
+    slot.symlink_to(target)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert "slot_not_regular:generation-1:red" in result["errors"]
+
+
+def test_backend_verifier_rejects_byte_binding_and_docker_hash_defects(
+    tmp_path: Path,
+) -> None:
+    run_dir = _write_minimal_run(tmp_path / "missing-binding")
+    attempt = next(run_dir.glob("generation-1/judge/replays/*/attempt-receipt.json"))
+    payload = json.loads(attempt.read_text(encoding="utf-8"))
+    payload["judge_input_byte_bindings"].pop()
+    _write_json(attempt, payload)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert any("binding_count_invalid" in error for error in result["errors"])
+
+    run_dir = _write_minimal_run(tmp_path / "docker-observed-mismatch")
+    attempt = next(run_dir.glob("generation-1/judge/replays/*/attempt-receipt.json"))
+    payload = json.loads(attempt.read_text(encoding="utf-8"))
+    payload["container_input_hashes"][0]["observed_sha256"] = {
+        "red_exploit_submission.py": "0" * 64
+    }
+    _write_json(attempt, payload)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert any(
+        "container_hash_expected_observed_mismatch" in error
+        for error in result["errors"]
+    )
+
+    run_dir = _write_minimal_run(tmp_path / "docker-command-failed")
+    attempt = next(run_dir.glob("generation-1/judge/replays/*/attempt-receipt.json"))
+    payload = json.loads(attempt.read_text(encoding="utf-8"))
+    payload["container_input_hashes"][0]["command_receipt"]["exit_code"] = 2
+    _write_json(attempt, payload)
+    result = json.loads(_run_verifier(run_dir).stdout)
+    assert result["status"] == "FAIL"
+    assert any("container_hash_command_failed" in error for error in result["errors"])
 
 
 def _write_minimal_run(root: Path) -> Path:
@@ -101,7 +261,10 @@ def _write_minimal_run(root: Path) -> Path:
                 "schema": "battle.exact_judge_pair_replay.v1",
                 "status": "PASS",
                 "matched": True,
+                "receipt_valid": True,
                 "generation": generation,
+                "docker_image_id": "sha256:" + "d" * 64,
+                "replay_docker_image_id": "sha256:" + "d" * 64,
             },
         )
         replay_sha = _sha(replay_receipt)
@@ -119,27 +282,45 @@ def _write_minimal_run(root: Path) -> Path:
             }
         )
 
-    _write_json(
-        root / "artifact-integrity-receipt.json",
-        {
-            "schema": "battle.adaptive_artifact_integrity.v1",
-            "status": "PASS",
-            "required_slot_count": 4,
-            "matched_slot_count": 4,
-            "required_replay_count": 2,
-            "matched_replay_count": 2,
-            "unique_slot_paths": True,
-            "slots": slots,
-            "judge_replays": replay_records,
-        },
-    )
+    integrity_path = root / "artifact-integrity-receipt.json"
+    integrity = {
+        "schema": "battle.adaptive_artifact_integrity.v1",
+        "status": "PASS",
+        "required_slot_count": 4,
+        "matched_slot_count": 4,
+        "required_replay_count": 2,
+        "matched_replay_count": 2,
+        "unique_slot_paths": True,
+        "unique_replay_paths": True,
+        "slots": slots,
+        "judge_replays": replay_records,
+    }
+    _write_json(integrity_path, integrity)
+    for team in ("red", "blue"):
+        auth_path = root / "generation-2" / team / "research" / "research-query-authorization.json"
+        _write_json(
+            auth_path,
+            {
+                "schema": "tau.research_query_authorization.v1",
+                "approved": True,
+                "allowed_methods": ["brave-search"],
+            },
+        )
     _write_json(
         root / "campaign-receipt.json",
         {
             "schema": "battle.adaptive_red_blue_lineage_canary.v1",
             "status": "PASS",
+            "run_id": "test-run",
+            "source_commit": "a" * 40,
+            "source_tree": "b" * 40,
             "mocked": False,
+            "live": True,
             "fixture_fallback_used": False,
+            "artifact_integrity": {
+                "path": str(integrity_path),
+                "sha256": _sha(integrity_path),
+            },
             "generations": [
                 {
                     "generation": 1,
@@ -159,6 +340,27 @@ def _write_minimal_run(root: Path) -> Path:
         },
     )
     return root
+
+
+def _run_verifier(run_dir: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), str(run_dir)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _rewrite_integrity_and_campaign(run_dir: Path, integrity: dict[str, object]) -> None:
+    integrity_path = run_dir / "artifact-integrity-receipt.json"
+    _write_json(integrity_path, integrity)
+    campaign_path = run_dir / "campaign-receipt.json"
+    campaign = json.loads(campaign_path.read_text(encoding="utf-8"))
+    campaign["artifact_integrity"] = {
+        "path": str(integrity_path),
+        "sha256": _sha(integrity_path),
+    }
+    _write_json(campaign_path, campaign)
 
 
 def _write_attempt(*, root: Path, generation: int, attempt_dir: Path) -> None:
