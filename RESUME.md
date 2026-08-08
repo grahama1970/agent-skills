@@ -17,7 +17,7 @@ I build agentic pipelines that run in production, not prototypes: multi-agent or
 
 Four years on the prime-contractor team of a major DARPA program: Principal Data Scientist and ACERT Technical Lead on ARCOS, delivering knowledge-graph and LLM reasoning for automated certification of mission-critical software. Presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin. Defense, aerospace, and compliance, where an answer has to be traceable to evidence.
 
-Self-contained: research, back end, front end, and the briefing. 15+ years hand-coding, today primarily agentic coding across many harnesses and models, including my own (tau). I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself.
+Uncommon path, and it is the point: commercial composer for Adidas and Pepsi, Webby-recognized Executive Producer on Sony's God of War, then data science, then four years on a DARPA prime team. Very few people have run both the creative and the verifiable-AI side. Self-contained with it: 15+ years hand-coding, today primarily agentic coding across many harnesses including my own (tau); I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself.
 
 Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles.
 

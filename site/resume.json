@@ -132,7 +132,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Self-contained: research, back end, front end, and the briefing. 15+ years hand-coding, today primarily agentic coding across many harnesses and models, including my own (tau). I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself."
+       "v": "Uncommon path, and it is the point: commercial composer for Adidas and Pepsi, Webby-recognized Executive Producer on Sony's God of War, then data science, then four years on a DARPA prime team. Very few people have run both the creative and the verifiable-AI side. Self-contained with it: 15+ years hand-coding, today primarily agentic coding across many harnesses including my own (tau); I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself."
       }
      ]
     },
@@ -547,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "61993b932",
+ "sourceCommit": "872650e7e",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "c2416eb3cb3260841000dd8286c8544d18090d39bbc54d040488dc86b29cb2fe",
+ "sourceSha256": "aa6b02a5bd0ec8993cb0a04b6c8536f928a22c7fba248991d3bc10b534d1cceb",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -628,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "51885b48321d28fd23b3cbe5649a454483b72a816389a2e8ea1860fde60d5e99",
- "pdfBytes": 159553
+ "pdfSha256": "81e1346da8b0f436be274fb7cc4e98c29845329352ffbdf4b76dba781a5765f8",
+ "pdfBytes": 159696
 }
