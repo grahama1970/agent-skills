@@ -25,12 +25,12 @@ Open to contract engagements and full-time Principal/Staff AI Engineer, AI Archi
 
 ### Founder & Principal AI Engineer / Architect | grahamaco | Buffalo–Niagara Falls Area · Remote
 Feb 2025 - Present
-Independent AI engineering practice. Clients are primarily export-controlled (ITAR) defense/aerospace — names withheld; publicly releasable engineering is at github.com/grahama1970.
+Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970.
 - Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every agent handoff must produce a schema-valid receipt, hashed evidence artifact, or validator result — no receipt, no action.
 - Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling.
 - Authored agent-skills: 340+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 90+ bounded worker roles, ~85% of them gated by deterministic sanity checks — public repo, private runtime.
 - Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records across 7K+ security-control records; hybrid BM25 + vector + multi-hop graph recall over 2.2M source chunks; ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval.
-- Core contributor to pi-mono (open-source agent framework/TUI): extension system, agent runtime, and TUI harness work, Feb–Jul 2026.
+- Delivered scoped client engagements end to end under ITAR, including a React/D3 dataset explorer over a security-control knowledge graph — graph relationships, integrity and coverage checks, and quality gates feeding downstream ingest and evaluation.
 
 ### Lead Research Scientist, Agentic Formal Methods | grahamaco (independent practice) | Buffalo, NY
 Jan 2024 - Feb 2025

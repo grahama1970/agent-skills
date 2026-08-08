@@ -165,7 +165,7 @@
        "inline": [
         {
          "t": "text",
-         "v": "Independent AI engineering practice. Clients are primarily export-controlled (ITAR) defense/aerospace — names withheld; publicly releasable engineering is at github.com/grahama1970."
+         "v": "Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970."
         }
        ]
       },
@@ -199,7 +199,7 @@
         [
          {
           "t": "text",
-          "v": "Core contributor to pi-mono (open-source agent framework/TUI): extension system, agent runtime, and TUI harness work, Feb–Jul 2026."
+          "v": "Delivered scoped client engagements end to end under ITAR, including a React/D3 dataset explorer over a security-control knowledge graph — graph relationships, integrity and coverage checks, and quality gates feeding downstream ingest and evaluation."
          }
         ]
        ]
@@ -547,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "872650e7e",
+ "sourceCommit": "554d81d4a",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "aa6b02a5bd0ec8993cb0a04b6c8536f928a22c7fba248991d3bc10b534d1cceb",
+ "sourceSha256": "2b92c5b7f81551f6af4a298d4d21f794da25155d4dc5158a055e28fdcca8e46a",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -628,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "81e1346da8b0f436be274fb7cc4e98c29845329352ffbdf4b76dba781a5765f8",
- "pdfBytes": 159696
+ "pdfSha256": "fbbc065923922ae5409a6b8fb88f751d1c6478d96f497c5ff1d51ed1309ee322",
+ "pdfBytes": 160166
 }
