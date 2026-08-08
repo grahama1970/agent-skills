@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-08-07 20:25 by agent
+**Last updated:** 2026-08-07 20:41 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -12,6 +12,7 @@
 | Date | Decision | Why |
 |------|----------|-----|
 | 2026-08-07 | Initialize project knowledge | Enable shared human/agent context |
+| 2026-08-07 | Voice layer = bounded proposal compiler (model proposes style, transform verifier proves meaning, human approves exact strings); filed as #1311-#1316; contract at /mnt/storage12tb/skills/pitchdeck/outputs/webgpt-voice-layer-contract-2026-08-07.md | Agent blind rating failed decisively (generated median 2 vs exemplar 5); corpus encodes the voice rules but the candidate pool never used them; webgpt consult + style-transfer literature (TinyStyler) support exemplar-conditioned proposal under fail-closed transform validation |
 
 ## Open Questions
 

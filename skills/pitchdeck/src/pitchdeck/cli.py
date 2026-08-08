@@ -427,6 +427,34 @@ def design_lint_cmd(
         _abort(exc)
 
 
+@app.command(name="compile-voice-profile")
+def compile_voice_profile_cmd(
+    corpus: Annotated[Path, typer.Option(help="best-practices-slide-design skill dir (contains references/exemplars.yaml).")],
+    output: Annotated[Path | None, typer.Option(help="Write voice_profile.v1 JSON here (stdout otherwise).")] = None,
+) -> None:
+    """Compile the author headline corpus into content-addressed voice_profile.v1 (#1311)."""
+    import json as json_mod
+
+    from .voice_profile import compile_voice_profile
+
+    try:
+        profile = compile_voice_profile(corpus)
+        payload = profile.model_dump(by_alias=True, mode="json")
+        payload["content_sha256"] = profile.content_sha256()
+        rendered = json_mod.dumps(payload, indent=1, sort_keys=True)
+        if output:
+            output.write_text(rendered, encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS",
+            "exemplars": len(profile.exemplars),
+            "coverage_gaps": profile.coverage_gaps,
+            "content_sha256": payload["content_sha256"],
+            "output": str(output) if output else None,
+        }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],
