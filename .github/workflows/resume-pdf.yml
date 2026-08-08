@@ -12,6 +12,7 @@ on:
     paths:
       - "RESUME.md"
       - "docs/resume/resume.css"
+      - "docs/resume/fonts/**"
       - "scripts/build_markdown_pdf.py"
       - ".github/workflows/resume-pdf.yml"
   pull_request:
@@ -19,6 +20,7 @@ on:
     paths:
       - "RESUME.md"
       - "docs/resume/resume.css"
+      - "docs/resume/fonts/**"
       - "scripts/build_markdown_pdf.py"
       - ".github/workflows/resume-pdf.yml"
   workflow_dispatch:
@@ -51,8 +53,13 @@ jobs:
         if: steps.resume_source.outputs.present == 'true'
         run: |
           css_args=()
+          # The resume sheet is a complete stylesheet, so it replaces the
+          # script's generic default rather than layering on top of it.
           if [[ -f docs/resume/resume.css ]]; then
-            css_args=(--css docs/resume/resume.css)
+            css_args=(--css docs/resume/resume.css --no-default-css)
+          fi
+          if [[ -d docs/resume/fonts ]]; then
+            css_args+=(--font-dir docs/resume/fonts)
           fi
           uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
             RESUME.md \

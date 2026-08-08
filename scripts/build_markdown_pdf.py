@@ -72,6 +72,7 @@ class PdfBuildConfig:
     markdown_path: Path
     output_path: Path
     css_path: Path | None
+    font_dir: Path | None
     title: str
     author: str
     toc_level: int
@@ -87,6 +88,12 @@ def parse_args(argv: list[str]) -> PdfBuildConfig:
     parser.add_argument("markdown", type=Path, help="Input Markdown file")
     parser.add_argument("output", type=Path, help="Output PDF file")
     parser.add_argument("--css", type=Path, default=None, help="Optional CSS file")
+    parser.add_argument(
+        "--font-dir",
+        type=Path,
+        default=None,
+        help="Directory of TTF/OTF files that @font-face rules may reference by filename",
+    )
     parser.add_argument("--title", default="", help="PDF metadata title")
     parser.add_argument("--author", default="", help="PDF metadata author")
     parser.add_argument("--toc-level", type=int, default=2, help="Bookmark heading depth")
@@ -106,6 +113,7 @@ def parse_args(argv: list[str]) -> PdfBuildConfig:
         markdown_path=args.markdown,
         output_path=args.output,
         css_path=args.css,
+        font_dir=args.font_dir,
         title=args.title,
         author=args.author,
         toc_level=args.toc_level,
@@ -152,6 +160,18 @@ def build_pdf(config: PdfBuildConfig) -> None:
         root=str(config.markdown_path.parent),
         paper_size=config.paper_size,
     )
+    if config.font_dir is not None:
+        if not config.font_dir.is_dir():
+            raise FileNotFoundError(f"Font directory does not exist: {config.font_dir}")
+        # markdown-pdf hands Section.root straight to fitz.Story(archive=...), so an
+        # Archive spanning both roots lets @font-face resolve fonts by bare filename
+        # while relative image paths still resolve against the Markdown directory.
+        import pymupdf
+
+        archive = pymupdf.Archive()
+        archive.add(str(config.markdown_path.parent))
+        archive.add(str(config.font_dir))
+        section.root = archive
     pdf.add_section(section, user_css=read_css(config))
     if config.title:
         pdf.meta["title"] = config.title

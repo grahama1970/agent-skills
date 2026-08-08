@@ -1,0 +1,108 @@
+/* ============================================================
+   Resume PDF — print adaptation of the grahama.co design system.
+
+   The site (site/app/globals.css) is a dark editorial surface:
+   ink #0c0908 ground, warm #ece2d3 text, brass #e2ac62 accent,
+   Fraunces display serif, system sans for prose, mono reserved
+   for machine-produced text.
+
+   A resume is printed, skimmed, and parsed by ATS software, so
+   this sheet inverts the ground and keeps everything else:
+   the same Fraunces face (cut from the site's own variable
+   WOFF2 by scripts/build_resume_fonts.py), the same hue family,
+   and the same type roles.
+
+   Accent colors are darkened only where WCAG AA demands it on a
+   light ground (measured against #ffffff):
+     ink    #0c0908  19.84:1  body text
+     slate  #5d5147   7.68:1  meta and dates
+     ember  #a8501f   5.48:1  links   (site --ember lightened form is 3.45:1)
+     brass  #e2ac62   2.04:1  rules only — never text
+   ============================================================ */
+
+@font-face {
+  font-family: "Fraunces Display";
+  src: url(Fraunces-Display.ttf);
+}
+@font-face {
+  font-family: "Fraunces Heading";
+  src: url(Fraunces-Heading.ttf);
+}
+
+body {
+  color: #0c0908;
+  font-family: "Helvetica", sans-serif;
+  font-size: 9.5pt;
+  line-height: 1.3;
+}
+
+/* Name — the one display-scale element, matching the site hero face. */
+h1 {
+  color: #0c0908;
+  font-family: "Fraunces Display", Georgia, serif;
+  font-size: 25pt;
+  font-weight: normal;
+  margin: 0 0 1.5pt;
+}
+
+/* Section rules: brass hairline, the site's accent used structurally. */
+h2 {
+  border-bottom: 1pt solid #e2ac62;
+  color: #0c0908;
+  font-family: "Fraunces Heading", Georgia, serif;
+  font-size: 11.5pt;
+  font-weight: normal;
+  margin: 11pt 0 4pt;
+  padding-bottom: 2pt;
+}
+
+/* Role titles stay in the sans prose voice, not the display face. */
+h3 {
+  color: #0c0908;
+  font-size: 10.2pt;
+  font-weight: bold;
+  margin: 7.5pt 0 1pt;
+}
+
+p {
+  margin: 0 0 3.5pt;
+}
+
+ul {
+  margin: 2.5pt 0 5.5pt 14pt;
+  padding: 0;
+}
+
+li {
+  margin: 0 0 1.5pt;
+}
+
+a {
+  color: #a8501f;
+  text-decoration: none;
+}
+
+/* Machine-produced text only — the site's monospace rule, kept. */
+code {
+  color: #5d5147;
+  font-family: "Courier", monospace;
+  font-size: 8.8pt;
+}
+
+em {
+  color: #5d5147;
+  font-style: italic;
+}
+
+hr {
+  border: 0;
+  border-top: 1pt solid #e2ac62;
+  margin: 8pt 0;
+}
+
+blockquote {
+  color: #5d5147;
+  font-family: "Fraunces Heading", Georgia, serif;
+  font-size: 10.5pt;
+  margin: 4pt 0 8pt;
+}
