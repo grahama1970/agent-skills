@@ -51,10 +51,9 @@ Sep 2020 - Dec 2023
 2016 - 2020
 - Independent data science and engineering consulting for various clients through grahamaco — the same practice resumed after the DARPA ARCOS program.
 
-### Executive Producer / Marketing Executive / Professional Composer | Los Angeles, CA
-Mar 2005 - 2016
-- Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized); led cross-functional teams (80+) on large-scale interactive productions.
-- Commercial composer for major consumer brands (Adidas, X-Games, Pepsi, Taco Bell, Nestle).
+### Earlier: Executive Producer & Professional Composer | Los Angeles, CA
+2005 - 2016
+- Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized), leading cross-functional teams of 80+; commercial composer for Adidas, Pepsi, X-Games, Taco Bell, and Nestle.
 
 ## PUBLIC WORK (non-ITAR) — github.com/grahama1970
 Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:

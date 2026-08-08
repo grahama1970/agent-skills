@@ -319,10 +319,10 @@
      "title": [
       {
        "t": "text",
-       "v": "Executive Producer / Marketing Executive / Professional Composer | Los Angeles, CA"
+       "v": "Earlier: Executive Producer & Professional Composer | Los Angeles, CA"
       }
      ],
-     "period": "Mar 2005 - 2016",
+     "period": "2005 - 2016",
      "blocks": [
       {
        "kind": "ul",
@@ -330,13 +330,7 @@
         [
          {
           "t": "text",
-          "v": "Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized); led cross-functional teams (80+) on large-scale interactive productions."
-         }
-        ],
-        [
-         {
-          "t": "text",
-          "v": "Commercial composer for major consumer brands (Adidas, X-Games, Pepsi, Taco Bell, Nestle)."
+          "v": "Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized), leading cross-functional teams of 80+; commercial composer for Adidas, Pepsi, X-Games, Taco Bell, and Nestle."
          }
         ]
        ]
@@ -556,10 +550,10 @@
    ]
   }
  ],
- "sourceCommit": "15aa5b771",
+ "sourceCommit": "9c70dafb0",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "9927ad59c79099219d4ca17df672c6425335c89ab833408b27c7af10eca0fb36",
+ "sourceSha256": "92f2e98f6dc8309d85e82be01aac75324fa559c318e97da67d3c52b4681fff44",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -568,8 +562,8 @@
   {
    "start": 2005,
    "end": "2016",
-   "period": "Mar 2005 - 2016",
-   "label": "Executive Producer",
+   "period": "2005 - 2016",
+   "label": "Earlier: Executive Producer & Professional Composer",
    "org": "Los Angeles, CA"
   },
   {
@@ -637,6 +631,6 @@
    }
   ]
  },
- "pdfSha256": "a70b0a448ea674e247613baccf969189edb9aa41cd8c1c8443c3927fed67e6e2",
- "pdfBytes": 159588
+ "pdfSha256": "4e237c0d44f46b63d58eb02ab56519542a6e8b00d56291f74784bbac5f6644c2",
+ "pdfBytes": 159523
 }
