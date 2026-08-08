@@ -372,14 +372,14 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             )
         if scene and not node.label.strip():
             continue  # a bare supporting glyph carries no label box
-        label = group.shapes.add_textbox(Inches(nx - nw * 0.25), Inches(ny + nh * (1.0 if scene else (0.62 if unboxed else 0.52))), Inches(nw * 1.5), Inches(nh * (0.5 if scene else (0.38 if unboxed else 0.44))))
+        label = group.shapes.add_textbox(Inches(nx - nw * 0.25), Inches(ny + nh * (1.06 if scene else (0.62 if unboxed else 0.52))), Inches(nw * 1.5), Inches(nh * (0.5 if scene else (0.38 if unboxed else 0.44))))
         label.name = f"el:{element.id}:node:{node.id}:label"
         tf = label.text_frame
         tf.word_wrap = True
         run = tf.paragraphs[0].add_run()
         run.text = node.label
         run.font.bold = True
-        run.font.size = Pt(13 if unboxed else 14)
+        run.font.size = Pt(11 if scene else (13 if unboxed else 14))
         run.font.color.rgb = accent
         from pptx.enum.text import PP_ALIGN
 

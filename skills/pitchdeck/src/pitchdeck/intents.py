@@ -139,6 +139,30 @@ def _after_chevrons(reveal: list[str], floor: float) -> float:
     return round(0.19 + len(chevrons) * 0.082 + 0.04, 3)
 
 
+def _gate_scene(nodes):
+    """Closure gates as a SCENE, not a row of identical shields (#1315).
+
+    The synthesised gate list was five equally weighted, evenly pitched ringed
+    glyphs — the exact composition blind judges scored lowest and the one
+    assert_not_mechanical() refuses. The terminal gate becomes the subject and
+    the rest recede."""
+    from .scenes import SceneError, compose_scene
+
+    if len(nodes) < 2:
+        return None
+    try:
+        return compose_scene(
+            "gate-run",
+            subject_label=nodes[-1].label,
+            icons=[n.icon or "shield-check" for n in (nodes[-1], *nodes[:-1])],
+            support_labels=[n.label for n in nodes[:-1]],
+            node_prefix="gate",
+            binding_paths=["element:diagram"],
+        )
+    except SceneError:
+        return None  # fall back to the row rather than emit a broken scene
+
+
 def _fill_diagram_canvas(graph):
     """Single-row diagrams fill their box vertically (corpus: the author's
     diagrams occupy the canvas; ours floated in a narrow band with dead space
@@ -260,7 +284,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
             bbox=Bbox(x=0.05, y=_after_chevrons(reveal, 0.30), w=0.9, h=0.90 - _after_chevrons(reveal, 0.30)),
-            diagram=_fill_diagram_canvas(DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
+            diagram=_gate_scene(nodes) or _fill_diagram_canvas(DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
             binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade"),
         ))

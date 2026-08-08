@@ -116,15 +116,17 @@ def compose_scene(
         raise SceneError(f"scene '{scene}' needs at least one glyph")
 
     supports = list(support_labels or [])
+    support_icons = list(icons[1:]) or [icons[0]]
     nodes: list[DiagramNode] = []
+    support_index = 0
     for index, (dx, dy, scale, decoration) in enumerate(layout):
-        icon = icons[index % len(icons)]
         if decoration == "principal":
+            icon = icons[0]  # the subject keeps the caller's first glyph
             label = subject_label
-        elif supports:
-            label = supports.pop(0)
         else:
-            label = " "  # a bare supporting glyph carries no claim text
+            icon = support_icons[support_index % len(support_icons)]
+            support_index += 1
+            label = supports.pop(0) if supports else " "
         size = round(0.30 * scale, 3)
         # centre -> corner, clamped so a heavy glyph never leaves the box
         x = min(max(dx - size / 2, 0.0), 1.0 - size)

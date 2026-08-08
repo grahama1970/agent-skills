@@ -151,7 +151,7 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
                 if node.icon
                 else ""
             )
-            + f'<text x="{x + w / 2:.0f}" y="{y + h * (1.02 if scene else (0.80 if unboxed else 0.68)):.0f}" text-anchor="middle" '
+            + f'<text x="{x + w / 2:.0f}" y="{y + h * (1.14 if scene else (0.80 if unboxed else 0.68)):.0f}" text-anchor="middle" '
             f'font-size="{max(14, h * 0.14):.0f}" font-weight="bold" fill="{primary}">{html.escape(node.label)}</text>'
             + (
                 f'<text x="{x + w / 2:.0f}" y="{y + h * (0.95 if unboxed else 0.84):.0f}" text-anchor="middle" '
