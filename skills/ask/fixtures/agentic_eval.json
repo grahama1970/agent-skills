@@ -2,21 +2,44 @@
   "version": 2,
   "skill": "ask",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "ask entrypoint and browser-provider preflight troubleshooting posture",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the Ask sanity entrypoint and Surf browser-provider preflight recovery classification meet explicit local expectations",
+    "does_not_prove": "browser provider semantic correctness, live WebGPT review completion, or full Ask orchestration readiness"
   },
   "cases": [
     {
-      "name": "sanity",
+      "name": "browser-availability-entrypoint",
       "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 30,
       "command": [
         "bash",
-        "../sanity.sh"
+        "-c",
+        "cd .. && ./run.sh browser-availability --help"
       ],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": [
+          "Read-only provider availability probe"
+        ]
+      }
+    },
+    {
+      "name": "surf-stale-socket-preflight-classification",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_browser_provider_availability.py::test_probe_reports_surf_stale_socket_recovery_when_tab_list_refuses -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
       }
     }
   ]

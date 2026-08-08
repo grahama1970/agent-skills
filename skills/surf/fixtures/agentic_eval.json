@@ -2,21 +2,44 @@
   "version": 2,
   "skill": "surf",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "surf entrypoint and native-socket troubleshooting posture",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the Surf sanity entrypoint and native CLI socket diagnostics meet explicit local expectations",
+    "does_not_prove": "provider semantic correctness, authenticated WebGPT completion, or full browser review readiness"
   },
   "cases": [
     {
-      "name": "sanity",
+      "name": "capabilities-entrypoint",
       "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 120,
       "command": [
         "bash",
-        "../sanity.sh"
+        "-c",
+        "cd .. && ./run.sh capabilities --json"
       ],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": [
+          "surf"
+        ]
+      }
+    },
+    {
+      "name": "stale-native-socket-emits-actionable-failure-code",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../vendor/surf-cli && npm test -- --run test/integration/cli-native-socket.test.ts && cd ../.. && ./run.sh capabilities --json >/dev/null"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "cli-native-socket.test.ts"
+        ]
       }
     }
   ]

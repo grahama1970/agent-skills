@@ -154,3 +154,24 @@ entrypoint, it creates a static contract-validation fixture that runs the
 writes only missing `fixtures/agentic_eval.json` files unless `--force` is
 passed and emits a JSON receipt. This reduces missing eval posture; it does not
 establish semantic coverage.
+
+## Regression Fixture Pattern
+
+When a live incident exposes an agent-troubleshooting failure, add or strengthen
+the affected skill's committed `fixtures/agentic_eval.json` instead of leaving
+the lesson only in chat. The case should name the failure code, exercise the
+real skill entrypoint, script, or test runner, and assert the recovery wording
+or receipt fields an agent must see.
+
+Example pattern for browser transport incidents:
+
+- `type: "adversarial"` for stale sockets, stale tab bindings, lock contention,
+  missing native host dependencies, or provider payload mismatch.
+- `real_world: true` when the command invokes `run.sh`, a real script, live
+  HTTP, or the production test runner without feeding itself `fixtures/` stubs.
+- `expected.stderr_contains` or `expected.stdout_contains` should include the
+  stable failure code such as `stale_socket_no_listener`, not only a generic
+  timeout or nonzero exit.
+
+This keeps agentic evals tied to the operational mistake future project agents
+need to recognize.

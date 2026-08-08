@@ -139,6 +139,47 @@ webgpt raw response has sentinel but parser reports degraded = sentinel/parser i
 preflight fails = tab identity/focus/browser binding issue
 ```
 
+### Native Host And Socket Incidents
+
+When Chrome was reloaded, updated, or the Surf extension was loaded more than
+once, diagnose the native-host path before blaming WebGPT, Ask, or the target
+provider:
+
+```bash
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf
+./run.sh tab.list --json
+ss -xlpn | grep /tmp/surf.sock || true
+tail -80 /tmp/surf-host.log
+cat ${HOME}/.config/google-chrome/NativeMessagingHosts/surf.browser.host.json
+```
+
+Failure code `stale_socket_no_listener` means `/tmp/surf.sock` exists but no
+native host is accepting connections. The wrapper attempts to move the stale
+socket aside and emits a structured `surf.extension_incident.v1` line. Reload
+the single enabled Surf extension in `chrome://extensions`, or restart Chrome,
+then rerun `./run.sh tab.list --json`.
+
+If Chrome shows duplicate Surf extensions, keep only the intended unpacked
+extension enabled. Its extension id must be the only current
+`allowed_origins` entry in the native host manifest. After an extension id
+changes, run:
+
+```bash
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf
+./run.sh install <extension-id>
+```
+
+If `/tmp/surf-host.log` reports `Cannot find module ...`, the native host can
+launch but the vendored CLI dependencies are incomplete. Repair from the
+vendored CLI directory, then reload the extension:
+
+```bash
+cd ${HOME}/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli
+npm install
+cd ../..
+./run.sh tab.list --json
+```
+
 ### Capability And Result Contracts
 
 Before diagnosing provider breakage after a Surf update, capture the versioned
@@ -1719,6 +1760,9 @@ Rules learned the expensive way (2026-08-03/04):
 | Element not found          | Run `surf read` first to get current refs       |
 | Page not loading           | Check URL is valid, try with `https://`         |
 | Empty read output          | Page may still be loading - try `surf wait 2`   |
+| `/tmp/surf.sock` exists but commands report `Connection refused` or `stale_socket_no_listener` | No native host is listening on the stale socket. Run `./run.sh tab.list --json`; the wrapper will try to move the stale socket aside. Then reload the single enabled Surf extension or restart Chrome and rerun `./run.sh tab.list --json`. Preserve `ss -xlpn | grep /tmp/surf.sock`, `/tmp/surf-host.log`, and the native host manifest if filing a ticket. |
+| Chrome shows duplicate Surf extensions | Disable/remove the stale duplicate. The native host manifest must allow the active extension id only; run `./run.sh install <extension-id>` after choosing the active unpacked extension. |
+| `/tmp/surf-host.log` says `Cannot find module` | Vendored native-host dependencies are missing. Run `npm install` in `skills/surf/vendor/surf-cli`, then reload the Surf extension and rerun `./run.sh tab.list --json`. |
 | WebGPT submit hangs until I switch to the ChatGPT tab | Background tab: ChatGPT defers DOM updates while `document.hidden`. `webgpt.submit --no-activate` re-wakes tab lifecycle during polling, only accepts the **current** sentinel on the **post-submit assistant turn** (ignores stale markers / prompt echo), falls back to turn-level page text when assistant DOM lags, and records `document_hidden_at_completion` / `background_hidden_polls` in meta. Rebuild + `surf extension.reload` after surf-cli vendor changes. Optional `webgpt.extract` if ChatGPT already finished. |
 | Agent "doesn't see" sentinel on another tab | `surf read` without `--tab-id` reads the **foreground** tab only. Completion is detected inside `webgpt.submit`, not by the project agent watching Chrome. |
 | Raw response has the sentinel but clean response does not | Normal when clean output stripped the terminal marker. Check `raw_contains_sentinel`, `clean_contains_sentinel`, and the raw file before reporting failure. |

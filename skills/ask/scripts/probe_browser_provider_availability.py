@@ -181,6 +181,21 @@ def _surf_tab_list_failure_recovery(
 ) -> dict[str, Any]:
     combined = "\n".join(part for part in (proc.stdout, proc.stderr) if part)
     lower = combined.lower()
+    if "stale_socket_no_listener" in lower or "connection refused" in lower:
+        return {
+            "failure_code": "surf_browser_connection_unavailable",
+            "recovery_kind": "surf_stale_socket_no_listener",
+            "human_action": (
+                "Surf found /tmp/surf.sock, but no native host is accepting connections. "
+                "Move the stale socket aside only if no listener owns it, then reload Surf or restart Chrome."
+            ),
+            "next_command": f"cd {surf_run.parent} && ./run.sh tab.list --json",
+            "ticket_instruction": (
+                "If tab.list keeps reporting stale_socket_no_listener after stale socket cleanup and Chrome reload, "
+                "file a $ticket to $surf with browser-provider-availability.json, /tmp/surf-host.log, "
+                "the native host manifest, and `ss -xlpn | grep /tmp/surf.sock` output."
+            ),
+        }
     if "socket_missing_after_recovery" in lower or "/tmp/surf.sock" in lower:
         return {
             "failure_code": "surf_browser_connection_unavailable",

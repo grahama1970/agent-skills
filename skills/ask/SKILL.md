@@ -232,6 +232,15 @@ Project agents can also run the same probe manually before a planned panel:
   --json
 ```
 
+If this probe returns `ERROR` with `recovery_kind:
+surf_stale_socket_no_listener`, `/tmp/surf.sock` exists but no Surf native host
+is listening. This is local browser transport failure, not WebGPT provider
+throttling. Follow the reported `next_command`; if it repeats, collect
+`browser-provider-availability.json`, `/tmp/surf-host.log`, the native host
+manifest, and `ss -xlpn | grep /tmp/surf.sock`, then file a `$ticket` to
+`$surf`. Do not launch a browser roundtable, retry provider lanes, or classify
+the failure as provider cooldown until Surf `tab.list` works again.
+
 If the report is `NEEDS_ATTENTION` with `cooldown_policy.status:
 LANE_LOCAL_RETRY`, do not cancel healthy peers. Treat only the named providers
 as cooling down, preserve the policy, and use the adjusted handler list from
@@ -780,6 +789,11 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   `surf_browser_connection_unavailable`, not provider throttling. Recover the
   Surf host/socket and rerun only the affected lane; do not apply a provider
   cooldown.
+- `stale_socket_no_listener` is the specific Surf native-host case where the
+  socket path exists but has no listener. Ask preflight reports
+  `recovery_kind: surf_stale_socket_no_listener` and should stop before Tau
+  dispatch. Preserve the preflight artifact and follow the Surf runbook rather
+  than submitting a browser-handler job.
 - Competition joins preserve every terminal candidate receipt, including
   blocked lanes, but populate `winner_handler` and `winner_node_id` only when
   the scorecard is blocker-free `PASS`. A `NEEDS_ATTENTION` scorecard never

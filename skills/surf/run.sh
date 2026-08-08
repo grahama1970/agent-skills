@@ -399,9 +399,62 @@ run_cdp_controller() {
     CDP_PORT="$port" uv run --project "$SCRIPT_DIR" python3 "$CDP_CONTROLLER" "$@"
 }
 
-# Check if surf-cli socket is available
+# Check if surf-cli socket is available. A stale Unix socket can remain after
+# Chrome disconnects the native host; treat that as unavailable instead of
+# routing into a guaranteed ECONNREFUSED.
 surf_cli_available() {
-    [[ -S "/tmp/surf.sock" ]]
+    [[ -S "/tmp/surf.sock" ]] || return 1
+    python3 - <<'PY'
+import socket
+import sys
+
+sock = socket.socket(socket.AF_UNIX)
+sock.settimeout(0.25)
+try:
+    sock.connect("/tmp/surf.sock")
+except ConnectionRefusedError:
+    sys.exit(2)
+except OSError:
+    sys.exit(1)
+else:
+    sys.exit(0)
+finally:
+    sock.close()
+PY
+}
+
+recover_stale_surf_socket() {
+    [[ -S "/tmp/surf.sock" ]] || return 1
+    python3 - <<'PY'
+import socket
+import sys
+
+sock = socket.socket(socket.AF_UNIX)
+sock.settimeout(0.25)
+try:
+    sock.connect("/tmp/surf.sock")
+except ConnectionRefusedError:
+    sys.exit(2)
+except OSError:
+    sys.exit(1)
+else:
+    sys.exit(0)
+finally:
+    sock.close()
+PY
+    case "$?" in
+        2)
+            _stale="/tmp/surf.sock.stale-$(date +%Y%m%dT%H%M%S)"
+            if mv /tmp/surf.sock "$_stale" 2>/dev/null; then
+                printf '{"schema":"surf.extension_incident.v1","code":"stale_socket_no_listener","socket":"/tmp/surf.sock","moved_to":"%s","hint":"Surf socket existed but no native host was listening; moved stale socket aside. Reload Surf or restart Chrome to let the extension create a fresh native host."}\n' "$_stale" >&2
+                return 0
+            fi
+            return 1
+            ;;
+        *)
+            return 1
+            ;;
+    esac
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -720,6 +773,7 @@ if [[ "$1" == "tab.list" ]]; then
     done
     if [[ "$_with_kde" == "1" ]]; then
         if ! surf_cli_available; then
+            recover_stale_surf_socket || true
             echo "Error: tab.list --with-kde requires surf-cli extension." >&2
             exit 1
         fi
@@ -777,6 +831,7 @@ if surf_cli_available; then
     echo "Run: surf setup" >&2
     exit 1
 fi
+recover_stale_surf_socket || true
 
 if [[ -f "${SURF_CLI_PATH}/package.json" ]]; then
     # Hot path: never queue behind a long build lock (a kernel-wedged npm held
@@ -846,6 +901,7 @@ case "$1" in
         "$SKILL_DIR/scripts/ensure-surf-cli.sh" >&2 || true
         for _i in 1 2 3 4 5 6; do
             surf_cli_available && break
+            recover_stale_surf_socket || true
             sleep 2
         done
         if surf_cli_available && [[ -f "$LOCAL_CLI" ]]; then

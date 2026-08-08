@@ -313,6 +313,39 @@ def test_probe_reports_surf_extension_socket_recovery_when_tab_list_fails(monkey
     assert "$ticket to $surf" in report["ticket_instruction"]
 
 
+def test_probe_reports_surf_stale_socket_recovery_when_tab_list_refuses(monkeypatch, tmp_path: Path) -> None:
+    surf = tmp_path / "surf-run.sh"
+    surf.write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
+    surf.chmod(0o755)
+
+    def fake_run(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=1,
+            stdout="",
+            stderr=(
+                "Error: Socket connect failed: Connection refused. Native host is not accepting connections. "
+                "failure_code=stale_socket_no_listener.\nAttempted socket: /tmp/surf.sock"
+            ),
+        )
+
+    monkeypatch.setattr(probe_browser_provider_availability, "_run", fake_run)
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webgpt"],
+        surf_run=surf,
+        max_tabs_per_provider=1,
+        explicit_tabs={},
+    )
+
+    assert report["status"] == "ERROR"
+    assert report["error"] == "surf_tab_list_failed"
+    assert report["failure_code"] == "surf_browser_connection_unavailable"
+    assert report["recovery_kind"] == "surf_stale_socket_no_listener"
+    assert "no native host is accepting connections" in report["human_action"]
+    assert "ss -xlpn" in report["ticket_instruction"]
+
+
 def _fake_surf(
     tmp_path: Path,
     *,

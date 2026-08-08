@@ -29,7 +29,7 @@ function formatSocketError(error, context = "connect") {
   if (error && error.code === "ENOENT") {
     message = "Socket not found.";
   } else if (error && error.code === "ECONNREFUSED") {
-    message = "Connection refused. Native host is not accepting connections.";
+    message = "Connection refused. Native host is not accepting connections. failure_code=stale_socket_no_listener.";
   } else {
     message = error && error.message ? error.message : String(error);
   }

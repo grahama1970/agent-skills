@@ -220,6 +220,60 @@ async function runCliWithMissingSocket(args: string[]) {
   });
 }
 
+async function runCliWithStaleSocket(args: string[]) {
+  const socketPath = createSocketPath();
+  const cliPath = path.join(process.cwd(), "native", "cli.cjs");
+  const owner = spawn(
+    process.execPath,
+    [
+      "-e",
+      [
+        "const net = require('node:net');",
+        `const server = net.createServer();`,
+        `server.listen(${JSON.stringify(socketPath)}, () => console.log('ready'));`,
+        "setInterval(() => {}, 1000);",
+      ].join(""),
+    ],
+    { cwd: process.cwd(), env: process.env, stdio: ["ignore", "pipe", "pipe"] },
+  );
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("stale socket owner did not start")), 5000);
+    owner.stdout.on("data", (chunk) => {
+      if (String(chunk).includes("ready")) {
+        clearTimeout(timeout);
+        resolve();
+      }
+    });
+    owner.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error instanceof Error ? error : new Error(String(error)));
+    });
+  });
+  owner.kill("SIGKILL");
+  await new Promise((resolve) => owner.on("close", resolve));
+
+  return await new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve) => {
+    const child = spawn(process.execPath, [cliPath, ...args], {
+      cwd: process.cwd(),
+      env: { ...process.env, SURF_SOCKET: socketPath },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on("close", (code) =>
+      resolve({ code: typeof code === "number" ? code : null, stdout, stderr }),
+    );
+  });
+}
+
 afterEach(() => {
   for (const tempDir of tempDirs.splice(0)) {
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -298,5 +352,22 @@ describe("CLI native socket integration", () => {
       "SURF_SOCKET is set; make sure the native host and CLI use the same value.",
     );
     expect(result.stderr).not.toContain("/tmp/surf.sock");
+  });
+
+  it("prints stale socket diagnostics when SURF_SOCKET points at an unowned socket", async () => {
+    if (process.platform === "win32") {
+      return;
+    }
+
+    const result = await runCliWithStaleSocket(["tab.list"]);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("Socket connect failed: Connection refused.");
+    expect(result.stderr).toContain("failure_code=stale_socket_no_listener");
+    expect(result.stderr).toContain("Attempted socket:");
+    expect(result.stderr).toContain(
+      "SURF_SOCKET is set; make sure the native host and CLI use the same value.",
+    );
   });
 });
