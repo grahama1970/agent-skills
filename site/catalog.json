@@ -1,6 +1,6 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "caa60079b",
+  "sourceCommit": "eee004c65",
   "counts": {
     "areas": 8,
     "projects": 10,
@@ -205,7 +205,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "A memory service, Chatterbox TTS, and the insightface identity gate.",
+      "boundary": "Tests whether a dream changes persona state under sealed conditions — a null result is valid, and it makes no claim that dreaming helps."
     },
     {
       "id": "project:surf",
@@ -239,7 +241,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Chrome with the surf extension or a supported CDP setup, and an authenticated browser session.",
+      "boundary": "Proves tab / element / screenshot provenance — not whether the broader agent workflow is correct."
     },
     {
       "id": "project:battle",
@@ -272,7 +276,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Docker and isolated target images.",
+      "boundary": "Scores what actually worked in a sandbox — not production safety."
     },
     {
       "id": "project:tau",
@@ -308,7 +314,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Python env; a model gateway and, for browser handlers, browser bindings.",
+      "boundary": "Proves each agent turn was bounded and receipted — not that the task itself was solved correctly."
     },
     {
       "id": "project:extractor",
@@ -342,7 +350,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Python env and a vision/model provider for extraction.",
+      "boundary": "Extracts what is present without knobs to flatter the result — not that the source is complete."
     },
     {
       "id": "project:dogpile",
@@ -375,7 +385,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Search API keys and network access.",
+      "boundary": "Reports what the sweep reached across sources — not exhaustive coverage."
     },
     {
       "id": "project:watch",
@@ -409,7 +421,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "A screen-capture pipeline and frame storage.",
+      "boundary": "Records what was on screen at a moment — not intent."
     },
     {
       "id": "project:scillm",
@@ -443,7 +457,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "A container runtime and provider credentials (OAuth).",
+      "boundary": "Normalizes provider access behind one contract — it does not itself reason or plan."
     },
     {
       "id": "project:debugger",
@@ -477,7 +493,9 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
-      "scoutState": "setup-required"
+      "scoutState": "setup-required",
+      "requirements": "Python env with the target process reachable for breakpoints.",
+      "boundary": "Shows real runtime state at a paused frame — it does not fix the bug for you."
     },
     {
       "id": "project:sparta-explorer",
@@ -510,7 +528,9 @@
       "href": "https://github.com/grahama1970/sparta-public",
       "visibility": "public-overview",
       "evidenceAccess": "abstract",
-      "scoutState": "abstract-only"
+      "scoutState": "abstract-only",
+      "requirements": "Public overview only — the system and its evidence are private.",
+      "boundary": "A public methodology overview; the implementation and evidence are under NDA."
     },
     {
       "id": "skill:agent-inbox",

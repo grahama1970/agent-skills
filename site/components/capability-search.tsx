@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, runSearch, type Hit } from '@/lib/search';
+import inventory from '@/inventory.json';
+
+const BUILD_COMMIT = (inventory as { commit: string }).commit;
 
 // Honest scout-readiness labels (webgpt Criterion 4): whether the public code
 // runs on a fresh clone or needs setup. No project claims "run now" without a
@@ -123,7 +126,86 @@ export function CapabilitySearch() {
               no exact match — showing closest results
             </li>
           )}
-          {hits.map((r) => (
+          {(() => {
+            // Scout Card: the top PROJECT result becomes a complete, actionable
+            // card — why it matched, honest readiness, what it gives you, what
+            // you need before starting, its boundary, and the actions to begin.
+            const scout = hits.find((h) => h.type === 'project');
+            if (!scout) return null;
+            const isPrivate = scout.visibility && scout.visibility !== 'public';
+            return (
+              <li className="scout-card" key={`scout-${scout.id}`}>
+                <div className="scout-head">
+                  <span className="scout-kicker">best match · project</span>
+                  <h3 className="scout-name">{scout.name}</h3>
+                  {scout.area && <span className="scout-area">{scout.area}</span>}
+                </div>
+                <p className="scout-badges">
+                  <span className={`capsearch-scout capsearch-scout--${scout.scoutState}`}>
+                    {SCOUT_LABEL[scout.scoutState ?? ''] ?? scout.scoutState}
+                  </span>
+                  <span className="scout-verified">last verified {BUILD_COMMIT}</span>
+                </p>
+                {scout.reason?.terms && (
+                  <p className="scout-why">
+                    matched <b>{scout.reason.terms}</b> in {scout.reason.where}
+                  </p>
+                )}
+                {(scout.summary || scout.question) && (
+                  <p className="scout-give">
+                    <span className="scout-lab">What it gives you</span>
+                    {scout.summary || scout.question}
+                  </p>
+                )}
+                {scout.requirements && (
+                  <p className="scout-req">
+                    <span className="scout-lab">Before you start</span>
+                    {scout.requirements}
+                  </p>
+                )}
+                {scout.boundary && (
+                  <p className="scout-bound">
+                    <span className="scout-lab">Known boundary</span>
+                    {scout.boundary}
+                  </p>
+                )}
+                <p className="scout-actions">
+                  {!isPrivate && scout.href && (
+                    <a
+                      href={scout.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scout-act scout-act--primary"
+                      data-qid={`scout:readme:${scout.slug}`}
+                      data-qs-action="SCOUT_OPEN_README"
+                      title={`Open ${scout.name} on GitHub`}
+                    >
+                      Start with the README ↗
+                    </a>
+                  )}
+                  <a
+                    href={scout.slug ? `#project-${scout.slug}` : '#work'}
+                    className="scout-act"
+                    data-qid={`scout:evidence:${scout.slug}`}
+                    data-qs-action="SCOUT_INSPECT_EVIDENCE"
+                    title={`Inspect ${scout.name} evidence on this page`}
+                  >
+                    Inspect evidence
+                  </a>
+                  <a
+                    href="#search"
+                    className="scout-act"
+                    data-qid={`scout:connections:${scout.slug}`}
+                    data-qs-action="SCOUT_SHOW_CONNECTIONS"
+                    title="See how this connects in the constellation"
+                  >
+                    Show connections
+                  </a>
+                </p>
+              </li>
+            );
+          })()}
+          {hits.filter((h) => h.type !== 'project' || h.id !== hits.find((x) => x.type === 'project')?.id).map((r) => (
             <li key={r.id} className={`capsearch-hit capsearch-hit--${r.type}`}>
               <a
                 href={

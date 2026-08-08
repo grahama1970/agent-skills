@@ -116,8 +116,13 @@ def main() -> None:
                            "reason": "private_without_public_overview_or_approved_abstract"
                            if vis == "PRIVATE" else "visibility_unknown"})
 
+    import subprocess
+    commit = subprocess.check_output(
+        ["git", "rev-parse", "--short", "HEAD"], cwd=OUT.resolve().parents[1], text=True
+    ).strip()
     out = {
         "schema": "grahama.project_visibility.v1",
+        "sourceCommit": commit,
         "projects": entries,
         "hidden": hidden,
     }

@@ -20,6 +20,8 @@ export interface Doc {
   visibility?: string;
   evidenceAccess?: string;
   scoutState?: string;
+  requirements?: string;
+  boundary?: string;
   category?: string;
 }
 

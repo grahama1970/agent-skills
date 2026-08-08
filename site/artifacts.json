@@ -1,5 +1,5 @@
 {
-  "commit": "caa60079b",
+  "commit": "eee004c65",
   "as_of": "2026-08-07",
   "artifacts": [
     {
@@ -9,10 +9,16 @@
       "body": "{\n  \"run\": \"ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c\",\n  \"node\": \"handler-webclaude\",\n  \"backend\": \"webclaude\",\n  \"binding_status\": \"ok\",\n  \"tab_id\": \"837367921\",\n  \"model_preference\": \"Fable 5 High\",\n  \"attachment\": \"packet-round2.md\",\n  \"path_preflight\": \"PASS\"\n}"
     },
     {
+      "id": "live-audit",
+      "title": "monitor-website audit \u2014 this page, checked against the repo",
+      "caption": "skills/monitor-website/run.sh audit --json \u00b7 captured at build",
+      "body": "{\n  \"ok\": true,\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
+    },
+    {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
-      "caption": "site/inventory.json \u00b7 sha256 6487c15965d3f7a6\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"caa60079b\",\n  \"as_of\": \"2026-08-07\",\n  \"stats\": {\n    \"skills\": 342,\n    \"sanity\": 289,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 2b9df306540b78eb\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"eee004c65\",\n  \"as_of\": \"2026-08-07\",\n  \"stats\": {\n    \"skills\": 342,\n    \"sanity\": 289,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }

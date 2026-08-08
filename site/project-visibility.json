@@ -1,20 +1,13 @@
 {
   "schema": "grahama.project_visibility.v1",
+  "sourceCommit": "eee004c65",
   "projects": [
     {
-      "slug": "tau",
-      "name": "t'au",
+      "slug": "persona-dream",
+      "name": "persona-dream",
       "visibility": "public",
       "evidence_access": "source",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "abstract": null
-    },
-    {
-      "slug": "battle",
-      "name": "battle",
-      "visibility": "public",
-      "evidence_access": "source",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
       "abstract": null
     },
     {
@@ -26,11 +19,19 @@
       "abstract": null
     },
     {
-      "slug": "persona-dream",
-      "name": "persona-dream",
+      "slug": "battle",
+      "name": "battle",
       "visibility": "public",
       "evidence_access": "source",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "abstract": null
+    },
+    {
+      "slug": "tau",
+      "name": "t'au",
+      "visibility": "public",
+      "evidence_access": "source",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
       "abstract": null
     },
     {

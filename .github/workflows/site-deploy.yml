@@ -43,6 +43,7 @@ jobs:
           python3 scripts/gen_research_map.py
           python3 scripts/gen_graph.py
           python3 scripts/gen_artifacts.py
+          python3 scripts/gen_visibility.py
       - run: python3 scripts/gen_build_manifest.py
       - run: python3 scripts/verify-data-qid.py
       - run: python3 scripts/copy_audit.py

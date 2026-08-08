@@ -7,7 +7,7 @@
 export const BOOST = { name: 4, aliases: 3, area: 2, question: 1.5, summary: 1.2, body: 0.6 };
 
 const INDEX_FIELDS = ['name', 'aliases', 'area', 'disciplines', 'question', 'summary', 'body', 'category'];
-const STORE_FIELDS = ['type', 'name', 'slug', 'area', 'href', 'question', 'summary', 'visibility', 'evidenceAccess', 'scoutState'];
+const STORE_FIELDS = ['type', 'name', 'slug', 'area', 'href', 'question', 'summary', 'visibility', 'evidenceAccess', 'scoutState', 'requirements', 'boundary'];
 
 const FIELD_RANK = ['name', 'aliases', 'area', 'question', 'disciplines', 'summary', 'body', 'category'];
 const FIELD_LABEL = {

@@ -117,9 +117,37 @@ def main() -> None:
                             "governed evidence"],
     }
 
+    # Honest scout-card metadata: what a visitor needs before starting, and the
+    # boundary of what the project proves (webgpt Scout Card). Both stay truthful
+    # to the real system — "before you start" sets expectations, "known boundary"
+    # states what it does NOT establish, matching the evidence culture.
+    SCOUT_META = {
+        "tau": ("Python env; a model gateway and, for browser handlers, browser bindings.",
+                "Proves each agent turn was bounded and receipted — not that the task itself was solved correctly."),
+        "battle": ("Docker and isolated target images.",
+                   "Scores what actually worked in a sandbox — not production safety."),
+        "surf": ("Chrome with the surf extension or a supported CDP setup, and an authenticated browser session.",
+                 "Proves tab / element / screenshot provenance — not whether the broader agent workflow is correct."),
+        "persona-dream": ("A memory service, Chatterbox TTS, and the insightface identity gate.",
+                          "Tests whether a dream changes persona state under sealed conditions — a null result is valid, and it makes no claim that dreaming helps."),
+        "extractor": ("Python env and a vision/model provider for extraction.",
+                      "Extracts what is present without knobs to flatter the result — not that the source is complete."),
+        "dogpile": ("Search API keys and network access.",
+                    "Reports what the sweep reached across sources — not exhaustive coverage."),
+        "watch": ("A screen-capture pipeline and frame storage.",
+                  "Records what was on screen at a moment — not intent."),
+        "scillm": ("A container runtime and provider credentials (OAuth).",
+                   "Normalizes provider access behind one contract — it does not itself reason or plan."),
+        "debugger": ("Python env with the target process reachable for breakpoints.",
+                     "Shows real runtime state at a paused frame — it does not fix the bug for you."),
+        "sparta-explorer": ("Public overview only — the system and its evidence are private.",
+                            "A public methodology overview; the implementation and evidence are under NDA."),
+    }
+
     for p in content["projects"]:
         v = vis.get(p["slug"], {})
         a = project_area.get(p["slug"], {})
+        _req, _bound = SCOUT_META.get(p["slug"], ("", ""))
         skill = SLUG_TO_SKILL.get(p["slug"], p["slug"])
         desc, body = _skill_text(skill)  # public SKILL.md text only
         docs.append(
@@ -147,6 +175,8 @@ def main() -> None:
                     "abstract-only" if v.get("visibility", "public") != "public"
                     else "setup-required"
                 ),
+                "requirements": _req,
+                "boundary": _bound,
             }
         )
 

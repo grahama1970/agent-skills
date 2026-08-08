@@ -1,5 +1,5 @@
 {
-  "source_commit": "caa60079b",
+  "source_commit": "eee004c65",
   "as_of": "2026-08-07",
   "stats": {
     "skills": 342,
@@ -11,10 +11,23 @@
     "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
   },
   "outputs": {
-    "inventory.json": "6487c15965d3f7a6ef9c39a1c1a4b8e556446d3a3cdf43081f2c7ce3bdfc5277",
-    "artifacts.json": "8606dc148622376cdec0670ff35dfa3484ca17f8858b1d370bbfbfaafb97afbd",
-    "catalog.json": "216ef20872879adbf6b5ab9a985e0ff5e92340fe1536119a6ee891ede4ec7d0f",
-    "research-map.json": "950463cc2bced469e48dc5f9dd54d22ce0de3115211d3f1f079c7772840c2ea7",
-    "graph.json": "83a8a4bad14069ecd37db0bf510011c22c40835ae7082ac367cfc7ad6dec61d5"
+    "inventory.json": "2b9df306540b78eb2ed386f36c9617c4ef8f3e2dfe717387861f19b11d64204e",
+    "artifacts.json": "11e0b12b3a230a9eef219a1c0398d2c623a2a7a8f9add13b0fe73c14b721d956",
+    "catalog.json": "3a60214024c48fb6df91c062aabb314d0217c740980e67a2bae78c54246a3115",
+    "research-map.json": "71584fac7deee6540fb318645ae70123a028c230876ead3b5ab9969b78ef286d",
+    "graph.json": "56e1cc9cba6d23553796025e7284a346d2e71e26ab664e3c332fe05007f7b185",
+    "project-visibility.json": "6a8348b16544069d7b3eaeff538f40f15d1ef43f89cc73b60d8c39155f0424bc"
+  },
+  "fixtures": {
+    "proof-explainer.json": {
+      "immutable": true,
+      "evidence_source": "ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c",
+      "sha256": "525fbc9d25963af4366e1c04527936b7d49b838fb6e5b508037afbc016747f11"
+    },
+    "generated/battle-lineage.json": {
+      "immutable": true,
+      "evidence_source": "68391a9d884c72dc3b0a0bdf275910ae7bd20f6f5efbd9278067089abb8fe8ea",
+      "sha256": "80a065b81777f56d947c8f46730523e8f79dc6a5cd712b946df21669b968c86f"
+    }
   }
 }

@@ -23,13 +23,23 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 SITE = REPO / "site"
 
-# generated surface -> the field that records the commit it was built from
+# Regenerated-from-repo surfaces -> the field recording the commit they were
+# built from. ALL must equal HEAD (this is the coherence contract).
 SURFACES = {
     "inventory.json": "commit",
     "artifacts.json": "commit",
     "catalog.json": "sourceCommit",
     "research-map.json": "sourceCommit",
     "graph.json": "sourceCommit",
+    "project-visibility.json": "sourceCommit",
+}
+# Immutable historical fixtures the page renders: NOT regenerated per commit —
+# they capture a real PAST run. They carry their own evidence-source (a run id /
+# content sha of the underlying artifacts) instead of HEAD, and are recorded in
+# the manifest as fixtures so coverage is complete (webgpt trust check).
+FIXTURES = {
+    "proof-explainer.json": "run",          # the real Tau run that designed the site
+    "generated/battle-lineage.json": "sourceSha256",  # recorded battle-004 fixture
 }
 INPUTS = ["../README.md", "content.json"]
 
@@ -63,6 +73,20 @@ def main() -> int:
     if content and content != inv:
         errors.append(f"content.json stats {content} != inventory {inv}")
 
+    # Fixtures: declare each with its own evidence-source + digest. Missing
+    # fixture or missing evidence-source field is a coverage gap -> fail.
+    fixtures = {}
+    for fname, srckey in FIXTURES.items():
+        p = SITE / fname
+        if not p.exists():
+            errors.append(f"fixture missing: {fname}")
+            continue
+        src = json.loads(p.read_text()).get(srckey)
+        if not src:
+            errors.append(f"fixture {fname}: no evidence-source field '{srckey}'")
+            continue
+        fixtures[fname] = {"immutable": True, "evidence_source": src, "sha256": sha(p)}
+
     if errors:
         print("FAIL: source incoherence — the site would show mixed source state:",
               file=sys.stderr)
@@ -78,6 +102,7 @@ def main() -> int:
         "stats": inv,
         "inputs": {i: sha(SITE / i) for i in INPUTS if (SITE / i).exists()},
         "outputs": {f: sha(SITE / f) for f in SURFACES if (SITE / f).exists()},
+        "fixtures": fixtures,
     }
     (SITE / "build-manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
