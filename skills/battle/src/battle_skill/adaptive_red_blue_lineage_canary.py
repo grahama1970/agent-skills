@@ -1234,11 +1234,23 @@ def _judge_reviewed_generation(
         generation_dir / "judge" / "reviewed-judge-pair-input.json", judge_input
     )
     _assert_pipeline_slots(pipelines)
+    docker_image_id = _docker_image_id(docker_image)
     judge = _judge_tau_artifacts(
         out_dir=generation_dir,
         scenario=scenario,
         docker_image=docker_image,
         tau_manifest=reviewed_manifest,
+    )
+    _assert_pipeline_slots(pipelines)
+    exact_replay = _run_exact_judge_replay(
+        generation_dir=generation_dir,
+        scenario=scenario,
+        docker_image=docker_image,
+        reviewed_manifest=reviewed_manifest,
+        original_judge=judge,
+        pipelines=pipelines,
+        target_identity_sha256=target_identity_sha256,
+        docker_image_id=docker_image_id,
     )
     judge.update(
         {
@@ -1250,6 +1262,7 @@ def _judge_reviewed_generation(
             "target_identity_receipt_sha256": target_identity_sha256,
             "original_target_tree_sha256": target_identity_sha256,
             "patched_target_tree_sha256": patched_identity,
+            "exact_replay": exact_replay,
         }
     )
     return judge
@@ -1308,6 +1321,224 @@ def _assert_pipeline_slots(pipelines: dict[str, dict[str, Any]]) -> None:
             raise RuntimeError(f"{team} immutable slot is not a regular file")
         if _sha(path) != pipeline.get("selected_artifact_sha256"):
             raise RuntimeError(f"{team} immutable slot changed during Judge")
+
+
+def _run_exact_judge_replay(
+    *,
+    generation_dir: Path,
+    scenario: dict[str, Any],
+    docker_image: str,
+    reviewed_manifest: dict[str, Any],
+    original_judge: dict[str, Any],
+    pipelines: dict[str, dict[str, Any]],
+    target_identity_sha256: str,
+    docker_image_id: str,
+) -> dict[str, Any]:
+    replay_root = generation_dir / "judge-exact-replay"
+    _copy_tree_for_replay(
+        generation_dir / "arena" / "team-public" / "target",
+        replay_root / "arena" / "team-public" / "target",
+    )
+    replay_judge = _judge_tau_artifacts(
+        out_dir=replay_root,
+        scenario=scenario,
+        docker_image=docker_image,
+        tau_manifest=reviewed_manifest,
+    )
+    _assert_pipeline_slots(pipelines)
+    original_fingerprint = _judge_fingerprint(
+        judge=original_judge,
+        docker_image=docker_image,
+        target_identity_sha256=target_identity_sha256,
+        docker_image_id=docker_image_id,
+    )
+    replay_image_id = _docker_image_id(docker_image)
+    replay_fingerprint = _judge_fingerprint(
+        judge=replay_judge,
+        docker_image=docker_image,
+        target_identity_sha256=target_identity_sha256,
+        docker_image_id=replay_image_id,
+    )
+    matched = (
+        original_fingerprint == replay_fingerprint
+        and replay_image_id == docker_image_id
+    )
+    receipt = {
+        "schema": "battle.exact_judge_pair_replay.v1",
+        "status": "PASS" if matched else "FAIL",
+        "matched": matched,
+        "generation": _generation_number_from_dir(generation_dir),
+        "docker_image": docker_image,
+        "docker_image_id": docker_image_id,
+        "replay_docker_image_id": replay_image_id,
+        "target_identity_sha256": target_identity_sha256,
+        "original_fingerprint": original_fingerprint,
+        "replay_fingerprint": replay_fingerprint,
+        "replay_judge": replay_judge,
+    }
+    path = _write_json(replay_root / "exact-replay-receipt.json", receipt)
+    receipt["path"] = str(path)
+    receipt["sha256"] = _sha(path)
+    return receipt
+
+
+def _copy_tree_for_replay(source: Path, target: Path) -> None:
+    if target.exists():
+        raise RuntimeError(f"exact replay target already exists: {target}")
+    shutil.copytree(source, target)
+
+
+def _docker_image_id(docker_image: str) -> str:
+    completed = subprocess.run(
+        ["docker", "image", "inspect", docker_image, "--format", "{{.Id}}"],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    image_id = completed.stdout.strip()
+    if completed.returncode != 0 or not image_id.startswith("sha256:"):
+        raise RuntimeError(f"Docker image identity unavailable for {docker_image}")
+    return image_id
+
+
+def _judge_fingerprint(
+    *,
+    judge: dict[str, Any],
+    docker_image: str,
+    target_identity_sha256: str,
+    docker_image_id: str | None = None,
+) -> dict[str, Any]:
+    attempts = judge.get("attempts") if isinstance(judge.get("attempts"), list) else []
+    return {
+        "docker_image": docker_image,
+        "docker_image_id": docker_image_id,
+        "target_identity_sha256": target_identity_sha256,
+        "status": judge.get("status"),
+        "verdict": judge.get("verdict"),
+        "judged_pair_count": judge.get("judged_pair_count"),
+        "attempts": [_attempt_fingerprint(item) for item in attempts],
+    }
+
+
+def _attempt_fingerprint(attempt: dict[str, Any]) -> dict[str, Any]:
+    commands = (
+        attempt.get("commands_run")
+        if isinstance(attempt.get("commands_run"), list)
+        else []
+    )
+    bindings = (
+        attempt.get("judge_input_byte_bindings")
+        if isinstance(attempt.get("judge_input_byte_bindings"), list)
+        else []
+    )
+    container_hashes = (
+        attempt.get("container_input_hashes")
+        if isinstance(attempt.get("container_input_hashes"), list)
+        else []
+    )
+    return {
+        "pair_id": attempt.get("pair_id"),
+        "red_artifact_sha256": attempt.get("red_artifact_sha256")
+        or _sha(Path(str(attempt["red_artifact"]))),
+        "blue_artifact_sha256": attempt.get("blue_artifact_sha256")
+        or _sha(Path(str(attempt["blue_artifact"]))),
+        "verdict": attempt.get("verdict"),
+        "status": attempt.get("status"),
+        "judge_input_byte_binding_pass": attempt.get("judge_input_byte_binding_pass"),
+        "container_input_hash_pass": attempt.get("container_input_hash_pass"),
+        "exploit_confirmed_before_patch": attempt.get("exploit_confirmed_before_patch"),
+        "exploit_blocked_after_patch": attempt.get("exploit_blocked_after_patch"),
+        "functionality_preserved": attempt.get("functionality_preserved"),
+        "bindings": [_binding_fingerprint(item) for item in bindings],
+        "container_hashes": [_container_hash_fingerprint(item) for item in container_hashes],
+        "commands": [_command_fingerprint(command) for command in commands],
+    }
+
+
+def _binding_fingerprint(binding: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "role": binding.get("role"),
+        "source_path": _normalize_replay_path(binding.get("source_path")),
+        "source_sha256": binding.get("source_sha256"),
+        "execution_path": _normalize_replay_path(binding.get("execution_path")),
+        "execution_sha256": binding.get("execution_sha256"),
+        "docker_workspace_path": binding.get("docker_workspace_path"),
+        "matched": binding.get("matched"),
+        "regular_file": binding.get("regular_file"),
+    }
+
+
+def _container_hash_fingerprint(receipt: dict[str, Any]) -> dict[str, Any]:
+    command = receipt.get("command_receipt")
+    return {
+        "schema": receipt.get("schema"),
+        "status": receipt.get("status"),
+        "docker_image": receipt.get("docker_image"),
+        "work_dir": _normalize_replay_path(receipt.get("work_dir")),
+        "expected_sha256": receipt.get("expected_sha256"),
+        "observed_sha256": receipt.get("observed_sha256"),
+        "matched": receipt.get("matched"),
+        "command": _command_fingerprint(command) if isinstance(command, dict) else None,
+    }
+
+
+def _command_fingerprint(command: dict[str, Any]) -> dict[str, Any]:
+    argv = list(command.get("command") or [])
+    normalized: list[str] = []
+    for value in argv:
+        text = str(value)
+        normalized.append(
+            "$WORKSPACE:/workspace:rw"
+            if text.endswith(":/workspace:rw") and text.startswith("/")
+            else text
+        )
+    stdout = Path(str(command.get("stdout_path") or ""))
+    stderr = Path(str(command.get("stderr_path") or ""))
+    return {
+        "command": normalized,
+        "exit_code": command.get("exit_code"),
+        "stdout_sha256": _sha(stdout) if stdout.is_file() else None,
+        "stderr_sha256": _sha(stderr) if stderr.is_file() else None,
+    }
+
+
+def _normalize_replay_path(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    markers = (
+        "/judge-exact-replay/judge/replays/",
+        "/judge/replays/",
+        "/judge-exact-replay/",
+    )
+    for marker in markers:
+        if marker in text:
+            return f"$REPLAY_ROOT/{text.split(marker, 1)[1]}"
+    return text
+
+
+def _generation_number_from_dir(path: Path) -> int | None:
+    try:
+        return int(path.name.removeprefix("generation-"))
+    except ValueError:
+        return None
+
+
+def _assert_exact_replay_set(judges: dict[int, dict[str, Any]]) -> None:
+    generations: list[int] = []
+    for generation in (1, 2):
+        replay = judges.get(generation, {}).get("exact_replay")
+        if not isinstance(replay, dict):
+            raise RuntimeError(f"generation {generation} exact replay is missing")
+        if replay.get("status") != "PASS" or replay.get("matched") is not True:
+            raise RuntimeError(f"generation {generation} exact replay did not pass")
+        replay_generation = replay.get("generation")
+        if replay_generation != generation:
+            raise RuntimeError(f"generation {generation} exact replay is misbound")
+        generations.append(int(replay_generation))
+    if generations != [1, 2] or len(set(generations)) != 2:
+        raise RuntimeError("exact replay generation set is invalid")
 
 
 def _provider_genomes(

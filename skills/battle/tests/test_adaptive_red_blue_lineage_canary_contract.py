@@ -8,15 +8,20 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 
 import pytest
 
 from battle_skill.adaptive_red_blue_lineage_canary import (
+    _assert_exact_replay_set,
     _assert_pipeline_slots,
     _campaign_status,
+    _docker_image_id,
     _generation_2_objective,
+    _judge_fingerprint,
     _preserve_selected_artifact,
     _reviewed_manifest,
+    _run_exact_judge_replay,
 )
 
 
@@ -281,3 +286,390 @@ def test_reviewed_manifest_uses_immutable_slot_not_mutable_source(
         ]
 
     _assert_pipeline_slots(pipelines)
+
+
+def test_exact_replay_consumes_immutable_slots_and_records_pass_receipt(
+    tmp_path, monkeypatch
+) -> None:
+    generation_dir, pipelines, reviewed_manifest, original_judge = _exact_replay_fixture(
+        tmp_path, generation=1
+    )
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary._docker_image_id",
+        lambda image: "sha256:" + "d" * 64,
+    )
+    calls = []
+
+    def fake_judge(**kwargs):
+        calls.append(kwargs)
+        assert kwargs["out_dir"] == generation_dir / "judge-exact-replay"
+        for team in ("red", "blue"):
+            materialized = kwargs["tau_manifest"]["teams"][0 if team == "red" else 1][
+                "materialized_artifact"
+            ]
+            assert materialized["path"] == pipelines[team]["selected_artifact_path"]
+            assert (
+                materialized["path"]
+                != pipelines[team]["selected_artifact_source_path"]
+            )
+        return _judge_receipt(
+            root=kwargs["out_dir"],
+            red_path=Path(pipelines["red"]["selected_artifact_path"]),
+            blue_path=Path(pipelines["blue"]["selected_artifact_path"]),
+            verdict="BLUE_SUCCESS",
+        )
+
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary._judge_tau_artifacts",
+        fake_judge,
+    )
+
+    replay = _run_exact_judge_replay(
+        generation_dir=generation_dir,
+        scenario={"scenario_id": "arena-zip-slip-import-001"},
+        docker_image="python:3.12-slim",
+        reviewed_manifest=reviewed_manifest,
+        original_judge=original_judge,
+        pipelines=pipelines,
+        target_identity_sha256="a" * 64,
+        docker_image_id="sha256:" + "d" * 64,
+    )
+
+    assert len(calls) == 1
+    assert replay["status"] == "PASS"
+    assert replay["matched"] is True
+    assert replay["generation"] == 1
+    assert replay["docker_image_id"] == replay["replay_docker_image_id"]
+    assert Path(replay["path"]).is_file()
+    assert replay["sha256"] == hashlib.sha256(Path(replay["path"]).read_bytes()).hexdigest()
+
+
+def test_exact_replay_fails_on_slot_mutation_or_docker_identity_mismatch(
+    tmp_path, monkeypatch
+) -> None:
+    generation_dir, pipelines, reviewed_manifest, original_judge = _exact_replay_fixture(
+        tmp_path, generation=2
+    )
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary._judge_tau_artifacts",
+        lambda **kwargs: _judge_receipt(
+            root=kwargs["out_dir"],
+            red_path=Path(pipelines["red"]["selected_artifact_path"]),
+            blue_path=Path(pipelines["blue"]["selected_artifact_path"]),
+            verdict="BLUE_SUCCESS",
+        ),
+    )
+    images = iter(["sha256:" + "e" * 64])
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary._docker_image_id",
+        lambda image: next(images),
+    )
+
+    replay = _run_exact_judge_replay(
+        generation_dir=generation_dir,
+        scenario={"scenario_id": "arena-zip-slip-import-001"},
+        docker_image="python:3.12-slim",
+        reviewed_manifest=reviewed_manifest,
+        original_judge=original_judge,
+        pipelines=pipelines,
+        target_identity_sha256="a" * 64,
+        docker_image_id="sha256:" + "d" * 64,
+    )
+    assert replay["status"] == "FAIL"
+    assert replay["matched"] is False
+    assert replay["replay_docker_image_id"] != replay["docker_image_id"]
+
+    generation_dir, pipelines, reviewed_manifest, original_judge = _exact_replay_fixture(
+        tmp_path / "slot-drift", generation=2
+    )
+    Path(pipelines["red"]["selected_artifact_path"]).chmod(0o644)
+    Path(pipelines["red"]["selected_artifact_path"]).write_bytes(b"mutated slot\n")
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary._docker_image_id",
+        lambda image: "sha256:" + "d" * 64,
+    )
+    with pytest.raises(RuntimeError, match="immutable slot changed"):
+        _run_exact_judge_replay(
+            generation_dir=generation_dir,
+            scenario={"scenario_id": "arena-zip-slip-import-001"},
+            docker_image="python:3.12-slim",
+            reviewed_manifest=reviewed_manifest,
+            original_judge=original_judge,
+            pipelines=pipelines,
+            target_identity_sha256="a" * 64,
+            docker_image_id="sha256:" + "d" * 64,
+        )
+
+
+def test_judge_fingerprint_normalizes_only_replay_workspace_paths(
+    tmp_path,
+) -> None:
+    red = tmp_path / "red.py"
+    blue = tmp_path / "blue.py"
+    red.write_bytes(b"red\n")
+    blue.write_bytes(b"blue\n")
+
+    first = _judge_receipt(
+        root=tmp_path / "first" / "generation-1",
+        red_path=red,
+        blue_path=blue,
+        verdict="BLUE_SUCCESS",
+    )
+    second = _judge_receipt(
+        root=tmp_path / "second" / "generation-1" / "judge-exact-replay",
+        red_path=red,
+        blue_path=blue,
+        verdict="BLUE_SUCCESS",
+    )
+    assert _judge_fingerprint(
+        judge=first,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    ) == _judge_fingerprint(
+        judge=second,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    )
+
+    changed = _judge_receipt(
+        root=tmp_path / "third" / "generation-1" / "judge-exact-replay",
+        red_path=red,
+        blue_path=blue,
+        verdict="RED_SUCCESS",
+    )
+    assert _judge_fingerprint(
+        judge=first,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    ) != _judge_fingerprint(
+        judge=changed,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    )
+
+    changed_hash = _judge_receipt(
+        root=tmp_path / "fourth" / "generation-1" / "judge-exact-replay",
+        red_path=red,
+        blue_path=blue,
+        verdict="BLUE_SUCCESS",
+    )
+    changed_hash["attempts"][0]["container_input_hashes"][0]["observed_sha256"] = {
+        "red_exploit_submission.py": "0" * 64
+    }
+    assert _judge_fingerprint(
+        judge=first,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    ) != _judge_fingerprint(
+        judge=changed_hash,
+        docker_image="python:3.12-slim",
+        docker_image_id="sha256:" + "d" * 64,
+        target_identity_sha256="a" * 64,
+    )
+
+
+def test_exact_replay_set_requires_one_pass_per_generation(tmp_path) -> None:
+    replays = {}
+    for generation in (1, 2):
+        path = tmp_path / f"generation-{generation}" / "exact-replay-receipt.json"
+        path.parent.mkdir(parents=True)
+        path.write_text("{}\n", encoding="utf-8")
+        replays[generation] = {
+            "exact_replay": {
+                "status": "PASS",
+                "matched": True,
+                "generation": generation,
+                "path": str(path),
+            }
+        }
+    _assert_exact_replay_set(replays)
+
+    missing = {1: replays[1], 2: {}}
+    with pytest.raises(RuntimeError, match="generation 2 exact replay is missing"):
+        _assert_exact_replay_set(missing)
+
+    duplicate = {
+        1: replays[1],
+        2: {"exact_replay": {**replays[2]["exact_replay"], "generation": 1}},
+    }
+    with pytest.raises(RuntimeError, match="misbound"):
+        _assert_exact_replay_set(duplicate)
+
+
+def test_docker_image_id_requires_resolved_sha_identity(monkeypatch) -> None:
+    class Completed:
+        def __init__(self, returncode: int, stdout: str) -> None:
+            self.returncode = returncode
+            self.stdout = stdout
+
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary.subprocess.run",
+        lambda *args, **kwargs: Completed(0, "sha256:" + "d" * 64 + "\n"),
+    )
+    assert _docker_image_id("python:3.12-slim") == "sha256:" + "d" * 64
+
+    monkeypatch.setattr(
+        "battle_skill.adaptive_red_blue_lineage_canary.subprocess.run",
+        lambda *args, **kwargs: Completed(0, "python:3.12-slim\n"),
+    )
+    with pytest.raises(RuntimeError, match="Docker image identity unavailable"):
+        _docker_image_id("python:3.12-slim")
+
+
+def _exact_replay_fixture(tmp_path, *, generation: int):
+    generation_dir = tmp_path / f"generation-{generation}"
+    target = generation_dir / "arena" / "team-public" / "target"
+    target.mkdir(parents=True)
+    (target / "app.py").write_bytes(b"def import_zip(): pass\n")
+    pipelines = {}
+    teams = []
+    for team in ("red", "blue"):
+        source = tmp_path / "mutable" / team / "selected.py"
+        source.parent.mkdir(parents=True)
+        source.write_bytes(f"{team} mutable source\n".encode("utf-8"))
+        slot = _preserve_selected_artifact(
+            generation_dir=generation_dir,
+            generation=generation,
+            team=team,
+            source=source,
+            expected_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+        )
+        pipelines[team] = {
+            "selected_artifact_sha256": slot["preserved_sha256"],
+            "selected_artifact_path": slot["path"],
+            "selected_artifact_source_path": str(source),
+            "immutable_slot": slot,
+        }
+        teams.append(
+            {
+                "team": team,
+                "worker_id": f"{team}-0",
+                "lane_id": f"{team}-lane",
+                "action_id": f"{team}-action",
+                "materialized_artifact": {"status": "PASS", "path": slot["path"]},
+            }
+        )
+    reviewed_manifest = {"teams": teams}
+    original_judge = _judge_receipt(
+        root=generation_dir,
+        red_path=Path(pipelines["red"]["selected_artifact_path"]),
+        blue_path=Path(pipelines["blue"]["selected_artifact_path"]),
+        verdict="BLUE_SUCCESS",
+    )
+    return generation_dir, pipelines, reviewed_manifest, original_judge
+
+
+def _judge_receipt(*, root: Path, red_path: Path, blue_path: Path, verdict: str):
+    replay_dir = root / "judge" / "replays" / "red-0__blue-0"
+    original_work = replay_dir / "original"
+    patched_work = replay_dir / "patched"
+    original_work.mkdir(parents=True)
+    patched_work.mkdir(parents=True)
+    stdout = replay_dir / "stdout.txt"
+    stderr = replay_dir / "stderr.txt"
+    stdout.write_text("RED_EXPLOIT_CONFIRMED\n", encoding="utf-8")
+    stderr.write_text("", encoding="utf-8")
+    red_sha = hashlib.sha256(red_path.read_bytes()).hexdigest()
+    blue_sha = hashlib.sha256(blue_path.read_bytes()).hexdigest()
+    bindings = [
+        {
+            "role": "red_original_exploit",
+            "source_path": str(red_path),
+            "source_sha256": red_sha,
+            "execution_path": str(original_work / "red_exploit_submission.py"),
+            "execution_sha256": red_sha,
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "matched": True,
+            "regular_file": True,
+        },
+        {
+            "role": "red_patched_exploit",
+            "source_path": str(red_path),
+            "source_sha256": red_sha,
+            "execution_path": str(patched_work / "red_exploit_submission.py"),
+            "execution_sha256": red_sha,
+            "docker_workspace_path": "/workspace/red_exploit_submission.py",
+            "matched": True,
+            "regular_file": True,
+        },
+        {
+            "role": "blue_patched_app",
+            "source_path": str(blue_path),
+            "source_sha256": blue_sha,
+            "execution_path": str(patched_work / "app.py"),
+            "execution_sha256": blue_sha,
+            "docker_workspace_path": "/workspace/app.py",
+            "matched": True,
+            "regular_file": True,
+        },
+    ]
+    container_hashes = [
+        {
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "docker_image": "python:3.12-slim",
+            "work_dir": str(original_work),
+            "expected_sha256": {"red_exploit_submission.py": red_sha},
+            "observed_sha256": {"red_exploit_submission.py": red_sha},
+            "matched": True,
+            "command_receipt": {
+                "command": ["docker", "run", f"{original_work}:/workspace:rw"],
+                "exit_code": 0,
+                "stdout_path": str(stdout),
+                "stderr_path": str(stderr),
+            },
+        },
+        {
+            "schema": "battle.judge_container_input_hashes.v1",
+            "status": "PASS",
+            "docker_image": "python:3.12-slim",
+            "work_dir": str(patched_work),
+            "expected_sha256": {
+                "red_exploit_submission.py": red_sha,
+                "app.py": blue_sha,
+            },
+            "observed_sha256": {
+                "red_exploit_submission.py": red_sha,
+                "app.py": blue_sha,
+            },
+            "matched": True,
+            "command_receipt": {
+                "command": ["docker", "run", f"{patched_work}:/workspace:rw"],
+                "exit_code": 0,
+                "stdout_path": str(stdout),
+                "stderr_path": str(stderr),
+            },
+        },
+    ]
+    return {
+        "status": "PASS" if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"} else "FAIL",
+        "verdict": verdict,
+        "judged_pair_count": 1,
+        "attempts": [
+            {
+                "pair_id": "red-0__blue-0",
+                "status": "PASS",
+                "verdict": verdict,
+                "red_artifact": str(red_path),
+                "red_artifact_sha256": red_sha,
+                "blue_artifact": str(blue_path),
+                "blue_artifact_sha256": blue_sha,
+                "judge_input_byte_binding_pass": True,
+                "judge_input_byte_bindings": bindings,
+                "container_input_hash_pass": True,
+                "container_input_hashes": container_hashes,
+                "exploit_confirmed_before_patch": True,
+                "exploit_blocked_after_patch": verdict == "BLUE_SUCCESS",
+                "functionality_preserved": True,
+                "commands_run": [
+                    container_hashes[0]["command_receipt"],
+                    container_hashes[1]["command_receipt"],
+                ],
+            }
+        ],
+    }
