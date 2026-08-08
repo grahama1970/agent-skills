@@ -9,6 +9,10 @@ from typing import Any
 
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 GEO_PRIORITY = {"WNY_HYBRID": 300, "WNY_ONSITE": 200, "REMOTE": 100, "NOT_APPLICABLE": 150}
 
 

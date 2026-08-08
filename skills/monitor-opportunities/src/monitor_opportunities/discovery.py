@@ -16,6 +16,10 @@ from .receipts import base_receipt as _base_receipt, finalize_receipt as _finali
 from .required_source_receipts import client_research_receipt as _client_research_receipt, federal_website_receipt as _federal_website_receipt, linkedin_required_receipt as _linkedin_required_receipt
 from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write_jsonl
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 LANES = ("A", "B", "C")
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)
 MAX_RESPONSE_BYTES = 1_500_000

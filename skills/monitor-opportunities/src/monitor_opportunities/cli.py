@@ -30,6 +30,10 @@ from .tailoring import tailor_candidate
 from .util import read_json
 from .verification import run_verification
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 app = typer.Typer(
     name="monitor-opportunities",
     help="Zero-network Stage 0 status, report, and verification kernel.",

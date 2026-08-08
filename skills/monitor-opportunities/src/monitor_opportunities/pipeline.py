@@ -20,6 +20,10 @@ from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_
 
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 # The funnel is a volume game: ~42 applications per interview, 100-200+ cold
 # applications per offer (brave-search 2026-08-07, memory
 # job-application-funnel-metrics-2026), and tailoring is the biggest lever. So

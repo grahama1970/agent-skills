@@ -38,6 +38,11 @@ provides:
 composes:
   - memory
   - brave-search
+  - extract-entities
+  - surf
+  - ticket
+  - ops-buzz
+  - classifier-lab
   - mailbox-mining
   - ops-linkedin
   - gmail
@@ -82,6 +87,25 @@ Each morning the candidate opens **one entry point** backed by one source-of-tru
 manifest. It exposes a small ranked set of real opportunities, every associated artifact,
 every blocker, and every available decision. Every message to another human is
 transmitted **by the candidate**.
+
+## Architecture (2026-08-08 — see docs/PROJECT_KNOWLEDGE.md for current state)
+
+```
+cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
+  discovery  → SAM.gov + LinkedIn (read-only, human's own session) + Greenhouse/Ashby + brave-search
+  filter     → recency (2wk) · role-type · mandate relevance via /extract-entities vocabulary (not regex)
+  per top-N  → /tau creator-reviewer eval loop [contracts written; evaluator+reviewer subagents in agents/]
+  tailor     → claim-bound resume · live ATS form capture (human-gated submit)
+  track      → PRIVATE repo grahama1970/opportunities (issue per opp, dedup, lifecycle labels)
+               dual queues: track:employment · track:consulting (prospect queue)
+  deliver    → /memory (morning_opportunities) + Buzz summary
+  flywheel   → opportunity_labels accumulate → /classifier-lab trains learned relevance at N≥300
+```
+
+Ranking/evaluation rubric: **best-practices-opportunities** (evaluator scores against it,
+reviewer reviews against it, ranker orders by it — no bespoke top-N). GitHub `/ticket`
+(public agent-skills) is for the skill's own code defects only; opportunities are private.
+Effects are human-gated: **no auto-submit, no auto-send**.
 
 ## The interactive report is the product
 

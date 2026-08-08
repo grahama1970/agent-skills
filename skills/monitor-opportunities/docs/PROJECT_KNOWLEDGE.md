@@ -1,21 +1,42 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-04
+Updated: 2026-08-08
 Authoritative branch target: `grahama1970/agent-skills@main`
-Immutable goal: see `../SKILL.md`.
+Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
 
-## Current state
+## Current state (2026-08-08): OPERATIONAL nightly, human-gated effects
 
-Contract-freeze state: **LOCAL_STAGE_0_KERNEL / STAGE_0_RESEARCH_ONLY / NOT_ESTABLISHED**.
+The nightly is scheduled (`monitor-opportunities-nightly`, cron `0 2 * * *`) and runs
+live end-to-end — proven by a successful scheduled run and by the `/agentic-evals`
+real-world case (READY). `external_effects` stays FALSE by design: no auto-submit, no
+InMail/Gmail send; submit is human-authorized, outreach drafts go to `/memory`.
 
-This skill has a local Stage 0 kernel. `./run.sh status --json` is the authority for
-implemented capabilities and operational readiness; this document must not override that
-machine-readable result.
+Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
+1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
+   top-applicant (human's OWN authenticated session, via `surf window.new` like `/ask`);
+   Greenhouse/Ashby ATS sweeps; brave-search client research. Dead API → website fallback
+   is enforced in code (`_enforce_api_website_fallback`).
+2. **Filtering** — 2-week recency gate (`REJECT_STALE_AGE`), role-type targeting
+   (`REJECT_ROLE_TYPE`, token-safe), and mandate relevance via `/extract-entities` against
+   the `opportunity_vocabulary` ArangoDB corpus (NOT regex; fail-soft to regex).
+3. **Tailoring** — claim-bound custom resume per top job (`apply-prep`, top-N, gated).
+4. **ATS capture** — live read-only application-form schema (Greenhouse API / surf DOM).
+5. **Tracking** — each opportunity is a GitHub issue in the PRIVATE repo
+   `grahama1970/opportunities`, deduped by `content_hash`, lifecycle via labels; dual
+   queues `track:employment` and `track:consulting` (prospect queue = federal
+   solicitations + commercial signals, mandate-filtered).
+6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
 
-Live discovery, ranking, resume compilation, decisions, scheduling, Gmail/LinkedIn
-handoffs, and ATS effects are only established to the extent reported by `status` and
-retained command receipts. A rendered fixture is useful working value, but it is not a
-reliable nightly opportunity pipeline.
+Written but NOT yet live-proven (honest gaps):
+- Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
+  `opportunity-evaluation-reviewer` contracts in `agents/`, pass best-practices-subagent).
+  Blocker to verify: headless tau under OAuth at 2 AM.
+- **Mandate-first ranking** (webgpt P0) — current ranking is still geo-weighted.
+- **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
+  toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
+
+Legacy note: the old "Stage 0 kernel / NOT_ESTABLISHED / network_access=false" language
+below predates 2026-08-08 and is superseded by this section.
 
 The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
 run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through

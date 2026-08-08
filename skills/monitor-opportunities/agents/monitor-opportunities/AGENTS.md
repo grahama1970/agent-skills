@@ -9,15 +9,25 @@ likely employed by the employer or client.
 “Algorithm likely employed” is operationalized as an evidence-backed screening-interface
 profile with explicit unknowns, not a claim about proprietary ranking weights.
 
-## Current implementation boundary
+## Current implementation boundary (updated 2026-08-08)
 
-This package is the zero-network Stage 0 kernel only. It implements `status`, `report`,
-and `verify`. Discovery, eligibility/ranking, tailoring, decisions, scheduling, Gmail,
-LinkedIn, and ATS commands fail closed with `NOT_IMPLEMENTED`.
+The nightly pipeline is OPERATIONAL and scheduled (`monitor-opportunities-nightly`,
+cron `0 2 * * *`, verified success). It runs live: read-only browser capture (SAM.gov
+website, LinkedIn advanced-search + top-applicant of the human's OWN authenticated
+session), Greenhouse/Ashby ATS sweeps, brave-search client research, 2-week recency +
+role-type + mandate-relevance (via `/extract-entities` vocabulary) filtering,
+mandate-tailored resumes for the top jobs, live ATS application-form capture, a
+memory-backed morning report, and per-opportunity tracking as issues in the PRIVATE
+repo `grahama1970/opportunities` (dual queues: `track:employment`, `track:consulting`).
 
-Do not report the nightly pipeline as ready. The status contract is authoritative:
-`operational_readiness=NOT_ESTABLISHED`, `network_access=false`, and
-`external_effects=false`.
+`external_effects` remains FALSE by design: nothing is auto-submitted and no InMail/Gmail
+is auto-sent. Submit is human-authorized (application_plan gate); outreach drafts go to
+`/memory` and the human transmits. `network_access` is TRUE (browser, brave-search, memory).
+
+Written but NOT yet live-proven: the per-opportunity `/tau` creator-reviewer evaluation
+loop (opportunity-evaluator + opportunity-evaluation-reviewer subagent contracts in
+`agents/`), mandate-first ranking, and the learned relevance classifier (label flywheel
+accumulating toward `MIN_LABELS_TO_TRAIN`). The rubric is `best-practices-opportunities`.
 
 ## Post-run requirement
 

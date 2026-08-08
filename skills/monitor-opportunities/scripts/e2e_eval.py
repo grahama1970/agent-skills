@@ -24,6 +24,10 @@ import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
+
 SKILL_DIR = Path(__file__).resolve().parents[1]
 RUN_SH = SKILL_DIR / "run.sh"
 MEMORY_URL = "http://127.0.0.1:8601"
