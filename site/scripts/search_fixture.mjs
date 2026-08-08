@@ -114,6 +114,25 @@ const FIX = [
   ['blorptquux', 'none', null],
 ];
 
+// Scout-conversion fixture (webgpt review, Criterion 4): a visitor describes a
+// PROBLEM in natural language and must land on the right PROJECT — the actual
+// conversion promise, not exact-name retrieval. `want` = acceptable project
+// name(s); the expected project must appear in the top-3 PROJECT-type results.
+const SCOUT = [
+  ['my agent forgets previous decisions', ['persona-dream']],
+  ['prove which browser tab an agent acted in', ['surf']],
+  ['adversarially test an agent', ['battle']],
+  ['red team an ai system', ['battle']],
+  ['extract evidence from messy pdfs', ['extractor']],
+  ['trace compliance claims back to evidence', ['sparta explorer']],
+  ['orchestrate several agent workers safely', ["t'au"]],
+  ['understand what was on screen at an exact moment', ['watch']],
+  ['use multiple model providers consistently', ['scillm']],
+  ['inspect runtime truth before patching a bug', ['debugger']],
+  ['research across github arxiv and the web', ['dogpile']],
+  ['a workflow reports success without evidence', ["t'au", 'surf']],
+];
+
 const norm = (s) => (s ?? '').toLowerCase();
 let g1n = 0, g1d = 0;   // exact name #1
 let g2n = 0, g2d = 0;   // acceptable in top-3 (all non-'none')
@@ -158,22 +177,36 @@ const pct = (n, d) => (d ? ((100 * n) / d).toFixed(1) : '—');
 const line = (label, n, d, need, ok) =>
   `${ok ? 'PASS' : 'FAIL'}  ${label}: ${n}/${d} (${pct(n, d)}%)  need ${need}`;
 
+// G5 — scout conversion: a natural-language problem lands on the right PROJECT
+// in the top-3 project-type results.
+let g5n = 0, g5d = 0;
+for (const [q, want] of SCOUT) {
+  g5d++;
+  const { hits } = runSearch(index, q);
+  const projects = hits.filter((h) => h.type === 'project').map((h) => norm(h.name));
+  const accept = want.map(norm);
+  if (projects.slice(0, 3).some((n) => accept.includes(n))) g5n++;
+  else failures.push(`G5 "${q}": none of [${accept.join(', ')}] in top-3 projects [${projects.slice(0, 3).join(', ') || 'none'}]`);
+}
+
 const G1 = g1n === g1d;
 const G2 = g2d > 0 && g2n / g2d >= 0.9;
 const G3 = g3n === g3d;
 const G4 = g4n === g4d;
+const G5 = g5d > 0 && g5n / g5d >= 0.9;
 
-console.log(`capability-search fixture — ${FIX.length} queries over ${catalog.documents.length} docs\n`);
+console.log(`capability-search fixture — ${FIX.length + SCOUT.length} queries over ${catalog.documents.length} docs\n`);
 console.log(line('G1 exact names rank #1 ', g1n, g1d, '100%', G1));
 console.log(line('G2 acceptable in top-3 ', g2n, g2d, '>=90%', G2));
 console.log(line('G3 exact/alias not fuzzed', g3n, g3d, '100%', G3));
 console.log(line('G4 nonsense -> no-match', g4n, g4d, '100%', G4));
+console.log(line('G5 scout problem->project', g5n, g5d, '>=90%', G5));
 
 if (failures.length) {
   console.log(`\n${failures.length} failing case(s):`);
   for (const f of failures) console.log('  - ' + f);
 }
 
-const ok = G1 && G2 && G3 && G4;
+const ok = G1 && G2 && G3 && G4 && G5;
 console.log(`\n${ok ? 'OK: all gates pass' : 'FAIL: search does not meet the acceptance bar'}`);
 process.exit(ok ? 0 : 1);

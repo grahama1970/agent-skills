@@ -57,8 +57,9 @@ export function CapabilitySearch() {
         what <em>you</em> need. Describe a problem or a capability.
       </p>
       <p className="capsearch-nodemo">
-        No &ldquo;book a demo.&rdquo; Find something here that fits — every match
-        is real, working code you can use for free — <em>then</em> let&rsquo;s
+        No &ldquo;book a demo.&rdquo; Describe the problem — I&rsquo;ll point you
+        to the closest public project, tell you what runs now and what needs
+        setup, and leave the gaps visible. Start there; <em>then</em> let&rsquo;s
         talk.
       </p>
       <label className="capsearch-label" htmlFor="capsearch-input">

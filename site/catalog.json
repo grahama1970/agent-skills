@@ -1,6 +1,6 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "93fff678f",
+  "sourceCommit": "3bd3cfdbc",
   "counts": {
     "areas": 8,
     "projects": 10,
@@ -188,7 +188,11 @@
         "persona",
         "voice",
         "continuity",
-        "long-lived agent"
+        "long-lived agent",
+        "agent forgets previous decisions",
+        "remembers previous conversations",
+        "durable memory across sessions",
+        "memory and persona"
       ],
       "disciplines": [
         "memory-knowledge",
@@ -217,7 +221,10 @@
         "browser agents",
         "dag",
         "workflow",
-        "orchestration"
+        "orchestration",
+        "which browser tab acted",
+        "authenticated browser control",
+        "agent browser provenance"
       ],
       "disciplines": [
         "agentic-orchestration",
@@ -247,7 +254,12 @@
         "security testing",
         "fuzzing",
         "evolution",
-        "arena"
+        "arena",
+        "adversarial testing",
+        "adversarially test an agent",
+        "red teaming",
+        "test an agent adversarially",
+        "exploit evolution"
       ],
       "disciplines": [
         "compliance-security"
@@ -274,7 +286,12 @@
         "browser agents",
         "dag",
         "workflow",
-        "orchestration"
+        "orchestration",
+        "orchestrate agents",
+        "agent workers",
+        "multi-agent orchestration",
+        "workflow reports success without evidence",
+        "prove what an agent did"
       ],
       "disciplines": [
         "agentic-orchestration",
@@ -305,7 +322,10 @@
         "retrieval",
         "research",
         "citations",
-        "ingestion"
+        "ingestion",
+        "extract from pdfs",
+        "document extraction",
+        "tables and figures"
       ],
       "disciplines": [
         "extraction",
@@ -335,7 +355,9 @@
         "retrieval",
         "research",
         "citations",
-        "ingestion"
+        "ingestion",
+        "research across github arxiv and the web",
+        "multi-source research sweep"
       ],
       "disciplines": [
         "extraction",
@@ -365,7 +387,10 @@
         "retrieval",
         "research",
         "citations",
-        "ingestion"
+        "ingestion",
+        "what was on screen at an exact moment",
+        "video at exact timestamps",
+        "screen observation"
       ],
       "disciplines": [
         "extraction",
@@ -394,7 +419,10 @@
         "browser agents",
         "dag",
         "workflow",
-        "orchestration"
+        "orchestration",
+        "multiple model providers",
+        "provider glue",
+        "model gateway"
       ],
       "disciplines": [
         "agentic-orchestration",
@@ -424,7 +452,10 @@
         "browser agents",
         "dag",
         "workflow",
-        "orchestration"
+        "orchestration",
+        "runtime truth before patching",
+        "inspect program state",
+        "live breakpoint state"
       ],
       "disciplines": [
         "agentic-orchestration",
@@ -455,7 +486,10 @@
         "policy",
         "oscal",
         "assurance",
-        "gate"
+        "gate",
+        "trace compliance claims to evidence",
+        "compliance evidence",
+        "governed evidence"
       ],
       "disciplines": [
         "compliance-security",

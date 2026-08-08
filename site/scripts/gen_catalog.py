@@ -91,6 +91,32 @@ def main() -> None:
 
     docs = list(area_docs)
 
+    # Per-project scout keywords: natural-language PROBLEM phrasings each project
+    # genuinely solves, so a visitor's problem lands on the right project (the
+    # scout-conversion promise, webgpt Criterion 4). Merged into aliases (which
+    # BM25 boosts). Must stay TRUE to what the project does — this maps real
+    # problems to real work, it is not SEO stuffing. Gated by search_fixture G5.
+    SCOUT = {
+        "tau": ["orchestrate agents", "agent workers", "multi-agent orchestration",
+                "workflow reports success without evidence", "prove what an agent did"],
+        "battle": ["adversarial testing", "adversarially test an agent", "red teaming",
+                   "test an agent adversarially", "exploit evolution"],
+        "surf": ["which browser tab acted", "authenticated browser control",
+                 "agent browser provenance"],
+        "persona-dream": ["agent forgets previous decisions",
+                          "remembers previous conversations",
+                          "durable memory across sessions", "memory and persona"],
+        "extractor": ["extract from pdfs", "document extraction", "tables and figures"],
+        "dogpile": ["research across github arxiv and the web", "multi-source research sweep"],
+        "watch": ["what was on screen at an exact moment", "video at exact timestamps",
+                  "screen observation"],
+        "scillm": ["multiple model providers", "provider glue", "model gateway"],
+        "debugger": ["runtime truth before patching", "inspect program state",
+                     "live breakpoint state"],
+        "sparta-explorer": ["trace compliance claims to evidence", "compliance evidence",
+                            "governed evidence"],
+    }
+
     for p in content["projects"]:
         v = vis.get(p["slug"], {})
         a = project_area.get(p["slug"], {})
@@ -105,7 +131,7 @@ def main() -> None:
                 "area": a.get("title", ""),
                 "areaId": a.get("id", ""),
                 "lens": a.get("lens", ""),
-                "aliases": a.get("aliases", []),
+                "aliases": a.get("aliases", []) + SCOUT.get(p["slug"], []),
                 "disciplines": a.get("disciplines", []),
                 "question": p.get("question", ""),
                 "summary": p.get("blurb", ""),
