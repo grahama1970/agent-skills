@@ -117,8 +117,26 @@ export function CapabilitySearch() {
         <ul className="capsearch-results" aria-live="polite">
           {hits.length === 0 && (
             <li className="capsearch-empty">
-              No confident match for <b>{q}</b> — try a capability, a problem, or a
-              project name.
+              <p className="capsearch-empty-lead">
+                No honest match for <b>{q}</b>.
+              </p>
+              <p className="capsearch-empty-body">
+                I could show you something vaguely related and hope you
+                don&rsquo;t look too closely — but not faking a result is
+                sort of the whole point here. Try a capability or a problem,
+                or{' '}
+                <a
+                  href={`mailto:graham@grahama.co?subject=${encodeURIComponent(
+                    'A problem for you',
+                  )}&body=${encodeURIComponent(`I was looking for: ${q}\n\nHere's the actual problem:\n`)}`}
+                  data-qid="search:empty:email"
+                  data-qs-action="SEARCH_EMPTY_EMAIL"
+                  title="Email graham@grahama.co and describe the problem"
+                >
+                  tell me what you&rsquo;re actually trying to do
+                </a>{' '}
+                — that&rsquo;s often the more interesting problem anyway.
+              </p>
             </li>
           )}
           {hits.length > 0 && fuzzed && (

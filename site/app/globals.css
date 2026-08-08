@@ -2810,6 +2810,24 @@ a.fig:hover .l::after,
   color: var(--faint);
   font-size: 0.9rem;
 }
+.capsearch-empty-lead {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--text);
+}
+.capsearch-empty-lead b { font-style: italic; color: var(--brass); font-weight: 400; }
+.capsearch-empty-body {
+  margin: 0.5rem 0 0;
+  max-width: 54ch;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.capsearch-empty-body a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 /* Why a hit matched — the retrieval showing its work. */
 .capsearch-why {
   margin: 0.2rem 0 0;
