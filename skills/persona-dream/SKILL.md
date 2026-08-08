@@ -839,6 +839,84 @@ quality-sensitive generation choice. If a longer clip drifts, prefer prompt
 repair or splitting that shot into 5-second subclips over accepting continuity
 damage.
 
+## Chatterbox Affect Channels — Read Before Touching Voice
+
+The point of this skill is that the dream changes how Embry sounds. Chatterbox
+offers **two** ways to do that, and they are on **mutually exclusive code
+paths**. This has been re-derived from scratch more than once; the findings
+below are measured, with the commands that measured them.
+
+### 1. Paralinguistic tags — YES, Chatterbox has them
+
+Chatterbox Turbo natively consumes inline event tags in the text:
+
+```text
+[clear throat]  [sigh]  [shush]  [cough]  [groan]
+[sniff]         [gasp]  [chuckle]  [laugh]
+```
+
+Source: `chatterbox/gradio_tts_turbo_app.py` `EVENT_TAGS`, and README "Paralinguistic
+tags are now native to the Turbo model".
+
+Verified 2026-08-08 on the Turbo fast path: `[laugh]` is **not** transcribed as a
+word by Whisper, and adds ~0.84s of audio (n=3 with `[4.32, 5.24, 4.32]` vs
+without `[4.24, 3.76, 3.36]`, non-overlapping). It produces a real event.
+
+Only these nine are in the vocabulary. **Invented tags are not tags** — the
+fork's README warns about `[firm]` and `[breath]` specifically, and those are
+spoken as literal words. Do not extend the list.
+
+### 2. Tone / affect envelope — also yes, but on the OTHER path
+
+Out-of-band `voice_delivery` with the 15-tone vocabulary (see
+`scripts/map_delivery_tone.py`). Setting `emotion_realization: "audible"` routes
+the render to `chatterbox_base_affect`, which derives intensity/valence/tempo
+from `TONE_CALIBRATION`.
+
+### The conflict — this is the part that keeps getting lost
+
+| Path | Tone affect | `[laugh]` etc. |
+| --- | --- | --- |
+| Turbo fast path (default) | request-only, **not audible** | **native, works** |
+| `emotion_realization: audible` -> base | **audible** | **spoken as the literal word** |
+
+Verified 2026-08-08, same text both ways, Whisper transcripts:
+
+- turbo: `"That is genuinely funny. Anyway, let me get back to what I was saying."`
+- base:  `"That is genuinely funny, laugh! Anyway, let me get back to what I was saying."`
+
+`map_delivery_tone.py` hardcodes `emotion_realization: "audible"`, so **every
+persona-dream render is currently on the base path**, where injecting a tag
+makes Embry say the word "laugh" out loud. Do not add tags to journal or reply
+text until this is resolved upstream.
+
+The server reports `tag_handling.tags_interpreted: false` on **both** paths, so
+that receipt field is not a reliable capability probe. Trust the transcript.
+
+### What is actually audible (do not re-litigate)
+
+Chatterbox declares valence **perceptually inert** — a full knob sweep scored by
+a held-out dimensional model puts perceived valence at Spearman ~0.08 against
+the requested knob, versus **0.96** for arousal/intensity. Tempo is a real
+deterministic time stretch.
+
+So dream -> emotion can only travel through **intensity and tempo**. Chatterbox's
+own guidance: use contrasts **>= 0.5 apart**; finer gradations sit under the
+renderer's noise floor. Note that `AXIS_TO_DELIVERY` currently maps five of eight
+dream axes (Desire, Disclosure, Belonging, Competence, Inadequacy) into intensity
+0.65-0.80 — inside that floor, so those five dreams sound alike.
+
+Re-check any of this with the live service rather than assuming:
+
+```bash
+curl -s http://127.0.0.1:8018/health | python3 -m json.tool   # tag_handling, voice_delivery_effect
+sed -n '177,195p' ~/workspace/experiments/chatterbox/src/chatterbox/agent/presets.py  # TONE_CALIBRATION
+```
+
+Only a per-render `*_effect` receipt with `applied: true` is evidence a channel
+moved audio. Echo-back of a request field is not. (Known gap: `pace_effect`
+returns `null` even when the stretch demonstrably applied.)
+
 ## Audio / Voice Handoff Lane
 
 `persona-dream` emits `timed_transcript.json` and `voice_handoff_plan.json` so a
