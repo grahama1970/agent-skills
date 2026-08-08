@@ -8,6 +8,8 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import hashlib
+import inspect
+import json
 from pathlib import Path
 
 import pytest
@@ -15,6 +17,7 @@ import pytest
 from battle_skill.adaptive_red_blue_lineage_canary import (
     _assert_exact_replay_set,
     _assert_pipeline_slots,
+    _build_artifact_integrity_receipt,
     _campaign_status,
     _docker_image_id,
     _generation_2_objective,
@@ -53,8 +56,8 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
     values = {
         "generation_1": {"status": "PASS"},
         "visibility": {"status": "PASS"},
-        "g1_judge": {"judged_pair_count": 1},
-        "g2_judge": {"judged_pair_count": 1},
+        "g1_judge": {"status": "PASS", "judged_pair_count": 1},
+        "g2_judge": {"status": "PASS", "judged_pair_count": 1},
         "red_spawn": {"status": "PASS"},
         "blue_spawn": {"status": "PASS"},
         "red_ack": {"status": "PASS"},
@@ -68,6 +71,7 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
         ],
         "deltas": [{"nonempty_semantic_delta": True}] * 2,
         "memory_evaluation": {"status": "PASS"},
+        "artifact_integrity": _passing_artifact_integrity(),
     }
 
     assert _campaign_status(**values) == (
@@ -80,6 +84,54 @@ def test_campaign_status_requires_both_lineages_and_both_judge_pairs() -> None:
         "BLOCKED",
         "spawn_inheritance_or_selection_blocked",
     )
+
+
+def test_campaign_status_fails_closed_without_exact_integrity_sets() -> None:
+    values = _passing_campaign_values()
+    values.pop("artifact_integrity")
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "artifact_integrity_missing",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["slots"][-1]["slot_key"] = "generation-2:red"
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "artifact_integrity_slot_set_invalid",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["slots"][0]["matched"] = False
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "artifact_integrity_slot_mismatch",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["judge_replays"][1]["generation"] = 1
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "judge_replay_generation_set_invalid",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["judge_replays"][0]["matched"] = False
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "judge_replay_mismatch",
+    )
+
+    values = _passing_campaign_values()
+    values["artifact_integrity"]["judge_replays"][0]["receipt_valid"] = False
+    assert _campaign_status(**values) == (
+        "BLOCKED",
+        "judge_replay_receipt_invalid",
+    )
+
+    values = _passing_campaign_values()
+    values["g1_judge"]["status"] = "INSUFFICIENT_EVIDENCE"  # type: ignore[index]
+    assert _campaign_status(**values) == ("BLOCKED", "judge_status_not_pass")
 
 
 def test_preserved_slot_survives_source_mutation_and_detects_slot_mutation(
@@ -127,6 +179,175 @@ def test_preserved_slot_survives_source_mutation_and_detects_slot_mutation(
     slot_path.write_bytes(b"MUTATED SLOT\n")
     with pytest.raises(RuntimeError, match="immutable slot changed"):
         _assert_pipeline_slots({"red": pipeline, "blue": pipeline})
+
+
+def test_integrity_receipt_requires_four_unique_slots_and_two_replays(
+    tmp_path: Path,
+) -> None:
+    pipelines, judges = _artifact_integrity_fixture(tmp_path)
+
+    receipt = _build_artifact_integrity_receipt(
+        out_dir=tmp_path,
+        pipelines=pipelines,
+        judges=judges,
+    )
+    assert receipt["status"] == "PASS"
+    assert receipt["matched_slot_count"] == receipt["required_slot_count"] == 4
+    assert receipt["matched_replay_count"] == receipt["required_replay_count"] == 2
+    assert all(item["receipt_valid"] for item in receipt["judge_replays"])
+
+    for generation in (1, 2):
+        for team in ("red", "blue"):
+            root = tmp_path / f"slot-mutation-{generation}-{team}"
+            mutated_pipelines, mutated_judges = _artifact_integrity_fixture(root)
+            slot_path = Path(
+                mutated_pipelines[generation][team]["immutable_slot"]["path"]
+            )
+            slot_path.write_text("DRIFT\n", encoding="utf-8")
+            failed = _build_artifact_integrity_receipt(
+                out_dir=root,
+                pipelines=mutated_pipelines,
+                judges=mutated_judges,
+            )
+            assert failed["status"] == "FAIL"
+            assert failed["matched_slot_count"] == 3
+            assert failed["reason"] == "artifact_integrity_slot_mismatch"
+
+    duplicate_root = tmp_path / "duplicate-slot"
+    duplicate_pipelines, duplicate_judges = _artifact_integrity_fixture(duplicate_root)
+    duplicate_pipelines[2]["blue"]["immutable_slot"]["path"] = duplicate_pipelines[2][
+        "red"
+    ]["immutable_slot"]["path"]
+    duplicate = _build_artifact_integrity_receipt(
+        out_dir=duplicate_root,
+        pipelines=duplicate_pipelines,
+        judges=duplicate_judges,
+    )
+    assert duplicate["status"] == "FAIL"
+    assert duplicate["reason"] in {
+        "artifact_integrity_slot_path_set_invalid",
+        "artifact_integrity_slot_mismatch",
+    }
+
+    bad_replay_root = tmp_path / "bad-replay"
+    bad_replay_pipelines, bad_replay_judges = _artifact_integrity_fixture(
+        bad_replay_root
+    )
+    replay_path = Path(bad_replay_judges[1]["exact_replay"]["path"])
+    replay_path.write_text('{"status": "PASS", "matched": false}\n', encoding="utf-8")
+    failed_replay = _build_artifact_integrity_receipt(
+        out_dir=bad_replay_root,
+        pipelines=bad_replay_pipelines,
+        judges=bad_replay_judges,
+    )
+    assert failed_replay["status"] == "FAIL"
+    assert failed_replay["matched_replay_count"] == 1
+    assert failed_replay["judge_replays"][0]["receipt_valid"] is False
+
+
+def test_integrity_receipt_rejects_missing_duplicate_external_and_symlink_replays(
+    tmp_path: Path,
+) -> None:
+    missing_root = tmp_path / "missing-replay"
+    missing_pipelines, missing_judges = _artifact_integrity_fixture(missing_root)
+    Path(missing_judges[2]["exact_replay"]["path"]).unlink()
+    missing = _build_artifact_integrity_receipt(
+        out_dir=missing_root,
+        pipelines=missing_pipelines,
+        judges=missing_judges,
+    )
+    assert missing["status"] == "FAIL"
+    assert missing["reason"] in {
+        "judge_replay_generation_set_invalid",
+        "judge_replay_path_set_invalid",
+    }
+
+    duplicate_root = tmp_path / "duplicate-replay"
+    duplicate_pipelines, duplicate_judges = _artifact_integrity_fixture(duplicate_root)
+    duplicate_judges[2]["exact_replay"]["path"] = duplicate_judges[1]["exact_replay"][
+        "path"
+    ]
+    duplicate_judges[2]["exact_replay"]["sha256"] = duplicate_judges[1][
+        "exact_replay"
+    ]["sha256"]
+    duplicate = _build_artifact_integrity_receipt(
+        out_dir=duplicate_root,
+        pipelines=duplicate_pipelines,
+        judges=duplicate_judges,
+    )
+    assert duplicate["status"] == "FAIL"
+    assert duplicate["reason"] in {
+        "judge_replay_generation_set_invalid",
+        "judge_replay_path_set_invalid",
+    }
+
+    external_root = tmp_path / "external-replay"
+    external_pipelines, external_judges = _artifact_integrity_fixture(external_root)
+    external = tmp_path / "outside-replay.json"
+    _write_test_json(external, {"generation": 1, "status": "PASS", "matched": True})
+    external_judges[1]["exact_replay"]["path"] = str(external)
+    external_judges[1]["exact_replay"]["sha256"] = hashlib.sha256(
+        external.read_bytes()
+    ).hexdigest()
+    external_result = _build_artifact_integrity_receipt(
+        out_dir=external_root,
+        pipelines=external_pipelines,
+        judges=external_judges,
+    )
+    assert external_result["status"] == "FAIL"
+    assert external_result["judge_replays"][0]["inside_run_root"] is False
+
+    symlink_root = tmp_path / "symlink-replay"
+    symlink_pipelines, symlink_judges = _artifact_integrity_fixture(symlink_root)
+    replay = Path(symlink_judges[1]["exact_replay"]["path"])
+    target = replay.with_suffix(".target.json")
+    replay.rename(target)
+    replay.symlink_to(target)
+    symlink_result = _build_artifact_integrity_receipt(
+        out_dir=symlink_root,
+        pipelines=symlink_pipelines,
+        judges=symlink_judges,
+    )
+    assert symlink_result["status"] == "FAIL"
+    assert symlink_result["judge_replays"][0]["regular_file"] is False
+
+
+def test_campaign_receipt_binding_records_artifact_sha_mismatch(
+    tmp_path: Path,
+) -> None:
+    pipelines, judges = _artifact_integrity_fixture(tmp_path)
+    integrity = _build_artifact_integrity_receipt(
+        out_dir=tmp_path,
+        pipelines=pipelines,
+        judges=judges,
+    )
+    integrity_path = tmp_path / "artifact-integrity-receipt.json"
+    _write_test_json(integrity_path, integrity)
+    integrity["path"] = str(integrity_path)
+    integrity["sha256"] = hashlib.sha256(integrity_path.read_bytes()).hexdigest()
+    campaign = {"status": "PASS", "artifact_integrity": integrity}
+    campaign_path = tmp_path / "campaign-receipt.json"
+    _write_test_json(campaign_path, campaign)
+
+    readback = json.loads(campaign_path.read_text(encoding="utf-8"))
+    assert readback["artifact_integrity"]["sha256"] == hashlib.sha256(
+        integrity_path.read_bytes()
+    ).hexdigest()
+
+    integrity_path.write_text('{"tampered": true}\n', encoding="utf-8")
+    assert readback["artifact_integrity"]["sha256"] != hashlib.sha256(
+        integrity_path.read_bytes()
+    ).hexdigest()
+
+
+def test_normalized_fixture_write_is_after_campaign_status_pass_gate() -> None:
+    import battle_skill.adaptive_red_blue_lineage_canary as canary
+
+    source = inspect.getsource(canary.run_adaptive_red_blue_lineage_canary)
+    pass_gate_index = source.index('if status == "PASS":')
+    write_index = source.index("write_fixture_copies(")
+    skipped_index = source.index('"status": "SKIPPED"')
+    assert pass_gate_index < write_index < skipped_index
 
 
 def test_immutable_slot_blocks_hash_mismatch_symlink_and_overwrite(tmp_path) -> None:
@@ -519,6 +740,115 @@ def test_docker_image_id_requires_resolved_sha_identity(monkeypatch) -> None:
     )
     with pytest.raises(RuntimeError, match="Docker image identity unavailable"):
         _docker_image_id("python:3.12-slim")
+
+
+def _passing_artifact_integrity() -> dict[str, object]:
+    return {
+        "status": "PASS",
+        "required_slot_count": 4,
+        "matched_slot_count": 4,
+        "required_replay_count": 2,
+        "matched_replay_count": 2,
+        "slots": [
+            {"slot_key": "generation-1:red", "matched": True},
+            {"slot_key": "generation-1:blue", "matched": True},
+            {"slot_key": "generation-2:red", "matched": True},
+            {"slot_key": "generation-2:blue", "matched": True},
+        ],
+        "judge_replays": [
+            {
+                "generation": 1,
+                "status": "PASS",
+                "matched": True,
+                "receipt_valid": True,
+            },
+            {
+                "generation": 2,
+                "status": "PASS",
+                "matched": True,
+                "receipt_valid": True,
+            },
+        ],
+    }
+
+
+def _passing_campaign_values() -> dict[str, object]:
+    return {
+        "generation_1": {"status": "PASS"},
+        "visibility": {"status": "PASS"},
+        "g1_judge": {"status": "PASS", "judged_pair_count": 1},
+        "g2_judge": {"status": "PASS", "judged_pair_count": 1},
+        "red_spawn": {"status": "PASS"},
+        "blue_spawn": {"status": "PASS"},
+        "red_ack": {"status": "PASS"},
+        "blue_ack": {"status": "PASS"},
+        "selection": {"status": "PASS"},
+        "observations": [{"status": "PASS"}] * 4,
+        "fitness": [{"status": "PASS"}] * 4,
+        "requests": [
+            {"request": {"requested_action": "SPAWN_CHILD"}},
+            {"request": {"requested_action": "SPAWN_CHILD"}},
+        ],
+        "deltas": [{"nonempty_semantic_delta": True}] * 2,
+        "memory_evaluation": {"status": "PASS"},
+        "artifact_integrity": _passing_artifact_integrity(),
+    }
+
+
+def _artifact_integrity_fixture(
+    root: Path,
+) -> tuple[dict[int, dict[str, dict[str, object]]], dict[int, dict[str, object]]]:
+    pipelines: dict[int, dict[str, dict[str, object]]] = {1: {}, 2: {}}
+    for generation in (1, 2):
+        for team in ("red", "blue"):
+            path = (
+                root
+                / f"generation-{generation}"
+                / "reviewed"
+                / "immutable-slots"
+                / f"generation-{generation}-{team}.py"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"{generation}:{team}\n", encoding="utf-8")
+            sha = hashlib.sha256(path.read_bytes()).hexdigest()
+            pipelines[generation][team] = {
+                "selected_artifact_sha256": sha,
+                "immutable_slot": {
+                    "slot_key": f"generation-{generation}:{team}",
+                    "generation": generation,
+                    "team": team,
+                    "path": str(path),
+                    "preserved_sha256": sha,
+                },
+            }
+    judges: dict[int, dict[str, object]] = {}
+    for generation in (1, 2):
+        replay_path = (
+            root
+            / f"generation-{generation}"
+            / "judge-exact-replay"
+            / "exact-replay-receipt.json"
+        )
+        _write_test_json(
+            replay_path,
+            {"generation": generation, "status": "PASS", "matched": True},
+        )
+        judges[generation] = {
+            "status": "PASS",
+            "exact_replay": {
+                "generation": generation,
+                "status": "PASS",
+                "matched": True,
+                "path": str(replay_path),
+                "sha256": hashlib.sha256(replay_path.read_bytes()).hexdigest(),
+            },
+        }
+    return pipelines, judges
+
+
+def _write_test_json(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _exact_replay_fixture(tmp_path, *, generation: int):

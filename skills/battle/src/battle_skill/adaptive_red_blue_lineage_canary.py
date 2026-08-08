@@ -478,6 +478,16 @@ def run_adaptive_red_blue_lineage_canary(
             "decisions": [item["decision"] for item in memory_evaluation["evaluations"]]
         },
     )
+    artifact_integrity = _build_artifact_integrity_receipt(
+        out_dir=out_dir,
+        pipelines={1: g1_pipelines, 2: g2_pipelines},
+        judges={1: g1_judge, 2: g2_judge},
+    )
+    artifact_integrity_path = _write_json(
+        out_dir / "artifact-integrity-receipt.json", artifact_integrity
+    )
+    artifact_integrity["path"] = str(artifact_integrity_path)
+    artifact_integrity["sha256"] = _sha(artifact_integrity_path)
     status, reason = _campaign_status(
         generation_1=generation_1,
         visibility=visibility,
@@ -498,6 +508,7 @@ def run_adaptive_red_blue_lineage_canary(
         requests=[red_request, blue_request],
         deltas=[deltas["red"], deltas["blue"]],
         memory_evaluation=memory_evaluation,
+        artifact_integrity=artifact_integrity,
     )
     receipt = {
         "schema": SCHEMA,
@@ -537,6 +548,7 @@ def run_adaptive_red_blue_lineage_canary(
         "fitness": {"generation_1": g1_fitness, "generation_2": g2_fitness},
         "genome_deltas": deltas,
         "memory_evaluation": memory_evaluation,
+        "artifact_integrity": artifact_integrity,
         "elapsed_seconds": round(time.perf_counter() - started, 6),
         "judge_verified_exploits": sum(
             int(item.get("red_success_count") or 0) for item in (g1_judge, g2_judge)
@@ -577,34 +589,45 @@ def run_adaptive_red_blue_lineage_canary(
         memory_evaluation=memory_evaluation,
     )
     source_index_path = _write_json(out_dir / "source-receipt-index.json", source_index)
-    fixture_id = f"{battle_id}-adaptive-lineage-v13"
-    fixture = build_normalized_adaptive_fixture(
-        campaign_root=out_dir,
-        source_index_path=source_index_path,
-        fixture_id=fixture_id,
-    )
-    skill_root = Path(__file__).resolve().parents[2]
-    local_dir = skill_root / "local" / fixture_id
-    public_dir = skill_root / "spectator" / "public" / "battle-fixtures" / fixture_id
-    validation_result = write_fixture_copies(
-        fixture=fixture,
-        local_path=local_dir / "battle.normalized_ux_fixture.json",
-        public_path=public_dir / "battle.normalized_ux_fixture.json",
-    )
-    _write_json(out_dir / "normalized" / "validation.json", validation_result)
-    _write_json(local_dir / "validation.json", validation_result)
-    _write_json(local_dir / "source-receipt-index.json", source_index)
     receipt["event_journal"] = {
         "path": str(journal.path),
         "event_count": journal.seq,
         "sha256": _sha(journal.path),
     }
-    receipt["normalized_fixture"] = {
-        "fixture_id": fixture_id,
-        "status": validation_result["status"],
-        "fixture_sha256": validation_result["fixture_sha256"],
-        "local_public_byte_identical": validation_result["local_public_byte_identical"],
-    }
+    fixture_id = f"{battle_id}-adaptive-lineage-v13"
+    if status == "PASS":
+        fixture = build_normalized_adaptive_fixture(
+            campaign_root=out_dir,
+            source_index_path=source_index_path,
+            fixture_id=fixture_id,
+        )
+        skill_root = Path(__file__).resolve().parents[2]
+        local_dir = skill_root / "local" / fixture_id
+        public_dir = (
+            skill_root / "spectator" / "public" / "battle-fixtures" / fixture_id
+        )
+        validation_result = write_fixture_copies(
+            fixture=fixture,
+            local_path=local_dir / "battle.normalized_ux_fixture.json",
+            public_path=public_dir / "battle.normalized_ux_fixture.json",
+        )
+        _write_json(out_dir / "normalized" / "validation.json", validation_result)
+        _write_json(local_dir / "validation.json", validation_result)
+        _write_json(local_dir / "source-receipt-index.json", source_index)
+        receipt["normalized_fixture"] = {
+            "fixture_id": fixture_id,
+            "status": validation_result["status"],
+            "fixture_sha256": validation_result["fixture_sha256"],
+            "local_public_byte_identical": validation_result[
+                "local_public_byte_identical"
+            ],
+        }
+    else:
+        receipt["normalized_fixture"] = {
+            "fixture_id": fixture_id,
+            "status": "SKIPPED",
+            "reason": "campaign_not_pass",
+        }
     _write_json(out_dir / "adaptive-lineage-chain-receipt.json", receipt)
     _write_json(out_dir / "campaign-receipt.json", receipt)
     return receipt
@@ -1642,6 +1665,8 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         for name in ("g1_judge", "g2_judge")
     ):
         return "BLOCKED", "judge_pair_missing"
+    if any(items[name].get("status") != "PASS" for name in ("g1_judge", "g2_judge")):
+        return "BLOCKED", "judge_status_not_pass"
     if len(items["observations"]) != 4 or any(
         item.get("status") != "PASS" for item in items["observations"]
     ):
@@ -1661,7 +1686,211 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         return "BLOCKED", "semantic_genome_delta_missing"
     if items["memory_evaluation"].get("status") != "PASS":
         return "BLOCKED", "memory_evaluation_missing"
+    integrity = items.get("artifact_integrity")
+    if not isinstance(integrity, dict):
+        return "BLOCKED", "artifact_integrity_missing"
+    if integrity.get("status") != "PASS":
+        return "BLOCKED", "artifact_integrity_failed"
+    slots = integrity.get("slots") if isinstance(integrity.get("slots"), list) else []
+    expected_slots = {
+        "generation-1:red",
+        "generation-1:blue",
+        "generation-2:red",
+        "generation-2:blue",
+    }
+    if (
+        len(slots) != 4
+        or {item.get("slot_key") for item in slots} != expected_slots
+        or integrity.get("required_slot_count") != 4
+    ):
+        return "BLOCKED", "artifact_integrity_slot_set_invalid"
+    if integrity.get("matched_slot_count") != 4 or any(
+        item.get("matched") is not True for item in slots
+    ):
+        return "BLOCKED", "artifact_integrity_slot_mismatch"
+    replays = (
+        integrity.get("judge_replays")
+        if isinstance(integrity.get("judge_replays"), list)
+        else []
+    )
+    if (
+        len(replays) != 2
+        or {item.get("generation") for item in replays} != {1, 2}
+        or integrity.get("required_replay_count") != 2
+    ):
+        return "BLOCKED", "judge_replay_generation_set_invalid"
+    if integrity.get("matched_replay_count") != 2 or any(
+        item.get("status") != "PASS" or item.get("matched") is not True
+        for item in replays
+    ):
+        return "BLOCKED", "judge_replay_mismatch"
+    if any(item.get("receipt_valid") is not True for item in replays):
+        return "BLOCKED", "judge_replay_receipt_invalid"
     return "PASS", "two_generation_red_blue_lineage_evaluated"
+
+
+def _build_artifact_integrity_receipt(
+    *,
+    out_dir: Path,
+    pipelines: dict[int, dict[str, dict[str, Any]]],
+    judges: dict[int, dict[str, Any]],
+) -> dict[str, Any]:
+    root = out_dir.resolve()
+    required_slot_keys = {
+        "generation-1:red",
+        "generation-1:blue",
+        "generation-2:red",
+        "generation-2:blue",
+    }
+    slots: list[dict[str, Any]] = []
+    slot_paths: list[str] = []
+    for generation in (1, 2):
+        for team in ("red", "blue"):
+            pipeline = pipelines.get(generation, {}).get(team, {})
+            slot = pipeline.get("immutable_slot")
+            slot_key = f"generation-{generation}:{team}"
+            path_text = slot.get("path") if isinstance(slot, dict) else None
+            path = Path(str(path_text or ""))
+            exists = path.exists()
+            resolved = path.resolve() if exists else path
+            regular_file = path.is_file() and not path.is_symlink()
+            inside_run = exists and resolved.is_relative_to(root)
+            expected = (
+                slot.get("preserved_sha256")
+                if isinstance(slot, dict) and slot.get("preserved_sha256")
+                else pipeline.get("selected_artifact_sha256")
+            )
+            actual = _sha(path) if regular_file else None
+            matched = (
+                actual == expected
+                and slot_key == (slot.get("slot_key") if isinstance(slot, dict) else None)
+                and regular_file
+                and inside_run
+            )
+            slots.append(
+                {
+                    "slot_key": slot_key,
+                    "generation": generation,
+                    "team": team,
+                    "path": str(path) if path_text else None,
+                    "expected_sha256": expected,
+                    "actual_sha256": actual,
+                    "matched": matched,
+                    "regular_file": regular_file,
+                    "inside_run_root": inside_run,
+                }
+            )
+            if exists:
+                slot_paths.append(str(resolved))
+
+    replay_records: list[dict[str, Any]] = []
+    replay_paths: list[str] = []
+    for generation in (1, 2):
+        replay = judges.get(generation, {}).get("exact_replay")
+        path_text = replay.get("path") if isinstance(replay, dict) else None
+        replay_path = Path(str(path_text or ""))
+        exists = replay_path.exists()
+        replay_resolved = replay_path.resolve() if exists else replay_path
+        regular_file = replay_path.is_file() and not replay_path.is_symlink()
+        inside_run = exists and replay_resolved.is_relative_to(root)
+        expected = replay.get("sha256") if isinstance(replay, dict) else None
+        actual = _sha(replay_path) if regular_file else None
+        parsed: dict[str, Any] = {}
+        if regular_file:
+            try:
+                parsed = _read_json(replay_path)
+            except Exception:
+                parsed = {}
+        replay_generation = (
+            parsed.get("generation")
+            if isinstance(parsed.get("generation"), int)
+            else replay.get("generation")
+            if isinstance(replay, dict)
+            else None
+        )
+        receipt_valid = actual == expected and regular_file and inside_run
+        replay_matched = (
+            receipt_valid
+            and replay_generation == generation
+            and parsed.get("status") == "PASS"
+            and parsed.get("matched") is True
+            and (replay.get("status") if isinstance(replay, dict) else None) == "PASS"
+            and (replay.get("matched") if isinstance(replay, dict) else False) is True
+        )
+        replay_records.append(
+            {
+                "generation": replay_generation,
+                "expected_generation": generation,
+                "status": parsed.get("status")
+                if parsed.get("status") is not None
+                else replay.get("status")
+                if isinstance(replay, dict)
+                else None,
+                "matched": replay_matched,
+                "path": str(replay_path) if path_text else None,
+                "expected_sha256": expected,
+                "actual_sha256": actual,
+                "receipt_valid": receipt_valid,
+                "regular_file": regular_file,
+                "inside_run_root": inside_run,
+            }
+        )
+        if exists:
+            replay_paths.append(str(replay_resolved))
+
+    slot_keys = {item["slot_key"] for item in slots}
+    slots_pass = (
+        slot_keys == required_slot_keys
+        and len(slots) == 4
+        and len(slot_paths) == len(set(slot_paths)) == 4
+        and all(item["matched"] for item in slots)
+    )
+    replay_generations = {item["generation"] for item in replay_records}
+    replays_pass = (
+        replay_generations == {1, 2}
+        and len(replay_records) == 2
+        and len(replay_paths) == len(set(replay_paths)) == 2
+        and all(
+            item["status"] == "PASS"
+            and item["matched"]
+            and item["receipt_valid"]
+            for item in replay_records
+        )
+    )
+    reason = "artifact_integrity_pass"
+    if slot_keys != required_slot_keys or len(slots) != 4:
+        reason = "artifact_integrity_slot_set_invalid"
+    elif len(slot_paths) != len(set(slot_paths)) or len(slot_paths) != 4:
+        reason = "artifact_integrity_slot_path_set_invalid"
+    elif not all(item["matched"] for item in slots):
+        reason = "artifact_integrity_slot_mismatch"
+    elif replay_generations != {1, 2} or len(replay_records) != 2:
+        reason = "judge_replay_generation_set_invalid"
+    elif len(replay_paths) != len(set(replay_paths)) or len(replay_paths) != 2:
+        reason = "judge_replay_path_set_invalid"
+    elif not all(item["receipt_valid"] for item in replay_records):
+        reason = "judge_replay_receipt_invalid"
+    elif not all(item["status"] == "PASS" and item["matched"] for item in replay_records):
+        reason = "judge_replay_mismatch"
+
+    return {
+        "schema": "battle.adaptive_artifact_integrity.v1",
+        "status": "PASS" if slots_pass and replays_pass else "FAIL",
+        "reason": reason,
+        "required_slot_count": 4,
+        "matched_slot_count": sum(1 for item in slots if item["matched"]),
+        "required_replay_count": 2,
+        "matched_replay_count": sum(
+            1
+            for item in replay_records
+            if item["status"] == "PASS" and item["matched"] and item["receipt_valid"]
+        ),
+        "slots": slots,
+        "judge_replays": replay_records,
+        "unique_slot_paths": len(slot_paths) == len(set(slot_paths)) == 4,
+        "unique_replay_paths": len(replay_paths) == len(set(replay_paths)) == 2,
+        "created_at": _now(),
+    }
 
 
 def _source_receipt_index(
