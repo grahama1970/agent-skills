@@ -109,3 +109,44 @@ def test_resume_skill_manifest_rejects_evidence_free_claim(tmp_path: Path) -> No
             base_path=base,
             out_dir=tmp_path,
         )
+
+
+def test_competency_leads_come_from_the_registry(tmp_path: Path) -> None:
+    """Live: the ranking is produced by /resume, not hardcoded here."""
+    from monitor_opportunities.resume_artifact import rank_competencies
+
+    posting = (
+        "Build multi-agent LLM systems. You will own agent orchestration and tool "
+        "calling, build evaluation harnesses and evals for agent behavior, and own "
+        "observability, monitoring and guardrails for LLM pipelines."
+    )
+    leads = rank_competencies(posting)
+    assert leads, "a posting naming evals, orchestration and observability ranked nothing"
+    assert "evaluation-quality" in leads
+    assert "observability-operations" in leads
+
+
+def test_competency_ranking_is_never_a_gate() -> None:
+    """An empty posting must degrade to no ordering, not an error."""
+    from monitor_opportunities.resume_artifact import rank_competencies
+
+    assert rank_competencies("") == []
+    assert rank_competencies("   \n  ") == []
+
+
+def test_variant_competency_section_names_only_registry_disciplines() -> None:
+    """The added line orders disciplines; it must not mint a new claim."""
+    from monitor_opportunities.resume_artifact import build_variant_markdown, rank_competencies
+
+    snapshot = _snapshot()
+    wordings = approved_wordings(snapshot, [_first_key()])
+    posting = "agent orchestration, evals and observability for LLM pipelines"
+    base = "# Graham Anderson\n\nExperience...\n"
+    variant = build_variant_markdown(
+        base, {"title": "Role", "organization": "Org"}, wordings, posting_text=posting
+    )
+    leads = rank_competencies(posting)
+    if leads:
+        assert "Competencies this role asks for" in variant
+        for name in leads:
+            assert name.replace("-", " ") in variant

@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -72,6 +73,37 @@ def select_aligned_lines(base_markdown: str, posting_text: str, limit: int = 6) 
     return scored[:limit]
 
 
+def rank_competencies(posting_text: str, resume_skill: Path = RESUME_SKILL_DEFAULT) -> list[str]:
+    """Ask /resume which competencies this posting actually asks for.
+
+    The ordering comes from the canonical project-taxonomy registry via
+    competencies.py, so a tailored variant leads with domains the catalog can
+    back rather than whichever cluster happens to be listed first. Returns an
+    empty list when the posting is empty or the helper is unavailable: leading
+    order is a presentation nicety, never a gate on producing the artifact.
+    """
+    if not posting_text.strip():
+        return []
+    script = resume_skill / "scripts" / "competencies.py"
+    if not script.is_file():
+        return []
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as fh:
+        fh.write(posting_text)
+        posting_path = Path(fh.name)
+    try:
+        proc = subprocess.run(
+            ["uv", "run", "--project", str(resume_skill), "python", str(script), "match", str(posting_path)],
+            capture_output=True, text=True, timeout=180,
+        )
+        if proc.returncode != 0:
+            return []
+        return list(json.loads(proc.stdout).get("lead_with", []))
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+    finally:
+        posting_path.unlink(missing_ok=True)
+
+
 def build_variant_markdown(
     base_markdown: str,
     opportunity: dict[str, Any],
@@ -86,6 +118,16 @@ def build_variant_markdown(
         *[f"- {row['text']}" for row in wordings],
         "",
     ]
+    leads = rank_competencies(posting_text)
+    if leads:
+        sections += [
+            f"## Competencies this role asks for — {opportunity['title']}",
+            "",
+            # Ordering only: every name is a discipline the skills catalog
+            # already declares, counted in project-taxonomy.
+            "- " + ", ".join(d.replace("-", " ") for d in leads),
+            "",
+        ]
     aligned = select_aligned_lines(base_markdown, posting_text) if posting_text else []
     if aligned:
         sections += [
