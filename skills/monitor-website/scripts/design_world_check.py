@@ -37,15 +37,18 @@ def scan_mono_on_human_labels(css_files, allow: list[str]) -> list[dict]:
     'monospace on human-written labels' exclusion."""
     allow_set = {a.strip() for a in allow}
     violations = []
+    comment_re = re.compile(r"/\*.*?\*/", re.S)
     rule_re = re.compile(r"([^{}]+)\{([^{}]*)\}", re.S)
     for f in css_files:
-        text = f.read_text()
+        text = comment_re.sub(" ", f.read_text())  # strip CSS comments (no false selectors)
         for m in rule_re.finditer(text):
-            sel, body = m.group(1).strip(), m.group(2)
+            sel, body = " ".join(m.group(1).split()), m.group(2)
             if "font-family: var(--mono)" in body or "font-family:var(--mono)" in body:
-                sel_norm = sel.split()[-1] if sel else sel  # last simple selector
-                if sel not in allow_set and sel_norm not in allow_set:
-                    violations.append({"file": f.name, "selector": sel[:80]})
+                # allowed if any approved machine-output selector is present in the
+                # (possibly grouped/pseudo) selector — covers grouped rules.
+                if any(a and a in sel for a in allow_set):
+                    continue
+                violations.append({"file": f.name, "selector": sel[:80]})
     return violations
 
 

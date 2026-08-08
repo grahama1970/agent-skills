@@ -89,3 +89,7 @@ machine_output_selectors:
   - ".ticket"                    # receipt payload
   - ".ticket h3"
   - ".github-repo-link"          # repo URLs
+  - ".hud"                       # live value readout
+  - ".proof-lineage"             # receipt-lineage widget (ids/operators/meta)
+  - "constellation-hud"          # live constellation readout
+  - ".evidence-private"          # evidence-access label derived from metadata

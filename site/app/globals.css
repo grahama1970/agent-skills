@@ -306,7 +306,7 @@ section {
   align-items: center;
 }
 .nav a {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -539,7 +539,7 @@ h1 .it::after {
   background: #eebc78;
 }
 .btn .arrow {
-  font-family: var(--mono);
+  font-family: var(--sans);
   transition: transform 0.22s ease;
 }
 .btn:hover .arrow {
@@ -550,7 +550,7 @@ h1 .it::after {
   color: var(--text);
   border-color: var(--line);
   box-shadow: none;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.78rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -671,7 +671,7 @@ h1 .it::after {
   bottom: 0;
   z-index: 2;
   padding: 0.7rem 1rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.68rem;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -873,7 +873,7 @@ h1 .it::after {
   padding-top: 1.05rem;
 }
 .idx {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.78rem;
   color: var(--faint);
   letter-spacing: 0.06em;
@@ -916,7 +916,7 @@ h1 .it::after {
   grid-column: 2;
   justify-self: start;
   margin-top: 0.85em;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.63rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1276,7 +1276,7 @@ h1 .it::after {
 }
 .frame .cap {
   margin-top: 0.55rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   letter-spacing: 0.08em;
   color: var(--faint);
@@ -1514,7 +1514,7 @@ footer .lab {
   margin-bottom: 0.7rem;
 }
 footer a {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.76rem;
   color: var(--muted);
   text-decoration: none;
@@ -1626,7 +1626,7 @@ footer a:hover {
   padding: 0.6rem 1rem;
   background: var(--paper);
   color: #1a1411;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.8rem;
   border-radius: 4px;
   box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.5);
@@ -1716,7 +1716,7 @@ footer a:hover {
   align-items: baseline;
   gap: 1.4rem;
   margin-top: 1.2rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   color: var(--faint);
@@ -1733,7 +1733,7 @@ footer a:hover {
   border: 0;
   border-bottom: 1px solid var(--line);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.78rem;
   padding: 0.25em 0.2em;
   outline: none;
@@ -1747,7 +1747,7 @@ footer a:hover {
   margin-top: 1rem;
 }
 .ledger-cat {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.64rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1808,7 +1808,7 @@ footer a:hover {
   position: absolute;
   left: 0;
   color: var(--ember);
-  font-family: var(--mono);
+  font-family: var(--sans);
 }
 .fits b {
   color: var(--text);
@@ -1838,7 +1838,7 @@ footer a:hover {
 .hero-intake {
   margin-top: 1rem;
   max-width: 54ch;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.74rem;
   line-height: 1.7;
   letter-spacing: 0.01em;
@@ -1858,7 +1858,7 @@ footer a:hover {
   margin-top: 0.9rem;
 }
 .ledger-chip {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1880,7 +1880,7 @@ footer a:hover {
   border-color: var(--brass);
 }
 .ledger-view {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.64rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1920,7 +1920,7 @@ footer a:hover {
   padding: 0.35rem 0.6rem;
   background: var(--paper);
   color: #1a1411;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   border-radius: 3px;
   white-space: nowrap;
@@ -2037,7 +2037,7 @@ footer a:hover {
   left: 0;
   bottom: 0;
   padding: 0.6rem 0.9rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   color: var(--muted);
@@ -2054,7 +2054,7 @@ footer a:hover {
   margin-top: 0.8rem;
 }
 .stepper-controls > button {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2107,7 +2107,7 @@ footer a:hover {
   position: absolute;
   left: 3px;
   bottom: 2px;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-style: normal;
   font-size: 0.55rem;
   color: var(--text);
@@ -2151,7 +2151,7 @@ footer a:hover {
 }
 .stepper-hint {
   margin: 0.6rem 0 0;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   color: var(--faint);
@@ -2190,7 +2190,7 @@ footer a:hover {
   position: absolute;
   top: 14px;
   right: 18px;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2580,7 +2580,7 @@ a.fig:hover .l::after,
   gap: 0.6rem;
   min-height: 44px;
   padding: 0.45rem 0.8rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.82rem;
   color: var(--text);
   text-decoration: none;
@@ -2684,7 +2684,7 @@ a.fig:hover .l::after,
   border-bottom: 2px solid var(--brass);
   border-radius: 3px;
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 1rem;
   padding: 0.9rem 1rem;
   outline: none;
@@ -2699,7 +2699,7 @@ a.fig:hover .l::after,
 }
 .capsearch-examples {
   margin: 0.7rem 0 0;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72rem;
   color: var(--faint);
 }
@@ -2735,7 +2735,7 @@ a.fig:hover .l::after,
   text-decoration: none;
 }
 .capsearch-type {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.58rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2754,12 +2754,12 @@ a.fig:hover .l::after,
   color: var(--text);
 }
 .capsearch-area {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   color: var(--faint);
 }
 .capsearch-evi {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2769,7 +2769,7 @@ a.fig:hover .l::after,
   padding: 0.05rem 0.35rem;
 }
 .capsearch-scout {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2807,7 +2807,7 @@ a.fig:hover .l::after,
   flex-wrap: wrap;
 }
 .scout-kicker {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.58rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -2831,7 +2831,7 @@ a.fig:hover .l::after,
   flex-wrap: wrap;
 }
 .scout-verified {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2853,7 +2853,7 @@ a.fig:hover .l::after,
 }
 .scout-lab {
   display: block;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.58rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2963,7 +2963,7 @@ a.fig:hover .l::after,
 /* Why a hit matched — the retrieval showing its work. */
 .capsearch-why {
   margin: 0.2rem 0 0;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   letter-spacing: 0.02em;
   color: var(--faint);
@@ -2975,7 +2975,7 @@ a.fig:hover .l::after,
 .capsearch-note {
   list-style: none;
   margin: 0 0 0.3rem;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   letter-spacing: 0.02em;
   color: var(--faint);
@@ -3109,7 +3109,7 @@ a:hover .c-img { opacity: 1; }
 }
 .constellation-hint {
   font-style: normal;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   color: var(--faint);
@@ -3154,14 +3154,14 @@ a:hover .c-img { opacity: 1; }
   fill: var(--text);
 }
 .c-plabel {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 11px;
   fill: var(--muted);
 }
 a:hover .c-plabel { fill: var(--brass); }
 .c-count { fill: var(--faint); font-family: var(--mono); font-size: 9.5px; }
 .c-priv {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 8.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3172,7 +3172,7 @@ a:hover .c-plabel { fill: var(--brass); }
   flex-wrap: wrap;
   gap: 1rem;
   margin: 0.7rem 0 0;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.66rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -3261,7 +3261,7 @@ a:hover .c-plabel { fill: var(--brass); }
 }
 .rm-systems {
   margin: 0;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.74rem;
   color: var(--faint);
 }
