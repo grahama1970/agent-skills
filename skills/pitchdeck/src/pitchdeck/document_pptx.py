@@ -433,6 +433,7 @@ def emit_document_pptx(
     house_template: Path | None = None,
     disclaimer: str | None = None,
     stale_owner_markers: tuple[str, ...] = (),
+    brandmark: bool = False,
 ) -> dict:
     from .publish_gate import assert_publishable
 
@@ -446,6 +447,7 @@ def emit_document_pptx(
     # construction instead of being measured and redrawn.
     layout_profile = None
     pending_disclaimer_receipt = None
+    pending_brandmark_removed: list[str] | None = None
     if house_template is not None:
         from .template_deck import open_stripped_template, profile_template
 
@@ -467,6 +469,13 @@ def emit_document_pptx(
                     "asserts ownership by someone other than its owner"
                 )
             pending_disclaimer_receipt = disclaimer_receipt
+        if brandmark:
+            # The inherited logo is the TEMPLATE owner's mark. Leaving it beside a
+            # retargeted disclaimer makes the deck name two different owners, so
+            # the old marks are removed and the grahama.co Gc mark takes its place.
+            from .brandmark import remove_inherited_marks
+
+            pending_brandmark_removed = remove_inherited_marks(presentation)
         blank = next((presentation.slide_layouts[l.index] for l in layout_profile.layouts
                       if l.role == "blank"), presentation.slide_layouts[-1])
     else:
@@ -482,6 +491,8 @@ def emit_document_pptx(
     }
     if pending_disclaimer_receipt is not None:
         receipt["disclaimer"] = pending_disclaimer_receipt
+    if pending_brandmark_removed is not None:
+        receipt["brandmark"] = {"removed_inherited_marks": pending_brandmark_removed}
     root = Frame(0.0, 0.0, SLIDE_W_IN, SLIDE_H_IN)
     band_cfg = theme.get("chrome", {}).get("header_band", {})
     for slide_doc in document.slides:
@@ -566,6 +577,10 @@ def emit_document_pptx(
                     continue
                 _emit_element(slide.shapes, element, root, palette=palette, scale=scale,
                               assets=assets, asset_base=asset_base, receipt=receipt)
+            if brandmark:
+                from .brandmark import emit_brandmark
+
+                emit_brandmark(slide.shapes, left_in=0.33, top_in=SLIDE_H_IN - 0.62)
             receipt["slides"].append({"id": slide_doc.id, "elements": len(slide_doc.elements)})
             continue
         rule = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(SLIDE_H_IN - 0.045), Inches(SLIDE_W_IN), Inches(0.045))

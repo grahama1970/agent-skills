@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "97cf50ffd1f10317bc535fd259b04bec038db5b9",
- "source_tree_sha256": "58199c7a72bedfc1d0836f4aa8f03f16508e4bb2c03e2cc94e91ef5bf64e774d",
+ "commit": "936cea489029ab39b3ed9adff2e491d5592b8edd",
+ "source_tree_sha256": "a2e2f1226772a3deaacea6e9d5a256b18db8bd03802d8af1106a19f44a92dcc3",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -50,6 +50,7 @@
   {
    "declared_schemas": [
     "pitchdeck.asset_manifest.v1",
+    "pitchdeck.brandmark_receipt.v1",
     "pitchdeck.build_receipt.v1",
     "pitchdeck.claim_ledger.v1",
     "pitchdeck.composition_recipe.v1",
