@@ -31,17 +31,20 @@ optional_branches:
   video: "steps 6-38 of the legacy ledger; branches off dream_packet"
 
 steps:
-  # NOTE ON "THE IDEA": this lane is AUTONOMOUS. autonomous-dream-cycle selects
-  # its own person-anchored residue cluster from memory by biographical recency
-  # and a seeded hash. There is no --idea flag and no place to put one, so a
-  # human idea reaches a dream by being INGESTED to memory first, not by being
-  # passed here. The other lane (`generate --about`) does take a topic; it
-  # builds a static/video packet, not a journal.
+  # THE IDEA steers step 1. It restricts residue selection to memories the idea
+  # actually touches, then the existing cluster engine finds a valence conflict
+  # within that subset. Proven to steer: three ideas selected three different
+  # counterpart clusters (kai / maya_chen / james), and an idea matching nothing
+  # is REFUSED rather than silently replaced by an autonomous pick.
+  #
+  # Omit --idea for fully autonomous selection.
+  #
+  # An idea never invents residue: she can only dream about what she remembers.
   - id: dream_cycle
     name: Autonomous Dream Cycle
     command: autonomous-dream-cycle
     run_dir_arg: null
-    args: ["--persona", "{persona}", "--cycle-id", "{cycle_id}"]
+    args: ["--persona", "{persona}", "--cycle-id", "{cycle_id}", "--about", "{idea}"]
     produces: [storyboard_plan.json, selection_receipt.v1.json, residue_links.json,
                phase14_tom.json, observation_packet.json]
     proves: residue was selected, dreamt, observed, interpreted, and persisted

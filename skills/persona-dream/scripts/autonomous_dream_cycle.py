@@ -109,7 +109,72 @@ def counterpart_violations(claims: list, counterpart_id: str, id_field: str) -> 
     return [c.get(id_field) for c in claims if str(c.get("target")) not in allowed]
 
 
-def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
+#: Words that carry no selection signal. Deliberately short -- an idea is a
+#: sentence a human typed, not a query language, and over-filtering it would
+#: quietly change what she dreams about.
+_IDEA_STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "at", "for",
+    "with", "about", "that", "this", "it", "its", "is", "was", "were", "be",
+    "been", "i", "me", "my", "we", "our", "you", "your", "they", "them",
+    "what", "when", "where", "why", "how", "not", "never", "out", "loud",
+    "things", "thing", "said", "say", "from", "into", "over", "all", "some",
+}
+
+#: Fields that actually carry prose in persona_memory roots.
+_IDEA_TEXT_FIELDS = ("claim", "claim_text", "evidence_text", "retrieval_text")
+
+
+def idea_terms(idea: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9']+", idea.lower())
+            if len(w) > 2 and w not in _IDEA_STOPWORDS}
+
+
+def score_root_against_idea(doc: dict, terms: set[str]) -> int:
+    """How many distinct idea terms this memory mentions."""
+    blob = " ".join(str(doc.get(f) or "") for f in _IDEA_TEXT_FIELDS).lower()
+    return sum(1 for t in terms if t in blob)
+
+
+def seed_roots_with_idea(roots: dict, idea: str) -> tuple[dict, dict]:
+    """Restrict selection to residue the idea actually touches.
+
+    Local matching, not /recall: collection-scoped recall against
+    persona_memory returns nothing (graph-memory-operator#50), which is why
+    fetch_persona_docs uses /list. Matching here also has the advantage of
+    scoring exactly the root set selection will draw from, rather than a
+    separately-ranked list that may not intersect it.
+
+    An idea steers WHICH of her memories surface. It never invents residue --
+    she can only dream about what she remembers.
+    """
+    terms = idea_terms(idea)
+    if not terms:
+        raise SystemExit(f"BLOCKED_IDEA_EMPTY: {idea!r} has no searchable terms")
+    scored = {k: score_root_against_idea(d, terms) for k, d in roots.items()}
+    best = max(scored.values(), default=0)
+    if best == 0:
+        raise SystemExit(
+            f"BLOCKED_IDEA_NO_RESIDUE: none of {len(roots)} eligible root "
+            f"memories mention any of {sorted(terms)}.\n"
+            "  She can only dream about what she remembers. Ingest the "
+            "material to memory first, then dream about it."
+        )
+    # Keep every root that matches at all, so the cluster engine still has a
+    # population to find a valence conflict in; a top-1 filter would starve it.
+    seeded = {k: d for k, d in roots.items() if scored[k] > 0}
+    provenance = {
+        "idea": idea,
+        "terms": sorted(terms),
+        "roots_before": len(roots),
+        "roots_after": len(seeded),
+        "best_term_hits": best,
+    }
+    return seeded, provenance
+
+
+
+def select_cluster(profile, out: Path, persist_ledger: bool = True,
+                   idea: str = "") -> dict:
     """Persona-agnostic conflict-seeded selection. Every persona/corpus-specific
     decision (which docs are roots, the recency band, who the counterparts are,
     the valence-conflict score, and how to traverse) is delegated to the profile,
@@ -128,6 +193,14 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
                    or (d.get("voice_delivery") or {}).get("affect_source") == "persona_dream"
                    or d.get("dream_provenance"))}
     roots = {k: v for k, v in roots.items() if k not in tainted}
+
+    # An idea steers which residue surfaces. Fail closed when it matches
+    # nothing: silently dreaming about something else would be worse than
+    # refusing, because the receipt would then claim an idea it ignored.
+    idea_provenance: dict = {}
+    if idea:
+        roots, idea_provenance = seed_roots_with_idea(roots, idea)
+
     used: set[str] = set()
     for d in docs:
         if d.get("kind") in ("synthetic_dream_memory", "synthetic_reflection_memory") \
@@ -506,6 +579,9 @@ def main() -> int:
     parser.add_argument("--cycle-id", default=None)
     parser.add_argument("--persona", default=PERSONA,
                         help="persona_id to dream for (default embry)")
+    parser.add_argument("--about", default="",
+                        help="the idea to dream about; steers which of her own "
+                             "residue surfaces. Omit for autonomous selection.")
     parser.add_argument("--select-only", action="store_true",
                         help="run only the persona-agnostic selection stage "
                              "(no paid render / phases); writes selection_receipt")
@@ -522,12 +598,15 @@ def main() -> int:
 
     # 1. select (persona-agnostic). Proof runs (--select-only) must NOT consume
     # a variation from the ledger.
-    sel = select_cluster(profile, out, persist_ledger=not args.select_only)
+    sel = select_cluster(profile, out, persist_ledger=not args.select_only,
+                         idea=args.about)
     roots = sorted(sel["docs"])
     if args.select_only:
         print(json.dumps({"stage": "select_only", "persona_id": persona_id,
                           "strategy": profile.strategy,
                           "has_identity_gate": profile.has_identity_gate,
+                          "idea": args.about or None,
+                          "idea_seeded": bool(args.about),
                           "cluster": sel["cluster"]["cluster_id"],
                           "selected": sel["cluster"]["selected"],
                           "valence_emphasis": sel["cluster"]["valence_emphasis"],

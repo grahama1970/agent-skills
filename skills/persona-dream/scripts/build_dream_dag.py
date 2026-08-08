@@ -52,7 +52,7 @@ def _goal_hash(goal: dict[str, Any]) -> str:
 
 
 def build_spec(*, contract: Path, run_dir: Path, run_id: str,
-               persona: str, cycle_id: str, timeout_seconds: int) -> dict[str, Any]:
+               persona: str, cycle_id: str, idea: str, timeout_seconds: int) -> dict[str, Any]:
     spine = yaml.safe_load(contract.read_text(encoding="utf-8"))
     if not isinstance(spine, dict) or not isinstance(spine.get("steps"), list):
         raise SystemExit(f"BLOCKED_BAD_CONTRACT: {contract} has no steps")
@@ -102,9 +102,23 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         # would otherwise read it as the next flag.
         if run_dir_arg:
             command += [f"--run-dir-arg={run_dir_arg}"]
-        subs = {"persona": persona, "cycle_id": cycle_id, "run_dir": str(run_dir)}
-        for raw in step.get("args") or []:
-            command += [f"--step-arg={str(raw).format(**subs)}"]
+        subs = {"persona": persona, "cycle_id": cycle_id, "idea": idea,
+                "run_dir": str(run_dir)}
+        rendered = [str(raw).format(**subs) for raw in step.get("args") or []]
+        # Drop a flag whose value came out empty (e.g. --about with no idea):
+        # Tau rejects empty argv items, and an empty --about would also mean
+        # something different to the step than omitting it.
+        pruned: list[str] = []
+        i = 0
+        while i < len(rendered):
+            if (rendered[i].startswith("--") and i + 1 < len(rendered)
+                    and rendered[i + 1] == ""):
+                i += 2
+                continue
+            pruned.append(rendered[i])
+            i += 1
+        for value in pruned:
+            command += [f"--step-arg={value}"]
 
         nodes.append({
             "node_id": node_id,
@@ -143,13 +157,15 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--persona", default="embry")
     ap.add_argument("--cycle-id", default="", help="cycle id; generated when omitted")
+    ap.add_argument("--idea", default="",
+                    help="what she should dream about; omit for autonomous selection")
     args = ap.parse_args()
 
     run_dir = args.run_dir.expanduser().resolve()
     cycle_id = args.cycle_id or f"cycle_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
     run_id = args.run_id or f"dream-{cycle_id}"
     spec = build_spec(contract=args.contract.resolve(), run_dir=run_dir,
-                      run_id=run_id, persona=args.persona, cycle_id=cycle_id,
+                      run_id=run_id, persona=args.persona, cycle_id=cycle_id, idea=args.idea,
                       timeout_seconds=args.timeout_seconds)
 
     out = args.out or (run_dir / "dag-spec.json")

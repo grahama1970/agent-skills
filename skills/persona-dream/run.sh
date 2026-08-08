@@ -13,6 +13,9 @@ Commands:
                        Given an idea, this is the only command you run:
                          ./run.sh dream --run-dir DIR --persona embry \
                                         --idea "what she should dream about"
+                       --idea steers which of her memories surface; omit it for
+                       fully autonomous selection. An idea matching no residue
+                       is refused, never silently replaced.
   dream-spec           Compile the DAG spec without executing it
   autonomous-dream-cycle  One full autonomous dream cycle (spine step 1)
   write-dream-journal  Write the persona_journal.v1 entry (spine step 2)
