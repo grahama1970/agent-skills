@@ -204,7 +204,6 @@ export default function Home() {
           </div>
           <figure
             className="strip wipe"
-            role="img"
             aria-label="Horus Lupercal and Embry taking tea on a void-world terrace — a rendered persona-dream"
           >
             {/* Atmospheric dream band: poster by default; the clip loads + plays
@@ -332,7 +331,7 @@ export default function Home() {
                           data-qid={`work:repo:${p.slug}`}
                           data-qs-action="WORK_OPEN_REPO"
                           title={`Open ${p.name} repository on github.com`}
-                          aria-label={`View ${p.name} source code on GitHub (opens in a new tab)`}
+                          aria-label={`${ghShort} — ${p.name} source on GitHub (opens in a new tab)`}
                           className="github-repo-link"
                         >
                           <svg className="gh-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -551,7 +550,7 @@ export default function Home() {
                     data-qid="about:link:resume"
                     data-qs-action="ABOUT_OPEN_RESUME"
                     title="Open RESUME.md on GitHub"
-                    style={{ color: 'var(--brass)' }}
+                    style={{ color: 'var(--brass)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
                   >
                     full résumé
                   </a>
@@ -670,6 +669,17 @@ export default function Home() {
                 <p className="lab">Ethos</p>
                 <p className="ethos">No claim ships without a receipt.</p>
               </div>
+            </div>
+            <div className="foot-boundary">
+              <p className="lab">Public scope &amp; data boundaries</p>
+              <p className="boundary">
+                This site and its open repositories contain reusable agent
+                patterns, contracts, prompts, hooks, and evaluation workflows.
+                They are intentionally decoupled from controlled, proprietary,
+                ITAR-restricted, or sensitive operational data. Private runtime
+                contexts, credentials, regulated artifacts, and deployment
+                details remain strictly out-of-band.
+              </p>
             </div>
           </div>
         </footer>

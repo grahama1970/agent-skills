@@ -1347,7 +1347,7 @@ h1 .it::after {
   font-size: 0.64rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #8a6a3e;
+  color: #6f541f; /* AA-safe dark brass on the light --paper plate (5.9:1) */
   border-bottom: 1px dashed rgba(26, 20, 17, 0.3);
   padding-bottom: 0.6rem;
 }
@@ -1945,7 +1945,7 @@ footer a:hover {
   font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8a6a3e;
+  color: #6f541f; /* AA-safe dark brass on the light --paper plate (5.9:1) */
   background: none;
   border: 0;
   cursor: pointer;
