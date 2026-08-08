@@ -15,7 +15,7 @@ This is the two-page version. The longer one — full project detail and the liv
 ## ABOUT
 I build agentic pipelines that run in production, not prototypes: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it.
 
-Defense, aerospace, and compliance, where an answer has to be traceable to evidence. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team; presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin.
+Four years on the prime-contractor team of a major DARPA program: Principal Data Scientist and ACERT Technical Lead on ARCOS, delivering knowledge-graph and LLM reasoning for automated certification of mission-critical software. Presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin. Defense, aerospace, and compliance, where an answer has to be traceable to evidence.
 
 Self-contained: research, back end, front end, and the briefing. 15+ years hand-coding, today primarily agentic coding across many harnesses and models, including my own (tau). I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself.
 

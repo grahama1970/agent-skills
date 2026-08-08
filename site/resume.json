@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Defense, aerospace, and compliance, where an answer has to be traceable to evidence. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team; presented agentic cybersecurity research to AFRL and received a \"Hacker\" challenge coin."
+       "v": "Four years on the prime-contractor team of a major DARPA program: Principal Data Scientist and ACERT Technical Lead on ARCOS, delivering knowledge-graph and LLM reasoning for automated certification of mission-critical software. Presented agentic cybersecurity research to AFRL and received a \"Hacker\" challenge coin. Defense, aerospace, and compliance, where an answer has to be traceable to evidence."
       }
      ]
     },
@@ -547,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "1224eb28e",
+ "sourceCommit": "61993b932",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "117a7581de58377a3120a3d0d354d75ff5ca464fcb74340631015a49b146a29f",
+ "sourceSha256": "c2416eb3cb3260841000dd8286c8544d18090d39bbc54d040488dc86b29cb2fe",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -628,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "e5e6390620e6e69d927a4a6ecb066e4f4e83c751736d1b354ab99f7090f93b06",
- "pdfBytes": 159469
+ "pdfSha256": "51885b48321d28fd23b3cbe5649a454483b72a816389a2e8ea1860fde60d5e99",
+ "pdfBytes": 159553
 }
