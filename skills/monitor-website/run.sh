@@ -19,4 +19,11 @@ if [[ "${1:-}" == "design-world-check" ]]; then
   exec python3 scripts/design_world_check.py "$@"
 fi
 
+# `copy-audit` enforces the first-person human-voice contract (#1298):
+# site/VOICE.md + site/voice-anchors.yml. Report-only, deterministic at a commit.
+if [[ "${1:-}" == "copy-audit" ]]; then
+  shift
+  exec python3 ../../site/scripts/copy_audit.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

@@ -14,6 +14,7 @@ Voice contract (from #1298):
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -67,7 +68,28 @@ def _jsx_text(path: Path) -> list[str]:
     return [t.strip() for t in nodes + attrs if t.strip()]
 
 
-def main() -> None:
+# Accidental placeholders / generated boilerplate that must never ship.
+PLACEHOLDER_RE = re.compile(
+    r"\blorem ipsum\b|\bdolor sit\b|\bplaceholder\b|\bTODO\b|\bFIXME\b|\bXXXX\b"
+    r"|\bYour (?:Name|Company|Text) Here\b|\blipsum\b", re.IGNORECASE)
+
+
+def _anchors():
+    """(anchors, allow_collective) from voice-anchors.yml. Empty if absent so the
+    core audit still runs standalone."""
+    p = SITE / "voice-anchors.yml"
+    if not p.is_file():
+        return [], set()
+    import yaml
+    d = yaml.safe_load(p.read_text()) or {}
+    return d.get("anchors", []), set(d.get("allow_collective_in", []))
+
+
+def main(argv=None) -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--json", action="store_true")
+    args = ap.parse_args(argv)
+
     sources: list[tuple[str, list[str]]] = []
     for name in ("content.json", "research-map.json", "private-abstracts.json"):
         p = SITE / name
@@ -77,24 +99,50 @@ def main() -> None:
     if page.exists():
         sources.append(("app/page.tsx", _jsx_text(page)))
 
+    anchors, allow_collective = _anchors()
+    allow_collective |= ALLOW_COLLECTIVE_IN
+
     violations: list[str] = []
     for name, strings in sources:
         for s in strings:
             for m in COLLECTIVE.finditer(s):
-                if s in ALLOW_COLLECTIVE_IN:
+                if s in allow_collective:
                     continue
                 violations.append(f"{name}: collective voice '{m.group(0)}' — {s[:80]!r}")
             for m in SUP_RE.finditer(s):
                 violations.append(f"{name}: superlative '{m.group(0)}' — {s[:80]!r}")
+            if PLACEHOLDER_RE.search(s):
+                violations.append(f"{name}: placeholder/boilerplate — {s[:80]!r}")
 
-    if violations:
+    # Signature lines must still be present (or explicitly retired by a human).
+    corpus = re.sub(r"\s+", " ", " ".join(s for _, ss in sources for s in ss))
+    missing_anchors = [
+        a["id"] for a in anchors
+        if not a.get("retired") and re.sub(r"\s+", " ", a["fragment"]) not in corpus
+    ]
+    for aid in missing_anchors:
+        violations.append(f"voice-anchors.yml: signature line '{aid}' missing from copy")
+
+    total = sum(len(s) for _, s in sources)
+    result = {
+        "schema": "monitor_website.copy_audit.v1",
+        "status": "FAIL" if violations else "PASS",
+        "sources": [n for n, _ in sources],
+        "strings_scanned": total,
+        "anchors_checked": len(anchors),
+        "violations": violations,
+    }
+    if args.json:
+        print(json.dumps(result, indent=2))
+    elif violations:
         print("copy-audit FAILED — voice-contract violations:")
         for v in violations:
             print(f"  - {v}")
-        sys.exit(1)
-    total = sum(len(s) for _, s in sources)
-    print(f"copy-audit OK: {total} visible strings across {len(sources)} sources; "
-          "first-person voice, no collective 'we', no AI-startup superlatives.")
+    else:
+        print(f"copy-audit OK: {total} visible strings across {len(sources)} sources; "
+              f"{len(anchors)} signature lines present; first-person voice, no "
+              "collective 'we', no superlatives, no placeholders.")
+    sys.exit(1 if violations else 0)
 
 
 if __name__ == "__main__":

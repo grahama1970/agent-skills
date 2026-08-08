@@ -105,3 +105,18 @@ It validates the contract and the deterministically-checkable prohibitions
 machine-output boundary) and returns `NOT_TESTED` — never `PASS` — while
 rendered-screenshot and blind-review artifacts are absent (#1343). Treat a
 `FAIL` (e.g. human labels still in monospace) as residue to remove, not noise.
+
+## Voice contract (#1298)
+
+grahama.co's first-person human voice is locked in `site/VOICE.md` (contract) +
+`site/voice-anchors.yml` (signature lines). Automated jobs may validate,
+synchronize factual metadata, and publish approved notes, but may **not** rewrite
+site prose unless a human-authored source file changed. Report-only, deterministic:
+
+```bash
+skills/monitor-website/run.sh copy-audit --json
+```
+
+It flags first-party `we`/`our`/`us`, AI-startup superlatives, placeholders/lorem,
+and any signature line that vanished from the copy. Evidence labels stay derived
+from structured metadata — prose cannot strengthen them.

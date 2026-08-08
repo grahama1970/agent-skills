@@ -1,0 +1,17 @@
+# Signature voice lines (#1298). Automated jobs may reference these but must not
+# silently replace them. `copy-audit` verifies each `fragment` still appears in
+# the site's visible copy; a removal must be a recorded human decision (set
+# retired: true with a note).
+schema: grahama.voice_anchors.v1
+version: 1
+anchors:
+  # Fragments must live in a single visible text node (JSX splits italics /
+  # {' '} spacers across nodes, so keep anchors to one clean phrase).
+  - id: hero-build
+    fragment: "I build agent systems that can"
+  - id: shelved
+    fragment: "the project you"
+  - id: ethos-receipt
+    fragment: "No claim ships without"
+# Third-party plural-pronoun contexts that are NOT the site's own voice.
+allow_collective_in: []
