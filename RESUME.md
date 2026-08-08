@@ -4,10 +4,12 @@ Buffalo, NY · Buffalo-area hybrid/onsite or remote
 
 > I build agent systems that can prove what they did.
 
-Principal AI Engineer | Machine Learning Engineer | AI Architect | Agentic AI · LLM/RAG · Knowledge Graphs | Defense & Aerospace | Founder, grahamaco | Buffalo, NY · Remote
+**Principal AI Engineer · AI Architect · Machine Learning Engineer**  
+Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco
 
 U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints.
 
+<!-- pdf-only -->
 This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
 
 ## ABOUT
@@ -19,7 +21,7 @@ Self-contained by default: research, back end, front end, and the briefing. I de
 
 15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily. Creative systems thinking — from leading 80+ person interactive productions — is why my AI systems are architected, not stapled together.
 
-Buffalo, NY based (hybrid/onsite there, or remote). Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles.
+Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles.
 
 ## EXPERIENCE
 

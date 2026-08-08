@@ -173,7 +173,11 @@ export default function ResumePage() {
             Both are real file links, not window.print(): the PDF served here
             is the typeset, ATS-checked artifact, and a browser print-to-PDF
             would substitute a different file per visitor. */}
+        {/* The page is the full version; the PDF is the two-page cut. Saying so
+            here replaces the PDF's own "this is the two-page version" line,
+            which would be self-referential on the page it points at. */}
         <div className="cv-actions">
+          <span className="cv-actions-note">Full version — the PDF is a 2-page cut</span>
           <a
             className="cv-btn cv-btn-primary"
             href={doc.downloads.pdf}

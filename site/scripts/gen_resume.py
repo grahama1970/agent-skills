@@ -84,6 +84,11 @@ def parse(md: str) -> dict:
     role: dict | None = None
     buf: list[str] = []
     items: list[list[dict]] | None = None
+    # A `<!-- pdf-only -->` comment marks the next line as belonging to the
+    # printed cut alone. The PDF renders the comment as nothing; the page skips
+    # the line it guards, so a sentence that makes sense on paper ("this is the
+    # two-page version") does not become self-referential on the web.
+    pdf_only = False
 
     def target_blocks() -> list[dict]:
         if role is not None:
@@ -101,6 +106,13 @@ def parse(md: str) -> dict:
     for raw in lines:
         line = raw.rstrip()
         stripped = line.strip()
+
+        if stripped == "<!-- pdf-only -->":
+            pdf_only = True
+            continue
+        if pdf_only:
+            pdf_only = False
+            continue
 
         if not stripped:
             _flush(buf, target_blocks())

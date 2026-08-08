@@ -86,8 +86,12 @@
    "kind": "p",
    "inline": [
     {
+     "t": "strong",
+     "v": "Principal AI Engineer · AI Architect · Machine Learning Engineer"
+    },
+    {
      "t": "text",
-     "v": "Principal AI Engineer | Machine Learning Engineer | AI Architect | Agentic AI · LLM/RAG · Knowledge Graphs | Defense & Aerospace | Founder, grahamaco | Buffalo, NY · Remote"
+     "v": " Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco"
     }
    ]
   },
@@ -97,24 +101,6 @@
     {
      "t": "text",
      "v": "U.S. citizen. Extensive experience delivering under export-controlled (ITAR) constraints."
-    }
-   ]
-  },
-  {
-   "kind": "p",
-   "inline": [
-    {
-     "t": "text",
-     "v": "This is the two-page version. The longer one — full project detail and the live capability inventory — is at "
-    },
-    {
-     "t": "link",
-     "v": "grahama.co/resume",
-     "href": "https://grahama.co/resume"
-    },
-    {
-     "t": "text",
-     "v": "."
     }
    ]
   }
@@ -164,7 +150,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Buffalo, NY based (hybrid/onsite there, or remote). Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles."
+       "v": "Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles."
       }
      ]
     }
@@ -570,10 +556,10 @@
    ]
   }
  ],
- "sourceCommit": "78f37c43c",
+ "sourceCommit": "15aa5b771",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "de37b2a3c403109d375658405a40d177c9a6d5e8bb426d0931b95c00580fb116",
+ "sourceSha256": "9927ad59c79099219d4ca17df672c6425335c89ab833408b27c7af10eca0fb36",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -625,7 +611,7 @@
     "givenName": "Graham",
     "familyName": "Anderson",
     "url": "https://grahama.co",
-    "jobTitle": "Principal AI Engineer",
+    "jobTitle": "Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco",
     "description": "I build agent systems that can prove what they did.",
     "email": "graham@grahama.co",
     "sameAs": [
@@ -651,6 +637,6 @@
    }
   ]
  },
- "pdfSha256": "719f82cc104fef923b0565f759060698981d2a6d622647be29fbd794a1453df7",
- "pdfBytes": 159609
+ "pdfSha256": "a70b0a448ea674e247613baccf969189edb9aa41cd8c1c8443c3927fed67e6e2",
+ "pdfBytes": 159588
 }

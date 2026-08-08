@@ -168,6 +168,25 @@ img {
   margin: 0.5em 0 0;
   max-width: 22ch;
 }
+/* Per-section headline voice — Fraunces set by hand, not one global setting.
+   Each axis choice is deliberate so the variation reads as art-direction, not
+   inconsistency: #work leans warm/editorial, #dream large & soft (a question
+   spoken aloud), #competence near-neutral/technical (it fronts a data table),
+   #ledger tight & plain (an inventory). Non-negotiable: Fraunces throughout. */
+#work .h2 {
+  font-variation-settings: 'SOFT' 58, 'WONK' 1, 'opsz' 144;
+}
+#dream .h2 {
+  font-variation-settings: 'SOFT' 74, 'WONK' 1, 'opsz' 144;
+  letter-spacing: -0.025em;
+}
+#competence .h2 {
+  font-variation-settings: 'SOFT' 12, 'WONK' 0, 'opsz' 96;
+  letter-spacing: -0.015em;
+}
+#ledger .h2 {
+  font-variation-settings: 'SOFT' 20, 'WONK' 0, 'opsz' 84;
+}
 .lede {
   color: var(--muted);
   max-width: 62ch;
@@ -1493,6 +1512,20 @@ footer a:hover {
   font-size: 1.02rem;
   color: var(--text);
   font-variation-settings: 'SOFT' 80, 'WONK' 1, 'opsz' 20;
+}
+/* Public scope & data boundaries — a quiet full-width perimeter note under the
+   footer grid; muted register, never louder than the ethos line above it. */
+.foot-boundary {
+  margin-top: clamp(1.6rem, 3vw, 2.6rem);
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line-2);
+}
+.boundary {
+  margin: 0.5rem 0 0;
+  max-width: 78ch;
+  color: var(--faint);
+  font-size: 0.84rem;
+  line-height: 1.6;
 }
 
 /* --- load choreography ------------------------------------ */
@@ -4193,5 +4226,20 @@ th.cm-num {
 @media print {
   .cv-evidence {
     display: none !important;
+  }
+}
+
+/* Sits with the download buttons: names which version you are reading. */
+.cv-actions-note {
+  align-self: center;
+  color: var(--faint);
+  font-size: 0.8rem;
+  margin-left: 0.35rem;
+}
+
+@media (max-width: 640px) {
+  .cv-actions-note {
+    flex-basis: 100%;
+    margin-left: 0;
   }
 }
