@@ -428,9 +428,10 @@ section {
   padding-top: 0.9rem;
 }
 .eyebrow {
-  font-family: var(--mono);
+  font-family: var(--sans);
+  font-weight: 500;
   font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--faint);
   display: flex;
