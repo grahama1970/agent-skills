@@ -40,6 +40,28 @@ tau-dag run `ask-tau-roundtable-webgpt-webclaude-webk-f32d7391fec6`.
 - Project images: `public/projects/<slug>.webp`, copied from
   `docs/assets/project-cards/`.
 
+## Source of truth (declared — the architecture, stated honestly)
+
+The site is **auto-rebuilding from repo changes, not yet fully auto-publishing
+project README prose** (full README-driven publication is #1310, deferred). The
+actual, current source of truth is:
+
+- **Authored project cards** (name / blurb / question / why) → `content.json`,
+  which is versioned in `/memory` (`grahama_site` collection, recall-able). This
+  is human/agent-authored copy, never machine-overwritten.
+- **Capability body text** in `catalog.json` → the project's **public
+  `SKILL.md`** via `gen_catalog._skill_text` (not the project README). A
+  README-only edit triggers a rebuild but does not change catalog body text.
+- **Counts / inventory** → `gen_inventory.py` from git-tracked repo state at HEAD.
+- **Coherence** → every generated surface is regenerated at the deploy commit in
+  dependency order (inventory → visibility → research-map → catalog → graph →
+  artifacts) and `gen_build_manifest.py` fails the build if any surface, count,
+  or upstream-input digest drifts.
+
+If #1310 lands, public project READMEs become the catalog body source with
+SKILL.md as fallback; until then, treat `content.json` + `/memory` + public
+`SKILL.md` as the declared source of truth so the goal and the code agree.
+
 ## best-practices-react compliance
 
 Interactive elements carry `data-qid` + `data-qs-action` + `title`;

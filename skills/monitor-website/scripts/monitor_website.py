@@ -169,14 +169,17 @@ def refresh(commit: bool, push: bool) -> dict:
     ):
         p = REPO / f
         before[f] = p.read_bytes() if p.exists() else b""
+    # Dependency order: catalog reads inventory/visibility/research-map; graph
+    # reads visibility/research-map. Upstream first so nothing consumes a stale
+    # dependency (webgpt trust review).
     for script in (
         "site/scripts/gen_inventory.py",
-        "site/scripts/gen_artifacts.py",
-        "site/scripts/gen_battle_lineage.py",
-        "site/scripts/gen_research_map.py",
         "site/scripts/gen_visibility.py",
+        "site/scripts/gen_research_map.py",
         "site/scripts/gen_catalog.py",
         "site/scripts/gen_graph.py",
+        "site/scripts/gen_artifacts.py",
+        "site/scripts/gen_battle_lineage.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:

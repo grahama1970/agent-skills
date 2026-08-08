@@ -1,5 +1,5 @@
 {
-  "source_commit": "eee004c65",
+  "source_commit": "f8a508540",
   "as_of": "2026-08-07",
   "stats": {
     "skills": 342,
@@ -11,12 +11,46 @@
     "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
   },
   "outputs": {
-    "inventory.json": "2b9df306540b78eb2ed386f36c9617c4ef8f3e2dfe717387861f19b11d64204e",
-    "artifacts.json": "11e0b12b3a230a9eef219a1c0398d2c623a2a7a8f9add13b0fe73c14b721d956",
-    "catalog.json": "3a60214024c48fb6df91c062aabb314d0217c740980e67a2bae78c54246a3115",
-    "research-map.json": "71584fac7deee6540fb318645ae70123a028c230876ead3b5ab9969b78ef286d",
-    "graph.json": "56e1cc9cba6d23553796025e7284a346d2e71e26ab664e3c332fe05007f7b185",
-    "project-visibility.json": "6a8348b16544069d7b3eaeff538f40f15d1ef43f89cc73b60d8c39155f0424bc"
+    "inventory.json": {
+      "sha256": "55f32ac45de93c22ba4f89cbec8f86340df51b8e55f0912fd25157f374702e3b",
+      "inputs": {}
+    },
+    "artifacts.json": {
+      "sha256": "b3db9c22e41eb4456c4c0181c90b52ff66e327191f3670bc9ce79ed0c646b2a1",
+      "inputs": {
+        "inventory.json": "55f32ac45de93c22ba4f89cbec8f86340df51b8e55f0912fd25157f374702e3b"
+      }
+    },
+    "catalog.json": {
+      "sha256": "9e3fa8b7602842dd9a4cbe9984583478d60cf37d9b3b3487f84fae5c98bf3492",
+      "inputs": {
+        "inventory.json": "55f32ac45de93c22ba4f89cbec8f86340df51b8e55f0912fd25157f374702e3b",
+        "project-visibility.json": "24542a0f84c49aaf02a1348f4c2b98a9a51f298e5d5b94a9f61f6741175a0fb2",
+        "research-map.json": "6978dc7656b63d9c695835c65d85eefb4a9df75a6cdf7491cb575883e1688176",
+        "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
+      }
+    },
+    "research-map.json": {
+      "sha256": "6978dc7656b63d9c695835c65d85eefb4a9df75a6cdf7491cb575883e1688176",
+      "inputs": {
+        "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
+      }
+    },
+    "graph.json": {
+      "sha256": "022ccb4a0776f7cce0862f10407c5c29d6744db66af223eb7a4cf7266c88a508",
+      "inputs": {
+        "project-visibility.json": "24542a0f84c49aaf02a1348f4c2b98a9a51f298e5d5b94a9f61f6741175a0fb2",
+        "research-map.json": "6978dc7656b63d9c695835c65d85eefb4a9df75a6cdf7491cb575883e1688176",
+        "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
+      }
+    },
+    "project-visibility.json": {
+      "sha256": "24542a0f84c49aaf02a1348f4c2b98a9a51f298e5d5b94a9f61f6741175a0fb2",
+      "inputs": {
+        "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638",
+        "private-abstracts.json": "063d4114cf57fce15c27ff07db1a6aa15dcd909e2a04cd86788286926868f704"
+      }
+    }
   },
   "fixtures": {
     "proof-explainer.json": {

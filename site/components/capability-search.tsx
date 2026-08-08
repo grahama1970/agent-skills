@@ -144,7 +144,7 @@ export function CapabilitySearch() {
                   <span className={`capsearch-scout capsearch-scout--${scout.scoutState}`}>
                     {SCOUT_LABEL[scout.scoutState ?? ''] ?? scout.scoutState}
                   </span>
-                  <span className="scout-verified">last verified {BUILD_COMMIT}</span>
+                  <span className="scout-verified">catalog verified @ {BUILD_COMMIT}</span>
                 </p>
                 {scout.reason?.terms && (
                   <p className="scout-why">
@@ -186,20 +186,20 @@ export function CapabilitySearch() {
                   <a
                     href={scout.slug ? `#project-${scout.slug}` : '#work'}
                     className="scout-act"
-                    data-qid={`scout:evidence:${scout.slug}`}
-                    data-qs-action="SCOUT_INSPECT_EVIDENCE"
-                    title={`Inspect ${scout.name} evidence on this page`}
+                    data-qid={`scout:project:${scout.slug}`}
+                    data-qs-action="SCOUT_VIEW_PROJECT"
+                    title={`See ${scout.name} on this page`}
                   >
-                    Inspect evidence
+                    View project
                   </a>
                   <a
                     href="#search"
                     className="scout-act"
-                    data-qid={`scout:connections:${scout.slug}`}
-                    data-qs-action="SCOUT_SHOW_CONNECTIONS"
-                    title="See how this connects in the constellation"
+                    data-qid={`scout:map:${scout.slug}`}
+                    data-qs-action="SCOUT_VIEW_MAP"
+                    title="See the practice map (constellation)"
                   >
-                    Show connections
+                    View the practice map
                   </a>
                 </p>
               </li>

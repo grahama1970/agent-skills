@@ -43,6 +43,19 @@ FIXTURES = {
 }
 INPUTS = ["../README.md", "content.json"]
 
+# Direct upstream inputs each output consumes. Recording their digests in the
+# manifest makes a green gate prove not just "generated at HEAD" but "generated
+# from exactly these upstream files" — closing the generator-order false-green
+# (webgpt trust review). Keys map to files under site/.
+INPUT_DEPS = {
+    "inventory.json": [],  # repo state (git ls-tree) — no site-file inputs
+    "project-visibility.json": ["content.json", "private-abstracts.json"],
+    "research-map.json": ["content.json"],
+    "catalog.json": ["inventory.json", "project-visibility.json", "research-map.json", "content.json"],
+    "graph.json": ["project-visibility.json", "research-map.json", "content.json"],
+    "artifacts.json": ["inventory.json"],
+}
+
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -101,7 +114,17 @@ def main() -> int:
         "as_of": json.loads((SITE / "inventory.json").read_text()).get("as_of"),
         "stats": inv,
         "inputs": {i: sha(SITE / i) for i in INPUTS if (SITE / i).exists()},
-        "outputs": {f: sha(SITE / f) for f in SURFACES if (SITE / f).exists()},
+        "outputs": {
+            f: {
+                "sha256": sha(SITE / f),
+                "inputs": {
+                    dep: sha(SITE / dep)
+                    for dep in INPUT_DEPS.get(f, [])
+                    if (SITE / dep).exists()
+                },
+            }
+            for f in SURFACES if (SITE / f).exists()
+        },
         "fixtures": fixtures,
     }
     (SITE / "build-manifest.json").write_text(
