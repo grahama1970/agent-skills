@@ -96,6 +96,7 @@ dag_spec:
 
 primary_skills:
   - memory
+  - best-practices-opportunities
   - brave-search
   - best-practices-subagent
 

@@ -50,6 +50,7 @@ complies:
   - best-practices-arangodb
   - best-practices-roundtable
   - best-practices-security
+  - best-practices-opportunities
 taxonomy:
   - operations
   - retrieval

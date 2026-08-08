@@ -57,6 +57,7 @@ dag_spec:
 
 primary_skills:
   - memory
+  - best-practices-opportunities
   - best-practices-subagent
 
 tool_policy:
