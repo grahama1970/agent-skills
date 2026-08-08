@@ -499,7 +499,7 @@
       [
        {
         "t": "text",
-        "v": "Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing, Stakeholder Collaboration"
+        "v": "Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing"
        }
       ],
       [
@@ -556,10 +556,10 @@
    ]
   }
  ],
- "sourceCommit": "b31bc58bb",
+ "sourceCommit": "cd13de6d6",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "a2e4fa83e64d79c4661cb159f3180843510f41ba552e9b0bc214489b0ee92f26",
+ "sourceSha256": "a81f0bd48bb62556b19e221a4945f1b37b8746fb2372830ac55b86c08a71d138",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -637,6 +637,6 @@
    }
   ]
  },
- "pdfSha256": "3f9ad3987f0029773cc58fd1db32e2737bf341a5405703792e0c56ae32e0ea59",
- "pdfBytes": 159969
+ "pdfSha256": "31a07d099bd46330c6f522f4abaa3e241b30c4c3473fd4cbdef6676b1675ddf5",
+ "pdfBytes": 159659
 }

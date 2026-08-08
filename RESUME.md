@@ -78,7 +78,7 @@ Client work is mostly export-controlled, so here is the public, verifiable side 
 - Verification & Compliance: Formal Verification, Lean 4, NIST 800-53/171, MITRE ATT&CK, AI Governance
 - Document AI: PDF Extraction, Layout & Table Extraction, Fixture Generation, Extraction Calibration
 - Interfaces & Visualization: React, TypeScript, D3, Data-Dense & Graph UI, Design Systems, Deterministic UI Interaction Testing
-- Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing, Stakeholder Collaboration
+- Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing
 - ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux
 
 ## DEEPER DETAIL
