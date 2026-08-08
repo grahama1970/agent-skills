@@ -600,7 +600,8 @@
       "hub-spoke",
       "layered-stack",
       "loop",
-      "before-after"
+      "before-after",
+      "scene"
      ],
      "title": "Recipe",
      "type": "string"
@@ -686,6 +687,25 @@
      },
      "title": "Binding Paths",
      "type": "array"
+    },
+    "decoration": {
+     "default": "ring",
+     "enum": [
+      "ring",
+      "principal",
+      "support",
+      "ground"
+     ],
+     "title": "Decoration",
+     "type": "string"
+    },
+    "scale": {
+     "default": 1.0,
+     "description": "Glyph weight within its scene.",
+     "exclusiveMinimum": 0.2,
+     "maximum": 2.5,
+     "title": "Scale",
+     "type": "number"
     }
    },
    "required": [

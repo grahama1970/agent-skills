@@ -267,7 +267,25 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         bindings.append(TextBinding(path="element:diagram", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=module.candidate_claim_ids[0], transform_class="truncation"))
     if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-gates":
-        graph = _fill_diagram_canvas(DiagramGraph.model_validate(module.diagram))
+        graph = DiagramGraph.model_validate(module.diagram)
+        # #1315: render the module's actors as a multi-element SCENE — a
+        # labelled subject with smaller supporting glyphs and dotted flow —
+        # rather than a row of equally weighted ringed icons.
+        if len(graph.nodes) >= 2 and recipe.id == "one-big-diagram":
+            from .scenes import compose_scene, scene_for_module
+
+            ordered = list(graph.nodes)
+            subject = ordered[len(ordered) // 2]
+            supports = [n for n in ordered if n.id != subject.id]
+            graph = compose_scene(
+                scene_for_module(module.module),
+                subject_label=subject.label,
+                icons=[n.icon or "circle" for n in (subject, *supports)],
+                support_labels=[n.label for n in supports],
+                node_prefix="scene",
+                binding_paths=["element:diagram"],
+            )
+        graph = _fill_diagram_canvas(graph)
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
             bbox=Bbox(x=0.06, y=_after_chevrons(reveal, 0.24), w=0.88, h=0.90 - _after_chevrons(reveal, 0.24)),

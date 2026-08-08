@@ -120,17 +120,18 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
         f'xmlns="http://www.w3.org/2000/svg" font-family="Calibri, sans-serif">'
     ]
     centers: dict[str, tuple[float, float, float, float]] = {}
-    unboxed = graph.recipe == "pipeline"  # visual review: unboxed line-art path, differentiated actors
+    unboxed = graph.recipe in {"pipeline", "scene"}
+    scene = graph.recipe == "scene"  # multi-element illustration (#1315)  # visual review: unboxed line-art path, differentiated actors
     for n_index, node in enumerate(graph.nodes):
         x, y = node.bbox.x * width, node.bbox.y * height
         w, h = node.bbox.w * width, node.bbox.h * height
-        centers[node.id] = (x + w / 2, y + h * (0.28 if unboxed else 0.5), w, h)
+        centers[node.id] = (x + w / 2, y + h * (0.5 if scene else (0.28 if unboxed else 0.5)), w, h)
         accent = _ROLE_CYCLE[n_index % len(_ROLE_CYCLE)] if unboxed else primary
         terminal = unboxed and n_index == len(graph.nodes) - 1
         # asymmetry (corpus: hand-arranged, never uniform): terminal node
         # emphasized, interior nodes alternate scale.
-        _scale = (1.22 if (unboxed and n_index == len(graph.nodes) - 1) else (1.0 if n_index % 2 == 0 else 0.86))
-        icon_size = min(w, h) * ((0.40 if unboxed else 0.34) * _scale)
+        _scale = node.scale if scene else (1.22 if (unboxed and n_index == len(graph.nodes) - 1) else (1.0 if n_index % 2 == 0 else 0.86))
+        icon_size = min(w, h) * (0.92 if scene else (0.40 if unboxed else 0.34) * _scale)
         parts.append(
             f'<g id="node-{html.escape(node.id)}">'
             + (
@@ -142,15 +143,15 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
             + (
                 f'<circle cx="{x + w / 2:.0f}" cy="{y + h * 0.28:.0f}" r="{icon_size * 0.72:.0f}" '
                 f'fill="none" stroke="{accent}" stroke-width="{4 if terminal else 2.5}"/>'
-                if unboxed
+                if unboxed and not scene
                 else ""
             )
             + (
-                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * (0.28 if unboxed else 0.32) - icon_size / 2, icon_size, accent)
+                _icon_glyph_svg(node.icon, x + w / 2 - icon_size / 2, y + h * (0.5 if scene else (0.28 if unboxed else 0.32)) - icon_size / 2, icon_size, accent)
                 if node.icon
                 else ""
             )
-            + f'<text x="{x + w / 2:.0f}" y="{y + h * (0.80 if unboxed else 0.68):.0f}" text-anchor="middle" '
+            + f'<text x="{x + w / 2:.0f}" y="{y + h * (1.02 if scene else (0.80 if unboxed else 0.68)):.0f}" text-anchor="middle" '
             f'font-size="{max(14, h * 0.14):.0f}" font-weight="bold" fill="{primary}">{html.escape(node.label)}</text>'
             + (
                 f'<text x="{x + w / 2:.0f}" y="{y + h * (0.95 if unboxed else 0.84):.0f}" text-anchor="middle" '
@@ -169,14 +170,14 @@ def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str,
     for edge in graph.edges:
         sx, sy, sw, _ = centers[edge.source]
         tx, ty, tw, _ = centers[edge.target]
-        x1, x2 = sx + sw / 2, tx - tw / 2
+        x1, x2 = (sx, tx) if scene else (sx + sw / 2, tx - tw / 2)
         dash = {"solid": "", "dashed": ' stroke-dasharray="10 8"', "dotted": ' stroke-dasharray="3 6"'}[edge.line_style]
         if unboxed and edge.line_style == "solid":
             dash = ' stroke-dasharray="2 7" stroke-linecap="round"'  # corpus: dotted meander arrows
         arrow = ' marker-end="url(#arrow)"' if edge.arrowhead else ""
         parts.append(
             f'<g id="edge-{html.escape(edge.id)}">'
-            + (f'<path d="M {x1:.0f} {sy:.0f} Q {(x1 + x2) / 2:.0f} {sy - 14:.0f} {x2:.0f} {ty:.0f}" fill="none" '
+            + (f'<path d="M {x1:.0f} {sy:.0f} Q {(x1 + x2) / 2:.0f} {min(sy, ty) - 26:.0f} {x2:.0f} {ty:.0f}" fill="none" '
              f'stroke="{primary}" stroke-width="3"{dash}{arrow}/>' if unboxed else
              f'<line x1="{x1:.0f}" y1="{sy:.0f}" x2="{x2:.0f}" y2="{ty:.0f}" '
              f'stroke="{primary}" stroke-width="3"{dash}{arrow}/>')

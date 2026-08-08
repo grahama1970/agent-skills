@@ -231,6 +231,13 @@ class DiagramNode(StrictModel):
     label: str = Field(min_length=1)
     sublabel: str | None = None
     binding_paths: list[str] = Field(default_factory=list)
+    # Scene clusters (#1315): a multi-element illustration is several glyphs of
+    # DIFFERENT weights, not a row of identical ringed icons. "principal" is the
+    # labeled subject; "support" is a smaller bare glyph in the same scene;
+    # "ground" is a baseline/context mark. Default keeps existing documents
+    # byte-identical.
+    decoration: Literal["ring", "principal", "support", "ground"] = "ring"
+    scale: float = Field(default=1.0, gt=0.2, le=2.5, description="Glyph weight within its scene.")
 
 
 class DiagramEdge(StrictModel):
@@ -256,7 +263,9 @@ class DiagramEdge(StrictModel):
         return self
 
 
-DiagramRecipe = Literal["endpoint-bridge", "pipeline", "hub-spoke", "layered-stack", "loop", "before-after"]
+# "scene" (#1315) is a multi-element illustration rather than a node graph:
+# a labelled subject with smaller supporting glyphs and dotted flow.
+DiagramRecipe = Literal["endpoint-bridge", "pipeline", "hub-spoke", "layered-stack", "loop", "before-after", "scene"]
 
 
 class DiagramGraph(StrictModel):

@@ -330,7 +330,8 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
     primary = _hex(palette["primary"])
     ink = _hex(palette["ink"])
     role_cycle = ["#065E7C", "#6F8E30", "#26558E", "#D6A300", "#065E7C"]
-    unboxed = graph.recipe == "pipeline"
+    unboxed = graph.recipe in {"pipeline", "scene"}
+    scene = graph.recipe == "scene"  # multi-element illustration (#1315)
     group = container.add_group_shape()
     dframe = frame.sub(element.bbox)
     centers: dict[str, tuple[float, float, float, float]] = {}
@@ -342,14 +343,16 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
         centers[node.id] = (nx, ny, nw, nh)
         accent = _hex(role_cycle[n_index % len(role_cycle)]) if unboxed else primary
         terminal = unboxed and n_index == len(graph.nodes) - 1
-        if not unboxed:
+        if scene:
+            pass  # scene glyphs are BARE: the author never rings a scene element
+        elif not unboxed:
             box = group.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(nx), Inches(ny), Inches(nw), Inches(nh))
             box.fill.background()
             box.line.color.rgb = primary
             box.line.width = Pt(2.5)
             box.name = f"el:{element.id}:node:{node.id}"
         else:
-            _scale = 1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86)
+            _scale = node.scale if scene else (1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86))
             ring_size = min(nw, nh) * 0.48 * _scale
             ring = group.shapes.add_shape(
                 MSO_SHAPE.OVAL,
@@ -360,14 +363,16 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             ring.line.width = Pt(3.25 if terminal else 2.25)
             ring.name = f"el:{element.id}:node:{node.id}"
         if node.icon:
-            _iscale = (1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86)) if unboxed else 1.0
-            size = min(nw, nh) * (0.32 if unboxed else 0.36) * _iscale
+            _iscale = node.scale if scene else ((1.22 if terminal else (1.0 if n_index % 2 == 0 else 0.86)) if unboxed else 1.0)
+            size = min(nw, nh) * (0.92 if scene else (0.32 if unboxed else 0.36) * _iscale)
             _emit_icon_parts(
                 group, node.icon,
-                Frame(nx + nw / 2 - size / 2, ny + nh * (0.28 if unboxed else 0.32) - size / 2, size, size),
+                Frame(nx + nw / 2 - size / 2, ny + nh * (0.5 if scene else (0.28 if unboxed else 0.32)) - size / 2, size, size),
                 accent, f"el:{element.id}:node:{node.id}:icon",
             )
-        label = group.shapes.add_textbox(Inches(nx), Inches(ny + nh * (0.62 if unboxed else 0.52)), Inches(nw), Inches(nh * (0.38 if unboxed else 0.44)))
+        if scene and not node.label.strip():
+            continue  # a bare supporting glyph carries no label box
+        label = group.shapes.add_textbox(Inches(nx - nw * 0.25), Inches(ny + nh * (1.0 if scene else (0.62 if unboxed else 0.52))), Inches(nw * 1.5), Inches(nh * (0.5 if scene else (0.38 if unboxed else 0.44))))
         label.name = f"el:{element.id}:node:{node.id}:label"
         tf = label.text_frame
         tf.word_wrap = True
@@ -389,9 +394,15 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
     for edge in graph.edges:
         sx, sy, sw, sh = centers[edge.source]
         tx, ty, tw, th = centers[edge.target]
-        edge_frac = 0.28 if unboxed else 0.5
-        begin = (Inches(sx + sw), Inches(sy + sh * edge_frac))
-        end = (Inches(tx), Inches(ty + th * edge_frac))
+        edge_frac = 0.5 if scene else (0.28 if unboxed else 0.5)
+        if scene:
+            # centre-to-centre: a scene's flow associates glyphs wherever they
+            # sit, unlike a pipeline's strict left-to-right hand-off.
+            begin = (Inches(sx + sw / 2), Inches(sy + sh / 2))
+            end = (Inches(tx + tw / 2), Inches(ty + th / 2))
+        else:
+            begin = (Inches(sx + sw), Inches(sy + sh * edge_frac))
+            end = (Inches(tx), Inches(ty + th * edge_frac))
         route = MSO_CONNECTOR.ELBOW if edge.route == "curve" else MSO_CONNECTOR.STRAIGHT
         connector = group.shapes.add_connector(route, begin[0], begin[1], end[0], end[1])
         connector.line.color.rgb = primary

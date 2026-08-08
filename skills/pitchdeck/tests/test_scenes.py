@@ -1,0 +1,68 @@
+"""Scene-cluster invariants (#1315): a scene must never degenerate into a row."""
+
+import pytest
+
+from pitchdeck.document import Bbox, DiagramNode
+from pitchdeck.scenes import (
+    _COMPOSITIONS,
+    SceneError,
+    assert_not_mechanical,
+    compose_scene,
+    scene_for_module,
+)
+
+
+def test_every_composition_is_in_bounds_and_weighted():
+    for scene_id in _COMPOSITIONS:
+        graph = compose_scene(
+            scene_id,
+            subject_label="Subject",
+            icons=["database", "book", "users", "shield-check"],
+            support_labels=["Alpha", "Beta", "Gamma"],
+        )
+        assert len(graph.nodes) >= 2
+        for node in graph.nodes:
+            assert node.bbox.x + node.bbox.w <= 1.0001, (scene_id, node.id)
+            assert node.bbox.y + node.bbox.h <= 1.0001, (scene_id, node.id)
+        scales = {round(n.scale, 2) for n in graph.nodes}
+        assert len(scales) >= 2, f"{scene_id} has no weight hierarchy"
+        assert sum(1 for n in graph.nodes if n.decoration == "principal") == 1
+
+
+def test_mechanical_row_is_refused():
+    """The exact composition blind judges called out: identical, evenly pitched."""
+    row = [
+        DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
+                    icon="shield-check", label="gate")
+        for i in range(4)
+    ]
+    with pytest.raises(SceneError, match="scale hierarchy"):
+        assert_not_mechanical(row)
+
+
+def test_even_pitch_is_refused_even_when_scales_differ():
+    row = [
+        DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
+                    icon="shield-check", label="gate", scale=1.0 + 0.1 * i)
+        for i in range(4)
+    ]
+    with pytest.raises(SceneError, match="evenly pitched"):
+        assert_not_mechanical(row)
+
+
+def test_supporting_glyphs_carry_no_claim_text():
+    """A bare support glyph must not invent a label — claims live on the subject."""
+    graph = compose_scene("evidence-cluster", subject_label="Evidence", icons=["database"])
+    labelled = [n for n in graph.nodes if n.label.strip()]
+    assert [n.decoration for n in labelled] == ["principal"]
+
+
+def test_unknown_scene_fails_closed():
+    with pytest.raises(SceneError, match="unknown scene"):
+        compose_scene("no-such-scene", subject_label="x", icons=["users"])  # type: ignore[arg-type]
+
+
+def test_module_selection_is_semantic():
+    assert scene_for_module("roadmap") == "gate-run"
+    assert scene_for_module("proof") == "capture-surface"
+    assert scene_for_module("unmapped-module") == "evidence-cluster"
