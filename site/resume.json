@@ -287,7 +287,7 @@
      "title": [
       {
        "t": "text",
-       "v": "Data Scientist | grahama (independent practice) | NYC · Remote"
+       "v": "Data Scientist | grahamaco (independent practice) | NYC · Remote"
       }
      ],
      "period": "Sep 2011 - Sep 2020",
@@ -547,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "62fdc749f",
+ "sourceCommit": "088c9b7d5",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "10de1ab9e2cae9370d33d8b54671492152994373a772cacf7e14923fc5b8348f",
+ "sourceSha256": "117a7581de58377a3120a3d0d354d75ff5ca464fcb74340631015a49b146a29f",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -568,7 +568,7 @@
    "end": "2020",
    "period": "Sep 2011 - Sep 2020",
    "label": "Data Scientist",
-   "org": "grahama (independent practice)"
+   "org": "grahamaco (independent practice)"
   },
   {
    "start": 2020,

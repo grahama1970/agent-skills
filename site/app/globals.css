@@ -3799,7 +3799,7 @@ h1 .proof-origin::after {
   border: 1px solid var(--line);
   display: inline-flex;
   gap: 0.45rem;
-  min-height: 36px; /* comfortable touch target on mobile */
+  min-height: 44px; /* WCAG 2.5.5 / COTS touch-target floor */
   border-radius: 2px;
   color: var(--text);
   display: inline-block;

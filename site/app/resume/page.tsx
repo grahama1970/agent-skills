@@ -42,7 +42,7 @@ type Block =
   | { kind: 'ul'; items: Token[][] }
   | { kind: 'role'; title: Token[]; period: string; blocks: Block[] };
 
-function Inline({ tokens }: { tokens: Token[] }) {
+function Inline({ tokens, ns = 'link' }: { tokens: Token[]; ns?: string }) {
   return (
     <>
       {tokens.map((tok, i) => {
@@ -52,7 +52,14 @@ function Inline({ tokens }: { tokens: Token[] }) {
             <a
               key={i}
               href={tok.href}
-              data-qid={`resume:link:${i}`}
+              // Slug of the label, not the token index: indices restart in every
+              // block, which produced five elements all called resume:link:0
+              // and broke the one-qid-one-element contract the DOM tests rely on.
+              data-qid={`resume:${ns}:${(tok.v || String(i))
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 40)}`}
               data-qs-action="RESUME_OPEN_LINK"
               title={tok.v}
               {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -163,7 +170,7 @@ export default function ResumePage() {
           <h1>{doc.name}</h1>
           {doc.contactLines.map((line, i) => (
             <p key={i} className={i === 0 ? 'cv-contact cv-contact-where' : 'cv-contact'}>
-              <Inline tokens={line} />
+              <Inline tokens={line} ns="contact" />
             </p>
           ))}
           {doc.lede ? <p className="cv-lede">{doc.lede}</p> : null}
