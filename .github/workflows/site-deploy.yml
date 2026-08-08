@@ -3,7 +3,14 @@ name: site-deploy
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/site-deploy.yml']
+    # README / skills / agents feed the generated surfaces, so a change there
+    # must rebuild the site too — otherwise the public counts silently lag HEAD.
+    paths:
+      - 'site/**'
+      - 'README.md'
+      - 'skills/**'
+      - 'agents/**'
+      - '.github/workflows/site-deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,6 +34,16 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: site/package-lock.json
+      # Regenerate every generated surface at THIS commit, then fail closed if
+      # any surface (or README/content counts) disagrees — so the deployed site
+      # always represents one coherent source state, not a mix of epochs.
+      - run: |
+          python3 scripts/gen_inventory.py
+          python3 scripts/gen_catalog.py
+          python3 scripts/gen_research_map.py
+          python3 scripts/gen_graph.py
+          python3 scripts/gen_artifacts.py
+      - run: python3 scripts/gen_build_manifest.py
       - run: python3 scripts/verify-data-qid.py
       - run: python3 scripts/copy_audit.py
       - run: npm ci

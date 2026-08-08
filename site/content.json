@@ -1,25 +1,17 @@
 {
   "stats": {
-    "skills": 330,
-    "sanity": 278,
-    "agents": 72
+    "skills": 342,
+    "sanity": 290,
+    "agents": 92
   },
   "projects": [
     {
-      "slug": "tau",
-      "name": "t'au",
-      "blurb": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "question": "How do you build an agent harness that doesn't trust agents?",
-      "why": "Tau's answer: a contract around every turn — memory-first context before action, bounded subagents, goal-locked handoffs, explicit mocked/live proof boundaries. No receipt, no action."
-    },
-    {
-      "slug": "battle",
-      "name": "battle",
-      "blurb": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
-      "question": "What do you do with exploit code you can't trust? Breed it.",
-      "why": "Red and Blue evolve attacks and defenses in isolated Docker targets; generated code is genetic material, and a deterministic Judge — not plausibility — scores what actually worked."
+      "slug": "persona-dream",
+      "name": "persona-dream",
+      "blurb": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "question": "Can a dream give a persona more than memory can?",
+      "why": "A preregistered study: the dream is an inspectable intermediate whose certified affect drives the live Chatterbox voice — emotion tags, tone — and “No” is a real answer."
     },
     {
       "slug": "surf",
@@ -30,12 +22,20 @@
       "why": "Receipts from inside authenticated Chrome — element refs, sentinels, same-tab screenshots. Orchestration is deliberately someone else's job."
     },
     {
-      "slug": "persona-dream",
-      "name": "persona-dream",
-      "blurb": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
-      "question": "Can a dream give a persona more than memory can?",
-      "why": "A preregistered study: the dream is an inspectable intermediate whose certified affect drives the live Chatterbox voice — emotion tags, tone — and “No” is a real answer."
+      "slug": "battle",
+      "name": "battle",
+      "blurb": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "question": "What do you do with exploit code you can't trust? Breed it.",
+      "why": "Red and Blue evolve attacks and defenses in isolated Docker targets; generated code is genetic material, and a deterministic Judge — not plausibility — scores what actually worked."
+    },
+    {
+      "slug": "tau",
+      "name": "t'au",
+      "blurb": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "why": "Tau's answer: a contract around every turn — memory-first context before action, bounded subagents, goal-locked handoffs, explicit mocked/live proof boundaries. No receipt, no action."
     },
     {
       "slug": "extractor",

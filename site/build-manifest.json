@@ -1,0 +1,20 @@
+{
+  "source_commit": "5866a7d5d",
+  "as_of": "2026-08-07",
+  "stats": {
+    "skills": 342,
+    "sanity": 290,
+    "agents": 92
+  },
+  "inputs": {
+    "../README.md": "bd76654cf75153c880a40af7b99ce2b0e81912b8cc9951b872ed1de13e50e1ba",
+    "content.json": "cc8e4a9e5ec146b757b91896d7389d08ab82bed62f8ab51c576c7685f2937365"
+  },
+  "outputs": {
+    "inventory.json": "1bb4e9db0c40b3442b4fc66d380a38000d4e5ee06bf495239c94a6ca801f5e7e",
+    "artifacts.json": "b3736c370e1cc4b2bbf3dd7e941a334d48e55aa37f90ff05e7ca2ff7903c9d2f",
+    "catalog.json": "10b73903ecb398ba0465a9e6fc95ea2f2eee181b236a3957eb6f0e3c2b619271",
+    "research-map.json": "ae9523e37606d504eac7cfc704fd6a3d87dfd0bbe3896f0a5b6906735344b65f",
+    "graph.json": "eccc2d626562c5431f36bfee6c25be912fc05d97fd3874b3ce72d3404fa65a2f"
+  }
+}

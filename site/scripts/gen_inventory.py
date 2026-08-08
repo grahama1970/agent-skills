@@ -28,7 +28,12 @@ def main() -> None:
             skills.append({"n": d.name, "c": cat, "s": (d / "sanity.sh").exists()})
     if not skills:
         raise SystemExit("inventory generation failed: no skills found")
-    agents = sum(1 for d in (REPO / "agents").iterdir() if d.is_dir())
+    # Exclude hidden dirs (e.g. .ask) so the public count matches visible agents,
+    # the same way skills are counted above.
+    agents = sum(
+        1 for d in (REPO / "agents").iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    )
     commit = subprocess.check_output(
         ["git", "rev-parse", "--short", "HEAD"], cwd=REPO, text=True
     ).strip()

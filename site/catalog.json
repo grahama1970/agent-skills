@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "3eb94881a",
+  "sourceCommit": "5866a7d5d",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 338
+    "skills": 342
   },
   "documents": [
     {
@@ -947,6 +947,16 @@
       "summary": "Best practices for designing and structuring agent skills: SKILL.md frontmatter rules, triggers, progressive disclosure, and when to use scripts vs references.",
       "body": "Skills Best Practices Use this skill when creating or reviewing skills under .pi/skills/ . Runtime self improvement tier Declare in frontmatter when a skill is more than a simple one shot CLI: Tier Verify command Maintainer ticket Agent post run section none No No No basic sanity.sh only No Optional substantial ./run.sh verify + receipt file maintainer ticket Required in agents/<skill /AGENTS.md Full contract: references/runtime self improvement.md Template files: references/templates/runtime self improvement/ Validator enforces substantial via rules RSI001 – RSI004 in scripts/validate skill.py . Rollout: wire substantial skills incrementally; voice segment selector is the reference implementation. ArangoDB Access Policy (NON NEGOTIABLE) /memory is the ONLY skill that accesses ArangoDB directly /ops arango handles admin ops (backups, indexes, migrations) monitor memory has read only exception for health probes (documented) ALL other skills MUST use memory/run.sh subcommands: memory rec",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-skills/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-slide-design",
+      "type": "skill",
+      "name": "best-practices-slide-design",
+      "category": "best-practices",
+      "sanity": false,
+      "summary": "Slide design craft for /pitchdeck: assertion headlines, distance-legible chrome, multi-channel reinforcement, density limits, audience-parameterized arcs, and house theme templates. Use when planning, drafting, critiquing, or restyling a deck; when slides look like \"blue boxes\"; when choosing layouts, fonts, or themes; or when converting a reference PPTX into a house style.",
+      "body": "Slide Design Best Practices Craft rules for turning claim honest deck drafts into persuasive slides. Every rule cites exemplar slides rendered from the human's REAL decks ( references/exemplars.yaml , images in assets/ ). Design is ADVISORY; claims are LAW — nothing here overrides the pitchdeck compiler's gates. The three principles (from the deck author, 2026 08 06) 1. Distance legibility drives chrome. The header band exists so header and body separate at 5–20 ft. If a slide's title zone is not distinguishable at thumbnail scale, it fails. ( cybersummit 04 ) 2. Animation is rhetorical. Builds reveal in the order the argument unfolds; motion with no argumentative role is noise. Duplicated slide runs that fake builds become ContentReveal.STEP fragments. ( cybersummit 42..45 , anti exemplar) 3. Multi channel reinforcement. Headline asserts it, chevrons state it, the diagram shows it, the metaphor badge sets the emotional register — the SAME idea on every channel. Text only slides get a ",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-slide-design/SKILL.md"
     },
     {
       "id": "skill:best-practices-sparta",
@@ -2649,6 +2659,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-pi/SKILL.md"
     },
     {
+      "id": "skill:monitor-projects",
+      "type": "skill",
+      "name": "monitor-projects",
+      "category": "monitor",
+      "sanity": true,
+      "summary": "Nightly cron roundtable review of every skill amended during the day. Discovers amended skills from git history, builds an equal-context packet from /project-state, /ops-workstation, and /brave-search, convenes a five-seat browser roundtable (webgpt, webclaude, webkimi, webgrok, webgemini) through /ask tau-dag, and stores the attributed synthesis in /memory (ArangoDB `project_roundtables` + lessons with Qdrant semantic sync) so the human and project agent can recall and discuss it.",
+      "body": "Monitor Projects Nightly, on a scheduler cron, review the skills amended during the day — not the whole agent skills project (agent skills is a collection of skills; the unit of review is the skill directory) — via a five seat concurrent roundtable, then store the result in /memory for later recall. Pipeline (one nightly run) 1. Discover — git log since over skills/<name / paths in the canonical checkout finds skills amended in the last 24h. No amendments → store a no changes receipt and exit 0. 2. Context — build the shared packet from: /project state report json cached (project readiness evidence), /ops workstation quick health (host context), /brave search web for each amended skill's load bearing topic (capped, external evidence per /best practices roundtable ). 3. Roundtable — one /ask compile+execute, per /best practices roundtable (equal context, concurrent topology, no privileged seat): 4. Synthesize — per seat status (responded / blocked / stale tab / timed out), common ground",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-projects/SKILL.md"
+    },
+    {
       "id": "skill:monitor-security",
       "type": "skill",
       "name": "monitor-security",
@@ -3139,6 +3159,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-state/SKILL.md"
     },
     {
+      "id": "skill:project-taxonomy",
+      "type": "skill",
+      "name": "project-taxonomy",
+      "category": "core",
+      "sanity": true,
+      "summary": "Canonical research-discipline taxonomy for the skills catalog. Owns the closed 18-discipline vocabulary (extraction, memory-knowledge, agentic-orchestration, compliance-security, research-retrieval, model-ops, ml-training, evaluation-quality, observability-operations, browser-automation, content-creation, voice-audio, persona-simulation, ui-design-engineering, developer-tooling, human-collaboration, data-engineering, engineering-standards) and the explicit per-skill mapping. Applies disciplines to SKILL.md frontmatter and README banners, and syncs the catalog into /memory (skill_descriptions) so skills and projects are retrievable by category. Use for \"label skills by discipline\", \"what disciplines exist\", \"which skills are in <discipline>\", \"classify this new skill\", or \"discipline check\".",
+      "body": "Project Taxonomy One controlled, client facing discipline vocabulary for every skill in the catalog. Deliberately separate from the free form taxonomy: folksonomy: disciplines: is a CLOSED set — values outside references/disciplines.yml are a validation error, and a skill on disk without a mapping entry fails the check (fail closed; new skills must be classified before they pass). Commands portfolio keeps the project classification current by construction: it fails when the registry exceeds the 90 day quarterly review cap or when a locally active primary checkout (recent commits, has an origin remote, not a worktree; canonicalized by origin URL so lane clones count once) is missing from portfolio/research taxonomy.json and not covered by portfolio repo overrides in references/disciplines.yml . Retrieval The memory repo's ingest skills reads the disciplines: frontmatter into skill descriptions , whose ArangoSearch view indexes the field ( text en + identity ). No parallel discipline col",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-taxonomy/SKILL.md"
+    },
+    {
       "id": "skill:project-watchdog",
       "type": "skill",
       "name": "project-watchdog",
@@ -3257,6 +3287,16 @@
       "summary": "Open Claude Code remote-control sessions in any registered project from iPad",
       "body": "Remote Control — Open Any Project from iPad From iPad, say \"open sparta\" and get a URL to a full Claude Code session running in that project on your workstation. Each project gets its own session with its own CLAUDE.md, skills, and MCP servers. How It Works The embry projects MCP server (user scoped, auto loaded in every session) manages tmux sessions running claude remote control per project. MCP Tools Session Management (the key ones) open project(name) — Launch remote control in a project, return URL for iPad close project(name) — Stop a project's remote control session active sessions() — List all running sessions with URLs Cross Project Utilities list projects() — All registered projects with branches project status(name) — Git status for a project run in project(name, command) — Run bash in any project read project file(name, path) — Read a file from any project search project(name, pattern) — Ripgrep in a project multi project status() — Overview across projects iPad Workflow 1.",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/remote-control/SKILL.md"
+    },
+    {
+      "id": "skill:resume",
+      "type": "skill",
+      "name": "resume",
+      "category": "core",
+      "sanity": true,
+      "summary": "Maintain a canonical Markdown resume and create claim-bound, evidence-referenced resume variants for a specific opportunity. Use when the user asks to update a resume, validate resume links, tailor a resume, create a resume PDF handoff, or prepare resume artifacts for /monitor-opportunities.",
+      "body": "Resume This skill owns resume artifacts; it does not discover opportunities, send outreach, submit applications, or invent claims. /monitor opportunities composes this skill when it needs a per opportunity resume artifact. Source of truth Human edited baseline: repository RESUME.md . Generated PDF: docs/resume/graham anderson resume.pdf , produced by the repository resume workflow. Per opportunity output: an explicitly named directory supplied to tailor . Claim evidence: an input JSON document containing approved claims and evidence refs. Never edit the generated PDF by hand. Validate the Markdown source first, then use the repository's converter or workflow to regenerate the PDF. Commands validate checks that the source exists, is non empty, contains a top level heading, and contains no unresolved placeholder markers. tailor preserves the source, selects only approved claims with at least one evidence reference, writes a Markdown variant, and emits resume variant.json with hashes and ",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/resume/SKILL.md"
     },
     {
       "id": "skill:review-animations",

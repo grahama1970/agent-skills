@@ -71,6 +71,39 @@ def check_live() -> dict:
     return out
 
 
+def _surface_coherence_drift() -> list[str]:
+    """DRIFT:0 must mean ALL public generated surfaces share one source commit —
+    not just README==content.json (webgpt review, Criterion 2). Checks every
+    generated surface's stamped commit against HEAD and inventory==README counts."""
+    import subprocess
+    site_dir = CONTENT.parent
+    try:
+        head = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=site_dir.parent, text=True
+        ).strip()
+    except Exception as e:  # noqa: BLE001 — report, do not hide
+        return [f"cannot resolve HEAD for coherence check: {e}"]
+    surfaces = {
+        "inventory.json": "commit", "artifacts.json": "commit",
+        "catalog.json": "sourceCommit", "research-map.json": "sourceCommit",
+        "graph.json": "sourceCommit",
+    }
+    out = []
+    for fname, key in surfaces.items():
+        p = site_dir / fname
+        if not p.exists():
+            out.append(f"surface missing: {fname}")
+            continue
+        stamped = json.loads(p.read_text()).get(key)
+        if stamped != head:
+            out.append(f"{fname} stamped {stamped}, HEAD is {head} (stale — refresh)")
+    inv = json.loads((site_dir / "inventory.json").read_text()).get("stats", {})
+    site_stats = json.loads(CONTENT.read_text()).get("stats", {})
+    if site_stats and inv and site_stats != inv:
+        out.append(f"content.json stats {site_stats} != real inventory {inv}")
+    return out
+
+
 def audit(live: bool) -> dict:
     readme = parse_readme()
     site = json.loads(CONTENT.read_text(encoding="utf-8"))
@@ -78,6 +111,7 @@ def audit(live: bool) -> dict:
     for key, val in readme["stats"].items():
         if site["stats"].get(key) != val:
             drift.append(f"stats.{key}: README={val} site={site['stats'].get(key)}")
+    drift.extend(_surface_coherence_drift())
     r_by_slug = {p["slug"]: p for p in readme["projects"]}
     s_by_slug = {p["slug"]: p for p in site["projects"]}
     for slug in r_by_slug.keys() - s_by_slug.keys():
