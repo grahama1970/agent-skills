@@ -293,98 +293,6 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
     });
   }
 
-  const deferProofChrome = liveReplay;
-  const liveTransportChrome = liveTransport.isLiveRoute && (liveTransport.contractModel || liveTransport.model) ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px]">
-      <BattleLiveTransportBanner
-        mode={liveTransport.mode}
-        model={liveTransport.model}
-        contractModel={liveTransport.contractModel}
-        sseClient={liveTransport.sseClient}
-        onReturnToLive={liveTransport.returnToLive}
-        onRecover={liveTransport.recoverFromGap}
-      />
-    </div>
-  ) : null;
-  const humanInterjectionChrome = receiptChrome ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0">
-      <BattleHumanInterjectionPanel
-        fixture={typedReceiptFixture}
-        liveControl={liveReplay ? liveTransport.pauseControl : null}
-        onPauseAfterRound={liveReplay ? liveTransport.submitPauseAfterRound : undefined}
-      />
-    </div>
-  ) : null;
-  const geneticChrome = geneticModel ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px]">
-      <BattleGeneticLifecycleBanner model={geneticModel} fixture={typedReceiptFixture} />
-    </div>
-  ) : null;
-  const lineageChrome = receiptReplay ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
-      {typedReceiptFixture ? <BattleLineageComparisonPanel fixture={typedReceiptFixture} sourceBound /> : null}
-    </div>
-  ) : null;
-  const roundIntroChrome = roundIntro && roundIntroOpen ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px]">
-      <BattleRoundStoryIntro
-        intro={roundIntro}
-        audioPlaying={overturePlaying}
-        onArmAudio={() => {
-          arm();
-          void score.playCue("death_clock_overture").then(() => {
-            setOverturePlaying(true);
-            setSoundCaption(scoreCaptionForCue("death_clock_overture"));
-          });
-        }}
-        onStopAudio={() => {
-          score.stopAll();
-          setOverturePlaying(false);
-          setSoundCaption("Death Clock overture stopped.");
-        }}
-        onSkip={() => {
-          score.stopAll();
-          setOverturePlaying(false);
-          setRoundIntroOpen(false);
-        }}
-        onStartArena={() => {
-          score.stopAll();
-          setOverturePlaying(false);
-          setRoundIntroOpen(false);
-          setPlaying(true);
-          if (!campaignPresentation.mute) {
-            void score.startLoop().then(() => {
-              setSoundCaption(scoreCaptionForCue("live_arena_loop"));
-            });
-          } else {
-            setSoundCaption("Arena entered after Death Clock round intro.");
-          }
-        }}
-      />
-    </div>
-  ) : null;
-  const campaignStoryChrome = campaignStory ? (
-    <div className="mx-auto mb-2 w-full max-w-[1672px]">
-      <BattleCampaignStoryPanel
-        story={campaignStory}
-        activeChapter={activeCampaignChapter}
-        soundCaption={soundCaption}
-        soundEnabled={enabled}
-        reducedMotion={campaignPresentation.reducedMotion}
-        particles={campaignPresentation.particles}
-        onArmSound={() => {
-          arm();
-          setSoundCaption("Sound armed for receipt-backed campaign cues.");
-        }}
-        onSelectChapter={(chapter) => {
-          setPlayheadSeconds(chapter.atSeconds);
-          setPlaying(false);
-          setSoundCaption(chapter.soundCaption);
-        }}
-      />
-    </div>
-  ) : null;
-
   if ((receiptReplay && receiptLoading) || transportLoading) {
     return <div className="grid h-full place-items-center text-slate-300">{liveReplay ? "Loading live transport package…" : "Loading receipt replay fixture…"}</div>;
   }
@@ -412,12 +320,96 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
     <div className={cn("flex h-full min-h-0 flex-col overflow-hidden text-slate-100", mockupShell ? "battle-mockup-app p-4" : "p-3 2xl:p-4")} style={{ boxSizing: "border-box" }}>
       <Toaster theme="dark" richColors position="top-right" />
       {(receiptReplay || liveReplay || mockupShell) ? <BattleProofNav /> : null}
-      {!deferProofChrome ? liveTransportChrome : null}
-      {humanInterjectionChrome}
-      {!deferProofChrome ? geneticChrome : null}
-      {!deferProofChrome ? lineageChrome : null}
-      {!deferProofChrome ? roundIntroChrome : null}
-      {!deferProofChrome ? campaignStoryChrome : null}
+      {liveTransport.isLiveRoute && (liveTransport.contractModel || liveTransport.model) ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleLiveTransportBanner
+            mode={liveTransport.mode}
+            model={liveTransport.model}
+            contractModel={liveTransport.contractModel}
+            sseClient={liveTransport.sseClient}
+            onReturnToLive={liveTransport.returnToLive}
+            onRecover={liveTransport.recoverFromGap}
+          />
+        </div>
+      ) : null}
+      {receiptChrome ? (
+        <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0">
+          <BattleHumanInterjectionPanel
+            fixture={typedReceiptFixture}
+            liveControl={liveReplay ? liveTransport.pauseControl : null}
+            onPauseAfterRound={liveReplay ? liveTransport.submitPauseAfterRound : undefined}
+          />
+        </div>
+      ) : null}
+      {geneticModel ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleGeneticLifecycleBanner model={geneticModel} fixture={typedReceiptFixture} />
+        </div>
+      ) : null}
+      {receiptReplay ? (
+        <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
+          {typedReceiptFixture ? <BattleLineageComparisonPanel fixture={typedReceiptFixture} sourceBound /> : null}
+        </div>
+      ) : null}
+      {roundIntro && roundIntroOpen ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleRoundStoryIntro
+            intro={roundIntro}
+            audioPlaying={overturePlaying}
+            onArmAudio={() => {
+              arm();
+              void score.playCue("death_clock_overture").then(() => {
+                setOverturePlaying(true);
+                setSoundCaption(scoreCaptionForCue("death_clock_overture"));
+              });
+            }}
+            onStopAudio={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setSoundCaption("Death Clock overture stopped.");
+            }}
+            onSkip={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setRoundIntroOpen(false);
+            }}
+            onStartArena={() => {
+              score.stopAll();
+              setOverturePlaying(false);
+              setRoundIntroOpen(false);
+              setPlaying(true);
+              if (!campaignPresentation.mute) {
+                void score.startLoop().then(() => {
+                  setSoundCaption(scoreCaptionForCue("live_arena_loop"));
+                });
+              } else {
+                setSoundCaption("Arena entered after Death Clock round intro.");
+              }
+            }}
+          />
+        </div>
+      ) : null}
+      {campaignStory ? (
+        <div className="mx-auto mb-2 max-w-[1672px]">
+          <BattleCampaignStoryPanel
+            story={campaignStory}
+            activeChapter={activeCampaignChapter}
+            soundCaption={soundCaption}
+            soundEnabled={enabled}
+            reducedMotion={campaignPresentation.reducedMotion}
+            particles={campaignPresentation.particles}
+            onArmSound={() => {
+              arm();
+              setSoundCaption("Sound armed for receipt-backed campaign cues.");
+            }}
+            onSelectChapter={(chapter) => {
+              setPlayheadSeconds(chapter.atSeconds);
+              setPlaying(false);
+              setSoundCaption(chapter.soundCaption);
+            }}
+          />
+        </div>
+      ) : null}
       {!mockupShell ? (
         <div className="mx-auto mb-2 w-full max-w-[1920px] shrink-0">
           <BattleToolbar mode={mode} setMode={setMode} filter={filter} setFilter={setFilter} query={query} setQuery={setQuery} />
@@ -523,14 +515,6 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
           </>
         ) : null}
       </div>
-      {deferProofChrome && (liveTransportChrome || geneticChrome || roundIntroChrome || campaignStoryChrome) ? (
-        <div className="mx-auto mt-3 w-full max-w-[1672px] shrink-0 overflow-y-auto" data-qid="battle:live:supporting-chrome" style={{ maxHeight: "30vh" }}>
-          {liveTransportChrome}
-          {geneticChrome}
-          {roundIntroChrome}
-          {campaignStoryChrome}
-        </div>
-      ) : null}
     </div>
   );
 }

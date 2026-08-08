@@ -2,7 +2,6 @@ import type { BattleLiveTransportContractViewModel } from "./lib/battle-live-tra
 import type { BattleLiveSseClientState } from "./lib/battle-live-sse-client";
 import type { BattleTransportViewModel } from "./lib/battle-transport-types";
 import type { BattleLiveTransportMode } from "./lib/battle-transport-registry";
-import { useRegisterAction } from "./hooks/useRegisterAction";
 
 type Props = {
 	mode: BattleLiveTransportMode;
@@ -27,18 +26,6 @@ export function BattleLiveTransportBanner({
 	onReturnToLive,
 	onRecover,
 }: Props) {
-	useRegisterAction("battle:live:return-to-live", {
-		action: "BATTLE_LIVE_RETURN_TO_CURSOR",
-		label: "Return To Live Cursor",
-		description: "Move the Battle spectator timeline back to the latest live cursor.",
-		tags: ["battle", "live", "transport"],
-	});
-	useRegisterAction("battle:live:recover-snapshot", {
-		action: "BATTLE_LIVE_RECOVER_SNAPSHOT",
-		label: "Reload Live Snapshot",
-		description: "Reload the Battle live transport snapshot after a gap recovery state.",
-		tags: ["battle", "live", "transport"],
-	});
 	if (mode === "contract" && contractModel && isLiveAdapterConnected(sseClient)) {
 		const isWebSocket = sseClient?.transportMode === "websocket";
 		return (
@@ -81,13 +68,13 @@ export function BattleLiveTransportBanner({
 									: "TRANSPORT: UNKNOWN"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
-						stream {model?.status ?? sseClient?.status ?? "connecting"}
+						status {model?.status ?? sseClient?.status ?? "connecting"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:seq">
 						seq {model?.appliedSeq ?? sseClient?.lastSeq ?? 0}/{model?.lastSeq ?? "?"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:sse-client">
-						client {sseClient?.status ?? "idle"}
+						live client {sseClient?.status ?? "idle"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:genetic-count">
 						genetic types {contractModel.geneticEventCount}
@@ -95,10 +82,8 @@ export function BattleLiveTransportBanner({
 					{model && !model.followLive ? (
 						<button
 							type="button"
-							className="min-h-11 rounded border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-amber-100"
+							className="rounded border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-amber-100"
 							data-qid="battle:live:return-to-live"
-							data-qs-action="BATTLE_LIVE_RETURN_TO_CURSOR"
-							title="Return the Battle timeline to the latest live cursor"
 							onClick={onReturnToLive}
 						>
 							Return to live
@@ -111,10 +96,8 @@ export function BattleLiveTransportBanner({
 					{(model?.status === "gap_recovery" || sseClient?.status === "gap_recovery") && onRecover ? (
 						<button
 							type="button"
-							className="min-h-11 rounded border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100"
+							className="rounded border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100"
 							data-qid="battle:live:recover-snapshot"
-							data-qs-action="BATTLE_LIVE_RECOVER_SNAPSHOT"
-							title="Reload the live Battle snapshot after stream gap recovery"
 							onClick={onRecover}
 						>
 							Reload snapshot
@@ -197,13 +180,13 @@ export function BattleLiveTransportBanner({
 						SSE ENDPOINT NOT EXECUTED
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
-						contract {contractModel.status}
+						status {contractModel.status}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:transport">
 						{contractModel.transportKind}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:sse-client">
-						client {sseClient?.status ?? "idle"}
+						sse client {sseClient?.status ?? "idle"}
 					</span>
 					<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500" data-qid="battle:live:genetic-count">
 						genetic types {contractModel.geneticEventCount}
@@ -276,7 +259,7 @@ export function BattleLiveTransportBanner({
 					MOCKED: {model.mocked ? "YES" : "NO"}
 				</span>
 				<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:status">
-					stream {model.status}
+					status {model.status}
 				</span>
 				<span className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400" data-qid="battle:live:seq">
 					seq {model.appliedSeq}/{model.lastSeq}
@@ -290,10 +273,8 @@ export function BattleLiveTransportBanner({
 				{!model.followLive ? (
 					<button
 						type="button"
-						className="min-h-11 rounded border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-amber-100"
+						className="rounded border border-amber-400/40 bg-amber-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-amber-100"
 						data-qid="battle:live:return-to-live"
-						data-qs-action="BATTLE_LIVE_RETURN_TO_CURSOR"
-						title="Return the Battle timeline to the latest live cursor"
 						onClick={onReturnToLive}
 					>
 						Return to live
@@ -306,10 +287,8 @@ export function BattleLiveTransportBanner({
 				{model.status === "gap_recovery" && onRecover ? (
 					<button
 						type="button"
-						className="min-h-11 rounded border border-rose-400/40 bg-rose-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100"
+						className="rounded border border-rose-400/40 bg-rose-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100"
 						data-qid="battle:live:recover-snapshot"
-						data-qs-action="BATTLE_LIVE_RECOVER_SNAPSHOT"
-						title="Reload the live Battle snapshot after stream gap recovery"
 						onClick={onRecover}
 					>
 						Reload snapshot

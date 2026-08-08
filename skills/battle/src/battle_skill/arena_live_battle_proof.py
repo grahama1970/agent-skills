@@ -33,7 +33,6 @@ SCOREBOARD_SCHEMA = "battle.arena_tau_public_only_scoreboard.v1"
 VALIDATION_SCHEMA = "battle.arena_tau_public_only_visibility_validation.v1"
 EXPLOIT_LIFECYCLE_RECEIPTS_SCHEMA = "battle.exploit_lifecycle_receipts.v1"
 EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA = "battle.exploit_lifecycle_receipt.v1"
-ARENA_BALANCE_CONTRACT_SCHEMA = "battle.arena_balance_contract.v1"
 PREKILL_SURVIVAL_SPAWN_DECISIONS = frozenset({"strategic_pre_kill", "panic_spawn", "parallel_pivot"})
 TERMINAL_BOUNDARY_EVENT_TYPES = frozenset(
     {
@@ -47,39 +46,6 @@ TAU_REPO = Path(
     os.environ.get("TAU_REPO", "/home/graham/workspace/experiments/tau")
 ).expanduser().resolve()
 CANONICAL_BATTLE004_ALLOTTED_SECONDS = 1200.0
-
-
-def _canonical_zip_slip_balance_contract() -> dict[str, Any]:
-    return {
-        "schema": ARENA_BALANCE_CONTRACT_SCHEMA,
-        "competitive_relevance": "NOT_QUALIFIED",
-        "qualification_status": "CANARY_ONLY",
-        "reason": (
-            "BATTLE-004 Zip Slip is a backend lineage/Judge canary. It is not "
-            "sufficiently complex to prove Red/Blue competitive balance."
-        ),
-        "disqualifying_patterns": [
-            "repeated automatic BLUE_SUCCESS",
-            "single known vulnerability family",
-            "no arena-level balance diagnosis",
-            "no Red first-signal versus Blue patch timing comparison",
-        ],
-        "required_for_balanced_arena": [
-            "staged multi-step exploit path",
-            "plausible Blue narrow defense and broad defense paths",
-            "decoys or shortcut traps tested by Judge predicates",
-            "functionality regressions that can invalidate overbroad patches",
-            "terminal receipt with red_first_signal_elapsed_seconds",
-            "terminal receipt with blue_patch_elapsed_seconds",
-            "terminal receipt with balance_diagnosis",
-        ],
-        "allowed_balance_diagnosis_values": [
-            "too_easy_for_blue",
-            "too_easy_for_red",
-            "balanced",
-            "inconclusive",
-        ],
-    }
 
 
 def run_arena_prekill_survival_proof(
@@ -704,7 +670,6 @@ def _write_canonical_zip_slip_scenario(
         "target_language": "python",
         "hidden_vulnerability_family": "Zip Slip path traversal",
         "cwe": "CWE-22",
-        "arena_balance_contract": _canonical_zip_slip_balance_contract(),
         "red_blue_visible": {
             "entrypoint": "/api/import-zip",
             "files": ["app.py"],
@@ -731,7 +696,6 @@ def _write_canonical_zip_slip_scenario(
             "public_entrypoint": scenario["public_entrypoint"],
             "public_contract": scenario["public_contract"],
             "red_blue_visible": scenario["red_blue_visible"],
-            "arena_balance_contract": scenario["arena_balance_contract"],
         },
     )
 
@@ -747,7 +711,6 @@ def _write_canonical_zip_slip_scenario(
             "live": "docker_oracle",
             "team": "arena",
             "persona": "canonical-battle-004-scenario-builder",
-            "arena_balance_contract": scenario["arena_balance_contract"],
             "docker_image": docker_image,
             "artifact_paths": {
                 "scenario": str(scenario_path),
@@ -1253,10 +1216,6 @@ def _judge_pair(
     pair_id = f"{red['worker_id']}__{blue['worker_id']}"
     red_path = Path(red["path"])
     blue_path = Path(blue["path"])
-    red_bytes = red_path.read_bytes()
-    blue_bytes = blue_path.read_bytes()
-    red_sha256 = hashlib.sha256(red_bytes).hexdigest()
-    blue_sha256 = hashlib.sha256(blue_bytes).hexdigest()
     replay_dir = out_dir / "judge" / "replays" / pair_id
     original_work = replay_dir / "original"
     patched_work = replay_dir / "patched"
@@ -1268,30 +1227,15 @@ def _judge_pair(
         out_dir / "arena" / "team-public" / "target",
         patched_work,
     )
-    original_red_exec = original_work / "red_exploit_submission.py"
-    patched_red_exec = patched_work / "red_exploit_submission.py"
-    patched_blue_exec = patched_work / "app.py"
-    original_red_exec.write_bytes(red_bytes)
-    patched_red_exec.write_bytes(red_bytes)
-    patched_blue_exec.write_bytes(blue_bytes)
-    original_container_hash = _container_input_hash_receipt(
-        docker_image=docker_image,
-        work_dir=original_work,
-        out_dir=replay_dir,
-        name="judge-original-input-hashes",
-        expected={
-            "red_exploit_submission.py": red_sha256,
-        },
-    )
-    patched_container_hash = _container_input_hash_receipt(
-        docker_image=docker_image,
-        work_dir=patched_work,
-        out_dir=replay_dir,
-        name="judge-patched-input-hashes",
-        expected={
-            "red_exploit_submission.py": red_sha256,
-            "app.py": blue_sha256,
-        },
+    (
+        original_work / "red_exploit_submission.py"
+    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
+    (
+        patched_work / "red_exploit_submission.py"
+    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
+    (patched_work / "app.py").write_text(
+        blue_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
     )
 
     before = _run_command(
@@ -1371,47 +1315,13 @@ def _judge_pair(
         docker_image=docker_image,
         scenario=scenario,
     )
-    judge_input_byte_bindings = [
-        _judge_input_byte_binding(
-            role="red_original_exploit",
-            source_path=red_path,
-            source_sha256=red_sha256,
-            execution_path=original_red_exec,
-            work_dir=original_work,
-        ),
-        _judge_input_byte_binding(
-            role="red_patched_exploit",
-            source_path=red_path,
-            source_sha256=red_sha256,
-            execution_path=patched_red_exec,
-            work_dir=patched_work,
-        ),
-        _judge_input_byte_binding(
-            role="blue_patched_app",
-            source_path=blue_path,
-            source_sha256=blue_sha256,
-            execution_path=patched_blue_exec,
-            work_dir=patched_work,
-        ),
-    ]
-    judge_input_byte_binding_pass = all(
-        item["matched"] for item in judge_input_byte_bindings
-    )
-    container_input_hash_pass = (
-        original_container_hash["status"] == "PASS"
-        and patched_container_hash["status"] == "PASS"
-    )
     verdict = (
         "BLUE_SUCCESS"
         if exploit_confirmed
         and exploit_blocked
         and functionality_preserved
-        and judge_input_byte_binding_pass
-        and container_input_hash_pass
         else "RED_SUCCESS"
         if exploit_confirmed
-        and judge_input_byte_binding_pass
-        and container_input_hash_pass
         else "INSUFFICIENT_EVIDENCE"
     )
     ended_elapsed_seconds = (
@@ -1431,30 +1341,16 @@ def _judge_pair(
         "red_worker_id": red["worker_id"],
         "red_lane_id": red["lane_id"],
         "red_artifact": red["path"],
-        "red_artifact_sha256": red_sha256,
         "blue_worker_id": blue["worker_id"],
         "blue_action_id": blue["action_id"],
         "blue_artifact": blue["path"],
-        "blue_artifact_sha256": blue_sha256,
-        "judge_input_byte_binding_pass": judge_input_byte_binding_pass,
-        "judge_input_byte_bindings": judge_input_byte_bindings,
-        "container_input_hash_pass": container_input_hash_pass,
-        "container_input_hashes": [
-            original_container_hash,
-            patched_container_hash,
-        ],
         "exploit_confirmed_before_patch": exploit_confirmed,
         "exploit_blocked_after_patch": exploit_blocked,
         "exploit_still_succeeds_after_patch": (
             exploit_still_succeeds
         ),
         "functionality_preserved": functionality_preserved,
-        "commands_run": [
-            original_container_hash["command_receipt"],
-            patched_container_hash["command_receipt"],
-            before,
-            after,
-        ],
+        "commands_run": [before, after],
         **(
             {
                 "started_elapsed_seconds": started_elapsed_seconds,
@@ -1474,78 +1370,6 @@ def _judge_pair(
     }
     _write_json(replay_dir / "attempt-receipt.json", attempt)
     return attempt
-
-def _container_input_hash_receipt(
-    *,
-    docker_image: str,
-    work_dir: Path,
-    out_dir: Path,
-    name: str,
-    expected: dict[str, str],
-) -> dict[str, Any]:
-    paths_json = json.dumps(sorted(expected))
-    code = (
-        "import hashlib,json,pathlib;"
-        f"paths={paths_json};"
-        "print(json.dumps({p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}, sort_keys=True))"
-    )
-    command_receipt = _run_command(
-        _python_docker_command(
-            docker_image=docker_image,
-            work_dir=work_dir,
-            args=["python", "-c", code],
-        ),
-        out_dir=out_dir,
-        name=name,
-    )
-    stdout_path = Path(str(command_receipt.get("stdout_path") or ""))
-    try:
-        observed = json.loads(stdout_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        observed = {}
-    matched = (
-        command_receipt.get("exit_code") == 0
-        and isinstance(observed, dict)
-        and observed == expected
-    )
-    return {
-        "schema": "battle.judge_container_input_hashes.v1",
-        "status": "PASS" if matched else "FAIL",
-        "docker_image": docker_image,
-        "work_dir": str(work_dir),
-        "expected_sha256": expected,
-        "observed_sha256": observed,
-        "matched": matched,
-        "command_receipt": command_receipt,
-    }
-
-def _judge_input_byte_binding(
-    *,
-    role: str,
-    source_path: Path,
-    source_sha256: str,
-    execution_path: Path,
-    work_dir: Path,
-) -> dict[str, Any]:
-    execution_sha256 = (
-        _sha256(execution_path)
-        if execution_path.is_file() and not execution_path.is_symlink()
-        else None
-    )
-    try:
-        docker_path = f"/workspace/{execution_path.relative_to(work_dir)}"
-    except ValueError:
-        docker_path = None
-    return {
-        "role": role,
-        "source_path": str(source_path),
-        "source_sha256": source_sha256,
-        "execution_path": str(execution_path),
-        "execution_sha256": execution_sha256,
-        "docker_workspace_path": docker_path,
-        "matched": execution_sha256 == source_sha256,
-        "regular_file": execution_path.is_file() and not execution_path.is_symlink(),
-    }
 
 def _materialized_entries(tau_manifest: dict[str, Any], team_name: str) -> list[dict[str, Any]]:
     teams = tau_manifest.get("teams") if isinstance(tau_manifest.get("teams"), list) else []

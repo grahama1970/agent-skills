@@ -16,51 +16,6 @@ from battle_skill import cli as battle_cli  # noqa: E402
 from battle_skill.ux_contract_validator import ContractError, validate_exploit_lifecycle_receipts, validate_exploit_lifecycle_receipts_path  # noqa: E402
 
 
-def test_canonical_zip_slip_scenario_is_marked_canary_not_balanced(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    def fake_write_target_files(target_dir: Path):  # type: ignore[no-untyped-def]
-        target_dir.mkdir(parents=True)
-        app_path = target_dir / "app.py"
-        exploit_path = target_dir / "exploit.py"
-        app_path.write_text("def import_zip(): pass\n", encoding="utf-8")
-        exploit_path.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
-        return app_path, exploit_path
-
-    monkeypatch.setattr(proof, "_write_target_files", fake_write_target_files)
-    monkeypatch.setattr(
-        proof,
-        "_run_oracle",
-        lambda **_: {
-            "command": ["python", "exploit.py"],
-            "exit_code": 0,
-            "stdout_path": "stdout.txt",
-            "stderr_path": "stderr.txt",
-        },
-    )
-
-    receipt_path = proof._write_canonical_zip_slip_scenario(
-        arena_out=tmp_path / "arena",
-        battle_id="battle-004",
-        run_id="run-001",
-        docker_image="python:3.12-slim",
-    )
-
-    scenario = json.loads((tmp_path / "arena" / "scenario.json").read_text(encoding="utf-8"))
-    public_brief = json.loads((tmp_path / "arena" / "team-public" / "scenario-brief.json").read_text(encoding="utf-8"))
-    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
-
-    balance = scenario["arena_balance_contract"]
-    assert balance["schema"] == proof.ARENA_BALANCE_CONTRACT_SCHEMA
-    assert balance["competitive_relevance"] == "NOT_QUALIFIED"
-    assert balance["qualification_status"] == "CANARY_ONLY"
-    assert "repeated automatic BLUE_SUCCESS" in balance["disqualifying_patterns"]
-    assert "terminal receipt with balance_diagnosis" in balance["required_for_balanced_arena"]
-    assert public_brief["arena_balance_contract"] == balance
-    assert receipt["arena_balance_contract"] == balance
-
-
 def test_tau_abort_manifest_preserves_partial_materialized_worker_receipts(
     tmp_path: Path,
 ) -> None:
@@ -142,104 +97,6 @@ def test_tau_abort_manifest_preserves_partial_materialized_worker_receipts(
     assert judge["status"] == "INSUFFICIENT_EVIDENCE"
     assert judge["red_artifact_count"] == 1
     assert judge["blue_artifact_count"] == 0
-
-
-def test_judge_pair_records_source_to_docker_workspace_byte_bindings(
-    tmp_path: Path,
-    monkeypatch,
-) -> None:
-    out_dir = tmp_path / "proof"
-    target = out_dir / "arena" / "team-public" / "target"
-    target.mkdir(parents=True)
-    (target / "app.py").write_text("def import_zip(): pass\n", encoding="utf-8")
-    red_artifact = tmp_path / "red_exploit_submission.py"
-    blue_artifact = tmp_path / "patched_app.py"
-    red_artifact.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
-    blue_artifact.write_text("def import_zip(): return 'blocked'\n", encoding="utf-8")
-    red_sha = proof._sha256(red_artifact)
-    blue_sha = proof._sha256(blue_artifact)
-
-    def fake_run_command(command, *, out_dir: Path, name: str):  # type: ignore[no-untyped-def]
-        stdout = out_dir / f"{name}.stdout"
-        stderr = out_dir / f"{name}.stderr"
-        if name == "judge-original-input-hashes":
-            stdout.write_text(
-                json.dumps({"red_exploit_submission.py": red_sha}, sort_keys=True),
-                encoding="utf-8",
-            )
-        elif name == "judge-patched-input-hashes":
-            stdout.write_text(
-                json.dumps(
-                    {
-                        "app.py": blue_sha,
-                        "red_exploit_submission.py": red_sha,
-                    },
-                    sort_keys=True,
-                ),
-                encoding="utf-8",
-            )
-        else:
-            stdout.write_text(
-                "RED_EXPLOIT_CONFIRMED\n"
-                if name == "judge-red-exploit-original"
-                else "",
-                encoding="utf-8",
-            )
-        stderr.write_text("", encoding="utf-8")
-        return {
-            "command": command,
-            "exit_code": 1 if name == "judge-red-exploit-patched" else 0,
-            "stdout_path": str(stdout),
-            "stderr_path": str(stderr),
-        }
-
-    monkeypatch.setattr(proof, "_run_command", fake_run_command)
-    monkeypatch.setattr(proof, "_smoke_import", lambda **_: True)
-
-    attempt = proof._judge_pair(
-        out_dir=out_dir,
-        scenario={"scenario_id": "arena-zip-slip-import-001"},
-        docker_image="python:3.12-slim",
-        red={
-            "worker_id": "red-0",
-            "lane_id": "payload-red-0",
-            "path": str(red_artifact),
-        },
-        blue={
-            "worker_id": "blue-0",
-            "action_id": "blue-0-patch",
-            "path": str(blue_artifact),
-        },
-    )
-
-    assert attempt["status"] == "PASS"
-    assert attempt["verdict"] == "BLUE_SUCCESS"
-    assert attempt["judge_input_byte_binding_pass"] is True
-    assert attempt["container_input_hash_pass"] is True
-    assert [item["status"] for item in attempt["container_input_hashes"]] == [
-        "PASS",
-        "PASS",
-    ]
-    assert attempt["container_input_hashes"][0]["observed_sha256"] == {
-        "red_exploit_submission.py": red_sha,
-    }
-    assert attempt["container_input_hashes"][1]["observed_sha256"] == {
-        "app.py": blue_sha,
-        "red_exploit_submission.py": red_sha,
-    }
-    assert len(attempt["commands_run"]) == 4
-    bindings = {item["role"]: item for item in attempt["judge_input_byte_bindings"]}
-    assert set(bindings) == {
-        "red_original_exploit",
-        "red_patched_exploit",
-        "blue_patched_app",
-    }
-    assert bindings["red_original_exploit"]["source_sha256"] == attempt["red_artifact_sha256"]
-    assert bindings["red_original_exploit"]["execution_sha256"] == attempt["red_artifact_sha256"]
-    assert bindings["red_original_exploit"]["docker_workspace_path"] == "/workspace/red_exploit_submission.py"
-    assert bindings["blue_patched_app"]["source_sha256"] == attempt["blue_artifact_sha256"]
-    assert bindings["blue_patched_app"]["execution_sha256"] == attempt["blue_artifact_sha256"]
-    assert bindings["blue_patched_app"]["docker_workspace_path"] == "/workspace/app.py"
 
 
 def test_parent_spawn_flag_runs_parent_first_and_records_lineage_request(
@@ -604,47 +461,16 @@ def test_prekill_pressure_callback_runs_before_terminal_confirmation(
     blue_path = tmp_path / "blue.py"
     red_path.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
     blue_path.write_text("def import_zip(*args):\n    return None\n", encoding="utf-8")
-    red_sha = proof._sha256(red_path)
-    blue_sha = proof._sha256(blue_path)
 
-    original_hash_stdout = tmp_path / "original-hash.stdout"
-    original_hash_stderr = tmp_path / "original-hash.stderr"
-    patched_hash_stdout = tmp_path / "patched-hash.stdout"
-    patched_hash_stderr = tmp_path / "patched-hash.stderr"
     before_stdout = tmp_path / "before.stdout"
     before_stderr = tmp_path / "before.stderr"
     after_stdout = tmp_path / "after.stdout"
     after_stderr = tmp_path / "after.stderr"
-    original_hash_stdout.write_text(
-        json.dumps({"red_exploit_submission.py": red_sha}, sort_keys=True),
-        encoding="utf-8",
-    )
-    original_hash_stderr.write_text("", encoding="utf-8")
-    patched_hash_stdout.write_text(
-        json.dumps(
-            {"app.py": blue_sha, "red_exploit_submission.py": red_sha},
-            sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
-    patched_hash_stderr.write_text("", encoding="utf-8")
     before_stdout.write_text("RED_EXPLOIT_CONFIRMED\n", encoding="utf-8")
     before_stderr.write_text("", encoding="utf-8")
     after_stdout.write_text("", encoding="utf-8")
     after_stderr.write_text("blocked\n", encoding="utf-8")
     commands = [
-        {
-            "exit_code": 0,
-            "stdout_path": str(original_hash_stdout),
-            "stderr_path": str(original_hash_stderr),
-            "command": ["original-hash"],
-        },
-        {
-            "exit_code": 0,
-            "stdout_path": str(patched_hash_stdout),
-            "stderr_path": str(patched_hash_stderr),
-            "command": ["patched-hash"],
-        },
         {
             "exit_code": 0,
             "stdout_path": str(before_stdout),

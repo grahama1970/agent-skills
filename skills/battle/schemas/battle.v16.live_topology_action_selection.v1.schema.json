@@ -11,7 +11,6 @@
     "team": {"enum": ["red", "blue"]},
     "provider_call_sha256": {"$ref": "#/$defs/sha"},
     "provider_artifact_sha256": {"$ref": "#/$defs/sha"},
-    "provider_artifact_type": {"enum": ["red_action_selection", "blue_action_selection"]},
     "strategy_genome_sha256": {"$ref": "#/$defs/sha"},
     "selected_proposal": {"type": "object"},
     "selected_proposal_sha256": {"$ref": "#/$defs/sha"},
@@ -30,7 +29,7 @@
   },
   "required": [
     "schema", "status", "target_id", "team", "provider_call_sha256",
-    "provider_artifact_sha256", "provider_artifact_type", "strategy_genome_sha256", "selected_proposal",
+    "provider_artifact_sha256", "strategy_genome_sha256", "selected_proposal",
     "selected_proposal_sha256", "rejected_proposals", "eligible_proposal_count",
     "selection_policy", "private_judge_read_during_selection", "mocked", "live", "created_at"
   ]

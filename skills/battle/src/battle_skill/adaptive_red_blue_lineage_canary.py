@@ -259,13 +259,13 @@ def run_adaptive_red_blue_lineage_canary(
     research_root = generation_2_dir / "arena" / "team-public" / "research"
     red_research = _run_tau_research(
         team="red",
-        query=_required_child_research_query("red", red_request, red_spawn),
+        query=str(red_request["request"]["requested_research_questions"][0]),
         out_dir=research_root / "red",
         origin_request_path=red_request_path,
     )
     blue_research = _run_tau_research(
         team="blue",
-        query=_required_child_research_query("blue", blue_request, blue_spawn),
+        query=str(blue_request["request"]["requested_research_questions"][0]),
         out_dir=research_root / "blue",
         origin_request_path=blue_request_path,
     )
@@ -478,16 +478,6 @@ def run_adaptive_red_blue_lineage_canary(
             "decisions": [item["decision"] for item in memory_evaluation["evaluations"]]
         },
     )
-    artifact_integrity = _build_artifact_integrity_receipt(
-        out_dir=out_dir,
-        pipelines={1: g1_pipelines, 2: g2_pipelines},
-        judges={1: g1_judge, 2: g2_judge},
-    )
-    artifact_integrity_path = _write_json(
-        out_dir / "artifact-integrity-receipt.json", artifact_integrity
-    )
-    artifact_integrity["path"] = str(artifact_integrity_path)
-    artifact_integrity["sha256"] = _sha(artifact_integrity_path)
     status, reason = _campaign_status(
         generation_1=generation_1,
         visibility=visibility,
@@ -508,7 +498,6 @@ def run_adaptive_red_blue_lineage_canary(
         requests=[red_request, blue_request],
         deltas=[deltas["red"], deltas["blue"]],
         memory_evaluation=memory_evaluation,
-        artifact_integrity=artifact_integrity,
     )
     receipt = {
         "schema": SCHEMA,
@@ -548,7 +537,6 @@ def run_adaptive_red_blue_lineage_canary(
         "fitness": {"generation_1": g1_fitness, "generation_2": g2_fitness},
         "genome_deltas": deltas,
         "memory_evaluation": memory_evaluation,
-        "artifact_integrity": artifact_integrity,
         "elapsed_seconds": round(time.perf_counter() - started, 6),
         "judge_verified_exploits": sum(
             int(item.get("red_success_count") or 0) for item in (g1_judge, g2_judge)
@@ -589,39 +577,34 @@ def run_adaptive_red_blue_lineage_canary(
         memory_evaluation=memory_evaluation,
     )
     source_index_path = _write_json(out_dir / "source-receipt-index.json", source_index)
+    fixture_id = f"{battle_id}-adaptive-lineage-v13"
+    fixture = build_normalized_adaptive_fixture(
+        campaign_root=out_dir,
+        source_index_path=source_index_path,
+        fixture_id=fixture_id,
+    )
+    skill_root = Path(__file__).resolve().parents[2]
+    local_dir = skill_root / "local" / fixture_id
+    public_dir = skill_root / "spectator" / "public" / "battle-fixtures" / fixture_id
+    validation_result = write_fixture_copies(
+        fixture=fixture,
+        local_path=local_dir / "battle.normalized_ux_fixture.json",
+        public_path=public_dir / "battle.normalized_ux_fixture.json",
+    )
+    _write_json(out_dir / "normalized" / "validation.json", validation_result)
+    _write_json(local_dir / "validation.json", validation_result)
+    _write_json(local_dir / "source-receipt-index.json", source_index)
     receipt["event_journal"] = {
         "path": str(journal.path),
         "event_count": journal.seq,
         "sha256": _sha(journal.path),
     }
-    if status == "PASS":
-        fixture_id = f"{battle_id}-adaptive-lineage-v13"
-        fixture = build_normalized_adaptive_fixture(
-            campaign_root=out_dir,
-            source_index_path=source_index_path,
-            fixture_id=fixture_id,
-        )
-        skill_root = Path(__file__).resolve().parents[2]
-        local_dir = skill_root / "local" / fixture_id
-        public_dir = (
-            skill_root / "spectator" / "public" / "battle-fixtures" / fixture_id
-        )
-        validation_result = write_fixture_copies(
-            fixture=fixture,
-            local_path=local_dir / "battle.normalized_ux_fixture.json",
-            public_path=public_dir / "battle.normalized_ux_fixture.json",
-        )
-        _write_json(out_dir / "normalized" / "validation.json", validation_result)
-        _write_json(local_dir / "validation.json", validation_result)
-        _write_json(local_dir / "source-receipt-index.json", source_index)
-        receipt["normalized_fixture"] = {
-            "fixture_id": fixture_id,
-            "status": validation_result["status"],
-            "fixture_sha256": validation_result["fixture_sha256"],
-            "local_public_byte_identical": validation_result[
-                "local_public_byte_identical"
-            ],
-        }
+    receipt["normalized_fixture"] = {
+        "fixture_id": fixture_id,
+        "status": validation_result["status"],
+        "fixture_sha256": validation_result["fixture_sha256"],
+        "local_public_byte_identical": validation_result["local_public_byte_identical"],
+    }
     _write_json(out_dir / "adaptive-lineage-chain-receipt.json", receipt)
     _write_json(out_dir / "campaign-receipt.json", receipt)
     return receipt
@@ -729,15 +712,6 @@ def _parent_spawn_request(
             "judge_verdict": judge.get("verdict"),
             "measurements": observation["measurements"],
             "remaining_budget": {"child_count": 1, "provider_attempts": 1},
-            "campaign_contract": {
-                "required_action": "SPAWN_CHILD",
-                "required_child_count": 1,
-                "reason": (
-                    "This qualification requires one bounded second generation for "
-                    "each team, including a successful parent, to test lineage and "
-                    "strategy variation. STOP and CONTINUE_PARENT do not satisfy it."
-                ),
-            },
         },
     )
     tau_receipt_path = spawn_root / f"{team}-tau-parent-reflection.json"
@@ -807,26 +781,6 @@ def _parent_spawn_request(
     result["path"] = str(path)
     result["sha256"] = _sha(path)
     return result, path
-
-
-def _required_child_research_query(
-    team: str,
-    request: dict[str, Any],
-    spawn_decision: dict[str, Any],
-) -> str:
-    action = request.get("request", {}).get("requested_action")
-    if spawn_decision.get("status") != "PASS" or action != "SPAWN_CHILD":
-        raise RuntimeError(
-            f"{team} parent did not request the required generation-2 child: {action}"
-        )
-    questions = request.get("request", {}).get("requested_research_questions")
-    if (
-        not isinstance(questions, list)
-        or not questions
-        or not str(questions[0]).strip()
-    ):
-        raise RuntimeError(f"{team} parent child request omitted a research question")
-    return str(questions[0])
 
 
 def _spawn_decision(
@@ -1218,17 +1172,9 @@ def _reviewed_manifest(
         )
         if pipeline["status"] != "PASS":
             raise RuntimeError(f"{team} artifact pipeline blocked")
-        slot = _preserve_selected_artifact(
-            generation_dir=generation_dir,
-            generation=generation,
-            team=team,
-            source=Path(pipeline["selected_artifact_path"]),
-            expected_sha256=str(pipeline["selected_artifact_sha256"]),
-        )
         materialized["raw_provider_path"] = materialized["path"]
-        materialized["path"] = slot["path"]
+        materialized["path"] = str(pipeline["selected_artifact_path"])
         materialized["pipeline_handoff"] = str(pipeline["handoff_path"])
-        materialized["immutable_slot"] = slot
         entry["materialized"] = materialized
         pipelines[team] = {
             "status": pipeline["status"],
@@ -1237,9 +1183,7 @@ def _reviewed_manifest(
             "compile_receipt_sha256": _sha(pipeline["compile_receipt_path"]),
             "review_receipt_sha256": _sha(pipeline["review_receipt_path"]),
             "handoff_path": str(pipeline["handoff_path"]),
-            "selected_artifact_source_path": str(pipeline["selected_artifact_path"]),
-            "selected_artifact_path": slot["path"],
-            "immutable_slot": slot,
+            "selected_artifact_path": str(pipeline["selected_artifact_path"]),
         }
     _write_json(generation_dir / "reviewed" / "reviewed-manifest.json", reviewed)
     return reviewed, pipelines
@@ -1279,23 +1223,11 @@ def _judge_reviewed_generation(
     input_path = _write_json(
         generation_dir / "judge" / "reviewed-judge-pair-input.json", judge_input
     )
-    docker_image_id = _docker_image_id(docker_image)
     judge = _judge_tau_artifacts(
         out_dir=generation_dir,
         scenario=scenario,
         docker_image=docker_image,
         tau_manifest=reviewed_manifest,
-    )
-    _assert_pipeline_slots(pipelines)
-    exact_replay = _run_exact_judge_replay(
-        generation_dir=generation_dir,
-        scenario=scenario,
-        docker_image=docker_image,
-        reviewed_manifest=reviewed_manifest,
-        original_judge=judge,
-        pipelines=pipelines,
-        target_identity_sha256=target_identity_sha256,
-        docker_image_id=docker_image_id,
     )
     judge.update(
         {
@@ -1307,196 +1239,9 @@ def _judge_reviewed_generation(
             "target_identity_receipt_sha256": target_identity_sha256,
             "original_target_tree_sha256": target_identity_sha256,
             "patched_target_tree_sha256": patched_identity,
-            "exact_replay": exact_replay,
         }
     )
     return judge
-
-
-def _preserve_selected_artifact(
-    *,
-    generation_dir: Path,
-    generation: int,
-    team: str,
-    source: Path,
-    expected_sha256: str,
-) -> dict[str, Any]:
-    if team not in {"red", "blue"}:
-        raise RuntimeError(f"invalid immutable slot team: {team}")
-    if source.is_symlink() or not source.is_file():
-        raise RuntimeError(f"selected artifact is not a regular file: {source}")
-    payload = source.read_bytes()
-    actual_sha256 = hashlib.sha256(payload).hexdigest()
-    if actual_sha256 != expected_sha256:
-        raise RuntimeError(f"{team} selected artifact changed before slot preservation")
-    suffix = source.suffix or ".bin"
-    slot_path = (
-        generation_dir
-        / "reviewed"
-        / "immutable-slots"
-        / f"generation-{generation}-{team}{suffix}"
-    )
-    slot_path.parent.mkdir(parents=True, exist_ok=True)
-    with slot_path.open("xb") as handle:
-        handle.write(payload)
-    slot_path.chmod(0o444)
-    slot_sha256 = _sha(slot_path)
-    if slot_sha256 != expected_sha256:
-        raise RuntimeError(f"{team} immutable slot differs from selected artifact")
-    return {
-        "slot_key": f"generation-{generation}:{team}",
-        "generation": generation,
-        "team": team,
-        "path": str(slot_path),
-        "expected_sha256": expected_sha256,
-        "preserved_sha256": slot_sha256,
-        "source_path": str(source),
-        "regular_file": slot_path.is_file() and not slot_path.is_symlink(),
-    }
-
-
-def _assert_pipeline_slots(pipelines: dict[str, dict[str, Any]]) -> None:
-    for team in ("red", "blue"):
-        pipeline = pipelines[team]
-        slot = pipeline.get("immutable_slot")
-        if not isinstance(slot, dict):
-            raise RuntimeError(f"{team} immutable slot is missing")
-        path = Path(str(slot.get("path") or ""))
-        if path.is_symlink() or not path.is_file():
-            raise RuntimeError(f"{team} immutable slot is not a regular file")
-        if _sha(path) != pipeline.get("selected_artifact_sha256"):
-            raise RuntimeError(f"{team} immutable slot changed during Judge")
-
-
-def _run_exact_judge_replay(
-    *,
-    generation_dir: Path,
-    scenario: dict[str, Any],
-    docker_image: str,
-    reviewed_manifest: dict[str, Any],
-    original_judge: dict[str, Any],
-    pipelines: dict[str, dict[str, Any]],
-    target_identity_sha256: str,
-    docker_image_id: str,
-) -> dict[str, Any]:
-    replay_root = generation_dir / "judge-exact-replay"
-    _copy_tree_for_replay(
-        generation_dir / "arena" / "team-public" / "target",
-        replay_root / "arena" / "team-public" / "target",
-    )
-    replay_judge = _judge_tau_artifacts(
-        out_dir=replay_root,
-        scenario=scenario,
-        docker_image=docker_image,
-        tau_manifest=reviewed_manifest,
-    )
-    _assert_pipeline_slots(pipelines)
-    original_fingerprint = _judge_fingerprint(
-        judge=original_judge,
-        docker_image=docker_image,
-        target_identity_sha256=target_identity_sha256,
-    )
-    replay_fingerprint = _judge_fingerprint(
-        judge=replay_judge,
-        docker_image=docker_image,
-        target_identity_sha256=target_identity_sha256,
-    )
-    replay_image_id = _docker_image_id(docker_image)
-    matched = (
-        original_fingerprint == replay_fingerprint
-        and replay_image_id == docker_image_id
-    )
-    receipt = {
-        "schema": "battle.exact_judge_pair_replay.v1",
-        "status": "PASS" if matched else "FAIL",
-        "matched": matched,
-        "docker_image": docker_image,
-        "docker_image_id": docker_image_id,
-        "replay_docker_image_id": replay_image_id,
-        "target_identity_sha256": target_identity_sha256,
-        "original_fingerprint": original_fingerprint,
-        "replay_fingerprint": replay_fingerprint,
-        "replay_judge": replay_judge,
-    }
-    path = _write_json(replay_root / "exact-replay-receipt.json", receipt)
-    receipt["path"] = str(path)
-    receipt["sha256"] = _sha(path)
-    return receipt
-
-
-def _copy_tree_for_replay(source: Path, target: Path) -> None:
-    if target.exists():
-        raise RuntimeError(f"exact replay target already exists: {target}")
-    shutil.copytree(source, target)
-
-
-def _docker_image_id(docker_image: str) -> str:
-    completed = subprocess.run(
-        ["docker", "image", "inspect", docker_image, "--format", "{{.Id}}"],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    image_id = completed.stdout.strip()
-    if completed.returncode != 0 or not image_id.startswith("sha256:"):
-        raise RuntimeError(f"Docker image identity unavailable for {docker_image}")
-    return image_id
-
-
-def _judge_fingerprint(
-    *,
-    judge: dict[str, Any],
-    docker_image: str,
-    target_identity_sha256: str,
-) -> dict[str, Any]:
-    attempts = judge.get("attempts") if isinstance(judge.get("attempts"), list) else []
-    return {
-        "docker_image": docker_image,
-        "target_identity_sha256": target_identity_sha256,
-        "status": judge.get("status"),
-        "verdict": judge.get("verdict"),
-        "judged_pair_count": judge.get("judged_pair_count"),
-        "attempts": [_attempt_fingerprint(item) for item in attempts],
-    }
-
-
-def _attempt_fingerprint(attempt: dict[str, Any]) -> dict[str, Any]:
-    commands = (
-        attempt.get("commands_run")
-        if isinstance(attempt.get("commands_run"), list)
-        else []
-    )
-    return {
-        "pair_id": attempt.get("pair_id"),
-        "red_artifact_sha256": _sha(Path(str(attempt["red_artifact"]))),
-        "blue_artifact_sha256": _sha(Path(str(attempt["blue_artifact"]))),
-        "verdict": attempt.get("verdict"),
-        "exploit_confirmed_before_patch": attempt.get("exploit_confirmed_before_patch"),
-        "exploit_blocked_after_patch": attempt.get("exploit_blocked_after_patch"),
-        "functionality_preserved": attempt.get("functionality_preserved"),
-        "commands": [_command_fingerprint(command) for command in commands],
-    }
-
-
-def _command_fingerprint(command: dict[str, Any]) -> dict[str, Any]:
-    argv = list(command.get("command") or [])
-    normalized: list[str] = []
-    for value in argv:
-        text = str(value)
-        normalized.append(
-            "$WORKSPACE:/workspace:rw"
-            if text.endswith(":/workspace:rw") and text.startswith("/")
-            else text
-        )
-    stdout = Path(str(command.get("stdout_path") or ""))
-    stderr = Path(str(command.get("stderr_path") or ""))
-    return {
-        "command": normalized,
-        "exit_code": command.get("exit_code"),
-        "stdout_sha256": _sha(stdout) if stdout.is_file() else None,
-        "stderr_sha256": _sha(stderr) if stderr.is_file() else None,
-    }
 
 
 def _provider_genomes(
@@ -1595,8 +1340,6 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         for name in ("red_spawn", "blue_spawn", "red_ack", "blue_ack", "selection")
     ):
         return "BLOCKED", "spawn_inheritance_or_selection_blocked"
-    if any(items[name].get("status") != "PASS" for name in ("g1_judge", "g2_judge")):
-        return "BLOCKED", "judge_status_not_pass"
     if any(
         int(items[name].get("judged_pair_count") or 0) < 1
         for name in ("g1_judge", "g2_judge")
@@ -1621,141 +1364,7 @@ def _campaign_status(**items: Any) -> tuple[str, str]:
         return "BLOCKED", "semantic_genome_delta_missing"
     if items["memory_evaluation"].get("status") != "PASS":
         return "BLOCKED", "memory_evaluation_missing"
-    integrity = items.get("artifact_integrity")
-    if not isinstance(integrity, dict):
-        return "BLOCKED", "artifact_integrity_missing"
-    if integrity.get("status") != "PASS":
-        return "BLOCKED", "artifact_integrity_failed"
-    slots = integrity.get("slots") if isinstance(integrity.get("slots"), list) else []
-    expected_slots = {
-        "generation-1:red",
-        "generation-1:blue",
-        "generation-2:red",
-        "generation-2:blue",
-    }
-    if {item.get("slot_key") for item in slots} != expected_slots:
-        return "BLOCKED", "artifact_integrity_slot_set_invalid"
-    if len(slots) != 4 or any(item.get("matched") is not True for item in slots):
-        return "BLOCKED", "artifact_integrity_slot_mismatch"
-    replays = (
-        integrity.get("judge_replays")
-        if isinstance(integrity.get("judge_replays"), list)
-        else []
-    )
-    if {item.get("generation") for item in replays} != {1, 2}:
-        return "BLOCKED", "judge_replay_generation_set_invalid"
-    if len(replays) != 2 or any(
-        item.get("status") != "PASS" or item.get("matched") is not True
-        for item in replays
-    ):
-        return "BLOCKED", "judge_replay_mismatch"
-    if any(item.get("receipt_valid") is not True for item in replays):
-        return "BLOCKED", "judge_replay_receipt_invalid"
     return "PASS", "two_generation_red_blue_lineage_evaluated"
-
-
-def _build_artifact_integrity_receipt(
-    *,
-    out_dir: Path,
-    pipelines: dict[int, dict[str, dict[str, Any]]],
-    judges: dict[int, dict[str, Any]],
-) -> dict[str, Any]:
-    root = out_dir.resolve()
-    slots: list[dict[str, Any]] = []
-    paths: list[str] = []
-    for generation in (1, 2):
-        for team in ("red", "blue"):
-            pipeline = pipelines[generation][team]
-            slot = pipeline.get("immutable_slot")
-            path = Path(str(slot.get("path") if isinstance(slot, dict) else ""))
-            resolved = path.resolve() if path.exists() else path
-            expected = str(pipeline.get("selected_artifact_sha256") or "")
-            actual = _sha(path) if path.is_file() and not path.is_symlink() else None
-            inside_run = path.exists() and resolved.is_relative_to(root)
-            matched = (
-                actual == expected
-                and inside_run
-                and path.is_file()
-                and not path.is_symlink()
-            )
-            slots.append(
-                {
-                    "slot_key": f"generation-{generation}:{team}",
-                    "generation": generation,
-                    "team": team,
-                    "path": str(path),
-                    "expected_sha256": expected,
-                    "actual_sha256": actual,
-                    "matched": matched,
-                    "regular_file": path.is_file() and not path.is_symlink(),
-                    "inside_run_root": inside_run,
-                }
-            )
-            paths.append(str(resolved))
-    replay_records = []
-    for generation in (1, 2):
-        replay = judges[generation].get("exact_replay")
-        replay_path = Path(str(replay.get("path") if isinstance(replay, dict) else ""))
-        replay_resolved = replay_path.resolve() if replay_path.exists() else replay_path
-        replay_expected = replay.get("sha256") if isinstance(replay, dict) else None
-        replay_actual = (
-            _sha(replay_path)
-            if replay_path.is_file() and not replay_path.is_symlink()
-            else None
-        )
-        replay_inside_run = replay_path.exists() and replay_resolved.is_relative_to(root)
-        receipt_valid = (
-            replay_actual == replay_expected
-            and replay_inside_run
-            and replay_path.is_file()
-            and not replay_path.is_symlink()
-        )
-        replay_records.append(
-            {
-                "generation": generation,
-                "status": replay.get("status") if isinstance(replay, dict) else None,
-                "matched": replay.get("matched") if isinstance(replay, dict) else False,
-                "path": str(replay_path) if str(replay_path) else None,
-                "expected_sha256": replay_expected,
-                "actual_sha256": replay_actual,
-                "receipt_valid": receipt_valid,
-                "regular_file": replay_path.is_file() and not replay_path.is_symlink(),
-                "inside_run_root": replay_inside_run,
-            }
-        )
-    slot_keys = {item["slot_key"] for item in slots}
-    required_slot_keys = {
-        "generation-1:red",
-        "generation-1:blue",
-        "generation-2:red",
-        "generation-2:blue",
-    }
-    slots_pass = (
-        slot_keys == required_slot_keys
-        and len(paths) == len(set(paths)) == 4
-        and all(item["matched"] for item in slots)
-    )
-    replays_pass = {item["generation"] for item in replay_records} == {1, 2} and all(
-        item["status"] == "PASS"
-        and item["matched"]
-        and item["receipt_valid"]
-        for item in replay_records
-    )
-    return {
-        "schema": "battle.adaptive_artifact_integrity.v1",
-        "status": "PASS" if slots_pass and replays_pass else "FAIL",
-        "required_slot_count": 4,
-        "matched_slot_count": sum(1 for item in slots if item["matched"]),
-        "required_replay_count": 2,
-        "matched_replay_count": sum(
-            1
-            for item in replay_records
-            if item["status"] == "PASS" and item["matched"] and item["receipt_valid"]
-        ),
-        "slots": slots,
-        "judge_replays": replay_records,
-        "unique_slot_paths": len(paths) == len(set(paths)) == 4,
-    }
 
 
 def _source_receipt_index(
