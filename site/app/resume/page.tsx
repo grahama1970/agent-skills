@@ -104,6 +104,7 @@ export default function ResumePage() {
     sourceCommit: string;
     asOf: string;
     jsonLd: unknown;
+    timeline: { start: number; end: string; label: string; org: string }[];
   };
 
   return (
@@ -164,6 +165,34 @@ export default function ResumePage() {
 
 
         {doc.intro.length ? <section className="cv-intro"><Blocks blocks={doc.intro} /></section> : null}
+
+        {/* A real ordered list with a CSS rail rather than an image of text:
+            the labels stay selectable and screen-readable, the dates come from
+            the same roles rendered below, and it reflows to a vertical rail on
+            a phone instead of shrinking to something illegible. */}
+        {doc.timeline.length ? (
+          <section className="cv-timeline" aria-labelledby="cv-timeline-h">
+            <h2 id="cv-timeline-h" className="cv-sr-only">
+              Career timeline
+            </h2>
+            <ol>
+              {doc.timeline.map((t) => (
+                <li key={`${t.start}-${t.label}`}>
+                  <span className="cv-tl-span machine">
+                    {t.start}
+                    <span aria-hidden="true">–</span>
+                    <span className="cv-sr-only"> to </span>
+                    {t.end}
+                  </span>
+                  <span className="cv-tl-node" aria-hidden="true" />
+                  <span className="cv-tl-label">{t.label}</span>
+                  {t.org ? <span className="cv-tl-org">{t.org}</span> : null}
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
 
         {doc.sections.map((s) => (
           <section key={s.title} className="cv-section">

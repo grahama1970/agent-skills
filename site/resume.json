@@ -405,7 +405,7 @@
    ]
   }
  ],
- "sourceCommit": "36e09c1ba",
+ "sourceCommit": "e7831c1d8",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
  "sourceSha256": "6915a6b3a2baf24a55684774b7ef2897f1408216d9b8b124e2e46cbf777caf5d",
@@ -413,6 +413,36 @@
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
  },
+ "timeline": [
+  {
+   "start": 2005,
+   "end": "2016",
+   "period": "Mar 2005 - 2016",
+   "label": "Executive Producer",
+   "org": "Los Angeles, CA"
+  },
+  {
+   "start": 2020,
+   "end": "2023",
+   "period": "Sep 2020 - Dec 2023",
+   "label": "Principal Data Scientist & ACERT Technical Lead",
+   "org": "CS Group (DARPA ARCOS)"
+  },
+  {
+   "start": 2024,
+   "end": "2025",
+   "period": "Jan 2024 - Feb 2025",
+   "label": "Lead Research Scientist (Agentic Formal Methods)",
+   "org": "Self-Employed"
+  },
+  {
+   "start": 2025,
+   "end": "Present",
+   "period": "Feb 2025 - Present",
+   "label": "Founder & Principal AI Engineer",
+   "org": "grahamaco"
+  }
+ ],
  "jsonLd": {
   "@context": "https://schema.org",
   "@graph": [

@@ -160,6 +160,43 @@ def parse(md: str) -> dict:
     return doc
 
 
+YEAR_RE = re.compile(r"\b(\d{4})\b")
+
+
+def build_timeline(doc: dict) -> list[dict]:
+    """Derive a career timeline from the roles already parsed out of RESUME.md.
+
+    The page renders this as an ordered list with a drawn rail rather than an
+    image, so the labels stay selectable, translatable, and screen-readable,
+    and the dates cannot drift from the experience section below it.
+    """
+    entries: list[dict] = []
+    for section in doc["sections"]:
+        for block in section["blocks"]:
+            if block.get("kind") != "role" or not block.get("period"):
+                continue
+            years = YEAR_RE.findall(block["period"])
+            if not years:
+                continue
+            title = "".join(t["v"] for t in block["title"])
+            parts = [p.strip() for p in title.split("|")]
+            entries.append(
+                {
+                    "start": int(years[0]),
+                    "end": "Present" if "Present" in block["period"] else years[-1],
+                    "period": block["period"],
+                    # A rail column is ~170px wide, so it carries the
+                    # first-listed title and org only. Nothing is invented —
+                    # the full title stays in the experience section below.
+                    "label": parts[0].split(" / ")[0].strip(),
+                    "org": parts[1].split(" / ")[0].strip() if len(parts) > 1 else "",
+                }
+            )
+    # RESUME.md lists roles newest-first; a timeline reads oldest-first.
+    entries.sort(key=lambda e: e["start"])
+    return entries
+
+
 def build_jsonld(doc: dict) -> dict:
     """Derive schema.org Person/ProfilePage from the resume itself.
 
@@ -260,6 +297,7 @@ def main() -> int:
     doc["generator"] = "site/scripts/gen_resume.py"
     doc["sourceSha256"] = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
     doc["downloads"] = {"pdf": "/resume.pdf", "markdown": "/resume.md"}
+    doc["timeline"] = build_timeline(doc)
     doc["jsonLd"] = build_jsonld(doc)
 
     public = SITE / "public"
