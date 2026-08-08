@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "f8a508540",
+  "sourceCommit": "9c3e55ee1",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 342
+    "skills": 343
   },
   "documents": [
     {
@@ -871,6 +871,16 @@
       "summary": "Create, audit, and package AI-video-ready reference packs for Kling-style element binding. Use when users ask for Kling contact sheets, Kling-ready assets, element reference packs, character reference sheets, prop sheets, scene sheets, or consistent AI-video references.",
       "body": "Best Practices: Kling Contact Sheets and Reference Packs Use this skill when a user asks for contact sheets, reference sheets, model sheets, character sheets, prop sheets, environment sheets, or “Kling ready” assets for AI video generation. The goal is not to make a beautiful portfolio board. The goal is to make a model readable reference pack that minimizes ambiguity and helps Kling preserve identity, shape, material, outfit, scale, and scene layout across shots. Core rule Treat a contact sheet as a planning document, not the ideal upload artifact. For Kling style workflows, prefer 2–4 separate reference images grouped into one Element over one busy grid image. A human understands that a four panel grid shows four views of one subject; an AI video model may interpret the grid as one scene containing several copies, labels, frames, or layout artifacts. Recommended upload package for one Kling Element: 1. Main front facing / hero reference image. 2. Supplementary angle or alternate view",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-kling-contact-sheet/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-opportunities",
+      "type": "skill",
+      "name": "best-practices-opportunities",
+      "category": "best-practices",
+      "sanity": false,
+      "summary": "Canonical rubric for evaluating, scoring, ranking, and gating career and consulting opportunities for Graham Anderson, so the \"top opportunities\" selection is principled and repeatable rather than bespoke per run. Use when discovering, evaluating, reviewing, ranking, or deciding which opportunities to apply to in monitor-opportunities, or when building or reviewing the opportunity-evaluator / opportunity-evaluation-reviewer subagents or the ranker. The evaluator scores AGAINST this rubric; the reviewer reviews AGAINST it; the ranker orders BY it. No hand-built top-N lists.",
+      "body": "Best Practices: Opportunities The single source of truth for judging opportunities for Graham. It exists so no agent ever bespokes a \"top opportunities\" list from intuition. Three consumers: opportunity evaluator (creator) produces subscores + a verdict AGAINST this rubric. opportunity evaluation reviewer (reviewer) issues VERDICT PASS/FAIL AGAINST this rubric. the ranker orders the shortlist BY this rubric (mandate first, §6). If a rule here conflicts with a hand written list, the rule wins. Update the rubric; do not special case a run. 0. Candidate profile is authoritative Read skills/monitor opportunities/config/candidate profile.json and /memory ( morning opportunities ) for who Graham is. Never infer preferences. Key facts: Principal AI Architect , Buffalo NY, US citizen, authorized to work in US. Dual track: senior full time employment AND consulting clients (§7). Seniority floor: Principal / Staff+ / Architect / Senior. Below is deprioritized. Workplace: remote or hybrid preferr",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-opportunities/SKILL.md"
     },
     {
       "id": "skill:best-practices-plan",
