@@ -85,3 +85,23 @@ ship disabled; enable only when the scheduler environment is ready).
 | live site | https://grahama.co, /sitemap.xml | non-200, or homepage missing a nav `data-qid` |
 | resume surface | `RESUME.md` vs `site/resume.json` | stamped commit != HEAD, or recorded `sourceSha256` != the real RESUME.md digest |
 | live resume | /resume, /resume.pdf, /resume.md | non-200, or the served file is not the expected page/PDF/Markdown |
+
+## Design maintenance — bespoke visual-world contract (#1337)
+
+Design/visual-identity maintenance of grahama.co composes with
+`best-practices-bespoke-design`. The site's visual world is locked in
+`site/design-world.yml` (machine source of truth) + `site/DESIGN_WORLD.md`
+(readable): a narrative premise, three non-color invariants, the full role
+grammar, and the prohibited structural AI-template residue.
+
+A visual redesign may **never** be reported ready from prose confidence. Run:
+
+```bash
+skills/monitor-website/run.sh design-world-check --json
+```
+
+It validates the contract and the deterministically-checkable prohibitions
+(currently: monospace on human-written labels, against the declared
+machine-output boundary) and returns `NOT_TESTED` — never `PASS` — while
+rendered-screenshot and blind-review artifacts are absent (#1343). Treat a
+`FAIL` (e.g. human labels still in monospace) as residue to remove, not noise.

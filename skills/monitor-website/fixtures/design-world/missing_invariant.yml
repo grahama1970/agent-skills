@@ -1,0 +1,8 @@
+schema: grahama.design_world.v1
+premise: A claim becomes permissible only when traced to a bounded judgment.
+invariants:
+  - id: only-one
+    rule: not enough invariants
+role_grammar: {typography: {}}
+exclusions: [x]
+machine_output_selectors: [".machine"]

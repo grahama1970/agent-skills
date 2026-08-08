@@ -1,0 +1,91 @@
+# grahama.co visual-world contract (best-practices-bespoke-design #1337).
+# Human-approved, versioned. The design-world-check validates against this;
+# it does NOT redesign the site. READY requires rendered + blind evidence that
+# this file cannot supply on its own (see gates -> NOT_TESTED).
+schema: grahama.design_world.v1
+version: 1
+approved_by: operator
+premise: >
+  A claim becomes permissible only when it can be traced through evidence to a
+  bounded judgment.
+# At least three NON-COLOR invariants — recognizable without palette or logo.
+invariants:
+  - id: narrative-vs-machine-roles
+    rule: >
+      Human narrative and machine evidence occupy visibly different typographic
+      and spatial roles; machine-emitted values use monospace, human prose never.
+  - id: evidence-margin
+    rule: >
+      A recurring device (evidence margin, proof line, bracket, provenance
+      stamp) connects a claim to its supporting artifact.
+  - id: judgment-and-boundary
+    rule: >
+      Consequential artifacts state both the judgment and the proof boundary or
+      unresolved remainder (visible gaps, never hidden).
+role_grammar:
+  typography:
+    display: Fraunces (variable, per-instance axes)   # headlines / argument
+    reading: system sans                              # human prose
+    utility: system sans small-caps                   # eyebrows, labels
+    data: Fraunces / tabular figures                  # inventory numbers
+    annotation: system sans italic                    # asides, captions
+    machine_output: monospace                         # SHAs, counts, paths ONLY
+  color_roles:
+    anchor: "--ink"          # warm near-black ground
+    field: "--paper"         # warm evidence plates (light-on-dark, scoped)
+    evidence: "--brass"
+    contradiction_failure: "--ember"
+    semantic_state: "--sage"
+  motif:
+    primary: claim-to-evidence connective line
+    supporting: [proof-boundary bracket, provenance stamp]
+  material_language: >
+    Dark-first; warm paper/light plates permitted only where an evidence artifact
+    is shown. No fabricated texture.
+  motion: >
+    Motion explains a real state/relationship/action; one signature grammar is
+    claim->evidence completion/inspection. Operator-sanctioned exceptions are
+    recorded in site/effects.yml (#1342). Everything honours prefers-reduced-motion.
+  responsive: >
+    Layout recomposes (reorders/collapses/crops), never merely shrinks; reading
+    lanes stay calm at every breakpoint.
+  controlled_abundance:
+    rich: [hero, constellation, strip]
+    quiet: [reading prose, ledger data, contact]
+# Structural AI-template residue that is PROHIBITED (deterministically checked
+# where possible; the rest requires rendered/blind review).
+exclusions:
+  - identical-section-chrome-on-every-beat
+  - equal-weight-card-grids-for-unequal-work
+  - one-global-expressive-type-setting-everywhere
+  - monospace-on-human-written-labels          # deterministically checked
+  - systematic-numbering-as-the-only-organizing-idea
+  - ornament-without-declared-semantic-job
+  - simulated-handcraft-or-machine-evidence-made-imperfect
+# Which classes legitimately carry monospace (machine output). The check flags
+# var(--mono) on any selector NOT matched here as a human-label violation.
+# Selectors that legitimately carry monospace because they render PROGRAM OUTPUT
+# (SHAs, counts, data figures, receipt/proof machine tags, provenance, paths).
+# Everything else flagged by design-world-check is a human-label residue to fix
+# (the dashboard tell). This list is the declared machine/human boundary.
+machine_output_selectors:
+  - "code"
+  - "pre"
+  - ".machine"
+  - ".prov"
+  - ".gen-link"
+  - ".count"
+  - ".hash-stamp"
+  - ".cm-caption .machine"
+  - ".fig .n"                    # inventory data figures
+  - ".rm-count"                  # skill counts
+  - ".c-count"                   # constellation node counts
+  - ".proof-lineage__id,\n.proof-lineage__operator,\n.proof-lineage__meta"  # run ids / operators / meta
+  - ".proofx-dot"
+  - ".proofx-tag"
+  - ".proof-legend__chip"
+  - ".legend"
+  - ".panel .tag"
+  - ".ticket"                    # receipt payload
+  - ".ticket h3"
+  - ".github-repo-link"          # repo URLs
