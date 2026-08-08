@@ -1,6 +1,11 @@
 import { Command, Edit3, Layout, Monitor, X } from 'lucide-react'
 import { useEffect } from 'react'
 
+// Direct import, never a barrel file: a barrel pulls every primitive into the
+// bundle even when one is used (best-practices-react).
+import { Button } from './ui/button'
+import { useRegisterAction } from '../hooks'
+
 // Keyboard shortcuts cheat sheet (user spec) — documents the REAL bindings.
 
 const GROUPS = [
@@ -44,6 +49,16 @@ const GROUPS = [
 ]
 
 export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  // Hooks at the TOP of the component body (Rules of Hooks). Registration makes
+  // the action discoverable to agents and analytics; the DOM attribute makes it
+  // clickable with zero latency. Same action id in both, deliberately.
+  useRegisterAction('deck:shortcuts:close', {
+    app: 'pitchdeck',
+    action: 'DECK_SHORTCUTS_CLOSE',
+    label: 'Close shortcuts',
+    description: 'Close the keyboard shortcuts cheat sheet',
+  })
+
   useEffect(() => {
     if (!isOpen) return
     const onKey = (event: KeyboardEvent) => {
@@ -81,16 +96,18 @@ export function ShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
               Keyboard shortcuts
             </h2>
           </span>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             data-qid="deck:shortcuts:close"
             data-qs-action="DECK_SHORTCUTS_CLOSE"
             title="Close (Esc)"
             onClick={onClose}
-            className="cursor-pointer rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="h-7 w-7 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
           >
             <X aria-hidden className="h-4 w-4" />
-          </button>
+          </Button>
         </header>
         <div className="max-h-[70vh] space-y-6 overflow-y-auto p-6">
           {GROUPS.map((group) => (

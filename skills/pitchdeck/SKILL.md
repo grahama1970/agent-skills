@@ -216,6 +216,40 @@ The deck-coupled form, when you want variations for a specific slide:
 Missing `codex`, or a failed generation, reports `NEEDS_ATTENTION` — never a
 fabricated image and never a silent skip.
 
+## shadcn primitives (ui/)
+
+`ui/` is scaffolded as shadcn proper: `components.json`, `src/lib/utils.ts`
+(`cn()` = clsx + tailwind-merge), and primitives under `src/components/ui/`.
+Tailwind v4 is CSS-first, so the design tokens live in `src/index.css` rather
+than a `tailwind.config.js`, and they carry the DECK's measured palette
+(`--primary #076889`, `--ring #1D7694`) so primitives inherit the product look
+instead of shadcn's slate defaults.
+
+The interaction contract is enforced at the type level, not by review. On
+`Button`, `data-qid`, `data-qs-action`, and `title` are REQUIRED props — a button
+that no test manifest can select and no agent can drive fails to compile:
+
+```tsx
+<Button
+  variant="ghost" size="icon"
+  data-qid="deck:shortcuts:close"
+  data-qs-action="DECK_SHORTCUTS_CLOSE"
+  title="Close (Esc)"
+  onClick={onClose}
+>
+```
+
+`useRegisterAction` deliberately stays in the CALLER's component body, at the
+top, never inside the primitive: hooks must run at a component's top level, and
+registering from inside `Button` would fire wherever a Button renders, including
+inside `.map()`. Non-interactive primitives (`Badge`, `Card`) carry no action
+contract — if a badge becomes clickable it must become a `Button`.
+
+Verified: `verify_ui_contracts.py` PASS across 27 files, `tsc --noEmit` clean,
+every changed module served 200 by the live Vite dev server (tsc and Vite resolve
+imports differently, so tsc alone is not proof), and `pnpm build` succeeds.
+Imports are direct (`./ui/button`), never through a barrel file.
+
 ## Three export targets, one source
 
 | Target | Command | Nature |

@@ -1,5 +1,38 @@
 @import 'tailwindcss';
 
+/* shadcn design tokens (Tailwind v4 is CSS-first: no tailwind.config.js).
+   Values are the deck's own house palette so primitives inherit the product
+   look rather than shadcn's slate defaults. */
+:root {
+  --background: #ffffff;
+  --foreground: #292929;
+  --card: #ffffff;
+  --card-foreground: #292929;
+  --primary: #076889;          /* measured house band fill */
+  --primary-foreground: #ffffff;
+  --secondary: #eef3f6;
+  --secondary-foreground: #0c3d50;
+  --accent: #eef3f6;
+  --accent-foreground: #0c3d50;
+  --destructive: #b3261e;
+  --border: #d6dee3;
+  --ring: #1d7694;             /* measured house accent */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0c0908;
+    --foreground: #ece2d3;
+    --card: #151110;
+    --card-foreground: #ece2d3;
+    --secondary: #1d2a30;
+    --secondary-foreground: #ece2d3;
+    --accent: #1d2a30;
+    --accent-foreground: #ece2d3;
+    --border: #2b3940;
+  }
+}
+
+
 :root {
   color-scheme: dark;
 }

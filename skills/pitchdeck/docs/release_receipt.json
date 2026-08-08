@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "9de33fc0ec29ae394bd904fff41c99cd4d59dac8",
- "source_tree_sha256": "73b8e372dfe2c371d82efb2ca16c49b7b01dee51c05248a0455e31be780122d8",
+ "commit": "09258bc12db4ec1f4ce4598ca516e52b511e27dc",
+ "source_tree_sha256": "477386f7eaf99cfb5e20af2c2d1031a5db73f60ce0b96b6f722c4d907c5b7442",
  "commands": [
   "analyze-style",
   "apply-edit",
