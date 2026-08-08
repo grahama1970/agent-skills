@@ -58,6 +58,10 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         raise SystemExit(f"BLOCKED_BAD_CONTRACT: {contract} has no steps")
 
     receipts_dir = run_dir / "dag_receipts"
+    # Both spine steps that own artifacts write into the persona-dream cycle
+    # directory, which they hardcode. The DAG's --run-dir holds only its own
+    # bookkeeping, so the artifact check must look where the files actually go.
+    cycle_dir = ROOT / "reports" / "goal_v3" / "cycles" / cycle_id
     shim = ROOT / "scripts" / "dag_step.py"
 
     goal = {
@@ -89,7 +93,8 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
             "--node-id", node_id,
             "--command", str(step["command"]),
             "--receipt", str(receipts_dir / f"{node_id}.json"),
-            "--run-dir", str(run_dir),
+            "--run-dir", str(cycle_dir),
+            "--artifact-dir", str(cycle_dir),
             "--produces", produces,
             "--proves", str(step.get("proves") or ""),
             "--does-not-prove", str(step.get("does_not_prove") or ""),

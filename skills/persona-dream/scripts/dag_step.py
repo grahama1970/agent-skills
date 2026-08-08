@@ -41,6 +41,10 @@ def main() -> int:
     ap.add_argument("--command", required=True, help="run.sh subcommand for this step")
     ap.add_argument("--receipt", required=True, type=Path)
     ap.add_argument("--run-dir", required=True, type=Path)
+    ap.add_argument("--artifact-dir", type=Path, default=None,
+                    help="where declared artifacts actually land; defaults to "
+                         "--run-dir. The dream cycle writes into its cycle "
+                         "directory, not the DAG's bookkeeping directory.")
     ap.add_argument("--run-dir-arg", default="", help="empty when the step takes none")
     ap.add_argument("--produces", default="", help="comma-separated declared artifacts")
     ap.add_argument("--proves", default="")
@@ -65,23 +69,24 @@ def main() -> int:
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
         exit_code = proc.returncode
-        stderr_tail = proc.stderr[-1200:]
+        stderr_tail = proc.stderr[-8000:]
         if proc.returncode != 0:
-            errors.append(f"{args.command} exited {proc.returncode}: {stderr_tail[-400:]}")
+            errors.append(f"{args.command} exited {proc.returncode}: {stderr_tail[-2500:]}")
     except subprocess.TimeoutExpired:
         errors.append(f"{args.command} exceeded 1800s")
     except FileNotFoundError:
         errors.append(f"run.sh not executable at {RUN_SH}")
 
     # The artifact check. This is the part Tau cannot do for us.
+    artifact_dir = args.artifact_dir or args.run_dir
     artifacts: list[dict[str, Any]] = []
     for name in produces:
-        path = args.run_dir / name
+        path = artifact_dir / name
         if path.is_file():
             artifacts.append({"path": str(path), "sha256": _sha256(path),
                               "bytes": path.stat().st_size})
         else:
-            errors.append(f"declared artifact not produced: {name}")
+            errors.append(f"declared artifact not produced: {artifact_dir / name}")
 
     ok = not errors
     receipt = {
