@@ -172,7 +172,66 @@ def build_media_lock(packet: dict[str, Any], storyboard_path: Path) -> dict[str,
     }
 
 
-def build_reference_pack_audit(packet: dict[str, Any]) -> dict[str, Any]:
+def _split_pack_images(character_id: str) -> list[str]:
+    """Clean 2-4 reference crops for a character, if the element pack was built
+    (reports/assets/element_packs/<id>/*.png). Kling character-reference binding
+    wants 2-4 clean images per character — this is what un-blocks the split gate."""
+    pack_dir = ROOT / "reports" / "assets" / "element_packs" / character_id
+    if not pack_dir.is_dir():
+        return []
+    return sorted(str(p.relative_to(ROOT)) for p in pack_dir.glob(f"{character_id}_*.png"))
+
+
+def _elements_from_bible(character_bible: dict[str, Any], packet: dict[str, Any]) -> dict[str, Any]:
+    """Derive the reference-pack elements from the ACTIVE run's cast + built
+    element packs, instead of the hardcoded surf fixture. This is what lets any
+    dream (Horus/Embry warp-eye, etc.) produce a correct pack, not just the
+    surf test fixture."""
+    refs = packet.get("identity_reference_assets", {})
+    elements: list[dict[str, Any]] = []
+    for char in character_bible.get("characters", []):
+        cid = char.get("character_id") or (char.get("display_name") or "").lower()
+        if not cid:
+            continue
+        name = char.get("display_name") or cid.title()
+        continuity = char.get("visual_continuity", [])
+        pack = _split_pack_images(cid)
+        split_ok = len(pack) >= 2
+        elements.append({
+            "element_id": f"element_{cid}_v1",
+            "token": f"<<<element_{cid}>>>",
+            "type": "character_reference",
+            "source_asset_ids": [f"{cid}_character_sheet"],
+            "reference_pack_status": "SPLIT_INTO_2_TO_4_IMAGES" if split_ok
+            else "DRAFT_CONTACT_SHEET_SOURCE_ONLY",
+            "description": f"{name}: " + "; ".join(continuity) if continuity else name,
+            "do_not_change": [f"do not change {name}'s established identity"]
+            + [f"keep: {c}" for c in continuity[:4]],
+            "allowed_variation": ["subtle expression changes", "natural motion"],
+            "ignore": ["contact sheet grid", "labels", "borders", "reference layout artifacts"],
+            "reference_pack_images": pack,
+            "live_blockers": [] if split_ok
+            else ["BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES"],
+            "source_assets": refs.get(name, refs.get(cid, [])),
+        })
+    all_blockers = sorted({b for e in elements for b in e["live_blockers"]})
+    return {
+        "schema": "persona_dream.kling.reference_pack_audit.v1",
+        "status": "GENERATED" if not all_blockers else "GENERATED_WITH_LIVE_BLOCKERS",
+        "elements": elements,
+        "dry_run_blockers": [],
+        "live_blockers": all_blockers,
+    }
+
+
+def build_reference_pack_audit(
+    packet: dict[str, Any], character_bible: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    # Derive from the active run's cast + built element packs when a character
+    # bible is supplied; otherwise fall back to the surf test fixture (keeps the
+    # existing fixture-based tests byte-stable).
+    if character_bible and character_bible.get("characters"):
+        return _elements_from_bible(character_bible, packet)
     refs = packet.get("identity_reference_assets", {})
     elements = [
         {
@@ -564,6 +623,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--storyboard-packet", required=True, type=Path)
     parser.add_argument("--output-root", required=True, type=Path)
+    parser.add_argument("--character-bible", type=Path, default=None,
+                        help="character_scene_bible.json for the active run; when given, the "
+                             "reference-pack elements are derived from the real cast + built "
+                             "element packs instead of the surf test fixture.")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -573,8 +636,9 @@ def main() -> int:
     if packet.get("accepted") is not True or packet.get("panel_count") != 4:
         raise SystemExit("storyboard packet must be accepted with panel_count=4")
 
+    character_bible = read_json(args.character_bible.resolve()) if args.character_bible else None
     media_lock = build_media_lock(packet, storyboard_path)
-    reference_audit = build_reference_pack_audit(packet)
+    reference_audit = build_reference_pack_audit(packet, character_bible)
     distiller = build_distiller_receipt(packet)
     scene_packet = build_scene_packet(packet, media_lock, reference_audit, output_root)
     token_receipt = token_lint(scene_packet, reference_audit)
