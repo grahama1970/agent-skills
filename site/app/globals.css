@@ -2864,6 +2864,17 @@ a.fig:hover .l::after,
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.capsearch-empty-recover {
+  margin: 0.9rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+}
+.capsearch-empty-or {
+  font-size: 0.8rem;
+  color: var(--faint);
+}
 /* Why a hit matched — the retrieval showing its work. */
 .capsearch-why {
   margin: 0.2rem 0 0;

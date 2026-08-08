@@ -139,6 +139,25 @@ export function CapabilitySearch() {
                 </a>{' '}
                 — that&rsquo;s often the more interesting problem anyway.
               </p>
+              <p className="capsearch-empty-recover">
+                <span className="capsearch-empty-or">or start from one of these:</span>
+                {EXAMPLES.slice(0, 4).map((ex) => (
+                  <button
+                    key={ex}
+                    type="button"
+                    className="capsearch-example"
+                    data-qid={`search:recover:${ex}`}
+                    data-qs-action="SEARCH_RECOVER"
+                    title={`Search for "${ex}"`}
+                    onClick={() => {
+                      setQuery(ex);
+                      inputRef.current?.focus();
+                    }}
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </p>
             </li>
           )}
           {hits.length > 0 && fuzzed && (
