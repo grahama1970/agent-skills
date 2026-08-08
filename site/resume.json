@@ -175,7 +175,7 @@
         [
          {
           "t": "text",
-          "v": "Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every agent handoff must produce a schema-valid receipt, hashed evidence artifact, or validator result — no receipt, no action."
+          "v": "Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every handoff must produce a schema-valid receipt or validator result — no receipt, no action."
          }
         ],
         [
@@ -193,7 +193,7 @@
         [
          {
           "t": "text",
-          "v": "Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records across 7K+ security-control records; hybrid BM25 + vector + multi-hop graph recall over 2.2M source chunks; ~94K Lean 4 theorem statements indexed for requirements-to-proof retrieval."
+          "v": "Built an ArangoDB agent-memory platform (private, regulated): ~219K evidence-grounded QRA records over 7K+ security controls, hybrid BM25 + vector + graph recall across 2.2M chunks, ~94K Lean 4 theorems indexed for requirements-to-proof retrieval."
          }
         ],
         [
@@ -478,13 +478,7 @@
       [
        {
         "t": "text",
-        "v": "Document AI: PDF Extraction, Layout & Table Extraction, Fixture Generation, Extraction Calibration"
-       }
-      ],
-      [
-       {
-        "t": "text",
-        "v": "Interfaces & Visualization: React, TypeScript, D3, Data-Dense & Graph UI, Design Systems, Deterministic UI Interaction Testing"
+        "v": "Document AI & Interfaces: PDF Extraction, Layout & Table Extraction, Extraction Calibration, React, TypeScript, D3, Data-Dense & Graph UI, Design Systems"
        }
       ],
       [
@@ -547,10 +541,10 @@
    ]
   }
  ],
- "sourceCommit": "554d81d4a",
+ "sourceCommit": "dcfd2f448",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "2b92c5b7f81551f6af4a298d4d21f794da25155d4dc5158a055e28fdcca8e46a",
+ "sourceSha256": "ef83826c3aa03b5392559810b9bfe061ab495c8484b5c9db53ed3f501ac44139",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -628,6 +622,6 @@
    }
   ]
  },
- "pdfSha256": "fbbc065923922ae5409a6b8fb88f751d1c6478d96f497c5ff1d51ed1309ee322",
- "pdfBytes": 160166
+ "pdfSha256": "90ea4b40510b0a3b2d0519615cbdc008d7f3c50f14d8c4a559525bb98733290d",
+ "pdfBytes": 159838
 }
