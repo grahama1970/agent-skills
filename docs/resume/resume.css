@@ -77,8 +77,12 @@ li {
   margin: 0 0 1.5pt;
 }
 
+/* !important is load-bearing: PyMuPDF >= 1.28 ships its own anchor rule that
+   paints link text default blue and beats a plain `a { color }`. Verified
+   against 1.26.7 and 1.28.2 — without it, CI silently published blue links
+   while a local build rendered ember. */
 a {
-  color: #a8501f;
+  color: #a8501f !important;
   text-decoration: none;
 }
 
