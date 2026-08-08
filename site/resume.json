@@ -119,7 +119,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS, I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution: the responsible technical/project lead for knowledge-graph and LLM reasoning delivery for automated certification of mission-critical software, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators."
+       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution."
       }
      ]
     },
@@ -154,7 +154,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Presented Agentic Cybersecurity research to Air Force Research Laboratory and received an AFRL \"Hacker\" challenge coin following the presentation."
+       "v": "Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room."
       }
      ]
     },
@@ -271,7 +271,7 @@
         [
          {
           "t": "text",
-          "v": "Presented Agentic Cybersecurity work to Air Force Research Laboratory; received an AFRL \"Hacker\" challenge coin."
+          "v": "Presented agentic cybersecurity research at venues across the country, including to the Air Force Research Laboratory; received an AFRL \"Hacker\" challenge coin. Authored the talks and decks myself."
          }
         ]
        ]
@@ -306,7 +306,7 @@
         [
          {
           "t": "text",
-          "v": "Worked with government and aerospace program stakeholders; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code."
+          "v": "Briefed the program and its collaborators at reviews and conferences nationally; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code, authoring the decks and demos myself."
          }
         ]
        ]
@@ -423,6 +423,17 @@
       ],
       [
        {
+        "t": "link",
+        "v": "grahama.co",
+        "href": "https://grahama.co"
+       },
+       {
+        "t": "text",
+        "v": " — this site, built and designed by me: Next.js static export, self-hosted variable type, a live d3-force capability graph, and generated surfaces that fail the build if any count drifts from the repo."
+       }
+      ],
+      [
+       {
         "t": "text",
         "v": "extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public."
        }
@@ -504,6 +515,18 @@
       [
        {
         "t": "text",
+        "v": "Interfaces & Visualization: React, TypeScript, D3, Data-Dense & Graph UI, Design Systems, Deterministic UI Interaction Testing"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Slide Decks & Demos, Technical Writing, Stakeholder Collaboration"
+       }
+      ],
+      [
+       {
+        "t": "text",
         "v": "ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux"
        }
       ]
@@ -512,10 +535,10 @@
    ]
   }
  ],
- "sourceCommit": "cc7a9ff6b",
+ "sourceCommit": "7adac9892",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "b679309d53d27a4332b4fbc6225594af0b06bbc70b1fc1d25eb05388652500c7",
+ "sourceSha256": "ec9a4f17bf5ad98f461c9d52465a61314cc66999bae3856de30dc019173da76b",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -593,6 +616,6 @@
    }
   ]
  },
- "pdfSha256": "b378635ff7b6676e97d69ae79c1778c88a2db942a5e35c3a51cfc64c559c9440",
- "pdfBytes": 159294
+ "pdfSha256": "91402c9ae4b0dd4102e3d3aef6ddae5de96873dbe14e55a9b61b31fcc4977857",
+ "pdfBytes": 160318
 }
