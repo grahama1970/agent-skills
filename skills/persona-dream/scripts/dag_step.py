@@ -45,6 +45,8 @@ def main() -> int:
     ap.add_argument("--produces", default="", help="comma-separated declared artifacts")
     ap.add_argument("--proves", default="")
     ap.add_argument("--does-not-prove", default="")
+    ap.add_argument("--goal-hash", default="",
+                    help="binds this receipt to the DAG goal; Tau requires it")
     ap.add_argument("--step-arg", action="append", default=[],
                     help="extra argument forwarded to the step; repeatable")
     args = ap.parse_args()
@@ -85,6 +87,7 @@ def main() -> int:
     receipt = {
         "schema": NODE_RECEIPT_SCHEMA,
         "node_id": args.node_id,
+        "goal_hash": args.goal_hash,
         "status": "PASS" if ok else "BLOCKED",
         "verdict": "PASS" if ok else "BLOCKED",
         "artifacts": artifacts,

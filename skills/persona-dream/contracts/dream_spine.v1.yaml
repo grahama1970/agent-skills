@@ -29,20 +29,11 @@ optional_branches:
   video: "steps 6-38 of the legacy ledger; branches off dream_packet"
 
 steps:
-  - id: memory_residue
-    name: Memory Recall And Residue Grounding
-    command: pipeline-phase02-recall
-    # Steps do not share a flag name for the run directory, so each declares
-    # its own. Assuming a common one is how an orchestrator silently
-    # mis-invokes a step and reports the wrong reason for the failure.
-    run_dir_arg: --run-root
-    # Steps do not share an interface either, so each declares its own args.
-    # {persona} / {idea} / {run_dir} are substituted from the single `run.sh
-    # dream` CLI surface -- that is what makes one command sufficient.
-    args: []
-    produces: [memory_residue.json]
-    proves: residue was recalled from memory with source ids and scopes intact
-    does_not_prove: that the residue is relevant or that a dream should follow
+  # NOTE: there is deliberately no separate recall step. `generate` performs the
+  # memory recall itself -- --about biases it -- and the obvious candidate,
+  # pipeline-phase02-recall, turned out to be a REFRESH tool: it fails on a
+  # fresh run looking for an existing pipeline_review_8892/index.html to patch.
+  # A spine step must be able to start from nothing.
 
   - id: dream_packet
     name: Dream Packet
@@ -50,7 +41,7 @@ steps:
     run_dir_arg: null          # uses --output-dir, supplied via args below
     args: ["--persona", "{persona}", "--about", "{idea}", "--output-dir", "{run_dir}"]
     produces: [dream_packet.json]
-    proves: a synthetic dream was composed from that residue
+    proves: memory residue was recalled and a synthetic dream composed from it
     does_not_prove: anything about the day the residue came from
 
   - id: journal_entry

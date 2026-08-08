@@ -60,6 +60,22 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
     receipts_dir = run_dir / "dag_receipts"
     shim = ROOT / "scripts" / "dag_step.py"
 
+    goal = {
+        "goal_id": "persona-dream-spine",
+        "goal_version": 1,
+        "summary": (
+            "Produce a dream from memory residue and journal it. Terminates at "
+            "the spoken journal; the video lane is an optional branch and "
+            "conversation is a downstream consumer, not a step."
+        ),
+        "completion_criteria": [
+            "every spine node returns a schema-valid PASS node receipt",
+            "each node produced the artifacts its step declared in the contract",
+            f"the terminal node {spine.get('terminates_at')!r} produced its artifact",
+        ],
+    }
+    goal_hash = _goal_hash(goal)
+
     nodes: list[dict[str, Any]] = []
     previous: str | None = None
 
@@ -77,6 +93,7 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
             "--produces", produces,
             "--proves", str(step.get("proves") or ""),
             "--does-not-prove", str(step.get("does_not_prove") or ""),
+            "--goal-hash", goal_hash,
         ]
         # Omitted entirely when the step takes no run directory: Tau requires
         # every argv item to be a non-empty string, so an empty flag value is
@@ -102,29 +119,11 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         })
         previous = node_id
 
-    # Tau's spec validator is strict about the goal object: anything beyond the
-    # canonical fields belongs under `extensions`. It says so precisely when it
-    # refuses, which is why the fix is a move rather than a guess.
-    goal = {
-        "goal_id": "persona-dream-spine",
-        "goal_version": 1,
-        "summary": (
-            "Produce a dream from memory residue and journal it. Terminates at "
-            "the spoken journal; the video lane is an optional branch and "
-            "conversation is a downstream consumer, not a step."
-        ),
-        "completion_criteria": [
-            "every spine node returns a schema-valid PASS node receipt",
-            "each node produced the artifacts its step declared in the contract",
-            f"the terminal node {spine.get('terminates_at')!r} produced its artifact",
-        ],
-    }
-
     return {
         "schema": DAG_SPEC_SCHEMA,
         "run_id": run_id,
         "run_dir": str(run_dir / "dag_run"),
-        "goal": {**goal, "goal_hash": _goal_hash(goal)},
+        "goal": {**goal, "goal_hash": goal_hash},
         "nodes": nodes,
         "extensions": {
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
