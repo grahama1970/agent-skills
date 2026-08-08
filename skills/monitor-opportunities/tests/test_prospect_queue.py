@@ -1,0 +1,58 @@
+"""Prospect queue filtering: real signals in, facilities/junk out."""
+
+from __future__ import annotations
+
+from monitor_opportunities.prospect_queue import (
+    build_prospect_queue,
+    commercial_prospects,
+    federal_prospects,
+)
+
+# Real junk the SAM sweep returned on 2026-08-08 + realistic relevant solicitations.
+SAM = {
+    "opportunities": [
+        {"title": "Flooring Abatement and Replacement", "url": "https://sam.gov/workspace/contract/opp/aaa/view"},
+        {"title": "Vehicle Services Building Exterior Painting", "url": "https://sam.gov/workspace/contract/opp/bbb/view"},
+        {"title": "AGRICULTURE, DEPARTMENT OF", "url": "https://sam.gov/organization/100006809"},
+        {"title": "Artificial Intelligence for Document Understanding", "url": "https://sam.gov/workspace/contract/opp/ccc/view"},
+        {"title": "Machine Learning Model Verification Services", "url": "https://sam.gov/workspace/contract/opp/ddd/view"},
+        {"title": "Quarantine Facility HVAC Replacement", "url": "https://sam.gov/workspace/contract/opp/eee/view"},
+    ]
+}
+
+
+def test_federal_drops_junk_and_org_pages() -> None:
+    p = federal_prospects(SAM)
+    titles = [x["organization"] for x in p]
+    assert "Artificial Intelligence for Document Understanding" in titles
+    assert "Machine Learning Model Verification Services" in titles
+    assert not any("Flooring" in t or "Painting" in t or "HVAC" in t for t in titles)  # junk
+    assert not any("AGRICULTURE" in t for t in titles)  # org page (/organization/ url)
+    assert len(p) == 2
+
+
+def test_federal_records_carry_mandate_hits_and_signal() -> None:
+    p = federal_prospects(SAM)
+    ai = next(x for x in p if "Document" in x["organization"])
+    assert ai["signal_type"] == "federal"
+    assert ai["prospect_class"] == "federal_buyer"
+    assert any("document" in h or "artificial intelligence" in h for h in ai["mandate_hits"])
+
+
+def test_commercial_prospects_from_lane_c() -> None:
+    shortlist = [
+        {"lane": "C", "title": "Technology modernization signal", "organization": "University at Buffalo UBIT",
+         "primary_evidence_url": "https://www.buffalo.edu/ubit.html", "posting_text": "data security software"},
+        {"lane": "A", "title": "Staff AI Engineer", "organization": "Drata"},  # not a prospect
+    ]
+    p = commercial_prospects(shortlist)
+    assert len(p) == 1
+    assert p[0]["signal_type"] == "commercial"
+    assert "Buffalo" in p[0]["organization"]
+
+
+def test_build_queue_combines_both() -> None:
+    shortlist = [{"lane": "C", "title": "x", "organization": "Acme"}]
+    q = build_prospect_queue(SAM, shortlist)
+    assert len([x for x in q if x["signal_type"] == "federal"]) == 2
+    assert len([x for x in q if x["signal_type"] == "commercial"]) == 1

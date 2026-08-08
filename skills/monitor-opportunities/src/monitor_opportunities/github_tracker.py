@@ -14,6 +14,7 @@ Failure modes: gh not authenticated / repo missing -> GithubTrackerError.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from typing import Any
@@ -115,8 +116,55 @@ def file_or_update_opportunity(
     return {"action": "updated", "number": existing, "opp_id": opp_id}
 
 
+def _prospect_id(prospect: dict[str, Any]) -> str:
+    raw = f"{prospect.get('organization', '')}|{prospect.get('signal_type', '')}"
+    return "prospect:" + hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def _prospect_body(prospect: dict[str, Any], pid: str) -> str:
+    lines = [
+        f"**Organization:** {prospect.get('organization', 'UNKNOWN')}",
+        f"**Signal type:** {prospect.get('signal_type', '?')}  |  **Class:** {prospect.get('prospect_class', '?')}",
+        f"**Mandate hits:** {', '.join(prospect.get('mandate_hits', [])) or 'none'}",
+        f"**Evidence:** {prospect.get('evidence_url') or ''}",
+        f"**Source:** {prospect.get('source', '?')}",
+        "",
+        "_Consulting prospect. Graham transmits every outreach; nothing is auto-sent._",
+        "",
+        f"<!-- {_MARKER}: {pid} -->",
+    ]
+    return "\n".join(lines)
+
+
+def file_or_update_prospect(
+    prospect: dict[str, Any],
+    repo: str = TRACKER_REPO_DEFAULT,
+    state_label: str = "prospect:new",
+    comment: str | None = None,
+) -> dict[str, Any]:
+    """File/update a consulting prospect in the queue (track:consulting)."""
+    pid = _prospect_id(prospect)
+    labels = ["track:consulting", f"signal:{prospect.get('signal_type', 'commercial')}", "verdict:client-signal", state_label]
+    existing = _find_issue(repo, pid)
+    if existing is None:
+        label_args: list[str] = []
+        for lbl in labels:
+            label_args += ["--label", lbl]
+        url = _gh(
+            "issue", "create", "-R", repo,
+            "--title", str(prospect.get("title") or prospect.get("organization") or "Prospect")[:120],
+            "--body", _prospect_body(prospect, pid),
+            *label_args,
+        )
+        return {"action": "created", "number": _number_from_url(url.splitlines()[-1]), "prospect_id": pid}
+    if comment:
+        _gh("issue", "comment", str(existing), "-R", repo, "--body", comment)
+    _apply_labels_exclusive(repo, existing, state_label, "verdict:client-signal", "track:consulting")
+    return {"action": "updated", "number": existing, "prospect_id": pid}
+
+
 # Label families where an issue must carry at most one value at a time.
-_EXCLUSIVE_PREFIXES = ("state:", "verdict:", "track:", "outcome:")
+_EXCLUSIVE_PREFIXES = ("state:", "verdict:", "track:", "outcome:", "prospect:", "signal:")
 
 
 def _apply_labels_exclusive(repo: str, number: int, *new_labels: str | None) -> None:
