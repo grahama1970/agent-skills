@@ -1,20 +1,20 @@
 {
-  "source_commit": "5866a7d5d",
+  "source_commit": "93fff678f",
   "as_of": "2026-08-07",
   "stats": {
     "skills": 342,
-    "sanity": 290,
+    "sanity": 289,
     "agents": 92
   },
   "inputs": {
-    "../README.md": "bd76654cf75153c880a40af7b99ce2b0e81912b8cc9951b872ed1de13e50e1ba",
-    "content.json": "cc8e4a9e5ec146b757b91896d7389d08ab82bed62f8ab51c576c7685f2937365"
+    "../README.md": "e327e606a10c57e16314f9cfbca469998ea86e28413a5fb1a9b1037c36e5930a",
+    "content.json": "c68a6ec25bec0f37dd52eacaf6bbbfca1a654d63573be464ce5d2aad88798638"
   },
   "outputs": {
-    "inventory.json": "1bb4e9db0c40b3442b4fc66d380a38000d4e5ee06bf495239c94a6ca801f5e7e",
-    "artifacts.json": "b3736c370e1cc4b2bbf3dd7e941a334d48e55aa37f90ff05e7ca2ff7903c9d2f",
-    "catalog.json": "10b73903ecb398ba0465a9e6fc95ea2f2eee181b236a3957eb6f0e3c2b619271",
-    "research-map.json": "ae9523e37606d504eac7cfc704fd6a3d87dfd0bbe3896f0a5b6906735344b65f",
-    "graph.json": "eccc2d626562c5431f36bfee6c25be912fc05d97fd3874b3ce72d3404fa65a2f"
+    "inventory.json": "cf4b402b34a990d42d04702034f75decf7713492a834210213569bad8e1eaaaf",
+    "artifacts.json": "7baee6df167c69eee26944f30a2d8f6b7ebdd2b86682ab5d18a8a016605b27b4",
+    "catalog.json": "628b88a6e3c5fdc81301b274be6653745b65b868260836470e79fe4f15c3a2f1",
+    "research-map.json": "1bb75009a1c921ee875338202611737b7c1447153d73ffbc9df8ede2d6a3ce36",
+    "graph.json": "fbd9e6ac287ed2f22f78d35973aa388498ccf48c75d22a3aaafba46e240b4f42"
   }
 }

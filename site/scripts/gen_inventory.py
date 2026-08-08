@@ -20,20 +20,40 @@ PREFIXES = (
 )
 
 
+def _tracked_at_head() -> set[str]:
+    """Files tracked at HEAD — so counts reflect the committed state, not a dirty
+    working tree. This makes the generator deterministic: a local run and the CI
+    run at the same commit produce identical counts (uncommitted/untracked files
+    never inflate or deflate the numbers)."""
+    out = subprocess.check_output(
+        ["git", "ls-tree", "-r", "--name-only", "HEAD", "--", "skills", "agents"],
+        cwd=REPO, text=True,
+    )
+    return set(out.splitlines())
+
+
 def main() -> None:
+    tracked = _tracked_at_head()
+    # top-level skills with a tracked SKILL.md; sanity = those with a tracked sanity.sh
+    skill_names = sorted({
+        f.split("/")[1] for f in tracked
+        if f.startswith("skills/") and f.count("/") == 2 and f.endswith("/SKILL.md")
+    })
+    has_sanity = {
+        f.split("/")[1] for f in tracked
+        if f.startswith("skills/") and f.count("/") == 2 and f.endswith("/sanity.sh")
+    }
     skills = []
-    for d in sorted((REPO / "skills").iterdir()):
-        if d.is_dir() and (d / "SKILL.md").exists():
-            cat = next((p.rstrip("-") for p in PREFIXES if d.name.startswith(p)), "core")
-            skills.append({"n": d.name, "c": cat, "s": (d / "sanity.sh").exists()})
+    for name in skill_names:
+        cat = next((p.rstrip("-") for p in PREFIXES if name.startswith(p)), "core")
+        skills.append({"n": name, "c": cat, "s": name in has_sanity})
     if not skills:
         raise SystemExit("inventory generation failed: no skills found")
-    # Exclude hidden dirs (e.g. .ask) so the public count matches visible agents,
-    # the same way skills are counted above.
-    agents = sum(
-        1 for d in (REPO / "agents").iterdir()
-        if d.is_dir() and not d.name.startswith(".")
-    )
+    # top-level, non-hidden agent directories tracked at HEAD.
+    agents = len({
+        f.split("/")[1] for f in tracked
+        if f.startswith("agents/") and f.count("/") >= 2 and not f.split("/")[1].startswith(".")
+    })
     commit = subprocess.check_output(
         ["git", "rev-parse", "--short", "HEAD"], cwd=REPO, text=True
     ).strip()

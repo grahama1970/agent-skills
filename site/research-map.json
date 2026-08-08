@@ -23,14 +23,14 @@
       ],
       "systems": [
         {
-          "slug": "tau",
-          "name": "t'au",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
-        },
-        {
           "slug": "surf",
           "name": "surf",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md"
+        },
+        {
+          "slug": "tau",
+          "name": "t'au",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
         },
         {
           "slug": "scillm",
@@ -229,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "5866a7d5d"
+  "sourceCommit": "93fff678f"
 }

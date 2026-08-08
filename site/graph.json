@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "5866a7d5d",
+  "sourceCommit": "93fff678f",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -19,19 +19,7 @@
       "title": "Agentic pipelines & orchestration",
       "lens": "technical",
       "skillCount": 49,
-      "img": "tau"
-    },
-    {
-      "id": "project:tau",
-      "type": "project",
-      "label": "t'au",
-      "slug": "tau",
-      "lens": "technical",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "question": "How do you build an agent harness that doesn't trust agents?",
-      "visibility": "public",
-      "evidenceAccess": "source",
-      "img": "tau"
+      "img": "surf"
     },
     {
       "id": "project:surf",
@@ -44,6 +32,18 @@
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "surf"
+    },
+    {
+      "id": "project:tau",
+      "type": "project",
+      "label": "t'au",
+      "slug": "tau",
+      "lens": "technical",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "img": "tau"
     },
     {
       "id": "project:scillm",
@@ -210,12 +210,12 @@
     },
     {
       "source": "area:pipelines",
-      "target": "project:tau",
+      "target": "project:surf",
       "rel": "system"
     },
     {
       "source": "area:pipelines",
-      "target": "project:surf",
+      "target": "project:tau",
       "rel": "system"
     },
     {

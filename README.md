@@ -176,7 +176,7 @@ Latest sweep: `msh-20260628-084135`
 |---|---:|
 | Skills | 342 |
 | With `run.sh` | 292 |
-| With `sanity.sh` | 290 |
+| With `sanity.sh` | 289 |
 | Agent directories | 92 |
 | With `AGENTS.md` | 86 |
 | With `persona.yaml` | 51 |

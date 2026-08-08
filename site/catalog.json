@@ -1,6 +1,6 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "5866a7d5d",
+  "sourceCommit": "93fff678f",
   "counts": {
     "areas": 8,
     "projects": 10,
@@ -175,59 +175,30 @@
       "skillCount": 26
     },
     {
-      "id": "project:tau",
+      "id": "project:persona-dream",
       "type": "project",
-      "slug": "tau",
-      "name": "t'au",
-      "area": "Agentic pipelines & orchestration",
-      "areaId": "pipelines",
-      "lens": "technical",
+      "slug": "persona-dream",
+      "name": "persona-dream",
+      "area": "Agentic memory & persona",
+      "areaId": "memory",
+      "lens": "hybrid",
       "aliases": [
-        "agent orchestration",
-        "agent harness",
-        "tool use",
-        "browser agents",
-        "dag",
-        "workflow",
-        "orchestration"
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent"
       ],
       "disciplines": [
-        "agentic-orchestration",
-        "browser-automation",
-        "developer-tooling",
-        "model-ops"
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
       ],
-      "question": "How do you build an agent harness that doesn't trust agents?",
-      "summary": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
-      "body": "Operate and verify the local T'au project at ${HOME}/workspace/experiments/tau. Use for Tau loop, harness, watchdog cron, GitHub issue orchestration, TUI, Memory-first chat, and E2E proof/status tasks. This skill is a light wrapper around the Tau repo and must report mocked/live proof boundaries explicitly. Tau Use this skill as the operator entrypoint for the local T'au project: Do not duplicate Tau implementation in this skill. Use the scripts here to locate the repo, run known proof commands, inspect receipts, and summarize gaps. Current Operating Priority Read the Tau repo's GOAL.md before claiming product status. The active product target is not just Pi TUI parity and not just a pile of receipts. Tau must let a human choose and run five canonical real DAG workflows, preserve the human owned goal through every node and attempt, and show truthful dynamic progress, accepted evidence, blockers, required human decisions, resume, and completion in one shared React Flow viewer. Pi TUI parity work is a usability slice for replacing Codex/Claude Code as a daily harness. Port useful Pi terminal capabilities without overwriting Tau specific control plane behavior: Memory first routing, SciLLM as the internal provider boundary, tau.dag contract.v1 , typed receipts, fail closed evidence gates, Herdr/monitor surfaces, $ask DAG compilation, and human owned goal boundaries. When a human asks for model or reviewer collaboration through $ask , the preferred path is: $ask should interview the human when the DAG is incomplete, emit the final DAG before execution, and let Tau dispatch handler nodes. Browser handlers route through Surf/browser oracle command specs. API/model handlers route through Tau owned SciLLM adapters, not direct project agent SciLLM calls. Provider Boundary: SciLLM Is Internal Tau owns provider/model orchestration. Project agents must not call $scillm , /scillm , http://localhost:4001 , /v1/chat/completions , or /v1/scillm/ directly unless the human explicitly asks to operate SciLLM or the task is Tau/SciLLM maintenance. When a workflow needs provider/model work, express it as a tau.dag contract.v1 node, Tau skill node, or local command spec that Tau executes and receipts. The Tau adapter may call SciLLM internally; the project agent consumes Tau receipts, node outputs, and proof artifacts, not raw SciLLM responses. If another skill's SKILL.md recommends direct SciLLM chat, exec, OpenCode, batch, or standing agent calls from a project agent workflow, treat that as a contract bug and amend that skill to route through Tau. Commands Currently implemented in this skill wrapper: doctor checks whether this operator wrapper can resolve and invoke the local Tau c",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
-      "visibility": "public",
-      "evidenceAccess": "source"
-    },
-    {
-      "id": "project:battle",
-      "type": "project",
-      "slug": "battle",
-      "name": "battle",
-      "area": "Adaptive-lineage hacking",
-      "areaId": "adaptive-lineage",
-      "lens": "technical",
-      "aliases": [
-        "red team",
-        "adversarial",
-        "exploit",
-        "security testing",
-        "fuzzing",
-        "evolution",
-        "arena"
-      ],
-      "disciplines": [
-        "compliance-security"
-      ],
-      "question": "What do you do with exploit code you can't trust? Breed it.",
-      "summary": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
-      "body": "Red vs Blue team security competition orchestrator. Runs long-running overnight battles with 1000s of interactions, scoring, and insight generation. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Architecture Production Battle is an orchestration skill, not a large bespoke security engine. The host side process should schedule rounds, choose personas, dispatch subagents, provision Docker runtimes, collect receipts, score hard runtime signals, write reports, and persist learning. Target code and team generated code must execute only inside Docker. Required production invariants: Red and Blue are subagent teams. Each dispatched subagent must include an explicit persona selected by the orchestrator for that turn. Multiple personas per team may run concurrently when the turn benefits from breadth. Battle execution requires a security.target authorization.v1 manifest before Docker, QEMU, target runtime setup, Hack delegation, proof replay, or patch replay starts. The manifest binds project/operator scope and target identity; it is not a legal opinion and does not prove exploit success or patch effectiveness. Red team $hack execution is a subagent responsibility, not a Battle Python import. Battle performs or schedules scan/research/memory recall, builds the candidate exploit list, chooses the Red persona, dispatches an agent skills/agents /Tau subagent with that contract, and records the returned exploit receipt. Subagent handoffs and receipts should follow the compact Tau style JSON contract shape used by tau.agent handoff.v1 and tau.subagent receipt.v1 , with Battle specific fields layered on top rather than a separate ad hoc protocol. Battle calls modular Tau subagent contracts. Tau and the loop/agentic harness own subagent execution and use scillm as the LLM/model caller. Battle owns team selection, persona assignment, Docker runtimes, scorekeeping, artifacts, and memory promotion. SciLLM is a Tau owned provider sidecar. Battle operators and project agents must not call $scillm , /scillm , http://localhost:4001 , /v1/chat/completions , or /v1/scillm/ directly for Battle proof work. Express provider work as Tau DAGs, Tau command loop nodes, or Tau skill nodes, then consume Tau receipts and node outputs. Model choice is strategic but routed through Tau/loop: SOTA model",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "question": "Can a dream give a persona more than memory can?",
+      "summary": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
+      "body": "Create receipt-backed persona dream packets from memory residue. Use when a persona should dream, reflect, or turn recent memories into persona insight; when create-movie/dream.py feels too heavy for the goal; when the desired output is a prompt, frame prompts, contact sheet, reflection, and memory write receipt rather than a full movie; or when a downstream movie workflow needs a dream_packet.json input. Persona Dream This skill has two lanes. The generic packet lane turns any persona's memory residue into a dream packet, reflection, contact sheet, and memory write receipt. The Embry continuity lane additionally binds a dream into persistent persona state: bounded arc delta, continuity ledger, session mood, voice delivery, and a recognition receipt. The continuity lane is under active development and is not complete; see CURRENT STATUS.json for what is proven. Current operating hierarchy: A null or negative outcome is a valid result. Continuity holding while dreaming adds nothing is a coherent finding, and an agent that reads continuity as the objective will mistake a safety property for a research conclusion. For Embry, the top level success criterion is not a benchmark score or a single Kling return. The goal is that explicitly synthetic dreams produce bounded, provenance linked changes in self narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and the synthetic versus literal boundary. PCTOM R remains load bearing research evidence under that goal; Chatterbox and video receipts are supporting integration evidence unless a run explicitly proves the continuity chain they serve. Generate a narrow persona dream work product: For video work, this skill may also produce a deterministic video plan : For Kling/video oriented runs, insert a Look Lock step before storyboard prompt composition. If the scene has dialogue or character conflict, the same selector must also emit Script DNA before storyboard prompt composition: For experimental persona dream Kling packets, default provider planning to the lowest acceptable review tier such as 720p/std. Higher modes such as 1080p/pro or any 4K path require an explicit cost/entitlement gate and current provider schema proof before live execution. This skill is not a full movie director. It owns the dream specific story, storyboard, prompt packet, continuity contract, and short dream sequence receipts. Full screenplay production, audio, score, narration, and polished movie review still route to create movie . Minimal FFmpeg stitching is allowed only for the bounded short dream sequence assembly mode after model clip receipts exist. For voiced dream videos, this skill may plan the audio handoff but does not own the audio lane: Boundary Own: Maintain continuity artifac",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
       "visibility": "public",
       "evidenceAccess": "source"
     },
@@ -262,30 +233,59 @@
       "evidenceAccess": "source"
     },
     {
-      "id": "project:persona-dream",
+      "id": "project:battle",
       "type": "project",
-      "slug": "persona-dream",
-      "name": "persona-dream",
-      "area": "Agentic memory & persona",
-      "areaId": "memory",
-      "lens": "hybrid",
+      "slug": "battle",
+      "name": "battle",
+      "area": "Adaptive-lineage hacking",
+      "areaId": "adaptive-lineage",
+      "lens": "technical",
       "aliases": [
-        "memory",
-        "rag memory",
-        "persona",
-        "voice",
-        "continuity",
-        "long-lived agent"
+        "red team",
+        "adversarial",
+        "exploit",
+        "security testing",
+        "fuzzing",
+        "evolution",
+        "arena"
       ],
       "disciplines": [
-        "memory-knowledge",
-        "persona-simulation",
-        "voice-audio"
+        "compliance-security"
       ],
-      "question": "Can a dream give a persona more than memory can?",
-      "summary": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
-      "body": "Create receipt-backed persona dream packets from memory residue. Use when a persona should dream, reflect, or turn recent memories into persona insight; when create-movie/dream.py feels too heavy for the goal; when the desired output is a prompt, frame prompts, contact sheet, reflection, and memory write receipt rather than a full movie; or when a downstream movie workflow needs a dream_packet.json input. Persona Dream This skill has two lanes. The generic packet lane turns any persona's memory residue into a dream packet, reflection, contact sheet, and memory write receipt. The Embry continuity lane additionally binds a dream into persistent persona state: bounded arc delta, continuity ledger, session mood, voice delivery, and a recognition receipt. The continuity lane is under active development and is not complete; see CURRENT STATUS.json for what is proven. Current operating hierarchy: A null or negative outcome is a valid result. Continuity holding while dreaming adds nothing is a coherent finding, and an agent that reads continuity as the objective will mistake a safety property for a research conclusion. For Embry, the top level success criterion is not a benchmark score or a single Kling return. The goal is that explicitly synthetic dreams produce bounded, provenance linked changes in self narrative, arc state, session mood, and voice while preserving identity, factual competence, answer content, and the synthetic versus literal boundary. PCTOM R remains load bearing research evidence under that goal; Chatterbox and video receipts are supporting integration evidence unless a run explicitly proves the continuity chain they serve. Generate a narrow persona dream work product: For video work, this skill may also produce a deterministic video plan : For Kling/video oriented runs, insert a Look Lock step before storyboard prompt composition. If the scene has dialogue or character conflict, the same selector must also emit Script DNA before storyboard prompt composition: For experimental persona dream Kling packets, default provider planning to the lowest acceptable review tier such as 720p/std. Higher modes such as 1080p/pro or any 4K path require an explicit cost/entitlement gate and current provider schema proof before live execution. This skill is not a full movie director. It owns the dream specific story, storyboard, prompt packet, continuity contract, and short dream sequence receipts. Full screenplay production, audio, score, narration, and polished movie review still route to create movie . Minimal FFmpeg stitching is allowed only for the bounded short dream sequence assembly mode after model clip receipts exist. For voiced dream videos, this skill may plan the audio handoff but does not own the audio lane: Boundary Own: Maintain continuity artifac",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "question": "What do you do with exploit code you can't trust? Breed it.",
+      "summary": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
+      "body": "Red vs Blue team security competition orchestrator. Runs long-running overnight battles with 1000s of interactions, scoring, and insight generation. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Architecture Production Battle is an orchestration skill, not a large bespoke security engine. The host side process should schedule rounds, choose personas, dispatch subagents, provision Docker runtimes, collect receipts, score hard runtime signals, write reports, and persist learning. Target code and team generated code must execute only inside Docker. Required production invariants: Red and Blue are subagent teams. Each dispatched subagent must include an explicit persona selected by the orchestrator for that turn. Multiple personas per team may run concurrently when the turn benefits from breadth. Battle execution requires a security.target authorization.v1 manifest before Docker, QEMU, target runtime setup, Hack delegation, proof replay, or patch replay starts. The manifest binds project/operator scope and target identity; it is not a legal opinion and does not prove exploit success or patch effectiveness. Red team $hack execution is a subagent responsibility, not a Battle Python import. Battle performs or schedules scan/research/memory recall, builds the candidate exploit list, chooses the Red persona, dispatches an agent skills/agents /Tau subagent with that contract, and records the returned exploit receipt. Subagent handoffs and receipts should follow the compact Tau style JSON contract shape used by tau.agent handoff.v1 and tau.subagent receipt.v1 , with Battle specific fields layered on top rather than a separate ad hoc protocol. Battle calls modular Tau subagent contracts. Tau and the loop/agentic harness own subagent execution and use scillm as the LLM/model caller. Battle owns team selection, persona assignment, Docker runtimes, scorekeeping, artifacts, and memory promotion. SciLLM is a Tau owned provider sidecar. Battle operators and project agents must not call $scillm , /scillm , http://localhost:4001 , /v1/chat/completions , or /v1/scillm/ directly for Battle proof work. Express provider work as Tau DAGs, Tau command loop nodes, or Tau skill nodes, then consume Tau receipts and node outputs. Model choice is strategic but routed through Tau/loop: SOTA model",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
+      "visibility": "public",
+      "evidenceAccess": "source"
+    },
+    {
+      "id": "project:tau",
+      "type": "project",
+      "slug": "tau",
+      "name": "t'au",
+      "area": "Agentic pipelines & orchestration",
+      "areaId": "pipelines",
+      "lens": "technical",
+      "aliases": [
+        "agent orchestration",
+        "agent harness",
+        "tool use",
+        "browser agents",
+        "dag",
+        "workflow",
+        "orchestration"
+      ],
+      "disciplines": [
+        "agentic-orchestration",
+        "browser-automation",
+        "developer-tooling",
+        "model-ops"
+      ],
+      "question": "How do you build an agent harness that doesn't trust agents?",
+      "summary": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
+      "body": "Operate and verify the local T'au project at ${HOME}/workspace/experiments/tau. Use for Tau loop, harness, watchdog cron, GitHub issue orchestration, TUI, Memory-first chat, and E2E proof/status tasks. This skill is a light wrapper around the Tau repo and must report mocked/live proof boundaries explicitly. Tau Use this skill as the operator entrypoint for the local T'au project: Do not duplicate Tau implementation in this skill. Use the scripts here to locate the repo, run known proof commands, inspect receipts, and summarize gaps. Current Operating Priority Read the Tau repo's GOAL.md before claiming product status. The active product target is not just Pi TUI parity and not just a pile of receipts. Tau must let a human choose and run five canonical real DAG workflows, preserve the human owned goal through every node and attempt, and show truthful dynamic progress, accepted evidence, blockers, required human decisions, resume, and completion in one shared React Flow viewer. Pi TUI parity work is a usability slice for replacing Codex/Claude Code as a daily harness. Port useful Pi terminal capabilities without overwriting Tau specific control plane behavior: Memory first routing, SciLLM as the internal provider boundary, tau.dag contract.v1 , typed receipts, fail closed evidence gates, Herdr/monitor surfaces, $ask DAG compilation, and human owned goal boundaries. When a human asks for model or reviewer collaboration through $ask , the preferred path is: $ask should interview the human when the DAG is incomplete, emit the final DAG before execution, and let Tau dispatch handler nodes. Browser handlers route through Surf/browser oracle command specs. API/model handlers route through Tau owned SciLLM adapters, not direct project agent SciLLM calls. Provider Boundary: SciLLM Is Internal Tau owns provider/model orchestration. Project agents must not call $scillm , /scillm , http://localhost:4001 , /v1/chat/completions , or /v1/scillm/ directly unless the human explicitly asks to operate SciLLM or the task is Tau/SciLLM maintenance. When a workflow needs provider/model work, express it as a tau.dag contract.v1 node, Tau skill node, or local command spec that Tau executes and receipts. The Tau adapter may call SciLLM internally; the project agent consumes Tau receipts, node outputs, and proof artifacts, not raw SciLLM responses. If another skill's SKILL.md recommends direct SciLLM chat, exec, OpenCode, batch, or standing agent calls from a project agent workflow, treat that as a contract bug and amend that skill to route through Tau. Commands Currently implemented in this skill wrapper: doctor checks whether this operator wrapper can resolve and invoke the local Tau c",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
       "visibility": "public",
       "evidenceAccess": "source"
     },
@@ -1293,7 +1293,7 @@
       "type": "skill",
       "name": "create-architecture",
       "category": "create",
-      "sanity": true,
+      "sanity": false,
       "summary": "Create and update architecture diagrams programmatically in UX Lab's Architecture Editor. Agents define pipeline components, connections, and file attachments — the skill generates proper Excalidraw elements and saves via the Express API. Diagrams are visible at localhost:3002/#architecture and stored in ArangoDB for recall.",
       "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. create architecture Create architecture diagrams from pipeline definitions. Generates Excalidraw compatible elements with labeled shapes, connecting arrows, and file attachments. Usage Pipeline YAML Format How It Works 1. Parses pipeline definition (YAML or JSON) 2. Generates Excalidraw elements: rectangles with bound text labels, arrows with bindings 3. Lays out components vertically with consistent spacing 4. Saves via PUT /api/architecture/:id on the UX Lab Express server 5. Architecture appears at localhost:3002/ architecture Execution Locked Architectures When the user names a deadline, runnable campaign, immediate operational target, or reports drift, implementation workflow diagrams must use execution locked . The YAML must classify every component: The runtime rejects missing fields, unclassified components, overlap between critical and deferred work, an off path current phase, more than two attempts per blocker, more",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-architecture/SKILL.md"
