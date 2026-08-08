@@ -25,6 +25,7 @@ provides:
   - browser-deck-renderer
   - house-conformance-gate
   - publish-verification
+  - react-deck-payload
   - house-style-measurement
   - author-voice-profile
   - nearest-slide-layout-retrieval
@@ -214,6 +215,41 @@ The deck-coupled form, when you want variations for a specific slide:
 
 Missing `codex`, or a failed generation, reports `NEEDS_ATTENTION` — never a
 fabricated image and never a silent skip.
+
+## Three export targets, one source
+
+| Target | Command | Nature |
+|--------|---------|--------|
+| **PPTX** | `emit-document-pptx` (+ `--house-template`) | native editable shapes; inherits the house theme/master/layouts |
+| **PDF** | `render --pptx …` | a RENDER of the PPTX via LibreOffice, plus per-slide PNGs and a contact sheet — never an independent source |
+| **React deck** | `emit-document-ui` | projects the canonical document into the payload `ui/` already loads (React 19 + Tailwind 4, lucide-react, clsx + tailwind-merge) |
+
+All three now derive from `pitchdeck.deck_document.v1`. They did NOT before:
+PPTX and static HTML compiled from the canonical document while the React app
+consumed a `deck.data.json` emitted from the older bundle path, so composition
+recipes, scene illustrations, template inheritance, and qualifier footers reached
+PowerPoint but never the browser deck (#1264). `emit-document-ui` closes that,
+and passes element geometry (bbox, z, style) plus full diagram graphs — including
+scene `decoration` and `scale` — so the renderer places what the document decided
+rather than re-deriving a layout.
+
+```bash
+./run.sh emit-document-pptx --document deck.document.json --output deck.pptx \
+  --asset-base <bundle> --house-template house.pptx
+./run.sh render --pptx deck.pptx --output-dir out/render            # PDF + PNGs
+./run.sh emit-document-ui --document deck.document.json \
+  --output-dir ui/public/canonical --asset-base <bundle>            # React payload
+cd ui && pnpm dev    # then open ?deck=./canonical/deck.data.json
+```
+
+Note on the stack: `ui/` uses Tailwind with shadcn's dependency set
+(lucide-react, clsx, tailwind-merge) but is not scaffolded as shadcn — there is
+no `components.json` and no `components/ui`. Adopting shadcn primitives proper is
+a separate decision, not something this export implies.
+
+Verified: 6 slides / 26 elements / 8 assets projected with zero gaps; scene
+illustrations reach the React payload on the architecture and roadmap slides;
+PDF renders from the templated PPTX (sha256 recorded in its receipt).
 
 ## Publish verification (the final boundary)
 

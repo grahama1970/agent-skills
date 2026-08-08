@@ -1,0 +1,51 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="640"
+  height="1000"
+  viewBox="0 0 640 1000"
+  role="img"
+  aria-labelledby="spartaHelmetTitle spartaHelmetDesc"
+  shape-rendering="geometricPrecision"
+>
+  <title id="spartaHelmetTitle">Front-facing Sparta helmet</title>
+  <desc id="spartaHelmetDesc">
+    A clean, symmetrical Spartan helmet silhouette with angular eye openings,
+    a central nose guard, and a split lower face guard.
+  </desc>
+
+  <path
+    fill="#18d7e8"
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="
+      M 247 92
+      Q 321 42 405 92
+      L 384 220
+      C 487 247 558 333 558 438
+      L 558 730
+      L 360 976
+      L 292 976
+      L 94 730
+      L 94 438
+      C 94 333 166 247 268 220
+      Z
+
+      M 135 505
+      L 282 571
+      L 300 639
+      L 292 724
+      L 326 770
+      L 360 724
+      L 352 639
+      L 369 571
+      L 518 505
+      L 500 584
+      L 394 666
+      L 360 976
+      L 292 976
+      L 258 666
+      L 153 584
+      Z
+    "
+  />
+</svg>

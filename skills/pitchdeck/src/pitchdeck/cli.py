@@ -597,6 +597,51 @@ def verify_publish_cmd(
         _abort(exc)
 
 
+@app.command(name="emit-document-ui")
+def emit_document_ui_cmd(
+    document: Annotated[Path, typer.Option(help="deck.document.json (pitchdeck.deck_document.v1).")],
+    output_dir: Annotated[Path, typer.Option(help="Directory to write deck.data.json (+ copied assets).")],
+    asset_base: Annotated[Path, typer.Option(help="Base dir for relative asset paths.")],
+) -> None:
+    """Project the canonical document into the React deck payload (one source, three targets)."""
+    import json as json_mod
+    import shutil as shutil_mod
+
+    from .document import DeckDocument
+    from .document_ui import project_document_to_ui
+
+    try:
+        doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
+        payload = project_document_to_ui(doc)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        assets_dir = output_dir / "assets"
+        assets_dir.mkdir(exist_ok=True)
+        copied = 0
+        from .io import expand_path
+
+        for asset in doc.assets:
+            raw = getattr(asset, "local_path", None)
+            # local_path carries ${SPARTA_PUBLIC_ROOT}-style vars; expand before use
+            source = expand_path(raw) if raw else None
+            if source and not source.is_absolute():
+                source = asset_base / source
+            if source and source.is_file():
+                shutil_mod.copy(source, assets_dir / source.name)
+                copied += 1
+        (output_dir / "deck.data.json").write_text(json_mod.dumps(payload, indent=1), encoding="utf-8")
+        (output_dir / "deck.document.json").write_text(document.read_text(encoding="utf-8"), encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS" if payload["validation_readiness"] == "READY" else "USABLE_WITH_GAPS",
+            "slides": len(payload["slides"]),
+            "elements": sum(len(s["elements"]) for s in payload["slides"]),
+            "assets_copied": copied,
+            "gaps": payload["validation_gaps"],
+            "output": str(output_dir / "deck.data.json"),
+        }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],
