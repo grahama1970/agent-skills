@@ -36,6 +36,40 @@ def _posting_age_days(candidate: dict[str, Any]) -> float | None:
     return None
 
 
+# Off-target role types for a Principal AI Architect. Hard-negative title terms
+# disqualify a lane-A posting even with a senior prefix (a "Senior Account
+# Executive" is still sales). Bounded, fixture-tested vocabulary — not open-ended
+# classification. Terms are matched against the space-padded lowercased title.
+_ROLE_TYPE_REJECT_TERMS = (
+    "account executive", "account manager", "sales representative", "sales rep",
+    " sales ", "business development", "solutions engineer", "solutions consultant",
+    "sales engineer", "pre-sales", "presales", "chief growth", "growth officer",
+    "administrator", "coordinator", "cmms", "accounting", "bookkeeper",
+    "recruiter", "talent acquisition", "web designer", "copywriter", " editor",
+    "founder in residence", "entrepreneur in residence", "founder", "co-founder",
+    "data management specialist", "data entry",
+)
+# Below Graham's Principal/Staff/Senior floor.
+_BELOW_FLOOR_TERMS = ("intern ", "internship", " junior ", "entry level", "entry-level", "apprentice", " co-op ", "associate engineer", "associate developer")
+# Engineering/AI signal that keeps a "... manager" title (e.g. Engineering Manager).
+_ENG_SIGNAL_TERMS = ("engineer", "architect", "developer", " ml ", " ai ", "machine learning", "research scien", "applied ai", "applied ml", "platform", "llm", "data scien")
+
+
+def _role_type_reject(title: str) -> str | None:
+    low = f" {title.lower().strip()} "
+    for term in _ROLE_TYPE_REJECT_TERMS:
+        if term in low:
+            return term.strip()
+    for term in _BELOW_FLOOR_TERMS:
+        if term in low:
+            return term.strip()
+    # A bare "manager" title with no engineering signal is off-mandate
+    # (Manager, Analytics / Accounting Manager) — but keep Engineering Manager.
+    if "manager" in low and not any(sig in low for sig in _ENG_SIGNAL_TERMS):
+        return "non-engineering manager"
+    return None
+
+
 def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     if candidate.get("source_valid") is False:
         return "REJECT_SOURCE_INVALID", ["source_valid=false"]
@@ -52,6 +86,13 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     max_age = _max_age_days()
     if age is not None and age > max_age:
         return "REJECT_STALE_AGE", [f"published {age:.0f}d ago (> {max_age}d window)"]
+    # Role-type targeting: drop off-mandate roles (sales, admin, founder,
+    # creative, below-floor) for real job postings. Federal (B) and commercial
+    # signal (C) lanes are not title-filtered.
+    if candidate.get("lane") == "A":
+        off_target = _role_type_reject(str(candidate.get("title") or ""))
+        if off_target:
+            return "REJECT_ROLE_TYPE", [f"off-target role type: {off_target}"]
     if candidate.get("work_authorization_mismatch") is True:
         return "REJECT_WORK_AUTHORIZATION_MISMATCH", ["work_authorization_mismatch=true"]
     if candidate.get("clearance_required") == "UNKNOWN":
