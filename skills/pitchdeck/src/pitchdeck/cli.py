@@ -455,6 +455,80 @@ def compile_voice_profile_cmd(
         _abort(exc)
 
 
+@app.command(name="measure-house-spec")
+def measure_house_spec_cmd(
+    decks: Annotated[Path, typer.Option(help="Directory of the author's real .pptx decks.")],
+    output: Annotated[Path | None, typer.Option(help="Write house_spec.v1 JSON here.")] = None,
+) -> None:
+    """Measure geometry, type scale, and colors from a real deck corpus (#1311)."""
+    import json as json_mod
+
+    from .house_spec import measure_house_spec
+
+    try:
+        spec = measure_house_spec(decks)
+        payload = spec.model_dump(by_alias=True, mode="json")
+        if output:
+            output.write_text(json_mod.dumps(payload, indent=1, sort_keys=True), encoding="utf-8")
+        typer.echo(json_mod.dumps({"status": "PASS", **payload}, indent=1, sort_keys=True))
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="house-conformance")
+def house_conformance_cmd(
+    pptx: Annotated[Path, typer.Option(help="Emitted .pptx to measure against corpus invariants.")],
+) -> None:
+    """Deterministic house-style conformance gate (exit 1 on findings, #1311)."""
+    import json as json_mod
+
+    from .house_conformance import check_conformance
+
+    try:
+        findings = [f.model_dump(mode="json") for f in check_conformance(pptx)]
+        typer.echo(json_mod.dumps(
+            {"status": "PASS" if not findings else "FINDINGS", "findings": findings}, indent=1))
+        raise typer.Exit(0 if not findings else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="index-house-slides")
+def index_house_slides_cmd(
+    decks: Annotated[Path, typer.Option(help="Directory of real .pptx decks.")],
+    renders: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs.")],
+) -> None:
+    """Index real slides into Qdrant for nearest-layout retrieval (composes /embedding)."""
+    import json as json_mod
+
+    from .layout_retrieval import index_house_slides
+
+    try:
+        typer.echo(json_mod.dumps({"status": "PASS", **index_house_slides(decks, renders)}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="find-layout")
+def find_layout_cmd(
+    query: Annotated[str, typer.Option(help="What the slide needs to do.")],
+    limit: Annotated[int, typer.Option(help="Max hits.")] = 3,
+) -> None:
+    """Retrieve the author's real slides closest to a described need (#1315)."""
+    import json as json_mod
+
+    from .layout_retrieval import find_nearest_layout
+
+    try:
+        hits = find_nearest_layout(query, limit=limit)
+        typer.echo(json_mod.dumps({"status": "PASS", "hits": [
+            {k: v for k, v in h.items() if k != "blocks"} for h in hits]}, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],

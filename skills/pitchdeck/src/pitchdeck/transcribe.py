@@ -13,6 +13,8 @@ written on failure.
 from __future__ import annotations
 
 import os
+
+from dotenv import load_dotenv
 import subprocess
 from pathlib import Path
 
@@ -34,6 +36,7 @@ print(text)
 
 
 def _interpreter() -> Path | None:
+    load_dotenv(override=False)
     override = os.getenv("REALSTT_PYTHON")
     candidates = [Path(override)] if override else []
     candidates.append(REALSTT_ROOT / ".venv" / "bin" / "python")

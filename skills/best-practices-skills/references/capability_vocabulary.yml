@@ -131,3 +131,8 @@ capabilities:
   resume-artifact-handoff:
     providers:
       - resume
+  house-conformance-gate: [pitchdeck]
+  house-style-measurement: [pitchdeck]
+  author-voice-profile: [pitchdeck]
+  nearest-slide-layout-retrieval: [pitchdeck]
+  native-editable-icon-library: [pitchdeck]

@@ -23,8 +23,21 @@ provides:
   - public-private-claim-filter
   - deck-ui-bundle
   - browser-deck-renderer
+  - house-conformance-gate
+  - house-style-measurement
+  - author-voice-profile
+  - nearest-slide-layout-retrieval
+  - native-editable-icon-library
 composes:
   - memory
+  - embedding
+  - best-practices-slide-design
+  - ux-lab
+  - browser-oracle
+  - surf
+  - ask
+  - agentic-evals
+  - project-knowledge
 complies:
   - best-practices-skills
   - best-practices-python
@@ -110,6 +123,57 @@ Public decks fail closed if they reference private sources or claims.
   --pptx /mnt/storage12tb/skills/pitchdeck/outputs/product-public.pptx \
   --output-dir /mnt/storage12tb/skills/pitchdeck/outputs/product-public-render
 ```
+
+## Composition
+
+Every entry is wired in code or committed configuration — this list is what the
+skill actually calls, not what it could plausibly use.
+
+| Skill | Used for | Where |
+|-------|----------|-------|
+| `best-practices-slide-design` | House theme, exemplars, render envelope, band asset; the design rules the compiler measures against | `design_system.py`, `design_lint.py`, `document_pptx.py`, `voice_profile.py` |
+| `embedding` | Multimodal slide vectors (:8603) for visual sync and nearest-layout retrieval | `visual_sync.py`, `layout_retrieval.py` |
+| `memory` | Per-deck summaries and recall; the ONLY route to ArangoDB | `memory_sync.py` |
+| `ux-lab` | Shared `ChatWell` powering the claim-review chat in the browser deck | `ui/src/components/DeckChat.tsx` |
+| `browser-oracle` + `surf` + `ask` | Visual review of rendered slides by a browser oracle | `.ask/browser-oracles.yaml` (project `pitchdeck-review`) |
+| `agentic-evals` | Seeded-defect evaluation of the design gates | `fixtures/agentic_eval.json` |
+| `project-knowledge` | Shared current-state document for human + agent | `docs/PROJECT_KNOWLEDGE.md` |
+
+**Considered and rejected, with reasons** (so the next agent does not re-litigate):
+
+- `create-figure` / `figure-lab` — produce raster or Mermaid output. The PPTX
+  contract requires natively editable shapes, so a generated figure would have
+  to be embedded as a picture and would fail the editability gate. Use them for
+  README/report figures, not for slide diagrams.
+- `create-icon` — produces 72x72 Stream Deck PNGs, not vector line art.
+- `tau` — the creator/reviewer loop for slide critique SHOULD run as a tau DAG
+  rather than hand-orchestrated subagents. Not yet wired; tracked in #1315.
+
+Icons come from **lucide** (ISC), imported into the hash-pinned library by
+`scripts/import_lucide_icons.py`. Only icons whose primitives map to native
+PowerPoint objects are imported; curve-bearing icons are skipped rather than
+approximated, because silently degrading a curve to a polygon would be a lie
+about editability that `resolve_icon()` could not detect.
+
+## House-style measurement
+
+The author's decks are invariant, so "does this match the house style?" is a
+measurement rather than a judgement. Measured over a 263-slide corpus: 100%
+carry a header band, bottom-left mark, bottom-right footer text, and a title;
+261/263 bands are `#076889`; the median slide carries 2 pictures and 8 shapes.
+
+```bash
+./run.sh measure-house-spec --decks /path/to/real/decks --output house_spec.json
+./run.sh house-conformance --pptx out/deck.pptx        # exit 1 on findings
+./run.sh compile-voice-profile --corpus ../best-practices-slide-design
+./run.sh index-house-slides --decks /path/to/decks --renders /path/to/renders
+./run.sh find-layout --query "closing slide: what must happen before deployment"
+```
+
+`house-conformance` is a negative-control gate: it must pass the author's own
+decks, and it caught two of its own definition errors that way (chrome
+inherited from the slide layout, and a bottom-left mark that is a logo row
+rather than text).
 
 ## Browser deck renderer (ui/)
 
