@@ -25,30 +25,33 @@ schema: persona_dream.dream_spine.v1
 version: 1
 
 terminates_at: journal_spoken
+# The run dir IS the cycle dir: reports/goal_v3/cycles/<cycle_id>. Both
+# autonomous-dream-cycle and write-dream-journal hardcode that location.
 optional_branches:
   video: "steps 6-38 of the legacy ledger; branches off dream_packet"
 
 steps:
-  # NOTE: there is deliberately no separate recall step. `generate` performs the
-  # memory recall itself -- --about biases it -- and the obvious candidate,
-  # pipeline-phase02-recall, turned out to be a REFRESH tool: it fails on a
-  # fresh run looking for an existing pipeline_review_8892/index.html to patch.
-  # A spine step must be able to start from nothing.
-
-  - id: dream_packet
-    name: Dream Packet
-    command: generate
-    run_dir_arg: null          # uses --output-dir, supplied via args below
-    args: ["--persona", "{persona}", "--about", "{idea}", "--output-dir", "{run_dir}"]
-    produces: [dream_packet.json]
-    proves: memory residue was recalled and a synthetic dream composed from it
-    does_not_prove: anything about the day the residue came from
+  # NOTE ON "THE IDEA": this lane is AUTONOMOUS. autonomous-dream-cycle selects
+  # its own person-anchored residue cluster from memory by biographical recency
+  # and a seeded hash. There is no --idea flag and no place to put one, so a
+  # human idea reaches a dream by being INGESTED to memory first, not by being
+  # passed here. The other lane (`generate --about`) does take a topic; it
+  # builds a static/video packet, not a journal.
+  - id: dream_cycle
+    name: Autonomous Dream Cycle
+    command: autonomous-dream-cycle
+    run_dir_arg: null
+    args: ["--persona", "{persona}", "--cycle-id", "{cycle_id}"]
+    produces: [storyboard_plan.json, selection_receipt.v1.json, residue_links.json,
+               phase14_tom.json, observation_packet.json]
+    proves: residue was selected, dreamt, observed, interpreted, and persisted
+    does_not_prove: that the dream is meaningful or that recall improves
 
   - id: journal_entry
     name: Journal Entry
     command: write-dream-journal
-    run_dir_arg: --cycles-dir
-    args: ["--persona", "{persona}"]
+    run_dir_arg: null
+    args: ["--cycle", "{cycle_id}", "--persona", "{persona}"]
     produces: [dream_journal.v1.json, dream_journal.md]
     proves: she wrote an entry conforming to persona_journal.v1
     does_not_prove: that the entry is true of events
@@ -70,6 +73,7 @@ steps:
     produces: [journal.wav]
     proves: the entry was rendered to audio with a requested delivery tone
     does_not_prove: that a listener perceives the intended feeling
+
 
 # Artifacts a run directory may hold that no step produces. Anything else found
 # there is reported as undeclared -- that is how a bespoked side path becomes

@@ -14,7 +14,8 @@ Commands:
                          ./run.sh dream --run-dir DIR --persona embry \
                                         --idea "what she should dream about"
   dream-spec           Compile the DAG spec without executing it
-  write-dream-journal  Write the persona_journal.v1 entry (spine step)
+  autonomous-dream-cycle  One full autonomous dream cycle (spine step 1)
+  write-dream-journal  Write the persona_journal.v1 entry (spine step 2)
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   doctor               Preflight the whole dream chain (tau nodes, insightface, scillm, GMO, anchors); fails loud with fixes
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
@@ -340,6 +341,13 @@ case "$COMMAND" in
   dream-spec)
     # Compile only: inspect or diff the DAG without executing it.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/build_dream_dag.py" "$@"
+    ;;
+  autonomous-dream-cycle)
+    # The actual dream pipeline: select residue -> storyboard -> frames ->
+    # observe -> interpret -> persist -> evaluate, producing the cycle
+    # directory write-dream-journal reads. Had no door in run.sh at all, which
+    # is why the spine kept being reassembled by hand from its internals.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/autonomous_dream_cycle.py" "$@"
     ;;
   write-dream-journal)
     # Was unreachable through run.sh entirely, despite being the artifact the

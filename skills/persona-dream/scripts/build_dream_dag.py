@@ -52,7 +52,7 @@ def _goal_hash(goal: dict[str, Any]) -> str:
 
 
 def build_spec(*, contract: Path, run_dir: Path, run_id: str,
-               persona: str, idea: str, timeout_seconds: int) -> dict[str, Any]:
+               persona: str, cycle_id: str, timeout_seconds: int) -> dict[str, Any]:
     spine = yaml.safe_load(contract.read_text(encoding="utf-8"))
     if not isinstance(spine, dict) or not isinstance(spine.get("steps"), list):
         raise SystemExit(f"BLOCKED_BAD_CONTRACT: {contract} has no steps")
@@ -102,7 +102,7 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         # would otherwise read it as the next flag.
         if run_dir_arg:
             command += [f"--run-dir-arg={run_dir_arg}"]
-        subs = {"persona": persona, "idea": idea, "run_dir": str(run_dir)}
+        subs = {"persona": persona, "cycle_id": cycle_id, "run_dir": str(run_dir)}
         for raw in step.get("args") or []:
             command += [f"--step-arg={str(raw).format(**subs)}"]
 
@@ -142,13 +142,14 @@ def main() -> int:
     ap.add_argument("--timeout-seconds", type=int, default=1800)
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--persona", default="embry")
-    ap.add_argument("--idea", default="", help="the idea to dream about")
+    ap.add_argument("--cycle-id", default="", help="cycle id; generated when omitted")
     args = ap.parse_args()
 
     run_dir = args.run_dir.expanduser().resolve()
-    run_id = args.run_id or f"dream-{run_dir.name}"
+    cycle_id = args.cycle_id or f"cycle_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
+    run_id = args.run_id or f"dream-{cycle_id}"
     spec = build_spec(contract=args.contract.resolve(), run_dir=run_dir,
-                      run_id=run_id, persona=args.persona, idea=args.idea,
+                      run_id=run_id, persona=args.persona, cycle_id=cycle_id,
                       timeout_seconds=args.timeout_seconds)
 
     out = args.out or (run_dir / "dag-spec.json")
