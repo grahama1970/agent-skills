@@ -55,6 +55,8 @@ repository's converter or workflow to regenerate the PDF.
 
 ```bash
 ./run.sh validate /path/to/RESUME.md
+uv run --project . python scripts/competencies.py report
+uv run --project . python scripts/competencies.py match /path/to/posting.txt
 ./run.sh tailor /path/to/RESUME.md /path/to/tailoring-request.json \
   --output-dir /path/to/resume-variant
 ./sanity.sh
@@ -64,6 +66,22 @@ repository's converter or workflow to regenerate the PDF.
 and contains no unresolved placeholder markers. `tailor` preserves the source, selects
 only approved claims with at least one evidence reference, writes a Markdown variant,
 and emits `resume-variant.json` with hashes and a producer-side seam receipt.
+
+## Competency evidence
+
+Resumes get customised per employer, so "which competencies do I lead with for
+this posting?" is a repeated question. `competencies.py` answers it from
+`skills/project-taxonomy/references/disciplines.yml` — the canonical closed
+18-discipline vocabulary and its explicit, fail-closed per-skill mapping. It
+never re-derives or guesses a discipline, so every competency claim is backed
+by a countable set of named skills.
+
+- `report` ranks demonstrated competencies by skill count and cites examples.
+- `match POSTING` ranks them by term overlap with a real job posting and names
+  which to lead with, weighted by how much evidence backs each one.
+
+`match` reports what a posting actually says. It models no employer's private
+ranking system, and it is deterministic term overlap, not semantic matching.
 
 ## Claim safety
 
