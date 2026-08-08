@@ -83,6 +83,11 @@ function Blocks({ blocks }: { blocks: Block[] }) {
           );
         return (
           <article key={i} className="cv-role">
+            {/* The career rail lives on the roles themselves: one node per
+                position, threading down the left of the experience list. No
+                separate timeline band, so no duplicated dates and no truncated
+                titles. */}
+            <span className="cv-role-node" aria-hidden="true" />
             <h3><Inline tokens={b.title} /></h3>
             {b.period ? <p className="cv-period machine">{b.period}</p> : null}
             <Blocks blocks={b.blocks} />
@@ -97,6 +102,7 @@ export default function ResumePage() {
   const doc = resume as unknown as {
     name: string;
     contact: Token[];
+    contactLines: Token[][];
     lede: string;
     intro: Block[];
     sections: { title: string; blocks: Block[] }[];
@@ -120,7 +126,11 @@ export default function ResumePage() {
       <main className="cv" id="top">
         <header className="cv-head">
           <h1>{doc.name}</h1>
-          <p className="cv-contact"><Inline tokens={doc.contact} /></p>
+          {doc.contactLines.map((line, i) => (
+            <p key={i} className={i === 0 ? 'cv-contact cv-contact-where' : 'cv-contact'}>
+              <Inline tokens={line} />
+            </p>
+          ))}
           {doc.lede ? <p className="cv-lede">{doc.lede}</p> : null}
         </header>
 
@@ -165,34 +175,6 @@ export default function ResumePage() {
 
 
         {doc.intro.length ? <section className="cv-intro"><Blocks blocks={doc.intro} /></section> : null}
-
-        {/* A real ordered list with a CSS rail rather than an image of text:
-            the labels stay selectable and screen-readable, the dates come from
-            the same roles rendered below, and it reflows to a vertical rail on
-            a phone instead of shrinking to something illegible. */}
-        {doc.timeline.length ? (
-          <section className="cv-timeline" aria-labelledby="cv-timeline-h">
-            <h2 id="cv-timeline-h" className="cv-sr-only">
-              Career timeline
-            </h2>
-            <ol>
-              {doc.timeline.map((t) => (
-                <li key={`${t.start}-${t.label}`}>
-                  <span className="cv-tl-span machine">
-                    {t.start}
-                    <span aria-hidden="true">–</span>
-                    <span className="cv-sr-only"> to </span>
-                    {t.end}
-                  </span>
-                  <span className="cv-tl-node" aria-hidden="true" />
-                  <span className="cv-tl-label">{t.label}</span>
-                  {t.org ? <span className="cv-tl-org">{t.org}</span> : null}
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
-
 
         {doc.sections.map((s) => (
           <section key={s.title} className="cv-section">

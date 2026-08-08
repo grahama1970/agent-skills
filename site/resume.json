@@ -3,7 +3,7 @@
  "contact": [
   {
    "t": "text",
-   "v": "Buffalo, NY | Buffalo-area hybrid/onsite or remote | "
+   "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
   },
   {
    "t": "link",
@@ -12,7 +12,7 @@
   },
   {
    "t": "text",
-   "v": " | "
+   "v": " · "
   },
   {
    "t": "link",
@@ -21,40 +21,64 @@
   },
   {
    "t": "text",
-   "v": " | "
+   "v": " · "
   },
   {
    "t": "link",
-   "v": "Work",
-   "href": "https://github.com/grahama1970/agent-skills"
-  },
-  {
-   "t": "text",
-   "v": " | "
-  },
-  {
-   "t": "link",
-   "v": "LinkedIn",
+   "v": "linkedin.com/in/grahamanderson",
    "href": "https://www.linkedin.com/in/grahamanderson/"
   },
   {
    "t": "text",
-   "v": " | "
+   "v": " · "
   },
   {
    "t": "link",
-   "v": "GitHub",
+   "v": "github.com/grahama1970",
    "href": "https://github.com/grahama1970"
-  },
-  {
-   "t": "text",
-   "v": " | "
-  },
-  {
-   "t": "link",
-   "v": "PDF",
-   "href": "docs/resume/graham-anderson-resume.pdf"
   }
+ ],
+ "contactLines": [
+  [
+   {
+    "t": "text",
+    "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
+   }
+  ],
+  [
+   {
+    "t": "link",
+    "v": "graham@grahama.co",
+    "href": "mailto:graham@grahama.co"
+   },
+   {
+    "t": "text",
+    "v": " · "
+   },
+   {
+    "t": "link",
+    "v": "grahama.co",
+    "href": "https://grahama.co"
+   },
+   {
+    "t": "text",
+    "v": " · "
+   },
+   {
+    "t": "link",
+    "v": "linkedin.com/in/grahamanderson",
+    "href": "https://www.linkedin.com/in/grahamanderson/"
+   },
+   {
+    "t": "text",
+    "v": " · "
+   },
+   {
+    "t": "link",
+    "v": "github.com/grahama1970",
+    "href": "https://github.com/grahama1970"
+   }
+  ]
  ],
  "lede": "I build agent systems that can prove what they did.",
  "intro": [
@@ -306,6 +330,29 @@
      "title": [
       {
        "t": "text",
+       "v": "Founder & Principal Consultant | grahamaco / Various Clients | Buffalo, NY · Remote"
+      }
+     ],
+     "period": "2016 - 2020",
+     "blocks": [
+      {
+       "kind": "ul",
+       "items": [
+        [
+         {
+          "t": "text",
+          "v": "Independent data science and engineering consulting for various clients through grahamaco — the same practice resumed after the DARPA ARCOS program."
+         }
+        ]
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "role",
+     "title": [
+      {
+       "t": "text",
        "v": "Executive Producer / Marketing Executive / Professional Composer | Los Angeles, CA"
       }
      ],
@@ -391,24 +438,72 @@
    ]
   },
   {
-   "title": "TOP SKILLS",
+   "title": "EDUCATION",
    "blocks": [
     {
-     "kind": "p",
-     "inline": [
-      {
-       "t": "text",
-       "v": "Machine Learning, Generative AI, Large Language Models (LLM), Agentic AI, AI Agents, Multi-Agent Systems, Retrieval-Augmented Generation (RAG), Knowledge Graphs, GraphRAG, ArangoDB, Vector Databases, Prompt Engineering, LLM Evaluation, LLMOps, Formal Verification, Lean 4, Python, Rust, Model Context Protocol (MCP), NIST Frameworks, AI Governance, Docker, Linux"
-      }
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "text",
+        "v": "Metis Data Science Program | 2017"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Trinity University | BS, Finance and Marketing | 1994"
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "CORE COMPETENCIES",
+   "blocks": [
+    {
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "text",
+        "v": "Agentic AI: Agentic AI, AI Agents, Multi-Agent Systems, Model Context Protocol (MCP), Prompt Engineering"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "LLM & Retrieval: Large Language Models (LLM), Generative AI, Retrieval-Augmented Generation (RAG), GraphRAG, LLM Evaluation, LLMOps"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Knowledge & Data: Knowledge Graphs, ArangoDB, Vector Databases, Machine Learning"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Verification & Compliance: Formal Verification, Lean 4, NIST Frameworks, AI Governance"
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Platform: Python, Rust, Docker, Linux"
+       }
+      ]
      ]
     }
    ]
   }
  ],
- "sourceCommit": "e7831c1d8",
+ "sourceCommit": "201eec1f8",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "6915a6b3a2baf24a55684774b7ef2897f1408216d9b8b124e2e46cbf777caf5d",
+ "sourceSha256": "3c32511f74403522863075547d52d912209b36b58f9aadea5085f289974e6414",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -420,6 +515,13 @@
    "period": "Mar 2005 - 2016",
    "label": "Executive Producer",
    "org": "Los Angeles, CA"
+  },
+  {
+   "start": 2016,
+   "end": "2020",
+   "period": "2016 - 2020",
+   "label": "Founder & Principal Consultant",
+   "org": "grahamaco"
   },
   {
    "start": 2020,
@@ -465,32 +567,7 @@
      "addressLocality": "Buffalo",
      "addressRegion": "NY",
      "addressCountry": "US"
-    },
-    "knowsAbout": [
-     "Machine Learning",
-     "Generative AI",
-     "Large Language Models (LLM)",
-     "Agentic AI",
-     "AI Agents",
-     "Multi-Agent Systems",
-     "Retrieval-Augmented Generation (RAG)",
-     "Knowledge Graphs",
-     "GraphRAG",
-     "ArangoDB",
-     "Vector Databases",
-     "Prompt Engineering",
-     "LLM Evaluation",
-     "LLMOps",
-     "Formal Verification",
-     "Lean 4",
-     "Python",
-     "Rust",
-     "Model Context Protocol (MCP)",
-     "NIST Frameworks",
-     "AI Governance",
-     "Docker",
-     "Linux"
-    ]
+    }
    },
    {
     "@type": "ProfilePage",
@@ -504,6 +581,6 @@
    }
   ]
  },
- "pdfSha256": "ba4f977757a55315f0c62b2b1d26c906a10ffa56cc7e5f1c832753defea977ef",
- "pdfBytes": 158590
+ "pdfSha256": "2dfc1822a51c7e999bee524760828d9d32cc6f3ea5beb26c032dd89a22dab061",
+ "pdfBytes": 158860
 }

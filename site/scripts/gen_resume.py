@@ -38,7 +38,9 @@ OUT = SITE / "resume.json"
 # A role's first line is its employment period when it looks like one; pulling
 # it out lets the page render dates as their own meta line instead of burying
 # them in the opening sentence.
-PERIOD_RE = re.compile(r"^[A-Z][a-z]{2} \d{4}\s*[-–]\s*(Present|[A-Z][a-z]{2} \d{4}|\d{4})$")
+PERIOD_RE = re.compile(
+    r"^(?:[A-Z][a-z]{2} )?\d{4}\s*[-–]\s*(?:Present|(?:[A-Z][a-z]{2} )?\d{4})$"
+)
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 STRONG_RE = re.compile(r"\*\*([^*]+)\*\*")
 CODE_RE = re.compile(r"`([^`]+)`")
@@ -77,7 +79,7 @@ def _flush(buf: list[str], blocks: list[dict]) -> None:
 def parse(md: str) -> dict:
     """Parse the resume Markdown into the structure the page renders."""
     lines = md.splitlines()
-    doc: dict = {"name": "", "contact": [], "lede": "", "intro": [], "sections": []}
+    doc: dict = {"name": "", "contact": [], "contactLines": [], "lede": "", "intro": [], "sections": []}
     section: dict | None = None
     role: dict | None = None
     buf: list[str] = []
@@ -138,9 +140,14 @@ def parse(md: str) -> dict:
             items.append(inline(stripped[2:].strip()))
             continue
 
-        # The contact line is the first body line, immediately under the name.
-        if doc["name"] and not doc["contact"] and not doc["sections"] and not buf:
-            doc["contact"] = inline(stripped)
+        # The contact block is the run of lines directly under the name, before
+        # the first blank line. Markdown keeps them one paragraph (line one ends
+        # with a hard break), but the page renders each on its own line.
+        if doc["name"] and not doc["sections"] and not doc["lede"] and not buf and not doc["intro"]:
+            doc["contactLines"].append(inline(stripped))
+            # Flat list retained so consumers that scan every contact token
+            # (schema.org derivation) keep working unchanged.
+            doc["contact"].extend(doc["contactLines"][-1])
             continue
 
         if role is not None and not role["period"] and not role["blocks"] and PERIOD_RE.match(stripped):
@@ -216,9 +223,11 @@ def build_jsonld(doc: dict) -> dict:
             if href not in same_as:
                 same_as.append(href)
 
-    # "Buffalo, NY | ..." — the contact line leads with the location.
+    # "Buffalo, NY · ..." — the contact block leads with the location, then the
+    # work mode. Split on either separator so a styling change to the divider
+    # cannot leak "hybrid/onsite or remote" into addressRegion.
     first_text = next((t["v"] for t in doc["contact"] if t["t"] == "text"), "")
-    locality, _, region = first_text.split("|")[0].strip().partition(", ")
+    locality, _, region = re.split(r"[|·]", first_text)[0].strip().partition(", ")
 
     # The headline paragraph leads with the primary title.
     headline = ""

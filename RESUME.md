@@ -1,5 +1,6 @@
 # Graham Anderson
-Buffalo, NY | Buffalo-area hybrid/onsite or remote | [graham@grahama.co](mailto:graham@grahama.co) | [grahama.co](https://grahama.co) | [Work](https://github.com/grahama1970/agent-skills) | [LinkedIn](https://www.linkedin.com/in/grahamanderson/) | [GitHub](https://github.com/grahama1970) | [PDF](docs/resume/graham-anderson-resume.pdf)
+Buffalo, NY · Buffalo-area hybrid/onsite or remote  
+[graham@grahama.co](mailto:graham@grahama.co) · [grahama.co](https://grahama.co) · [linkedin.com/in/grahamanderson](https://www.linkedin.com/in/grahamanderson/) · [github.com/grahama1970](https://github.com/grahama1970)
 
 > I build agent systems that can prove what they did.
 
@@ -49,6 +50,10 @@ Sep 2020 - Dec 2023
 - Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards.
 - Worked with government and aerospace program stakeholders; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code.
 
+### Founder & Principal Consultant | grahamaco / Various Clients | Buffalo, NY · Remote
+2016 - 2020
+- Independent data science and engineering consulting for various clients through grahamaco — the same practice resumed after the DARPA ARCOS program.
+
 ### Executive Producer / Marketing Executive / Professional Composer | Los Angeles, CA
 Mar 2005 - 2016
 - Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized); led cross-functional teams (80+) on large-scale interactive productions.
@@ -61,5 +66,13 @@ Client work is mostly export-controlled, so here is the public, verifiable side 
 - [pdf_oxide](https://github.com/grahama1970/pdf_oxide) — heavily diverged fork of yfedoseev's Rust PDF toolkit (430 commits, ~137K lines added: Rust-core changes, Python pipeline, PDF cloning, NIST validation).
 - scillm, extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public.
 
-## TOP SKILLS
-Machine Learning, Generative AI, Large Language Models (LLM), Agentic AI, AI Agents, Multi-Agent Systems, Retrieval-Augmented Generation (RAG), Knowledge Graphs, GraphRAG, ArangoDB, Vector Databases, Prompt Engineering, LLM Evaluation, LLMOps, Formal Verification, Lean 4, Python, Rust, Model Context Protocol (MCP), NIST Frameworks, AI Governance, Docker, Linux
+## EDUCATION
+- Metis Data Science Program | 2017
+- Trinity University | BS, Finance and Marketing | 1994
+
+## CORE COMPETENCIES
+- Agentic AI: Agentic AI, AI Agents, Multi-Agent Systems, Model Context Protocol (MCP), Prompt Engineering
+- LLM & Retrieval: Large Language Models (LLM), Generative AI, Retrieval-Augmented Generation (RAG), GraphRAG, LLM Evaluation, LLMOps
+- Knowledge & Data: Knowledge Graphs, ArangoDB, Vector Databases, Machine Learning
+- Verification & Compliance: Formal Verification, Lean 4, NIST Frameworks, AI Governance
+- Platform: Python, Rust, Docker, Linux
