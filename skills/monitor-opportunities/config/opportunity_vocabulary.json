@@ -1,0 +1,189 @@
+{
+  "schema": "monitor_opportunities.opportunity_vocabulary.v1",
+  "collection": "opportunity_vocabulary",
+  "note": "Curated terms corpus for opportunity relevance, matched by /extract-entities (Flashtext + fuzzy, no LLM). Version-controlled like the SPARTA/aerospace corpora. Prefer multi-word specific aliases over short tokens to avoid fuzzy false positives (e.g. bare 'agent'/'agentic' fuzzy-matches 'Agency'). Tune via the adversarial eval, not intuition.",
+  "concepts": [
+    {
+      "_key": "ai-ml-general",
+      "control_id": "ai-ml-general",
+      "name": "artificial intelligence",
+      "category": "ai-technology",
+      "aliases": [
+        "AI",
+        "machine learning",
+        "deep learning",
+        "generative AI",
+        "GenAI",
+        "foundation model",
+        "large language model",
+        "neural network",
+        "natural language processing",
+        "computer vision",
+        "reinforcement learning",
+        "applied AI",
+        "AI engineer",
+        "AI architect",
+        "AI/ML"
+      ]
+    },
+    {
+      "_key": "agentic-pipelines",
+      "control_id": "agentic-pipelines",
+      "name": "agentic AI",
+      "category": "ai-technology",
+      "aliases": [
+        "AI agent",
+        "multi-agent",
+        "autonomous agent",
+        "agentic workflow",
+        "agentic pipeline",
+        "agent orchestration",
+        "tool use",
+        "function calling",
+        "autonomous coding",
+        "AI copilot",
+        "autonomous system"
+      ]
+    },
+    {
+      "_key": "llm-systems",
+      "control_id": "llm-systems",
+      "name": "large language model",
+      "category": "ai-technology",
+      "aliases": [
+        "LLM",
+        "RAG",
+        "retrieval augmented generation",
+        "prompt engineering",
+        "fine-tuning",
+        "embeddings",
+        "vector database",
+        "RLHF",
+        "context window",
+        "transformer model"
+      ]
+    },
+    {
+      "_key": "document-extraction",
+      "control_id": "document-extraction",
+      "name": "document extraction",
+      "category": "document-ai",
+      "aliases": [
+        "OCR",
+        "optical character recognition",
+        "intelligent document processing",
+        "IDP",
+        "document understanding",
+        "document AI",
+        "layout understanding",
+        "table extraction",
+        "form extraction",
+        "PDF extraction",
+        "information extraction",
+        "key-value extraction",
+        "data aggregation and visualization"
+      ]
+    },
+    {
+      "_key": "agentic-compliance",
+      "control_id": "agentic-compliance",
+      "name": "AI compliance",
+      "category": "compliance",
+      "aliases": [
+        "GRC",
+        "governance risk and compliance",
+        "model assurance",
+        "AI governance",
+        "responsible AI",
+        "AI safety",
+        "auditability",
+        "continuous compliance",
+        "continuous monitoring"
+      ]
+    },
+    {
+      "_key": "compliance-frameworks",
+      "control_id": "compliance-frameworks",
+      "name": "compliance framework",
+      "category": "compliance",
+      "aliases": [
+        "NIST",
+        "OSCAL",
+        "FedRAMP",
+        "SOC 2",
+        "ISO 27001",
+        "NIST 800-53",
+        "NIST 800-171",
+        "CMMC",
+        "authority to operate",
+        "security controls",
+        "risk management framework"
+      ]
+    },
+    {
+      "_key": "verification-ai",
+      "control_id": "verification-ai",
+      "name": "AI verification",
+      "category": "verification",
+      "aliases": [
+        "model verification",
+        "model evaluation",
+        "evaluation harness",
+        "eval framework",
+        "benchmark",
+        "red teaming",
+        "adversarial testing",
+        "formal verification",
+        "test and evaluation",
+        "assurance case",
+        "model validation"
+      ]
+    },
+    {
+      "_key": "cyber-security",
+      "control_id": "cyber-security",
+      "name": "cybersecurity",
+      "category": "security",
+      "aliases": [
+        "cyber engineering",
+        "information security",
+        "zero trust",
+        "threat detection",
+        "vulnerability management",
+        "penetration testing",
+        "security operations"
+      ]
+    },
+    {
+      "_key": "rd-modernization",
+      "control_id": "rd-modernization",
+      "name": "research and development",
+      "category": "rd",
+      "aliases": [
+        "R&D",
+        "modeling and simulation",
+        "technology modernization",
+        "digital transformation",
+        "science and technology"
+      ]
+    },
+    {
+      "_key": "federal-acquisition",
+      "control_id": "federal-acquisition",
+      "name": "federal solicitation",
+      "category": "federal",
+      "aliases": [
+        "SBIR",
+        "STTR",
+        "broad agency announcement",
+        "sources sought",
+        "request for proposal",
+        "request for information",
+        "request for solutions",
+        "other transaction authority",
+        "DARPA",
+        "AFWERX"
+      ]
+    }
+  ]
+}

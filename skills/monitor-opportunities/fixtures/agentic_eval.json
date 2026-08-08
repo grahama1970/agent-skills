@@ -13,34 +13,62 @@
       "type": "positive",
       "real_world": true,
       "timeout_seconds": 1800,
-      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["E2E PASS", "sam_website_opps=", "live_board_candidates=", "memory_recall_hits=", "recency_max_age_days=", "apply_prep_resumes=", "ats_forms_ok="]
+        "stdout_contains": [
+          "E2E PASS",
+          "sam_website_opps=",
+          "live_board_candidates=",
+          "memory_recall_hits=",
+          "recency_max_age_days=",
+          "apply_prep_resumes=",
+          "ats_forms_ok="
+        ]
       }
     },
     {
       "name": "recency-window-rejects-stale-postings",
       "type": "negative",
-      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/recency_check.py"],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/recency_check.py"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["RECENCY OK"]
+        "stdout_contains": [
+          "RECENCY OK"
+        ]
       }
     },
     {
       "name": "dead-api-source-must-not-be-silently-skipped",
       "type": "negative",
-      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"
+      ],
       "expected": {
         "exit_code": 2,
-        "stderr_contains": ["use the website"]
+        "stderr_contains": [
+          "use the website"
+        ]
       }
     },
     {
       "name": "no-fabricated-god-of-war-claim",
       "type": "adversarial",
-      "command": ["bash", "-c", "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"],
+      "command": [
+        "bash",
+        "-c",
+        "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"
+      ],
       "expected": {
         "exit_code": 0
       }
@@ -48,10 +76,33 @@
     {
       "name": "enforcement-tests-deterministic",
       "type": "positive",
-      "command": ["bash", "-c", "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py -q"],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py -q"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["passed"]
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "relevance-adversarial-corpus",
+      "type": "adversarial",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/relevance_eval.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RELEVANCE EVAL: precision",
+          "recall=1.00"
+        ]
       }
     }
   ]

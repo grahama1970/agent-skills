@@ -1,0 +1,32 @@
+{
+  "schema": "monitor_opportunities.relevance_adversarial.v1",
+  "note": "Adversarial regression set for opportunity relevance. must_match = real opportunities that MUST match >=1 mandate concept. must_not_match = facilities/services/unrelated titles that MUST match none (includes real false-positives caught in production). Run scripts/relevance_eval.py; it fails on any regression.",
+  "must_match": [
+    "Staff AI Engineer",
+    "Senior Machine Learning Engineer",
+    "Autonomous Coding Agent",
+    "Intelligent Document Processing / OCR Engineer",
+    "AI Evaluation Lead",
+    "FedRAMP ATO Compliance Engineer",
+    "OSCAL automation for continuous compliance",
+    "Principal AI Architect - Document Understanding",
+    "Broad Agency Announcement: Autonomous Systems",
+    "DARPA SBIR - Machine Learning for Verification",
+    "Sources Sought - NextGen Cyber Engineering",
+    "Request for Solutions: RAG retrieval augmented generation",
+    "Prostate Cancer Testing Artificial Intelligence"
+  ],
+  "must_not_match": [
+    "Flooring Abatement and Replacement",
+    "Vehicle Services Building Exterior Painting",
+    "Quarantine Facility HVAC Replacement",
+    "Grounds Maintenance and Landscaping Services",
+    "Janitorial and Custodial Services",
+    "Prostate Cancer Screening Services",
+    "Emergency Management Agency Coordinator",
+    "Federal Emergency Management Agency Notice",
+    "Elevator Modernization and Repair",
+    "Accounting Manager, Technical Accounting",
+    "Warehouse Forklift Operator"
+  ]
+}
