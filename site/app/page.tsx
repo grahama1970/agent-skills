@@ -105,7 +105,7 @@ export default function Home() {
                   lead alongside{' '}
                   <em style={{ ['--i' as string]: 5 }}>Lockheed Martin</em> and{' '}
                   <em style={{ ['--i' as string]: 6 }}>MIT</em>.
-                  High-end creative and hard technical work — delivered by the
+                  High-end creative and hard technical work, delivered by the
                   same person, shipped as working code, in public.
                 </p>
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
@@ -214,7 +214,7 @@ export default function Home() {
             </figcaption>
           </figure>
           <p className="strip-note">
-            Not a keyframe — a <em>rendered persona-dream</em>. Embry dreams a
+            Not a keyframe: a <em>rendered persona-dream</em>. Embry dreams a
             quiet argument with Horus about building SPARTA Explorer as a{' '}
             <em>campaign of proof</em>: no unsupported claim past the perimeter,
             no receipt pretending to be a verdict. The pipeline dreams it from her
@@ -383,7 +383,7 @@ export default function Home() {
                 <h2 className="h2">Can a persona dream itself a personality?</h2>
               </div>
               <p className="b">
-                Not a movie generator — a preregistered study. The question:
+                Not a movie generator: a preregistered study. The question:
                 does letting a persistent voice persona <em>dream</em> about
                 its experience actually help, beyond plainly remembering — and
                 is it still itself afterwards? The day&apos;s memories yield a
@@ -452,7 +452,7 @@ export default function Home() {
                 </h2>
               </div>
               <p className="proofx-intro">
-                Not a diagram of an idealised pipeline — the actual{' '}
+                Not a diagram of an idealised pipeline: the actual{' '}
                 <span className="machine">tau</span> roundtable that designed
                 this page, walked stage by stage. Each step resolves to a real
                 immutable artifact you can hash-check, and each one says plainly

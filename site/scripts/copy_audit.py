@@ -124,6 +124,13 @@ def main(argv=None) -> None:
         violations.append(f"voice-anchors.yml: signature line '{aid}' missing from copy")
 
     total = sum(len(s) for _, s in sources)
+    # Em-dash cadence — advisory, not a violation (punctuation is voice-adjacent).
+    # Research (bespoke-design audit) flags repeated "claim — clarification" dashes
+    # as an "em-dash confetti" / sameness tell. Track density so it can't creep back.
+    all_strings = [s for _, ss in sources for s in ss]
+    em_dashes = sum(s.count("—") for s in all_strings)
+    strings_with_em = sum(1 for s in all_strings if "—" in s)
+    em_ratio = round(strings_with_em / max(len(all_strings), 1), 3)
     result = {
         "schema": "monitor_website.copy_audit.v1",
         "status": "FAIL" if violations else "PASS",
@@ -131,6 +138,12 @@ def main(argv=None) -> None:
         "strings_scanned": total,
         "anchors_checked": len(anchors),
         "violations": violations,
+        "em_dash_cadence": {
+            "advisory": em_ratio > 0.28,  # >~1/4 of strings using em-dashes reads as a mannerism
+            "em_dashes": em_dashes,
+            "strings_with_em_dash": strings_with_em,
+            "ratio": em_ratio,
+        },
     }
     if args.json:
         print(json.dumps(result, indent=2))
