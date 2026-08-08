@@ -180,7 +180,16 @@ def choose_tone(run_dir: Path, chosen: str) -> tuple[str, dict[str, Any]]:
 
     mapper_tones = mapper.ALLOWED_TONES
     if chosen in mapper_tones:
-        return chosen, mapper.map_mood(chosen, contradictions)["voice_delivery"]
+        # map_mood's first argument is `mood_label` -- provenance only. It comes
+        # back out as persona_mood_label and never selects a tone; the tone is
+        # derived from the dream's dominant tension axis. Passing her choice
+        # there sent the axis tone and recorded hers, so the two disagreed by
+        # construction and the mismatch looked like a renderer fault. Take the
+        # envelope for its pace, then set the tone she actually picked: a reply
+        # is about what she just said, not about what the dream was arguing.
+        delivery = mapper.map_mood(chosen, contradictions)["voice_delivery"]
+        delivery["tone"] = chosen
+        return chosen, delivery
 
     mood_label = ""
     packet = run_dir / "dream_packet.json"
