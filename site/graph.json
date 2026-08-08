@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "71e6153c0",
+  "sourceCommit": "8afd93e00",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -141,7 +141,7 @@
       "label": "Compliance",
       "title": "Compliance, security & governance",
       "lens": "technical",
-      "skillCount": 55,
+      "skillCount": 56,
       "img": "sparta-explorer"
     },
     {
@@ -191,7 +191,7 @@
       "label": "Design",
       "title": "Design & interface",
       "lens": "creative",
-      "skillCount": 20
+      "skillCount": 19
     },
     {
       "id": "area:creative-media",

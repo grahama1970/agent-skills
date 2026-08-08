@@ -13,13 +13,11 @@ U.S. citizen. Extensive experience delivering under export-controlled (ITAR) con
 This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
 
 ## ABOUT
-An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA technical lead alongside Lockheed Martin and MIT. High-end creative and hard technical work — delivered by the same person, shipped as working code, in public.
+I build agentic pipelines that run in production, not prototypes: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it.
 
-I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team.
+Defense, aerospace, and compliance, where an answer has to be traceable to evidence. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team; presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin.
 
-Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room.
-
-15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily. Creative systems thinking — from leading 80+ person interactive productions — is why my AI systems are architected, not stapled together.
+Self-contained: research, back end, front end, and the briefing. 15+ years hand-coding, today primarily agentic coding across many harnesses and models, including my own (tau). I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself.
 
 Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles.
 

@@ -1,5 +1,5 @@
 {
-  "commit": "71e6153c0",
+  "commit": "8afd93e00",
   "as_of": "2026-08-08",
   "generator": "site/scripts/gen_competence.py",
   "totalSkills": 344,
@@ -8,7 +8,7 @@
     {
       "id": "evaluation-quality",
       "label": "Evaluation quality",
-      "skillCount": 74,
+      "skillCount": 73,
       "lenses": [],
       "areas": [],
       "projects": []
@@ -187,7 +187,7 @@
     {
       "id": "engineering-standards",
       "label": "Engineering standards",
-      "skillCount": 33,
+      "skillCount": 34,
       "lenses": [
         "technical"
       ],

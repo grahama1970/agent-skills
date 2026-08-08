@@ -114,7 +114,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA technical lead alongside Lockheed Martin and MIT. High-end creative and hard technical work — delivered by the same person, shipped as working code, in public."
+       "v": "I build agentic pipelines that run in production, not prototypes: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it."
       }
      ]
     },
@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team."
+       "v": "Defense, aerospace, and compliance, where an answer has to be traceable to evidence. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team; presented agentic cybersecurity research to AFRL and received a \"Hacker\" challenge coin."
       }
      ]
     },
@@ -132,16 +132,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room."
-      }
-     ]
-    },
-    {
-     "kind": "p",
-     "inline": [
-      {
-       "t": "text",
-       "v": "15+ years of hand-coding underneath it all — today I work primarily through agentic coding, driving many harnesses and models, including my own (tau). I build the tools that make agentic development trustworthy, and I use them daily. Creative systems thinking — from leading 80+ person interactive productions — is why my AI systems are architected, not stapled together."
+       "v": "Self-contained: research, back end, front end, and the briefing. 15+ years hand-coding, today primarily agentic coding across many harnesses and models, including my own (tau). I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself."
       }
      ]
     },
@@ -556,10 +547,10 @@
    ]
   }
  ],
- "sourceCommit": "1f2fded1d",
+ "sourceCommit": "8afd93e00",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "24877e5c223c3a0d10e1bed8762cbb0e2593e242a929c99be9a9087eae0c33be",
+ "sourceSha256": "f73fca220bbac37e74e29aaa0d4da5af6bb5fa8dfbaccffb6e02356ecb510494",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -637,6 +628,6 @@
    }
   ]
  },
- "pdfSha256": "5cc99f32a7a1394f2791f3876e2d08c616212a8f38130fda310483e87469c396",
- "pdfBytes": 159652
+ "pdfSha256": "c6aa860b9c5a89188b904fd1bda5b4e1b2e3ded4e72b407da29d07bb3d5727c2",
+ "pdfBytes": 159637
 }
