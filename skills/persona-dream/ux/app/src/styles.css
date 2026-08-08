@@ -1,0 +1,215 @@
+/* Scaffold, not a finished design.
+ *
+ * A designer restyles this, so it is written to be restyled: every colour and
+ * measure is a custom property, class names are semantic rather than visual,
+ * and nothing here encodes layout that the data depends on.
+ *
+ * STRUCTURAL (data-bound, do not remove):
+ *   .pd-boundary        the synthetic-vs-record qualifier
+ *   .pd-tone-chip       what was requested of the renderer
+ *   .pd-chat-refusal    a reply that was not recorded, and why
+ *   .pd-chat-blocked    a capability that is genuinely unavailable
+ * Restyle these freely; deleting them removes a claim qualifier, not chrome.
+ *
+ * STYLISTIC (safe to replace wholesale): every other rule.
+ */
+
+:root {
+  --pd-bg: #0c0c0e;
+  --pd-surface: #141417;
+  --pd-surface-2: #1b1b20;
+  --pd-line: #2a2a31;
+  --pd-ink: #e8e6e3;
+  --pd-ink-dim: #9a968f;
+  --pd-accent: #c9a227;      /* her voice; used sparingly */
+  --pd-warn: #b4553f;
+  --pd-radius: 10px;
+  --pd-measure: 68ch;        /* prose line length */
+  --pd-pad: 1.25rem;
+  --pd-font: ui-serif, Georgia, 'Times New Roman', serif;
+  --pd-font-ui: ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Consumed by the ported EmbryDrawer, which expects Sparta's token names.
+     Aliased rather than renamed so the component stays a clean port. */
+  --surface-deepest: var(--pd-surface);
+  --border-default: var(--pd-line);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--pd-bg);
+  color: var(--pd-ink);
+  font-family: var(--pd-font-ui);
+  line-height: 1.6;
+}
+
+.pd-app { display: flex; flex-direction: column; height: 100vh; }
+
+/* main + drawer are flex ROW siblings: EmbryDrawer sizes itself with
+   `flex: 0 0 <width>` and has no position of its own. */
+.pd-body { display: flex; flex: 1; min-height: 0; }
+
+/* ---------------------------------------------------------------- chrome */
+
+.pd-runs {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem var(--pd-pad);
+  border-bottom: 1px solid var(--pd-line);
+  font-size: 0.85rem; color: var(--pd-ink-dim);
+}
+.pd-runs select {
+  background: var(--pd-surface-2); color: var(--pd-ink);
+  border: 1px solid var(--pd-line); border-radius: 6px;
+  padding: 0.35rem 0.5rem; font: inherit;
+}
+
+.pd-main { flex: 1; min-width: 0; overflow-y: auto; padding: 2.5rem var(--pd-pad); }
+.pd-error { color: var(--pd-warn); }
+.pd-loading { color: var(--pd-ink-dim); }
+
+/* ---------------------------------------------------------------- journal */
+
+.pd-journal { max-width: var(--pd-measure); margin: 0 auto; }
+
+.pd-journal-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1.5rem; margin-bottom: 2rem;
+}
+.pd-journal-persona {
+  margin: 0; font-size: 0.75rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--pd-ink-dim);
+}
+.pd-journal h1 { margin: 0.3rem 0; font-family: var(--pd-font); font-weight: 500; font-size: 1.9rem; }
+.pd-mood { margin: 0; color: var(--pd-ink-dim); font-size: 0.9rem; }
+.pd-mood em { color: var(--pd-accent); font-style: normal; }
+
+.pd-journal-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.pd-journal-actions button {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--pd-surface-2); color: var(--pd-ink);
+  border: 1px solid var(--pd-line); border-radius: 6px;
+  padding: 0.45rem 0.75rem; font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.pd-journal-actions button:hover:not(:disabled) { border-color: var(--pd-ink-dim); }
+.pd-journal-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pd-journal-actions button:focus-visible { outline: 2px solid var(--pd-accent); outline-offset: 2px; }
+.pd-primary.pd-on { border-color: var(--pd-accent); color: var(--pd-accent); }
+
+.pd-preamble { color: var(--pd-ink-dim); font-style: italic; }
+.pd-prose { font-family: var(--pd-font); font-size: 1.06rem; }
+.pd-prose p { margin: 0 0 1.15rem; }
+
+.pd-tension {
+  border-left: 2px solid var(--pd-line);
+  padding-left: 1rem; margin: 2rem 0; font-size: 0.92rem;
+}
+.pd-tension p { margin: 0 0 0.75rem; }
+.pd-tension span {
+  display: block; font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--pd-ink-dim);
+}
+
+.pd-footnotes { font-size: 0.82rem; color: var(--pd-ink-dim); }
+
+.pd-boundary {
+  margin-top: 3rem; padding-top: 1rem;
+  border-top: 1px solid var(--pd-line);
+  font-size: 0.8rem; color: var(--pd-ink-dim);
+}
+.pd-boundary-flags { font-family: ui-monospace, monospace; font-size: 0.72rem; opacity: 0.75; }
+
+/* ------------------------------------------------------------------- chat */
+
+.pd-chat {
+  display: flex; flex-direction: column; height: 100%;
+  padding: 1rem 1.15rem 0.9rem; min-width: 0; overflow: hidden;
+  font-size: 0.9rem;
+}
+.pd-chat * { min-width: 0; }
+.pd-turn p { overflow-wrap: anywhere; }
+
+.pd-chat-head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0 0 0.9rem; border-bottom: 1px solid var(--pd-line);
+}
+.pd-chat-head h2 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.pd-chat-head-text p {
+  margin: 0.15rem 0 0; color: var(--pd-ink-dim); font-size: 0.78rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.pd-chat-scroll { flex: 1; overflow-y: auto; padding: 1rem 0; display: flex; flex-direction: column; gap: 1rem; }
+.pd-chat-empty, .pd-chat-thinking { color: var(--pd-ink-dim); font-size: 0.85rem; }
+
+.pd-turn p { margin: 0.25rem 0 0; }
+.pd-turn-meta { display: flex; align-items: center; gap: 0.5rem; }
+.pd-turn-role { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pd-ink-dim); }
+.pd-turn-embry p { color: var(--pd-ink); }
+.pd-turn-human p, .pd-turn-agent p { color: var(--pd-ink-dim); }
+
+.pd-tone-chip {
+  font-size: 0.68rem; padding: 0.1rem 0.4rem; border-radius: 999px;
+  border: 1px solid var(--pd-line); color: var(--pd-accent);
+  font-family: ui-monospace, monospace;
+}
+.pd-turn-play {
+  background: none; border: none; color: var(--pd-ink-dim);
+  cursor: pointer; padding: 0 0.2rem; font-size: 0.75rem;
+}
+.pd-turn-play:focus-visible { outline: 2px solid var(--pd-accent); outline-offset: 2px; }
+
+.pd-chat-blocked, .pd-chat-refusal {
+  border: 1px solid var(--pd-warn); border-radius: var(--pd-radius);
+  padding: 0.7rem 0.85rem; font-size: 0.8rem; color: var(--pd-ink);
+}
+.pd-chat-refusal strong { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--pd-warn); }
+.pd-chat-refusal p { margin: 0.35rem 0; }
+.pd-chat-refusal code { font-size: 0.7rem; color: var(--pd-ink-dim); overflow-wrap: anywhere; }
+
+.pd-chat-composer {
+  display: flex; align-items: flex-end; gap: 0.5rem;
+  padding-top: 0.75rem; border-top: 1px solid var(--pd-line);
+}
+.pd-chat-composer textarea {
+  flex: 1; resize: none; background: var(--pd-surface-2); color: var(--pd-ink);
+  border: 1px solid var(--pd-line); border-radius: 8px;
+  padding: 0.55rem 0.65rem; font: inherit; font-size: 0.85rem;
+}
+.pd-chat-composer textarea:focus-visible { outline: 2px solid var(--pd-accent); outline-offset: 1px; }
+.pd-mic, .pd-send {
+  display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0;
+  background: var(--pd-surface-2); color: var(--pd-ink);
+  border: 1px solid var(--pd-line); border-radius: 8px; cursor: pointer;
+}
+.pd-mic:disabled, .pd-send:disabled { opacity: 0.35; cursor: not-allowed; }
+.pd-mic-on { border-color: var(--pd-warn); color: var(--pd-warn); }
+.pd-mic:focus-visible, .pd-send:focus-visible { outline: 2px solid var(--pd-accent); outline-offset: 2px; }
+
+.pd-chat-boundary { margin: 0.6rem 0 0; font-size: 0.7rem; color: var(--pd-ink-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Per-paragraph requested tone, and the residue she worked from. */
+.pd-para-tone {
+  float: left; margin: 0.35rem 0.6rem 0 0;
+  font-family: ui-monospace, monospace; font-size: 0.62rem;
+  letter-spacing: 0.04em; color: var(--pd-ink-dim);
+  border: 1px solid var(--pd-line); border-radius: 3px; padding: 0.05rem 0.3rem;
+}
+.pd-sources { margin: 2.5rem 0 0; font-size: 0.8rem; color: var(--pd-ink-dim); }
+.pd-sources h2 {
+  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--pd-ink-dim); font-weight: 600; margin-bottom: 0.75rem;
+}
+.pd-sources p { margin: 0 0 0.65rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; }
+.pd-sources code { font-size: 0.72rem; color: var(--pd-accent); }
+.pd-synthetic {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em;
+  border: 1px solid var(--pd-warn); color: var(--pd-warn);
+  border-radius: 3px; padding: 0 0.25rem;
+}
+.pd-excerpt { flex: 1 1 100%; opacity: 0.85; }
