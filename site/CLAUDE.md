@@ -17,6 +17,14 @@ evidence. The **G꜀ brand mark** is Fraunces G + an *italic ember* subscript c
 with a brass ring (nav ~30px cream G, hub ~48px brass G, favicon `app/icon.svg`
 ~16-20px heavier G + ember node); the literal wordmark stays `grahama.co`
 (`.co` in brass) — never the `grahamᶜo` shorthand where domain recognition matters.
+`public/fonts/` holds only the two Fraunces variable cuts. The retired
+Instrument Serif faces were deleted once the light direction was retired; do
+not re-add a font here without a rule in `globals.css` that uses it.
+**Downstream font consumer:** the resume PDF's display face is instanced from
+`public/fonts/fraunces-var.woff2` by `scripts/build_resume_fonts.py` (PyMuPDF
+embeds static TTFs but cannot read variable WOFF2). Changing or replacing that
+file means regenerating `docs/resume/fonts/`, or the PDF and the site drift
+into different typefaces.
 **Machine-output rule:** monospace (`.machine`) appears ONLY on text a
 program produced — inventory numbers, commit SHAs, paths. Never headlines.
 **No fabricated evidence:** no fake traces, no animated counters, no number
@@ -24,16 +32,18 @@ that isn't emitted by `scripts/gen_inventory.py`. First-person voice ("I"),
 never "we".
 
 **Motion (operator override, 2026-08-07):** the original roundtable set "zero
-animation." The operator has since directed two deliberate, structural
-exceptions — both physical/real, not decorative theater:
+animation." The operator has since directed three deliberate, structural
+exceptions — all physical/real, not decorative theater:
 - the capability constellation is a live `d3-force` graph (repulsion +
   collision + drag), matching the persona-dream node graph;
 - the search placeholder rotates through real client-style questions;
 - the G꜀ mark's subscript c breathes slowly (~5s) as a quiet runtime signal,
   brightening on hover.
-Both honour `prefers-reduced-motion` (the constellation settles statically; the
-placeholder stops rotating), so the exhibits-not-theater posture still holds for
-that audience. No animated *evidence* — counters, traces, fake numbers — remains
+All three honour `prefers-reduced-motion` (the constellation settles statically
+via `matchMedia` in `capability-constellation.tsx`; the placeholder stops
+rotating in `capability-search.tsx`; the mark's breath is gated behind a
+`no-preference` media query in `globals.css`), so the exhibits-not-theater
+posture still holds for that audience. No animated *evidence* — counters, traces, fake numbers — remains
 banned. Any further motion needs the same explicit operator sign-off.
 
 Direction set by a 4-seat /ask roundtable (webgpt, webclaude, webkimi,
