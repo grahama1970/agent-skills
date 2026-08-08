@@ -36,6 +36,10 @@ steps:
     # its own. Assuming a common one is how an orchestrator silently
     # mis-invokes a step and reports the wrong reason for the failure.
     run_dir_arg: --run-root
+    # Steps do not share an interface either, so each declares its own args.
+    # {persona} / {idea} / {run_dir} are substituted from the single `run.sh
+    # dream` CLI surface -- that is what makes one command sufficient.
+    args: []
     produces: [memory_residue.json]
     proves: residue was recalled from memory with source ids and scopes intact
     does_not_prove: that the residue is relevant or that a dream should follow
@@ -43,7 +47,8 @@ steps:
   - id: dream_packet
     name: Dream Packet
     command: generate
-    run_dir_arg: null          # takes no run directory; see `run.sh generate --help`
+    run_dir_arg: null          # uses --output-dir, supplied via args below
+    args: ["--persona", "{persona}", "--about", "{idea}", "--output-dir", "{run_dir}"]
     produces: [dream_packet.json]
     proves: a synthetic dream was composed from that residue
     does_not_prove: anything about the day the residue came from
@@ -52,7 +57,8 @@ steps:
     name: Journal Entry
     command: write-dream-journal
     run_dir_arg: --cycles-dir
-    produces: [journal_entry.json]
+    args: ["--persona", "{persona}"]
+    produces: [dream_journal.v1.json, dream_journal.md]
     proves: she wrote an entry conforming to persona_journal.v1
     does_not_prove: that the entry is true of events
 
@@ -60,6 +66,7 @@ steps:
     name: Journal Render
     command: render-journal-entry
     run_dir_arg: --run-dir
+    args: ["--persona", "{persona}"]
     produces: [journal.md]
     proves: the entry rendered to prose with footnoted sources
     does_not_prove: that a reader will find it coherent
@@ -68,6 +75,7 @@ steps:
     name: Spoken Journal
     command: speak-journal
     run_dir_arg: --run-dir
+    args: []
     produces: [journal.wav]
     proves: the entry was rendered to audio with a requested delivery tone
     does_not_prove: that a listener perceives the intended feeling

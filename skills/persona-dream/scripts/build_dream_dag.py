@@ -38,13 +38,21 @@ DAG_SPEC_SCHEMA = "tau.generic_dag_spec.v1"
 
 
 def _goal_hash(goal: dict[str, Any]) -> str:
-    """Canonical over the goal object, per the Tau convention."""
-    canonical = json.dumps(goal, sort_keys=True, separators=(",", ":"))
+    """Reproduce Tau's canonical_sha256 exactly, over the goal minus its hash.
+
+    Tau recomputes this and refuses the spec on mismatch, so the encoding is not
+    ours to choose: sort_keys, tight separators, and ensure_ascii=False. The
+    default ensure_ascii=True silently diverges the moment a goal summary
+    contains a non-ASCII character.
+    """
+    payload = {k: v for k, v in goal.items() if k != "goal_hash"}
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False, allow_nan=False)
     return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def build_spec(*, contract: Path, run_dir: Path, run_id: str,
-               step_args: list[str], timeout_seconds: int) -> dict[str, Any]:
+               persona: str, idea: str, timeout_seconds: int) -> dict[str, Any]:
     spine = yaml.safe_load(contract.read_text(encoding="utf-8"))
     if not isinstance(spine, dict) or not isinstance(spine.get("steps"), list):
         raise SystemExit(f"BLOCKED_BAD_CONTRACT: {contract} has no steps")
@@ -66,13 +74,20 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
             "--command", str(step["command"]),
             "--receipt", str(receipts_dir / f"{node_id}.json"),
             "--run-dir", str(run_dir),
-            "--run-dir-arg", str(run_dir_arg or ""),
             "--produces", produces,
             "--proves", str(step.get("proves") or ""),
             "--does-not-prove", str(step.get("does_not_prove") or ""),
         ]
-        for extra in step_args:
-            command += ["--step-arg", extra]
+        # Omitted entirely when the step takes no run directory: Tau requires
+        # every argv item to be a non-empty string, so an empty flag value is
+        # not a way to say "none".
+        # `=` form: the VALUE starts with a dash (--run-root), and argparse
+        # would otherwise read it as the next flag.
+        if run_dir_arg:
+            command += [f"--run-dir-arg={run_dir_arg}"]
+        subs = {"persona": persona, "idea": idea, "run_dir": str(run_dir)}
+        for raw in step.get("args") or []:
+            command += [f"--step-arg={str(raw).format(**subs)}"]
 
         nodes.append({
             "node_id": node_id,
@@ -87,17 +102,22 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         })
         previous = node_id
 
+    # Tau's spec validator is strict about the goal object: anything beyond the
+    # canonical fields belongs under `extensions`. It says so precisely when it
+    # refuses, which is why the fix is a move rather than a guess.
     goal = {
         "goal_id": "persona-dream-spine",
         "goal_version": 1,
-        "statement": (
+        "summary": (
             "Produce a dream from memory residue and journal it. Terminates at "
             "the spoken journal; the video lane is an optional branch and "
             "conversation is a downstream consumer, not a step."
         ),
-        "contract": str(contract),
-        "contract_sha256": "sha256:" + hashlib.sha256(
-            contract.read_bytes()).hexdigest(),
+        "completion_criteria": [
+            "every spine node returns a schema-valid PASS node receipt",
+            "each node produced the artifacts its step declared in the contract",
+            f"the terminal node {spine.get('terminates_at')!r} produced its artifact",
+        ],
     }
 
     return {
@@ -106,7 +126,12 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         "run_dir": str(run_dir / "dag_run"),
         "goal": {**goal, "goal_hash": _goal_hash(goal)},
         "nodes": nodes,
-        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "extensions": {
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "contract": str(contract),
+            "contract_sha256": "sha256:" + hashlib.sha256(
+                contract.read_bytes()).hexdigest(),
+        },
     }
 
 
@@ -117,13 +142,14 @@ def main() -> int:
     ap.add_argument("--run-id", default="")
     ap.add_argument("--timeout-seconds", type=int, default=1800)
     ap.add_argument("--out", type=Path, default=None)
-    ap.add_argument("--step-arg", action="append", default=[])
+    ap.add_argument("--persona", default="embry")
+    ap.add_argument("--idea", default="", help="the idea to dream about")
     args = ap.parse_args()
 
     run_dir = args.run_dir.expanduser().resolve()
     run_id = args.run_id or f"dream-{run_dir.name}"
     spec = build_spec(contract=args.contract.resolve(), run_dir=run_dir,
-                      run_id=run_id, step_args=list(args.step_arg),
+                      run_id=run_id, persona=args.persona, idea=args.idea,
                       timeout_seconds=args.timeout_seconds)
 
     out = args.out or (run_dir / "dag-spec.json")
