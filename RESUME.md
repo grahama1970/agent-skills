@@ -15,7 +15,7 @@ This is the two-page version. The longer one — full project detail and the liv
 ## ABOUT
 An unusual résumé: commercial composer for Adidas and Pepsi, Webby-recognized producer for Sony, DARPA technical lead alongside Lockheed Martin and MIT. High-end creative and hard technical work — delivered by the same person, shipped as working code, in public.
 
-I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution.
+I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team.
 
 Self-contained by default: research, back end, front end, and the briefing. I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself, all my own design and code, no agency or contractor — and I present the work myself, having briefed agentic cybersecurity research at venues across the country for DARPA ARCOS and the Air Force Research Laboratory. One person takes it from problem to running system to the room.
 
@@ -43,17 +43,18 @@ Jan 2024 - Feb 2025
 
 ### Principal Data Scientist & ACERT Technical Lead | CS Group (DARPA ARCOS)
 Sep 2020 - Dec 2023
-- Responsible technical/project lead for CS Group's contribution to the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators.
+- Joined CS Group specifically for the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), on the prime-contractor team, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators.
 - Led design and delivery of ACERT (Automated Certification of Requirements Tool): architected the ArangoDB knowledge-graph schema and LLM-assisted reasoning pipeline for multi-hop compliance verification of mission-critical software against complex certification standards.
 - Briefed the program and its collaborators at reviews and conferences nationally; split time roughly 50/50 between executive/technical briefings and hands-on architecture and code, authoring the decks and demos myself.
 
-### Founder & Principal Consultant | grahamaco / Various Clients | Buffalo, NY · Remote
-2016 - 2020
-- Independent data science and engineering consulting for various clients through grahamaco — the same practice resumed after the DARPA ARCOS program.
+### Data Scientist | grahama | NYC · Remote
+Sep 2011 - Feb 2020
+- Freelance data science practice across gaming, manufacturing, entertainment, education, health, and e-commerce; ITAR-rated work included.
+- Clients included Toyota, Sony, Fox, Boehringer Ingelheim, UCLA Med, Dartmouth (edu-tech prediction), and Domain Industries (manufacturing intelligence).
 
-### Earlier: Executive Producer & Professional Composer | Los Angeles, CA
-2005 - 2016
-- Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized), leading cross-functional teams of 80+; commercial composer for Adidas, Pepsi, X-Games, Taco Bell, and Nestle.
+### Earlier: Interactive Executive Producer & Composer | Los Angeles, CA
+2005 - 2011
+- Director of Interactive Services at Dentsu America (LA division; 50% internal labor reduction, budgets $10K–$1M, teams of 3–50); Executive Producer, God of War: Ascension campaign for Sony (Webby-recognized, 80+ person productions); commercial composer for Adidas, Pepsi, and X-Games.
 
 ## PUBLIC WORK (non-ITAR) — github.com/grahama1970
 Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:
@@ -65,8 +66,8 @@ Client work is mostly export-controlled, so here is the public, verifiable side 
 - extractor, anvil, fetcher, chatterbox voice-agent fork — supporting cast, all public.
 
 ## EDUCATION
-- Metis Data Science Program | 2017
-- Trinity University | BS, Finance and Marketing | 1994
+- Metis Data Science Fellowship | 2016
+- Trinity University | BS, Finance, Marketing, and Economics
 
 ## CORE COMPETENCIES
 - Evals & Quality: LLM Evaluation, Agentic Evaluation Harnesses, Adversarial/Blind Testing, Regression Gates, Ground-Truth Fixtures, Judge Panels

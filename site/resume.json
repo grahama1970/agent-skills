@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead for CS Group's contribution."
+       "v": "I build verifiable agentic AI systems for defense, aerospace, and compliance. On DARPA ARCOS I was Principal Data Scientist and ACERT Technical Lead on the prime-contractor team."
       }
      ]
     },
@@ -272,7 +272,7 @@
         [
          {
           "t": "text",
-          "v": "Responsible technical/project lead for CS Group's contribution to the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators."
+          "v": "Joined CS Group specifically for the 4-year DARPA ARCOS program (Automated Rapid Certification of Software), on the prime-contractor team, working alongside Honeywell, Lockheed Martin, MIT, GE Research, SRI, and other program collaborators."
          }
         ],
         [
@@ -296,10 +296,10 @@
      "title": [
       {
        "t": "text",
-       "v": "Founder & Principal Consultant | grahamaco / Various Clients | Buffalo, NY · Remote"
+       "v": "Data Scientist | grahama | NYC · Remote"
       }
      ],
-     "period": "2016 - 2020",
+     "period": "Sep 2011 - Feb 2020",
      "blocks": [
       {
        "kind": "ul",
@@ -307,7 +307,13 @@
         [
          {
           "t": "text",
-          "v": "Independent data science and engineering consulting for various clients through grahamaco — the same practice resumed after the DARPA ARCOS program."
+          "v": "Freelance data science practice across gaming, manufacturing, entertainment, education, health, and e-commerce; ITAR-rated work included."
+         }
+        ],
+        [
+         {
+          "t": "text",
+          "v": "Clients included Toyota, Sony, Fox, Boehringer Ingelheim, UCLA Med, Dartmouth (edu-tech prediction), and Domain Industries (manufacturing intelligence)."
          }
         ]
        ]
@@ -319,10 +325,10 @@
      "title": [
       {
        "t": "text",
-       "v": "Earlier: Executive Producer & Professional Composer | Los Angeles, CA"
+       "v": "Earlier: Interactive Executive Producer & Composer | Los Angeles, CA"
       }
      ],
-     "period": "2005 - 2016",
+     "period": "2005 - 2011",
      "blocks": [
       {
        "kind": "ul",
@@ -330,7 +336,7 @@
         [
          {
           "t": "text",
-          "v": "Executive Producer, God of War: Ascension interactive campaign (Real Pie, for Sony; Webby-recognized), leading cross-functional teams of 80+; commercial composer for Adidas, Pepsi, X-Games, Taco Bell, and Nestle."
+          "v": "Director of Interactive Services at Dentsu America (LA division; 50% internal labor reduction, budgets $10K–$1M, teams of 3–50); Executive Producer, God of War: Ascension campaign for Sony (Webby-recognized, 80+ person productions); commercial composer for Adidas, Pepsi, and X-Games."
          }
         ]
        ]
@@ -423,13 +429,13 @@
       [
        {
         "t": "text",
-        "v": "Metis Data Science Program | 2017"
+        "v": "Metis Data Science Fellowship | 2016"
        }
       ],
       [
        {
         "t": "text",
-        "v": "Trinity University | BS, Finance and Marketing | 1994"
+        "v": "Trinity University | BS, Finance, Marketing, and Economics"
        }
       ]
      ]
@@ -550,10 +556,10 @@
    ]
   }
  ],
- "sourceCommit": "9c70dafb0",
+ "sourceCommit": "b31bc58bb",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "92f2e98f6dc8309d85e82be01aac75324fa559c318e97da67d3c52b4681fff44",
+ "sourceSha256": "a2e4fa83e64d79c4661cb159f3180843510f41ba552e9b0bc214489b0ee92f26",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -561,17 +567,17 @@
  "timeline": [
   {
    "start": 2005,
-   "end": "2016",
-   "period": "2005 - 2016",
-   "label": "Earlier: Executive Producer & Professional Composer",
+   "end": "2011",
+   "period": "2005 - 2011",
+   "label": "Earlier: Interactive Executive Producer & Composer",
    "org": "Los Angeles, CA"
   },
   {
-   "start": 2016,
+   "start": 2011,
    "end": "2020",
-   "period": "2016 - 2020",
-   "label": "Founder & Principal Consultant",
-   "org": "grahamaco"
+   "period": "Sep 2011 - Feb 2020",
+   "label": "Data Scientist",
+   "org": "grahama"
   },
   {
    "start": 2020,
@@ -631,6 +637,6 @@
    }
   ]
  },
- "pdfSha256": "4e237c0d44f46b63d58eb02ab56519542a6e8b00d56291f74784bbac5f6644c2",
- "pdfBytes": 159523
+ "pdfSha256": "3f9ad3987f0029773cc58fd1db32e2737bf341a5405703792e0c56ae32e0ea59",
+ "pdfBytes": 159969
 }
