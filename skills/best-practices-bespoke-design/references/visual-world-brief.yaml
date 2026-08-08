@@ -1,0 +1,260 @@
+schema_version: "bespoke-visual-world-brief.v1"
+project:
+  name: ""
+  surface: "marketing-site | product | editorial | portfolio | campaign | other"
+  implementation_target: ""
+  human_approver: ""
+  frozen_at: "YYYY-MM-DDTHH:MM:SSZ"
+
+provenance:
+  source_revision: ""
+  source_bundle_sha256: ""
+  authoritative_sources:
+    - source_id: "SRC-001"
+      title: ""
+      location: ""
+      source_type: "first-party | research | interview | analytics | stakeholder | reference"
+      authority: "authoritative | supporting | hypothesis"
+
+user_job:
+  primary_audience: ""
+  primary_job: ""
+  primary_decision: ""
+  desired_earned_feeling: ""
+  anxieties_or_failure_modes: []
+  secondary_audiences: []
+
+brand_truths:
+  - claim_id: "CLM-001"
+    claim: ""
+    source_ids: ["SRC-001"]
+    confidence: "high | medium | low"
+    audience_relevance: ""
+    visual_implication: ""
+    prohibited_inference: ""
+
+personality_tensions:
+  - axis: "learned <-> plainspoken"
+    position: ""
+    source_claim_ids: ["CLM-001"]
+    audience_consequence: ""
+  - axis: "precise <-> improvisational"
+    position: ""
+    source_claim_ids: []
+    audience_consequence: ""
+  - axis: "archival <-> future-facing"
+    position: ""
+    source_claim_ids: []
+    audience_consequence: ""
+  - axis: "quiet <-> theatrical"
+    position: ""
+    source_claim_ids: []
+    audience_consequence: ""
+
+narrative_premise:
+  sentence: >-
+    This experience behaves like [specific world or instrument] so that
+    [audience] can [job or decision] while feeling [earned emotion].
+  source_claim_ids: []
+  why_it_belongs_to_this_brand: ""
+  why_it_helps_the_user_job: ""
+  forbidden_literalizations: []
+
+concept_territories:
+  - id: "T1"
+    name: ""
+    semantic_premise: ""
+    emotional_posture: ""
+    typography_strategy: ""
+    composition_model: ""
+    image_or_illustration_logic: ""
+    primary_motif: ""
+    motion_behavior: ""
+    evidence_claim_ids: []
+    keyframe_artifacts: []
+    accessibility_risks: []
+    implementation_risks: []
+    exclusions: []
+  - id: "T2"
+    name: ""
+    semantic_premise: ""
+    emotional_posture: ""
+    typography_strategy: ""
+    composition_model: ""
+    image_or_illustration_logic: ""
+    primary_motif: ""
+    motion_behavior: ""
+    evidence_claim_ids: []
+    keyframe_artifacts: []
+    accessibility_risks: []
+    implementation_risks: []
+    exclusions: []
+  - id: "T3"
+    name: ""
+    semantic_premise: ""
+    emotional_posture: ""
+    typography_strategy: ""
+    composition_model: ""
+    image_or_illustration_logic: ""
+    primary_motif: ""
+    motion_behavior: ""
+    evidence_claim_ids: []
+    keyframe_artifacts: []
+    accessibility_risks: []
+    implementation_risks: []
+    exclusions: []
+
+selection:
+  selected_territory_id: ""
+  decided_by: ""
+  decided_at: "YYYY-MM-DDTHH:MM:SSZ"
+  must_pass_results:
+    claim_and_audience_fit: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    content_hierarchy: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    competitor_distinctiveness: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    system_scalability: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    accessibility_feasibility: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    responsive_feasibility: "PASS | FAIL | NOT_TESTED | BLOCKED"
+    implementation_editability: "PASS | FAIL | NOT_TESTED | BLOCKED"
+  rationale: ""
+  rejected_territories:
+    - territory_id: ""
+      reason: ""
+
+visual_grammar:
+  typography:
+    display_role: ""
+    reading_role: ""
+    utility_role: ""
+    data_or_annotation_role: ""
+    hierarchy_rules: []
+    wrapping_rules: []
+    fallback_rules: []
+    prohibited_uses: []
+  palette:
+    anchor: ""
+    field: ""
+    signal: ""
+    atmosphere: ""
+    semantic_states: {}
+    contrast_rules: []
+    prohibited_combinations: []
+  motif_family:
+    primary_device: ""
+    meaning: ""
+    source_claim_ids: []
+    macro_uses: []
+    component_uses: []
+    micro_uses: []
+    prohibited_uses: []
+  imagery:
+    subject_rules: []
+    crop_rules: []
+    treatment_rules: []
+    sequencing_rules: []
+    provenance_rules: []
+    alt_text_rules: []
+  spatial_grammar:
+    grid: ""
+    reading_lane: ""
+    focal_scale: ""
+    rhythm: ""
+    permitted_ruptures: []
+    forbidden_ruptures: []
+  material_language:
+    line: ""
+    border: ""
+    texture: ""
+    depth: ""
+    radius: ""
+    shadow: ""
+  motion:
+    purpose: []
+    allowed_properties: []
+    prohibited_motion: []
+    duration_range_ms: ""
+    reduced_motion_equivalent: ""
+  voice:
+    headline_behavior: ""
+    label_behavior: ""
+    call_to_action_behavior: ""
+    wit_boundary: ""
+    prohibited_tones: []
+  component_invariants:
+    - id: "INV-001"
+      rule: ""
+      survives_without_color_or_logo: true
+    - id: "INV-002"
+      rule: ""
+      survives_without_color_or_logo: true
+    - id: "INV-003"
+      rule: ""
+      survives_without_color_or_logo: true
+  responsive_choreography:
+    small: []
+    medium: []
+    large: []
+    extra_wide: []
+    text_zoom_200_percent: []
+
+controlled_abundance_map:
+  expressive_zones: []
+  calm_reading_zones: []
+  calm_task_zones: []
+  transition_zones: []
+  maximum_simultaneous_expressive_devices: 2
+
+page_beat_sheets:
+  - page_id: "home"
+    user_job: ""
+    beats:
+      - orientation: ""
+      - tension_or_question: ""
+      - explanation: ""
+      - proof: ""
+      - consequence: ""
+      - next_action: ""
+    required_content: []
+    prohibited_template_sections: []
+
+component_inventory:
+  - component_id: ""
+    semantic_purpose: ""
+    content_constraints: []
+    identity_bearing_rules: []
+    variants_and_states: []
+    responsive_transformation: []
+    accessibility_behavior: []
+    prohibited_uses: []
+
+acceptance:
+  required_viewports:
+    - "390x844"
+    - "768x1024"
+    - "1440x900"
+    - "extra-wide"
+  required_stress_fixtures:
+    - "long headline"
+    - "long labels"
+    - "high-density content"
+    - "no-image or failed-image"
+    - "keyboard traversal"
+    - "reduced motion"
+    - "200 percent text zoom"
+  blind_test:
+    rater_count: 5
+    representative_screen_count: 3
+    same_category_decoy_brief_count: 3
+    pre_registered_threshold: "80 percent correct"
+  accessibility_target: "WCAG 2.2 AA"
+  performance_target:
+    percentile: 75
+    lcp_seconds_max: 2.5
+    inp_milliseconds_max: 200
+    cls_max: 0.1
+
+exclusions:
+  living_designer_style_transfer: true
+  unsupported_cultural_references: true
+  fabricated_evidence: true
+  generic_trend_devices_without_brief_provenance: true

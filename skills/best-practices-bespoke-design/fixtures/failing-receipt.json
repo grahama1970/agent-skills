@@ -1,0 +1,394 @@
+{
+  "schema_version": "bespoke-design-receipt.v1",
+  "project": {
+    "name": "Deliberately Invalid Receipt Fixture",
+    "surface": "marketing-site and editorial index",
+    "source_revision": "fixture-source-4f23c1a",
+    "implementation_revision": "fixture-implementation-981bc7d",
+    "generated_at": "2026-08-08T16:30:00Z",
+    "fixture": true
+  },
+  "source_provenance": {
+    "source_bundle_sha256": "239ea24db366af7a360aca64008a5a55b3bb443dfaeda64abcee97ddfbe58903",
+    "authoritative_source_count": 7,
+    "supporting_source_count": 4
+  },
+  "concept_territories": [
+    {
+      "id": "T1",
+      "name": "Signal Observatory",
+      "semantic_premise": "The experience behaves like a calibrated observatory that turns scattered research signals into a legible field of evidence.",
+      "emotional_posture": "curious, exacting, and quietly revelatory",
+      "typography_strategy": "Large editorial propositions paired with compact technical annotations and calm reading text.",
+      "composition_model": "A stable reading axis surrounded by peripheral evidence constellations and measured boundary crossings.",
+      "image_logic": "Documentary research imagery is cropped as evidence specimens and sequenced from context to consequence.",
+      "primary_motif": "calibrated sightlines",
+      "evidence_claim_ids": [
+        "CLM-001",
+        "CLM-003"
+      ]
+    },
+    {
+      "id": "T2",
+      "name": "Working Field Manual",
+      "semantic_premise": "The experience behaves like a well-used field manual that helps practitioners move from observation to repeatable action.",
+      "emotional_posture": "practical, candid, and durable",
+      "typography_strategy": "Compact grotesk headings, numbered procedures, and generous long-form reading measures.",
+      "composition_model": "Tabbed chapters, margin notes, and sequential procedural blocks organized on a utilitarian modular grid.",
+      "image_logic": "Images appear as annotated field records with dates, captions, and explicit provenance.",
+      "primary_motif": "registration marks",
+      "evidence_claim_ids": [
+        "CLM-002",
+        "CLM-004"
+      ]
+    },
+    {
+      "id": "T3",
+      "name": "Living Index",
+      "semantic_premise": "The experience behaves like a living index whose relationships reveal how individual projects form a coherent research program.",
+      "emotional_posture": "open, connective, and forward-moving",
+      "typography_strategy": "A restrained humanist text face with elastic index labels and high-contrast relationship headlines.",
+      "composition_model": "An asymmetric relational grid that alternates index density with spacious narrative expansions.",
+      "image_logic": "Project imagery is grouped by relationship and changes scale according to evidentiary importance.",
+      "primary_motif": "linked index tabs",
+      "evidence_claim_ids": [
+        "CLM-001",
+        "CLM-005"
+      ]
+    }
+  ],
+  "selected_territory_id": "T1",
+  "visual_grammar": {
+    "narrative_premise": "A calibrated observatory turns scattered research signals into an inspectable and human-readable field of evidence.",
+    "non_color_invariants": [
+      "A stable central reading axis with evidence entering from the perimeter",
+      "Technical annotations aligned to visible source artifacts",
+      "Scale changes that correspond to evidentiary importance rather than decoration"
+    ],
+    "motif_mappings": [
+      {
+        "motif": "calibrated sightlines",
+        "meaning_or_job": "Connect a claim to the visible artifact or relationship that supports it.",
+        "source_claim_ids": [
+          "CLM-001",
+          "CLM-003"
+        ]
+      },
+      {
+        "motif": "specimen frame",
+        "meaning_or_job": "Separate source material from interpretation while preserving provenance.",
+        "source_claim_ids": [
+          "CLM-003"
+        ]
+      }
+    ],
+    "responsive_transformations": [
+      "Peripheral evidence moves into an ordered inline sequence on small screens",
+      "Wide comparison pairs become swipe-free stacked claim-and-source units",
+      "Decorative sightlines simplify while semantic source links remain visible"
+    ],
+    "controlled_abundance": {
+      "expressive_zones": [
+        "hero perimeter",
+        "section transitions"
+      ],
+      "calm_reading_zones": [
+        "case-study narrative",
+        "method explanation"
+      ],
+      "calm_task_zones": [
+        "project filters",
+        "contact form"
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "artifact_id": "A-SOURCE",
+      "kind": "source_bundle",
+      "path": "fixtures/artifacts/source-bundle.tar",
+      "sha256": "b68fa01f6dc6660fe0941f16f74e35ea1b06e86d2d22b90fdc15f800cde613ea"
+    },
+    {
+      "artifact_id": "A-LEDGER",
+      "kind": "evidence_ledger",
+      "path": "fixtures/artifacts/evidence-ledger.yaml",
+      "sha256": "3996d0b79c25c81d2191e1f9e2002c83fc08b077c5f8a97e364ffc0baea22c72"
+    },
+    {
+      "artifact_id": "A-BRIEF",
+      "kind": "visual_world_brief",
+      "path": "fixtures/artifacts/visual-world-brief.yaml",
+      "sha256": "9db39579dab94956dbacd88c4a55bf7ccce432af29ecce2244d8b686cbb43973"
+    },
+    {
+      "artifact_id": "A-T1",
+      "kind": "territory_board",
+      "path": "fixtures/artifacts/territory-t1.png",
+      "sha256": "48866e9c6fa579ac37b63dfa73c07de48f61cb0afb0e42906b951e1cfc91f211"
+    },
+    {
+      "artifact_id": "A-T2",
+      "kind": "territory_board",
+      "path": "fixtures/artifacts/territory-t2.png",
+      "sha256": "dd9f63f30d029d2eef5b530746ed22f0d5c85b741f596e501712c4026fefae06"
+    },
+    {
+      "artifact_id": "A-T3",
+      "kind": "territory_board",
+      "path": "fixtures/artifacts/territory-t3.png",
+      "sha256": "cdae11594e2c8edefd2dd4b030447b16ca6f1a89f40350bf7774e33881ca60e9"
+    },
+    {
+      "artifact_id": "A-SELECT",
+      "kind": "selection_record",
+      "path": "fixtures/artifacts/selection.json",
+      "sha256": "221739993449914bc29ddcc1cc6b4b5c782c398bd3800f4f61e1e47c1eb57dce"
+    },
+    {
+      "artifact_id": "A-HOME",
+      "kind": "screenshot",
+      "path": "fixtures/artifacts/home-1440.png",
+      "sha256": "4347580ac8f6a3348c904cb7ef0efdf87a91916bb0a08aacd4f0d1e131dfca3e",
+      "viewport": "1440x900",
+      "state": "default"
+    },
+    {
+      "artifact_id": "A-INTERIOR",
+      "kind": "screenshot",
+      "path": "fixtures/artifacts/interior-768.png",
+      "sha256": "aad551466b036a19b66a5248c56d368200f35a099ec1249c8258cac59d7bd39a",
+      "viewport": "768x1024",
+      "state": "dense-content"
+    },
+    {
+      "artifact_id": "A-STATE",
+      "kind": "screenshot",
+      "path": "fixtures/artifacts/state-390.png",
+      "sha256": "9420afb93bd1cac00baa11ee2981902e7dfa0446fc4c13b4b23013b81d27d56c",
+      "viewport": "390x844",
+      "state": "error"
+    },
+    {
+      "artifact_id": "A-BROWSER",
+      "kind": "browser_receipt",
+      "path": "fixtures/artifacts/browser-receipt.json",
+      "sha256": "145e878fedd9138897438745cb8af43b376043df737d398a0443f30bf4801c82"
+    },
+    {
+      "artifact_id": "A-A11Y",
+      "kind": "accessibility_receipt",
+      "path": "fixtures/artifacts/accessibility.json",
+      "sha256": "213e7bed695353e2e28d8f5996e27b340112bc227a24bbc77c8501bc51688f9f"
+    },
+    {
+      "artifact_id": "A-PERF",
+      "kind": "performance_receipt",
+      "path": "fixtures/artifacts/performance.json",
+      "sha256": "db9e6d7ef0d7cd19c7482831a3b0d284fec3151e494e305d47b77bad91787e15"
+    },
+    {
+      "artifact_id": "A-RATER-IN",
+      "kind": "rater_input",
+      "path": "fixtures/artifacts/rater-input.json",
+      "sha256": "c8dd55272f47f4f7ef4afee494de7dc848a0354fc14b98c8c39b1e980fcb868b"
+    },
+    {
+      "artifact_id": "A-RATER-OUT",
+      "kind": "rater_output",
+      "path": "fixtures/artifacts/rater-output.jsonl",
+      "sha256": "17b3969a5773c2ab1ee15f417cd17d9774cc46c1ee32938612360a46041906e4"
+    },
+    {
+      "artifact_id": "A-REFS",
+      "kind": "other",
+      "path": "fixtures/artifacts/reference-corpus.json",
+      "sha256": "c33b7a6462a1d3efd389186d2e4d868f40398b2289598cafbb51f2fe9f6ea909"
+    },
+    {
+      "artifact_id": "A-IMPL",
+      "kind": "implementation_bundle",
+      "path": "fixtures/artifacts/implementation.tar",
+      "sha256": "2974082e06b84cdd5b7cb583adac8769d5072baa3ad20e86fa255ea2f54edf6f"
+    }
+  ],
+  "blind_tests": {
+    "logo_off": {
+      "status": "PASS",
+      "correct_assignments": 8,
+      "total_assignments": 15,
+      "raw_output_artifact_ids": [
+        "A-RATER-OUT"
+      ]
+    },
+    "competitor_swap": {
+      "status": "PASS",
+      "conflict_channels": [
+        "metaphor",
+        "imagery",
+        "voice",
+        "spatial_grammar"
+      ],
+      "raw_output_artifact_ids": [
+        "A-RATER-OUT"
+      ]
+    },
+    "cross_screen_family": {
+      "status": "PASS",
+      "correct_groupings": 4,
+      "total_groupings": 5,
+      "observed_non_color_invariants": [
+        "central reading axis",
+        "source-linked annotations",
+        "evidence-weighted scale"
+      ],
+      "raw_output_artifact_ids": [
+        "A-RATER-OUT"
+      ]
+    },
+    "reference_leakage": {
+      "status": "PASS",
+      "reference_corpus_artifact_ids": [
+        "A-REFS"
+      ],
+      "distinctive_combination_copied": false,
+      "raw_output_artifact_ids": [
+        "A-RATER-OUT"
+      ]
+    }
+  },
+  "gates": {
+    "G0": {
+      "status": "PASS",
+      "summary": "G0 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-LEDGER"
+      ]
+    },
+    "G1": {
+      "status": "PASS",
+      "summary": "G1 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-LEDGER",
+        "A-BRIEF"
+      ]
+    },
+    "G2": {
+      "status": "PASS",
+      "summary": "G2 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-T1",
+        "A-T2",
+        "A-T3"
+      ]
+    },
+    "G3": {
+      "status": "PASS",
+      "summary": "G3 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BRIEF",
+        "A-SELECT"
+      ]
+    },
+    "G4": {
+      "status": "PASS",
+      "summary": "G4 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BRIEF",
+        "A-HOME",
+        "A-INTERIOR"
+      ]
+    },
+    "G5": {
+      "status": "PASS",
+      "summary": "G5 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BRIEF",
+        "A-HOME",
+        "A-INTERIOR"
+      ]
+    },
+    "G6": {
+      "status": "PASS",
+      "summary": "G6 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-HOME",
+        "A-INTERIOR",
+        "A-STATE"
+      ]
+    },
+    "G7": {
+      "status": "PASS",
+      "summary": "G7 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BRIEF",
+        "A-HOME",
+        "A-INTERIOR",
+        "A-STATE"
+      ]
+    },
+    "G8": {
+      "status": "PASS",
+      "summary": "G8 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BROWSER",
+        "A-HOME",
+        "A-INTERIOR",
+        "A-STATE"
+      ]
+    },
+    "G9": {
+      "status": "PASS",
+      "summary": "G9 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-A11Y",
+        "A-BROWSER"
+      ]
+    },
+    "G10": {
+      "status": "PASS",
+      "summary": "G10 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-PERF"
+      ]
+    },
+    "G11": {
+      "status": "FAIL",
+      "summary": "Blind distinctiveness test failed, but the receipt dishonestly claims readiness.",
+      "evidence_artifact_ids": [
+        "A-RATER-IN",
+        "A-RATER-OUT",
+        "A-REFS"
+      ]
+    },
+    "G12": {
+      "status": "PASS",
+      "summary": "G12 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-BROWSER",
+        "A-IMPL"
+      ]
+    },
+    "G13": {
+      "status": "PASS",
+      "summary": "G13 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-IMPL",
+        "A-BROWSER"
+      ]
+    },
+    "G14": {
+      "status": "PASS",
+      "summary": "G14 fixture evidence satisfies the pre-registered requirement.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    }
+  },
+  "exceptions": [],
+  "final_status": "READY",
+  "notes": "Synthetic fixture only; it demonstrates receipt validation and makes no claim about a production design."
+}

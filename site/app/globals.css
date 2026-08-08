@@ -201,6 +201,18 @@ section {
   position: relative;
   padding-block: clamp(64px, 9vw, 140px);
 }
+/* Per-section warm ground — art-directed, not one flat --ink. Each shift is a
+   few points within the warm family (kept subtle for cohesion / trust, per
+   best-practices-bespoke-design G6): a faint temperature move section to
+   section so the page reads hand-tuned rather than a uniform dark template.
+   All stay far above WCAG-AA against --text; grain/glow overlay unchanged. */
+.hero { background-color: #110d0b; }
+#search { background-color: #0d0b0a; }
+#work { background-color: #0c0e0b; }      /* a hair greener */
+#competence { background-color: #0e0c0a; }
+#dream { background-color: #100a0a; }      /* a hair warmer/redder */
+#ledger { background-color: #0b0908; }     /* deepest ink */
+#contact { background-color: #100c0a; }
 
 /* --- top bar ---------------------------------------------- */
 .topbar {
