@@ -1,0 +1,58 @@
+"""Pure-logic tests for the opportunity GitHub tracker (no network/gh)."""
+
+from __future__ import annotations
+
+import pytest
+
+from monitor_opportunities.github_tracker import (
+    GithubTrackerError,
+    _issue_body,
+    _issue_title,
+    _number_from_url,
+    _opp_id,
+    _track_label,
+    file_or_update_opportunity,
+)
+
+
+def _opp(**over: object) -> dict:
+    o = {
+        "candidate_id": "candidate:a:2c336a19739a65ce",
+        "title": "AI Engineer - Public Sector",
+        "organization": "Unstructured",
+        "apply_url": "https://jobs.ashbyhq.com/unstructured/abc",
+        "lane": "A",
+        "eligibility_state": "ELIGIBLE_REMOTE",
+    }
+    o.update(over)
+    return o
+
+
+def test_opp_id_prefers_candidate_id() -> None:
+    assert _opp_id(_opp()) == "candidate:a:2c336a19739a65ce"
+    assert _opp_id({"content_hash": "abc"}) == "abc"
+
+
+def test_track_label_by_lane() -> None:
+    assert _track_label(_opp(lane="A")) == "track:employment"
+    assert _track_label(_opp(lane="C")) == "track:consulting"
+
+
+def test_title_includes_org() -> None:
+    assert _issue_title(_opp()) == "AI Engineer - Public Sector — Unstructured"
+
+
+def test_body_carries_dedup_marker() -> None:
+    body = _issue_body(_opp(), "candidate:a:2c336a19739a65ce")
+    assert "<!-- opp-id: candidate:a:2c336a19739a65ce -->" in body
+    assert "Unstructured" in body
+    assert "Human transmits" in body
+
+
+def test_number_from_url() -> None:
+    assert _number_from_url("https://github.com/grahama1970/opportunities/issues/1") == 1
+
+
+def test_missing_id_raises() -> None:
+    with pytest.raises(GithubTrackerError):
+        file_or_update_opportunity({"title": "x", "organization": "y"})
