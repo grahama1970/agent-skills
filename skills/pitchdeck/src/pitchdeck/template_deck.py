@@ -183,6 +183,18 @@ def drop_unused_placeholders(slide, keep_idxs: set[int]) -> list[int]:
     return removed
 
 
+def all_layouts(presentation):
+    """Every layout in the package, across EVERY master.
+
+    ``presentation.slide_layouts`` returns only the FIRST master's layouts. The
+    Sparta template carries 2 masters and 55 layouts, so a scan using that
+    property silently skipped 28 of them — which is how a stale owner disclaimer
+    survived retargeting until verify-publish read the raw package."""
+    for master_index, master in enumerate(presentation.slide_masters):
+        for layout_index, layout in enumerate(master.slide_layouts):
+            yield f"master[{master_index}]/layout[{layout_index}]", layout
+
+
 def _rewrite_preserving_format(shape, text: str) -> None:
     """Replace a shape's text while KEEPING its run formatting.
 
@@ -219,11 +231,11 @@ def retarget_disclaimer(presentation, disclaimer: str, *, stale_markers: tuple[s
             if shape.has_text_frame and any(m in shape.text_frame.text for m in stale_markers):
                 _rewrite_preserving_format(shape, disclaimer)
                 rewritten.append(f"master[{master_index}]:{shape.name}")
-    for layout_index, layout in enumerate(presentation.slide_layouts):
+    for where, layout in all_layouts(presentation):
         for shape in layout.shapes:
             if shape.has_text_frame and any(m in shape.text_frame.text for m in stale_markers):
                 _rewrite_preserving_format(shape, disclaimer)
-                rewritten.append(f"layout[{layout_index}]:{shape.name}")
+                rewritten.append(f"{where}:{shape.name}")
     residual = scan_stale_markers(presentation, stale_markers)
     return {"rewritten": rewritten, "residual_markers": residual}
 
@@ -232,7 +244,7 @@ def scan_stale_markers(presentation, stale_markers: tuple[str, ...]) -> list[str
     """Every place a stale owner marker still appears (masters, layouts, slides)."""
     found: list[str] = []
     pools = [(f"master[{i}]", m.shapes) for i, m in enumerate(presentation.slide_masters)]
-    pools += [(f"layout[{i}]", l.shapes) for i, l in enumerate(presentation.slide_layouts)]
+    pools += [(where, l.shapes) for where, l in all_layouts(presentation)]
     pools += [(f"slide[{i}]", s.shapes) for i, s in enumerate(presentation.slides)]
     for where, shapes in pools:
         for shape in shapes:

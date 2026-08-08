@@ -558,6 +558,45 @@ def variations_cmd(
         _abort(exc)
 
 
+@app.command(name="verify-publish")
+def verify_publish_cmd(
+    pptx: Annotated[Path, typer.Option(help="The FINAL, possibly human-edited .pptx to be delivered.")],
+    ledger: Annotated[Path, typer.Option(help="Claim ledger (yaml or json).")],
+    approvals: Annotated[Path | None, typer.Option(help="pitchdeck.publish_approvals.v1 JSON: approved renderings, chrome text, disclaimer, stale-owner markers.")] = None,
+    template_contract: Annotated[Path | None, typer.Option(help="pitchdeck.template_contract.v1 JSON to check the deck still derives from the approved template.")] = None,
+    out: Annotated[Path | None, typer.Option(help="Write the publish receipt here.")] = None,
+) -> None:
+    """Re-prove the DELIVERED pptx: every visible string claim-bound (exit 1 on findings)."""
+    import json as json_mod
+
+    from .publish_verify import PublishApprovals, TemplateContract, load_claim_texts, verify_publish
+
+    try:
+        approval_model = (
+            PublishApprovals.model_validate(json_mod.loads(approvals.read_text(encoding="utf-8")))
+            if approvals else PublishApprovals()
+        )
+        contract_model = (
+            TemplateContract.model_validate(json_mod.loads(template_contract.read_text(encoding="utf-8")))
+            if template_contract else None
+        )
+        receipt = verify_publish(
+            pptx,
+            claim_texts=load_claim_texts(ledger),
+            approvals=approval_model,
+            template_contract=contract_model,
+        )
+        payload = receipt.model_dump(by_alias=True, mode="json")
+        if out:
+            out.write_text(json_mod.dumps(payload, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps(payload, indent=1))
+        raise typer.Exit(0 if receipt.status == "PASS" else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],

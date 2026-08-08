@@ -1,0 +1,151 @@
+"""Mutation tests for verify-publish (#1317).
+
+The compiler proved claim fidelity at emission; nothing re-proved it after a
+human edited the file. Each test below mutates a REAL emitted deck the way a
+person actually could — retype a word, paste a screenshot over a slide, drag a
+box off-canvas — and asserts the verifier refuses it. A gate that has never
+failed has not been demonstrated.
+"""
+
+import copy
+import json
+from pathlib import Path
+
+import pytest
+from pptx import Presentation
+from pptx.util import Inches
+
+from pitchdeck.publish_verify import (
+    PublishApprovals,
+    TemplateContract,
+    extract_visible_strings,
+    verify_publish,
+)
+
+CLAIMS = [
+    "Search, embeddings, and graph traversal can identify relevant material without "
+    "establishing support, scope, currency, or approval.",
+    "The model helps users navigate while governed evidence and authorized people decide.",
+]
+APPROVALS = PublishApprovals(
+    approved_renderings=["Relevant Material Does Not Establish Support"],
+    non_claim_text=["Prepared-host capture", "grahama.co"],
+    disclaimer="This document is the property of grahama.co and cannot be communicated "
+               "or disclosed without grahama.co's authorization.",
+    stale_owner_markers=["CSINC"],
+)
+
+
+def _deck(tmp_path: Path, *, title: str = "Relevant Material Does Not Establish Support") -> Path:
+    """A minimal compliant deck: one approved title, one claim excerpt."""
+    presentation = Presentation()
+    presentation.slide_width, presentation.slide_height = Inches(13.333), Inches(7.5)
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(0.8))
+    box.text_frame.text = title
+    body = slide.shapes.add_textbox(Inches(0.5), Inches(1.5), Inches(12), Inches(1.0))
+    body.text_frame.text = "Search, embeddings, and graph traversal can identify relevant material"
+    path = tmp_path / "deck.pptx"
+    presentation.save(str(path))
+    return path
+
+
+def _verify(path: Path, **kwargs):
+    return verify_publish(path, claim_texts=CLAIMS, approvals=APPROVALS, **kwargs)
+
+
+def test_compliant_deck_passes():
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        receipt = _verify(_deck(Path(tmp)))
+        assert receipt.status == "PASS", [f.model_dump() for f in receipt.findings]
+        assert receipt.strings_checked >= 2
+        assert receipt.pptx_sha256
+
+
+def test_unapproved_word_change_is_refused(tmp_path):
+    """The core loophole: a human retypes one word after emission."""
+    path = _deck(tmp_path, title="Relevant Material Always Establishes Support")
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "UNCLAIMED_TEXT" for f in receipt.findings)
+
+
+def test_stale_owner_marker_in_a_note_is_refused(tmp_path):
+    path = _deck(tmp_path)
+    presentation = Presentation(str(path))
+    presentation.slides[0].notes_slide.notes_text_frame.text = "internal: CSINC template origin"
+    presentation.save(str(path))
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "STALE_OWNER_MARKER" for f in receipt.findings)
+
+
+def test_flattened_slide_is_refused(tmp_path):
+    """A slide pasted in as a screenshot cannot be verified or edited."""
+    from PIL import Image
+
+    image = tmp_path / "flat.png"
+    Image.new("RGB", (400, 240), "#065E7C").save(image)
+    presentation = Presentation()
+    presentation.slide_width, presentation.slide_height = Inches(13.333), Inches(7.5)
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    slide.shapes.add_picture(str(image), Inches(1), Inches(1), Inches(8), Inches(4.5))
+    path = tmp_path / "flat.pptx"
+    presentation.save(str(path))
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "NON_EDITABLE_CONTENT" for f in receipt.findings)
+
+
+def test_offcanvas_text_is_refused(tmp_path):
+    path = _deck(tmp_path)
+    presentation = Presentation(str(path))
+    shape = presentation.slides[0].shapes[0]
+    shape.left = Inches(20)  # dragged off the canvas
+    presentation.save(str(path))
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "VISIBLE_CLAIM_LOSS" for f in receipt.findings)
+
+
+def test_midword_truncation_is_refused(tmp_path):
+    path = _deck(tmp_path, title="Relevant Material Does Not Establish Suppo…")
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "VISIBLE_CLAIM_LOSS" for f in receipt.findings)
+
+
+def test_template_drift_is_refused(tmp_path):
+    path = _deck(tmp_path)
+    contract = TemplateContract(
+        template_sha256="0" * 64, template_name="house", layouts_used=["Graham"],
+    )
+    receipt = _verify(path, template_contract=contract)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "TEMPLATE_DRIFT" for f in receipt.findings)
+
+
+def test_text_inside_a_group_is_not_missed(tmp_path):
+    """A claim hidden in a group must still be checked — groups are where text hides."""
+    presentation = Presentation()
+    presentation.slide_width, presentation.slide_height = Inches(13.333), Inches(7.5)
+    slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+    group = slide.shapes.add_group_shape()
+    inner = group.shapes.add_textbox(Inches(1), Inches(1), Inches(6), Inches(0.6))
+    inner.text_frame.text = "Machines quietly guarantee every conclusion"  # never a claim
+    path = tmp_path / "grouped.pptx"
+    presentation.save(str(path))
+    strings = extract_visible_strings(path)
+    assert any("quietly guarantee" in text for _, text in strings), strings
+    receipt = _verify(path)
+    assert receipt.status == "REFUSED"
+    assert any(f.code == "UNCLAIMED_TEXT" for f in receipt.findings)
+
+
+def test_receipt_states_what_it_does_not_prove(tmp_path):
+    receipt = _verify(_deck(tmp_path))
+    joined = " ".join(receipt.does_not_prove).lower()
+    assert "factually true" in joined
+    assert "pixel" in joined

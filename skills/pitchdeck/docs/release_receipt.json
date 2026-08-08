@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "936cea489029ab39b3ed9adff2e491d5592b8edd",
- "source_tree_sha256": "a2e2f1226772a3deaacea6e9d5a256b18db8bd03802d8af1106a19f44a92dcc3",
+ "commit": "de3a404af2e036a6d65d0cf435e86bdb6a5ec66f",
+ "source_tree_sha256": "5d2d80f2e92b3bae01f49bf2ba55c35d92eb1540407211edef36480e764f2a8e",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -42,10 +42,11 @@
   "undo",
   "variations",
   "verify",
+  "verify-publish",
   "version",
   "visual-sync"
  ],
- "command_count": 41,
+ "command_count": 42,
  "schema_inventory": [
   {
    "declared_schemas": [
@@ -77,6 +78,8 @@
     "pitchdeck.narrative_outline.v1",
     "pitchdeck.plan_receipt.v1",
     "pitchdeck.pptx_primitive_receipt.v1",
+    "pitchdeck.publish_approvals.v1",
+    "pitchdeck.publish_receipt.v1",
     "pitchdeck.render_envelope.v1",
     "pitchdeck.render_receipt.v1",
     "pitchdeck.slide_edit_receipt.v1",
@@ -85,6 +88,7 @@
     "pitchdeck.source_state.v1",
     "pitchdeck.style_analysis_receipt.v1",
     "pitchdeck.style_reference.v1",
+    "pitchdeck.template_contract.v1",
     "pitchdeck.transform_mapping.v1",
     "pitchdeck.ui_deck_bundle.v1",
     "pitchdeck.validation_report.v1",
@@ -105,7 +109,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "3 passed, 0 xfail"
+  "summary": "12 passed, 0 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

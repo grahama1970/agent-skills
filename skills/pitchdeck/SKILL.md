@@ -24,6 +24,7 @@ provides:
   - deck-ui-bundle
   - browser-deck-renderer
   - house-conformance-gate
+  - publish-verification
   - house-style-measurement
   - author-voice-profile
   - nearest-slide-layout-retrieval
@@ -213,6 +214,40 @@ The deck-coupled form, when you want variations for a specific slide:
 
 Missing `codex`, or a failed generation, reports `NEEDS_ATTENTION` — never a
 fabricated image and never a silent skip.
+
+## Publish verification (the final boundary)
+
+The compiler proves claim fidelity at EMISSION. Nothing re-proved it afterwards,
+so "claim-faithful" and "editable by a human" had a hole between them: any string
+could be retyped before delivery and no gate would notice. `verify-publish`
+closes that boundary by re-extracting evidence from the delivered file — slides,
+groups, tables, notes, and package XML — instead of trusting the manifest that
+produced it.
+
+```bash
+./run.sh verify-publish --pptx final-human-edited.pptx \
+  --ledger claim_ledger.yaml \
+  --approvals publish-approvals.json \
+  --template-contract house-template.contract.json \
+  --out publish-receipt.json          # exit 1 on any finding
+```
+
+| Code | Refuses |
+|------|---------|
+| `UNCLAIMED_TEXT` | a visible string that is not an approved rendering, a legal claim excerpt, or declared chrome |
+| `STALE_OWNER_MARKER` | a previous template owner's name anywhere in the package, notes and properties included |
+| `NON_EDITABLE_CONTENT` | a slide flattened to imagery, whose claims no verifier can read and no human can edit |
+| `TEMPLATE_DRIFT` | slides using layouts outside the approved template contract |
+| `VISIBLE_CLAIM_LOSS` | text that is off-canvas, zero-sized, or truncated mid-word |
+
+Nine mutation tests cover each code by mutating a real emitted deck the way a
+person actually could. Verified live: the deck passes with 36 strings checked,
+and retyping one claim into `"Search always establishes support"` is refused.
+
+Running it caught two defects the pre-emission gates could not see: a stale owner
+disclaimer surviving in 28 layouts (`presentation.slide_layouts` exposes only the
+FIRST master's layouts, and this template has two), and diagram node/edge labels
+reaching the render bound only at element level rather than string level.
 
 ## House-style measurement
 

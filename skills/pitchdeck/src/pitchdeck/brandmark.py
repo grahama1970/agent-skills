@@ -50,8 +50,10 @@ def remove_inherited_marks(presentation, *, max_height_in: float = 0.75) -> list
     never mistaken for a logo. Returns what was removed so the receipt can show
     it rather than the change being invisible."""
     removed: list[str] = []
+    from .template_deck import all_layouts
+
     pools = [(f"master[{i}]", m) for i, m in enumerate(presentation.slide_masters)]
-    pools += [(f"layout[{i}]", l) for i, l in enumerate(presentation.slide_layouts)]
+    pools += list(all_layouts(presentation))  # every master's layouts, not just the first
     limit = int(max_height_in * 914400)
     for where, part in pools:
         for shape in list(part.shapes):
