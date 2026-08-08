@@ -1,0 +1,82 @@
+# The generate-dream pipeline, as data.
+#
+# This exists because the 42-step taxonomy lived inside
+# scripts/persist_immutable_goal_steps.py, fused with one revision's results
+# (hardcoded RUN_ID and REVISION_ID). A definition welded to a run record cannot
+# be executed, cannot be diffed, and cannot be compiled into a Tau DAG. So the
+# definition moves here and the audit script keeps only its own job.
+#
+# Scope is the SPINE: the pipeline terminates when the dream is produced and
+# journaled. The video/Kling lane (42-step numbers 6-38) is an optional branch
+# off the dream packet, not the spine -- a run that produces a journal without
+# video is a COMPLETE run, not a failed one. That reframing is deliberate: the
+# old ledger reported BLOCKED_FINAL_ACCEPTANCE because a movie did not finish,
+# and agents routed around the blocker rather than stopping at it.
+#
+# Conversation is NOT here. Chatting with her about the dream consumes the
+# finished journal and appends only to conversation.jsonl; it is a downstream
+# surface, not a step.
+#
+# Every step declares the artifacts it must produce. A step that exits 0 without
+# producing them FAILS -- exit status is what a script claims, artifacts are what
+# it did.
+
+schema: persona_dream.dream_spine.v1
+version: 1
+
+terminates_at: journal_spoken
+optional_branches:
+  video: "steps 6-38 of the legacy ledger; branches off dream_packet"
+
+steps:
+  - id: memory_residue
+    name: Memory Recall And Residue Grounding
+    command: pipeline-phase02-recall
+    # Steps do not share a flag name for the run directory, so each declares
+    # its own. Assuming a common one is how an orchestrator silently
+    # mis-invokes a step and reports the wrong reason for the failure.
+    run_dir_arg: --run-root
+    produces: [memory_residue.json]
+    proves: residue was recalled from memory with source ids and scopes intact
+    does_not_prove: that the residue is relevant or that a dream should follow
+
+  - id: dream_packet
+    name: Dream Packet
+    command: generate
+    run_dir_arg: null          # takes no run directory; see `run.sh generate --help`
+    produces: [dream_packet.json]
+    proves: a synthetic dream was composed from that residue
+    does_not_prove: anything about the day the residue came from
+
+  - id: journal_entry
+    name: Journal Entry
+    command: write-dream-journal
+    run_dir_arg: --cycles-dir
+    produces: [journal_entry.json]
+    proves: she wrote an entry conforming to persona_journal.v1
+    does_not_prove: that the entry is true of events
+
+  - id: journal_render
+    name: Journal Render
+    command: render-journal-entry
+    run_dir_arg: --run-dir
+    produces: [journal.md]
+    proves: the entry rendered to prose with footnoted sources
+    does_not_prove: that a reader will find it coherent
+
+  - id: journal_spoken
+    name: Spoken Journal
+    command: speak-journal
+    run_dir_arg: --run-dir
+    produces: [journal.wav]
+    proves: the entry was rendered to audio with a requested delivery tone
+    does_not_prove: that a listener perceives the intended feeling
+
+# Artifacts a run directory may hold that no step produces. Anything else found
+# there is reported as undeclared -- that is how a bespoked side path becomes
+# visible instead of blending in.
+permitted_unowned:
+  - conversation.jsonl        # downstream chat surface, appended post-pipeline
+  - dream_pipeline_receipt.json
+  - contradiction_report.json
+  - "*.wav"                   # reply audio from the chat surface
