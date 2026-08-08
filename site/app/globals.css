@@ -2810,6 +2810,42 @@ a.fig:hover .l::after,
   color: var(--faint);
   font-size: 0.9rem;
 }
+.search-miss {
+  display: block;
+  width: 200px;
+  max-width: 60%;
+  height: auto;
+  margin: 0.2rem 0 0.9rem;
+}
+.search-miss .sm-edge {
+  stroke: var(--ember);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  opacity: 0.45;
+  stroke-linecap: round;
+}
+.search-miss .sm-empty {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: 0.6;
+}
+.search-miss .sm-core {
+  fill: rgba(209, 112, 60, 0.14);
+}
+.search-miss .sm-ring {
+  fill: none;
+  stroke: var(--ember);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 6px rgba(209, 112, 60, 0.5));
+}
+.search-miss .sm-q {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-style: italic;
+  fill: var(--brass);
+}
 .capsearch-empty-lead {
   margin: 0;
   font-family: var(--serif);
@@ -2994,6 +3030,28 @@ a:hover .c-img { opacity: 1; }
   white-space: nowrap;
   border: 0;
 }
+/* When a keyboard user tabs into the list, reveal it (don't strand focus in a
+   clipped void). Screen readers already read it; this serves sighted keyboard. */
+.constellation-sr:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0.6rem 0 0;
+  padding: 0.9rem 1.1rem;
+  clip: auto;
+  white-space: normal;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(24, 18, 17, 0.6);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.constellation-sr a { color: var(--brass); }
+.c-lensmark {
+  pointer-events: none;
+  opacity: 0.9;
+}
+.c-node.is-dim .c-lensmark { opacity: 0.25; }
 .c-alabel {
   font-family: var(--serif);
   font-size: 14px;

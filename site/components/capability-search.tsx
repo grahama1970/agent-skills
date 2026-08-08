@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, runSearch, type Hit } from '@/lib/search';
+import { SearchMiss } from '@/components/search-miss';
 import inventory from '@/inventory.json';
 
 const BUILD_COMMIT = (inventory as { commit: string }).commit;
@@ -117,6 +118,7 @@ export function CapabilitySearch() {
         <ul className="capsearch-results" aria-live="polite">
           {hits.length === 0 && (
             <li className="capsearch-empty">
+              <SearchMiss />
               <p className="capsearch-empty-lead">
                 No honest match for <b>{q}</b>.
               </p>

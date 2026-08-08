@@ -58,6 +58,18 @@ const GLOW: Record<string, string> = {
   hybrid: '#93a289',
 };
 
+// Redundant, colourblind-safe cue for lens: technical=triangle, creative=circle,
+// hybrid=diamond — so the technical/creative distinction never rests on the two
+// adjacent warm hues alone (best-practices-d3: don't rely on colour alone).
+function LensMark({ x, y, lens, color }: { x: number; y: number; lens?: string; color: string }) {
+  const s = 4;
+  if (lens === 'technical')
+    return <polygon points={`${x},${y - s} ${x - s},${y + s} ${x + s},${y + s}`} fill={color} className="c-lensmark" />;
+  if (lens === 'hybrid')
+    return <rect x={x - s + 0.8} y={y - s + 0.8} width={(s - 0.8) * 2} height={(s - 0.8) * 2} transform={`rotate(45 ${x} ${y})`} fill={color} className="c-lensmark" />;
+  return <circle cx={x} cy={y} r={s - 0.6} fill={color} className="c-lensmark" />; // creative
+}
+
 const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
 // The ring the node settles onto — keeps the physics legible instead of a hairball.
 const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 234 : 392);
@@ -279,12 +291,16 @@ export function CapabilityConstellation() {
             const inner = (
               <g
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
+                data-qid={`constellation:node:${n.id}`}
+                data-qs-action="CONSTELLATION_NODE"
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover(null)}
                 onPointerDown={startDrag(n)}
                 style={{ cursor: 'grab' }}
               >
-                {n.type === 'area' && <title>{n.title || n.label}</title>}
+                {/* SVG tooltip + accessible name (SVG uses a <title> child, not
+                    a title attribute) — for every node, not just areas. */}
+                <title>{n.title || n.label}</title>
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image
@@ -305,6 +321,7 @@ export function CapabilityConstellation() {
                   className={`c-ring${priv ? ' c-ring--private' : ''}`}
                   style={{ stroke: glow, filter: `drop-shadow(0 0 7px ${glow}aa)` }}
                 />
+                <LensMark x={x} y={y - r - 6} lens={n.lens} color={glow} />
                 <text
                   x={x}
                   y={y + r + (isProj ? 17 : 15)}
@@ -330,7 +347,7 @@ export function CapabilityConstellation() {
                 data-qid={`constellation:jump:${n.slug}`}
                 data-qs-action="CONSTELLATION_JUMP"
                 title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
-                aria-label={`${n.label} — ${n.question || ''}`}
+                aria-label={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 onClick={(e) => {
                   if (moved.current) e.preventDefault(); // was a drag, not a click
                 }}
@@ -367,26 +384,53 @@ export function CapabilityConstellation() {
         })()}
       </div>
       <p className="constellation-legend">
-        <span className="cl cl--technical">technical</span>
-        <span className="cl cl--hybrid">hybrid</span>
-        <span className="cl cl--creative">creative</span>
+        <span className="cl cl--technical">▲ technical</span>
+        <span className="cl cl--hybrid">◆ hybrid</span>
+        <span className="cl cl--creative">● creative</span>
         <span className="cl-note">dashed ring = private work, public overview only</span>
       </p>
-      {/* Text alternative for the graph (d3 a11y): the same structure, read linearly. */}
-      <ul className="constellation-sr">
-        {NODES.filter((n) => n.type === 'area').map((a) => {
-          const projs = EDGES.filter((e) => e.source === a.id).map(
-            (e) => byId.get(e.target)?.label,
-          );
-          return (
-            <li key={a.id}>
-              {a.label}
-              {a.skillCount ? ` (${a.skillCount} skills)` : ''}
-              {projs.length ? `: ${projs.join(', ')}` : ''}
-            </li>
-          );
-        })}
-      </ul>
+      {/* Text alternative for the graph (d3 a11y): a navigable equivalent — the
+          same areas and projects, with real jump links so keyboard / screen-
+          reader users reach every project the sighted graph links to. */}
+      <nav className="constellation-sr" aria-label="Practice map, as a list">
+        <ul>
+          {NODES.filter((n) => n.type === 'area').map((a) => {
+            const projs = EDGES.filter((e) => e.source === a.id)
+              .map((e) => byId.get(e.target))
+              .filter(Boolean);
+            return (
+              <li key={a.id}>
+                {a.label}
+                {a.skillCount ? ` (${a.skillCount} skills)` : ''}
+                {projs.length ? (
+                  <ul>
+                    {projs.map((p) => (
+                      <li key={p!.id}>
+                        {p!.slug ? (
+                          <a
+                            href={`#project-${p!.slug}`}
+                            data-qid={`constellation:srjump:${p!.slug}`}
+                            data-qs-action="CONSTELLATION_SR_JUMP"
+                            title={`Jump to ${p!.label}`}
+                          >
+                            {p!.label}
+                          </a>
+                        ) : (
+                          p!.label
+                        )}
+                        {p!.lens ? ` — ${p!.lens}` : ''}
+                        {p!.visibility && p!.visibility !== 'public'
+                          ? ' (public overview only)'
+                          : ''}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </figure>
   );
 }
