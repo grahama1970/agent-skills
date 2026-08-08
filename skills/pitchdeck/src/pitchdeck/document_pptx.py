@@ -249,14 +249,11 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
             tint = _hex(palette.get(element.icon.tint_role, "#FFFFFF"))
             group = container.add_group_shape()
             badge_frame = frame.sub(element.bbox)
-            ring = group.shapes.add_shape(MSO_SHAPE.OVAL, Inches(badge_frame.x), Inches(badge_frame.y),
-                                          Inches(badge_frame.w), Inches(badge_frame.h))
-            ring.fill.background()
-            ring.line.color.rgb = tint
-            ring.line.width = Pt(2.25)
-            ring.name = f"el:{element.id}:ring"
-            inner = Frame(badge_frame.x + badge_frame.w * 0.19, badge_frame.y + badge_frame.h * 0.19,
-                          badge_frame.w * 0.62, badge_frame.h * 0.62)
+            # Corpus evidence (cybersummit-32/47, sbir-38, reqml-49): the band
+            # badge is a BARE white line-art glyph — no enclosing ring — and it
+            # fills the badge box rather than sitting inside one.
+            inner = Frame(badge_frame.x + badge_frame.w * 0.06, badge_frame.y + badge_frame.h * 0.06,
+                          badge_frame.w * 0.88, badge_frame.h * 0.88)
             _emit_icon_parts(group, element.icon.library_id, inner, tint, f"el:{element.id}")
             _pin_group_xfrm(group, frame.rect(element.bbox))
             group.name = f"el:{element.id}"
@@ -462,6 +459,22 @@ def emit_document_pptx(
             band.fill.fore_color.rgb = _hex(band_cfg.get("fill", palette["primary"]))
             band.line.fill.background()
             band.name = "chrome:band"
+            # Corpus band carries faint diagonal technical linework on its right
+            # half (cybersummit-32/47, sbir-38) — emitted as native freeform
+            # lines so the band stays editable, never a raster overlay.
+            band_h = SLIDE_H_IN * 0.10
+            for i in range(6):
+                x0 = SLIDE_W_IN * 0.70 + i * 0.62
+                line = slide.shapes.add_connector(
+                    MSO_CONNECTOR.STRAIGHT,
+                    Inches(min(x0, SLIDE_W_IN)), Inches(band_h),
+                    Inches(min(x0 + 0.95, SLIDE_W_IN)), Inches(0.0),
+                )
+                # lighter petrol, not white: the corpus swooshes are a tonal
+                # shift within the band, never a contrasting overlay.
+                line.line.color.rgb = _hex("#1D7694")
+                line.line.width = Pt(1.25)
+                line.name = f"chrome:band-texture:{i}"
             title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
             is_cover = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
             tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""

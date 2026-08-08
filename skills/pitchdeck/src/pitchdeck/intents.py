@@ -127,6 +127,20 @@ def _assertion_for(module: OutlineModule, deck_title: str, *, use_candidate_rend
     return assertion, module.candidate_claim_ids[0], "verbatim"
 
 
+def _fill_diagram_canvas(graph):
+    """Single-row diagrams fill their box vertically (corpus: the author's
+    diagrams occupy the canvas; ours floated in a narrow band with dead space
+    above and below). Multi-row graphs are left untouched — their vertical
+    structure is meaningful."""
+    rows = {round(node.bbox.y, 3) for node in graph.nodes}
+    if len(rows) != 1:
+        return graph
+    filled = graph.model_copy(deep=True)
+    for node in filled.nodes:
+        node.bbox = node.bbox.model_copy(update={"y": 0.04, "h": 0.92})
+    return filled
+
+
 def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None, context_ask: str | None = None) -> DocSlide:
     recipe = _resolve_recipe(module, recipes)
     assertion, claim_id, transform = _assertion_for(module, deck_title, use_candidate_renderings=use_candidate_renderings)
@@ -205,8 +219,8 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                              binding_paths=["element:diagram"]) for i in range(count - 1)]
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
-            bbox=Bbox(x=0.05, y=0.24, w=0.9, h=0.58),
-            diagram=DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges),
+            bbox=Bbox(x=0.05, y=0.30, w=0.9, h=0.58),
+            diagram=_fill_diagram_canvas(DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
             binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade"),
         ))
@@ -235,10 +249,10 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
             reveal.append(el_id)
 
     if "diagram" in {r.value for r in recipe.required_roles} and recipe.id != "roadmap-gates":
-        graph = DiagramGraph.model_validate(module.diagram)
+        graph = _fill_diagram_canvas(DiagramGraph.model_validate(module.diagram))
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
-            bbox=Bbox(x=0.08, y=0.4 if reveal else 0.26, w=0.84, h=0.48 if reveal else 0.6),
+            bbox=Bbox(x=0.06, y=0.42 if reveal else 0.24, w=0.88, h=0.46 if reveal else 0.64),
             diagram=graph, binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade", fragment_index=len(reveal)) if reveal else DocEntrance(),
         ))

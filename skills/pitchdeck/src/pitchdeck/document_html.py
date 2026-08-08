@@ -64,6 +64,21 @@ _TITLE_CASE_LOWER = {"a", "an", "the", "and", "or", "but", "for", "nor", "of", "
                      "on", "at", "to", "by", "vs", "with", "from", "as", "is", "are"}
 
 
+# Band texture measured off the corpus renders (cybersummit-32/47, sbir-38):
+# faint diagonal technical linework sweeping across the band's right half.
+_BAND_TEXTURE_SVG = (
+    '<svg viewBox="0 0 400 40" preserveAspectRatio="none" '
+    'style="position:absolute;right:0;top:0;height:100%;width:46%;opacity:.18" '
+    'xmlns="http://www.w3.org/2000/svg">'
+    + "".join(
+        f'<path d="M {170 + i * 24} 44 C {205 + i * 24} 27, {250 + i * 24} 13, {330 + i * 24} 4" '
+        f'fill="none" stroke="#ffffff" stroke-width="1"/>'
+        for i in range(8)
+    )
+    + "</svg>"
+)
+
+
 def house_title_case(text: str) -> str:
     """House convention (measured: 173/213 real titles are Title Case).
 
@@ -248,13 +263,14 @@ def _element_html(el: DocElement, assets_by_id: dict, asset_base: Path, theme: d
         resolved = resolve_icon(el.icon.library_id, require_editable=False)
         tint = palette.get(el.icon.tint_role, palette["primary"])
         if el.role == "badge":
-            # metaphor badge: white circled glyph inside the band
+            # Corpus evidence (cybersummit-32/47, sbir-38, reqml-49): the band
+            # badge is a BARE white line-art glyph filling its box — the author
+            # never encloses it in a ring.
             svg = resolved["svg"].replace("#000", tint).replace("stroke='#000'", f"stroke='{tint}'")
-            svg = svg.replace("<svg ", '<svg width="62%" height="62%" style="position:absolute;left:19%;top:19%" ', 1)
+            svg = svg.replace("<svg ", '<svg width="88%" height="88%" style="position:absolute;left:6%;top:6%" ', 1)
             return (
                 f'<div {qid} data-icon="{html.escape(el.icon.library_id)}" style="{pos}">'
-                f'<div style="position:relative;width:100%;height:100%;border:2.5px solid {tint};'
-                f'border-radius:50%;box-sizing:border-box;">{svg}</div></div>'
+                f'<div style="position:relative;width:100%;height:100%;">{svg}</div></div>'
             )
         svg = resolved["svg"].replace("#000", tint).replace("stroke='#000'", f"stroke='{tint}'")
         svg = svg.replace("<svg ", '<svg width="100%" height="100%" ', 1)
@@ -366,8 +382,9 @@ def render_document_html(
             band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else house_title_case(title_el.text if title_el else ""))
             band_html = (
                 f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
-                f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;">'
-                f'<span style="color:{band.get("title_color", "#FFFFFF")};font-family:'
+                f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;'
+                f'overflow:hidden;">' + _BAND_TEXTURE_SVG +
+                f'<span style="position:relative;color:{band.get("title_color", "#FFFFFF")};font-family:'
                 f'{theme["theme_tokens"]["heading_font"]}, sans-serif;'
                 f'font-size:{38 if len(band_text) <= 58 else 32}px;font-weight:bold;'
                 f'padding-left:2.5%;padding-right:9%;">{html.escape(band_text)}</span></div>'
