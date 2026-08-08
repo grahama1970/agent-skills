@@ -184,7 +184,6 @@ export default function ResumePage() {
             here replaces the PDF's own "this is the two-page version" line,
             which would be self-referential on the page it points at. */}
         <div className="cv-actions">
-          <span className="cv-actions-note">Full version — the PDF is a 2-page cut</span>
           <a
             className="cv-btn cv-btn-primary"
             href={doc.downloads.pdf}
@@ -217,6 +216,7 @@ export default function ResumePage() {
             </svg>
             <span>Markdown</span>
           </a>
+          <span className="cv-actions-note">Full version — the PDF is a 2-page cut</span>
         </div>
 
 
