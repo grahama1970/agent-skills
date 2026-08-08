@@ -14,6 +14,7 @@ import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { SkillMosaic } from '@/components/skill-mosaic';
+import { CompetenceMatrix } from '@/components/competence-matrix';
 import content from '@/content.json';
 import inventory from '@/inventory.json';
 import visibility from '@/project-visibility.json';
@@ -344,6 +345,29 @@ export default function Home() {
                 );
               })}
             </div>
+          </div>
+        </section>
+
+        <hr className="rule" />
+
+        {/* ===================== COMPETENCE ===================== */}
+        <section id="competence">
+          <div className="wrap">
+            <div className="work-head">
+              <div>
+                <p className="kicker">
+                  <b>·</b> Across the corpus
+                </p>
+                <h2 className="h2">What the work adds up to.</h2>
+              </div>
+              <p className="count">disciplines the skills declare — counts, not ratings</p>
+            </div>
+            <p className="cm-lede">
+              Not a self-graded skills chart. Each row is a discipline the skills tag themselves
+              with; the number is how many actually do, and the projects are where you can watch it
+              run. Thin rows stay thin on purpose.
+            </p>
+            <CompetenceMatrix />
           </div>
         </section>
 

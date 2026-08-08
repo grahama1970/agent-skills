@@ -48,6 +48,8 @@ jobs:
           python3 scripts/gen_inventory.py
           python3 scripts/gen_visibility.py
           python3 scripts/gen_research_map.py
+          # competence matrix reads inventory + research-map + content.
+          python3 scripts/gen_competence.py
           python3 scripts/gen_catalog.py
           python3 scripts/gen_graph.py
           python3 scripts/gen_artifacts.py

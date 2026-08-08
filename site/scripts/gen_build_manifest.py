@@ -33,6 +33,7 @@ SURFACES = {
     "graph.json": "sourceCommit",
     "project-visibility.json": "sourceCommit",
     "resume.json": "sourceCommit",
+    "competence.json": "commit",
 }
 # Immutable historical fixtures the page renders: NOT regenerated per commit —
 # they capture a real PAST run. They carry their own evidence-source (a run id /
@@ -55,6 +56,9 @@ INPUT_DEPS = {
     "catalog.json": ["inventory.json", "project-visibility.json", "research-map.json", "content.json"],
     "graph.json": ["project-visibility.json", "research-map.json", "content.json"],
     "artifacts.json": ["inventory.json"],
+    # competence matrix: real per-discipline skill counts (frontmatter at HEAD via
+    # inventory) mapped to flagship projects through the research-map bridge.
+    "competence.json": ["inventory.json", "research-map.json", "content.json"],
     # RESUME.md is the resume's only upstream; digesting it here means a green
     # gate proves /resume was generated from exactly the committed Markdown.
     "resume.json": ["../RESUME.md"],

@@ -4010,3 +4010,97 @@ h1 .proof-origin::after {
 }
 
 
+
+/* ===================== Competence matrix ===================== */
+/* A lookup table, not a heatmap: real per-discipline skill counts + the flagship
+   projects that exercise each. Counts use .machine (program-emitted numbers). */
+.cm-lede {
+  max-width: 60ch;
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.cm-wrap {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--ink-1);
+}
+.cm-scroll {
+  overflow-x: auto; /* wide table scrolls inside its own box, never the page */
+}
+.cm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.cm-caption {
+  caption-side: bottom;
+  padding: 12px 16px;
+  color: var(--faint);
+  font-size: 0.82rem;
+  text-align: left;
+  line-height: 1.5;
+}
+.cm-table th,
+.cm-table td {
+  padding: 11px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: middle;
+}
+.cm-table thead th {
+  color: var(--faint);
+  font-weight: 600;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cm-table tbody tr:last-child th,
+.cm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.cm-disc {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.cm-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+th.cm-num {
+  text-align: right;
+}
+.cm-lens {
+  white-space: nowrap;
+}
+.cm-lensmark {
+  font-size: 0.9rem;
+  margin-right: 4px;
+}
+.cm-lens-technical { color: var(--brass); }
+.cm-lens-creative { color: var(--ember); }
+.cm-lens-hybrid { color: var(--sage); }
+.cm-dash {
+  color: var(--faint);
+}
+.cm-projects {
+  line-height: 1.9;
+}
+.cm-chip {
+  display: inline-block;
+  margin: 0 6px 2px 0;
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cm-chip:hover {
+  color: var(--text);
+  border-color: var(--brass);
+}
