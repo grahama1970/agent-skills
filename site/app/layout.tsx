@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     url: 'https://grahama.co',
     siteName: 'grahama.co',
     type: 'website',
-    images: [{ url: '/dream/horus-embry-tea.webp', width: 2172, height: 724 }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'grahama.co — G꜀ mark, agent systems that prove what they did' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Graham Anderson — agent systems that prove what they did',
     description,
-    images: ['/dream/horus-embry-tea.webp'],
+    images: ['/og.png'],
   },
 };
 

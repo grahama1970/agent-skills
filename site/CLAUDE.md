@@ -3,10 +3,20 @@
 Next.js (static export) + Tailwind v4, deployed to GitHub Pages via
 `.github/workflows/site-deploy.yml`, custom domain grahama.co.
 
-## Design system (roundtable-decided, 2026-08-05)
+## Design system (dark-first, as shipped)
 
-Light editorial: paper `#FAF8F4`, ink `#16150F`, one oxide-amber accent.
-Display face Instrument Serif (self-hosted OFL); body system sans.
+**Dark warm editorial** — this is the SHIPPED direction; do not "correct" it to
+light. An earlier 2026-08-05 roundtable note proposed a light palette; it was
+never implemented and the site has been dark-first throughout, so that note is
+retired here to avoid a costly mistaken redesign. Actual tokens (globals.css):
+ground `--ink #0c0908`, warm text `--text #ece2d3`, paper `--paper #f2eadc`,
+plus accents `--brass #e2ac62`, `--ember #d1703c`, `--sage #93a289`.
+Display face is self-hosted **variable Fraunces** (using its `SOFT`/`WONK`/`opsz`
+axes for the argument/editorial voice); body system sans; monospace for machine
+evidence. The **G꜀ brand mark** is Fraunces G + an *italic ember* subscript c
+with a brass ring (nav ~30px cream G, hub ~48px brass G, favicon `app/icon.svg`
+~16-20px heavier G + ember node); the literal wordmark stays `grahama.co`
+(`.co` in brass) — never the `grahamᶜo` shorthand where domain recognition matters.
 **Machine-output rule:** monospace (`.machine`) appears ONLY on text a
 program produced — inventory numbers, commit SHAs, paths. Never headlines.
 **No fabricated evidence:** no fake traces, no animated counters, no number

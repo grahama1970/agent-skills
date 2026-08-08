@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Favicon optical master of the G꜀ mark. Self-contained dark ground so it
+       reads on any browser-tab chrome; a heavier serif G for small-size
+       durability; the subscript c becomes an ember NODE at favicon scale
+       (per the identity review — legibility over literal notation at 16-20px).
+       Brass ring echoes the constellation hub. -->
+  <rect width="32" height="32" rx="7" fill="#16150F"/>
+  <circle cx="16" cy="16" r="13" fill="none" stroke="#e2ac62" stroke-width="1.4" opacity="0.85"/>
+  <text x="14.4" y="22.6" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', 'Iowan Old Style', serif"
+        font-weight="700" font-size="19" fill="#ece2d3">G</text>
+  <circle cx="22.2" cy="20.4" r="2.3" fill="#d1703c"/>
+</svg>
