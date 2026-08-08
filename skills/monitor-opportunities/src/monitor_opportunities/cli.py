@@ -660,6 +660,30 @@ def nightly(
         apply_prep_path.write_text(json.dumps(packets, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     steps["ats_form_capture"] = {"captured": len(ats_summary), "top_k": ats_capture_top_k, "results": ats_summary}
 
+    # Track each shortlisted opportunity as an issue in the PRIVATE tracker repo
+    # (dedup by content_hash; a re-seen posting gets a re-eval comment, not a
+    # duplicate). Fail-soft: a GitHub outage records the failure but never fails
+    # the nightly. Disable with MONITOR_TRACKER_ENABLED=0.
+    from .github_tracker import GithubTrackerError, file_or_update_opportunity
+
+    tracker_repo = _os.environ.get("MONITOR_TRACKER_REPO", "grahama1970/opportunities")
+    shortlist_path = out / "ranking" / "shortlist.json"
+    tracked: list[dict[str, object]] = []
+    if _os.environ.get("MONITOR_TRACKER_ENABLED", "1") == "1" and shortlist_path.exists():
+        shortlist = json.loads(shortlist_path.read_text(encoding="utf-8"))
+        for opp in shortlist:
+            try:
+                result = file_or_update_opportunity(
+                    opp,
+                    repo=tracker_repo,
+                    state_label="state:shortlisted",
+                    comment="Re-evaluated by tonight's nightly.",
+                )
+                tracked.append({"number": result.get("number"), "action": result.get("action")})
+            except (GithubTrackerError, subprocess.TimeoutExpired) as exc:
+                logger.warning("tracker skipped for {}: {}", opp.get("candidate_id"), exc)
+    steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo}
+
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a
     # restartable dependency).
