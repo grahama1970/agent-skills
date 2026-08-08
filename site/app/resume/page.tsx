@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { SiteNav } from '@/components/site-nav';
 import resume from '@/resume.json';
+import competence from '@/competence.json';
 
 /**
  * /resume — the formal, skimmable resume.
@@ -68,13 +69,47 @@ function Inline({ tokens }: { tokens: Token[] }) {
   );
 }
 
-function Blocks({ blocks }: { blocks: Block[] }) {
+/**
+ * A competency line is "Cluster: term, term, term". On paper the labelled
+ * bullet parses well for ATS, but on screen a bullet buries the label mid-line.
+ * Splitting on the first colon gives a scannable label column without changing
+ * the source, so the PDF and the page stay one document.
+ */
+function ClusterList({ items }: { items: Token[][] }) {
+  return (
+    <dl className="cv-clusters">
+      {items.map((item, i) => {
+        const first = item[0]?.v ?? '';
+        const cut = first.indexOf(':');
+        if (item[0]?.t !== 'text' || cut < 0) {
+          return (
+            <div key={i} className="cv-cluster">
+              <dd><Inline tokens={item} /></dd>
+            </div>
+          );
+        }
+        const label = first.slice(0, cut);
+        const rest: Token[] = [{ ...item[0], v: first.slice(cut + 1).trim() }, ...item.slice(1)];
+        return (
+          <div key={i} className="cv-cluster">
+            <dt>{label}</dt>
+            <dd><Inline tokens={rest} /></dd>
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
+
+function Blocks({ blocks, clusters = false }: { blocks: Block[]; clusters?: boolean }) {
   return (
     <>
       {blocks.map((b, i) => {
         if (b.kind === 'p') return <p key={i}><Inline tokens={b.inline} /></p>;
         if (b.kind === 'ul')
-          return (
+          return clusters ? (
+            <ClusterList key={i} items={b.items} />
+          ) : (
             <ul key={i}>
               {b.items.map((item, j) => (
                 <li key={j}><Inline tokens={item} /></li>
@@ -179,7 +214,35 @@ export default function ResumePage() {
         {doc.sections.map((s) => (
           <section key={s.title} className="cv-section">
             <h2>{s.title}</h2>
-            <Blocks blocks={s.blocks} />
+            <Blocks blocks={s.blocks} clusters={s.title === 'CORE COMPETENCIES'} />
+            {/* The evidence behind the competency claims, rendered only in the
+                deeper web version. Counts come from competence.json, generated
+                from the project-taxonomy registry at the deploy commit — the
+                same file the homepage matrix reads, so the two cannot disagree.
+                Counts, never self-assessed ratings. */}
+            {s.title === 'DEEPER DETAIL' ? (
+              <table className="cv-evidence">
+                <caption>
+                  Skills declaring each discipline, generated from{' '}
+                  <code>project-taxonomy</code> at {competence.commit} ·{' '}
+                  {competence.totalSkills} skills mapped
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Discipline</th>
+                    <th scope="col">Skills</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {competence.disciplines.map((d) => (
+                    <tr key={d.id}>
+                      <th scope="row">{d.label}</th>
+                      <td className="machine">{d.skillCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
           </section>
         ))}
 

@@ -1422,6 +1422,13 @@ h1 .it::after {
 }
 .closer .b {
   grid-column: 9 / span 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* text + bullets stay left-aligned */
+}
+/* Right-align only the email button within the block (Flexbox align-self). */
+.closer .b > .btn {
+  align-self: flex-end;
 }
 .shelved {
   font-family: var(--serif);
@@ -4103,4 +4110,88 @@ th.cm-num {
 .cm-chip:hover {
   color: var(--text);
   border-color: var(--brass);
+}
+
+/* ---- /resume: scannable competency clusters + evidence table ----
+   The label column lets the eye find a domain without reading the terms,
+   which a bullet with a mid-line colon does not allow. */
+.cv-clusters {
+  display: grid;
+  gap: 0.55rem 1.25rem;
+  margin: 0 0 1.1rem;
+}
+
+.cv-cluster {
+  display: grid;
+  gap: 0.1rem 1.25rem;
+  grid-template-columns: minmax(9rem, 15rem) 1fr;
+}
+
+.cv-clusters dt {
+  color: var(--brass);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cv-clusters dd {
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .cv-cluster {
+    grid-template-columns: 1fr;
+    gap: 0.05rem;
+  }
+}
+
+/* Counts, never ratings — the evidence behind the competency claims. */
+.cv-evidence {
+  border-collapse: collapse;
+  margin: 0.6rem 0 0.5rem;
+  width: 100%;
+}
+
+.cv-evidence caption {
+  color: var(--faint);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.cv-evidence th,
+.cv-evidence td {
+  border-bottom: 1px solid var(--line-2);
+  padding: 0.3rem 0.5rem 0.3rem 0;
+  text-align: left;
+}
+
+.cv-evidence thead th {
+  border-bottom-color: var(--line);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cv-evidence tbody th {
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.cv-evidence td {
+  color: var(--brass);
+  text-align: right;
+  width: 5rem;
+}
+
+@media print {
+  .cv-evidence {
+    display: none !important;
+  }
 }
