@@ -176,7 +176,21 @@ export default function ResumePage() {
             so the print stylesheet drops it. */}
         <footer className="cv-foot">
           <p className="machine">
-            Generated from RESUME.md at{' '}
+            Generated from{' '}
+            {/* Pinned to the commit, not to main, so the link always shows the
+                exact source that produced this page rather than whatever the
+                resume looks like today. */}
+            <a
+              href={`https://github.com/grahama1970/agent-skills/blob/${doc.sourceCommit}/RESUME.md`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-qid="resume:link:source"
+              data-qs-action="RESUME_OPEN_SOURCE"
+              title="Open the RESUME.md this page was generated from"
+            >
+              RESUME.md
+            </a>{' '}
+            at{' '}
             <a
               href={`https://github.com/grahama1970/agent-skills/commit/${doc.sourceCommit}`}
               target="_blank"

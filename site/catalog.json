@@ -1,6 +1,6 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "8c55853d4",
+  "sourceCommit": "36e09c1ba",
   "counts": {
     "areas": 8,
     "projects": 10,
@@ -2799,7 +2799,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Audit and sync the public site (grahama.co, site/) against the repo README. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README. Use for \"is the website current\", \"sync the site with the README\", \"website drift\", or after editing the README project cards or At a Glance table.",
-      "body": "monitor website The public site ( site/ , served at https://grahama.co) mirrors two curated surfaces in README.md : the \"Fun Stuff I'm Working On\" project cards and the \"At a Glance\" inventory table. The README is the source of truth; the site reads site/content.json . This skill keeps them honest. Commands A disabled by default nightly service is registered at agents/website maintainer/services.yaml (repo convention: cron entries ship disabled; enable only when the scheduler environment is ready). Contract Report only by default. audit never mutates. apply writes only site/content.json ; committing, pushing, and the Pages deploy remain the caller's explicit actions (push to main triggers .github/workflows/site deploy.yml ). Prose is not clobbered. Site blurbs may be richer than README card captions; apply preserves existing blurbs for projects that remain, and only membership (slugs/hrefs) and stats are synced. Proof: audit JSON reports each drift item; after an applied change lands o",
+      "body": "monitor website RESUME.md is the source of truth for grahama.co/resume: gen resume.py parses it into site/resume.json and copies the PDF and Markdown exports into site/public/ , so the page, /resume.pdf , and /resume.md are one commit's content. The digest check below catches an edited resume whose surface was never regenerated. The public site ( site/ , served at https://grahama.co) mirrors two curated surfaces in README.md : the \"Fun Stuff I'm Working On\" project cards and the \"At a Glance\" inventory table. The README is the source of truth; the site reads site/content.json . This skill keeps them honest. Commands A disabled by default nightly service is registered at agents/website maintainer/services.yaml (repo convention: cron entries ship disabled; enable only when the scheduler environment is ready). Contract Report only by default. audit never mutates. apply writes only site/content.json ; committing, pushing, and the Pages deploy remain the caller's explicit actions (push to m",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-website/SKILL.md"
     },
     {

@@ -3857,15 +3857,27 @@ h1 .proof-origin::after {
   border-bottom-color: var(--brass);
 }
 
+/* The global `footer` rule styles the homepage's link-list footer: a tinted
+   panel with generous padding and `footer a { display: block }`. Both are
+   wrong for a one-line build stamp, so this opts out of the panel and puts
+   the links back inline. */
 .cv-foot {
+  background: none;
   border-top: 1px solid var(--line-2);
   margin-top: 2.6rem;
-  padding-top: 1rem;
+  padding-block: 1rem 0;
 }
 
 .cv-foot p {
   color: var(--faint);
   margin: 0;
+}
+
+.cv-foot a {
+  display: inline;
+  font-size: inherit;
+  line-height: inherit;
+  word-break: normal;
 }
 
 @media (max-width: 640px) {
