@@ -54,6 +54,19 @@ class VoiceExemplar(StrictModel):
     source_image: str = Field(min_length=1)
 
 
+class VoiceStats(StrictModel):
+    """Quantified house voice, measured over the author's real deck titles."""
+
+    title_count: int = Field(ge=1)
+    median_words: int = Field(ge=1)
+    p10_words: int = Field(ge=1)
+    p90_words: int = Field(ge=1)
+    title_case_ratio: float = Field(ge=0.0, le=1.0)
+    question_ratio: float = Field(ge=0.0, le=1.0)
+    parenthetical_ratio: float = Field(ge=0.0, le=1.0)
+    copular_ratio: float = Field(ge=0.0, le=1.0)
+
+
 class VoiceProfile(StrictModel):
     schema_: Literal["pitchdeck.voice_profile.v1"] = Field(
         default="pitchdeck.voice_profile.v1", alias="schema"
@@ -64,6 +77,9 @@ class VoiceProfile(StrictModel):
         default_factory=list, description="Exemplar ids with no extractable headline — visible, not dropped."
     )
     word_count_range: tuple[int, int]
+    stats: VoiceStats | None = Field(
+        default=None, description="Measured over the real deck corpus when decks_dir is supplied."
+    )
 
     def content_sha256(self) -> str:
         payload = self.model_dump(by_alias=True, mode="json")
@@ -93,8 +109,60 @@ def _detect_devices(headline: str) -> list[str]:
     return devices
 
 
-def compile_voice_profile(corpus_dir: Path) -> VoiceProfile:
-    """Compile exemplars.yaml into a deterministic, content-addressed profile."""
+def harvest_titles(decks_dir: Path) -> list[str]:
+    """Every slide title from the author's real decks (the primary voice signal).
+
+    python-pptx title placeholder first, first non-empty text frame as the
+    documented fallback; 2-14 words keeps titles and drops body paragraphs."""
+    from pptx import Presentation
+
+    titles: list[str] = []
+    for deck in sorted(decks_dir.glob("*.pptx")):
+        for slide in Presentation(str(deck)).slides:
+            text = ""
+            try:
+                if slide.shapes.title is not None and slide.shapes.title.has_text_frame:
+                    text = slide.shapes.title.text_frame.text
+            except (AttributeError, KeyError):
+                text = ""
+            if not text.strip():
+                frames = [s.text_frame.text for s in slide.shapes if s.has_text_frame and s.text_frame.text.strip()]
+                text = frames[0] if frames else ""
+            text = " ".join(text.split())
+            if 2 <= len(text.split()) <= 14:
+                titles.append(text)
+    return titles
+
+
+def measure_voice(titles: list[str]) -> VoiceStats:
+    """Quantify the house voice from real titles — the numbers the proposer targets."""
+    import statistics
+
+    if not titles:
+        raise ValueError("cannot measure voice from zero titles")
+    counts = sorted(len(t.split()) for t in titles)
+    n = len(counts)
+
+    def _title_case(text: str) -> bool:
+        words = [w for w in text.split() if w]
+        capped = sum(1 for w in words if w[:1].isupper())
+        return bool(words) and capped >= max(2, len(words) * 0.6)
+
+    return VoiceStats(
+        title_count=n,
+        median_words=int(statistics.median(counts)),
+        p10_words=counts[n // 10],
+        p90_words=counts[(9 * n) // 10],
+        title_case_ratio=round(sum(_title_case(t) for t in titles) / n, 3),
+        question_ratio=round(sum(t.rstrip().endswith("?") for t in titles) / n, 3),
+        parenthetical_ratio=round(sum("(" in t for t in titles) / n, 3),
+        copular_ratio=round(sum(bool(re.search(r"\b(is|are)\b", t, re.I)) for t in titles) / n, 3),
+    )
+
+
+def compile_voice_profile(corpus_dir: Path, decks_dir: Path | None = None) -> VoiceProfile:
+    """Compile exemplars.yaml (+ real deck titles when available) into a
+    deterministic, content-addressed profile."""
     source = corpus_dir / "references" / "exemplars.yaml"
     data = yaml.safe_load(source.read_text(encoding="utf-8"))
     exemplars: list[VoiceExemplar] = []
@@ -119,11 +187,13 @@ def compile_voice_profile(corpus_dir: Path) -> VoiceProfile:
     if not exemplars:
         raise ValueError("voice profile compiled zero exemplars — corpus unusable")
     counts = [e.word_count for e in exemplars]
+    stats = measure_voice(harvest_titles(decks_dir)) if decks_dir and decks_dir.is_dir() else None
     return VoiceProfile(
         corpus_path=str(source),
         exemplars=sorted(exemplars, key=lambda e: e.id),
         coverage_gaps=sorted(gaps),
         word_count_range=(min(counts), max(counts)),
+        stats=stats,
     )
 
 

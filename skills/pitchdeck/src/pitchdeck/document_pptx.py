@@ -30,7 +30,7 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.util import Emu, Inches, Pt
 
 from .document import DeckDocument, DocElement, DocElementKind
-from .document_html import _load_theme
+from .document_html import _load_theme, house_title_case
 from .io import expand_path
 
 SLIDE_W_IN, SLIDE_H_IN = 13.333, 7.5
@@ -332,7 +332,7 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
     graph = element.diagram
     primary = _hex(palette["primary"])
     ink = _hex(palette["ink"])
-    role_cycle = ["#065E7C", "#6F8E30", "#26558E", "#D39500", "#065E7C"]
+    role_cycle = ["#065E7C", "#6F8E30", "#26558E", "#D6A300", "#065E7C"]
     unboxed = graph.recipe == "pipeline"
     group = container.add_group_shape()
     dframe = frame.sub(element.bbox)
@@ -465,7 +465,7 @@ def emit_document_pptx(
             title_el = next((e for e in slide_doc.elements if e.role == "title"), None)
             is_cover = bool(slide_doc.intent) and slide_doc.intent.recipe == "cover-brand"
             tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""
-            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else (title_el.text if title_el else ""))
+            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else house_title_case(title_el.text if title_el else ""))
             title_box = slide.shapes.add_textbox(Inches(0.33), Inches(0.07), Inches(SLIDE_W_IN - 1.6), Inches(SLIDE_H_IN * 0.10 - 0.1))
             title_box.name = "chrome:band-title" if hero else (f"el:{title_el.id}" if title_el else "chrome:band-title")
             # wrap on + no autofit: wrap="none"+spAutoFit makes LibreOffice

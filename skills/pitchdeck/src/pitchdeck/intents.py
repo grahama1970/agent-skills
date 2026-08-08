@@ -19,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .design_system import CompositionRecipe, DeckProfile, DesignSystem, load_recipes
+from .house_spec import HOUSE_BODY_PT, HOUSE_CAPTION_PT
 from .document import (
     Bbox,
     DiagramEdge,
@@ -78,8 +79,8 @@ _MODULE_RECIPES: dict[str, list[str]] = {
 
 _TITLE_STYLE = DocTextStyle(size_pt=40.0, bold=True)
 _HERO_STYLE = DocTextStyle(size_pt=64.0, bold=True, align="center")
-_CHEVRON_STYLE = DocTextStyle(size_pt=22.0)
-_CAPTION_STYLE = DocTextStyle(size_pt=14.0)
+_CHEVRON_STYLE = DocTextStyle(size_pt=HOUSE_BODY_PT)
+_CAPTION_STYLE = DocTextStyle(size_pt=HOUSE_CAPTION_PT)
 
 
 def _compatible(recipe: CompositionRecipe, module: OutlineModule) -> bool:
@@ -177,7 +178,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         message_text = (context_ask or tagline or module.purpose) if recipe.id == "cover-brand" else (tagline or module.purpose)
         elements.append(DocElement(id="message", kind=DocElementKind.TEXT, role="message",
                                    bbox=Bbox(x=0.08, y=0.52, w=0.84, h=0.09), text=message_text,
-                                   style=DocTextStyle(size_pt=28.0, align="center", color="#595959"),
+                                   style=DocTextStyle(size_pt=22.0, align="center", color="#595959"),
                                    binding_paths=["message"]))
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
 
@@ -284,7 +285,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
             id="qualifier", kind=DocElementKind.TEXT, role="footer",
             bbox=Bbox(x=0.06, y=0.92, w=0.88, h=0.05),
             text=_truncate_words(" · ".join(dict.fromkeys(required)), 260),
-            style=DocTextStyle(size_pt=12.0, color="#595959"),
+            style=DocTextStyle(size_pt=HOUSE_CAPTION_PT, color="#595959"),
             binding_paths=["footer"],
         ))
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_ids[0]))

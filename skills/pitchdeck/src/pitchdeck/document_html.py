@@ -57,7 +57,33 @@ def _icon_glyph_svg(icon_id: str, x: float, y: float, size: float, tint: str) ->
     return inner
 
 
-_ROLE_CYCLE = ["#065E7C", "#6F8E30", "#26558E", "#D39500", "#065E7C"]
+_ROLE_CYCLE = ["#065E7C", "#6F8E30", "#26558E", "#D6A300", "#065E7C"]
+
+
+_TITLE_CASE_LOWER = {"a", "an", "the", "and", "or", "but", "for", "nor", "of", "in",
+                     "on", "at", "to", "by", "vs", "with", "from", "as", "is", "are"}
+
+
+def house_title_case(text: str) -> str:
+    """House convention (measured: 173/213 real titles are Title Case).
+
+    Typography only — capitalization cannot change truth conditions, so this
+    never touches the bound element text, exactly like the kicker uppercasing."""
+    words = text.split()
+    out: list[str] = []
+    for index, word in enumerate(words):
+        bare = word.strip("(),:;")
+        if not bare:
+            out.append(word)
+            continue
+        if any(c.isupper() for c in bare[1:]):
+            out.append(word)  # preserve acronyms and CamelCase products
+        elif index != 0 and bare.lower() in _TITLE_CASE_LOWER and index != len(words) - 1:
+            out.append(word.lower())
+        else:
+            # hyphenated compounds capitalize both parts ("Space-Cyber")
+            out.append("-".join(p[:1].upper() + p[1:] if p else p for p in word.split("-")))
+    return " ".join(out)
 
 
 def _diagram_svg(graph: DiagramGraph, width: float, height: float, primary: str, ink: str) -> str:
@@ -337,7 +363,7 @@ def render_document_html(
             title_el = next((e for e in elements if e.role == "title"), None)
             is_cover = recipe == "cover-brand"
             tagline = document.deck.title.split("—")[-1].strip().upper() if "—" in document.deck.title else ""
-            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else (title_el.text if title_el else ""))
+            band_text = ((tagline if is_cover else document.deck.title.split("—")[0].strip().upper()) if hero else house_title_case(title_el.text if title_el else ""))
             band_html = (
                 f'<div style="position:absolute;left:0;top:0;width:100%;height:10%;'
                 f'background:{band.get("fill", palette["primary"])};display:flex;align-items:center;">'
