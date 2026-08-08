@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -97,6 +98,257 @@ def test_tau_abort_manifest_preserves_partial_materialized_worker_receipts(
     assert judge["status"] == "INSUFFICIENT_EVIDENCE"
     assert judge["red_artifact_count"] == 1
     assert judge["blue_artifact_count"] == 0
+
+
+def test_judge_pair_records_source_to_docker_workspace_byte_bindings(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    fixture = _judge_pair_fixture(tmp_path)
+    attempt = _run_judge_pair_with_fake_commands(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        fixture=fixture,
+    )
+
+    assert attempt["status"] == "PASS"
+    assert attempt["verdict"] == "BLUE_SUCCESS"
+    assert attempt["judge_input_byte_binding_pass"] is True
+    assert attempt["container_input_hash_pass"] is True
+    assert [item["status"] for item in attempt["container_input_hashes"]] == [
+        "PASS",
+        "PASS",
+    ]
+    assert attempt["container_input_hashes"][0]["observed_sha256"] == {
+        "red_exploit_submission.py": fixture["red_sha"],
+    }
+    assert attempt["container_input_hashes"][1]["observed_sha256"] == {
+        "app.py": fixture["blue_sha"],
+        "red_exploit_submission.py": fixture["red_sha"],
+    }
+    assert len(attempt["commands_run"]) == 4
+
+    bindings = {item["role"]: item for item in attempt["judge_input_byte_bindings"]}
+    assert set(bindings) == {
+        "red_original_exploit",
+        "red_patched_exploit",
+        "blue_patched_app",
+    }
+    assert bindings["red_original_exploit"]["source_sha256"] == attempt[
+        "red_artifact_sha256"
+    ]
+    assert bindings["red_original_exploit"]["execution_sha256"] == attempt[
+        "red_artifact_sha256"
+    ]
+    assert (
+        bindings["red_original_exploit"]["docker_workspace_path"]
+        == "/workspace/red_exploit_submission.py"
+    )
+    assert bindings["blue_patched_app"]["source_sha256"] == attempt[
+        "blue_artifact_sha256"
+    ]
+    assert bindings["blue_patched_app"]["execution_sha256"] == attempt[
+        "blue_artifact_sha256"
+    ]
+    assert bindings["blue_patched_app"]["docker_workspace_path"] == "/workspace/app.py"
+
+    receipt_path = (
+        fixture["out_dir"]
+        / "judge"
+        / "replays"
+        / "red-0__blue-0"
+        / "attempt-receipt.json"
+    )
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert receipt["judge_input_byte_binding_pass"] is True
+    assert receipt["container_input_hash_pass"] is True
+    assert len(receipt["judge_input_byte_bindings"]) == 3
+    assert len(receipt["container_input_hashes"]) == 2
+    assert (
+        fixture["out_dir"]
+        / "judge"
+        / "replays"
+        / "red-0__blue-0"
+        / "original"
+        / "red_exploit_submission.py"
+    ).read_bytes() == fixture["red_bytes"]
+    assert (
+        fixture["out_dir"]
+        / "judge"
+        / "replays"
+        / "red-0__blue-0"
+        / "patched"
+        / "app.py"
+    ).read_bytes() == fixture["blue_bytes"]
+
+
+@pytest.mark.parametrize(
+    "role",
+    ["red_original_exploit", "red_patched_exploit", "blue_patched_app"],
+)
+def test_judge_pair_byte_binding_mismatch_blocks_success(
+    tmp_path: Path,
+    monkeypatch,
+    role: str,
+) -> None:
+    fixture = _judge_pair_fixture(tmp_path)
+    original_binding = proof._judge_input_byte_binding
+
+    def drift_binding(**kwargs: Any) -> dict[str, Any]:
+        if kwargs["role"] == role:
+            kwargs["execution_path"].write_bytes(
+                kwargs["execution_path"].read_bytes() + b"\n# one-byte-drift"
+            )
+        return original_binding(**kwargs)
+
+    monkeypatch.setattr(proof, "_judge_input_byte_binding", drift_binding)
+
+    attempt = _run_judge_pair_with_fake_commands(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        fixture=fixture,
+    )
+
+    assert attempt["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["status"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["judge_input_byte_binding_pass"] is False
+    assert attempt["container_input_hash_pass"] is True
+
+
+@pytest.mark.parametrize(
+    "mode",
+    ["original_hash_mismatch", "patched_hash_mismatch", "hash_command_failed"],
+)
+def test_judge_pair_container_input_hash_failure_blocks_success(
+    tmp_path: Path,
+    monkeypatch,
+    mode: str,
+) -> None:
+    fixture = _judge_pair_fixture(tmp_path)
+    attempt = _run_judge_pair_with_fake_commands(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        fixture=fixture,
+        hash_failure_mode=mode,
+    )
+
+    assert attempt["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["status"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["judge_input_byte_binding_pass"] is True
+    assert attempt["container_input_hash_pass"] is False
+
+
+def test_judge_pair_absent_binding_or_hash_receipt_blocks_success(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    fixture = _judge_pair_fixture(tmp_path)
+    original_binding = proof._judge_input_byte_binding
+    monkeypatch.setattr(
+        proof,
+        "_judge_input_byte_binding",
+        lambda **kwargs: {"role": kwargs["role"]},
+    )
+    attempt = _run_judge_pair_with_fake_commands(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        fixture=fixture,
+    )
+    assert attempt["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["judge_input_byte_binding_pass"] is False
+
+    monkeypatch.setattr(proof, "_judge_input_byte_binding", original_binding)
+    monkeypatch.setattr(proof, "_container_input_hash_receipt", lambda **_: {})
+    attempt = _run_judge_pair_with_fake_commands(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        fixture=fixture,
+    )
+    assert attempt["verdict"] == "INSUFFICIENT_EVIDENCE"
+    assert attempt["container_input_hash_pass"] is False
+
+
+def _judge_pair_fixture(tmp_path: Path) -> dict[str, Any]:
+    out_dir = tmp_path / "proof"
+    target = out_dir / "arena" / "team-public" / "target"
+    target.mkdir(parents=True)
+    (target / "app.py").write_bytes(b"def import_zip():\n    return 'vulnerable'\n")
+    red_bytes = b"print('RED_EXPLOIT_CONFIRMED')\r\n# exact-byte-red\n"
+    blue_bytes = b"def import_zip():\r\n    return 'blocked'\r\n"
+    red_artifact = tmp_path / "red_exploit_submission.py"
+    blue_artifact = tmp_path / "patched_app.py"
+    red_artifact.write_bytes(red_bytes)
+    blue_artifact.write_bytes(blue_bytes)
+    return {
+        "out_dir": out_dir,
+        "red_artifact": red_artifact,
+        "blue_artifact": blue_artifact,
+        "red_bytes": red_bytes,
+        "blue_bytes": blue_bytes,
+        "red_sha": hashlib.sha256(red_bytes).hexdigest(),
+        "blue_sha": hashlib.sha256(blue_bytes).hexdigest(),
+    }
+
+
+def _run_judge_pair_with_fake_commands(
+    *,
+    tmp_path: Path,
+    monkeypatch,
+    fixture: dict[str, Any],
+    hash_failure_mode: str | None = None,
+) -> dict[str, Any]:
+    def fake_run_command(command, *, out_dir: Path, name: str):  # type: ignore[no-untyped-def]
+        stdout = out_dir / f"{name}.stdout"
+        stderr = out_dir / f"{name}.stderr"
+        exit_code = 0
+        if name == "judge-original-input-hashes":
+            observed = {"red_exploit_submission.py": fixture["red_sha"]}
+            if hash_failure_mode == "original_hash_mismatch":
+                observed = {"red_exploit_submission.py": "0" * 64}
+            stdout.write_text(json.dumps(observed, sort_keys=True), encoding="utf-8")
+        elif name == "judge-patched-input-hashes":
+            observed = {
+                "app.py": fixture["blue_sha"],
+                "red_exploit_submission.py": fixture["red_sha"],
+            }
+            if hash_failure_mode == "patched_hash_mismatch":
+                observed = {
+                    "app.py": "0" * 64,
+                    "red_exploit_submission.py": fixture["red_sha"],
+                }
+            if hash_failure_mode == "hash_command_failed":
+                exit_code = 1
+            stdout.write_text(json.dumps(observed, sort_keys=True), encoding="utf-8")
+        elif name == "judge-red-exploit-original":
+            stdout.write_text("RED_EXPLOIT_CONFIRMED\n", encoding="utf-8")
+        else:
+            exit_code = 1
+            stdout.write_text("", encoding="utf-8")
+        stderr.write_text("", encoding="utf-8")
+        return {
+            "command": command,
+            "exit_code": exit_code,
+            "stdout_path": str(stdout),
+            "stderr_path": str(stderr),
+        }
+
+    monkeypatch.setattr(proof, "_run_command", fake_run_command)
+    monkeypatch.setattr(proof, "_smoke_import", lambda **_: True)
+    return proof._judge_pair(
+        out_dir=fixture["out_dir"],
+        scenario={"scenario_id": "arena-zip-slip-import-001"},
+        docker_image="python:3.12-slim",
+        red={
+            "worker_id": "red-0",
+            "lane_id": "payload-red-0",
+            "path": str(fixture["red_artifact"]),
+        },
+        blue={
+            "worker_id": "blue-0",
+            "action_id": "blue-0-patch",
+            "path": str(fixture["blue_artifact"]),
+        },
+    )
 
 
 def test_parent_spawn_flag_runs_parent_first_and_records_lineage_request(
@@ -503,6 +755,21 @@ def test_prekill_pressure_callback_runs_before_terminal_confirmation(
 
     def fake_run_command(*args: Any, **kwargs: Any) -> dict[str, Any]:
         nonlocal call_index
+        name = str(kwargs.get("name") or "")
+        if name in {"judge-original-input-hashes", "judge-patched-input-hashes"}:
+            stdout = tmp_path / f"{name}.stdout"
+            stderr = tmp_path / f"{name}.stderr"
+            observed = {"red_exploit_submission.py": proof._sha256(red_path)}
+            if name == "judge-patched-input-hashes":
+                observed["app.py"] = proof._sha256(blue_path)
+            stdout.write_text(json.dumps(observed, sort_keys=True), encoding="utf-8")
+            stderr.write_text("", encoding="utf-8")
+            return {
+                "exit_code": 0,
+                "stdout_path": str(stdout),
+                "stderr_path": str(stderr),
+                "command": list(args[0]) if args else [],
+            }
         command = commands[call_index]
         call_index += 1
         return command
