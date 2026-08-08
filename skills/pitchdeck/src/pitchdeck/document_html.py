@@ -84,6 +84,13 @@ def _band_texture_html() -> str:
     )
 
 
+def _identity_wordmark(document) -> str:
+    """Ledger-licensed footer identity (#1314): only self-evident facts print."""
+    from .identity import ledger_from_document, strip_texts
+
+    return strip_texts(ledger_from_document(document.deck.title)).get("wordmark", "")
+
+
 def house_title_case(text: str) -> str:
     """House convention (measured: 173/213 real titles are Title Case).
 
@@ -405,6 +412,8 @@ def render_document_html(
             f"width:{CANVAS_W}px;height:{CANVAS_H}px;background:{palette['canvas']};"
             f'overflow:hidden;margin:24px auto;box-shadow:0 4px 24px rgba(0,0,0,0.25);">'
             f"{band_html}{body}{footer_rule}"
+            f'<span style="position:absolute;left:2.5%;bottom:1.2%;font:bold 15px Calibri,sans-serif;'
+            f'color:{palette["primary"]};">{html.escape(_identity_wordmark(document))}</span>'
             f'<span style="position:absolute;right:1.2%;bottom:1.2%;font:16px Calibri,sans-serif;color:#8a8a8a;">{slide.order}</span></section>'
         )
     page_title = html.escape(title or document.deck.title)

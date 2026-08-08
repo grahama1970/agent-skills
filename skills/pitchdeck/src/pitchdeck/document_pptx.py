@@ -500,6 +500,23 @@ def emit_document_pptx(
         rule.fill.fore_color.rgb = _hex(palette["primary"])
         rule.line.fill.background()
         rule.name = "chrome:footer-rule"
+        # Footer identity strip (#1314). Every corpus slide carries one; blind
+        # judges named its absence as the top authorship tell. Only ledger-
+        # licensed facts print — the wordmark is self-evident from the deck
+        # title, while sponsor marks and release markings stay absent until the
+        # author supplies them (identity.IdentityFact refuses derivation).
+        from .identity import ledger_from_document, strip_texts
+
+        identity = strip_texts(ledger_from_document(document.deck.title))
+        if identity.get("wordmark"):
+            mark_box = slide.shapes.add_textbox(Inches(0.33), Inches(SLIDE_H_IN - 0.44),
+                                                Inches(4.0), Inches(0.32))
+            mark_box.name = "chrome:identity-wordmark"
+            mark_run = mark_box.text_frame.paragraphs[0].add_run()
+            mark_run.text = identity["wordmark"]
+            mark_run.font.size = Pt(11)
+            mark_run.font.bold = True
+            mark_run.font.color.rgb = _hex(palette["primary"])
         page_box = slide.shapes.add_textbox(Inches(SLIDE_W_IN - 0.7), Inches(SLIDE_H_IN - 0.42), Inches(0.5), Inches(0.3))
         page_box.name = "chrome:page-number"
         page_run = page_box.text_frame.paragraphs[0].add_run()
