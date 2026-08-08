@@ -102,6 +102,7 @@ skills:
   best-practices-chatterbox-agent: [engineering-standards, voice-audio]
   best-practices-competition: [engineering-standards, agentic-orchestration]
   best-practices-converse: [engineering-standards, voice-audio, persona-simulation]
+  best-practices-bespoke-design: [engineering-standards, ui-design-engineering, content-creation]
   best-practices-cots: [engineering-standards, compliance-security, ui-design-engineering]
   best-practices-d3: [engineering-standards, ui-design-engineering]
   best-practices-design: [engineering-standards, ui-design-engineering]
