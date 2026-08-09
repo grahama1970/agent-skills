@@ -62,6 +62,24 @@ const TRACK = [
   { t: 'This practice', d: 'Agent systems that produce their own evidence — shipped as working code, in public.' },
 ];
 
+type ReceiptArtifact = {
+  id: 'roundtable-receipt' | 'live-audit' | 'inventory-provenance';
+  title: string;
+  capture_status: 'captured' | 'unavailable';
+  judgment: string;
+  proves: string;
+  does_not_prove: string;
+  body: string;
+  caption: string;
+  unavailable_reason?: string;
+};
+
+const RECEIPT_IDS: ReceiptArtifact['id'][] = [
+  'roundtable-receipt',
+  'live-audit',
+  'inventory-provenance',
+];
+
 const skillFlags = new Map(
   (inventory.skills as { n: string; s: boolean }[]).map((s) => [s.n, s.s]),
 );
@@ -69,8 +87,11 @@ const skillFlags = new Map(
 export default function Home() {
   const { stats, commit, as_of } = inventory;
   const receiptArtifacts = Object.fromEntries(
-    artifacts.artifacts.map((a) => [a.id, a]),
-  );
+    (artifacts.artifacts as ReceiptArtifact[]).map((a) => [a.id, a]),
+  ) as Record<ReceiptArtifact['id'], ReceiptArtifact>;
+  const capturedReceiptCount = (artifacts.artifacts as ReceiptArtifact[]).filter(
+    (a) => a.capture_status === 'captured',
+  ).length;
   return (
     <>
       <HomeJsonLd />
@@ -487,46 +508,37 @@ export default function Home() {
                 </p>
                 <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
-                  Three excerpts, printed as they came out of
+                  {capturedReceiptCount === 3 ? 'Three excerpts' : `${capturedReceiptCount} captured excerpts`},
+                  printed as they came out of
                   <span className="machine"> gen_artifacts.py</span>: a node
                   receipt from the roundtable run that designed this page, a
                   captured audit, and the provenance of the numbers above.
-                  Captured output, not status widgets.
+                  Missing sources stay visible as boundaries, not status widgets.
                 </p>
               </div>
               <div className="tickets">
-                {(
-                  [
-                    [
-                      'roundtable-receipt',
-                      'PREFLIGHT: PASS',
-                      'Proves the agent that designed this page actually ran in the intended environment — not that a model merely claimed it did.',
-                    ],
-                    [
-                      'live-audit',
-                      'DRIFT: 0 · LIVE: 200/200',
-                      'Proves the deployed site and the repository haven’t silently diverged.',
-                    ],
-                    [
-                      'inventory-provenance',
-                      `BUILD: ${commit}`,
-                      'Proves the numbers above came from checked source state, not marketing copy.',
-                    ],
-                  ] as const
-                ).map(
-                  ([id, callout, proves]) =>
-                    receiptArtifacts[id] && (
+                {RECEIPT_IDS.map((id) => {
+                  const receipt = receiptArtifacts[id];
+                  return receipt.capture_status === 'captured' ? (
                       <ReceiptTicket
                         key={id}
                         id={id}
-                        title={receiptArtifacts[id].title}
-                        callout={callout}
-                        proves={proves}
-                        body={receiptArtifacts[id].body}
-                        caption={receiptArtifacts[id].caption}
+                        title={receipt.title}
+                        callout={receipt.judgment}
+                        proves={receipt.proves}
+                        doesNotProve={receipt.does_not_prove}
+                        body={receipt.body}
+                        caption={receipt.caption}
                       />
-                    ),
-                )}
+                    ) : (
+                      <article className="receipt-boundary" key={id}>
+                        <h3>{receipt.title}</h3>
+                        <p className="callout">{receipt.judgment}</p>
+                        <p>{receipt.unavailable_reason ?? receipt.caption}</p>
+                        <p className="does-not-prove">{receipt.does_not_prove}</p>
+                      </article>
+                    );
+                })}
               </div>
             </div>
           </div>

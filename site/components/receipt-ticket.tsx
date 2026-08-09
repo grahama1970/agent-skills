@@ -9,6 +9,7 @@ export function ReceiptTicket({
   title,
   callout,
   proves,
+  doesNotProve,
   body,
   caption,
 }: {
@@ -16,6 +17,7 @@ export function ReceiptTicket({
   title: string;
   callout: string;
   proves: string;
+  doesNotProve: string;
   body: string;
   caption: string;
 }) {
@@ -25,6 +27,7 @@ export function ReceiptTicket({
       <h3>{title}</h3>
       <p className="callout">{callout}</p>
       <p className="proves">{proves}</p>
+      <p className="does-not-prove">{doesNotProve}</p>
       <button
         type="button"
         data-qid={`receipts:toggle:${id}`}
@@ -39,8 +42,8 @@ export function ReceiptTicket({
         <pre className="json">{body}</pre>
       ) : (
         <p className="human">
-          {caption}. The verdict and what it proves are above; the raw payload
-          is one click away — the summary is never the only evidence.
+          {caption}. The judgment, proof boundary, and raw payload stay together;
+          the summary is never the only evidence.
         </p>
       )}
       <p className="foot">{caption}</p>

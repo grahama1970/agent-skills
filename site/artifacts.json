@@ -1,18 +1,42 @@
 {
-  "commit": "66076feaa",
+  "commit": "ccf584df6",
   "as_of": "2026-08-08",
   "artifacts": [
     {
       "id": "roundtable-receipt",
       "title": "tau node receipt \u2014 the run that designed this site",
+      "capture_status": "captured",
+      "source": "site/proof-explainer.json",
+      "digest": "sha256:e697899eb7dcc021",
+      "judgment": "PREFLIGHT: PASS",
+      "proves": "A real model produced this seat's response, on the record, at a stamped time.",
+      "does_not_prove": "That the response's content is right \u2014 only that it genuinely occurred.",
       "caption": "node-receipt.json \u00b7 ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c \u00b7 sha256 e697899eb7dcc021\u2026",
-      "body": "{\n  \"run\": \"ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c\",\n  \"node\": \"handler-webclaude\",\n  \"backend\": \"webclaude\",\n  \"binding_status\": \"ok\",\n  \"tab_id\": \"837367921\",\n  \"model_preference\": \"Fable 5 High\",\n  \"attachment\": \"packet-round2.md\",\n  \"path_preflight\": \"PASS\"\n}"
+      "body": "{\n  \"run\": \"ask-tau-roundtable-round-2-webgpt-webcla-ce79c8ef960c\",\n  \"stage\": \"Captured evidence\",\n  \"artifact\": \"node-receipt.json\",\n  \"digest\": \"e697899eb7dcc021\",\n  \"excerpt\": {\n    \"handler\": \"webclaude\",\n    \"live\": true,\n    \"mocked\": false,\n    \"browser_model_preference\": \"Fable 5 High\",\n    \"created_at\": \"2026-08-05T20:58:04Z\"\n  },\n  \"invariant\": \"live:true with mocked:false is required; a mocked lane cannot satisfy the evidence gate.\"\n}"
+    },
+    {
+      "id": "live-audit",
+      "title": "monitor-website audit \u2014 this page, checked against the repo",
+      "capture_status": "captured",
+      "source": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
+      "digest": "sha256:6f1dac9826d78a6286262b40ccee25fe582f5756880c8d51b0b5b66b2e23b979",
+      "judgment": "LOCAL DRIFT: 0 \u00b7 PUBLIC ENDPOINTS: 5/5",
+      "proves": "The checkout's generated surfaces agreed with their source files, excluding artifacts.json while it was being regenerated, and the named public endpoints returned expected markers at capture time.",
+      "does_not_prove": "That the deployed HTML was built from this exact commit, or that every interaction works.",
+      "caption": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
+      "body": "{\n  \"ok\": true,\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
     },
     {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
-      "caption": "site/inventory.json \u00b7 sha256 555b74e69d474134\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"66076feaa\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 344,\n    \"sanity\": 290,\n    \"agents\": 92\n  }\n}"
+      "capture_status": "captured",
+      "source": "site/inventory.json",
+      "digest": "sha256:6d62cc81b4f47a7edfe38710404661acfc8d344d0734c5a85e29ab0968a69c0c",
+      "judgment": "BUILD: ccf584df6",
+      "proves": "The numbers above came from checked source state, not marketing copy.",
+      "does_not_prove": "That every skill is complete, useful, or production-ready.",
+      "caption": "site/inventory.json \u00b7 sha256 6d62cc81b4f47a7e\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"ccf584df6\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 344,\n    \"sanity\": 290,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }

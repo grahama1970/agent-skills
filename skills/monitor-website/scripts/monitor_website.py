@@ -76,11 +76,12 @@ def check_live() -> dict:
     return out
 
 
-def _surface_coherence_drift() -> list[str]:
+def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[str]:
     """DRIFT:0 must mean ALL public generated surfaces share one source commit —
     not just README==content.json (webgpt review, Criterion 2). Checks every
     generated surface's stamped commit against HEAD and inventory==README counts."""
     import subprocess
+    ignore_surfaces = ignore_surfaces or set()
     site_dir = CONTENT.parent
     try:
         head = subprocess.check_output(
@@ -89,13 +90,18 @@ def _surface_coherence_drift() -> list[str]:
     except Exception as e:  # noqa: BLE001 — report, do not hide
         return [f"cannot resolve HEAD for coherence check: {e}"]
     surfaces = {
-        "inventory.json": "commit", "artifacts.json": "commit",
-        "catalog.json": "sourceCommit", "research-map.json": "sourceCommit",
+        "inventory.json": "commit",
+        "artifacts.json": "commit",
+        "catalog.json": "sourceCommit",
+        "research-map.json": "sourceCommit",
         "graph.json": "sourceCommit",
         "resume.json": "sourceCommit",
+        "competence.json": "commit",
     }
     out = []
     for fname, key in surfaces.items():
+        if fname in ignore_surfaces:
+            continue
         p = site_dir / fname
         if not p.exists():
             out.append(f"surface missing: {fname}")
@@ -121,14 +127,14 @@ def _surface_coherence_drift() -> list[str]:
     return out
 
 
-def audit(live: bool) -> dict:
+def audit(live: bool, ignore_surfaces: set[str] | None = None) -> dict:
     readme = parse_readme()
     site = json.loads(CONTENT.read_text(encoding="utf-8"))
     drift = []
     for key, val in readme["stats"].items():
         if site["stats"].get(key) != val:
             drift.append(f"stats.{key}: README={val} site={site['stats'].get(key)}")
-    drift.extend(_surface_coherence_drift())
+    drift.extend(_surface_coherence_drift(ignore_surfaces=ignore_surfaces))
     r_by_slug = {p["slug"]: p for p in readme["projects"]}
     s_by_slug = {p["slug"]: p for p in site["projects"]}
     for slug in r_by_slug.keys() - s_by_slug.keys():
@@ -183,6 +189,9 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/project-visibility.json",
         "site/catalog.json",
         "site/graph.json",
+        "site/competence.json",
+        "site/build-manifest.json",
+        "site/resume.json",
     ):
         p = REPO / f
         before[f] = p.read_bytes() if p.exists() else b""
@@ -193,11 +202,13 @@ def refresh(commit: bool, push: bool) -> dict:
         "site/scripts/gen_inventory.py",
         "site/scripts/gen_visibility.py",
         "site/scripts/gen_research_map.py",
+        "site/scripts/gen_competence.py",
         "site/scripts/gen_catalog.py",
+        "site/scripts/gen_resume.py",
         "site/scripts/gen_graph.py",
         "site/scripts/gen_artifacts.py",
         "site/scripts/gen_battle_lineage.py",
-        "site/scripts/gen_resume.py",
+        "site/scripts/gen_build_manifest.py",
     ):
         proc = subprocess.run(["python3", str(REPO / script)], capture_output=True, text=True)
         if proc.returncode != 0:
@@ -236,7 +247,12 @@ def main() -> None:
     args = sys.argv[1:]
     cmd = args[0] if args else "audit"
     if cmd == "audit":
-        result = audit(live="--no-live" not in args)
+        ignore_surfaces = {
+            args[i + 1]
+            for i, arg in enumerate(args)
+            if arg == "--ignore-surface" and i + 1 < len(args)
+        }
+        result = audit(live="--no-live" not in args, ignore_surfaces=ignore_surfaces)
         print(json.dumps(result if "--json" in args else {"ok": result["ok"], "drift": result["drift"]}, indent=2))
         sys.exit(0 if result["ok"] else 1)
     if cmd == "apply":
