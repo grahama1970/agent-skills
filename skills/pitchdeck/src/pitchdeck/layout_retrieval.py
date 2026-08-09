@@ -1,4 +1,13 @@
-"""Nearest-real-slide layout retrieval over the author's deck corpus (#1315).
+"""RESEARCH-ONLY: nearest-real-slide layout retrieval over the deck corpus.
+
+NOT part of the compiler or the release story (#1335). It has no consumer in the
+emission path, and carrying it there meant a Qdrant service dependency, index and
+embedding-model drift, and operational surface for zero effect on output. It
+stays available behind `index-house-slides` / `find-layout` for offline study,
+and may only re-enter the product once a holdout experiment shows retrieval
+improves a defined house-conformance measure without reducing determinism.
+
+Original purpose follows.
 
 The house corpus is consistent by construction — the same author, chrome, and
 layout habits across five decks — which makes it a pattern-recognition target

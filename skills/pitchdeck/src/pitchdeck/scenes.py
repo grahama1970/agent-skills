@@ -8,8 +8,10 @@ between them — where the compiler drew a row of identical ringed icons.
 A scene is declarative and deterministic. Each composition places 2-4 glyphs at
 DIFFERENT scales on an asymmetric grid, so no scene can degenerate into the
 evenly-spaced row that reads as machine output; ``assert_not_mechanical``
-enforces that as a hard invariant rather than a style note. Glyphs come from the
-hash-pinned icon library, so every part stays natively editable.
+reports uniformity as an ADVISORY note. It is deliberately not a refusal:
+symmetry can encode a truthful claim (parallel agents, repeated stages), so a
+compiler that rejects it would distort meaning to avoid a stylistic tell. Glyphs
+come from the hash-pinned icon library, so every part stays natively editable.
 
 Inputs: a semantic role plus the label and icon hints for the subject. Outputs:
 DiagramNode/DiagramEdge sets the existing emitters already render. Failure
@@ -82,21 +84,26 @@ class SceneError(ValueError):
     """Raised when a scene cannot be composed honestly."""
 
 
-def assert_not_mechanical(nodes: list[DiagramNode]) -> None:
-    """Reject the row-of-identical-icons composition that reads as machine output.
+def describe_uniformity(nodes: list[DiagramNode]) -> list[str]:
+    """ADVISORY notes about uniform composition — never a refusal (#1335).
 
-    Two independent checks, because either alone is easy to satisfy by accident:
-    scale hierarchy (the glyphs cannot all be the same weight) and spacing
-    variance (they cannot be evenly pitched)."""
+    This was a hard invariant that refused evenly weighted, evenly pitched
+    glyphs as "mechanical". The state audit overturned it: symmetry can encode a
+    TRUTHFUL claim — parallel agents, repeated stages, redundant paths, equal
+    controls — so refusing it makes the compiler distort structure to avoid a
+    stylistic tell, which is a correctness bug, not a style win. Uniformity is
+    now reported for a human to judge; the compiler no longer overrides meaning
+    for aesthetics."""
+    notes: list[str] = []
     if len(nodes) < 3:
-        return
-    scales = sorted({round(n.scale, 2) for n in nodes})
-    if len(scales) < 2:
-        raise SceneError("scene has no scale hierarchy — every glyph is the same weight")
+        return notes
+    if len({round(n.scale, 2) for n in nodes}) < 2:
+        notes.append("uniform glyph weight — intentional only if the claim asserts equivalence")
     xs = sorted(n.bbox.x for n in nodes)
     gaps = [round(b - a, 3) for a, b in zip(xs, xs[1:])]
     if len(set(gaps)) == 1 and len(gaps) > 1:
-        raise SceneError(f"scene glyphs are evenly pitched ({gaps}) — mechanical row")
+        notes.append(f"even pitch ({gaps}) — intentional only if the claim asserts parallel or repeated stages")
+    return notes
 
 
 def compose_scene(
@@ -144,7 +151,8 @@ def compose_scene(
                 binding_paths=([f"{node_prefix}-{index}:label"] if label.strip() else []),
             )
         )
-    assert_not_mechanical(nodes)
+    # uniformity is advisory now, not a refusal (#1335)
+    describe_uniformity(nodes)
 
     # Dotted flow from each support into the principal — the author's meander,
     # not a straight process arrow.

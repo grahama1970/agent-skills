@@ -7,7 +7,7 @@ from pitchdeck.document import Bbox, DiagramNode
 from pitchdeck.scenes import (
     _COMPOSITIONS,
     SceneError,
-    assert_not_mechanical,
+    describe_uniformity,
     compose_scene,
     scene_for_module,
 )
@@ -30,26 +30,27 @@ def test_every_composition_is_in_bounds_and_weighted():
         assert sum(1 for n in graph.nodes if n.decoration == "principal") == 1
 
 
-def test_mechanical_row_is_refused():
-    """The exact composition blind judges called out: identical, evenly pitched."""
+def test_uniform_row_is_reported_but_not_refused():
+    """Symmetry can be TRUTHFUL (parallel agents, repeated stages), so uniformity
+    is advisory. Refusing it would distort meaning to avoid a stylistic tell (#1335)."""
     row = [
         DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
                     icon="shield-check", label="gate", binding_paths=[f"n{i}:label"])
         for i in range(4)
     ]
-    with pytest.raises(SceneError, match="scale hierarchy"):
-        assert_not_mechanical(row)
+    notes = describe_uniformity(row)
+    assert any("uniform glyph weight" in n for n in notes)
 
 
-def test_even_pitch_is_refused_even_when_scales_differ():
+def test_even_pitch_is_reported_when_scales_differ():
     row = [
         DiagramNode(id=f"n{i}", bbox=Bbox(x=0.1 + 0.2 * i, y=0.3, w=0.18, h=0.18),
                     icon="shield-check", label="gate", scale=1.0 + 0.1 * i,
                     binding_paths=[f"n{i}:label"])
         for i in range(4)
     ]
-    with pytest.raises(SceneError, match="evenly pitched"):
-        assert_not_mechanical(row)
+    notes = describe_uniformity(row)
+    assert any("even pitch" in n for n in notes)
 
 
 def test_supporting_glyphs_carry_no_claim_text():

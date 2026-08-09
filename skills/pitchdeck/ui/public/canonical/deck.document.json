@@ -1332,7 +1332,7 @@
         "label": "Retrieval",
         "sublabel": "search · embeddings · graph",
         "binding_paths": [
-         "element:diagram"
+         "retrieval:label"
         ],
         "decoration": "ring",
         "scale": 1.0
@@ -1349,7 +1349,7 @@
         "label": "Established support",
         "sublabel": "governed evidence · authorized people",
         "binding_paths": [
-         "element:diagram"
+         "support:label"
         ],
         "decoration": "ring",
         "scale": 1.0
@@ -1365,7 +1365,7 @@
         "arrowhead": true,
         "label": "relevance does not cross this gap",
         "binding_paths": [
-         "element:diagram"
+         "cannot-cross:label"
         ],
         "decorative": false
        }
@@ -1480,6 +1480,24 @@
      "kind": "claim_quote",
      "claim_id": "sparta-public-response-path-status",
      "transform_class": "truncation"
+    },
+    {
+     "path": "retrieval:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-relevance-not-support",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "support:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-relevance-not-support",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "cannot-cross:label",
+     "kind": "claim_paraphrase",
+     "claim_id": "sparta-public-relevance-not-support",
+     "transform_class": "generalization"
     },
     {
      "path": "element:diagram",
@@ -1673,7 +1691,7 @@
         "label": "Framework guidance",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "scene-0:label"
         ],
         "decoration": "support",
         "scale": 0.72
@@ -1690,7 +1708,7 @@
         "label": "Program evidence",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "scene-1:label"
         ],
         "decoration": "principal",
         "scale": 1.3
@@ -1707,7 +1725,7 @@
         "label": "Human review",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "scene-2:label"
         ],
         "decoration": "support",
         "scale": 0.86
@@ -1807,6 +1825,24 @@
      "path": "element:chevron-1",
      "kind": "claim_quote",
      "claim_id": "non-claim-human-authority",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "scene-0:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-thesis",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "scene-1:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-thesis",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "scene-2:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-thesis",
      "transform_class": "truncation"
     },
     {
@@ -2231,7 +2267,7 @@
         "label": "Independent corpus review",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "gate-0:label"
         ],
         "decoration": "support",
         "scale": 0.74
@@ -2248,7 +2284,7 @@
         "label": "response-route convergence",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "gate-1:label"
         ],
         "decoration": "support",
         "scale": 0.92
@@ -2265,7 +2301,7 @@
         "label": "QRA reasoning",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "gate-2:label"
         ],
         "decoration": "support",
         "scale": 0.78
@@ -2282,7 +2318,7 @@
         "label": "deployment remain explicit closure gates",
         "sublabel": null,
         "binding_paths": [
-         "element:diagram"
+         "gate-3:label"
         ],
         "decoration": "principal",
         "scale": 1.36
@@ -2385,6 +2421,30 @@
     },
     {
      "path": "element:chevron-0",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-open-gates",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "gate-0:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-open-gates",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "gate-1:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-open-gates",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "gate-2:label",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-open-gates",
+     "transform_class": "truncation"
+    },
+    {
+     "path": "gate-3:label",
      "kind": "claim_quote",
      "claim_id": "sparta-public-open-gates",
      "transform_class": "truncation"
