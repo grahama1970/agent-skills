@@ -112,6 +112,27 @@ if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/competencies.py" m
     exit 1
 fi
 
+echo "[resume] screening audit: every declared competency is demonstrated"
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/screening_audit.py" support \
+  --resume "$SCRIPT_DIR/../../RESUME.md" > "$TEMP_DIR/support.json"
+python3 - "$TEMP_DIR/support.json" <<'PYSUP'
+import json, pathlib, sys
+d = json.loads(pathlib.Path(sys.argv[1]).read_text())
+if d["schema"] != "resume.screening_support.v1":
+    raise SystemExit("unexpected support schema")
+if d["verdict"] != "PASS":
+    raise SystemExit(f"undemonstrated competencies: {d['unsupported']}")
+PYSUP
+
+echo "[resume] screening audit: negative control catches an unbacked claim"
+cat "$SCRIPT_DIR/../../RESUME.md" > "$TEMP_DIR/planted.md"
+printf '\n## CORE COMPETENCIES\n- Planted: Quantum Teleportation Engineering\n' >> "$TEMP_DIR/planted.md"
+if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/screening_audit.py" support \
+  --resume "$TEMP_DIR/planted.md" >/dev/null 2>&1; then
+    echo "unexpected PASS with a planted unbacked competency" >&2
+    exit 1
+fi
+
 echo "[resume] safety boundary: no network or repository mutation"
 test "$(git -C "$SCRIPT_DIR/../.." status --short --untracked-files=no | wc -l | tr -d ' ')" -ge 0
 echo "Result: PASS (deterministic local smoke; no live services exercised)"

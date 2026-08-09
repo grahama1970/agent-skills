@@ -193,7 +193,7 @@
         [
          {
           "t": "text",
-          "v": "Built an ArangoDB agent-memory platform (private, regulated): retrieval-augmented generation (RAG) and GraphRAG over vector databases and knowledge graphs — ~219K evidence-grounded QRA records across 7K+ security controls, hybrid BM25 + vector recall over 2.2M chunks, ~94K Lean 4 theorems indexed for requirements-to-proof retrieval."
+          "v": "Built an ArangoDB agent-memory platform (private, regulated): retrieval-augmented generation (RAG) and GraphRAG over vector databases and knowledge graphs — ~219K evidence-grounded QRA records across 7K+ security controls (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND), hybrid BM25 + vector recall over 2.2M chunks, ~94K Lean 4 theorems indexed for requirements-to-proof retrieval."
          }
         ],
         [
@@ -541,10 +541,10 @@
    ]
   }
  ],
- "sourceCommit": "3e80436d2",
+ "sourceCommit": "f4629fbdd",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "1b0cb15f9952b91aaa0bd786533a28dfa4670b9d75b9d47083f7305559b878da",
+ "sourceSha256": "3c95a522cca989502f9c1545abef36bf8adfbb4f44a422093552e631bcf1314d",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -675,6 +675,6 @@
    }
   ]
  },
- "pdfSha256": "c09c0c1c0a94702a3ffd051f160e712a2c229ed6257d431f0ff0a397dc54da45",
- "pdfBytes": 160292
+ "pdfSha256": "2fc8770d79a3d5bf4b52a6319559e384e4d74c372f4eee2ce3a98501ef145476",
+ "pdfBytes": 160374
 }

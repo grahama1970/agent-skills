@@ -58,6 +58,8 @@ repository's converter or workflow to regenerate the PDF.
 uv run --project . python scripts/competencies.py report
 uv run --project . python scripts/competencies.py match /path/to/posting.txt
 uv run --project . python scripts/competencies.py scan /path/to/posting.txt --resume RESUME.md
+uv run --project . python scripts/screening_audit.py support
+uv run --project . python scripts/screening_audit.py surfaces https://grahama.co
 ./run.sh tailor /path/to/RESUME.md /path/to/tailoring-request.json \
   --output-dir /path/to/resume-variant
 ./sanity.sh
@@ -85,6 +87,28 @@ by a countable set of named skills.
   actually says them, and exits non-zero below the coverage floor. Missing terms
   are split into ones the skills catalog can back — safe to add — and ones it
   cannot, which must not be claimed. Run it before every send.
+
+## Screening audit
+
+A resume is read by software before a person sees it. `screening_audit.py`
+checks the two structural things 2026 screening stacks reject on, neither of
+which is about whether the work was real:
+
+```bash
+uv run --project . python scripts/screening_audit.py support
+uv run --project . python scripts/screening_audit.py surfaces https://grahama.co
+```
+
+- `support` fails if a declared competency never appears in the experience text.
+  A skills list naming capabilities the bullets do not demonstrate reads as
+  padding, and Workday's AI layer flags it hardest. Web-only sections are
+  excluded from evidence, because a PDF screener never sees them.
+- `surfaces` fetches what a crawler or agent gets cold: `robots.txt`,
+  `sitemap.xml`, `llms.txt`, the resume page, PDF, Markdown, and the homepage
+  schema.org `Person`. Public surfaces that disagree read as a verification risk.
+
+Both exit non-zero on failure, so either can gate a send. Neither judges whether
+the resume is good — only that it cannot be dismissed for a structural reason.
 
 `match` reports what a posting actually says. It models no employer's private
 ranking system, and it is deterministic term overlap, not semantic matching.
