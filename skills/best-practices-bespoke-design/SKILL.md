@@ -24,6 +24,7 @@ provides:
   - responsive-art-direction-gates
   - bespoke-design-proof-receipt
 composes:
+  - best-practices-font
   - impeccable
   - best-practices-design
   - best-practices-react
@@ -174,6 +175,10 @@ Define rules, not a collage of preferences:
 
 Every recurring expressive device must map to a claim, audience need, or narrative
 function. “It looks interesting” is insufficient provenance.
+
+For font choice, pairing, hierarchy, delivery, and type-specific proof, compose
+with `best-practices-font`. Bespoke design owns the world model and distinctness
+gates; `best-practices-font` owns the font-world contract and receipt.
 
 ### 5. System
 

@@ -11,7 +11,11 @@ allowed-tools:
 provides:
   - monitor-website
 composes:
+  - best-practices-bespoke-design
+  - best-practices-font
   - agentic-evals
+complies:
+  - best-practices-skills
 disciplines:
   - observability-operations
   - content-creation
@@ -89,7 +93,7 @@ ship disabled; enable only when the scheduler environment is ready).
 ## Design maintenance — bespoke visual-world contract (#1337)
 
 Design/visual-identity maintenance of grahama.co composes with
-`best-practices-bespoke-design`. The site's visual world is locked in
+`best-practices-bespoke-design` and `best-practices-font`. The site's visual world is locked in
 `site/design-world.yml` (machine source of truth) + `site/DESIGN_WORLD.md`
 (readable): a narrative premise, three non-color invariants, the full role
 grammar, and the prohibited structural AI-template residue.
@@ -101,8 +105,8 @@ skills/monitor-website/run.sh design-world-check --json
 ```
 
 It validates the contract and the deterministically-checkable prohibitions
-(currently: monospace on human-written labels, against the declared
-machine-output boundary) and returns `NOT_TESTED` — never `PASS` — while
+(currently: monospace on human-written labels and the type receipt, against the declared
+machine-output/type-world boundary) and returns `NOT_TESTED` — never `PASS` — while
 rendered-screenshot and blind-review artifacts are absent (#1343). Treat a
 `FAIL` (e.g. human labels still in monospace) as residue to remove, not noise.
 

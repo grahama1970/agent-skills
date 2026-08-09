@@ -1,0 +1,108 @@
+{
+  "schema": "font.proof_receipt.v1",
+  "world_model": "Proof Workshop / claim -> evidence -> bounded judgment",
+  "type_position": "Literata carries human claims and section theses; system sans carries prose, utility, and labels; monospace is reserved for raw machine artifacts.",
+  "roles": {
+    "display": {
+      "family": "Literata",
+      "purpose": "open claims and section theses",
+      "weights": "600-700",
+      "optical_size": "44-72"
+    },
+    "reading": {
+      "family": "system-ui",
+      "purpose": "human explanation and reading lanes",
+      "measure": "45-75ch target"
+    },
+    "utility": {
+      "family": "system-ui",
+      "purpose": "navigation, controls, and role labels"
+    },
+    "data": {
+      "family": "Literata and ui-monospace by semantic role",
+      "purpose": "inventory numbers in display register; hashes/paths/timestamps in machine register"
+    },
+    "code": {
+      "family": "ui-monospace",
+      "purpose": "raw artifacts, ids, commands, hashes, paths, timestamps"
+    }
+  },
+  "assets": [
+    {
+      "family": "Literata",
+      "path_or_url": "site/public/fonts/literata-latin-var.woff2",
+      "source": "Google Fonts static asset downloaded for self-hosting",
+      "license": "SIL Open Font License",
+      "hosting": "self-hosted"
+    },
+    {
+      "family": "Literata",
+      "path_or_url": "site/public/fonts/literata-latin-italic-var.woff2",
+      "source": "Google Fonts static asset downloaded for self-hosting",
+      "license": "SIL Open Font License",
+      "hosting": "self-hosted"
+    }
+  ],
+  "evidence": {
+    "commands": [
+      {
+        "command": "npm run verify:type-direction",
+        "exit_code": 0,
+        "result": "OK: display type uses local Literata assets and no Fraunces-specific residue"
+      },
+      {
+        "command": "node /home/graham/workspace/experiments/impeccable/skill/scripts/detect.mjs --json --scope type site/app/globals.css site/app/layout.tsx site/components/receipt-ticket.tsx",
+        "exit_code": 0,
+        "result": "[]"
+      },
+      {
+        "command": "npm run build",
+        "exit_code": 0,
+        "result": "Next static export succeeded"
+      }
+    ],
+    "screenshots": [
+      {
+        "path": "/tmp/grahama-type-literata-desktop-settled.png",
+        "viewport": "1440x900"
+      },
+      {
+        "path": "/tmp/grahama-type-literata-mobile.png",
+        "viewport": "390x844"
+      }
+    ],
+    "computed_styles": [
+      {
+        "selector": "h1",
+        "fontFamily": "Literata, \"Iowan Old Style\", Palatino, Georgia, serif",
+        "fontWeight": "700",
+        "fontVariationSettings": "\"opsz\" 72"
+      },
+      {
+        "selector": "h1 .it",
+        "fontFamily": "Literata, \"Iowan Old Style\", Palatino, Georgia, serif",
+        "fontStyle": "italic",
+        "fontWeight": "500"
+      }
+    ]
+  },
+  "gates": {
+    "F0": "PASS",
+    "F1": "PASS",
+    "F2": "PASS",
+    "F3": "PASS",
+    "F4": "NOT_TESTED",
+    "F5": "PASS",
+    "F6": "PASS",
+    "F7": "NOT_TESTED",
+    "F8": "PASS",
+    "F9": "PASS"
+  },
+  "does_not_prove": [
+    "full best-practices-bespoke-design compliance",
+    "blind logo-off recognition",
+    "competitor-swap distinctiveness",
+    "WCAG 2.2 AA",
+    "field performance"
+  ]
+}

@@ -24,10 +24,10 @@ invariants:
       unresolved remainder (visible gaps, never hidden).
 role_grammar:
   typography:
-    display: Fraunces (variable, per-instance axes)   # headlines / argument
+    display: Literata (self-hosted variable roman/italic, optical-size tuned) # headlines / argument
     reading: system sans                              # human prose
     utility: system sans small-caps                   # eyebrows, labels
-    data: Fraunces / tabular figures                  # inventory numbers
+    data: Literata / tabular figures                  # inventory numbers
     annotation: system sans italic                    # asides, captions
     machine_output: monospace                         # SHAs, counts, paths ONLY
   color_roles:

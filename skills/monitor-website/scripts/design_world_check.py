@@ -4,7 +4,7 @@ scan for deterministically-checkable AI-template residue. Returns NOT_TESTED
 rather than PASS when rendered/blind evidence is absent — prose is not proof.
 """
 from __future__ import annotations
-import argparse, json, re, sys
+import argparse, json, re, subprocess, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
@@ -52,10 +52,44 @@ def scan_mono_on_human_labels(css_files, allow: list[str]) -> list[dict]:
     return violations
 
 
+def validate_font_receipt(receipt_path: Path) -> dict:
+    if not receipt_path.is_file():
+        return {
+            "status": "NOT_TESTED",
+            "needs": f"font receipt missing: {receipt_path}",
+        }
+    validator = REPO / "skills" / "best-practices-font" / "scripts" / "validate_font_receipt.py"
+    if not validator.is_file():
+        return {
+            "status": "FAIL",
+            "errors": [f"font receipt validator missing: {validator}"],
+        }
+    proc = subprocess.run(
+        ["python3", str(validator), str(receipt_path)],
+        cwd=str(REPO),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    if proc.returncode == 0:
+        return {
+            "status": "PASS",
+            "receipt": str(receipt_path),
+            "validator_output": proc.stdout.strip(),
+        }
+    return {
+        "status": "FAIL",
+        "receipt": str(receipt_path),
+        "validator_output": proc.stdout.strip(),
+    }
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contract", default=str(SITE / "design-world.yml"))
     ap.add_argument("--css-dir", default=str(SITE / "app"))
+    ap.add_argument("--font-receipt", default=str(SITE / "design-roundtable" / "font-receipt.r1.json"))
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
 
@@ -78,6 +112,7 @@ def main(argv=None) -> int:
         "violations": viol,
         "css_files_scanned": [f.name for f in css_files],
     }
+    result["gates"]["font_receipt"] = validate_font_receipt(Path(a.font_receipt))
     # Gates that require evidence this command cannot supply.
     for g in ("responsive_choreography", "distinctiveness_blind", "craft_integrity_render"):
         result["gates"][g] = {"status": "NOT_TESTED",

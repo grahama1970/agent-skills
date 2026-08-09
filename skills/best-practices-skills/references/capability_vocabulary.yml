@@ -58,6 +58,21 @@ capabilities:
   design-engineering-guidance:
     providers:
       - emil-design-eng
+  font-world-contract:
+    providers:
+      - best-practices-font
+  type-role-hierarchy:
+    providers:
+      - best-practices-font
+  font-pairing-rationale:
+    providers:
+      - best-practices-font
+  font-proof-receipt:
+    providers:
+      - best-practices-font
+  font-template-residue-audit:
+    providers:
+      - best-practices-font
   ui-polish-guidance:
     providers:
       - emil-design-eng
