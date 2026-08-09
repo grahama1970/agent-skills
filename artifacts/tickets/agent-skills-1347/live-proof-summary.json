@@ -1,0 +1,128 @@
+{
+  "assertions": {
+    "corrupt_cache_recomputes_one_file": true,
+    "delete_omits_removed_file": true,
+    "edit_reparses_one_file": true,
+    "fingerprint_bump_reparses_current_files": true,
+    "initial_parses_files": true,
+    "noop_reuses_all_current_files": true
+  },
+  "live": true,
+  "mocked": false,
+  "repo": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo",
+  "runs": {
+    "corrupt_cache_probe": {
+      "files_added": 0,
+      "files_changed": 1,
+      "files_deleted": 0,
+      "files_reused": 1,
+      "files_to_parse": 1,
+      "miss_reasons": {
+        "pkg/__init__.py": "component_hash_mismatch"
+      }
+    },
+    "delete": {
+      "bundle_checksums_sha256": "sha256:25e033d0feb43abfed80f8300d50be81b00ed22c88239bb9b9a932d41709206b",
+      "bundle_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/code-graph",
+      "component_plan": {
+        "files_added": 0,
+        "files_changed": 0,
+        "files_deleted": 1,
+        "files_reused": 2,
+        "files_to_parse": 0,
+        "miss_reasons": {}
+      },
+      "duration_ms": 34.901,
+      "live": true,
+      "mocked": false,
+      "schema": "ingest-code.incremental_receipt.v1",
+      "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+      "symbols_total": 1
+    },
+    "edit": {
+      "bundle_checksums_sha256": "sha256:a0362ba73c664082f4a2f04b9b02179f3d52c0718486579632d49b876b6d7db2",
+      "bundle_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/code-graph",
+      "component_plan": {
+        "files_added": 0,
+        "files_changed": 1,
+        "files_deleted": 0,
+        "files_reused": 2,
+        "files_to_parse": 1,
+        "miss_reasons": {
+          "pkg/alpha.py": "source_fingerprint_changed"
+        }
+      },
+      "duration_ms": 134.731,
+      "live": true,
+      "mocked": false,
+      "schema": "ingest-code.incremental_receipt.v1",
+      "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+      "symbols_total": 2
+    },
+    "fingerprint_bump": {
+      "bundle_checksums_sha256": "sha256:25e033d0feb43abfed80f8300d50be81b00ed22c88239bb9b9a932d41709206b",
+      "bundle_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/code-graph",
+      "component_plan": {
+        "files_added": 0,
+        "files_changed": 2,
+        "files_deleted": 0,
+        "files_reused": 0,
+        "files_to_parse": 2,
+        "miss_reasons": {
+          "pkg/__init__.py": "transform_fingerprint_changed",
+          "pkg/alpha.py": "transform_fingerprint_changed"
+        }
+      },
+      "duration_ms": 209.382,
+      "live": true,
+      "mocked": false,
+      "schema": "ingest-code.incremental_receipt.v1",
+      "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+      "symbols_total": 1
+    },
+    "initial": {
+      "bundle_checksums_sha256": "sha256:190422fc8b5a018ff09ba1c59d041c45b12e65192938f0e8cc341c3dd38e0a07",
+      "bundle_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/code-graph",
+      "component_plan": {
+        "files_added": 3,
+        "files_changed": 0,
+        "files_deleted": 0,
+        "files_reused": 0,
+        "files_to_parse": 3,
+        "miss_reasons": {
+          "pkg/__init__.py": "missing_component",
+          "pkg/alpha.py": "missing_component",
+          "pkg/beta.py": "missing_component"
+        }
+      },
+      "duration_ms": 322.949,
+      "live": true,
+      "mocked": false,
+      "schema": "ingest-code.incremental_receipt.v1",
+      "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+      "symbols_total": 2
+    },
+    "noop": {
+      "bundle_checksums_sha256": "sha256:190422fc8b5a018ff09ba1c59d041c45b12e65192938f0e8cc341c3dd38e0a07",
+      "bundle_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/code-graph",
+      "component_plan": {
+        "files_added": 0,
+        "files_changed": 0,
+        "files_deleted": 0,
+        "files_reused": 3,
+        "files_to_parse": 0,
+        "miss_reasons": {}
+      },
+      "duration_ms": 53.657,
+      "live": true,
+      "mocked": false,
+      "schema": "ingest-code.incremental_receipt.v1",
+      "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+      "symbols_total": 2
+    }
+  },
+  "schema": "ingest-code.incremental_components_proof.v1",
+  "source_fingerprint_kind": "sha256",
+  "state_path": "/tmp/ingest-code-incremental-components-proof-integrated/fixture-repo/artifacts/ingest-code/incremental-components.json",
+  "status": "pass"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "unit": {
+    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1347-integrate uv run pytest skills/ingest-code/tests/test_incremental_components.py skills/ingest-code/tests/test_code_graph_artifact.py -q && bash skills/ingest-code/sanity.sh && python3 scripts/check_mock_evidence_claims.py",
+    "exit_code": 0,
+    "summary": "7 pytest cases passed; ingest-code sanity Result: PASS; mock evidence checker reported OK across 577 test files."
+  },
+  "e2e": {
+    "command": "python skills/ingest-code/scripts/prove_incremental_components.py --out /tmp/ingest-code-incremental-components-proof-integrated --live-filesystem",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/tmp/ingest-code-incremental-components-proof-integrated/proof-summary.json",
+    "artifact_sha256": "cb5cddd6fcdd8f3234e3ecde4fcc144a0a0e5481b6ede8c172b285cad6924eb9",
+    "summary": "Real git fixture and Tree-sitter adapter exercised initial/no-op/edit/delete/fingerprint-bump/corrupt-cache cases; proof-summary status=pass."
+  }
+}
