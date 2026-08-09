@@ -50,4 +50,12 @@ if [[ "${1:-}" == "effects-check" ]]; then
   exec python3 scripts/effects_check.py "$@"
 fi
 
+# `responsive-geometry-check` runs the required bespoke-design viewport matrix
+# against the static site and rejects horizontal document overflow.
+if [[ "${1:-}" == "responsive-geometry-check" ]]; then
+  shift
+  cd ../../site
+  exec node ../skills/monitor-website/scripts/responsive_geometry_check.mjs "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

@@ -41,3 +41,7 @@ removed_homepage_effects:
   - decorative .ruledbg grid on hero
   - load-time .rise choreography
   - animated UnusualPath SVG
+removed_public_effects:
+  - ledger cell pseudo-tooltip that expanded document scroll width
+  - ledger cell pop animation and hover scale
+  - ledger mosaic neighbor recoil

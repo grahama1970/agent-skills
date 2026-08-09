@@ -73,7 +73,6 @@ body {
   letter-spacing: 0.005em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 ::selection {
   background: var(--brass);
@@ -310,7 +309,8 @@ section {
   height: 18px;
 }
 @media (max-width: 720px) {
-  /* Keep section nav on mobile as a horizontally scrollable strip. */
+  /* Keep every primary action visible on phones; the nav wraps instead of
+     placing contact/resume links in an off-canvas strip. */
   .topbar .wrap {
     flex-wrap: wrap;
     height: auto;
@@ -319,16 +319,20 @@ section {
   }
   .nav {
     flex: 1 1 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .nav::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    gap: 0.12rem 0.62rem;
+    overflow: visible;
+    white-space: normal;
   }
   .nav a {
     padding-block: 0.65rem;
+  }
+  .nav-icons {
+    gap: 0.2rem;
+    margin-left: 0;
+  }
+  .nav-icons::before {
+    display: none;
   }
 }
 
@@ -1033,11 +1037,7 @@ h1 .it::after {
   border-radius: 1px;
   background: var(--brass);
   opacity: 0.92;
-  transform: scale(0.86) translateY(2px);
-  animation: pop 0.5s var(--ease-entrance) forwards;
-  animation-delay: calc(var(--i) * 4.2ms + 0.35s);
   transition:
-    transform var(--dur-state) var(--ease-state),
     background var(--dur-state) var(--ease-state),
     opacity var(--dur-state) var(--ease-state);
   display: block;
@@ -1054,23 +1054,13 @@ h1 .it::after {
 }
 .cell:hover,
 .cell:focus-visible {
-  transform: scale(1.28);
   background: var(--ember);
-  z-index: 2;
-  position: relative;
-}
-/* Neighbor recoil (approx): non-hovered cells step back while one is up. */
-.mosaic:hover .cell:not(:hover) {
-  opacity: 0.8;
+  outline: 1px solid var(--paper);
+  outline-offset: 1px;
 }
 .cell.out:hover,
 .cell.out:focus-visible {
   box-shadow: inset 0 0 0 1px var(--ember);
-}
-@keyframes pop {
-  to {
-    transform: scale(1) translateY(0);
-  }
 }
 .legend {
   display: flex;
@@ -2400,35 +2390,6 @@ footer a:hover {
   border-radius: 999px;
   padding: 0.28em 0.65em;
   white-space: nowrap;
-}
-
-/* Cell hover popover: live-evidence micro-preview. */
-.cell::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 7px);
-  left: 50%;
-  translate: -50% 2px;
-  padding: 0.35rem 0.6rem;
-  background: var(--paper);
-  color: #1a1411;
-  font-family: var(--sans);
-  font-size: 0.66rem;
-  border-radius: 3px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.15s ease, translate 0.15s ease;
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
-  z-index: 30;
-}
-.cell:hover::after,
-.cell:focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-  translate: -50% 0;
-  transition-delay: 70ms;
 }
 
 /* Ticket dual-view */

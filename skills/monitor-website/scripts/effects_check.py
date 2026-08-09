@@ -21,10 +21,14 @@ PROHIBITED_CSS_TOKENS = {
     ".glow": "fixed ambient glow selector",
     ".grain": "fixed grain selector",
     "@keyframes rise": "load-time rise animation",
+    "@keyframes pop": "ledger cell pop animation",
     ".ruledbg": "decorative ruled background selector",
     "@keyframes c-breathe": "breathing brandmark animation",
     "@keyframes c-glow": "glowing brandmark animation",
     ".unusual-path-svg": "decorative path drawing selector",
+    ".cell::after": "ledger pseudo-tooltip that expands document width",
+    ".mosaic:hover .cell:not(:hover)": "ledger neighbor recoil effect",
+    "transform: scale(1.28)": "ledger hover scale effect",
 }
 
 
@@ -97,6 +101,7 @@ def validate(config_path: Path) -> dict:
     result["counts"] = {
         "registered_effects": len(effects),
         "removed_homepage_effects": len(config.get("removed_homepage_effects") or []),
+        "removed_public_effects": len(config.get("removed_public_effects") or []),
     }
     if result["errors"]:
         result["status"] = "FAIL"

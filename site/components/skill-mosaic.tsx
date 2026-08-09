@@ -85,7 +85,6 @@ export function SkillMosaic() {
       data-qid={`ledger:cell:${s.n}`}
       data-qs-action="LEDGER_OPEN_SKILL"
       title={`${s.n} · ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
-      data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ sanity-checked' : '○ contract only'}`}
       className={`cell${s.s ? '' : ' out'}`}
       style={{
         ['--i' as string]: i,
