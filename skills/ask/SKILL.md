@@ -176,6 +176,18 @@ Delivery goes through `herdr pane run`, the same transport `$monitor-herdr`
 uses. A success receipt proves the prompt was *submitted*, not that the other
 agent understood or acted on it — treat it as delivery proof only.
 
+**`submitted: true` is herdr reporting on itself.** During development it
+returned exit 0 for a pane whose content never showed the message, so confirm
+delivery independently with `herdr pane read <pane_id>` when it matters.
+`scripts/herdr_e2e_probe.sh` does exactly that and is wired into the agentic
+evals as `herdr-live-delivery-readback-e2e`.
+
+Known limitation: every **`opencode`** pane observed returns 0 bytes from
+`herdr pane read`, so delivery to those panes cannot be confirmed. `claude` and
+`codex` panes read back normally. The e2e probe restricts itself to readable
+agents for that reason — a pass on an unreadable pane would be
+indistinguishable from a silent failure.
+
 ## Project-Agent Quickstart
 
 Start here when the user asks for a single model call, roundtable, competition,

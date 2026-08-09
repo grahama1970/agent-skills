@@ -1,0 +1,179 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 3,
+  "proof_scope": "the three peer target types /ask can address: Herdr sessions via monitor-herdr, model calls via tau, and web models via surf",
+  "claims": {
+    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read",
+    "does_not_prove": "that a targeted agent understood or acted on a delivered message, browser or model semantic correctness, or that a Herdr session works as a roundtable seat (no capture lane exists yet)"
+  },
+  "cases": [
+    {
+      "name": "herdr-target-resolution-contract",
+      "type": "positive",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_herdr_target.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "12 passed"
+        ]
+      }
+    },
+    {
+      "name": "herdr-ambiguous-name-never-guesses",
+      "type": "adversarial",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_herdr_target.py::test_an_ambiguous_name_refuses_and_offers_candidates -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
+      "name": "herdr-interview-lists-session-model-directory",
+      "type": "positive",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_herdr_target.py::test_interview_shows_session_model_and_directory tests/test_herdr_target.py::test_interview_options_carry_machine_readable_fields -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "herdr-dead-and-busy-panes-are-never-typed-into",
+      "type": "adversarial",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_herdr_target.py::test_a_dead_pane_is_never_a_candidate tests/test_herdr_target.py::test_a_busy_pane_is_excluded_unless_asked_for -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "herdr-repo-slug-reaches-its-checkout",
+      "type": "positive",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_herdr_target.py::test_the_repo_slug_reaches_the_checkout_directory -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
+      "name": "herdr-sessions-are-listable-live",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh herdr list --help"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "addressable Herdr sessions"
+        ]
+      }
+    },
+    {
+      "name": "tau-model-target-compiles-to-a-dag",
+      "type": "positive",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag \"Ask gpt-5.5-high to review the change\" --repo grahama1970/agent-skills --target eval-targets-model --immutable-goal \"Review the change\" --handler gpt-5.5-high --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau.dag_contract.v1",
+          "\"status\": \"READY\"",
+          "goal_hash"
+        ]
+      }
+    },
+    {
+      "name": "surf-web-model-target-compiles-to-a-dag",
+      "type": "positive",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag \"Ask webgpt to review the change\" --repo grahama1970/agent-skills --target eval-targets-web --immutable-goal \"Review the change\" --handler webgpt --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau.dag_contract.v1",
+          "\"status\": \"READY\"",
+          "webgpt"
+        ]
+      }
+    },
+    {
+      "name": "compiling-a-web-target-never-goes-provider-live",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag \"Ask webgpt to review the change\" --repo grahama1970/agent-skills --target eval-targets-nolive --immutable-goal \"Review the change\" --handler webgpt --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"provider_live\": false",
+          "\"status\": \"READY\""
+        ]
+      }
+    },
+    {
+      "name": "herdr-live-delivery-readback-e2e",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/herdr_e2e_probe.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS: marker present"
+        ]
+      }
+    }
+  ]
+}
