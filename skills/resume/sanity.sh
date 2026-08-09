@@ -133,6 +133,33 @@ if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/screening_audit.py
     exit 1
 fi
 
+echo "[resume] linkedin sync: competency parsing and ledger idempotency are offline-safe"
+python3 - "$SCRIPT_DIR/scripts/linkedin_sync.py" "$SCRIPT_DIR/../../RESUME.md" <<'PYLI'
+import importlib.util, pathlib, sys
+spec = importlib.util.spec_from_file_location("lsync", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+# Register before exec: the module defines dataclasses, and dataclasses resolves
+# field types through sys.modules at class-creation time.
+sys.modules["lsync"] = m
+spec.loader.exec_module(m)
+terms = m.resume_competencies(pathlib.Path(sys.argv[2]).read_text(encoding="utf-8"))
+if len(terms) < 10:
+    raise SystemExit(f"expected the resume to declare competencies, parsed {len(terms)}")
+# Web-only material must never be treated as a declared skill.
+if any("Omitted from the two-page PDF" in t for t in terms):
+    raise SystemExit("web-only section leaked into declared competencies")
+# Canonical LinkedIn names must satisfy the resume's shorter phrasing.
+if m.normalise("React") not in m.normalise("React.js"):
+    raise SystemExit("normalise() would re-add a skill already stored canonically")
+PYLI
+
+echo "[resume] linkedin sync refuses to write without --confirm"
+if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/linkedin_sync.py" apply \
+  --tab-id 0 --resume "$FIXTURE_DIR/canonical.md" >/dev/null 2>&1; then
+    echo "unexpected success writing without --confirm" >&2
+    exit 1
+fi
+
 echo "[resume] safety boundary: no network or repository mutation"
 test "$(git -C "$SCRIPT_DIR/../.." status --short --untracked-files=no | wc -l | tr -d ' ')" -ge 0
 echo "Result: PASS (deterministic local smoke; no live services exercised)"

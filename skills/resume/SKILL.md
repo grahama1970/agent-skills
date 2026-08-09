@@ -20,6 +20,7 @@ provides:
   - resume-artifact-handoff
 composes:
   - handoff
+  - surf
   - agentic-evals
 complies:
   - best-practices-skills
@@ -112,6 +113,34 @@ the resume is good — only that it cannot be dismissed for a structural reason.
 
 `match` reports what a posting actually says. It models no employer's private
 ranking system, and it is deterministic term overlap, not semantic matching.
+
+## Keeping LinkedIn in step
+
+A profile listing twenty skills against a resume declaring fifty reads to a
+screener as an inconsistency, not as modesty. `linkedin_sync.py` drives the real
+signed-in browser through `/surf`:
+
+```bash
+uv run --project . python scripts/linkedin_sync.py plan --tab-id <surf tab>
+uv run --project . python scripts/linkedin_sync.py apply --tab-id <surf tab> --confirm
+```
+
+`plan` writes nothing and is the default posture; `apply` refuses to run without
+`--confirm`, because it edits a live professional profile. Nothing is ever
+deleted, and a term is only written when LinkedIn's own autocomplete offers a
+suggestion containing the query — typing "Observability" offers "Observational"
+first, which is a different word, so unmatched terms are skipped and reported
+rather than guessed at.
+
+Neither available read proves absence: the details view exposes only its first
+twenty entries, and the add dialog offers skills the profile already holds. So
+`local/linkedin-synced.json` records what has been written, and that ledger —
+not a page scrape — is what makes a second run idempotent.
+
+Expect roughly half of a resume's competency terms to have no LinkedIn
+equivalent ("DAG Contracts", "Ground-Truth Fixtures"). That is the tool working:
+the skills section carries the terms LinkedIn can actually index, and the resume
+carries the full vocabulary.
 
 ## Claim safety
 
