@@ -153,6 +153,27 @@ if m.normalise("React") not in m.normalise("React.js"):
     raise SystemExit("normalise() would re-add a skill already stored canonically")
 PYLI
 
+echo "[resume] linkedin sync: cap detection and alias map are coherent"
+python3 - "$SCRIPT_DIR/scripts/linkedin_sync.py" <<'PYCAP'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("lsync2", sys.argv[1])
+m = importlib.util.module_from_spec(spec)
+sys.modules["lsync2"] = m
+spec.loader.exec_module(m)
+if not hasattr(m, "at_skill_cap"):
+    raise SystemExit("cap detection missing; apply would no-op against a full profile")
+if not issubclass(m.ProfileFullError, Exception):
+    raise SystemExit("ProfileFullError is not raisable")
+# An alias must never point at a term the module also calls unmappable.
+overlap = set(m.TAXONOMY_ALIASES.values()) & m.NO_LINKEDIN_EQUIVALENT
+if overlap:
+    raise SystemExit(f"alias targets also marked unmappable: {sorted(overlap)}")
+# An unmappable term must not also carry an alias.
+both = set(m.TAXONOMY_ALIASES) & m.NO_LINKEDIN_EQUIVALENT
+if both:
+    raise SystemExit(f"terms both aliased and excluded: {sorted(both)}")
+PYCAP
+
 echo "[resume] linkedin sync refuses to write without --confirm"
 if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/linkedin_sync.py" apply \
   --tab-id 0 --resume "$FIXTURE_DIR/canonical.md" >/dev/null 2>&1; then

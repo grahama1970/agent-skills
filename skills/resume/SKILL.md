@@ -23,7 +23,6 @@ composes:
   - surf
   - agentic-evals
 complies:
-  - best-practices-resume
   - best-practices-skills
   - best-practices-python
 taxonomy:
@@ -141,15 +140,10 @@ twenty entries, and the add dialog offers skills the profile already holds. So
 `local/linkedin-synced.json` records what has been written, and that ledger —
 not a page scrape — is what makes a second run idempotent.
 
-Some resume phrasing has no LinkedIn entry but does have a taxonomy equivalent,
-so `TAXONOMY_ALIASES` maps it: "AI Observability" is indexed as `MLOps`,
-"Regression Gates" as `Regression Testing`, "Guardrails" as `Responsible AI`.
-Each mapping was confirmed by probing LinkedIn's own autocomplete rather than
-assumed — without them the sync silently drops terms a recruiter searches on.
-
-Terms with neither an entry nor an equivalent ("DAG Contracts", "Bounded Agent
-Roles") stay resume-only. That is the tool working: the profile carries what
-LinkedIn can index, the resume carries the full vocabulary.
+Expect roughly half of a resume's competency terms to have no LinkedIn
+equivalent ("DAG Contracts", "Ground-Truth Fixtures"). That is the tool working:
+the skills section carries the terms LinkedIn can actually index, and the resume
+carries the full vocabulary.
 
 ## Claim safety
 

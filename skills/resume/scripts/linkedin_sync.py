@@ -96,6 +96,10 @@ NO_LINKEDIN_EQUIVALENT = frozenset({
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
+class ProfileFullError(RuntimeError):
+    """The profile holds LinkedIn's maximum number of skills."""
+
+
 class SyncError(RuntimeError):
     """Stable failure for the LinkedIn sync seam."""
 
@@ -157,9 +161,12 @@ class Plan:
     missing: list[str]
     over_cap: int
 
+    at_cap: bool = False
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "schema": "resume.linkedin_sync_plan.v1",
+            "profile_at_cap": self.at_cap,
             "declared": len(self.declared),
             "present_on_profile": len(self.present),
             "missing": self.missing,
@@ -248,6 +255,27 @@ def save_ledger(names: list[str]) -> None:
     )
 
 
+def at_skill_cap(tab: str) -> bool:
+    """True when LinkedIn reports the profile is full.
+
+    At the cap LinkedIn removes the add affordance entirely, so a sync would
+    otherwise loop, find no input, and report every term as an innocuous
+    'no match' — indistinguishable from a term LinkedIn genuinely lacks. The
+    page says so in words, and that is the only unambiguous signal.
+    """
+    # Navigate first: callers may have moved the tab to the profile page, where
+    # the notice does not appear, which would read as "not full" and let apply
+    # loop uselessly against a cap it cannot see.
+    surf("go", SKILLS_URL, "--tab-id", tab)
+    time.sleep(5)
+    marker = surf_js(
+        tab,
+        "(function(){return document.body.innerText"
+        ".indexOf('maximum number of skills')>=0?'FULL':'OK';})()",
+    )
+    return marker == "FULL"
+
+
 def build_plan(resume: Path, tab: str) -> Plan:
     declared = resume_competencies(resume.read_text(encoding="utf-8"))
     if not declared:
@@ -286,7 +314,7 @@ def build_plan(resume: Path, tab: str) -> Plan:
         if d not in NO_LINKEDIN_EQUIVALENT and not satisfied(d)
     ]
     over = max(0, len(present) + len(missing) - LINKEDIN_SKILL_CAP)
-    return Plan(declared, present, missing, over)
+    return Plan(declared, present, missing, over, at_skill_cap(tab))
 
 
 def add_skill(tab: str, term: str) -> str | None:
@@ -360,6 +388,13 @@ def apply(
         raise typer.Exit(code=1)
     try:
         current = build_plan(resume, tab)
+        if current.missing and at_skill_cap(tab):
+            raise ProfileFullError(
+                f"profile is at LinkedIn's {LINKEDIN_SKILL_CAP}-skill cap; "
+                f"{len(current.missing)} term(s) cannot be added until one is "
+                "removed. Drop a generic entry (Strategy, Management) before "
+                "retrying — this is a decision, not something to automate."
+            )
         added: list[dict[str, str]] = []
         skipped: list[str] = []
         for term in current.missing[:limit]:
@@ -381,6 +416,9 @@ def apply(
             "unverified_after_readback": unverified,
             "verdict": "PASS" if not unverified else "PARTIAL",
         }
+    except ProfileFullError as exc:
+        logger.error("{}", exc)
+        raise typer.Exit(code=3) from exc
     except (OSError, SyncError) as exc:
         logger.error("linkedin sync failed: {}", exc)
         raise typer.Exit(code=1) from exc
