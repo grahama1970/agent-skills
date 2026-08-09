@@ -46,6 +46,8 @@ disciplines:
   - ui-design-engineering
   - content-creation
 runtime_self_improvement: none
+domains:
+  - marketing
 ---
 
 # Best Practices: Bespoke Digital Design

@@ -76,6 +76,52 @@ def validate(
         for disc in discs:
             if disc not in vocabulary:
                 errors.append(f"{name}: '{disc}' not in vocabulary")
+    errors.extend(validate_domains(skills_root, on_disk))
+    return errors
+
+
+def inbound_edges(skills_root: Path = SKILLS_ROOT) -> dict[str, int]:
+    """Count how many skills declare each skill in their `composes:` list."""
+    counts: dict[str, int] = {}
+    for skill_md in sorted(skills_root.glob("*/SKILL.md")):
+        try:
+            meta = yaml.safe_load(skill_md.read_text(encoding="utf-8").split("---", 2)[1]) or {}
+        except (yaml.YAMLError, IndexError):
+            continue
+        deps = meta.get("composes")
+        deps = [deps] if isinstance(deps, str) else (deps or [])
+        for dep in deps:
+            counts[str(dep)] = counts.get(str(dep), 0) + 1
+    return counts
+
+
+def validate_domains(skills_root: Path, on_disk: set[str]) -> list[str]:
+    """Fail-closed gates for the optional domain axis.
+
+    A domain is product context, not method: membership means the domain is
+    why the skill exists. The infrastructure guard enforces that in code —
+    a skill composed by more than `infrastructure_max_inbound` others is
+    shared infrastructure and cannot be claimed by any domain.
+    """
+    config = yaml.safe_load(DISCIPLINES_YML.read_text(encoding="utf-8"))
+    vocab = config.get("domain_vocabulary") or {}
+    members = config.get("domains") or {}
+    cap = int((config.get("domain_rules") or {}).get("infrastructure_max_inbound", 7))
+    counts = inbound_edges(skills_root)
+    errors: list[str] = []
+    for name, doms in members.items():
+        if name not in on_disk:
+            errors.append(f"domain member has no SKILL.md on disk: {name}")
+        for dom in doms:
+            if dom not in vocab:
+                errors.append(f"{name}: domain '{dom}' not in domain_vocabulary")
+        ib = counts.get(name, 0)
+        if ib > cap:
+            errors.append(
+                f"{name}: {ib} inbound composes edges (> {cap}) — shared "
+                f"infrastructure cannot belong to a domain; it is USED BY "
+                f"{doms}, it does not exist FOR it"
+            )
     return errors
 
 
@@ -89,12 +135,12 @@ def frontmatter_bounds(lines: list[str]) -> tuple[int, int]:
     raise ValueError("unterminated frontmatter")
 
 
-def strip_existing_block(lines: list[str], close: int) -> list[str]:
-    """Remove any existing top-level disciplines: block inside the frontmatter."""
+def strip_existing_block(lines: list[str], close: int, key: str = "disciplines:") -> list[str]:
+    """Remove an existing top-level block (disciplines:/domains:) from frontmatter."""
     out: list[str] = []
     i = 0
     while i < close:
-        if lines[i].startswith("disciplines:"):
+        if lines[i].startswith(key):
             i += 1
             while i < close and (lines[i].startswith((" ", "\t")) or not lines[i].strip()):
                 if not lines[i].strip() and i + 1 < close and not lines[i + 1].startswith((" ", "\t")):
@@ -106,12 +152,17 @@ def strip_existing_block(lines: list[str], close: int) -> list[str]:
     return out
 
 
-def set_skill_md(path: Path, disciplines: list[str], write: bool) -> str:
+def set_skill_md(
+    path: Path, disciplines: list[str], write: bool, domains: list[str] | None = None
+) -> str:
     text = path.read_text(encoding="utf-8")
     lines = text.split("\n")
     _, close = frontmatter_bounds(lines)
-    head = strip_existing_block(lines[:close], close)
+    head = strip_existing_block(lines[:close], close, key="disciplines:")
+    head = strip_existing_block(head, len(head), key="domains:")
     block = ["disciplines:"] + [f"  - {d}" for d in disciplines]
+    if domains:
+        block += ["domains:"] + [f"  - {d}" for d in domains]
     new_lines = head + block + lines[close:]
     new_text = "\n".join(new_lines)
     if new_text == text:
@@ -182,11 +233,14 @@ def run(
         typer.echo(json.dumps({"status": "FAIL", "errors": errors}, indent=2))
         raise typer.Exit(code=2)
 
+    domain_members = yaml.safe_load(DISCIPLINES_YML.read_text(encoding="utf-8")).get("domains") or {}
     results = {"skill_md": {"updated": 0, "unchanged": 0}, "readme": {"updated": 0, "unchanged": 0, "no_readme": 0}}
     failures: list[str] = []
     for name, discs in sorted(mapping.items()):
         try:
-            results["skill_md"][set_skill_md(SKILLS_ROOT / name / "SKILL.md", discs, write)] += 1
+            results["skill_md"][set_skill_md(
+                SKILLS_ROOT / name / "SKILL.md", discs, write, domain_members.get(name)
+            )] += 1
             results["readme"][set_readme(SKILLS_ROOT / name / "README.md", discs, write)] += 1
         except ValueError as exc:
             failures.append(f"{name}: {exc}")
@@ -196,6 +250,7 @@ def run(
         "skills": len(mapping),
         "disciplines": len(vocabulary),
         "results": results,
+        "domain_members": len(domain_members),
         "failures": failures,
     }
     if failures:
@@ -299,6 +354,26 @@ def _active_local_repos(window_days: int) -> set[str]:
     return active
 
 
+def checkout_staleness() -> dict:
+    """How far behind origin/<branch> this checkout is.
+
+    A coverage gate is only as truthful as the tree it runs in: a stale
+    checkout cannot see skills added since it last fetched, so it would
+    report green while blind. Observed 2026-08-09: a local run reported
+    "345 skills, all mapped" while origin/main already had 346.
+    """
+    subprocess.run(["git", "fetch", "-q", "origin"], capture_output=True, timeout=120, check=False)
+    branch = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True, check=False
+    ).stdout.strip()
+    counts = subprocess.run(
+        ["git", "rev-list", "--left-right", "--count", f"origin/{branch}...HEAD"],
+        capture_output=True, text=True, check=False,
+    ).stdout.split()
+    behind = int(counts[0]) if len(counts) == 2 else -1
+    return {"branch": branch, "behind_origin": behind, "current": behind == 0}
+
+
 @app.command("portfolio-check")
 def portfolio_check() -> None:
     """Validate the repo-level portfolio registry and its freshness (fail closed).
@@ -346,8 +421,10 @@ def portfolio_check() -> None:
     active = {aliases.get(name, name) for name in _active_local_repos(ACTIVITY_WINDOW_DAYS)}
     unclassified = sorted(active - known_repos - ignored)
 
+    stale = checkout_staleness()
     report = {
         "status": "PASS",
+        "checkout": stale,
         "validator": result.stdout.strip(),
         "registry_generated_on": str(generated_on),
         "registry_age_days": age_days,
@@ -358,6 +435,12 @@ def portfolio_check() -> None:
         report["errors"] = [
             f"registry is {age_days} days old (> {PORTFOLIO_MAX_AGE_DAYS}); quarterly review due"
         ]
+    if not stale["current"]:
+        report["status"] = "FAIL"
+        report.setdefault("errors", []).append(
+            f"checkout is {stale['behind_origin']} commits behind origin/{stale['branch']}; "
+            "coverage measured here is not trustworthy — fetch/rebase before trusting this gate"
+        )
     if unclassified:
         report["status"] = "FAIL"
         report.setdefault("errors", []).append(

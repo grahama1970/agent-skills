@@ -474,3 +474,47 @@ portfolio_repo_overrides:
   ignore:
     - impeccable      # third-party upstream (pbakaus/impeccable)
     - pi              # third-party upstream (earendil-works/pi); adapted line is pi-mono
+
+# Third axis: DOMAIN (product context), separate from discipline (method) and
+# from the portfolio research areas (narrative). A skill gets a domain only
+# when the domain is WHY IT EXISTS -- not because the domain calls it.
+#
+# Unlike `disciplines:`, `domains:` is OPTIONAL. Most skills are method-only
+# and correctly carry no domain. A domain that collects a large fraction of
+# the catalog answers no question and is a bug, not a success.
+#
+# infrastructure_max_inbound encodes the exists-for/used-by rule in code: a
+# skill composed by more than this many other skills is shared infrastructure
+# and MUST NOT be claimed by a domain. Observed 2026-08-09: surf (15 inbound),
+# brave-search (19), memory (147) are used BY the marketing pipeline but exist
+# independently of it; ops-buzz and social-bridge were excluded after reading
+# what they actually do (agent review/report relay and security-content
+# aggregation respectively), not from their names.
+domain_rules:
+  infrastructure_max_inbound: 7
+
+domain_vocabulary:
+  marketing: >
+    Finding and winning business: opportunity discovery and qualification,
+    outbound prospecting, sales and application collateral, and the public
+    brand surfaces those depend on. Excludes internal agent notification
+    transport and general browser/search/memory infrastructure.
+
+domains:
+  # discovery & qualification
+  monitor-opportunities: [marketing]
+  best-practices-opportunities: [marketing]
+  discover-contacts: [marketing]
+  monitor-contacts: [marketing]
+  mailbox-mining: [marketing]
+  # collateral
+  resume: [marketing]
+  best-practices-resume: [marketing]
+  pitchdeck: [marketing]
+  best-practices-slide-design: [marketing]
+  # public surfaces & brand (sync-sites deliberately excluded: it is OSTree
+  # static-delta federation for air-gapped multi-plant deployment, not the
+  # public web presence -- classified from its description, not its name)
+  monitor-website: [marketing]
+  best-practices-bespoke-design: [marketing]
+  best-practices-font: [marketing]

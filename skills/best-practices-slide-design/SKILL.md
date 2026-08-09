@@ -26,6 +26,8 @@ complies:
 disciplines:
   - engineering-standards
   - content-creation
+domains:
+  - marketing
 ---
 
 # Slide Design Best Practices

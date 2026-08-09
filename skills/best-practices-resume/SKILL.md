@@ -35,6 +35,8 @@ taxonomy:
 disciplines:
   - engineering-standards
   - content-creation
+domains:
+  - marketing
 ---
 
 # Best Practices: Resume

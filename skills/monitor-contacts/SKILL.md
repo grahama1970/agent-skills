@@ -27,6 +27,8 @@ composes:
 disciplines:
   - observability-operations
   - research-retrieval
+domains:
+  - marketing
 ---
 
 # monitor-contacts

@@ -19,6 +19,8 @@ complies:
 disciplines:
   - observability-operations
   - content-creation
+domains:
+  - marketing
 ---
 
 # monitor-website

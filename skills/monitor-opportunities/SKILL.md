@@ -66,6 +66,8 @@ taxonomy:
 disciplines:
   - research-retrieval
   - observability-operations
+domains:
+  - marketing
 ---
 
 # monitor-opportunities

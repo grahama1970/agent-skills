@@ -36,6 +36,8 @@ runtime_self_improvement: basic
 disciplines:
   - content-creation
   - evaluation-quality
+domains:
+  - marketing
 ---
 
 # Resume

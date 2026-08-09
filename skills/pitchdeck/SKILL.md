@@ -57,6 +57,8 @@ metadata:
   short-description: Claim-bound README-to-PPTX compiler
 disciplines:
   - content-creation
+domains:
+  - marketing
 ---
 
 # README to Pitch Deck

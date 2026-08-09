@@ -53,6 +53,8 @@ disciplines:
   - data-engineering
   - compliance-security
   - research-retrieval
+domains:
+  - marketing
 ---
 
 # mailbox-mining

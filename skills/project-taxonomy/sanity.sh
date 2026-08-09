@@ -61,10 +61,34 @@ with tempfile.TemporaryDirectory(prefix="project-taxonomy-sanity-") as tmp:
     if not any("not in vocabulary" in e for e in errors):
         failures.append("negative control: out-of-vocabulary discipline not reported")
 
+    # domain axis: infrastructure guard must reject a high-inbound skill
+    counts = ad.inbound_edges()
+    infra = [s for s, n in counts.items() if n > 7]
+    if not infra:
+        failures.append("domain guard untestable: no skill exceeds the inbound cap")
+    else:
+        cfg = __import__("yaml").safe_load(ad.DISCIPLINES_YML.read_text())
+        vocab = set(cfg.get("domain_vocabulary") or {})
+        members = dict(cfg.get("domains") or {})
+        # positive: real membership validates clean
+        if ad.validate_domains(ad.SKILLS_ROOT, set(members) | {infra[0]}):
+            failures.append("domain positive control: committed membership does not validate")
+        # negative: claiming an infrastructure skill must fail closed
+        members[infra[0]] = [sorted(vocab)[0]]
+        import tempfile, yaml as _y
+        orig = ad.DISCIPLINES_YML.read_text()
+        try:
+            cfg["domains"] = members
+            ad.DISCIPLINES_YML.write_text(_y.safe_dump(cfg))
+            if not any("inbound composes edges" in e for e in ad.validate_domains(ad.SKILLS_ROOT, set(members))):
+                failures.append(f"domain negative control: {infra[0]} ({counts[infra[0]]} inbound) was NOT rejected")
+        finally:
+            ad.DISCIPLINES_YML.write_text(orig)
+
 if failures:
     print(json.dumps({"status": "FAIL", "failures": failures}, indent=2))
     raise SystemExit(1)
-print(json.dumps({"status": "PASS", "gates": ["mapping-complete", "vocabulary-18", "idempotent", "negative-unmapped", "negative-vocabulary", "noise-dirs"]}))
+print(json.dumps({"status": "PASS", "gates": ["mapping-complete", "vocabulary-18", "idempotent", "negative-unmapped", "negative-vocabulary", "noise-dirs", "domain-positive", "domain-infra-guard"]}))
 PY
 
 ./run.sh crosswalk | uv run --project "$SCRIPT_DIR" python -c "

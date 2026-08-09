@@ -31,6 +31,8 @@ composes:
   - agentic-evals
 disciplines:
   - research-retrieval
+domains:
+  - marketing
 ---
 
 # discover-contacts
