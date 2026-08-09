@@ -1,0 +1,24 @@
+{
+  "schema": "grahama.craft_integrity.v1",
+  "status": "FAIL",
+  "visual_assets_check": {
+    "status": "PASS",
+    "counts": {
+      "registered_assets": 31,
+      "public_visuals": 31,
+      "evidence_assets": 4
+    }
+  },
+  "effects_check": {
+    "status": "FAIL",
+    "counts": {
+      "registered_effects": 5,
+      "removed_homepage_effects": 5,
+      "removed_public_effects": 0
+    }
+  },
+  "rendered_screens": [],
+  "prohibited_findings": [
+    "generated evidence marked as proof"
+  ]
+}

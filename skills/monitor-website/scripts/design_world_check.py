@@ -37,6 +37,8 @@ def validate_contract(c: dict) -> list[str]:
         errs.append("contract: premise missing")
     if not str(c.get("responsive_geometry_receipt", "")).strip():
         errs.append("contract: responsive_geometry_receipt missing")
+    if not str(c.get("craft_integrity_receipt", "")).strip():
+        errs.append("contract: craft_integrity_receipt missing")
     inv = c.get("invariants") or []
     if len(inv) < 3:
         errs.append("contract: at least 3 non-color invariants required")
@@ -191,6 +193,96 @@ def validate_responsive_geometry(receipt_path: Path) -> dict:
     }
 
 
+def validate_craft_integrity(receipt_path: Path) -> dict:
+    if not receipt_path.is_file():
+        return {
+            "status": "NOT_TESTED",
+            "needs": f"craft integrity receipt missing: {receipt_path}",
+        }
+    try:
+        receipt = json.loads(receipt_path.read_text())
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": [f"craft integrity receipt is not JSON: {exc}"],
+        }
+
+    errors: list[str] = []
+    if receipt.get("schema") != "grahama.craft_integrity.v1":
+        errors.append("schema must be grahama.craft_integrity.v1")
+    if receipt.get("status") != "PASS":
+        errors.append("receipt status must be PASS")
+    if (receipt.get("visual_assets_check") or {}).get("status") != "PASS":
+        errors.append("visual_assets_check.status must be PASS")
+    if (receipt.get("effects_check") or {}).get("status") != "PASS":
+        errors.append("effects_check.status must be PASS")
+    if receipt.get("prohibited_findings"):
+        errors.append("prohibited_findings must be empty")
+
+    visual_counts = (receipt.get("visual_assets_check") or {}).get("counts") or {}
+    if visual_counts.get("registered_assets", 0) < 1:
+        errors.append("visual_assets_check.counts.registered_assets must be positive")
+    if visual_counts.get("public_visuals") != visual_counts.get("registered_assets"):
+        errors.append("visual asset counts must show every public visual is registered")
+    if visual_counts.get("evidence_assets", 0) < 1:
+        errors.append("at least one evidence asset is required")
+    effects_counts = (receipt.get("effects_check") or {}).get("counts") or {}
+    if effects_counts.get("registered_effects", 0) < 1:
+        errors.append("effects_check.counts.registered_effects must be positive")
+    if effects_counts.get("removed_public_effects", 0) < 1:
+        errors.append("effects_check.counts.removed_public_effects must be positive")
+
+    screens = receipt.get("rendered_screens") or []
+    required_ids = {"home-desktop", "ledger-tablet", "explore-desktop"}
+    seen_ids = {s.get("id") for s in screens}
+    if seen_ids != required_ids:
+        errors.append(f"rendered_screens ids must match {sorted(required_ids)}")
+    for screen in screens:
+        label = screen.get("id", "<missing-id>")
+        path_value = screen.get("path")
+        digest = screen.get("sha256")
+        if not path_value:
+            errors.append(f"{label}: path missing")
+            continue
+        p = _repo_path(str(path_value))
+        if not p.is_file():
+            errors.append(f"{label}: screenshot missing: {path_value}")
+            continue
+        if not _is_sha256(digest):
+            errors.append(f"{label}: invalid sha256")
+        elif _sha256(p) != digest:
+            errors.append(f"{label}: screenshot digest mismatch")
+        if screen.get("status") != 200:
+            errors.append(f"{label}: HTTP status must be 200")
+        metrics = screen.get("metrics") or {}
+        width = screen.get("width")
+        if not isinstance(width, int):
+            errors.append(f"{label}: width must be an integer")
+        for key in ("scrollWidth", "bodyScrollWidth"):
+            value = metrics.get(key)
+            if not isinstance(value, int) or not isinstance(width, int) or value > width:
+                errors.append(f"{label}: {key} must be <= width")
+
+    if errors:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": errors,
+        }
+    return {
+        "status": "PASS",
+        "receipt": str(receipt_path),
+        "rendered_screens": len(screens),
+        "does_not_prove": [
+            "blind distinctiveness",
+            "independent Impeccable finish review",
+            "WCAG keyboard/contrast completion",
+            "performance budgets",
+        ],
+    }
+
+
 def validate_pr1_source_lock(contract: dict, brief_path: Path, selection_path: Path) -> dict[str, dict]:
     gates: dict[str, dict] = {}
     provenance_errors: list[str] = []
@@ -314,6 +406,7 @@ def main(argv=None) -> int:
     ap.add_argument("--css-dir", default=str(SITE / "app"))
     ap.add_argument("--font-receipt", default=str(SITE / "design-roundtable" / "font-receipt.r1.json"))
     ap.add_argument("--responsive-geometry", default=None)
+    ap.add_argument("--craft-integrity", default=None)
     ap.add_argument("--visual-world-brief", default=str(SITE / "design-roundtable" / "visual-world-brief.r1.yaml"))
     ap.add_argument("--territory-selection", default=str(SITE / "design-roundtable" / "territory-selection.r1.json"))
     ap.add_argument("--json", action="store_true")
@@ -346,8 +439,14 @@ def main(argv=None) -> int:
         or str(SITE / "design-roundtable" / "responsive-geometry.r1.json")
     )
     result["gates"]["responsive_choreography"] = validate_responsive_geometry(_repo_path(responsive_geometry))
+    craft_integrity = (
+        a.craft_integrity
+        or c.get("craft_integrity_receipt")
+        or str(SITE / "design-roundtable" / "craft-integrity.r1.json")
+    )
+    result["gates"]["craft_integrity_render"] = validate_craft_integrity(_repo_path(craft_integrity))
     # Gates that require evidence this command cannot supply.
-    for g in ("distinctiveness_blind", "craft_integrity_render"):
+    for g in ("distinctiveness_blind",):
         result["gates"][g] = {"status": "NOT_TESTED",
                               "needs": "rendered screenshot corpus / blind-rater outputs (#1343)"}
 
