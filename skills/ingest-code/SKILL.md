@@ -224,22 +224,44 @@ The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codeb
 
 ## Incremental Re-Indexing
 
-Re-ingesting a repo processes only what changed. State lives at
-`artifacts/ingest-code/incremental-state.json`, mapping each `symbol_id` to its
-`content_hash` plus the `transform_version` that produced it.
+Re-ingesting a repo emits a complete desired bundle while parsing only files
+whose source or relevant transforms changed. The bundle remains the handoff
+authority; the local cache is disposable acceleration evidence, not canonical
+backend state.
 
-The memoization key is `(content_hash, transform_version)`, never
-`content_hash` alone. `transform_version` is derived by hashing the extractor's
-own source (`ingest_code.py`, `code_symbol_record.py`, `treesitter_scan.py`), so
-editing the extractor invalidates every cached symbol automatically — including
-files whose bytes did not change. A content-only key would serve output from
-the superseded extractor forever, and a hand-bumped constant gets forgotten in
-exactly the run where it mattered.
+Two local state files may exist:
+
+- `artifacts/ingest-code/incremental-components.json` stores file components
+  from the last accepted complete bundle: source fingerprint, explicit transform
+  fingerprints, serialized symbols, and a component hash.
+- `artifacts/ingest-code/incremental-state.json` is the legacy Memory-upsert
+  retry state mapping each `symbol_id` to its `content_hash` plus the
+  `transform_version` that produced it.
+
+The file-component key is repository, branch, and repository-relative path. The
+source fingerprint is a Git blob id for clean tracked files and an exact
+SHA-256 for dirty or untracked files. Reuse is allowed only when the previous
+bundle was complete, the source fingerprint matches, all relevant transform
+fingerprints match, and the cached component hash verifies.
+
+The v1 transform fingerprint set is explicit:
+
+- discovery/ignore/configuration contract;
+- Tree-sitter skill and parser adapter inputs;
+- symbol identity/schema construction;
+- documentation/semantic-text construction;
+- typed edge resolver;
+- artifact writer/schema.
+
+Changing any relevant fingerprint fails closed to recomputation for the
+affected component. Cache corruption, a partial prior run, missing provenance,
+or fingerprint ambiguity also fails closed to recomputation.
 
 Each run reports its plan:
 
 ```
 Incremental: {"unchanged": 812, "added": 3, "changed": 1, "deleted": 2, "invalidated_by_transform": false}
+File components: 1 parsed, 812 reused, 2 deleted
 ```
 
 **Deletions are pruned, not left behind.** Symbols whose source no longer exists
@@ -256,6 +278,12 @@ Two ordering rules the implementation depends on:
 
 A missing or corrupt state file degrades to a full re-index rather than failing
 the ingest.
+
+`scan --treesitter --code-index` still uses the legacy per-symbol Memory upsert
+path until the governed bundle-application endpoint lands in
+`graph-memory-operator`. That compatibility path is not complete-projection
+lifecycle authority; closure of that contract is tracked separately by
+`agent-skills#1346`.
 
 ## Local Agent Artifacts
 

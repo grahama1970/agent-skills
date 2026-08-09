@@ -1,6 +1,6 @@
 # Project Knowledge: ingest-code
 
-**Last updated:** 2026-08-03 by agent
+**Last updated:** 2026-08-09 by codex
 **Status:** Active development
 
 ## Current Understanding
@@ -10,7 +10,9 @@
 - Structured code records include repo, branch, commit, path, language, symbol kind/name, qualified name, line range, source code, content hash, imports, parameters, local variables, called symbols, string literals, `lexical_terms`, problem, solution, text, and tags. These fields feed `/memory`'s code retrieval surfaces.
 - 2026-08-03: `CodeSymbolRecord` now separates stable logical identity from indexed source-version identity. `symbol_id` is based on repository, branch, normalized path, language, kind, qualified name, and an optional overload discriminator; `symbol_version_id` carries commit, line range, and content hash. The old line/content-shaped key remains available as `legacy_key` for migration diagnostics.
 - 2026-08-03: `scan --treesitter --code-index` now emits a deterministic backend-neutral code-graph bundle under `artifacts/ingest-code/code-graph/` before code-symbol Memory upserts. The bundle contains manifest, files, symbols, import edges, diagnostics, coverage, and checksums. Dry-run emits the same artifact bundle and legacy `code-symbols.jsonl` without writing Memory.
+- 2026-08-09: `scan --treesitter` now has a file-component reuse cache at `artifacts/ingest-code/incremental-components.json`. The cache stores source fingerprints, explicit transform fingerprints, serialized symbols, and component hashes from the last accepted complete bundle. No-op runs can reuse cached symbol components without invoking Tree-sitter for unchanged files; source edits, deletes, transform changes, corrupt cache rows, and incomplete prior bundles fail closed to recomputation.
 - The `scan` and `rescan` CLIs now support `--treesitter` with `--code-index` / `--no-code-index`. The default with `--treesitter` is to upsert structured code symbols to memory. Legacy lesson-style functional knowledge and CWE records remain for compatibility.
+- `scan --treesitter --code-index` still uses the legacy per-symbol Memory upsert path after bundle generation until Graph Memory Operator exposes a governed bundle-application endpoint. That endpoint gap is tracked by `agent-skills#1346`; the local component cache is not backend lifecycle authority.
 - `.ingest-code.json` now records `code_index` metadata: `backend=memory`, `collection=code_symbols`, `symbols_stored`, `lexical_terms`, `line_ranges`, `content_hashes`, and `hybrid_retrieval_capable`.
 - Relationship edge storage was moved through the same Unix-socket memory client path instead of the stale `MEMORY_SERVICE_URL` path.
 - 2026-04-29: The remaining recall issue was in `/memory`, not `/ingest-code`. `/memory` was returning `code_symbols` documents but `found:false` and `confidence:0.0` because its ArangoSearch source/view still targeted old fields such as `name`, `kind`, and `file_path`.
@@ -25,12 +27,14 @@
 | 2026-04-29 | Keep Qdrant ownership inside /memory, not /ingest-code | /memory already owns Qdrant, embeddings, sparse/hybrid retrieval, ArangoSearch views, and payload/index behavior. /ingest-code should remain the codebase walker and Tree-sitter extractor that emits structured code records through /memory /upsert. |
 | 2026-08-03 | Separate `symbol_id` from `symbol_version_id` | Ordinary source edits and line movement must update one logical symbol rather than mint a second current-looking entity. Commit, source range, and content hash belong to version identity. |
 | 2026-08-03 | Emit deterministic code-graph artifacts before code-symbol upsert | Downstream graph-memory tooling needs backend-neutral extraction evidence, coverage receipts, and checksum readback even when Memory writes are skipped or fail. |
+| 2026-08-09 | Add disposable file-component reuse state for complete bundles | Complete bundle generation does not need full source reparsing on no-op runs, but cache reuse must be gated by source fingerprints, transform fingerprints, component hashes, and prior complete-bundle acceptance. |
 
 ## Open Questions
 
 - [ ] Rebuild/restart the Docker-hosted memory service from updated `/memory` source so live API behavior includes the latest host-source duplicate suppression and formatter changes.
 - [ ] Add focused regression coverage for `scan --treesitter --code-index` proving that a sampled symbol and sampled identifier are retrievable through `/memory` code-symbol recall.
 - [ ] Reconcile records written with the previous line/content-shaped keys after Graph Memory Operator gains repository-scoped complete-run retirement; stable IDs alone do not remove old documents.
+- [ ] Replace the legacy per-symbol Memory upsert path with a governed bundle-application request after the upstream endpoint from `agent-skills#1346` exists.
 
 ## Key Files
 
@@ -40,6 +44,7 @@
 | treesitter_scan.py | Tree-sitter extraction path that emits structured code symbol records |
 | code_graph_artifact.py | Deterministic code-graph bundle writer for files, symbols, import edges, diagnostics, coverage, and checksums |
 | code_symbol_record.py | `CodeSymbolRecord` model, stable/version identities, and lexical term generation |
+| incremental_state.py | File-component cache, source fingerprints, transform fingerprints, and reuse receipts for complete bundle generation |
 | code_memory_client.py | Unix-socket `/memory` wrapper for `/upsert`, `/learn`, and edge storage |
 | SKILL.md | Skill contract and operator-facing documentation |
 | PROJECT_KNOWLEDGE.md | Shared project knowledge |

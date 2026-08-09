@@ -14,6 +14,7 @@ Usage:
 """
 
 import ast
+from dataclasses import asdict
 import hashlib
 import importlib.util
 import json
@@ -35,6 +36,7 @@ from code_memory_client import CodeMemoryClient
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
 from incremental_index import IncrementalIndex, transform_version
+from incremental_state import FileComponentState, build_transform_fingerprints
 from ingest_code_cwe import scan_file_cwe
 
 load_dotenv(override=False)
@@ -938,6 +940,22 @@ def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
     return []
 
 
+def _parse_treesitter_symbol_lines(stdout: str, filepath: Path) -> list[dict[str, Any]]:
+    """Parse `treesitter symbols --ndjson` output into one file-entry shape."""
+    symbols: list[dict[str, Any]] = []
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            symbols.append(payload)
+    return [{"path": str(filepath), "symbols": symbols}] if symbols else []
+
+
 def _store_treesitter_symbols_for_directory(
     directory: Path,
     codebase_root: Path,
@@ -963,6 +981,43 @@ def _store_treesitter_symbols_for_directory(
             })
 
     return result.stored
+
+
+def _records_from_treesitter_file_entries(
+    scan_results: list[dict[str, Any]],
+    *,
+    codebase_root: Path,
+    scope: str,
+) -> list[CodeSymbolRecord]:
+    repo = codebase_root.resolve().name
+    branch = _current_branch(codebase_root)
+    commit = _current_commit(codebase_root)
+    records: list[CodeSymbolRecord] = []
+    for file_entry in scan_results:
+        file_path_raw = file_entry.get("path")
+        if not file_path_raw:
+            continue
+
+        filepath = Path(file_path_raw)
+        if not filepath.is_absolute():
+            filepath = codebase_root / filepath
+        symbol_context = _extract_symbol_context(filepath)
+
+        for symbol in file_entry.get("symbols", []):
+            record = _build_code_symbol_record(
+                symbol=symbol,
+                filepath=filepath,
+                codebase_root=codebase_root,
+                scope=scope,
+                repo=repo,
+                branch=branch,
+                commit=commit,
+                imports=symbol_context["imports"],
+            )
+            if record is None:
+                continue
+            records.append(record)
+    return records
 
 
 def _scan_treesitter_symbol_records_for_directory(
@@ -1013,36 +1068,81 @@ def _scan_treesitter_symbol_records_for_directory(
     if not scan_results:
         return []
 
-    repo = codebase_root.resolve().name
-    branch = _current_branch(codebase_root)
-    commit = _current_commit(codebase_root)
-    records: list[CodeSymbolRecord] = []
-    for file_entry in scan_results:
-        file_path_raw = file_entry.get("path")
-        if not file_path_raw:
-            continue
+    return _records_from_treesitter_file_entries(scan_results, codebase_root=codebase_root, scope=scope)
 
-        filepath = Path(file_path_raw)
-        if not filepath.is_absolute():
-            filepath = codebase_root / filepath
-        symbol_context = _extract_symbol_context(filepath)
 
-        for symbol in file_entry.get("symbols", []):
-            record = _build_code_symbol_record(
-                symbol=symbol,
-                filepath=filepath,
-                codebase_root=codebase_root,
-                scope=scope,
-                repo=repo,
-                branch=branch,
-                commit=commit,
-                imports=symbol_context["imports"],
-            )
-            if record is None:
+def _scan_treesitter_symbol_records_for_file(
+    filepath: Path,
+    codebase_root: Path,
+    scope: str,
+) -> list[CodeSymbolRecord]:
+    """Scan one source file and return CodeSymbolRecord instances."""
+    filepath = filepath.resolve()
+    codebase_root = codebase_root.resolve()
+    treesitter_script = find_treesitter_skill()
+    if not treesitter_script:
+        print(f"Treesitter skill not found for {filepath}", file=sys.stderr, flush=True)
+        return []
+
+    cmd = [
+        "bash",
+        str(treesitter_script),
+        "symbols",
+        str(filepath),
+        "--content",
+        "--ndjson",
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=str(treesitter_script.parent),
+            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
+        )
+    except subprocess.TimeoutExpired:
+        print(f"Treesitter symbol scan timed out for {filepath}", file=sys.stderr, flush=True)
+        return []
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        if stderr:
+            print(f"Treesitter symbol scan failed for {filepath}: {stderr}", file=sys.stderr, flush=True)
+        return []
+
+    scan_results = _parse_treesitter_symbol_lines(result.stdout, filepath)
+    return _records_from_treesitter_file_entries(scan_results, codebase_root=codebase_root, scope=scope)
+
+
+def _code_files_within_scan_roots(files: list[Path], scan_roots: list[Path], codebase_root: Path) -> list[Path]:
+    roots = [root.resolve() for root in scan_roots] or [codebase_root.resolve()]
+    result: list[Path] = []
+    for filepath in files:
+        resolved = filepath.resolve()
+        for root in roots:
+            try:
+                resolved.relative_to(root)
+            except ValueError:
                 continue
-            records.append(record)
+            result.append(resolved)
+            break
+    return sorted(set(result), key=lambda item: _relative_path(item, codebase_root))
 
-    return records
+
+def _record_from_component_payload(payload: dict[str, Any]) -> CodeSymbolRecord:
+    allowed = set(CodeSymbolRecord.__dataclass_fields__)
+    values = {key: payload[key] for key in allowed if key in payload}
+    return CodeSymbolRecord(**values)
+
+
+def _symbols_by_path(records: list[CodeSymbolRecord]) -> dict[str, list[dict[str, Any]]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        grouped.setdefault(record.normalized_path, []).append(asdict(record))
+    for rel_path in grouped:
+        grouped[rel_path].sort(key=lambda item: (item.get("qualified_name", ""), item.get("start_line", 0)))
+    return grouped
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -1301,7 +1401,7 @@ def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
                 if line:
                     path = codebase_path / line
                     # Filter by extension
-                    if path.suffix in extensions:
+                    if path.is_file() and path.suffix in extensions:
                         files.append(path)
     except Exception:
         pass
@@ -1464,6 +1564,8 @@ def scan(
     # processing everything rather than silently skipping work.
     index = None
     index_plan = None
+    component_state = None
+    component_plan = None
     current_entries: dict[str, str] = {}
     code_symbols_pruned = 0
     precomputed_edges: list[dict[str, Any]] | None = None
@@ -1474,10 +1576,43 @@ def scan(
         print("\n--- Preparing deterministic code graph artifacts ---", flush=True)
         code_symbol_scan_roots = _extract_configured_scan_roots(path)
         local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
-        for scan_root in code_symbol_scan_roots:
-            root_records = _scan_treesitter_symbol_records_for_directory(scan_root, path, scope)
+        repo_name = path.resolve().name
+        branch = _current_branch(path)
+        rel_scan_roots = [
+            _relative_path(scan_root, path) if scan_root.resolve() != path.resolve() else "."
+            for scan_root in code_symbol_scan_roots
+        ]
+        transform_fingerprints = build_transform_fingerprints(
+            Path(__file__).parent,
+            scope=scope,
+            patterns=patterns,
+            scan_roots=rel_scan_roots,
+        )
+        component_state = FileComponentState(
+            path / "artifacts" / "ingest-code" / "incremental-components.json",
+            repo=repo_name,
+            branch=branch,
+            transform_fingerprints=transform_fingerprints,
+        )
+        code_files = _code_files_within_scan_roots(files, code_symbol_scan_roots, path)
+        component_plan = component_state.plan(code_files, path)
+        code_symbol_records.extend(
+            _record_from_component_payload(payload)
+            for payload in component_state.reused_symbols(component_plan.reused)
+        )
+        parsed_count = 0
+        for rel_path in component_plan.to_parse:
+            filepath = path / rel_path
+            root_records = _scan_treesitter_symbol_records_for_file(filepath, path, scope)
+            parsed_count += 1
             code_symbol_records.extend(root_records)
-            print(f"Code graph: {len(root_records)} symbols extracted from {scan_root}", flush=True)
+            print(f"Code graph: {len(root_records)} symbols extracted from {rel_path}", flush=True)
+        code_symbol_records.sort(key=lambda item: (item.normalized_path, item.qualified_name, item.start_line))
+        print(
+            "File components: "
+            f"{parsed_count} parsed, {len(component_plan.reused)} reused, {len(component_plan.deleted)} deleted",
+            flush=True,
+        )
         local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
         # Incremental gate: only symbols whose content changed under the
         # CURRENT extractor need reprocessing, and symbols whose source is
@@ -1498,11 +1633,10 @@ def scan(
         index_plan = index.plan(current_entries)
         print(f"Incremental: {json.dumps(index_plan.summary())}", flush=True)
         precomputed_edges = extract_edges(files, path)
-        repo_name = path.resolve().name
         code_graph_artifact = write_code_graph_bundle(
             codebase_root=path,
             repo=repo_name,
-            branch=_current_branch(path),
+            branch=branch,
             commit=_current_commit(path),
             scan_roots=code_symbol_scan_roots,
             files=files,
@@ -1664,6 +1798,23 @@ def scan(
             # would never be retried.
             if not memory_result.errors:
                 index.commit(current_entries)
+                if component_state and component_plan and code_graph_artifact:
+                    bundle_checksum = hashlib.sha256(
+                        Path(code_graph_artifact["checksums"]).read_bytes()
+                    ).hexdigest()
+                    component_state.commit(
+                        current_sources=component_plan.current_sources,
+                        symbols_by_path=_symbols_by_path(code_symbol_records),
+                        bundle_digest=f"sha256:{bundle_checksum}",
+                        accepted_complete_bundle=bool(code_graph_artifact.get("complete")),
+                        receipt={
+                            "schema": "ingest-code.incremental_receipt.v1",
+                            "component_plan": component_plan.summary(),
+                            "symbols_total": len(code_symbol_records),
+                            "symbols_written": memory_result.stored,
+                            "bundle_path": code_graph_artifact["path"],
+                        },
+                    )
             for error in memory_result.errors[:5]:
                 print(f"  [WARN] {error}", file=sys.stderr, flush=True)
             for record in code_symbol_records[:memory_result.stored]:
@@ -1687,6 +1838,7 @@ def scan(
         "code_symbols_stored": code_symbols_stored,
         "code_symbols_pruned": code_symbols_pruned,
         "incremental": index_plan.summary() if index_plan else None,
+        "file_components": component_plan.summary() if component_plan else None,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,

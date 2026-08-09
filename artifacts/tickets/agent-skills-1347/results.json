@@ -1,0 +1,39 @@
+{
+  "schema": "ticket.proof_results.v1",
+  "issue": "grahama1970/agent-skills#1347",
+  "mocked": false,
+  "live": true,
+  "deterministic_checks": [
+    {
+      "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache uv run pytest skills/ingest-code/tests/test_incremental_components.py skills/ingest-code/tests/test_incremental_index.py skills/ingest-code/tests/test_code_graph_artifact.py -q",
+      "exit_code": 0,
+      "result": "18 passed in 0.49s"
+    },
+    {
+      "command": "bash skills/ingest-code/sanity.sh",
+      "exit_code": 0,
+      "result": "Result: PASS"
+    },
+    {
+      "command": "python3 scripts/check_mock_evidence_claims.py",
+      "exit_code": 0,
+      "result": "OK: checked 627 test file(s); no mock+proof claim violations"
+    }
+  ],
+  "live_proof": {
+    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache uv run --no-project --isolated --with typer --with httpx --with loguru --with python-dotenv python skills/ingest-code/scripts/prove_incremental_components.py --out /tmp/ingest-code-incremental-components-proof",
+    "exit_code": 0,
+    "summary_path": "/tmp/ingest-code-incremental-components-proof/proof-summary.json",
+    "repo_summary_copy": "artifacts/tickets/agent-skills-1347/live-proof-summary.json",
+    "summary_sha256": "780ab5f24ac6f198ff416d7689ff041a48e50aa818c4e86fb4fc9a0893de21b1",
+    "assertions": {
+      "initial_parses_files": true,
+      "noop_reuses_all_current_files": true,
+      "edit_reparses_one_file": true,
+      "delete_omits_removed_file": true,
+      "fingerprint_bump_reparses_current_files": true,
+      "corrupt_cache_recomputes_one_file": true
+    }
+  },
+  "known_boundary": "Backend bundle-application remains tracked by agent-skills#1346; this proof covers artifact component reuse and does not claim governed backend activation."
+}
