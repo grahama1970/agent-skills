@@ -24,9 +24,33 @@
 schema: persona_dream.dream_spine.v1
 version: 1
 
-terminates_at: journal_spoken
+terminates_at: journal_entry
 # The run dir IS the cycle dir: reports/goal_v3/cycles/<cycle_id>. Both
 # autonomous-dream-cycle and write-dream-journal hardcode that location.
+#
+# TWO LANES, AND THIS IS THE COGNITION ONE.
+#
+#   cycle lane (here)  autonomous-dream-cycle -> write-dream-journal
+#                      Rich cognition: ToM validation, certified persistence,
+#                      identity subgates, instruments frozen pre-dream.
+#                      write-dream-journal emits BOTH dream_journal.v1.json and
+#                      dream_journal.md, so rendering is already included.
+#                      HAS NO SPEECH PATH.
+#
+#   generate lane      generate -> render-journal-entry -> speak-journal
+#                      Produces dream_packet.json and contradiction_report.json,
+#                      which render/speak both require, plus journal_spoken.txt.
+#                      HAS speech, lacks the cognition.
+#
+# render-journal-entry and speak-journal were in this spine until they were run:
+# both fail here because the cycle writes neither dream_packet.json nor
+# contradiction_report.json. They are not spine steps for this lane, and wiring
+# them as if they were only produced a pipeline that could not finish.
+#
+# KNOWN GAP: a cycle-lane dream cannot currently be spoken. Bridging it means
+# either teaching speak-journal to read dream_journal.md, or having the cycle
+# emit the two artifacts the generate lane's renderer expects. That is a design
+# decision about which lane owns voice, not a wiring fix.
 optional_branches:
   video: "steps 6-38 of the legacy ledger; branches off dream_packet"
 
@@ -58,24 +82,6 @@ steps:
     produces: [dream_journal.v1.json, dream_journal.md]
     proves: she wrote an entry conforming to persona_journal.v1
     does_not_prove: that the entry is true of events
-
-  - id: journal_render
-    name: Journal Render
-    command: render-journal-entry
-    run_dir_arg: --run-dir
-    args: ["--persona", "{persona}"]
-    produces: [journal.md]
-    proves: the entry rendered to prose with footnoted sources
-    does_not_prove: that a reader will find it coherent
-
-  - id: journal_spoken
-    name: Spoken Journal
-    command: speak-journal
-    run_dir_arg: --run-dir
-    args: []
-    produces: [journal.wav]
-    proves: the entry was rendered to audio with a requested delivery tone
-    does_not_prove: that a listener perceives the intended feeling
 
 
 # Artifacts a run directory may hold that no step produces. Anything else found
