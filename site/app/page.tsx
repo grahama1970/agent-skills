@@ -16,6 +16,7 @@ import { UnusualPath } from '@/components/unusual-path';
 import { SkillMosaic } from '@/components/skill-mosaic';
 import { CompetenceMatrix } from '@/components/competence-matrix';
 import content from '@/content.json';
+import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
 import visibility from '@/project-visibility.json';
 
@@ -72,6 +73,7 @@ export default function Home() {
   );
   return (
     <>
+      <HomeJsonLd />
       <div className="glow" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
       <div className="page">

@@ -247,17 +247,26 @@ def build_jsonld(doc: dict) -> dict:
         if block["kind"] == "p":
             headline = "".join(t["v"] for t in block["inline"])
             break
-    job_title = headline.split("|")[0].strip() if headline else ""
+    # jobTitle is a machine field a screener reads literally, so it carries one
+    # title, not the whole keyword headline.
+    job_title = ""
+    if headline:
+        job_title = re.split(r"[|·]", headline)[0].strip()
 
     knows: list[str] = []
     for section in doc["sections"]:
-        if section["title"].upper().startswith("TOP SKILLS"):
-            text = " ".join(
-                "".join(t["v"] for t in b["inline"])
-                for b in section["blocks"]
-                if b["kind"] == "p"
-            )
-            knows = [s.strip() for s in text.split(",") if s.strip()]
+        # The skills section has been TOP SKILLS and CORE COMPETENCIES; accept
+        # either, and read the clustered list form as well as flat prose.
+        if section["title"].upper().startswith(("TOP SKILLS", "CORE COMPETENCIES")):
+            parts: list[str] = []
+            for b in section["blocks"]:
+                if b["kind"] == "p":
+                    parts.append("".join(t["v"] for t in b["inline"]))
+                elif b["kind"] == "ul":
+                    for item in b["items"]:
+                        line = "".join(t["v"] for t in item)
+                        parts.append(line.split(":", 1)[1] if ":" in line else line)
+            knows = [x.strip() for x in ",".join(parts).split(",") if x.strip()]
 
     person: dict = {
         "@type": "Person",
@@ -332,6 +341,58 @@ def main() -> int:
         # Fail closed rather than ship a /resume page whose download 404s.
         print(f"error: missing resume PDF: {PDF_SOURCE}", file=sys.stderr)
         return 1
+
+    # /llms.txt — the machine-readable entry point. Agents and recruiter tooling
+    # read a site before a human does; this gives them the same facts the page
+    # shows, in one fetch, generated so it cannot drift from the resume.
+    lede = doc.get("lede", "")
+    headline = ""
+    for block in doc["intro"]:
+        if block["kind"] == "p":
+            headline = "".join(t["v"] for t in block["inline"])
+            break
+    comp = []
+    for section in doc["sections"]:
+        if section["title"].upper().startswith("CORE COMPETENCIES"):
+            for b in section["blocks"]:
+                if b["kind"] == "ul":
+                    comp = ["".join(t["v"] for t in item) for item in b["items"]]
+    roles = [
+        f'{"".join(t["v"] for t in b["title"])} — {b["period"]}'
+        for sec in doc["sections"] for b in sec["blocks"]
+        if b.get("kind") == "role" and b.get("period")
+    ]
+    llms = [
+        f"# {doc['name']}",
+        "",
+        f"> {lede}",
+        "",
+        headline,
+        "",
+        "## Résumé",
+        "",
+        "- [Full résumé (HTML)](https://grahama.co/resume)",
+        "- [Résumé PDF, two pages](https://grahama.co/resume.pdf)",
+        "- [Résumé source (Markdown)](https://grahama.co/resume.md)",
+        "",
+        "## Experience",
+        "",
+        *[f"- {r}" for r in roles],
+        "",
+        "## Core competencies",
+        "",
+        *[f"- {c}" for c in comp],
+        "",
+        "## Notes for agents",
+        "",
+        "- Client work is export-controlled (ITAR); client names are withheld by",
+        "  necessity, not omission.",
+        "- Every count on this site is generated from the repository at the deploy",
+        f"  commit ({doc['sourceCommit']}), not hand-maintained.",
+        "- Contact: graham@grahama.co",
+        "",
+    ]
+    (public / "llms.txt").write_text("\n".join(llms), encoding="utf-8")
 
     OUT.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     roles = sum(1 for s in doc["sections"] for b in s["blocks"] if b.get("kind") == "role")
