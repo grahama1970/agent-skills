@@ -42,6 +42,7 @@ COLLECTION = "sparta_controls"
 # slice is a sample and a miss establishes nothing.
 POSTURE = {
     "CISA_KEV": "authoritative",
+    "MITRE_ATLAS": "authoritative",
     "CWE": "authoritative",
     "CAPEC": "authoritative",
     "ATT_CK_Enterprise": "authoritative",
@@ -62,6 +63,7 @@ ID_PATTERNS = [
     (re.compile(r"^CVE-\d{4}-\d+$", re.I), "NVD"),
     (re.compile(r"^T\d{4}(\.\d{3})?$", re.I), "ATT_CK_Enterprise"),
     (re.compile(r"^D3-[A-Z]+$", re.I), "D3FEND"),
+    (re.compile(r"^AML\.(T|M)\d{4}(\.\d{3})?$", re.I), "MITRE_ATLAS"),
 ]
 
 UNVERIFIED_NOTE = (

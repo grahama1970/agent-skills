@@ -2,9 +2,9 @@
  "version": 2,
  "skill": "monitor-sparta",
  "trials": 3,
- "proof_scope": "live non-expert analyst retrieval over the SPARTA corpus, including abstention calibration",
+ "proof_scope": "live non-expert analyst retrieval, abstention calibration, and declared knowledge-coverage over the SPARTA corpus",
  "claims": {
-  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative",
+  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative; and that every framework declared covered in coverage_manifest.json still resolves",
   "does_not_prove": "plausibility judgment -- whether an exploitation chain is realistic, whether a detection rule would false-positive in production, or whether an AI's threat analysis is operationally sound. Those still require a practitioner."
  },
  "cases": [
@@ -106,6 +106,42 @@
      "CISA_KEV",
      "known_exploited",
      "Log4j"
+    ]
+   }
+  },
+  {
+   "name": "declared-knowledge-coverage-has-not-regressed",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/knowledge_coverage.py",
+    "--quiet"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "COVERAGE: PASS",
+     "known gaps"
+    ]
+   }
+  },
+  {
+   "name": "adversarial-ml-coverage-is-live",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/analyst_probe.py",
+    "resolve",
+    "AML.T0051"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "RESOLVED",
+     "MITRE_ATLAS",
+     "Prompt Injection"
     ]
    }
   }

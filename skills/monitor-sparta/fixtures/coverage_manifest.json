@@ -1,0 +1,98 @@
+{
+ "schema": "sparta.knowledge_coverage_manifest.v1",
+ "purpose": "The frameworks SPARTA is expected to answer questions about, each with probe identifiers that prove coverage. Researched via /brave-search 2026-08-09; revisit when a probe stops being representative or a new framework lands.",
+ "note": "A framework listed here with status 'gap' is a known, deliberate absence -- not a failure. The monitor's job is to keep gaps visible and named rather than discovered by surprise when someone asks a question the corpus silently cannot answer.",
+ "frameworks": [
+  {
+   "id": "CWE",
+   "why": "software weakness classes -- the vocabulary of vulnerability assessment",
+   "probes": ["CWE-89", "CWE-502"],
+   "expected": "covered"
+  },
+  {
+   "id": "CAPEC",
+   "why": "attack patterns -- offensive technique vocabulary",
+   "probes": ["CAPEC-1", "CAPEC-66"],
+   "expected": "covered"
+  },
+  {
+   "id": "ATT&CK Enterprise",
+   "why": "adversary techniques against systems; the backbone of threat analysis",
+   "probes": ["T1190", "T1003", "T1486"],
+   "expected": "covered"
+  },
+  {
+   "id": "D3FEND",
+   "why": "defensive countermeasures -- the detection-engineering half",
+   "probes": ["D3-ACA"],
+   "expected": "covered"
+  },
+  {
+   "id": "CISA KEV",
+   "why": "vulnerabilities observed exploited in the wild; the CVEs threat analysis actually cites",
+   "probes": ["CVE-2021-44228", "CVE-2014-0160", "CVE-2017-0144"],
+   "expected": "covered"
+  },
+  {
+   "id": "MITRE ATLAS",
+   "why": "attacks against MODELS -- prompt injection, model extraction, poisoning, agentic techniques",
+   "probes": ["AML.T0051", "AML.T0015", "AML.T0029"],
+   "expected": "covered"
+  },
+  {
+   "id": "SPARTA space",
+   "why": "the project's origin domain: space-vehicle countermeasures",
+   "probes": [],
+   "framework_field": "SPARTA",
+   "expected": "covered"
+  },
+  {
+   "id": "OWASP Top 10 for LLM Applications",
+   "why": "the canonical LLM risk list; prompt injection has held LLM01 since 2023. Asked constantly in AI-security work and unanswerable today.",
+   "probes": ["LLM01"],
+   "expected": "gap",
+   "source": "https://genai.owasp.org/",
+   "ingest_difficulty": "low -- small fixed list, needs a hand-built or scraped mapping"
+  },
+  {
+   "id": "OWASP Top 10 for Agentic Applications 2026",
+   "why": "the current framework for autonomous tool-using AI: goal hijack, memory and context poisoning, emergent misbehaviour. Released Dec 2025; most current thing in the field and entirely absent.",
+   "probes": ["ASI01", "ASI06"],
+   "expected": "gap",
+   "source": "https://genai.owasp.org/initiatives/agentic-security-initiative/",
+   "ingest_difficulty": "low -- ten entries, PDF/web source"
+  },
+  {
+   "id": "EPSS",
+   "why": "probability a CVE is exploited in the next 30 days. Pairs with KEV as prediction against observation; answers 'should we care yet' rather than 'was it exploited'.",
+   "probes": [],
+   "expected": "gap",
+   "source": "https://epss.empiricalsecurity.com/epss_scores-current.csv.gz",
+   "ingest_difficulty": "low -- single daily CSV, no auth"
+  },
+  {
+   "id": "Sigma rules",
+   "why": "thousands of real detection rules mapped to ATT&CK. Would let the selectivity checker score production rules instead of hand-written conditions.",
+   "probes": [],
+   "expected": "gap",
+   "source": "https://github.com/SigmaHQ/sigma",
+   "ingest_difficulty": "medium -- YAML tree, needs a parser"
+  },
+  {
+   "id": "NIST AI RMF",
+   "why": "AI risk governance; an April 2026 critical-infrastructure profile is in progress. Governance counterpart to ATLAS's technical view.",
+   "probes": [],
+   "expected": "gap",
+   "source": "https://www.nist.gov/itl/ai-risk-management-framework",
+   "ingest_difficulty": "medium -- prose framework, needs structuring"
+  },
+  {
+   "id": "CISA SBOM Minimum Elements 2026",
+   "why": "refreshed software supply-chain transparency requirements; supply chain is a standing SPARTA concern.",
+   "probes": [],
+   "expected": "gap",
+   "source": "https://www.cisa.gov/sbom",
+   "ingest_difficulty": "medium -- guidance document"
+  }
+ ]
+}
