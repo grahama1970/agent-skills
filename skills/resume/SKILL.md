@@ -34,6 +34,9 @@ metadata:
   short-description: Canonical resume validation and evidence-bound tailoring
   author: Graham Anderson
 runtime_self_improvement: basic
+disciplines:
+  - content-creation
+  - evaluation-quality
 ---
 
 # Resume

@@ -1,0 +1,820 @@
+{
+  "schema": "portfolio.research_taxonomy.v1",
+  "taxonomy_version": "1.0.0",
+  "generated_on": "2026-08-07",
+  "owner": "grahama1970",
+  "portfolio_umbrella": {
+    "id": "evidence-bearing-ai-systems",
+    "title": "Evidence-Bearing AI Systems",
+    "thesis": "Build AI systems whose claims, actions, memories, and generated artifacts carry inspectable lineage\u2014and whose authority remains bounded."
+  },
+  "source_scope": {
+    "repository_activity_window": {
+      "start": "2026-07-07",
+      "end": "2026-08-07"
+    },
+    "agent_skills_inventory_commit": "5cc00692d",
+    "agent_skills_inventory_as_of": "2026-08-06",
+    "repo_count_in_window": 14,
+    "skill_count": 338
+  },
+  "families": [
+    {
+      "id": "autonomous-systems",
+      "title": "Autonomous Systems Foundations",
+      "label": "family: autonomous-systems",
+      "color": "0969DA",
+      "thesis": "Control planes, memory, and model infrastructure for bounded, inspectable agent work."
+    },
+    {
+      "id": "evidence-assurance",
+      "title": "Evidence & Assurance Systems",
+      "label": "family: evidence-assurance",
+      "color": "8250DF",
+      "thesis": "Acquisition, analysis, attack/defense, governance, and proof systems that preserve source and authority boundaries."
+    },
+    {
+      "id": "human-centered-ai",
+      "title": "Human-Centered & Generative AI",
+      "label": "family: human-centered-ai",
+      "color": "BF3989",
+      "thesis": "Voice, persona, multimodal interaction, and creative generation with measurable lineage and human review."
+    }
+  ],
+  "areas": [
+    {
+      "id": "agent-systems",
+      "short_slug": "agent-systems",
+      "title": "Agent Systems & Orchestration",
+      "family": "autonomous-systems",
+      "label": "area: agent-systems",
+      "topic": "ra-agent-systems",
+      "color": "1F6FEB",
+      "core_question": "How can untrusted agents and tools be coordinated without losing the human goal, execution state, stop conditions, or replayability?",
+      "includes": [
+        "DAG and loop runtimes",
+        "bounded subagents",
+        "browser transport",
+        "handoffs",
+        "scheduling",
+        "goal preservation",
+        "human approval gates"
+      ],
+      "boundary": "Owns coordination and admissibility\u2014not model-provider semantics or domain decision authority.",
+      "examples": [
+        "tau",
+        "agent-skills",
+        "surf",
+        "ask"
+      ]
+    },
+    {
+      "id": "memory-knowledge",
+      "short_slug": "memory",
+      "title": "Memory & Knowledge Systems",
+      "family": "autonomous-systems",
+      "label": "area: memory",
+      "topic": "ra-memory",
+      "color": "8957E5",
+      "core_question": "How can agents recall durable, scoped, provenance-linked knowledge without mistaking retrieval relevance for truth or authority?",
+      "includes": [
+        "graph memory",
+        "vector and lexical retrieval",
+        "intent routing",
+        "episodic memory",
+        "project state",
+        "knowledge lifecycle"
+      ],
+      "boundary": "Owns retrieval, routing, and memory state; relevance does not itself establish claim support.",
+      "examples": [
+        "graph-memory-operator",
+        "memory",
+        "episodic-archiver"
+      ]
+    },
+    {
+      "id": "extraction-document-intelligence",
+      "short_slug": "extraction",
+      "title": "Extraction & Document Intelligence",
+      "family": "evidence-assurance",
+      "label": "area: extraction",
+      "topic": "ra-extraction",
+      "color": "2DA44E",
+      "core_question": "How can heterogeneous files and unstable sources become structurally faithful, hash-bound artifacts with truthful terminal outcomes?",
+      "includes": [
+        "source acquisition",
+        "PDF parsing",
+        "OCR",
+        "layout and table analysis",
+        "document normalization",
+        "route selection"
+      ],
+      "boundary": "Owns acquisition and structural extraction\u2014not the final semantic conclusion or approval.",
+      "examples": [
+        "fetcher",
+        "pdf_oxide",
+        "extractor"
+      ]
+    },
+    {
+      "id": "research-intelligence",
+      "short_slug": "research-intelligence",
+      "title": "Research Intelligence & Evidence Synthesis",
+      "family": "evidence-assurance",
+      "label": "area: research-intelligence",
+      "topic": "ra-research-intelligence",
+      "color": "1B7C83",
+      "core_question": "How can multi-source discovery and synthesis expose citations, coverage, uncertainty, and failed or degraded sources?",
+      "includes": [
+        "web, code, paper, feed, and video discovery",
+        "source comparison",
+        "grounded synthesis",
+        "coverage reporting"
+      ],
+      "boundary": "Research output is evidence and design input\u2014not runtime proof, compliance credit, or execution success.",
+      "examples": [
+        "dogpile",
+        "brave-search",
+        "arxiv",
+        "github-search"
+      ]
+    },
+    {
+      "id": "security-adaptive-defense",
+      "short_slug": "security-hacking",
+      "title": "Security, Hacking & Adaptive Defense",
+      "family": "evidence-assurance",
+      "label": "area: security-hacking",
+      "topic": "ra-security-hacking",
+      "color": "CF222E",
+      "core_question": "How can authorized attacks and defenses co-evolve in isolation and be selected by deterministic runtime evidence?",
+      "includes": [
+        "authorized hacking",
+        "red/blue competition",
+        "adaptive lineage",
+        "exploit and patch replay",
+        "sandboxed targets"
+      ],
+      "boundary": "Only authorized, isolated targets; runtime/Judge evidence outranks LLM plausibility.",
+      "examples": [
+        "battle",
+        "hack",
+        "thunderdome",
+        "anvil"
+      ]
+    },
+    {
+      "id": "governance-compliance",
+      "short_slug": "compliance-assurance",
+      "title": "Compliance, Governance & Assurance",
+      "family": "evidence-assurance",
+      "label": "area: compliance-assurance",
+      "topic": "ra-compliance-assurance",
+      "color": "BF8700",
+      "core_question": "How can controls, requirements, mappings, evidence, and review state remain distinct until an authorized human signs off?",
+      "includes": [
+        "compliance frameworks",
+        "evidence and assurance cases",
+        "OSCAL",
+        "policy gates",
+        "control mappings",
+        "human review"
+      ],
+      "boundary": "Models may navigate and explain; people and governed authorities decide.",
+      "examples": [
+        "sparta",
+        "sparta-public",
+        "create-evidence-case",
+        "cmmc-assessor"
+      ]
+    },
+    {
+      "id": "verification-formal-methods",
+      "short_slug": "verification",
+      "title": "Verification, Evaluation & Formal Methods",
+      "family": "evidence-assurance",
+      "label": "area: verification",
+      "topic": "ra-verification",
+      "color": "0550AE",
+      "core_question": "How can claims, code, prompts, models, and workflows be tested against executable, reproducible, adversarial, negative, or formal gates?",
+      "includes": [
+        "agentic evals",
+        "formal proof",
+        "debugging",
+        "benchmarks",
+        "regression",
+        "readiness scoring",
+        "negative controls"
+      ],
+      "boundary": "A proof establishes only its declared gate and conditions; it must carry explicit non-claims.",
+      "examples": [
+        "agentic-evals",
+        "lean4-prove",
+        "debugger",
+        "quality-audit"
+      ]
+    },
+    {
+      "id": "model-systems-learning",
+      "short_slug": "model-systems",
+      "title": "Model Infrastructure & Learning",
+      "family": "autonomous-systems",
+      "label": "area: model-systems",
+      "topic": "ra-model-systems",
+      "color": "218BFF",
+      "core_question": "How can heterogeneous models and providers be routed, retried, benchmarked, trained, and exposed through stable typed interfaces?",
+      "includes": [
+        "model gateways",
+        "provider routing",
+        "inference",
+        "training",
+        "prompt systems",
+        "capability and readiness probes"
+      ],
+      "boundary": "Owns model capability and transport\u2014not workflow admissibility, factual authority, or human-facing final claims.",
+      "examples": [
+        "scillm",
+        "prompt-lab",
+        "benchmark-models"
+      ]
+    },
+    {
+      "id": "multimodal-persona-interaction",
+      "short_slug": "voice-persona",
+      "title": "Multimodal, Voice & Persona Systems",
+      "family": "human-centered-ai",
+      "label": "area: voice-persona",
+      "topic": "ra-voice-persona",
+      "color": "D15704",
+      "core_question": "How can speech, video, affect, persona continuity, and real-time interaction be measurable, interruptible, and provenance-linked?",
+      "includes": [
+        "speech ingress and egress",
+        "wake/listen loops",
+        "video memory",
+        "persona continuity",
+        "affect and delivery",
+        "interaction UX"
+      ],
+      "boundary": "Sensors and renderers do not own answer meaning, durable identity, memory promotion, or authority.",
+      "examples": [
+        "RealtimeSTT",
+        "chatterbox",
+        "persona-dream",
+        "watch"
+      ]
+    },
+    {
+      "id": "creative-media-design",
+      "short_slug": "creative-media",
+      "title": "Generative Media & Creative Systems",
+      "family": "human-centered-ai",
+      "label": "area: creative-media",
+      "topic": "ra-creative-media",
+      "color": "A371F7",
+      "core_question": "How can image, video, music, story, and design generation become reproducible, reviewable creative workflows rather than one-off prompts?",
+      "includes": [
+        "image and movie generation",
+        "music and sound",
+        "story and storyboard",
+        "design systems",
+        "creative review and iteration"
+      ],
+      "boundary": "Generated media is a creative artifact, not evidence of an external factual claim; provenance and human review remain explicit.",
+      "examples": [
+        "create-image",
+        "create-movie",
+        "create-music",
+        "pitchdeck"
+      ]
+    }
+  ],
+  "governance": {
+    "primary_area_required_for_research_owning": true,
+    "maximum_secondary_areas": 1,
+    "methods_are_not_areas": true,
+    "domains_are_not_areas": true,
+    "boundary_to_preserve_required": true,
+    "support_and_projection_repositories_excluded_from_independent_research_count": true,
+    "adapted_upstream_projects_count_local_delta_only": true,
+    "keyword_inference_is_bootstrap_only": true,
+    "authoritative_classification_must_be_explicit": true,
+    "review_on_major_scope_change": true,
+    "recommended_review_cadence": "quarterly"
+  },
+  "projects": [
+    {
+      "repository": "grahama1970/agent-skills",
+      "recent_activity_theme": "Capability contracts, lifecycle hooks, eval posture, portfolio/site surfaces, and cross-project operator wrappers.",
+      "program_family": "autonomous-systems",
+      "primary_area": "agent-systems",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "research-platform",
+      "system_roles": [
+        "capability-registry",
+        "contract-library",
+        "integration-testbed"
+      ],
+      "methods": [
+        "typed-contracts",
+        "composability",
+        "provenance",
+        "lifecycle-gates",
+        "agentic-evaluation"
+      ],
+      "domains": [
+        "agent-systems",
+        "software-engineering"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "Defines reusable capability and worker contracts; individual skills do not become separate portfolio projects unless they have an independent research question and proof surface.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-agent-systems",
+        "ra-verification",
+        "agent-contracts",
+        "typed-receipts",
+        "research-platform"
+      ]
+    },
+    {
+      "repository": "grahama1970/extractor",
+      "recent_activity_theme": "Truthful extraction facade, route ownership, artifact validation, and explicit terminal-result contracts.",
+      "program_family": "evidence-assurance",
+      "primary_area": "extraction-document-intelligence",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "research-system",
+      "system_roles": [
+        "extraction-router",
+        "result-assembler"
+      ],
+      "methods": [
+        "deterministic-routing",
+        "fail-closed",
+        "typed-results",
+        "artifact-hashing",
+        "capability-routing"
+      ],
+      "domains": [
+        "documents",
+        "engineering-data"
+      ],
+      "lifecycle_stage": "prototype",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "Extractor owns route selection, recovery, validation, and the truthful result envelope; PDF accuracy belongs to pdf_oxide and model-mediated enrichment belongs behind Tau.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-extraction",
+        "ra-verification",
+        "document-intelligence",
+        "fail-closed",
+        "extraction-router"
+      ]
+    },
+    {
+      "repository": "grahama1970/pdf_oxide",
+      "recent_activity_theme": "PDF robustness, document structure, security/regression verification, and cross-language library surfaces.",
+      "program_family": "evidence-assurance",
+      "primary_area": "extraction-document-intelligence",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "adapted-research-component",
+      "system_roles": [
+        "parser-engine",
+        "document-runtime"
+      ],
+      "methods": [
+        "native-parsing",
+        "layout-analysis",
+        "forensic-pdf",
+        "corpus-benchmarking",
+        "deterministic-extraction"
+      ],
+      "domains": [
+        "pdf",
+        "documents"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "adapted-upstream",
+      "counting_status": "count-local-delta-only",
+      "boundary_to_preserve": "Owns deterministic PDF extraction and structural fidelity; it does not own application routing, model policy, or downstream claim authority.",
+      "classification_confidence": "medium",
+      "suggested_topics": [
+        "ra-extraction",
+        "ra-verification",
+        "pdf",
+        "rust",
+        "document-intelligence",
+        "benchmarking"
+      ]
+    },
+    {
+      "repository": "grahama1970/fetcher",
+      "recent_activity_theme": "Terminal outcome contracts, process-safe caching, source adapters, optional transports, and provenance-aware acquisition.",
+      "program_family": "evidence-assurance",
+      "primary_area": "extraction-document-intelligence",
+      "secondary_area": "research-intelligence",
+      "portfolio_class": "research-component",
+      "system_roles": [
+        "acquisition-layer",
+        "source-resolver"
+      ],
+      "methods": [
+        "async-retrieval",
+        "source-fallback",
+        "content-hashing",
+        "quality-prefilters",
+        "provenance"
+      ],
+      "domains": [
+        "web",
+        "documents",
+        "research"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "extracted-internal",
+      "counting_status": "count",
+      "boundary_to_preserve": "Acquires and fingerprints unstable source material; retrieval success or change detection does not prove a downstream semantic claim.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-extraction",
+        "ra-research-intelligence",
+        "web-acquisition",
+        "content-hashing",
+        "provenance"
+      ]
+    },
+    {
+      "repository": "grahama1970/sparta",
+      "recent_activity_theme": "Memory response hardening, evidence-case admission, privacy/policy gates, and human-review workbench convergence.",
+      "program_family": "evidence-assurance",
+      "primary_area": "governance-compliance",
+      "secondary_area": "memory-knowledge",
+      "portfolio_class": "application-workbench",
+      "system_roles": [
+        "human-evidence-workbench",
+        "domain-application"
+      ],
+      "methods": [
+        "evidence-cases",
+        "graph-lineage",
+        "policy-gates",
+        "human-in-the-loop",
+        "explicit-nonclaims"
+      ],
+      "domains": [
+        "space-cyber",
+        "aerospace",
+        "compliance"
+      ],
+      "lifecycle_stage": "prototype",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "The model helps navigate; governed evidence and authorized people decide. Relevance is not support, and candidate visibility is not compliance credit.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-compliance-assurance",
+        "ra-memory",
+        "space-cyber",
+        "evidence-cases",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "repository": "grahama1970/graph-memory-operator",
+      "recent_activity_theme": "Scoped recall, graph/vector/BM25 retrieval, governed memory lifecycle, code and artifact recall, and evidence routing.",
+      "program_family": "autonomous-systems",
+      "primary_area": "memory-knowledge",
+      "secondary_area": "governance-compliance",
+      "portfolio_class": "research-infrastructure",
+      "system_roles": [
+        "memory-substrate",
+        "retrieval-engine",
+        "routing-product"
+      ],
+      "methods": [
+        "graph-retrieval",
+        "vector-retrieval",
+        "lexical-retrieval",
+        "scope-controls",
+        "provenance"
+      ],
+      "domains": [
+        "agent-memory",
+        "software-engineering",
+        "knowledge"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "Owns memory state, source policy, recall, and route products; retrieval relevance does not confer claim support or approval authority.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-memory",
+        "ra-compliance-assurance",
+        "graph-retrieval",
+        "vector-search",
+        "memory-first",
+        "provenance"
+      ]
+    },
+    {
+      "repository": "grahama1970/watchdog-probe",
+      "recent_activity_theme": "A deliberately small repair-and-closure fixture used to exercise project-watchdog end to end.",
+      "program_family": "evidence-assurance",
+      "primary_area": "verification-formal-methods",
+      "secondary_area": null,
+      "portfolio_class": "evaluation-fixture",
+      "system_roles": [
+        "operational-probe",
+        "repair-fixture"
+      ],
+      "methods": [
+        "end-to-end-repair-test",
+        "closure-audit"
+      ],
+      "domains": [
+        "software-engineering"
+      ],
+      "lifecycle_stage": "fixture",
+      "origin": "original",
+      "counting_status": "exclude-evaluation-fixture",
+      "boundary_to_preserve": "Exists to test another system's lifecycle and closure behavior; it is not an independent research program.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-verification",
+        "evaluation-fixture",
+        "project-watchdog"
+      ]
+    },
+    {
+      "repository": "grahama1970/pi-mono",
+      "recent_activity_theme": "Local Embry voice/replay UI and SPARTA event-bridge work on an upstream multi-provider agent runtime.",
+      "program_family": "autonomous-systems",
+      "primary_area": "agent-systems",
+      "secondary_area": "multimodal-persona-interaction",
+      "portfolio_class": "adapted-platform",
+      "system_roles": [
+        "upstream-agent-runtime",
+        "ui-substrate"
+      ],
+      "methods": [
+        "agent-runtime",
+        "multi-provider",
+        "terminal-ui",
+        "local-integration"
+      ],
+      "domains": [
+        "agent-systems",
+        "voice-ux"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "adapted-upstream",
+      "counting_status": "exclude-adapted-platform",
+      "boundary_to_preserve": "Treat the upstream platform as implementation substrate; portfolio novelty claims attach only to the local delta and its evidence.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-agent-systems",
+        "ra-voice-persona",
+        "adapted-platform",
+        "agent-runtime"
+      ]
+    },
+    {
+      "repository": "grahama1970/resume",
+      "recent_activity_theme": "Career evidence, ATS-safe tailoring, and public portfolio communication.",
+      "program_family": null,
+      "primary_area": null,
+      "secondary_area": null,
+      "portfolio_class": "portfolio-collateral",
+      "system_roles": [
+        "career-workflow",
+        "portfolio-communication"
+      ],
+      "methods": [
+        "claim-bound-tailoring",
+        "human-review"
+      ],
+      "domains": [
+        "career"
+      ],
+      "lifecycle_stage": "collateral",
+      "origin": "original",
+      "counting_status": "exclude-portfolio-collateral",
+      "boundary_to_preserve": "Communicates and packages evidence about the research portfolio; it is not itself a research area.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "portfolio-collateral",
+        "career-workflow",
+        "claim-bound-tailoring"
+      ]
+    },
+    {
+      "repository": "grahama1970/sparta-public",
+      "recent_activity_theme": "Public product overview and screenshots for the private Sparta implementation.",
+      "program_family": "evidence-assurance",
+      "primary_area": "governance-compliance",
+      "secondary_area": null,
+      "portfolio_class": "public-projection",
+      "system_roles": [
+        "public-product-overview",
+        "documentation-projection"
+      ],
+      "methods": [
+        "public-documentation",
+        "claim-boundary",
+        "human-review"
+      ],
+      "domains": [
+        "space-cyber",
+        "compliance"
+      ],
+      "lifecycle_stage": "projection",
+      "origin": "derivative-projection",
+      "counting_status": "exclude-public-projection",
+      "boundary_to_preserve": "Inherits Sparta's research area but contains the public projection rather than an independent implementation or research line.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-compliance-assurance",
+        "public-projection",
+        "space-cyber",
+        "evidence-workbench"
+      ]
+    },
+    {
+      "repository": "grahama1970/scillm",
+      "recent_activity_theme": "Typed provider transport, semantic execution profiles, delegated worker surfaces, readiness, and failure normalization.",
+      "program_family": "autonomous-systems",
+      "primary_area": "model-systems-learning",
+      "secondary_area": "agent-systems",
+      "portfolio_class": "research-infrastructure",
+      "system_roles": [
+        "model-gateway",
+        "provider-transport"
+      ],
+      "methods": [
+        "capability-routing",
+        "provider-normalization",
+        "typed-failures",
+        "streaming",
+        "retries",
+        "receipts"
+      ],
+      "domains": [
+        "llm-infrastructure",
+        "agent-systems"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "original-integration",
+      "counting_status": "count",
+      "boundary_to_preserve": "Owns model/provider capability and transport; Tau owns delegated workflow control and admissibility, while planners and humans own final claims.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-model-systems",
+        "ra-agent-systems",
+        "llm-gateway",
+        "provider-routing",
+        "typed-failures"
+      ]
+    },
+    {
+      "repository": "grahama1970/RealtimeSTT",
+      "recent_activity_theme": "Local PipeWire speech ingress, wake/listen behavior, fail-closed audio gates, transport provenance, and event lineage.",
+      "program_family": "human-centered-ai",
+      "primary_area": "multimodal-persona-interaction",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "adapted-research-component",
+      "system_roles": [
+        "speech-ingress",
+        "listener-event-spine"
+      ],
+      "methods": [
+        "streaming-asr",
+        "vad",
+        "wake-word",
+        "transport-provenance",
+        "fail-closed-audio",
+        "turn-lineage"
+      ],
+      "domains": [
+        "voice",
+        "real-time-interaction"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "adapted-upstream",
+      "counting_status": "count-local-delta-only",
+      "boundary_to_preserve": "Transcribes and emits ingress evidence; it does not own meaning, memory, final answers, persona identity, or rendered voice.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-voice-persona",
+        "ra-verification",
+        "speech-to-text",
+        "streaming-asr",
+        "transport-provenance",
+        "adapted-upstream"
+      ]
+    },
+    {
+      "repository": "grahama1970/chatterbox",
+      "recent_activity_theme": "Interruptible voice rendering, ASR-gated acceptance, turn controls, cache provenance, and experimental listening/calibration work.",
+      "program_family": "human-centered-ai",
+      "primary_area": "multimodal-persona-interaction",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "adapted-research-component",
+      "system_roles": [
+        "speech-renderer",
+        "playback-control"
+      ],
+      "methods": [
+        "interruptible-streaming",
+        "asr-gated-acceptance",
+        "cache-provenance",
+        "blinded-evaluation",
+        "calibration"
+      ],
+      "domains": [
+        "voice",
+        "real-time-interaction"
+      ],
+      "lifecycle_stage": "prototype",
+      "origin": "adapted-upstream",
+      "counting_status": "count-local-delta-only",
+      "boundary_to_preserve": "Chatterbox is the renderer; memory, QRA trust, reasoning, and emotional-steering decisions belong to the coordinator and memory pipeline.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-voice-persona",
+        "ra-verification",
+        "text-to-speech",
+        "interruptible-streaming",
+        "asr-gated",
+        "adapted-upstream"
+      ]
+    },
+    {
+      "repository": "grahama1970/tau",
+      "recent_activity_theme": "Durable DAG supervision, typed receipts, model and voice transport, event journals, validation, and human-owned goal boundaries.",
+      "program_family": "autonomous-systems",
+      "primary_area": "agent-systems",
+      "secondary_area": "verification-formal-methods",
+      "portfolio_class": "research-system",
+      "system_roles": [
+        "zero-trust-control-plane",
+        "orchestration-runtime"
+      ],
+      "methods": [
+        "zero-trust",
+        "typed-receipts",
+        "bounded-autonomy",
+        "policy-gates",
+        "human-approval",
+        "provenance"
+      ],
+      "domains": [
+        "agent-systems",
+        "software-engineering",
+        "compliance"
+      ],
+      "lifecycle_stage": "prototype",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "Agents propose; Tau decides what is admissible; humans retain the goal and all high-risk approval authority.",
+      "classification_confidence": "high",
+      "suggested_topics": [
+        "ra-agent-systems",
+        "ra-verification",
+        "zero-trust",
+        "dag",
+        "typed-receipts",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "repository": "grahama1970/surf-cli",
+      "recent_activity_theme": "Agent-agnostic Chrome control CLI: browser transport used by surf/ask browser seats.",
+      "program_family": "autonomous-systems",
+      "primary_area": "agent-systems",
+      "secondary_area": null,
+      "portfolio_class": "research-component",
+      "system_roles": [
+        "browser-transport"
+      ],
+      "methods": [
+        "bounded-autonomy",
+        "receipts"
+      ],
+      "domains": [
+        "agent-systems",
+        "browser"
+      ],
+      "lifecycle_stage": "operational",
+      "origin": "original",
+      "counting_status": "count",
+      "boundary_to_preserve": "Owns browser transport and page-state evidence; it does not decide what a reviewer seat's response means.",
+      "classification_confidence": "medium",
+      "suggested_topics": [
+        "ra-agent-systems"
+      ]
+    }
+  ]
+}
