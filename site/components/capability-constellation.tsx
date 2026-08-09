@@ -26,6 +26,9 @@ interface GNode {
   visibility?: string;
   evidenceAccess?: string;
   skillCount?: number;
+  taxonomy?: string;
+  abstract?: string;
+  hasSanityCheck?: boolean;
   img?: string;
 }
 interface GEdge {
@@ -98,9 +101,19 @@ function getInspectorData(node: GNode): InspectorData {
   return {
     title: node.label,
     lens: LENS_LABEL[node.lens ?? 'technical'] ?? '▲ technical',
-    taxonomy: node.evidenceAccess === 'abstract' ? 'public overview' : 'skill contract',
-    abstract: node.question || 'Executable skill contract registered in the public inventory.',
-    status: node.visibility && node.visibility !== 'public' ? 'public overview only' : 'source linked',
+    taxonomy:
+      node.taxonomy ||
+      (node.evidenceAccess === 'abstract' ? 'public overview' : 'skill contract'),
+    abstract:
+      node.abstract ||
+      node.question ||
+      'Executable skill contract registered in the public inventory.',
+    status:
+      node.hasSanityCheck === true
+        ? 'sanity checked'
+        : node.visibility && node.visibility !== 'public'
+          ? 'public overview only'
+          : 'source linked',
   };
 }
 
@@ -351,7 +364,19 @@ export function CapabilityConstellation() {
 
             if (n.type === 'practice') {
               return (
-                <g key={n.id} className={`c-node${on ? '' : ' is-dim'}`}>
+                <g
+                  key={n.id}
+                  className={`c-node${on ? '' : ' is-dim'}`}
+                  data-qid={`constellation:node:${n.id}`}
+                  data-qs-action="CONSTELLATION_NODE"
+                  tabIndex={0}
+                  onMouseEnter={inspectAtPointer(n)}
+                  onMouseMove={moveInspector(n)}
+                  onMouseLeave={hideInspector}
+                  onFocus={inspectAtPointer(n)}
+                  onBlur={hideInspector}
+                  style={{ cursor: 'default' }}
+                >
                   <circle cx={x} cy={y} r={r} className="c-core" />
                   <circle
                     cx={x}
@@ -434,7 +459,6 @@ export function CapabilityConstellation() {
                 href={`#project-${n.slug}`}
                 data-qid={`constellation:jump:${n.slug}`}
                 data-qs-action="CONSTELLATION_JUMP"
-                title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 aria-label={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 onClick={(e) => {
                   if (moved.current) e.preventDefault(); // was a drag, not a click
