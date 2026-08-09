@@ -1,23 +1,74 @@
 {
-  "version": 2,
-  "skill": "monitor-sparta",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "monitor-sparta",
+ "trials": 3,
+ "proof_scope": "live non-expert analyst retrieval over the SPARTA corpus, including abstention calibration",
+ "claims": {
+  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative",
+  "does_not_prove": "plausibility judgment -- whether an exploitation chain is realistic, whether a detection rule would false-positive in production, or whether an AI's threat analysis is operationally sound. Those still require a practitioner."
+ },
+ "cases": [
+  {
+   "name": "sanity",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "name": "non-expert-analyst-bench-live",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/analyst_bench.py",
+    "--quiet"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "VERDICT: PASS"
+    ]
+   }
+  },
+  {
+   "name": "fabricated-identifier-is-rejected",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/analyst_probe.py",
+    "resolve",
+    "CWE-999999"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "NOT_IN_CORPUS"
+    ]
+   }
+  },
+  {
+   "name": "real-cve-absent-locally-must-abstain-not-deny",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/analyst_probe.py",
+    "resolve",
+    "CVE-2021-44228"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "UNVERIFIED_LOCALLY",
+     "NOT evidence"
+    ]
+   }
+  }
+ ]
 }
