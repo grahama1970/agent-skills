@@ -33,7 +33,7 @@ bash skills/monitor-codebase/sanity.sh
 Result: `25 passed, 0 failed, 1 warnings`.
 
 ```bash
-PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349 python3 skills/monitor-codebase/scripts/prove_docstring_proposals.py --out /tmp/monitor-codebase-docstring-proof
+PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349-clean python3 skills/monitor-codebase/scripts/prove_docstring_proposals.py --live --out /tmp/monitor-codebase-docstring-proof-clean
 ```
 
 Result: `status=pass`, `mocked=no`, `live=yes`.
@@ -41,7 +41,7 @@ Result: `status=pass`, `mocked=no`, `live=yes`.
 ## Live Proof Artifact
 
 - `artifacts/tickets/agent-skills-1349/live-proof-summary.json`
-- SHA-256: `c2c3841837dc19f5157e954f37af73104b1d19733dee8f88962c803efeb03eae`
+- SHA-256: `656191122b949cd24c7a6053d56fab7370f2d8545a6e78cc1ffdb1fac8504230`
 
 The live proof creates real local Python source files, runs the proposal CLI,
 applies reviewed candidates, and checks stale, malformed, unsupported, and

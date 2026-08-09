@@ -1,11 +1,11 @@
 {
   "artifacts": {
-    "apply_command": "/tmp/monitor-codebase-docstring-proof/apply-command.json",
-    "apply_receipt": "/tmp/monitor-codebase-docstring-proof/apply-receipt.json",
-    "ast_equivalence": "/tmp/monitor-codebase-docstring-proof/ast-equivalence.json",
-    "candidates": "/tmp/monitor-codebase-docstring-proof/docstring-candidates.jsonl",
-    "propose_command": "/tmp/monitor-codebase-docstring-proof/propose-command.json",
-    "rollback_receipt": "/tmp/monitor-codebase-docstring-proof/rollback-receipt.json"
+    "apply_command": "/tmp/monitor-codebase-docstring-proof-clean/apply-command.json",
+    "apply_receipt": "/tmp/monitor-codebase-docstring-proof-clean/apply-receipt.json",
+    "ast_equivalence": "/tmp/monitor-codebase-docstring-proof-clean/ast-equivalence.json",
+    "candidates": "/tmp/monitor-codebase-docstring-proof-clean/docstring-candidates.jsonl",
+    "propose_command": "/tmp/monitor-codebase-docstring-proof-clean/propose-command.json",
+    "rollback_receipt": "/tmp/monitor-codebase-docstring-proof-clean/rollback-receipt.json"
   },
   "checks": {
     "apply_cli_exit_zero": true,
@@ -23,8 +23,8 @@
   },
   "live": "yes",
   "mocked": "no",
-  "repo_root": "/home/graham/workspace/experiments/agent-skills",
+  "repo_root": "/tmp/agent-skills-1349-main",
   "schema": "monitor_codebase.docstring_workflow_proof.v1",
-  "skill_dir": "/home/graham/workspace/experiments/agent-skills/skills/monitor-codebase",
+  "skill_dir": "/tmp/agent-skills-1349-main/skills/monitor-codebase",
   "status": "pass"
 }

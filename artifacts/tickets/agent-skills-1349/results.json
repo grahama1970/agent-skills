@@ -14,12 +14,12 @@
     "proved": "Required/recommended/optional/exempt classification, reviewed apply, stale rejection, malformed rejection, unsupported-claim rejection, contract mismatch rejection, and AST rollback behavior."
   },
   "e2e": {
-    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349-clean python3 skills/monitor-codebase/scripts/prove_docstring_proposals.py --out /tmp/monitor-codebase-docstring-proof-clean",
+    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349-clean python3 skills/monitor-codebase/scripts/prove_docstring_proposals.py --live --out /tmp/monitor-codebase-docstring-proof-clean",
     "exit_code": 0,
     "mocked": false,
     "live": true,
     "artifact": "/tmp/agent-skills-1349-main/artifacts/tickets/agent-skills-1349/live-proof-summary.json",
-    "artifact_sha256": "sha256:c2c3841837dc19f5157e954f37af73104b1d19733dee8f88962c803efeb03eae",
+    "artifact_sha256": "sha256:656191122b949cd24c7a6053d56fab7370f2d8545a6e78cc1ffdb1fac8504230",
     "proved": "Proposal CLI does not mutate source; reviewed apply inserts one docstring; stale, malformed, unsupported, and AST-changing candidates are rejected or rolled back."
   },
   "sanity": {

@@ -116,7 +116,10 @@ def main() -> int:
     """Run the live proof and write proof-summary.json."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True, help="Proof output directory.")
+    parser.add_argument("--live", action="store_true", help="Confirm this proof runs against real local files.")
     args = parser.parse_args()
+    if not args.live:
+        raise SystemExit("refusing to run without --live")
 
     proof_dir = args.out.resolve()
     if proof_dir.exists():
