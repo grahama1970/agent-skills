@@ -73,6 +73,16 @@ jobs:
             --author "Graham Anderson" \
             "${css_args[@]}"
 
+      - name: Build resume DOCX
+        if: steps.resume_source.outputs.present == 'true'
+        run: |
+          docx_args=()
+          if grep -q '^## DEEPER DETAIL' RESUME.md; then
+            docx_args=(--omit-section "DEEPER DETAIL")
+          fi
+          uv run --with python-docx python scripts/build_resume_docx.py \
+            RESUME.md docs/resume/graham-anderson-resume.docx "${docx_args[@]}"
+
       - name: Verify generated PDF
         if: steps.resume_source.outputs.present == 'true'
         run: |
@@ -90,7 +100,7 @@ jobs:
       - name: Commit generated PDF on main
         if: steps.resume_source.outputs.present == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          git add docs/resume/graham-anderson-resume.pdf
+          git add docs/resume/graham-anderson-resume.pdf docs/resume/graham-anderson-resume.docx
           if git diff --cached --quiet; then
             echo "Resume PDF already current"
             exit 0

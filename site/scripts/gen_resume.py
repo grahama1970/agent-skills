@@ -33,6 +33,7 @@ REPO = Path(__file__).resolve().parents[2]
 SITE = REPO / "site"
 SOURCE = REPO / "RESUME.md"
 PDF_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.pdf"
+DOCX_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.docx"
 OUT = SITE / "resume.json"
 
 # A role's first line is its employment period when it looks like one; pulling
@@ -333,6 +334,11 @@ def main() -> int:
     public = SITE / "public"
     public.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(SOURCE, public / "resume.md")
+    # DOCX parses measurably better than PDF on the older trackers (Taleo in
+    # particular), so it is offered wherever a form lets you choose.
+    if DOCX_SOURCE.is_file():
+        shutil.copyfile(DOCX_SOURCE, public / "resume.docx")
+        doc["downloads"]["docx"] = "/resume.docx"
     if PDF_SOURCE.is_file():
         shutil.copyfile(PDF_SOURCE, public / "resume.pdf")
         doc["pdfSha256"] = hashlib.sha256(PDF_SOURCE.read_bytes()).hexdigest()

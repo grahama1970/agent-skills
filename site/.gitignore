@@ -10,3 +10,5 @@ next-env.d.ts
 # byte-for-byte copies are not.
 public/resume.md
 public/resume.pdf
+
+public/resume.docx

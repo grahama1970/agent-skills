@@ -49,6 +49,12 @@ jobs:
           uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
             RESUME.md docs/resume/graham-anderson-resume.pdf \
             --title "Graham Anderson Resume" --author "Graham Anderson" "${args[@]}"
+          docx_args=()
+          if grep -q '^## DEEPER DETAIL' RESUME.md; then
+            docx_args=(--omit-section "DEEPER DETAIL")
+          fi
+          uv run --with python-docx python scripts/build_resume_docx.py \
+            RESUME.md docs/resume/graham-anderson-resume.docx "${docx_args[@]}"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
