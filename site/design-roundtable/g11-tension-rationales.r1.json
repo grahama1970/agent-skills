@@ -1,0 +1,157 @@
+{
+  "schema": "grahama.g11_tension_rationales.v1",
+  "generated_at": "2026-08-09T23:18:00Z",
+  "status": "HUMAN_REVIEW_REQUIRED",
+  "source_disposition": "site/design-roundtable/g11-rater-disposition.r1.json",
+  "formal_gate": {
+    "command": "skills/monitor-website/run.sh design-world-check --json",
+    "status": "FAIL",
+    "blocking_gate": "distinctiveness_blind",
+    "failure_signature": "G11 competitor-swap subgate failed: only 1 usable rater reported competitor-swap tension; threshold requires 4.",
+    "usable_raters": 4,
+    "competitor_swap_tension_yes": 1,
+    "required_competitor_swap_tension_yes": 4
+  },
+  "ask_punt_receipt": {
+    "requested_handler": "webgpt",
+    "actual_handler": "webclaude",
+    "status": "DEGRADED",
+    "reason": "Ask removed WebGPT because browser-provider availability reported provider_limited=true.",
+    "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-monitor-webs-43a7b923e2bd",
+    "provider_selection": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-monitor-webs-43a7b923e2bd/browser-provider-selection.json",
+    "advisory_response": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-monitor-webs-43a7b923e2bd/node-artifacts/handler-webclaude/response.md",
+    "advisory_verdict": "STOP_SOLO"
+  },
+  "rater_tension_votes": [
+    {
+      "rater_id": "rater-01-webgpt",
+      "provider": "webgpt",
+      "usable": true,
+      "competitor_swap_tension": false,
+      "disposition": "valid_no_tension",
+      "raw_output": "site/design-roundtable/rater-outputs/rater-01-webgpt.md",
+      "stated_rationale": {
+        "positive_signals": [
+          "false-success receipt",
+          "reported-claim versus observed-evidence split",
+          "immutable artifact path and SHA-256",
+          "deterministic evaluation rule",
+          "bounded judgment",
+          "explicit non-proof limitation"
+        ],
+        "non_color_invariants": [
+          "editorial serif human claims versus compact technical machine evidence",
+          "bordered provenance receipt beside the claim",
+          "claim-to-evidence-to-rule-to-bounded-judgment sequence",
+          "unresolved gaps made visible",
+          "rectilinear proof boundaries instead of generic rounded card grids"
+        ],
+        "risk_or_reason_for_no": "The rater matched Proof Workshop and rejected generic-AI-template classification, but still marked competitor-swap tension as no; leakage risk was medium because the hero nearly restated the target brief and the familiar R&D/portfolio shell diluted the structural distinctiveness."
+      }
+    },
+    {
+      "rater_id": "rater-02-webgrok",
+      "provider": "webgrok",
+      "usable": true,
+      "competitor_swap_tension": false,
+      "disposition": "valid_no_tension",
+      "raw_output": "site/design-roundtable/rater-outputs/rater-02-webgrok.md",
+      "excluded_from_next_run": true,
+      "excluded_reason": "human_excluded_grok",
+      "stated_rationale": {
+        "positive_signals": [
+          "FALSE SUCCESS CHECK hierarchy",
+          "pilot-receipt provenance block",
+          "PILOT_EVIDENCE_ONLY local-evidence framing",
+          "ledger of contracts with sanity-check counts",
+          "explorer framing of problem to public project to gaps"
+        ],
+        "non_color_invariants": [
+          "human narrative role separated from machine evidence role",
+          "local evidence and provenance margins",
+          "visible claim-to-judgment structure",
+          "explicit non-proof boundary",
+          "unresolved-gap language"
+        ],
+        "risk_or_reason_for_no": "The rater said the screens were not a generic AI portfolio and formed a consistent evidence-first family, but still acknowledged the competitor-swap gate as separate and marked tension as no."
+      }
+    },
+    {
+      "rater_id": "rater-03-webgpt",
+      "provider": "webgpt",
+      "usable": true,
+      "competitor_swap_tension": true,
+      "disposition": "valid_tension",
+      "raw_output": "site/design-roundtable/rater-outputs/rater-03-webgpt.md",
+      "stated_rationale": {
+        "positive_signals": [
+          "false-success-check receipt",
+          "reported-claim and observed-evidence rows",
+          "immutable locator with SHA-256",
+          "deterministic rule",
+          "bounded judgment",
+          "what this does not prove",
+          "source-generated contract and sanity-check counts"
+        ],
+        "non_color_invariants": [
+          "large editorial-serif human claims versus compact monospaced machine evidence",
+          "local bordered receipt and provenance panel beside narrative copy",
+          "claim to evidence to rule to bounded judgment to non-proof sequence",
+          "visible unresolved coverage",
+          "artifact/code actions instead of generic conversion calls"
+        ],
+        "risk_or_reason_for_yes": "The rater still saw familiar premium R&D-portfolio conventions, but judged the proof grammar distinctive enough to create competitor-swap tension."
+      }
+    },
+    {
+      "rater_id": "rater-04-webgrok",
+      "provider": "webgrok",
+      "usable": true,
+      "competitor_swap_tension": false,
+      "disposition": "valid_no_tension",
+      "raw_output": "site/design-roundtable/rater-outputs/rater-04-webgrok.md",
+      "excluded_from_next_run": true,
+      "excluded_reason": "human_excluded_grok",
+      "stated_rationale": {
+        "positive_signals": [
+          "claim/evidence/judgment table with roles",
+          "pilot-receipt provenance and immutable locator",
+          "deterministic rule and bounded judgment",
+          "local-evidence-only note",
+          "contract counts with sanity-check status",
+          "problem-first search without demo CTA"
+        ],
+        "non_color_invariants": [
+          "human narrative roles separated from machine evidence roles",
+          "local evidence and provenance margins",
+          "explicit boundaries",
+          "visible claim-to-judgment structure",
+          "unresolved-gap language",
+          "deterministic rules bounding promotion of evidence"
+        ],
+        "risk_or_reason_for_no": "The rater matched Proof Workshop and saw sufficient non-color invariants for overall PASS, but competitor-swap tension was still no."
+      }
+    },
+    {
+      "rater_id": "rater-05-webgemini",
+      "provider": "webgemini",
+      "usable": false,
+      "competitor_swap_tension": null,
+      "disposition": "provider_error",
+      "unusable_reason": "BROWSER_ATTACHMENT_UNAVAILABLE",
+      "ask_run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/grahama-g11-webgemini-rater-03-20260809T1828"
+    }
+  ],
+  "interpretation_for_next_agent": [
+    "The failing G11 count is not hidden: three usable stored raters said competitor-swap tension was absent and one said it was present.",
+    "The stored no votes also contain many positive Proof Workshop matches, so the blocker is narrower than generic-template rejection.",
+    "Do not continue solo repair loops from this artifact; use it as the human decision packet for whether to change the design, change the gate/prompt, or pause G11 until fresh providers are available."
+  ],
+  "does_not_prove": [
+    "G11 pass",
+    "post-repair blind-rater pass",
+    "that WebClaude fallback is WebGPT",
+    "that any Grok vote should be used after the human excluded Grok",
+    "full bespoke-design readiness"
+  ]
+}
