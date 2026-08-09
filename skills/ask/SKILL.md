@@ -109,6 +109,20 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+## Three Kinds Of Target
+
+`/ask` addresses three peer target types. They differ in transport, not in
+standing:
+
+| Target | Example | Transport owner |
+| --- | --- | --- |
+| **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
+| **Model call** — API/model handler | `gpt-5.5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
+| **Web model** — browser-backed reviewer | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
+
+A project agent should not care which side is browser, model, or live session
+beyond naming the target.
+
 ## Talk To Another Agent's Session (Herdr)
 
 Agents working in different Herdr sessions reach each other by name. Three
@@ -140,9 +154,15 @@ Pick one by pane id:
   ./run.sh herdr send w11:p13 "<message>"
 ```
 
+When names collide, `send` runs `$interview` and asks which session, listing
+**session, model, and directory** for every candidate — the three facts that
+tell identical names apart. Answer the question and the message is delivered;
+no second command needed.
+
 Exit codes let a caller branch without parsing prose: `0` delivered, `2`
-ambiguous (interview the human with `--json` candidates), `1` nothing
-addressable matched.
+ambiguous, `1` nothing addressable matched. `--json` returns the candidates
+instead of interviewing, so a machine caller drives its own disambiguation;
+`--no-interview` fails closed on ambiguity.
 
 Two panes are never chosen for you:
 

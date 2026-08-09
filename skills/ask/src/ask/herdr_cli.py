@@ -30,12 +30,54 @@ Failure modes
 from __future__ import annotations
 
 import json as json_lib
+import subprocess
 import sys
+import tempfile
+from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from .herdr_target import list_panes, resolve, send
+from .herdr_target import HerdrPane, Resolution, list_panes, resolve, send
+
+INTERVIEW_RUN = Path(__file__).resolve().parents[3] / "interview" / "run.sh"
+
+
+def run_interview(resolution: Resolution) -> HerdrPane | None:
+    """Ask the human which session, via /interview. None if unanswered.
+
+    The project agent must not pick for the human when names collide, and it
+    must not make the human go find the session list either -- the question
+    carries the session, model, and directory for every candidate.
+    """
+    if not INTERVIEW_RUN.exists():
+        return None
+    with tempfile.TemporaryDirectory() as tmp:
+        questions = Path(tmp) / "questions.json"
+        answers = Path(tmp) / "answers.json"
+        questions.write_text(
+            json_lib.dumps(resolution.interview_payload(), indent=2), encoding="utf-8"
+        )
+        try:
+            subprocess.run(
+                [str(INTERVIEW_RUN), "--file", str(questions), "--output", str(answers)],
+                check=False,
+                timeout=600,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        try:
+            chosen = json_lib.loads(answers.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+    picked = ""
+    if isinstance(chosen, dict):
+        raw = chosen.get("herdr_session") or chosen.get("answers", {}).get("herdr_session")
+        picked = str(raw[0] if isinstance(raw, list) and raw else raw or "")
+    for pane in resolution.candidates:
+        if pane.session_name == picked or pane.pane_id == picked:
+            return pane
+    return None
 
 app = typer.Typer(help="Send work to another agent's Herdr session by name.", no_args_is_help=True)
 
@@ -114,9 +156,22 @@ def send_command(
     message: Annotated[str, typer.Argument(help="Message to deliver.")],
     json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     busy: Annotated[bool, typer.Option("--busy", help="Allow panes mid-task.")] = False,
+    no_interview: Annotated[bool, typer.Option("--no-interview", help="Fail on ambiguity instead of asking.")] = False,
 ) -> None:
     """Deliver MESSAGE to the Herdr session named NAME."""
     resolution = resolve(name, list_panes(), include_busy=busy)
+    if resolution.needs_interview and not json_out and not no_interview:
+        # Never guess -- but do not dead-end the human either. Ask which
+        # session, showing name, model, and directory for each.
+        picked = run_interview(resolution)
+        if picked is not None:
+            receipt = send(picked, message)
+            typer.echo(
+                f"delivered to {picked.describe()}"
+                if receipt.get("submitted")
+                else f"delivery failed: {receipt.get('error') or receipt.get('stderr')}"
+            )
+            raise typer.Exit(0 if receipt.get("submitted") else NOT_FOUND_EXIT)
     if resolution.needs_interview:
         # Never guess. Picking wrong sends another agent's work to a stranger.
         if json_out:

@@ -107,3 +107,23 @@ def test_herdr_being_down_is_not_an_exception() -> None:
 def test_unparseable_output_yields_no_panes() -> None:
     assert parse_panes("not json") == []
     assert parse_panes(json.dumps({"result": {"panes": "wrong"}})) == []
+
+
+def test_interview_shows_session_model_and_directory(panes: list[HerdrPane]) -> None:
+    """The three facts that let a human tell identical names apart."""
+    payload = resolve("memory", panes, repo_map=ALIASES).interview_payload()
+    assert payload["version"] == 2
+    question = payload["questions"][0]
+    assert question["multi_select"] is False
+    labels = [o["label"] for o in question["options"]]
+    assert labels == ["w11:p13", "w7E:pK"], "label is the session"
+    for option in question["options"]:
+        assert "model:" in option["description"]
+        assert "dir:" in option["description"]
+
+
+def test_interview_options_carry_machine_readable_fields(panes: list[HerdrPane]) -> None:
+    options = resolve("memory", panes, repo_map=ALIASES).interview_options()
+    assert options[0]["model"] == "codex"
+    assert options[0]["directory"].endswith("/memory")
+    assert options[0]["pane_id"] == "w11:p13"

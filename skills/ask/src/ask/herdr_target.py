@@ -82,6 +82,11 @@ class HerdrPane:
     def is_idle(self) -> bool:
         return self.is_addressable and self.status not in BUSY_STATUSES
 
+    @property
+    def session_name(self) -> str:
+        """How a human refers to this session: workspace plus pane."""
+        return self.pane_id
+
     def describe(self) -> str:
         return f"{self.pane_id} [{self.agent}/{self.status}] {self.cwd}"
 
@@ -102,15 +107,45 @@ class Resolution:
         return self.candidates[0] if len(self.candidates) == 1 else None
 
     def interview_options(self) -> list[dict[str, str]]:
-        """Candidates shaped for /interview, richest signal first."""
+        """Candidates shaped for /interview.
+
+        The three facts a human needs to tell identical names apart are the
+        session, the model driving it, and the directory it is working in.
+        Anything less and the choice is still a guess, just the human's.
+        """
         return [
             {
-                "label": pane.pane_id,
-                "description": f"{pane.agent} ({pane.status}) in {pane.cwd}",
+                "label": pane.session_name,
+                "description": f"model: {pane.agent or 'unknown'} ({pane.status}) | dir: {pane.cwd}",
                 "pane_id": pane.pane_id,
+                "model": pane.agent,
+                "directory": pane.cwd,
             }
             for pane in self.candidates
         ]
+
+    def interview_payload(self, *, question: str = "") -> dict[str, object]:
+        """A ready-to-run /interview question document."""
+        return {
+            "version": 2,
+            "title": "Which session did you want to target?",
+            "context": (
+                f"{len(self.candidates)} Herdr sessions answer to "
+                f"'{self.query}'. Pick the one to receive this work."
+            ),
+            "questions": [
+                {
+                    "id": "herdr_session",
+                    "header": "Session",
+                    "text": question or f"Which '{self.query}' session should receive this?",
+                    "multi_select": False,
+                    "options": [
+                        {"label": o["label"], "description": o["description"]}
+                        for o in self.interview_options()
+                    ],
+                }
+            ],
+        }
 
 
 def list_panes(*, bin_path: str | None = None, timeout: float = 20.0) -> list[HerdrPane]:
