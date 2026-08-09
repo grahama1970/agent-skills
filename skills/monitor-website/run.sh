@@ -34,4 +34,12 @@ if [[ "${1:-}" == "visual-assets-check" ]]; then
   exec python3 scripts/visual_assets_check.py "$@"
 fi
 
+# `case-composition-check` validates the three flagship case compositions and
+# rejects shared project-card geometry, generated evidence, missing artifacts,
+# and missing proof boundaries.
+if [[ "${1:-}" == "case-composition-check" ]]; then
+  shift
+  exec python3 scripts/case_composition_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

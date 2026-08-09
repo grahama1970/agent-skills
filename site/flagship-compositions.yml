@@ -1,0 +1,31 @@
+schema: grahama.flagship_compositions.v1
+cases:
+  - project_id: tau
+    component: site/components/cases/tau-case.tsx
+    composition_id: tau-causal-execution-dossier
+    artifact_id: tau-sanity-receipt
+    artifact_role: evidence
+    generated_media_used_as_evidence: false
+    proof_boundary: "Does not prove equal proof depth across every skill or fresh live-provider behavior."
+    mobile_transformation: "Execution dossier becomes a single ordered chain followed by the receipt artifact."
+  - project_id: sparta-explorer
+    component: site/components/cases/sparta-case.tsx
+    composition_id: sparta-evidence-relationship-plate
+    artifact_id: sparta-countermeasure-mapper-source
+    artifact_role: evidence
+    generated_media_used_as_evidence: false
+    proof_boundary: "Does not prove a live Explorer UI state, full corpus quality, or complete SPARTA risk reduction."
+    mobile_transformation: "Evidence plate becomes a source excerpt followed by explicit relationship labels."
+  - project_id: persona-dream
+    component: site/components/cases/persona-dream-case.tsx
+    composition_id: persona-dream-experiment-sequence
+    artifact_id: persona-dream-idea-gate-receipt
+    artifact_role: evidence
+    generated_media_used_as_evidence: false
+    proof_boundary: "Does not prove persona memories, emotional beats, story completeness, or generated panel quality."
+    mobile_transformation: "Experiment sequence becomes receipt-first steps with no hover-only labels."
+prohibited:
+  - common_project_card_renderer
+  - generated_media_as_evidence
+  - missing_proof_boundary
+  - undeclared_mobile_transformation

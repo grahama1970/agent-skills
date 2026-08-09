@@ -58,11 +58,13 @@ def validate(config_path: Path) -> list[str]:
         if token in page:
             errors.append(f"banned homepage full-surface token remains: {token}")
 
-    supporting_sources = re.findall(r'data-qid={`supporting:source:', page)
-    if len(supporting_sources) != 1:
-        errors.append("supporting investigations must be rendered from the compact supporting list")
+    if "data-supporting-projects={supporting.join(',')}" not in page:
+        errors.append("supporting investigations must expose the compact supporting project set")
     if "const supporting = ['sparta-explorer', 'persona-dream', 'battle']" not in page:
         errors.append("supporting investigations must stay at exactly three named projects")
+    for component in ("TauCase", "SpartaCase", "PersonaDreamCase"):
+        if component not in page:
+            errors.append(f"homepage missing {component}")
     if "HeroContradictionPlate" not in page:
         errors.append("proposition beat must retain HeroContradictionPlate")
 

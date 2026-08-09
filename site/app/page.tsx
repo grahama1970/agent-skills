@@ -1,5 +1,8 @@
 import heroContradiction from '@/hero-contradiction.json';
 import { HeroContradictionPlate } from '@/components/hero-contradiction-plate';
+import { PersonaDreamCase } from '@/components/cases/persona-dream-case';
+import { SpartaCase } from '@/components/cases/sparta-case';
+import { TauCase } from '@/components/cases/tau-case';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
 import { UnusualPath } from '@/components/unusual-path';
@@ -14,9 +17,10 @@ for (const project of content.projects) {
   projectBySlug.set(project.slug, project);
 }
 const flagship = projectBySlug.get('tau') ?? content.projects[0];
-const supporting = ['sparta-explorer', 'persona-dream', 'battle']
-  .map((slug) => projectBySlug.get(slug))
-  .filter((project): project is NonNullable<typeof project> => Boolean(project));
+const sparta = projectBySlug.get('sparta-explorer') ?? content.projects[1];
+const personaDream = projectBySlug.get('persona-dream') ?? content.projects[2];
+const battle = projectBySlug.get('battle') ?? content.projects[3];
+const supporting = ['sparta-explorer', 'persona-dream', 'battle'];
 
 const TRACK = [
   { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
@@ -72,47 +76,8 @@ export default function Home() {
         </section>
 
         <section id="flagship" className="home-beat flagship-beat" data-home-beat="flagship">
-          <div className="wrap flagship-grid">
-            <div className="beat-copy">
-              <p className="kicker">
-                <b>01</b> Dominant investigation
-              </p>
-              <h2 className="h2">{flagship.question}</h2>
-              <p className="lede">{flagship.why}</p>
-              <dl className="case-boundary">
-                <div>
-                  <dt>Source</dt>
-                  <dd>
-                    <a
-                      href={flagship.href}
-                      data-qid={`flagship:source:${flagship.slug}`}
-                      data-qs-action="FLAGSHIP_OPEN_SOURCE"
-                      title={`Open ${flagship.name} source`}
-                    >
-                      {flagship.href.replace('https://github.com/', 'github.com/')}
-                    </a>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Boundary</dt>
-                  <dd>One flagship example; not a claim that every skill has equal proof depth.</dd>
-                </div>
-              </dl>
-            </div>
-            <a
-              className="flagship-artifact"
-              href={flagship.href}
-              data-qid={`flagship:artifact:${flagship.slug}`}
-              data-qs-action="FLAGSHIP_OPEN_ARTIFACT"
-              title={`Open ${flagship.name} artifact source`}
-            >
-              <img
-                src="/artifacts/tau-sanity-receipt.svg"
-                alt="Tau sanity receipt excerpt showing exit code 0, 45 passed, and explicit proof boundaries."
-              />
-              <span>{flagship.name}</span>
-              <b>{flagship.blurb}</b>
-            </a>
+          <div className="wrap">
+            <TauCase project={flagship} />
           </div>
         </section>
 
@@ -131,8 +96,24 @@ export default function Home() {
                 Full explorer
               </a>
             </div>
-            <ol className="support-index">
-              {supporting.map((project, index) => (
+            <div className="supporting-cases" data-supporting-projects={supporting.join(',')}>
+              <SpartaCase project={sparta} />
+              <PersonaDreamCase project={personaDream} />
+              <article className="support-index support-index--single">
+                <a
+                  href={battle.href}
+                  data-qid={`supporting:source:${battle.slug}`}
+                  data-qs-action="SUPPORTING_OPEN_SOURCE"
+                  title={`Open ${battle.name} source`}
+                >
+                  <span>03</span>
+                  <b>{battle.name}</b>
+                  <em>{battle.question}</em>
+                </a>
+              </article>
+            </div>
+            <ol className="support-index support-index--mobile" aria-label="Supporting investigations">
+              {[sparta, personaDream, battle].map((project, index) => (
                 <li key={project.slug}>
                   <a
                     href={project.href}

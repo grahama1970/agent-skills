@@ -1,0 +1,18 @@
+schema: grahama.flagship_compositions.v1
+cases:
+  - project_id: tau
+    component: site/components/cases/tau-case.tsx
+    composition_id: repeated-card
+    artifact_id: project-tau-concept
+    artifact_role: evidence
+    generated_media_used_as_evidence: true
+    proof_boundary: ""
+    mobile_transformation: ""
+  - project_id: sparta-explorer
+    component: site/components/cases/sparta-case.tsx
+    composition_id: repeated-card
+    artifact_id: project-sparta-explorer-concept
+    artifact_role: evidence
+    generated_media_used_as_evidence: true
+    proof_boundary: ""
+    mobile_transformation: ""
