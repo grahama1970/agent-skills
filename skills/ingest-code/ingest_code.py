@@ -883,6 +883,7 @@ def _build_code_symbol_record(
         end_line=end_line,
         signature=signature,
         docstring=docstring,
+        source_docstring=docstring,
         code=code,
         imports=_flatten_import_symbols(imports),
         parameters=parameters,

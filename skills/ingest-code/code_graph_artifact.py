@@ -254,6 +254,15 @@ def _symbol_records(
             "end_line": symbol.end_line,
             "signature": symbol.signature,
             "content_hash": symbol.effective_content_hash,
+            "source_docstring": document.get("source_docstring", ""),
+            "source_docstring_status": document.get("source_docstring_status", ""),
+            "documentation_need": document.get("documentation_need", ""),
+            "documentation_need_reasons": document.get("documentation_need_reasons", []),
+            "summary_evidence": document.get("summary_evidence", {}),
+            "derived_summary": document.get("derived_summary"),
+            "semantic_input_schema": document.get("semantic_input_schema", ""),
+            "retrieval_text_sha256": document.get("retrieval_text_sha256", ""),
+            "purpose_source": document.get("purpose_source", ""),
             "memory_document": document,
         })
     return sorted(records, key=lambda item: (item["path"], item["qualified_name"], item["start_line"]))

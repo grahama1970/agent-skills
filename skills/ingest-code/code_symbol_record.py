@@ -6,6 +6,9 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
+
+from symbol_summary import documentation_need, semantic_input, summary_evidence
 
 
 def split_identifier(value: str) -> list[str]:
@@ -72,6 +75,12 @@ class CodeSymbolRecord:
     end_line: int
     signature: str = ""
     docstring: str = ""
+    source_docstring: str = ""
+    source_docstring_status: str = ""
+    documentation_need: str = ""
+    documentation_need_reasons: list[str] = field(default_factory=list)
+    summary_evidence: dict[str, Any] = field(default_factory=dict)
+    derived_summary: dict[str, Any] | None = None
     code: str = ""
     imports: list[str] = field(default_factory=list)
     parameters: list[str] = field(default_factory=list)
@@ -152,22 +161,8 @@ class CodeSymbolRecord:
 
     @property
     def solution(self) -> str:
-        parts = [f"File: {self.normalized_path}:{self.start_line}-{self.end_line}"]
-        parts.append(f"Kind: {self.symbol_kind}")
-        parts.append(f"Qualified name: {self.qualified_name}")
-        if self.signature:
-            parts.append(f"Signature: {self.signature}")
-        if self.imports:
-            parts.append(f"Imports: {', '.join(self.imports[:20])}")
-        if self.parameters:
-            parts.append(f"Parameters: {', '.join(self.parameters[:20])}")
-        if self.called_symbols:
-            parts.append(f"Calls: {', '.join(self.called_symbols[:20])}")
-        if self.docstring:
-            parts.append(f"Docstring:\n{self.docstring[:1200]}")
-        if self.code:
-            parts.append(f"Code:\n{self.code[:6000]}")
-        return "\n".join(parts)
+        semantic = semantic_input(self)
+        return semantic["text"]
 
     @property
     def lexical_terms(self) -> list[str]:
@@ -200,6 +195,10 @@ class CodeSymbolRecord:
 
     def to_document(self) -> dict:
         """Return a /memory /upsert document for the code_symbols collection."""
+        evidence = self.summary_evidence or summary_evidence(self)
+        semantic = semantic_input(self, evidence)
+        doc_need = documentation_need(self)
+        source_doc = self.source_docstring or self.docstring
         return {
             "_key": self.symbol_id,
             "type": "code_symbol",
@@ -216,7 +215,17 @@ class CodeSymbolRecord:
             "start_line": self.start_line,
             "end_line": self.end_line,
             "signature": self.signature,
-            "docstring": self.docstring,
+            "docstring": source_doc,
+            "source_docstring": source_doc,
+            "source_docstring_status": self.source_docstring_status or doc_need["source_docstring_status"],
+            "documentation_need": self.documentation_need or doc_need["documentation_need"],
+            "documentation_need_reasons": self.documentation_need_reasons or doc_need["documentation_need_reasons"],
+            "summary_evidence": evidence,
+            "derived_summary": semantic["derived_summary"],
+            "semantic_input_schema": semantic["schema"],
+            "retrieval_text": semantic["text"],
+            "retrieval_text_sha256": semantic["text_sha256"],
+            "purpose_source": semantic["purpose_source"],
             "code": self.code,
             "imports": _unique(self.imports),
             "parameters": _unique(self.parameters),
@@ -231,16 +240,20 @@ class CodeSymbolRecord:
             "lexical_terms": self.lexical_terms,
             "tags": _unique(self.tags + self.lexical_terms[:50]),
             "problem": self.problem,
-            "solution": self.solution,
-            "text": self.solution,
+            "solution": semantic["text"],
+            "text": semantic["text"],
             "code_symbol": True,
         }
 
     def to_legacy_lesson_document(self) -> dict:
         """Return a compatibility lesson document for old memory daemons."""
+        evidence = self.summary_evidence or summary_evidence(self)
+        semantic = semantic_input(self, evidence)
+        doc_need = documentation_need(self)
+        source_doc = self.source_docstring or self.docstring
         return {
             "problem": self.problem,
-            "solution": self.solution,
+            "solution": semantic["text"],
             "scope": self.scope,
             "tags": _unique(self.tags + ["code_symbol", self.symbol_name]),
             "code_symbol": True,
@@ -257,6 +270,15 @@ class CodeSymbolRecord:
                 "start_line": self.start_line,
                 "end_line": self.end_line,
                 "content_hash": self.effective_content_hash,
+                "source_docstring": source_doc,
+                "source_docstring_status": self.source_docstring_status or doc_need["source_docstring_status"],
+                "documentation_need": self.documentation_need or doc_need["documentation_need"],
+                "documentation_need_reasons": self.documentation_need_reasons or doc_need["documentation_need_reasons"],
+                "summary_evidence": evidence,
+                "derived_summary": semantic["derived_summary"],
+                "semantic_input_schema": semantic["schema"],
+                "retrieval_text_sha256": semantic["text_sha256"],
+                "purpose_source": semantic["purpose_source"],
                 "symbol_id": self.symbol_id,
                 "symbol_version_id": self.symbol_version_id,
                 "identity_discriminator": self.identity_discriminator,

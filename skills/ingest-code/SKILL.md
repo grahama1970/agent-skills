@@ -134,6 +134,25 @@ Each record includes:
 | `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for memory's sparse/hybrid retrieval |
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
 
+Documentation metadata is provenance-safe:
+
+| Field | Purpose |
+|-------|---------|
+| `source_docstring` / `docstring` | Exact authored source docstring text, preserved for compatibility |
+| `source_docstring_status` | `present`, `missing`, `generated_file`, or `not_applicable` for v1 extraction |
+| `documentation_need` | Deterministic triage: `required`, `recommended`, `optional`, or `exempt` |
+| `documentation_need_reasons` | Source-derived reasons such as `public_api`, `external_io`, `security`, `mutation`, or `trivial_helper` |
+| `summary_evidence` | Canonical source-fact packet and hash for optional generated summaries |
+| `derived_summary` | Current unreviewed generated summary only when bound to the current `symbol_version_id`, source hash, and evidence hash |
+| `retrieval_text`, `retrieval_text_sha256`, `purpose_source` | Canonical semantic text and hash used by Memory retrieval |
+
+Generated or model-written summaries are never copied into `docstring` or
+`source_docstring`, and `/ingest-code` never rewrites source files to add
+docstrings. Authored docstrings are preferred in retrieval text. A derived
+summary may appear only as `derived_summary.status="derived_unreviewed"` and
+only while its source/evidence hashes match the current symbol version; stale
+or malformed summaries fail closed to `null`.
+
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
 
 ### Typed Code Edges
