@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-08-09T15:12:18.866989+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-font-bespoke",
+  "root": "/home/graham/workspace/experiments/agent-skills-font-bespoke",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-font-bespoke",
+  "url": "http://127.0.0.1:43220/explore.html",
+  "name": "grahama-pr6-graph-inspector",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-font-bespoke/grahama-pr6-graph-inspector/20260809T151213Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-font-bespoke/grahama-pr6-graph-inspector/20260809T151213Z.read.json"
+}

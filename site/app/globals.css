@@ -97,39 +97,14 @@ img {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- ambient warmth + grain ------------------------------- */
-.glow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(120% 78% at 12% -8%, rgba(210, 112, 60, 0.2), transparent 62%),
-    radial-gradient(90% 60% at 92% 4%, rgba(226, 172, 98, 0.11), transparent 60%),
-    radial-gradient(120% 100% at 50% 110%, rgba(147, 162, 137, 0.07), transparent 65%);
-}
-.grain {
-  position: fixed;
-  inset: -50%;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.42;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
-}
 .page {
   position: relative;
-  z-index: 2;
 }
 
 /* --- shared shell ----------------------------------------- */
 .wrap {
   width: var(--wrap);
   margin-inline: auto;
-}
-.ruledbg {
-  background-image: linear-gradient(to right, var(--line-2) 0 1px, transparent 1px);
-  background-size: calc(100% / 12) 100%;
 }
 .rule {
   height: 1px;
@@ -203,7 +178,7 @@ section {
    few points within the warm family (kept subtle for cohesion / trust, per
    best-practices-bespoke-design G6): a faint temperature move section to
    section so the page reads hand-tuned rather than a uniform dark template.
-   All stay far above WCAG-AA against --text; grain/glow overlay unchanged. */
+   All stay far above WCAG-AA against --text. */
 .hero { background-color: #110d0b; }
 #search { background-color: #0d0b0a; }
 #work { background-color: #0c0e0b; }      /* a hair greener */
@@ -261,39 +236,6 @@ section {
   font-size: 10px;
   font-style: italic;
   fill: var(--ember, #d1703c);
-  transition: filter 0.25s ease, opacity 0.25s ease;
-}
-/* Instant activation: brighten the c and pause the ambient loop on hover. */
-.wordmark:hover .brandmark-c {
-  animation: none;
-  opacity: 1;
-  filter: drop-shadow(0 0 3px rgba(209, 112, 60, 0.9));
-}
-/* The subscript c breathes slowly — a quiet runtime signal, not decoration.
-   Strictly restrained (~5s), and off entirely under reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .brandmark-c {
-    animation: c-breathe 5s ease-in-out infinite;
-  }
-  .c-mark-sub {
-    animation: c-glow 5s ease-in-out infinite;
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-}
-@keyframes c-breathe {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-@keyframes c-glow {
-  0%, 100% {
-    opacity: 0.9;
-    filter: drop-shadow(0 0 2px rgba(209, 112, 60, 0.5));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(209, 112, 60, 0.75));
-  }
 }
 .wordmark span {
   color: var(--brass);
@@ -1976,29 +1918,6 @@ footer a:hover {
   line-height: 1.6;
 }
 
-/* --- load choreography ------------------------------------ */
-.rise {
-  opacity: 0;
-  transform: translateY(14px);
-  animation: rise 0.9s cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
-  animation-delay: var(--d, 0s);
-}
-@keyframes rise {
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.wipe {
-  clip-path: inset(0 100% 0 0);
-  animation: wipe 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.55s forwards;
-}
-@keyframes wipe {
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
 /* --- keyboard shortcuts modal + toast (retained systems) --- */
 .modal-overlay {
   position: fixed;
@@ -2219,8 +2138,6 @@ footer a:hover {
     animation-delay: 0s !important;
     transition-duration: 0.001ms !important;
   }
-  .rise { opacity: 1; transform: none; }
-  .wipe { clip-path: none; }
   html { scroll-behavior: auto; }
   .cell { transform: none; }
 }
@@ -2779,121 +2696,6 @@ footer a:hover {
 .lightbox button:hover {
   color: var(--brass);
   border-color: var(--brass);
-}
-
-/* "An unusual path" — non-linear DAG trace, draws once on scroll-in. */
-.unusual-path-svg {
-  display: block;
-  width: 100%;
-  max-width: 440px;
-  height: auto;
-  margin-top: 16px;
-  color: var(--brass);
-}
-/* The conventional straight route — faint and dashed, for contrast. */
-.path-baseline {
-  stroke: currentColor;
-  stroke-width: 1;
-  stroke-dasharray: 3 6;
-  opacity: 0.22;
-}
-.path-line {
-  stroke-dasharray: 1000; /* matches pathLength — draw always reaches the end */
-  stroke-dashoffset: 1000;
-}
-/* The trail draws in once, forward only. (An earlier non-monotonic version made
-   the line's endpoint retract, which read as a glitch — a self-erasing line, not
-   a search. Backtracking belongs to a tracer dot, not the trail itself.) */
-@keyframes trace-converge {
-  0% { stroke-dashoffset: 1000; }
-  100% { stroke-dashoffset: 0; }
-}
-.path-node {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.path-node.is-final {
-  filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7));
-}
-/* Dotted final approach (the unwritten present) + its focus ring. */
-.path-final {
-  fill: none;
-  stroke-dasharray: 0.5 6;
-}
-.final-clip {
-  width: 0;
-}
-.goal-ring {
-  opacity: 0;
-  stroke-width: 1.5;
-}
-.is-visible .path-line {
-  stroke-dashoffset: 0;
-  animation: trace-converge 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.is-visible .path-node {
-  opacity: 1;
-}
-/* Waypoints light up only AFTER the line has drawn to them — never a dot
-   floating ahead of the trail. Staggered left→right once the draw completes. */
-.is-visible .n1 { transition-delay: 2s; }
-.is-visible .n2 { transition-delay: 2.1s; }
-.is-visible .n3 { transition-delay: 2.2s; }
-.is-visible .n4 { transition-delay: 2.3s; }
-.is-visible .n5 { transition-delay: 2.4s; }
-/* The goal lights up only when the hesitant dotted approach arrives (~3.4s). */
-.is-visible .n6 { transition-delay: 3.35s; }
-/* Goal lock: the final waypoint flares once as it lights up, then settles. */
-.is-visible .path-node.is-final {
-  animation: node-lock 0.9s ease-out 3.35s both;
-}
-@keyframes node-lock {
-  0% { filter: drop-shadow(0 0 0 rgba(226, 172, 98, 0)); }
-  40% { filter: drop-shadow(0 0 11px rgba(255, 240, 214, 0.95)); }
-  100% { filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7)); }
-}
-/* Dotted final segment: a left→right wipe with hesitancy, then acceleration —
-   the present drawn tentatively, stuttering, then committed. */
-.is-visible .final-clip {
-  animation: final-hesi 1.6s linear 2s forwards;
-}
-@keyframes final-hesi {
-  0% { width: 0; }
-  28% { width: 20px; } /* tentative first reach */
-  42% { width: 18px; } /* hesitate — pull back */
-  56% { width: 25px; } /* still unsure */
-  100% { width: 82px; } /* accelerate — commit to now */
-}
-/* Focus ring: expands and glows once as the line lands on the goal. */
-.is-visible .goal-ring {
-  animation: goal-ring 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 3.35s both;
-}
-@keyframes goal-ring {
-  0% { r: 3.6; opacity: 0; stroke-width: 2; }
-  35% { r: 8.5; opacity: 0.9; stroke-width: 1.75; }
-  100% { r: 13; opacity: 0; stroke-width: 0.5; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .path-line {
-    stroke-dashoffset: 0;
-    transition: none;
-    animation: none;
-  }
-  .path-node {
-    opacity: 1;
-    transition: none;
-  }
-  .is-visible .path-node.is-final {
-    animation: none;
-  }
-  .final-clip {
-    width: 82px;
-    animation: none;
-  }
-  .goal-ring {
-    animation: none;
-    opacity: 0;
-  }
 }
 
 /* Vocabulary compliance: continuity crossfade on stepper frame swap;
@@ -3580,6 +3382,56 @@ a.fig:hover .l::after,
     radial-gradient(120% 90% at 50% 45%, rgba(226,172,98,0.06), transparent 60%),
     #0a0705;
   overflow: hidden;
+}
+.inspector-card {
+  position: fixed;
+  z-index: 1000;
+  width: min(310px, calc(100vw - 24px));
+  pointer-events: none;
+  background: rgba(16, 13, 11, 0.97);
+  border: 1px solid var(--line);
+  padding: 0.85rem 0.95rem;
+  color: var(--text);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+}
+.inspector-card.is-hidden {
+  visibility: hidden;
+}
+.inspector-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: baseline;
+}
+.inspector-card__title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.08;
+}
+.inspector-card__lens,
+.inspector-card__taxonomy,
+.status-badge {
+  font-family: var(--sans);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.inspector-card__taxonomy {
+  margin: 0.45rem 0 0;
+  color: var(--faint);
+}
+.inspector-card__abstract {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.status-badge {
+  display: inline-block;
+  margin-top: 0.7rem;
+  border: 1px solid var(--line);
+  padding: 0.2rem 0.45rem;
 }
 .constellation-svg {
   display: block;
@@ -4608,9 +4460,7 @@ h1 .proof-origin::after {
   /* Chrome, nav, and anything that is not the document itself. */
   .topbar,
   .cv-actions,
-  .cv-foot,
-  .grain,
-  .ambient {
+  .cv-foot {
     display: none !important;
   }
   .cv {

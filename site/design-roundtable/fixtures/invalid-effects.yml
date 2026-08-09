@@ -1,0 +1,8 @@
+schema: grahama.effects.v1
+policy:
+  ambient_loops_allowed_on_homepage: true
+  decorative_fixed_layers_allowed_on_homepage: true
+  simulated_material_allowed: true
+  captured_values_may_animate: true
+registered_effects: []
+removed_homepage_effects: []

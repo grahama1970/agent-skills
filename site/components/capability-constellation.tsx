@@ -24,6 +24,7 @@ interface GNode {
   href?: string | null;
   question?: string;
   visibility?: string;
+  evidenceAccess?: string;
   skillCount?: number;
   img?: string;
 }
@@ -42,6 +43,18 @@ type SimNode = GNode & {
   fy?: number | null;
 };
 type SimEdge = { source: SimNode; target: SimNode; rel: string };
+type InspectorData = {
+  title: string;
+  lens: string;
+  taxonomy: string;
+  abstract: string;
+  status?: string;
+};
+type InspectorState = {
+  data: InspectorData;
+  left: number;
+  top: number;
+};
 
 const NODES = graph.nodes as GNode[];
 const EDGES = graph.edges as GEdge[];
@@ -57,6 +70,39 @@ const GLOW: Record<string, string> = {
   creative: '#d1703c',
   hybrid: '#93a289',
 };
+const LENS_LABEL: Record<string, string> = {
+  technical: '▲ technical',
+  creative: '● creative',
+  hybrid: '◆ hybrid',
+};
+
+function getInspectorData(node: GNode): InspectorData {
+  if (node.type === 'practice') {
+    return {
+      title: node.label,
+      lens: LENS_LABEL[node.lens ?? 'hybrid'] ?? '◆ hybrid',
+      taxonomy: 'practice hub',
+      abstract: 'Central practice node connecting the research areas and public project routes.',
+      status: 'overview',
+    };
+  }
+  if (node.type === 'area') {
+    return {
+      title: node.title || node.label,
+      lens: LENS_LABEL[node.lens ?? 'technical'] ?? '▲ technical',
+      taxonomy: 'research area',
+      abstract: `Category group containing ${node.skillCount ?? 0} active skill contracts.`,
+      status: node.skillCount ? `${node.skillCount} skills` : 'category',
+    };
+  }
+  return {
+    title: node.label,
+    lens: LENS_LABEL[node.lens ?? 'technical'] ?? '▲ technical',
+    taxonomy: node.evidenceAccess === 'abstract' ? 'public overview' : 'skill contract',
+    abstract: node.question || 'Executable skill contract registered in the public inventory.',
+    status: node.visibility && node.visibility !== 'public' ? 'public overview only' : 'source linked',
+  };
+}
 
 // Redundant, colourblind-safe cue for lens: technical=triangle, creative=circle,
 // hybrid=diamond — so the technical/creative distinction never rests on the two
@@ -100,6 +146,7 @@ function footprintOf(n: { type: string; label: string; skillCount?: number }): n
 export function CapabilityConstellation() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const [inspector, setInspector] = useState<InspectorState | null>(null);
   const [, force] = useState(0); // bump to re-render from mutated sim positions
   const drag = useRef<{ id: string } | null>(null);
   const moved = useRef(false); // distinguishes a drag from a click on project nodes
@@ -223,6 +270,46 @@ export function CapabilityConstellation() {
         (e.source === hover && e.target === id) || (e.target === hover && e.source === id),
     );
 
+  const positionInspector = (clientX: number, clientY: number, data: InspectorData) => {
+    const width = 310;
+    const height = 168;
+    let left = clientX + 16;
+    let top = clientY + 16;
+    if (typeof window !== 'undefined') {
+      if (left + width > window.innerWidth) left = clientX - width - 16;
+      if (top + height > window.innerHeight) top = clientY - height - 16;
+    }
+    setInspector({ data, left: Math.max(12, left), top: Math.max(12, top) });
+  };
+
+  const inspectAtPointer = (n: SimNode) => (ev: React.MouseEvent | React.FocusEvent) => {
+    setHover(n.id);
+    const data = getInspectorData(n);
+    if ('clientX' in ev && ev.clientX && ev.clientY) {
+      positionInspector(ev.clientX, ev.clientY, data);
+      return;
+    }
+    const svg = svgRef.current;
+    const rect = svg?.getBoundingClientRect();
+    if (!rect) {
+      setInspector({ data, left: 16, top: 16 });
+      return;
+    }
+    const left = rect.left + (n.x / W) * rect.width + 16;
+    const top = rect.top + (n.y / H) * rect.height + 16;
+    positionInspector(left, top, data);
+  };
+
+  const moveInspector = (n: SimNode) => (ev: React.MouseEvent) => {
+    if (!inspector) return;
+    positionInspector(ev.clientX, ev.clientY, getInspectorData(n));
+  };
+
+  const hideInspector = () => {
+    setHover(null);
+    setInspector(null);
+  };
+
   return (
     <figure className="constellation" aria-label="How the practice connects">
       <figcaption className="constellation-cap">
@@ -293,14 +380,15 @@ export function CapabilityConstellation() {
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
                 data-qid={`constellation:node:${n.id}`}
                 data-qs-action="CONSTELLATION_NODE"
-                onMouseEnter={() => setHover(n.id)}
-                onMouseLeave={() => setHover(null)}
+                tabIndex={0}
+                onMouseEnter={inspectAtPointer(n)}
+                onMouseMove={moveInspector(n)}
+                onMouseLeave={hideInspector}
+                onFocus={inspectAtPointer(n)}
+                onBlur={hideInspector}
                 onPointerDown={startDrag(n)}
                 style={{ cursor: 'grab' }}
               >
-                {/* SVG tooltip + accessible name (SVG uses a <title> child, not
-                    a title attribute) — for every node, not just areas. */}
-                <title>{n.title || n.label}</title>
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image
@@ -359,29 +447,24 @@ export function CapabilityConstellation() {
             );
           })}
         </svg>
-        {(() => {
-          const hn = hover ? byId.get(hover) : null;
-          const detail =
-            hn && hn.type === 'area'
-              ? `${hn.title || hn.label}${hn.skillCount ? ` · ${hn.skillCount} skills` : ''}`
-              : hn?.question || '';
-          return (
-            <div className="constellation-hud" aria-hidden="true">
-              {hn ? (
-                <>
-                  <span className="ch-key">{hn.type}</span>
-                  <span className="ch-name">{hn.label}</span>
-                  {detail && <span className="ch-detail">{detail}</span>}
-                  {hn.visibility && hn.visibility !== 'public' && (
-                    <span className="ch-priv">public overview only</span>
-                  )}
-                </>
-              ) : (
-                <span className="ch-idle">hover a node to inspect · drag to explore</span>
-              )}
-            </div>
-          );
-        })()}
+        <div
+          id="graph-inspector-card"
+          className={`inspector-card${inspector ? '' : ' is-hidden'}`}
+          aria-live="polite"
+          style={inspector ? { left: inspector.left, top: inspector.top } : undefined}
+        >
+          {inspector ? (
+            <>
+              <div className="inspector-card__head">
+                <span className="inspector-card__title">{inspector.data.title}</span>
+                <span className="inspector-card__lens">{inspector.data.lens}</span>
+              </div>
+              <p className="inspector-card__taxonomy">{inspector.data.taxonomy}</p>
+              <p className="inspector-card__abstract">{inspector.data.abstract}</p>
+              {inspector.data.status && <span className="status-badge">{inspector.data.status}</span>}
+            </>
+          ) : null}
+        </div>
       </div>
       <p className="constellation-legend">
         <span className="cl cl--technical">▲ technical</span>

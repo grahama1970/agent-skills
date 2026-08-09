@@ -42,4 +42,12 @@ if [[ "${1:-}" == "case-composition-check" ]]; then
   exec python3 scripts/case_composition_check.py "$@"
 fi
 
+# `effects-check` validates the semantic effects registry and rejects public
+# homepage ambient layers, load choreography, decorative path drawing, and
+# animation of captured evidence values.
+if [[ "${1:-}" == "effects-check" ]]; then
+  shift
+  exec python3 scripts/effects_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

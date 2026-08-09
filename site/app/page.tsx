@@ -5,7 +5,6 @@ import { SpartaCase } from '@/components/cases/sparta-case';
 import { TauCase } from '@/components/cases/tau-case';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
-import { UnusualPath } from '@/components/unusual-path';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -36,20 +35,18 @@ export default function Home() {
   return (
     <>
       <HomeJsonLd />
-      <div className="glow" aria-hidden="true" />
-      <div className="grain" aria-hidden="true" />
       <div className="page">
         <SiteNav />
         <KeyboardNav />
 
-        <section className="hero ruledbg" id="top" data-home-beat="proposition">
+        <section className="hero" id="top" data-home-beat="proposition">
           <div className="wrap">
             <div className="hero-grid">
               <div className="hero-main">
-                <h1 className="rise" style={{ ['--d' as string]: '.12s' }}>
+                <h1>
                   I build agent systems that can <span className="it">prove</span> what they did.
                 </h1>
-                <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
+                <div className="hero-actions">
                   <a
                     className="btn"
                     href={heroContradiction.primary_action.href}
@@ -173,7 +170,6 @@ export default function Home() {
               </p>
               <h2 className="h2">
                 An unusual path, on purpose.
-                <UnusualPath />
               </h2>
               <div className="thesis">
                 <p>An unconventional path is an advantage on problems with no playbook.</p>
