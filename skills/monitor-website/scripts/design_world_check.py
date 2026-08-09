@@ -35,6 +35,8 @@ def validate_contract(c: dict) -> list[str]:
         errs.append("contract: schema must be grahama.design_world.v1")
     if not str(c.get("premise", "")).strip():
         errs.append("contract: premise missing")
+    if not str(c.get("responsive_geometry_receipt", "")).strip():
+        errs.append("contract: responsive_geometry_receipt missing")
     inv = c.get("invariants") or []
     if len(inv) < 3:
         errs.append("contract: at least 3 non-color invariants required")
@@ -95,6 +97,97 @@ def validate_font_receipt(receipt_path: Path) -> dict:
         "status": "FAIL",
         "receipt": str(receipt_path),
         "validator_output": proc.stdout.strip(),
+    }
+
+
+def validate_responsive_geometry(receipt_path: Path) -> dict:
+    required_routes = {
+        "/",
+        "/explore.html",
+        "/how-proof-works.html",
+        "/ledger.html",
+        "/capabilities.html",
+        "/resume.html",
+    }
+    required_viewports = {
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440",
+    }
+    if not receipt_path.is_file():
+        return {
+            "status": "NOT_TESTED",
+            "needs": f"responsive geometry receipt missing: {receipt_path}",
+        }
+    try:
+        receipt = json.loads(receipt_path.read_text())
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": [f"responsive geometry receipt is not JSON: {exc}"],
+        }
+
+    errors: list[str] = []
+    if receipt.get("schema") != "monitor_website.responsive_geometry_check.v1":
+        errors.append("schema must be monitor_website.responsive_geometry_check.v1")
+    if receipt.get("status") != "PASS":
+        errors.append("receipt status must be PASS")
+    counts = receipt.get("counts") or {}
+    expected_counts = {"routes": 6, "viewports": 5, "checks": 30, "failures": 0}
+    for key, expected in expected_counts.items():
+        if counts.get(key) != expected:
+            errors.append(f"counts.{key} must be {expected}")
+    failures = receipt.get("failures") or []
+    if failures:
+        errors.append("failures must be empty")
+    results = receipt.get("results") or []
+    if len(results) != 30:
+        errors.append("results must contain 30 route/viewport records")
+
+    seen_routes = {r.get("route") for r in results}
+    seen_viewports = {r.get("viewport") for r in results}
+    if seen_routes != required_routes:
+        errors.append(f"routes must match required set: {sorted(required_routes)}")
+    if seen_viewports != required_viewports:
+        errors.append(f"viewports must match required set: {sorted(required_viewports)}")
+
+    for i, record in enumerate(results):
+        label = f"result[{i}] {record.get('route')} {record.get('viewport')}"
+        width = record.get("width")
+        status = record.get("status")
+        if record.get("ok") is not True:
+            errors.append(f"{label}: ok must be true")
+        if not isinstance(status, int) or not (200 <= status < 400):
+            errors.append(f"{label}: status must be 2xx/3xx")
+        for key in ("scrollWidth", "bodyScrollWidth"):
+            value = record.get(key)
+            if not isinstance(width, int) or not isinstance(value, int) or value > width:
+                errors.append(f"{label}: {key} must be <= width")
+        if record.get("overflowPx") != 0 or record.get("bodyOverflowPx") != 0:
+            errors.append(f"{label}: document overflow must be zero")
+        if record.get("offscreenActions"):
+            errors.append(f"{label}: offscreenActions must be empty")
+
+    if errors:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": errors,
+        }
+    return {
+        "status": "PASS",
+        "receipt": str(receipt_path),
+        "counts": counts,
+        "does_not_prove": [
+            "200% text zoom reading order",
+            "WCAG contrast or keyboard completion",
+            "performance budgets",
+            "blind distinctiveness",
+            "craft/material fidelity",
+        ],
     }
 
 
@@ -220,12 +313,13 @@ def main(argv=None) -> int:
     ap.add_argument("--contract", default=str(SITE / "design-world.yml"))
     ap.add_argument("--css-dir", default=str(SITE / "app"))
     ap.add_argument("--font-receipt", default=str(SITE / "design-roundtable" / "font-receipt.r1.json"))
+    ap.add_argument("--responsive-geometry", default=None)
     ap.add_argument("--visual-world-brief", default=str(SITE / "design-roundtable" / "visual-world-brief.r1.yaml"))
     ap.add_argument("--territory-selection", default=str(SITE / "design-roundtable" / "territory-selection.r1.json"))
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
 
-    contract_path = Path(a.contract)
+    contract_path = _repo_path(a.contract)
     result = {"schema": "monitor_website.design_world_check.v1",
               "contract": str(contract_path), "gates": {}}
     if not contract_path.is_file():
@@ -236,18 +330,24 @@ def main(argv=None) -> int:
     c = _load_yaml(contract_path)
     cerrs = validate_contract(c)
     result["gates"]["contract"] = {"status": "PASS" if not cerrs else "FAIL", "errors": cerrs}
-    result["gates"].update(validate_pr1_source_lock(c, Path(a.visual_world_brief), Path(a.territory_selection)))
+    result["gates"].update(validate_pr1_source_lock(c, _repo_path(a.visual_world_brief), _repo_path(a.territory_selection)))
 
-    css_files = sorted(Path(a.css_dir).glob("*.css"))
+    css_files = sorted(_repo_path(a.css_dir).glob("*.css"))
     viol = scan_mono_on_human_labels(css_files, c.get("machine_output_selectors", []))
     result["gates"]["no_mono_on_human_labels"] = {
         "status": "PASS" if not viol else "FAIL",
         "violations": viol,
         "css_files_scanned": [f.name for f in css_files],
     }
-    result["gates"]["font_receipt"] = validate_font_receipt(Path(a.font_receipt))
+    result["gates"]["font_receipt"] = validate_font_receipt(_repo_path(a.font_receipt))
+    responsive_geometry = (
+        a.responsive_geometry
+        or c.get("responsive_geometry_receipt")
+        or str(SITE / "design-roundtable" / "responsive-geometry.r1.json")
+    )
+    result["gates"]["responsive_choreography"] = validate_responsive_geometry(_repo_path(responsive_geometry))
     # Gates that require evidence this command cannot supply.
-    for g in ("responsive_choreography", "distinctiveness_blind", "craft_integrity_render"):
+    for g in ("distinctiveness_blind", "craft_integrity_render"):
         result["gates"][g] = {"status": "NOT_TESTED",
                               "needs": "rendered screenshot corpus / blind-rater outputs (#1343)"}
 

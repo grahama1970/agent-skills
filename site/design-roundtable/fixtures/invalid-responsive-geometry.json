@@ -1,0 +1,19 @@
+{
+  "schema": "monitor_website.responsive_geometry_check.v1",
+  "baseUrl": "http://127.0.0.1:43220",
+  "status": "FAIL",
+  "counts": {
+    "routes": 6,
+    "viewports": 5,
+    "checks": 30,
+    "failures": 1
+  },
+  "failures": [
+    {
+      "route": "/ledger.html",
+      "viewport": "tablet-768",
+      "overflowPx": 75
+    }
+  ],
+  "results": []
+}

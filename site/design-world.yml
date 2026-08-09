@@ -8,6 +8,7 @@ approved_by: operator
 source_bundle_sha256: fdc5c6cd4e7250c3af7ed210289143af7e52eb1b83bb267bd06a2d432239fadf
 visual_world_brief: site/design-roundtable/visual-world-brief.r1.yaml
 territory_selection: site/design-roundtable/territory-selection.r1.json
+responsive_geometry_receipt: site/design-roundtable/responsive-geometry.r1.json
 selected_territory:
   id: T1
   name: Proof Workshop
