@@ -77,9 +77,15 @@ def check_live() -> dict:
 
 
 def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[str]:
-    """DRIFT:0 must mean ALL public generated surfaces share one source commit —
-    not just README==content.json (webgpt review, Criterion 2). Checks every
-    generated surface's stamped commit against HEAD and inventory==README counts."""
+    """DRIFT:0 must mean public generated surfaces share one source stamp —
+    not just README==content.json (webgpt review, Criterion 2).
+
+    A committed generated file cannot contain the hash of the commit that
+    contains it, because changing the generated file changes that commit hash.
+    CI deploys still regenerate these surfaces at checkout HEAD; repository
+    audit enforces the attainable invariant that all generated surfaces came
+    from one source stamp and that content-sensitive digests still match.
+    """
     import subprocess
     ignore_surfaces = ignore_surfaces or set()
     site_dir = CONTENT.parent
@@ -99,6 +105,7 @@ def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[st
         "competence.json": "commit",
     }
     out = []
+    stamped_by_surface = {}
     for fname, key in surfaces.items():
         if fname in ignore_surfaces:
             continue
@@ -107,8 +114,16 @@ def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[st
             out.append(f"surface missing: {fname}")
             continue
         stamped = json.loads(p.read_text()).get(key)
-        if stamped != head:
-            out.append(f"{fname} stamped {stamped}, HEAD is {head} (stale — refresh)")
+        if not stamped:
+            out.append(f"{fname} missing source stamp key {key}")
+            continue
+        stamped_by_surface[fname] = stamped
+    stamps = set(stamped_by_surface.values())
+    if len(stamps) > 1:
+        out.append(
+            "generated surfaces do not share one source stamp: "
+            + ", ".join(f"{fname}={stamp}" for fname, stamp in sorted(stamped_by_surface.items()))
+        )
     # A commit stamp alone cannot catch RESUME.md being edited and committed in
     # the same commit that regenerated nothing; compare the recorded digest too.
     resume_surface = site_dir / "resume.json"

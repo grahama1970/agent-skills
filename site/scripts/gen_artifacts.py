@@ -135,7 +135,7 @@ def live_audit_receipt() -> dict:
         "digest": f"sha256:{hashlib.sha256(audit.stdout.encode()).hexdigest()}",
         "judgment": f"LOCAL DRIFT: {len(d['drift'])} · PUBLIC ENDPOINTS: {live_ok}/{len(live)}",
         "proves": (
-            "The checkout's generated surfaces agreed with their source files, "
+            "The checkout's generated surfaces shared one source stamp, "
             "excluding artifacts.json while it was being regenerated, and the "
             "named public endpoints returned expected markers at capture time."
         ),

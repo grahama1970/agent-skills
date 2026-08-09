@@ -1,5 +1,5 @@
 {
-  "commit": "a0d5b0be0",
+  "commit": "0d84c1434",
   "as_of": "2026-08-08",
   "artifacts": [
     {
@@ -21,7 +21,7 @@
       "source": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
       "digest": "sha256:6f1dac9826d78a6286262b40ccee25fe582f5756880c8d51b0b5b66b2e23b979",
       "judgment": "LOCAL DRIFT: 0 \u00b7 PUBLIC ENDPOINTS: 5/5",
-      "proves": "The checkout's generated surfaces agreed with their source files, excluding artifacts.json while it was being regenerated, and the named public endpoints returned expected markers at capture time.",
+      "proves": "The checkout's generated surfaces shared one source stamp, excluding artifacts.json while it was being regenerated, and the named public endpoints returned expected markers at capture time.",
       "does_not_prove": "That the deployed HTML was built from this exact commit, or that every interaction works.",
       "caption": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
       "body": "{\n  \"ok\": true,\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
@@ -31,12 +31,12 @@
       "title": "inventory provenance \u2014 where the numbers come from",
       "capture_status": "captured",
       "source": "site/inventory.json",
-      "digest": "sha256:7689f1e87035af36a1caab33a35fdcbec4c4d3e1b2c1b32d6d9fc5cdc21d7922",
-      "judgment": "BUILD: a0d5b0be0",
+      "digest": "sha256:45a3eb22fd005aa6d75a6e1a30ec8f73dfd6e2266c0e76f4e88924ee610db0ee",
+      "judgment": "BUILD: 0d84c1434",
       "proves": "The numbers above came from checked source state, not marketing copy.",
       "does_not_prove": "That every skill is complete, useful, or production-ready.",
-      "caption": "site/inventory.json \u00b7 sha256 7689f1e87035af36\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"a0d5b0be0\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 344,\n    \"sanity\": 290,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 45a3eb22fd005aa6\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"0d84c1434\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 344,\n    \"sanity\": 290,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }
