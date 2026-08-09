@@ -73,7 +73,7 @@ Previously recorded deterministic checks in this worktree:
 
 ### Ask Browser Attachment Evidence Is Not Reliable Enough
 
-Do not launch another broad `/ask` browser roundtable until the attachment path and provider metadata issue is handled.
+Do not launch another broad `/ask` browser roundtable until the attachment path and provider metadata issue is handled. As of 2026-08-09T17:05Z, this has repeated across WebGemini and WebClaude attachment lanes.
 
 Observed attempts:
 
@@ -90,6 +90,14 @@ Observed attempts:
   - requested attachment path was absolute and locally readable
   - raw response contains a sentinel and a plausible rater answer, but Ask rejected it because attachment metadata was unavailable: `attachment.attached: false`
   - treat the R4 response as advisory only; do not count it toward the five-rater threshold
+- R5 WebClaude single-lane image-attachment run:
+  - run directory: `/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/grahama-distinctiveness-blind-r5-webclaude`
+  - node receipt: `status: NEEDS_ATTENTION`
+  - Tau verdict: `BROWSER_CLEAN_OUTPUT_CONTAMINATED`
+  - concrete Surf failure: `uploaded attachment 'distinctiveness-blind-contact-sheet.jpg' did not appear in Claude page text`
+  - recovery attempted the packet `next_command` once and failed with the same attachment-preview signature
+  - raw response was the Claude new-chat page text, not a rater answer; `raw_contains_sentinel: false`, `clean_chars: 0`
+  - treat the R5 response as unusable; do not count it toward the five-rater threshold
 
 ### Clipboard / Manual Bundle
 
@@ -111,8 +119,8 @@ Bundle contents:
 ## 5. Next Steps
 
 1. Stop broad browser-agent churn. Do not open more blank/unsubmitted browser windows.
-2. Use the zip bundle for a human or manually controlled model review, or repair Ask/Surf attachment metadata first.
-3. If using `/ask` again, run one lane only, with a single uploadable bundle and no local paths in the model-facing prompt. Inspect `node-receipt.json` before launching another lane.
+2. Use the zip bundle for a human or manually controlled model review, or repair Ask/Surf attachment transport first.
+3. If using `/ask` again, first prove the chosen provider can attach the contact-sheet image with a tiny focused attachment smoke, then run one rater lane only. Inspect `node-receipt.json` before launching another lane.
 4. To satisfy G11, collect at least five usable fresh-context rater outputs and create a validation receipt that `design-world-check` can consume.
 5. Only after G11 has real receipts should `design-world-check` be changed from `NOT_TESTED` to `PASS` for distinctiveness.
 6. After G11, run the final command set from the WebGPT eight-PR plan, including accessibility, performance, build, and receipt validation.
