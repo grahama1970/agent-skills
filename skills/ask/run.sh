@@ -53,6 +53,7 @@ Commands:
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
   team-plan <request> Plan a role-based multi-agent team and preview/run its Tau DAG
+  herdr <verb>      Talk to another agent's Herdr session by name (list|who|send)
   tau-dag <request> Compile a human request into a strict Tau DAG
   compete <request> Compile isolated competitors into a Tau compete DAG
   browser-availability Probe provider tabs for visible rate/capacity blockers
@@ -277,6 +278,10 @@ EOF
 }
 
 case "${1:-help}" in
+    herdr)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.herdr_cli "$@"
+        ;;
     learn)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.learn "$@"

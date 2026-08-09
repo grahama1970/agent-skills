@@ -109,6 +109,53 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+## Talk To Another Agent's Session (Herdr)
+
+Agents working in different Herdr sessions reach each other by name. Three
+verbs, no ids to look up first:
+
+```bash
+cd skills/ask
+./run.sh herdr list                 # every session you can talk to
+./run.sh herdr who memory           # what does this name resolve to?
+./run.sh herdr send memory "Please fix graph-memory-operator#105"
+```
+
+`NAME` is whatever you already know — a project directory (`memory`), a GitHub
+repo (`graph-memory-operator`), or an exact pane id (`w11:p13`). The first two
+disagree on this machine: `~/workspace/experiments/memory` *is*
+`grahama1970/graph-memory-operator`. Both spellings resolve to the same panes,
+so you never have to remember which name a project answers to.
+
+**Ambiguity is refused, never guessed.** Names are not unique — `memory`
+currently matches 5 live panes and `agent-skills` 44. `send` stops and prints
+the candidates plus a ready-to-paste command:
+
+```
+'memory' matches 5 live panes:
+  w11:p13 [codex/idle]    /home/graham/workspace/experiments/memory
+  w7E:pK  [claude/idle]   /home/graham/workspace/experiments/memory
+  w88:p1  [opencode/idle] /home/graham/workspace/experiments/memory
+Pick one by pane id:
+  ./run.sh herdr send w11:p13 "<message>"
+```
+
+Exit codes let a caller branch without parsing prose: `0` delivered, `2`
+ambiguous (interview the human with `--json` candidates), `1` nothing
+addressable matched.
+
+Two panes are never chosen for you:
+
+- **Dead panes.** No agent attached, or Herdr reports `blocked`/`unknown` —
+  that is monitor-herdr's rule, reused here, and it means a human or a wedged
+  agent owns the pane.
+- **Busy panes.** An agent mid-task is excluded so a message cannot interrupt
+  running work by accident. Pass `--busy` when interrupting is the intent.
+
+Delivery goes through `herdr pane run`, the same transport `$monitor-herdr`
+uses. A success receipt proves the prompt was *submitted*, not that the other
+agent understood or acted on it — treat it as delivery proof only.
+
 ## Project-Agent Quickstart
 
 Start here when the user asks for a single model call, roundtable, competition,
