@@ -1,0 +1,16 @@
+schema: grahama.visual_assets.v1
+assets:
+  - id: invalid-generated-evidence
+    path: site/public/projects/tau.webp
+    kind: image
+    source: "synthetic project image fixture"
+    creation_method: synthetic_illustration
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+    project_ids: [tau]
+    public_approval: false
+    role: evidence
+    caption: "Invalid fixture."
+    alt_text: "Invalid generated evidence fixture."
+    crop: none
+    does_not_establish: "Anything."
+    simulated_craft: true

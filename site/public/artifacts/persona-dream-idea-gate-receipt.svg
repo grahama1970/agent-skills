@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">persona-dream idea gate receipt excerpt</title>
+  <desc id="desc">Source-rendered excerpt from the persona-dream phase 1 anti-hallucination gate showing PASS_RECORDED_IDEA_ONLY and boundaries for what the receipt does not prove.</desc>
+  <rect width="1200" height="760" fill="#120d10"/>
+  <g fill="none" stroke="#55383d" stroke-width="1">
+    <rect x="54" y="54" width="1092" height="652"/>
+    <path d="M54 132h1092M54 596h1092M326 132v464M822 132v464"/>
+  </g>
+  <text x="84" y="98" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" letter-spacing="2">PIPELINE RECEIPT</text>
+  <text x="84" y="168" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">skills/persona-dream/experiments/20260612-horus-embry-storyboard-first/artifacts/phase_01_idea_anti_hallucination_gate.json</text>
+  <text x="84" y="230" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">phase</text>
+  <text x="362" y="230" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">Phase 1: Idea</text>
+  <text x="84" y="285" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">verdict</text>
+  <text x="362" y="285" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25">PASS_RECORDED_IDEA_ONLY</text>
+  <text x="84" y="350" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">proves</text>
+  <text x="362" y="350" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">seed idea exists as a recorded pipeline input; input contract exists</text>
+  <text x="84" y="430" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">does_not_prove</text>
+  <text x="362" y="430" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">persona memories, emotional beats, story completeness, generated panels</text>
+  <text x="84" y="636" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">generated dream imagery remains product output, not technical evidence</text>
+</svg>

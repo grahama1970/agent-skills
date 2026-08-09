@@ -674,12 +674,15 @@ h1 .it::after {
   color: var(--text);
   text-decoration: none;
   border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(12, 9, 8, 0.08), rgba(12, 9, 8, 0.76)),
-    var(--img),
-    #17100f;
-  background-size: cover;
-  background-position: center;
+  background: #100d0b;
+  overflow: hidden;
+}
+.flagship-artifact img {
+  width: 100%;
+  height: auto;
+  margin: calc(clamp(1rem, 2.2vw, 1.6rem) * -1) calc(clamp(1rem, 2.2vw, 1.6rem) * -1) 0;
+  max-width: calc(100% + (clamp(1rem, 2.2vw, 1.6rem) * 2));
+  border-bottom: 1px solid var(--line);
 }
 .flagship-artifact span {
   font-family: var(--sans);

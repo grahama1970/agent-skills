@@ -105,8 +105,11 @@ export default function Home() {
               data-qid={`flagship:artifact:${flagship.slug}`}
               data-qs-action="FLAGSHIP_OPEN_ARTIFACT"
               title={`Open ${flagship.name} artifact source`}
-              style={{ ['--img' as string]: `url('/projects/${flagship.slug}.webp')` }}
             >
+              <img
+                src="/artifacts/tau-sanity-receipt.svg"
+                alt="Tau sanity receipt excerpt showing exit code 0, 45 passed, and explicit proof boundaries."
+              />
               <span>{flagship.name}</span>
               <b>{flagship.blurb}</b>
             </a>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Tau sanity receipt excerpt</title>
+  <desc id="desc">Source-rendered excerpt from skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json showing targeted Tau checks, exit code 0, 45 passed, and explicit proof boundaries.</desc>
+  <rect width="1200" height="760" fill="#100d0b"/>
+  <g fill="none" stroke="#4f3b2d" stroke-width="1">
+    <rect x="54" y="54" width="1092" height="652"/>
+    <path d="M54 132h1092M54 594h1092M280 132v462M760 132v462"/>
+  </g>
+  <text x="84" y="98" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" letter-spacing="2">SOURCE RECEIPT</text>
+  <text x="84" y="168" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json</text>
+  <text x="84" y="220" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">checked_at</text>
+  <text x="320" y="220" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">2026-07-05T12:00:33Z</text>
+  <text x="84" y="270" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">command</text>
+  <text x="320" y="270" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">uv run pytest -q tests/test_subagent_receipt.py ...</text>
+  <text x="84" y="320" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">exit_code</text>
+  <text x="320" y="320" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="30">0</text>
+  <text x="84" y="378" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">stdout</text>
+  <text x="320" y="378" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">45 passed in 0.85s</text>
+  <text x="84" y="450" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">proves</text>
+  <text x="320" y="450" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">targeted Tau receipt, harness, TUI adapter, proof manifest checks</text>
+  <text x="84" y="510" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">does_not_prove</text>
+  <text x="320" y="510" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">fresh browser chat UI, live provider semantics, production SPARTA Chat readiness</text>
+  <text x="84" y="636" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">mocked=mixed  live=mixed  schema=agent_skills.tau.sanity_receipt.v1</text>
+</svg>

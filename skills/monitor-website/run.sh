@@ -26,4 +26,12 @@ if [[ "${1:-}" == "copy-audit" ]]; then
   exec python3 ../../site/scripts/copy_audit.py "$@"
 fi
 
+# `visual-assets-check` validates site/visual-assets.yml against public image
+# files and rejects generated media used as evidence, missing provenance,
+# digest drift, private assets, and simulated craft.
+if [[ "${1:-}" == "visual-assets-check" ]]; then
+  shift
+  exec python3 scripts/visual_assets_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">SPARTA countermeasure mapper source excerpt</title>
+  <desc id="desc">Source-rendered excerpt from skills/ingest-website/run/sparta/sparta.aerospace.org_countermeasures_mapper.md showing extracted SPARTA relationship content and its boundary.</desc>
+  <rect width="1200" height="760" fill="#0e1112"/>
+  <g fill="none" stroke="#46565a" stroke-width="1">
+    <rect x="54" y="54" width="1092" height="652"/>
+    <path d="M54 132h1092M54 596h1092M355 132v464M820 132v464"/>
+  </g>
+  <text x="84" y="98" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" letter-spacing="2">PUBLIC SOURCE EXTRACTION</text>
+  <text x="84" y="168" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">skills/ingest-website/run/sparta/sparta.aerospace.org_countermeasures_mapper.md</text>
+  <text x="84" y="230" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">source_type</text>
+  <text x="392" y="230" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">html extraction from public SPARTA material</text>
+  <text x="84" y="285" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">relationship</text>
+  <text x="392" y="285" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">countermeasures -&gt; techniques/sub-techniques -&gt; coverage gaps</text>
+  <text x="84" y="340" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">observed state</text>
+  <text x="392" y="340" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">selected countermeasures report covered TTPs and gaps in exported workbook</text>
+  <text x="84" y="430" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">boundary</text>
+  <text x="392" y="430" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">source excerpt only; not a live Explorer UI state or full SPARTA corpus audit</text>
+  <text x="84" y="636" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">role=evidence relationship plate  method=source_rendered_from_public_artifact</text>
+</svg>

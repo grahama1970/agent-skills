@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Proof Workshop pilot receipt excerpt</title>
+  <desc id="desc">Source-rendered excerpt from site/design-roundtable/proof-workshop-pilot-receipt.r1.json showing PILOT_EVIDENCE_ONLY status and the mobile overflow boundary.</desc>
+  <rect width="1200" height="760" fill="#100d0b"/>
+  <g fill="none" stroke="#4f3b2d" stroke-width="1">
+    <rect x="54" y="54" width="1092" height="652"/>
+    <path d="M54 132h1092M54 596h1092M342 132v464M816 132v464"/>
+  </g>
+  <text x="84" y="98" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" letter-spacing="2">WORKING TRACE</text>
+  <text x="84" y="168" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">site/design-roundtable/proof-workshop-pilot-receipt.r1.json</text>
+  <text x="84" y="230" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">status</text>
+  <text x="376" y="230" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25">PILOT_EVIDENCE_ONLY</text>
+  <text x="84" y="300" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">mobile geometry</text>
+  <text x="376" y="300" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">document_overflow_ignoring_fixed_layers = 639</text>
+  <text x="84" y="370" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">rule</text>
+  <text x="376" y="370" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">pilot evidence cannot be promoted to whole-site compliance</text>
+  <text x="84" y="450" fill="#9f9082" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">does_not_prove</text>
+  <text x="376" y="450" fill="#ece2d3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">blind distinctiveness, accessibility, performance, G16/G17/G18 finish review</text>
+  <text x="84" y="636" fill="#e2ac62" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">role=working trace  approved_public_material=true</text>
+</svg>
