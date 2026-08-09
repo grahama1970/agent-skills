@@ -57,6 +57,7 @@ repository's converter or workflow to regenerate the PDF.
 ./run.sh validate /path/to/RESUME.md
 uv run --project . python scripts/competencies.py report
 uv run --project . python scripts/competencies.py match /path/to/posting.txt
+uv run --project . python scripts/competencies.py scan /path/to/posting.txt --resume RESUME.md
 ./run.sh tailor /path/to/RESUME.md /path/to/tailoring-request.json \
   --output-dir /path/to/resume-variant
 ./sanity.sh
@@ -79,6 +80,11 @@ by a countable set of named skills.
 - `report` ranks demonstrated competencies by skill count and cites examples.
 - `match POSTING` ranks them by term overlap with a real job posting and names
   which to lead with, weighted by how much evidence backs each one.
+- `scan POSTING --resume FILE --floor N` is the pre-send gate: it takes the
+  requirement terms from that client's posting, checks whether the resume
+  actually says them, and exits non-zero below the coverage floor. Missing terms
+  are split into ones the skills catalog can back — safe to add — and ones it
+  cannot, which must not be claimed. Run it before every send.
 
 `match` reports what a posting actually says. It models no employer's private
 ranking system, and it is deterministic term overlap, not semantic matching.

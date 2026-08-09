@@ -47,7 +47,12 @@ _STOP = frozenset(
     """the a an and or of for in to with on at by is are be as from that this we you your our
     will their its it they have has can may must should would could about across into over
     per via than then when what which who whom whose how why all any both each more most other
-    some such only own same so too very just also if but not no nor own s t don now""".split()
+    some such only own same so too very just also if but not no nor own s t don now
+    senior junior lead principal staff role roles job responsibilities requirements required
+    preferred plus experience experienced familiarity strong excellent proven track record
+    team teams work working build building need needs looking candidate candidates ability
+    years year using use used help support ensure own owning deliver delivering including
+    etc our us we\u2019ll youll well plus nice must-have good great solid deep hands-on""".split()
 )
 
 
@@ -86,7 +91,8 @@ class Registry:
 
 def terms(text: str) -> set[str]:
     """Lowercased word set with stop words and very short tokens removed."""
-    return {w for w in re.findall(r"[a-z0-9+#.-]{3,}", text.lower())} - _STOP
+    raw = (t.strip(".,;:()/") for t in re.findall(r"[a-z0-9+#.\-/]{3,}", text.lower()))
+    return {w for w in raw if len(w) >= 3} - _STOP
 
 
 def discipline_terms(reg: Registry, discipline: str) -> set[str]:
@@ -160,6 +166,77 @@ def report(registry: Path = typer.Option(REGISTRY, "--registry")) -> None:
         logger.error("competency report failed: {}", exc)
         raise typer.Exit(code=1) from exc
     typer.echo(json.dumps(payload, indent=2))
+
+
+def scan_resume(reg: Registry, resume_text: str, posting: str, floor: float) -> dict[str, Any]:
+    """Adversarial pre-send check: what does this posting ask for that the resume does not say?
+
+    Requirement terms are taken from the posting itself, not from a canned list,
+    so the check adapts to each client. A term counts as covered only if it
+    appears in the resume text; near-misses are not credited, because a screen
+    that greps for "observability" is not satisfied by "monitoring".
+    """
+    post_terms = terms(posting)
+    res_terms = terms(resume_text)
+    lower = resume_text.lower()
+
+    # Weight by how often the posting repeats a term: a requirement stated three
+    # times is what the client is actually buying.
+    freq = Counter(
+        w for w in (t.strip(".,;:()/") for t in re.findall(r"[a-z0-9+#.\-/]{3,}", posting.lower()))
+        if w and w in post_terms
+    )
+    known = {w for d in reg.vocabulary for w in discipline_terms(reg, d)}
+
+    covered, missing = [], []
+    for term, n in freq.most_common():
+        hit = term in res_terms or term in lower
+        row = {"term": term, "posting_mentions": n, "in_catalog": term in known}
+        (covered if hit else missing).append(row)
+
+    total = len(covered) + len(missing)
+    coverage = round(100 * len(covered) / total, 1) if total else 0.0
+    # Missing terms the catalog can back are the actionable ones: the evidence
+    # exists, the resume just does not say it.
+    fixable = [m for m in missing if m["in_catalog"]]
+    return {
+        "schema": "resume.pre_send_scan.v1",
+        "coverage_pct": coverage,
+        "floor_pct": floor,
+        "verdict": "PASS" if coverage >= floor else "FAIL",
+        "terms_required": total,
+        "terms_covered": len(covered),
+        "missing_backed_by_catalog": fixable[:25],
+        "missing_unbacked": [m for m in missing if not m["in_catalog"]][:25],
+        "lead_with": build_match(reg, posting)["lead_with"],
+    }
+
+
+@app.command()
+def scan(
+    posting: Path = typer.Argument(..., help="Job posting or client brief"),
+    resume: Path = typer.Option(Path("RESUME.md"), "--resume"),
+    floor: float = typer.Option(60.0, "--floor", help="Minimum coverage %% to PASS"),
+    registry: Path = typer.Option(REGISTRY, "--registry"),
+) -> None:
+    """Verify a resume covers what one client's posting asks for, before sending."""
+    try:
+        if not posting.is_file():
+            raise FileNotFoundError(f"posting file does not exist: {posting}")
+        if not resume.is_file():
+            raise FileNotFoundError(f"resume file does not exist: {resume}")
+        payload = scan_resume(
+            Registry.load(registry),
+            resume.read_text(encoding="utf-8"),
+            posting.read_text(encoding="utf-8"),
+            floor,
+        )
+    except (OSError, ValueError) as exc:
+        logger.error("pre-send scan failed: {}", exc)
+        raise typer.Exit(code=1) from exc
+    typer.echo(json.dumps(payload, indent=2))
+    if payload["verdict"] != "PASS":
+        raise typer.Exit(code=2)
 
 
 @app.command()

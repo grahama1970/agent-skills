@@ -79,6 +79,32 @@ if d["disciplines"][0]["match_count"] < 1:
     raise SystemExit("top-ranked discipline matched no posting terms")
 PYMATCH
 
+echo "[resume] pre-send scan reports coverage and never invents claimable gaps"
+printf 'Build multi-agent LLM pipelines: agent orchestration, tool calling, MCP, RAG,\nknowledge graph reasoning, observability, evals and guardrails. Python required.\nKubernetes and Terraform preferred.\n' > "$TEMP_DIR/client.txt"
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/competencies.py" scan \
+  "$TEMP_DIR/client.txt" --resume "$FIXTURE_DIR/canonical.md" --floor 0 > "$TEMP_DIR/scan.json"
+python3 - "$TEMP_DIR/scan.json" <<'PYSCAN'
+import json, pathlib, sys
+d = json.loads(pathlib.Path(sys.argv[1]).read_text())
+if d["schema"] != "resume.pre_send_scan.v1":
+    raise SystemExit("unexpected scan schema")
+if not 0 <= d["coverage_pct"] <= 100:
+    raise SystemExit(f"coverage out of range: {d['coverage_pct']}")
+terms = {m["term"] for m in d["missing_backed_by_catalog"]}
+# A term the catalog cannot back must never be offered as claimable.
+if terms & {"kubernetes", "terraform"}:
+    raise SystemExit("scan offered an unbacked term as claimable")
+if not all(m["in_catalog"] for m in d["missing_backed_by_catalog"]):
+    raise SystemExit("claimable gap list contains an unbacked term")
+PYSCAN
+
+echo "[resume] pre-send scan fails closed below the coverage floor"
+if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/competencies.py" scan \
+  "$TEMP_DIR/client.txt" --resume "$FIXTURE_DIR/canonical.md" --floor 99.9 >/dev/null 2>&1; then
+    echo "unexpected PASS above an unreachable floor" >&2
+    exit 1
+fi
+
 echo "[resume] negative control: match fails closed on a missing posting"
 if uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/competencies.py" match \
   "$TEMP_DIR/does-not-exist.txt" >/dev/null 2>&1; then
