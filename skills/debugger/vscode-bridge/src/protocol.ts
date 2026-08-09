@@ -7,12 +7,31 @@ export type BridgeBreakpoint = {
   line: number;
 };
 
+export type BridgeAction =
+  | 'start'
+  | 'restart'
+  | 'process'
+  | 'inspect'
+  | 'stepOver'
+  | 'stepIn'
+  | 'stepOut'
+  | 'continue'
+  | 'pause'
+  | 'runTo'
+  | 'addBreakpoints'
+  | 'removeBreakpoints'
+  | 'selectFrame'
+  | 'selectThread'
+  | 'terminate';
+
 export type BridgeRequest = {
   id?: string;
-  action?: 'start' | 'restart' | 'process' | 'continue' | 'addBreakpoints';
+  action?: BridgeAction;
   workspace?: string;
   launchConfigName?: string;
   breakpoints?: BridgeBreakpoint[];
+  removeBreakpoints?: BridgeBreakpoint[];
+  runTo?: BridgeBreakpoint;
   locals?: string[];
   watches?: string[];
   allowWatchEval?: boolean;
@@ -23,20 +42,84 @@ export type BridgeRequest = {
   createdAt?: string;
   requestHash?: string;
   maxRequestAgeMs?: number;
+  sessionId?: string;
+  expectedStopSequence?: number;
+  threadId?: number;
+  frameId?: number;
+  stackDepth?: number;
 };
 
 export type BridgeStoppedState = {
+  sessionId?: string;
+  stopSequence?: number;
   reason?: string;
+  threadId?: number;
   matchedBreakpoint?: boolean;
   error?: string;
+  frame?: unknown;
+  stackFrames?: unknown[];
+  scopes?: unknown[];
   locals?: Record<string, string>;
   watches?: Record<string, string>;
+};
+
+export type BridgeSessionStatus = 'starting' | 'running' | 'paused' | 'terminated' | 'failed';
+
+export type BridgeSessionState = {
+  schema: 'debugger.session.v1';
+  bridgeSessionId: string;
+  vscodeSessionId: string;
+  vscodeSessionType: string;
+  vscodeSessionName: string;
+  workspace: string;
+  runtime?: Record<string, unknown>;
+  status: BridgeSessionStatus;
+  stopSequence: number;
+  selectedThreadId?: number;
+  selectedFrameId?: number;
+  requestedBreakpoints: BridgeBreakpoint[];
+  verifiedBreakpoints: BridgeBreakpoint[];
+  lastCommandId?: string;
+  lastRequestHash?: string;
+  updatedAt: string;
+  eventLogRef?: string;
+};
+
+export type BridgeSessionEvent = {
+  schema: 'debugger.session_event.v1';
+  sequence: number;
+  sessionId: string;
+  status: BridgeSessionStatus;
+  action?: BridgeAction;
+  requestId?: string;
+  requestHash?: string;
+  threadId?: number;
+  frameId?: number;
+  reason?: string;
+  adapterEvent?: string;
+  adapterCommand?: string;
+  createdAt: string;
 };
 
 export type ProofAssessment = {
   stopProofValid: boolean;
   variableInspectionValid: boolean;
   proofValid: boolean;
+  missingLocals: string[];
+  missingWatches: string[];
+  watchErrors: Record<string, string>;
+  capturedLocals: string[];
+  capturedWatches: string[];
+  reason: string;
+};
+
+export type SessionControlAssessment = {
+  sessionProofValid: boolean;
+  variableInspectionValid: boolean;
+  proofValid: boolean;
+  sameSession: boolean;
+  stopSequenceCurrent: boolean;
+  stopSequenceAdvanced: boolean;
   missingLocals: string[];
   missingWatches: string[];
   watchErrors: Record<string, string>;
@@ -108,7 +191,24 @@ export function usesSharedRequestOwner(filePath: string) {
 }
 
 export function validateRequest(request: BridgeRequest) {
-  const actions = new Set(['start', 'restart', 'process', 'continue', 'addBreakpoints', undefined]);
+  const actions = new Set<BridgeAction | undefined>([
+    'start',
+    'restart',
+    'process',
+    'inspect',
+    'stepOver',
+    'stepIn',
+    'stepOut',
+    'continue',
+    'pause',
+    'runTo',
+    'addBreakpoints',
+    'removeBreakpoints',
+    'selectFrame',
+    'selectThread',
+    'terminate',
+    undefined,
+  ]);
   if (!actions.has(request.action)) {
     throw new Error(`Unsupported debugger bridge action: ${String(request.action)}`);
   }
@@ -135,6 +235,14 @@ export function validateRequest(request: BridgeRequest) {
       throw new Error(`Invalid debugger bridge breakpoint: ${JSON.stringify(breakpoint)}`);
     }
   }
+  for (const breakpoint of request.removeBreakpoints ?? []) {
+    if (!breakpoint.file || !Number.isInteger(breakpoint.line) || breakpoint.line < 1) {
+      throw new Error(`Invalid debugger bridge removeBreakpoints entry: ${JSON.stringify(breakpoint)}`);
+    }
+  }
+  if (request.runTo !== undefined && (!request.runTo.file || !Number.isInteger(request.runTo.line) || request.runTo.line < 1)) {
+    throw new Error(`Invalid debugger bridge runTo breakpoint: ${JSON.stringify(request.runTo)}`);
+  }
   if (request.locals !== undefined && !Array.isArray(request.locals)) {
     throw new Error('Debugger bridge locals must be an array.');
   }
@@ -143,6 +251,52 @@ export function validateRequest(request: BridgeRequest) {
   }
   if ((request.watches?.length ?? 0) > 0 && request.allowWatchEval !== true) {
     throw new Error('Debugger bridge watch evaluation requires allowWatchEval: true.');
+  }
+  validateSessionControlRequest(request);
+}
+
+export function requiresBoundSession(action: BridgeAction | undefined) {
+  return (
+    action === 'inspect' ||
+    action === 'stepOver' ||
+    action === 'stepIn' ||
+    action === 'stepOut' ||
+    action === 'continue' ||
+    action === 'pause' ||
+    action === 'runTo' ||
+    action === 'removeBreakpoints' ||
+    action === 'selectFrame' ||
+    action === 'selectThread' ||
+    action === 'terminate'
+  );
+}
+
+export function validateSessionControlRequest(request: BridgeRequest) {
+  if (!requiresBoundSession(request.action)) {
+    return;
+  }
+  if (typeof request.sessionId !== 'string' || request.sessionId.length === 0) {
+    throw new Error(`Debugger bridge ${request.action} requires sessionId.`);
+  }
+  if (!Number.isInteger(request.expectedStopSequence) || (request.expectedStopSequence as number) < 0) {
+    throw new Error(`Debugger bridge ${request.action} requires non-negative integer expectedStopSequence.`);
+  }
+  if (request.threadId !== undefined && (!Number.isInteger(request.threadId) || request.threadId < 0)) {
+    throw new Error('Debugger bridge threadId must be a non-negative integer.');
+  }
+  if (request.frameId !== undefined && (!Number.isInteger(request.frameId) || request.frameId < 0)) {
+    throw new Error('Debugger bridge frameId must be a non-negative integer.');
+  }
+  if (request.stackDepth !== undefined && (!Number.isInteger(request.stackDepth) || request.stackDepth < 1 || request.stackDepth > 50)) {
+    throw new Error('Debugger bridge stackDepth must be an integer between 1 and 50.');
+  }
+}
+
+export function assertExpectedStopSequence(state: BridgeSessionState, request: BridgeRequest) {
+  if (request.expectedStopSequence !== state.stopSequence) {
+    throw new Error(
+      `Debugger bridge stale ${request.action} rejected: expectedStopSequence ${request.expectedStopSequence} does not match current ${state.stopSequence}.`,
+    );
   }
 }
 
@@ -307,6 +461,74 @@ export function assessProofValidity(request: BridgeRequest, stoppedState: Bridge
     stopProofValid,
     variableInspectionValid,
     proofValid,
+    missingLocals,
+    missingWatches,
+    watchErrors,
+    capturedLocals,
+    capturedWatches,
+    reason,
+  };
+}
+
+export function assessSessionControlValidity(
+  request: BridgeRequest,
+  previousStopSequence: number,
+  stoppedState: BridgeStoppedState,
+): SessionControlAssessment {
+  const requestedLocals = request.locals ?? [];
+  const requestedWatches = request.watches ?? [];
+  const locals = stoppedState.locals ?? {};
+  const watches = stoppedState.watches ?? {};
+  const missingLocals = requestedLocals.filter((name) => locals[name] === undefined);
+  const missingWatches = requestedWatches.filter((expression) => watches[expression] === undefined);
+  const watchErrors = Object.fromEntries(
+    requestedWatches
+      .filter((expression) => typeof watches[expression] === 'string' && watches[expression].startsWith('<error:'))
+      .map((expression) => [expression, watches[expression]]),
+  );
+  const capturedLocals = requestedLocals.filter((name) => locals[name] !== undefined);
+  const capturedWatches = requestedWatches.filter(
+    (expression) => watches[expression] !== undefined && watchErrors[expression] === undefined,
+  );
+  const requestedInspectionCount = requestedLocals.length + requestedWatches.length;
+  const capturedInspectionCount = capturedLocals.length + capturedWatches.length;
+  const variableInspectionValid =
+    requestedInspectionCount === 0 ||
+    (
+      capturedInspectionCount > 0 &&
+      missingLocals.length === 0 &&
+      missingWatches.length === 0 &&
+      Object.keys(watchErrors).length === 0
+    );
+  const sameSession = request.sessionId === stoppedState.sessionId;
+  const stopSequenceCurrent = request.action === 'inspect' && stoppedState.stopSequence === previousStopSequence;
+  const stopSequenceAdvanced = request.action !== 'inspect' && (stoppedState.stopSequence ?? 0) > previousStopSequence;
+  const sessionProofValid =
+    sameSession &&
+    stoppedState.error === undefined &&
+    (stopSequenceCurrent || stopSequenceAdvanced);
+  const proofValid = sessionProofValid && variableInspectionValid;
+
+  let reason = 'same session control action produced the expected paused state';
+  if (!sameSession) {
+    reason = 'stopped state belongs to a different debug session';
+  } else if (stoppedState.error !== undefined) {
+    reason = stoppedState.error;
+  } else if (!stopSequenceCurrent && !stopSequenceAdvanced) {
+    reason = request.action === 'inspect'
+      ? 'inspect changed or lost the expected stop sequence'
+      : 'session control did not advance to a new stopped sequence';
+  } else if (!variableInspectionValid) {
+    reason = 'requested locals or watches were missing from captured runtime state';
+  }
+
+  return {
+    sessionProofValid,
+    variableInspectionValid,
+    proofValid,
+    sameSession,
+    stopSequenceCurrent,
+    stopSequenceAdvanced,
     missingLocals,
     missingWatches,
     watchErrors,

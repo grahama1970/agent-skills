@@ -5,8 +5,10 @@ import path from 'node:path';
 
 import {
   AsyncKeyedQueue,
+  assertExpectedStopSequence,
   assertWorkspacePath,
   assessProofValidity,
+  assessSessionControlValidity,
   canonicalRequestHash,
   claimRequestId,
   decideOwnedStatusWritePath,
@@ -54,6 +56,35 @@ try {
   enforceFreshRequest(request);
   assert.equal(request.requestHash, canonicalRequestHash(request));
   assert.equal(resolveWorkspacePath(workspace, '.vscode/debugger-bridge/status.json', 'output'), statusPath);
+  assertExpectedStopSequence({ stopSequence: 1 }, { action: 'inspect', expectedStopSequence: 1 });
+  throwsWith(
+    () => assertExpectedStopSequence({ stopSequence: 2 }, { action: 'inspect', expectedStopSequence: 1 }),
+    /stale inspect rejected/,
+  );
+  validateRequest({
+    ...request,
+    action: 'inspect',
+    sessionId: 'session-1',
+    expectedStopSequence: 1,
+    threadId: 7,
+    frameId: 42,
+    stackDepth: 3,
+  });
+  validateRequest({
+    ...request,
+    action: 'runTo',
+    sessionId: 'session-1',
+    expectedStopSequence: 1,
+    threadId: 7,
+    runTo: { file: 'src/app.ts', line: 13 },
+  });
+  validateRequest({
+    ...request,
+    action: 'removeBreakpoints',
+    sessionId: 'session-1',
+    expectedStopSequence: 1,
+    removeBreakpoints: [{ file: 'src/app.ts', line: 12 }],
+  });
 
   await writeFile(
     statusPath,
@@ -145,6 +176,33 @@ try {
   throwsWith(() => validateRequest({ ...request, requestHash: 'not-a-hash' }), /requestHash/);
   throwsWith(() => validateRequest({ ...request, maxRequestAgeMs: 999999 }), /maxRequestAgeMs/);
   throwsWith(() => validateRequest({ ...request, watches: ['value + 1'] }), /allowWatchEval/);
+  throwsWith(() => validateRequest({ ...request, action: 'inspect' }), /requires sessionId/);
+  throwsWith(
+    () => validateRequest({ ...request, action: 'stepOver', sessionId: 'session-1' }),
+    /requires non-negative integer expectedStopSequence/,
+  );
+  throwsWith(
+    () =>
+      validateRequest({
+        ...request,
+        action: 'runTo',
+        sessionId: 'session-1',
+        expectedStopSequence: 1,
+        runTo: { file: '', line: 0 },
+      }),
+    /Invalid debugger bridge runTo breakpoint/,
+  );
+  throwsWith(
+    () =>
+      validateRequest({
+        ...request,
+        action: 'inspect',
+        sessionId: 'session-1',
+        expectedStopSequence: 1,
+        stackDepth: 99,
+      }),
+    /stackDepth/,
+  );
   assert.notEqual(tampered.requestHash, canonicalRequestHash(tampered));
 
   const oldRequest = withFreshRequestMetadata({
@@ -258,6 +316,43 @@ try {
       { reason: 'breakpoint', matchedBreakpoint: true, locals: { value: '14' }, watches: { 'value + 1': '15' } },
     ).proofValid,
     true,
+  );
+  assert.deepEqual(
+    assessSessionControlValidity(
+      { action: 'inspect', sessionId: 'session-1', locals: ['value'] },
+      3,
+      { sessionId: 'session-1', stopSequence: 3, reason: 'inspect', locals: { value: '14' } },
+    ),
+    {
+      sessionProofValid: true,
+      variableInspectionValid: true,
+      proofValid: true,
+      sameSession: true,
+      stopSequenceCurrent: true,
+      stopSequenceAdvanced: false,
+      missingLocals: [],
+      missingWatches: [],
+      watchErrors: {},
+      capturedLocals: ['value'],
+      capturedWatches: [],
+      reason: 'same session control action produced the expected paused state',
+    },
+  );
+  assert.equal(
+    assessSessionControlValidity(
+      { action: 'stepOver', sessionId: 'session-1' },
+      3,
+      { sessionId: 'session-1', stopSequence: 4, reason: 'step' },
+    ).proofValid,
+    true,
+  );
+  assert.equal(
+    assessSessionControlValidity(
+      { action: 'stepIn', sessionId: 'session-1' },
+      3,
+      { sessionId: 'session-2', stopSequence: 4, reason: 'step' },
+    ).proofValid,
+    false,
   );
 
   console.log('debugger bridge protocol tests passed');

@@ -98,6 +98,24 @@
         }
       }
     },
+    "sessionTranscript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sessionId", "stopSequences", "eventLogRef"],
+      "properties": {
+        "schema": {"const": "debugger.session_transcript_ref.v1"},
+        "sessionId": {"type": "string", "minLength": 1},
+        "stopSequences": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0}
+        },
+        "eventLogRef": {"type": "string", "minLength": 1},
+        "sessionHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-fA-F]{64}$"
+        }
+      }
+    },
     "analysis": {
       "type": "object",
       "additionalProperties": false,

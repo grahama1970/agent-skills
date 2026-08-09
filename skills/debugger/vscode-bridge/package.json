@@ -2,7 +2,7 @@
   "name": "debugger-vscode-bridge",
   "displayName": "Debugger VS Code Bridge",
   "description": "Bridge for the debugger skill to start visible VS Code debug sessions and capture stopped variable state.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "publisher": "agent-skills",
   "engines": {
     "vscode": "^1.90.0"
@@ -11,6 +11,7 @@
     "Debuggers"
   ],
   "activationEvents": [
+    "*",
     "onStartupFinished",
     "onCommand:debuggerBridge.processRequestFile",
     "onCommand:debuggerBridge.startLaunchConfig",

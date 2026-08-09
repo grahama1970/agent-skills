@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "debugger.session.v1",
+  "title": "Debugger Session v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bridgeSessionId",
+    "vscodeSessionId",
+    "vscodeSessionType",
+    "vscodeSessionName",
+    "workspace",
+    "status",
+    "stopSequence",
+    "requestedBreakpoints",
+    "verifiedBreakpoints",
+    "updatedAt"
+  ],
+  "properties": {
+    "schema": {
+      "const": "debugger.session.v1"
+    },
+    "bridgeSessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vscodeSessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vscodeSessionType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vscodeSessionName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "status": {
+      "enum": ["starting", "running", "paused", "terminated", "failed"]
+    },
+    "stopSequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selectedThreadId": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selectedFrameId": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "requestedBreakpoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/breakpoint"
+      }
+    },
+    "verifiedBreakpoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/breakpoint"
+      }
+    },
+    "lastCommandId": {
+      "type": "string"
+    },
+    "lastRequestHash": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "eventLogRef": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "breakpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "line"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -27,9 +27,49 @@ explicitly allowed, `evaluate`.
 - breakpoint replacement in requested files so stale bridge breakpoints do not accumulate
 - dirty-source save before start/restart so VS Code does not leave breakpoints unverified because files are modified
 - `restart` requests that stop the active session, replace breakpoints, and start the launch configuration again
-- `workbench.action.debug.continue` for continuing an already stopped visible session
 - debug adapter tracker for stopped events
 - DAP `stackTrace`, `scopes`, `variables`, and `evaluate` requests for paused variable state
+- session-bound DAP actions for `inspect`, `continue`, `stepOver`, `stepIn`,
+  `stepOut`, `pause`, `runTo`, `removeBreakpoints`, `selectFrame`,
+  `selectThread`, and `terminate`
+- `debugger.session.v1` state in session-control statuses, including VS Code
+  debug session ID/type/name, stop sequence, selected thread/frame,
+  requested/verified breakpoints, last command ID/hash, and event log reference
+- stale-command rejection through `sessionId` plus `expectedStopSequence`
+- append-only session event snapshots written beside bridge status artifacts
+
+## Session Control
+
+After a start/restart/process request stops at a breakpoint, read the returned
+`sessionState.vscodeSessionId`, `sessionState.stopSequence`, and selected
+thread/frame. Reuse those fields for follow-up requests:
+
+```bash
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/request_vscode_bridge.py" \
+  --workspace /path/to/project \
+  --action inspect \
+  --session-id "$VSCODE_SESSION_ID" \
+  --expected-stop-sequence "$STOP_SEQUENCE" \
+  --thread-id "$THREAD_ID" \
+  --local req
+```
+
+Stepping and runtime control use the same binding:
+
+```bash
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/request_vscode_bridge.py" \
+  --workspace /path/to/project \
+  --action stepOver \
+  --session-id "$VSCODE_SESSION_ID" \
+  --expected-stop-sequence "$STOP_SEQUENCE" \
+  --thread-id "$THREAD_ID"
+```
+
+The bridge rejects a stale `expectedStopSequence` instead of acting on a newer
+pause. Named-local reads remain separate from watch evaluation; watch
+expressions still require `--allow-watch-eval`.
 
 ## Status Ownership
 

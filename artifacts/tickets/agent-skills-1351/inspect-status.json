@@ -1,0 +1,185 @@
+{
+  "id": "debugger-fc1ef97c-ded2-436e-ab85-9936a4a4f947",
+  "requestHash": "73e8ffeeb22e08d31ced910f582144b562a7ae6a63838a873fb330fa3408b02e",
+  "proofValid": true,
+  "status": "inspected",
+  "stoppedState": {
+    "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+    "sessionName": "Debug issue1351 bridge fixture",
+    "stopSequence": 2,
+    "reason": "inspect",
+    "threadId": 1,
+    "frame": {
+      "id": 2,
+      "name": "main",
+      "line": 8,
+      "column": 1,
+      "source": {
+        "path": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+        "sourceReference": 0
+      }
+    },
+    "stackFrames": [
+      {
+        "id": 2,
+        "name": "main",
+        "line": 8,
+        "column": 1,
+        "source": {
+          "path": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+          "sourceReference": 0
+        }
+      },
+      {
+        "id": 5,
+        "name": "<module>",
+        "line": 13,
+        "column": 1,
+        "source": {
+          "path": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+          "sourceReference": 0
+        }
+      },
+      {
+        "id": 6,
+        "name": "_run_code",
+        "line": 86,
+        "column": 1,
+        "source": {
+          "path": "/home/graham/.pyenv/versions/3.10.11/lib/python3.10/runpy.py",
+          "sourceReference": 0
+        },
+        "presentationHint": "subtle"
+      }
+    ],
+    "matchedBreakpoint": false,
+    "adapterBreakpointVerification": "unavailable-vscode-api",
+    "locals": {
+      "marker": "'before'",
+      "value": "41"
+    },
+    "watches": {},
+    "scopes": [
+      {
+        "name": "Locals",
+        "variablesReference": 3,
+        "expensive": false,
+        "presentationHint": "locals",
+        "source": {}
+      },
+      {
+        "name": "Globals",
+        "variablesReference": 4,
+        "expensive": false,
+        "source": {}
+      }
+    ]
+  },
+  "sessionState": {
+    "schema": "debugger.session.v1",
+    "bridgeSessionId": "vscode:9083d686-a141-487b-bf13-c18808abd324",
+    "vscodeSessionId": "9083d686-a141-487b-bf13-c18808abd324",
+    "vscodeSessionType": "debugpy",
+    "vscodeSessionName": "Debug issue1351 bridge fixture",
+    "workspace": "/tmp/issue1351-20260809T172544Z-live12/workspace",
+    "runtime": {
+      "name": "debug_target",
+      "systemProcessId": 488376,
+      "isLocalProcess": true,
+      "startMethod": "launch",
+      "pointerSize": 64
+    },
+    "status": "paused",
+    "stopSequence": 2,
+    "selectedThreadId": 1,
+    "selectedFrameId": 2,
+    "requestedBreakpoints": [],
+    "verifiedBreakpoints": [],
+    "lastCommandId": "debugger-fc1ef97c-ded2-436e-ab85-9936a4a4f947",
+    "lastRequestHash": "73e8ffeeb22e08d31ced910f582144b562a7ae6a63838a873fb330fa3408b02e",
+    "updatedAt": "2026-08-09T17:27:34.329Z",
+    "eventLogRef": ".vscode/debugger-bridge/session-events.9083d686-a141-487b-bf13-c18808abd324.json"
+  },
+  "sessionProofAssessment": {
+    "sessionProofValid": true,
+    "variableInspectionValid": true,
+    "proofValid": true,
+    "sameSession": true,
+    "stopSequenceCurrent": true,
+    "stopSequenceAdvanced": false,
+    "missingLocals": [],
+    "missingWatches": [],
+    "watchErrors": {},
+    "capturedLocals": [
+      "value",
+      "marker"
+    ],
+    "capturedWatches": [],
+    "reason": "same session control action produced the expected paused state"
+  },
+  "eventLog": [
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 1,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "running",
+      "createdAt": "2026-08-09T17:26:09.988Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 2,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "running",
+      "createdAt": "2026-08-09T17:26:09.994Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 3,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "paused",
+      "action": "start",
+      "requestId": "debugger-ce56fe8a-a533-482d-88cc-d716f5be3e66",
+      "requestHash": "bbd8e5ba15d67819f182190b91a17cbacfd26b1806a7334bc815b4ab9cf18146",
+      "threadId": 1,
+      "frameId": 2,
+      "createdAt": "2026-08-09T17:26:10.573Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 4,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "running",
+      "action": "stepOver",
+      "requestId": "debugger-1b9f809b-6795-49cf-85f2-c085222a55a0",
+      "requestHash": "84198907220482e34e430a5f687d79e74410be8b82053ff8f62f1dedeb40fe46",
+      "threadId": 1,
+      "frameId": 2,
+      "createdAt": "2026-08-09T17:26:27.192Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 5,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "paused",
+      "action": "stepOver",
+      "requestId": "debugger-1b9f809b-6795-49cf-85f2-c085222a55a0",
+      "requestHash": "84198907220482e34e430a5f687d79e74410be8b82053ff8f62f1dedeb40fe46",
+      "threadId": 1,
+      "frameId": 2,
+      "createdAt": "2026-08-09T17:26:27.481Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 6,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "paused",
+      "action": "inspect",
+      "requestId": "debugger-fc1ef97c-ded2-436e-ab85-9936a4a4f947",
+      "requestHash": "73e8ffeeb22e08d31ced910f582144b562a7ae6a63838a873fb330fa3408b02e",
+      "threadId": 1,
+      "frameId": 2,
+      "createdAt": "2026-08-09T17:27:34.329Z"
+    }
+  ],
+  "updatedAt": "2026-08-09T17:27:34.330Z"
+}

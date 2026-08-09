@@ -1,0 +1,53 @@
+{
+  "analysis": {
+    "conclusion": "VS Code bridge stopped a visible debug session and captured selected paused state through DAP.",
+    "nextEdit": ""
+  },
+  "assessment": {
+    "limitations": [
+      "unavailable-vscode-api"
+    ],
+    "proofValid": true,
+    "variableInspectionValid": true
+  },
+  "breakpoints": [
+    {
+      "file": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+      "hit": true,
+      "line": 7,
+      "verified": "unavailable"
+    }
+  ],
+  "captures": {
+    "locals": {
+      "value": "41"
+    },
+    "requestedLocals": [],
+    "watches": {}
+  },
+  "debugger": {
+    "adapter": "VS Code Debug Adapter Protocol",
+    "mode": "vscode-bridge"
+  },
+  "producer": {
+    "name": "debugger-vscode-bridge"
+  },
+  "repro": {
+    "command": [
+      "vscode",
+      "Debug issue1351 bridge fixture"
+    ]
+  },
+  "schema": "debugger.proof.v1",
+  "stopped": {
+    "frame": {
+      "file": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+      "function": "main",
+      "line": 7,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "threadId": 1
+    },
+    "hit": true,
+    "reason": "breakpoint"
+  }
+}

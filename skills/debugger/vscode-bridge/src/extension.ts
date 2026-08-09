@@ -2,10 +2,15 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
   AsyncKeyedQueue,
+  assertExpectedStopSequence,
   type BridgeBreakpoint,
   type BridgeRequest,
+  type BridgeSessionEvent,
+  type BridgeSessionState,
+  type BridgeSessionStatus,
   assertWorkspacePath,
   assessProofValidity,
+  assessSessionControlValidity,
   canonicalRequestHash,
   claimRequestId,
   enforceFreshRequest,
@@ -24,9 +29,11 @@ import {
 type StoppedState = {
   sessionId: string;
   sessionName: string;
+  stopSequence: number;
   reason: string;
   threadId: number;
   frame?: unknown;
+  stackFrames?: unknown[];
   matchedBreakpoint?: boolean;
   adapterBreakpointVerification?: string;
   scopes?: unknown[];
@@ -46,6 +53,10 @@ const channel = vscode.window.createOutputChannel('Debugger Bridge');
 const pendingBySession = new Map<string, PendingCapture>();
 const processedRequestIds = new Set<string>();
 const processedRequestHashes = new Map<string, string>();
+const activeSessions = new Map<string, vscode.DebugSession>();
+const sessionStates = new Map<string, BridgeSessionState>();
+const sessionEvents = new Map<string, BridgeSessionEvent[]>();
+const requestFileMtimes = new Map<string, number>();
 const bridgeQueue = new AsyncKeyedQueue();
 let watcher: vscode.FileSystemWatcher | undefined;
 
@@ -82,6 +93,21 @@ export function activate(context: vscode.ExtensionContext) {
       },
     }),
   );
+  context.subscriptions.push(
+    vscode.debug.onDidStartDebugSession((session) => {
+      activeSessions.set(session.id, session);
+      upsertSessionState(session, undefined, 'running', {
+        selectedThreadId: undefined,
+        selectedFrameId: undefined,
+      });
+    }),
+  );
+  context.subscriptions.push(
+    vscode.debug.onDidTerminateDebugSession((session) => {
+      upsertSessionState(session, undefined, 'terminated');
+      activeSessions.delete(session.id);
+    }),
+  );
 
   setupWorkspaceWatcher(context);
 }
@@ -96,6 +122,28 @@ function setupWorkspaceWatcher(context: vscode.ExtensionContext) {
   context.subscriptions.push(watcher);
   watcher.onDidCreate((uri) => void processRequestUri(uri), null, context.subscriptions);
   watcher.onDidChange((uri) => void processRequestUri(uri), null, context.subscriptions);
+  const poller = setInterval(() => void pollWorkspaceRequestFiles(), 1000);
+  context.subscriptions.push({ dispose: () => clearInterval(poller) });
+}
+
+async function pollWorkspaceRequestFiles() {
+  for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    const requestUri = vscode.Uri.joinPath(folder.uri, '.vscode', 'debugger-bridge', 'request.json');
+    try {
+      const stat = await vscode.workspace.fs.stat(requestUri);
+      const priorMtime = requestFileMtimes.get(requestUri.fsPath);
+      if (priorMtime === stat.mtime) {
+        continue;
+      }
+      requestFileMtimes.set(requestUri.fsPath, stat.mtime);
+      await processRequestUri(requestUri);
+    } catch (error) {
+      if ((error as { code?: string }).code === 'FileNotFound' || (error as { code?: string }).code === 'ENOENT') {
+        continue;
+      }
+      channel.appendLine(`Debugger bridge request poll failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
 
 async function processWorkspaceRequestFile(options: { missingOk?: boolean } = {}) {
@@ -213,6 +261,10 @@ async function processBridgeRequestForOutput(
     requestHash,
     proofValid: false,
   };
+  if (isSessionControlAction(action)) {
+    await processSessionControlRequest(request, requestId, requestHash, folder, outputPath, statusBase, requirePendingStatus);
+    return;
+  }
   if (action === 'addBreakpoints') {
     await prepareSourceFiles(folder, request);
     const addedBreakpoints = await replaceRequestedBreakpoints(folder, request);
@@ -221,38 +273,6 @@ async function processBridgeRequestForOutput(
       status: 'breakpoints-added',
       addedBreakpoints,
       adapterBreakpointVerification: 'unavailable-vscode-api',
-      updatedAt: new Date().toISOString(),
-    }, requirePendingStatus);
-    return;
-  }
-
-  if (action === 'continue') {
-    await prepareSourceFiles(folder, request);
-    const addedBreakpoints = await replaceRequestedBreakpoints(folder, request);
-    const session = vscode.debug.activeDebugSession;
-    if (!session) {
-      throw new Error('No active VS Code debug session is available to continue.');
-    }
-    const stopped = waitForStoppedState(request, outputPath, { bindActiveSession: true });
-    await writeOwnedStatus(outputPath, requestId, requestHash, {
-      ...statusBase,
-      status: 'continuing',
-      launchConfigName: request.launchConfigName,
-      addedBreakpoints,
-      sessionId: session.id,
-      updatedAt: new Date().toISOString(),
-    }, requirePendingStatus);
-    await vscode.commands.executeCommand('workbench.action.debug.continue');
-    const stoppedState = await stopped;
-    const proofAssessment = assessProofValidity(request, stoppedState);
-    await writeOwnedStatus(outputPath, requestId, requestHash, {
-      ...statusBase,
-      status: proofAssessment.proofValid ? 'stopped' : 'stopped-not-proof',
-      proofValid: proofAssessment.proofValid,
-      proofAssessment,
-      launchConfigName: request.launchConfigName,
-      addedBreakpoints,
-      stoppedState,
       updatedAt: new Date().toISOString(),
     }, requirePendingStatus);
     return;
@@ -292,6 +312,7 @@ async function processBridgeRequestForOutput(
   try {
     const stoppedState = await stopped;
     const proofAssessment = assessProofValidity(request, stoppedState);
+    const sessionState = sessionStates.get(stoppedState.sessionId);
     await writeOwnedStatus(outputPath, requestId, requestHash, {
       ...statusBase,
       status: proofAssessment.proofValid ? 'stopped' : 'stopped-not-proof',
@@ -300,6 +321,8 @@ async function processBridgeRequestForOutput(
       launchConfigName: request.launchConfigName,
       addedBreakpoints,
       stoppedState,
+      sessionState,
+      eventLog: stoppedState.sessionId ? sessionEvents.get(stoppedState.sessionId) ?? [] : [],
       updatedAt: new Date().toISOString(),
     }, requirePendingStatus);
   } catch (error) {
@@ -313,6 +336,290 @@ async function processBridgeRequestForOutput(
     }, requirePendingStatus);
     throw error;
   }
+}
+
+function isSessionControlAction(action: string) {
+  return (
+    action === 'inspect' ||
+    action === 'stepOver' ||
+    action === 'stepIn' ||
+    action === 'stepOut' ||
+    action === 'continue' ||
+    action === 'pause' ||
+    action === 'runTo' ||
+    action === 'removeBreakpoints' ||
+    action === 'selectFrame' ||
+    action === 'selectThread' ||
+    action === 'terminate'
+  );
+}
+
+async function processSessionControlRequest(
+  request: BridgeRequest,
+  requestId: string,
+  requestHash: string,
+  folder: vscode.WorkspaceFolder,
+  outputPath: string,
+  statusBase: { id: string | undefined; requestHash: string; proofValid: boolean },
+  requirePendingStatus: boolean,
+) {
+  const session = sessionForRequest(request);
+  const currentState = currentSessionState(session, request);
+  assertExpectedStopSequence(currentState, request);
+  const threadId = request.threadId ?? currentState.selectedThreadId;
+
+  if (request.action === 'inspect') {
+    if (threadId === undefined) {
+      throw new Error('Debugger bridge inspect requires selected or requested threadId.');
+    }
+    const stoppedState = await captureStoppedState(
+      session,
+      threadId,
+      'inspect',
+      request,
+      request.frameId ?? currentState.selectedFrameId,
+    );
+    stoppedState.stopSequence = currentState.stopSequence;
+    const sessionProofAssessment = assessSessionControlValidity(request, currentState.stopSequence, stoppedState);
+    const sessionState = upsertSessionState(session, request, 'paused', {
+      selectedThreadId: threadId,
+      selectedFrameId: frameIdFromState(stoppedState) ?? currentState.selectedFrameId,
+    }, { preserveStopSequence: true });
+    await writeSessionEvents(folder, session.id);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'inspected',
+      proofValid: sessionProofAssessment.proofValid,
+      stoppedState,
+      sessionState,
+      sessionProofAssessment,
+      eventLog: sessionEvents.get(session.id) ?? [],
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
+
+  if (request.action === 'selectThread' || request.action === 'selectFrame') {
+    const sessionState = upsertSessionState(session, request, currentState.status, {
+      selectedThreadId: request.threadId ?? currentState.selectedThreadId,
+      selectedFrameId: request.frameId ?? currentState.selectedFrameId,
+    });
+    await writeSessionEvents(folder, session.id);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'selected',
+      sessionState,
+      eventLog: sessionEvents.get(session.id) ?? [],
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
+
+  if (request.action === 'removeBreakpoints') {
+    const removedBreakpoints = removeRequestedBreakpoints(folder, request.removeBreakpoints ?? request.breakpoints ?? []);
+    const sessionState = upsertSessionState(session, request, currentState.status);
+    await writeSessionEvents(folder, session.id);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'breakpoints-removed',
+      removedBreakpoints,
+      sessionState,
+      eventLog: sessionEvents.get(session.id) ?? [],
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
+
+  if (request.action === 'terminate') {
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'terminating',
+      sessionState: upsertSessionState(session, request, 'running'),
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    await vscode.debug.stopDebugging(session);
+    const sessionState = upsertSessionState(session, request, 'terminated');
+    await writeSessionEvents(folder, session.id);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'terminated',
+      sessionState,
+      eventLog: sessionEvents.get(session.id) ?? [],
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
+
+  await prepareSourceFiles(folder, request);
+  let addedBreakpoints: unknown[] = [];
+  if (request.action === 'runTo' && request.runTo) {
+    addedBreakpoints = await addRequestedBreakpoints(folder, [request.runTo]);
+  } else if ((request.breakpoints?.length ?? 0) > 0) {
+    addedBreakpoints = await replaceRequestedBreakpoints(folder, request);
+  }
+
+  const stopped = request.action === 'pause'
+    ? waitForStoppedState(request, outputPath, { sessionId: session.id })
+    : request.action === 'continue' || request.action === 'stepOver' || request.action === 'stepIn' || request.action === 'stepOut' || request.action === 'runTo'
+      ? waitForStoppedState(request, outputPath, { sessionId: session.id })
+      : undefined;
+  await writeOwnedStatus(outputPath, requestId, requestHash, {
+    ...statusBase,
+    status: request.action === 'pause' ? 'pausing' : 'running',
+    sessionState: upsertSessionState(session, request, 'running'),
+    addedBreakpoints,
+    updatedAt: new Date().toISOString(),
+  }, requirePendingStatus);
+
+  if (request.action === 'pause') {
+    await sendThreadRequest(session, 'pause', threadId);
+  } else if (request.action === 'continue' || request.action === 'runTo') {
+    await sendThreadRequest(session, 'continue', threadId);
+  } else if (request.action === 'stepOver') {
+    await sendThreadRequest(session, 'next', threadId);
+  } else if (request.action === 'stepIn') {
+    await sendThreadRequest(session, 'stepIn', threadId);
+  } else if (request.action === 'stepOut') {
+    await sendThreadRequest(session, 'stepOut', threadId);
+  }
+
+  if (!stopped) {
+    return;
+  }
+  const stoppedState = await stopped;
+  const sessionProofAssessment = assessSessionControlValidity(request, currentState.stopSequence, stoppedState);
+  const sessionState = sessionStates.get(session.id);
+  await writeSessionEvents(folder, session.id);
+  await writeOwnedStatus(outputPath, requestId, requestHash, {
+    ...statusBase,
+    status: sessionProofAssessment.proofValid ? 'stopped' : 'stopped-not-proof',
+    proofValid: sessionProofAssessment.proofValid,
+    sessionProofAssessment,
+    addedBreakpoints,
+    stoppedState,
+    sessionState,
+    eventLog: sessionEvents.get(session.id) ?? [],
+    updatedAt: new Date().toISOString(),
+  }, requirePendingStatus);
+}
+
+function sessionForRequest(request: BridgeRequest) {
+  const session = activeSessions.get(request.sessionId ?? '') ?? (
+    vscode.debug.activeDebugSession?.id === request.sessionId ? vscode.debug.activeDebugSession : undefined
+  );
+  if (!session) {
+    throw new Error(`Debugger bridge sessionId is not active: ${request.sessionId}`);
+  }
+  return session;
+}
+
+function currentSessionState(session: vscode.DebugSession, request: BridgeRequest) {
+  const state = sessionStates.get(session.id);
+  if (!state) {
+    throw new Error(`Debugger bridge has no session state for sessionId: ${request.sessionId}`);
+  }
+  return state;
+}
+
+async function sendThreadRequest(session: vscode.DebugSession, command: string, threadId?: number) {
+  if (threadId === undefined) {
+    throw new Error(`Debugger bridge ${command} requires selected or requested threadId.`);
+  }
+  await session.customRequest(command, { threadId });
+}
+
+function removeRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints: BridgeBreakpoint[]) {
+  const targets = new Set(
+    breakpoints.map((breakpoint) => `${resolveBreakpointPath(folder, breakpoint)}:${breakpoint.line}`),
+  );
+  const staleBreakpoints = vscode.debug.breakpoints.filter((breakpoint): breakpoint is vscode.SourceBreakpoint => {
+    if (!(breakpoint instanceof vscode.SourceBreakpoint)) {
+      return false;
+    }
+    return targets.has(`${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`);
+  });
+  if (staleBreakpoints.length > 0) {
+    vscode.debug.removeBreakpoints(staleBreakpoints);
+  }
+  return staleBreakpoints.map((breakpoint) => ({
+    file: breakpoint.location.uri.fsPath,
+    line: breakpoint.location.range.start.line + 1,
+  }));
+}
+
+function upsertSessionState(
+  session: vscode.DebugSession,
+  request: BridgeRequest | undefined,
+  status: BridgeSessionStatus,
+  patch: Partial<
+    Pick<
+      BridgeSessionState,
+      'runtime' | 'selectedThreadId' | 'selectedFrameId' | 'requestedBreakpoints' | 'verifiedBreakpoints'
+    >
+  > = {},
+  options: { preserveStopSequence?: boolean } = {},
+) {
+  const prior = sessionStates.get(session.id);
+  const isStopped = status === 'paused';
+  const stopSequence = isStopped && !options.preserveStopSequence ? (prior?.stopSequence ?? 0) + 1 : (prior?.stopSequence ?? 0);
+  const state: BridgeSessionState = {
+    schema: 'debugger.session.v1',
+    bridgeSessionId: `vscode:${session.id}`,
+    vscodeSessionId: session.id,
+    vscodeSessionType: session.type,
+    vscodeSessionName: session.name,
+    workspace: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
+    runtime: patch.runtime ?? prior?.runtime,
+    status,
+    stopSequence,
+    selectedThreadId: patch.selectedThreadId ?? prior?.selectedThreadId,
+    selectedFrameId: patch.selectedFrameId ?? prior?.selectedFrameId,
+    requestedBreakpoints: patch.requestedBreakpoints ?? prior?.requestedBreakpoints ?? request?.breakpoints ?? [],
+    verifiedBreakpoints: patch.verifiedBreakpoints ?? prior?.verifiedBreakpoints ?? [],
+    lastCommandId: request?.id ?? prior?.lastCommandId,
+    lastRequestHash: request?.requestHash ?? prior?.lastRequestHash,
+    updatedAt: new Date().toISOString(),
+    eventLogRef: `.vscode/debugger-bridge/session-events.${safeSessionId(session.id)}.json`,
+  };
+  sessionStates.set(session.id, state);
+  recordSessionEvent(state, request, status);
+  return state;
+}
+
+function recordSessionEvent(state: BridgeSessionState, request: BridgeRequest | undefined, status: BridgeSessionStatus) {
+  const events = sessionEvents.get(state.vscodeSessionId) ?? [];
+  events.push({
+    schema: 'debugger.session_event.v1',
+    sequence: events.length + 1,
+    sessionId: state.vscodeSessionId,
+    status,
+    action: request?.action,
+    requestId: request?.id,
+    requestHash: request?.requestHash,
+    threadId: state.selectedThreadId,
+    frameId: state.selectedFrameId,
+    createdAt: state.updatedAt,
+  });
+  sessionEvents.set(state.vscodeSessionId, events);
+}
+
+async function writeSessionEvents(folder: vscode.WorkspaceFolder, sessionId: string) {
+  const events = sessionEvents.get(sessionId) ?? [];
+  const eventPath = resolveContainedWorkspacePath(
+    folder.uri.fsPath,
+    `.vscode/debugger-bridge/session-events.${safeSessionId(sessionId)}.json`,
+    'session events',
+  );
+  await writeJsonFile(eventPath, events);
+}
+
+function safeSessionId(value: string) {
+  return value.replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+
+function frameIdFromState(state: StoppedState) {
+  const frameId = (state.frame as { id?: unknown } | undefined)?.id;
+  return typeof frameId === 'number' ? frameId : undefined;
 }
 
 async function prepareSourceFiles(folder: vscode.WorkspaceFolder, request: BridgeRequest) {
@@ -392,7 +699,7 @@ function resolveBreakpointPath(folder: vscode.WorkspaceFolder, breakpoint: Bridg
 function waitForStoppedState(
   request: BridgeRequest,
   outputPath: string,
-  options: { bindActiveSession?: boolean } = {},
+  options: { bindActiveSession?: boolean; sessionId?: string } = {},
 ): Promise<StoppedState> {
   const timeoutMs = request.stopTimeoutMs ?? 30000;
   return new Promise((resolve, reject) => {
@@ -414,14 +721,20 @@ function waitForStoppedState(
       timer,
     };
 
-    const active = options.bindActiveSession ? vscode.debug.activeDebugSession : undefined;
+    const active = options.sessionId
+      ? activeSessions.get(options.sessionId)
+      : options.bindActiveSession
+        ? vscode.debug.activeDebugSession
+        : undefined;
     if (active) {
       pendingBySession.set(active.id, pendingCapture);
     }
 
     startSubscription = vscode.debug.onDidStartDebugSession((session) => {
       pendingBySession.set(session.id, pendingCapture);
-      startSubscription?.dispose();
+      if (options.sessionId || options.bindActiveSession) {
+        startSubscription?.dispose();
+      }
     });
     if (active) {
       startSubscription.dispose();
@@ -430,6 +743,14 @@ function waitForStoppedState(
 }
 
 async function handleDebugAdapterMessage(session: vscode.DebugSession, message: unknown) {
+  if (isDebugAdapterEvent(message, 'process')) {
+    const prior = sessionStates.get(session.id);
+    upsertSessionState(session, undefined, prior?.status ?? 'running', {
+      runtime: sanitizeRuntimeIdentity((message as { body?: unknown }).body),
+    }, { preserveStopSequence: true });
+    return;
+  }
+
   if (!isDebugAdapterEvent(message, 'stopped')) {
     return;
   }
@@ -437,7 +758,7 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
   if (!pending) {
     return;
   }
-  pendingBySession.delete(session.id);
+  clearPendingCapture(pending);
   clearTimeout(pending.timer);
 
   const body = message.body as { reason?: string; threadId?: number };
@@ -446,6 +767,7 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
     pending.resolve({
       sessionId: session.id,
       sessionName: session.name,
+      stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
       reason: body.reason ?? 'stopped',
       threadId: -1,
       error: 'Stopped event did not include a numeric threadId.',
@@ -455,9 +777,16 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
 
   try {
     const state = await captureStoppedState(session, threadId, body.reason ?? 'stopped', pending.request);
-    if (state.reason !== 'breakpoint') {
+    const sessionState = upsertSessionState(session, pending.request, 'paused', {
+      selectedThreadId: threadId,
+      selectedFrameId: frameIdFromState(state),
+      requestedBreakpoints: pending.request.breakpoints ?? [],
+      verifiedBreakpoints: state.matchedBreakpoint ? pending.request.breakpoints ?? [] : [],
+    });
+    state.stopSequence = sessionState.stopSequence;
+    if (expectsBreakpointStop(pending.request) && state.reason !== 'breakpoint') {
       state.error = `Stopped for ${state.reason}, not breakpoint. This is not debugger proof.`;
-    } else if (!state.matchedBreakpoint) {
+    } else if (expectsBreakpointStop(pending.request) && !state.matchedBreakpoint) {
       state.error = 'Stopped frame did not match a requested breakpoint. This is not debugger proof.';
     }
     pending.resolve(state);
@@ -465,10 +794,33 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
     pending.resolve({
       sessionId: session.id,
       sessionName: session.name,
+      stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
       reason: body.reason ?? 'stopped',
       threadId,
       error: error instanceof Error ? error.message : String(error),
     });
+  }
+}
+
+function sanitizeRuntimeIdentity(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== 'object') {
+    return {};
+  }
+  const source = body as Record<string, unknown>;
+  const runtime: Record<string, unknown> = {};
+  for (const key of ['name', 'systemProcessId', 'isLocalProcess', 'startMethod', 'pointerSize']) {
+    if (source[key] !== undefined) {
+      runtime[key] = source[key];
+    }
+  }
+  return runtime;
+}
+
+function clearPendingCapture(pendingCapture: PendingCapture) {
+  for (const [sessionId, pending] of pendingBySession.entries()) {
+    if (pending === pendingCapture) {
+      pendingBySession.delete(sessionId);
+    }
   }
 }
 
@@ -477,15 +829,21 @@ async function captureStoppedState(
   threadId: number,
   reason: string,
   request: BridgeRequest,
+  requestedFrameId?: number,
 ): Promise<StoppedState> {
-  const stackTrace = await session.customRequest('stackTrace', { threadId, startFrame: 0, levels: 1 });
-  const frame = stackTrace?.stackFrames?.[0];
+  const stackTrace = await session.customRequest('stackTrace', { threadId, startFrame: 0, levels: request.stackDepth ?? 1 });
+  const stackFrames = stackTrace?.stackFrames ?? [];
+  const frame = requestedFrameId
+    ? stackFrames.find((candidate: { id?: unknown }) => candidate.id === requestedFrameId) ?? stackFrames[0]
+    : stackFrames[0];
   const state: StoppedState = {
     sessionId: session.id,
     sessionName: session.name,
+    stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
     reason,
     threadId,
     frame,
+    stackFrames,
     matchedBreakpoint: frameMatchesRequestedBreakpoint(frame, request),
     adapterBreakpointVerification: 'unavailable-vscode-api',
     locals: {},
@@ -547,6 +905,11 @@ function frameMatchesRequestedBreakpoint(frame: unknown, request: BridgeRequest)
     );
     return normalizedBreakpointPath === normalizedFramePath && breakpoint.line === line;
   });
+}
+
+function expectsBreakpointStop(request: BridgeRequest) {
+  const action = request.action ?? 'start';
+  return action === 'start' || action === 'restart' || action === 'process' || action === 'continue' || action === 'runTo';
 }
 
 function isDebugAdapterEvent(message: unknown, eventName: string): message is { type: 'event'; event: string; body?: unknown } {

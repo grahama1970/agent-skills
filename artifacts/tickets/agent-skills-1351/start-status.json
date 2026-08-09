@@ -1,0 +1,142 @@
+{
+  "id": "debugger-ce56fe8a-a533-482d-88cc-d716f5be3e66",
+  "requestHash": "bbd8e5ba15d67819f182190b91a17cbacfd26b1806a7334bc815b4ab9cf18146",
+  "proofValid": true,
+  "status": "stopped",
+  "proofAssessment": {
+    "stopProofValid": true,
+    "variableInspectionValid": true,
+    "proofValid": true,
+    "missingLocals": [],
+    "missingWatches": [],
+    "watchErrors": {},
+    "capturedLocals": [
+      "value"
+    ],
+    "capturedWatches": [],
+    "reason": "matched breakpoint and inspected requested runtime state"
+  },
+  "launchConfigName": "Debug issue1351 bridge fixture",
+  "addedBreakpoints": [
+    {
+      "file": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+      "line": 7,
+      "enabled": true,
+      "adapterVerification": "unavailable-vscode-api"
+    }
+  ],
+  "stoppedState": {
+    "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+    "sessionName": "Debug issue1351 bridge fixture",
+    "stopSequence": 1,
+    "reason": "breakpoint",
+    "threadId": 1,
+    "frame": {
+      "id": 2,
+      "name": "main",
+      "line": 7,
+      "column": 1,
+      "source": {
+        "path": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+        "sourceReference": 0
+      }
+    },
+    "stackFrames": [
+      {
+        "id": 2,
+        "name": "main",
+        "line": 7,
+        "column": 1,
+        "source": {
+          "path": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+          "sourceReference": 0
+        }
+      }
+    ],
+    "matchedBreakpoint": true,
+    "adapterBreakpointVerification": "unavailable-vscode-api",
+    "locals": {
+      "value": "41"
+    },
+    "watches": {},
+    "scopes": [
+      {
+        "name": "Locals",
+        "variablesReference": 3,
+        "expensive": false,
+        "presentationHint": "locals",
+        "source": {}
+      },
+      {
+        "name": "Globals",
+        "variablesReference": 4,
+        "expensive": false,
+        "source": {}
+      }
+    ]
+  },
+  "sessionState": {
+    "schema": "debugger.session.v1",
+    "bridgeSessionId": "vscode:9083d686-a141-487b-bf13-c18808abd324",
+    "vscodeSessionId": "9083d686-a141-487b-bf13-c18808abd324",
+    "vscodeSessionType": "debugpy",
+    "vscodeSessionName": "Debug issue1351 bridge fixture",
+    "workspace": "/tmp/issue1351-20260809T172544Z-live12/workspace",
+    "runtime": {
+      "name": "debug_target",
+      "systemProcessId": 488376,
+      "isLocalProcess": true,
+      "startMethod": "launch",
+      "pointerSize": 64
+    },
+    "status": "paused",
+    "stopSequence": 1,
+    "selectedThreadId": 1,
+    "selectedFrameId": 2,
+    "requestedBreakpoints": [
+      {
+        "file": "debug_target.py",
+        "line": 7
+      }
+    ],
+    "verifiedBreakpoints": [
+      {
+        "file": "debug_target.py",
+        "line": 7
+      }
+    ],
+    "lastCommandId": "debugger-ce56fe8a-a533-482d-88cc-d716f5be3e66",
+    "lastRequestHash": "bbd8e5ba15d67819f182190b91a17cbacfd26b1806a7334bc815b4ab9cf18146",
+    "updatedAt": "2026-08-09T17:26:10.573Z",
+    "eventLogRef": ".vscode/debugger-bridge/session-events.9083d686-a141-487b-bf13-c18808abd324.json"
+  },
+  "eventLog": [
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 1,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "running",
+      "createdAt": "2026-08-09T17:26:09.988Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 2,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "running",
+      "createdAt": "2026-08-09T17:26:09.994Z"
+    },
+    {
+      "schema": "debugger.session_event.v1",
+      "sequence": 3,
+      "sessionId": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "paused",
+      "action": "start",
+      "requestId": "debugger-ce56fe8a-a533-482d-88cc-d716f5be3e66",
+      "requestHash": "bbd8e5ba15d67819f182190b91a17cbacfd26b1806a7334bc815b4ab9cf18146",
+      "threadId": 1,
+      "frameId": 2,
+      "createdAt": "2026-08-09T17:26:10.573Z"
+    }
+  ],
+  "updatedAt": "2026-08-09T17:26:10.574Z"
+}

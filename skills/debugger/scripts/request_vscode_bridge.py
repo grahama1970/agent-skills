@@ -39,14 +39,36 @@ def safe_file_name(value: str) -> str:
 def main(
     workspace: Annotated[Path, typer.Option("--workspace", help="Open VS Code workspace folder.")] = Path.cwd(),
     action: Annotated[
-        Literal["start", "restart", "continue", "addBreakpoints", "process"],
-        typer.Option("--action", help="Bridge action: start, restart, continue, addBreakpoints."),
+        Literal[
+            "start",
+            "restart",
+            "process",
+            "inspect",
+            "stepOver",
+            "stepIn",
+            "stepOut",
+            "continue",
+            "pause",
+            "runTo",
+            "addBreakpoints",
+            "removeBreakpoints",
+            "selectFrame",
+            "selectThread",
+            "terminate",
+        ],
+        typer.Option("--action", help="Bridge action."),
     ] = "start",
     launch_config_name: Annotated[
         str, typer.Option("--launch-config-name", help="Name from .vscode/launch.json.")
     ] = "Debug with $debugger",
     breakpoint: Annotated[
         list[str] | None, typer.Option("--break", help="Breakpoint as file:line. Repeat as needed.")
+    ] = None,
+    remove_breakpoint: Annotated[
+        list[str] | None, typer.Option("--remove-break", help="Breakpoint to remove as file:line. Repeat as needed.")
+    ] = None,
+    run_to: Annotated[
+        str | None, typer.Option("--run-to", help="Temporary run-to breakpoint as file:line.")
     ] = None,
     local: Annotated[list[str] | None, typer.Option("--local", help="Local variable names to capture.")] = None,
     watch: Annotated[list[str] | None, typer.Option("--watch", help="Watch expression to evaluate while stopped.")] = None,
@@ -65,6 +87,13 @@ def main(
     max_request_age_ms: Annotated[
         int, typer.Option("--max-request-age-ms", help="Maximum request age accepted by the VS Code bridge.")
     ] = 120000,
+    session_id: Annotated[str | None, typer.Option("--session-id", help="Existing VS Code debug session id.")] = None,
+    expected_stop_sequence: Annotated[
+        int | None, typer.Option("--expected-stop-sequence", help="Reject if the bridge session stop sequence has changed.")
+    ] = None,
+    thread_id: Annotated[int | None, typer.Option("--thread-id", help="DAP thread id for session control.")] = None,
+    frame_id: Annotated[int | None, typer.Option("--frame-id", help="DAP frame id for inspection/selection.")] = None,
+    stack_depth: Annotated[int, typer.Option("--stack-depth", help="Bounded stack frames to capture for inspection.")] = 1,
 ) -> None:
     workspace = workspace.resolve()
     bridge_dir = workspace / ".vscode" / "debugger-bridge"
@@ -79,6 +108,8 @@ def main(
         "workspace": str(workspace),
         "launchConfigName": launch_config_name,
         "breakpoints": [parse_breakpoint(item) for item in breakpoint or []],
+        "removeBreakpoints": [parse_breakpoint(item) for item in remove_breakpoint or []],
+        "runTo": parse_breakpoint(run_to) if run_to else None,
         "locals": local or [],
         "watches": watch or [],
         "allowWatchEval": allow_watch_eval,
@@ -88,7 +119,13 @@ def main(
         "saveBeforeStart": save_before_start,
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "maxRequestAgeMs": max_request_age_ms,
+        "sessionId": session_id,
+        "expectedStopSequence": expected_stop_sequence,
+        "threadId": thread_id,
+        "frameId": frame_id,
+        "stackDepth": stack_depth,
     }
+    request = {key: value for key, value in request.items() if value is not None}
     request["requestHash"] = canonical_request_hash(request)
     status = json.dumps(
         {

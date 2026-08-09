@@ -39,6 +39,7 @@
 | 2026-05-27 | Add Phase 1 proof-schema gate | `debugger.proof.v1` now has a schema, validator, fixtures, and validation coverage for Python, TypeScript, Rust, and VS Code bridge proof shapes |
 | 2026-05-27 | Add redacted debugger lesson distillation | Prior debugger proof can become a reusable lesson only after raw locals, watches, secrets, and local paths are removed |
 | 2026-05-27 | Add advisory memory recall normalization | Memory can guide breakpoint selection but cannot satisfy fresh debugger proof for the current bug |
+| 2026-08-09 | Add session-oriented VS Code bridge controls | The bridge now supports same-session inspect, step, pause/run-to, breakpoint mutation, frame/thread selection, termination, stale sequence rejection, and DAP-derived runtime identity without scraping the Variables pane |
 
 ## Open Questions
 
@@ -98,6 +99,10 @@
     constraints are valid frontmatter, explicit triggers/provides/composes,
     concise SKILL.md with details in references, behavioral sanity checks with
     positive/negative controls, and no heavy transient artifacts committed.
+  - Issue `agent-skills#1351` proof artifacts live at
+    `artifacts/tickets/agent-skills-1351/`. The live VS Code/debugpy run shows
+    a persistent session across initial breakpoint stop, inspect without
+    continue, stepOver, stepIn, stepOut, and terminate receipts.
 
 ## Key Files
 

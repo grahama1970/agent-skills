@@ -1,0 +1,15 @@
+{
+  "e2e": {
+    "artifact": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/artifacts/tickets/agent-skills-1351/live-proof-summary.json",
+    "command": "code --verbose --wait visible VS Code debugpy bridge live receipt readback",
+    "exit_code": 0,
+    "live": true,
+    "mocked": false
+  },
+  "issue": 1351,
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "unit": {
+    "command": "bash skills/debugger/sanity-bridge.sh",
+    "exit_code": 0
+  }
+}

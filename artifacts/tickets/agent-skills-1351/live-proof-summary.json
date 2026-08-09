@@ -1,0 +1,114 @@
+{
+  "artifact_hashes": {
+    "inspect-status.json": "sha256:cdbbe9335422c66062d1d67f444276d5f1a9d8bcd69f7ca3ed495b7fd5a3f099",
+    "session-events.json": "sha256:23df08085ce73de33fcd944302b723429272e9f65d72d5b469e4dff01d662cea",
+    "start-status.canonical.json": "sha256:0b52ef1da2f6a6b82824ada99d9eedc22557c06a618e14154a8b82962c83f177",
+    "start-status.json": "sha256:55315b8547946e7e9b5c2208adbaa6300d029662c79e3cb359972caa4c0c08ca",
+    "stepIn-status.json": "sha256:60262c6945a40414b4c278a4c4579964631e8d0a0af783a07771c35bb671e758",
+    "stepOut-status.json": "sha256:eba97c5e35cd169723f968daf171be96deb5e3ef91f3db7473e52f7353056e5d",
+    "stepOver-status.json": "sha256:7b15bd87b8c3b2977ce55c2881d571eef67745a85dc766892b18cc3cd9854b35",
+    "terminate-status.json": "sha256:4b7a4b870358f0a9b2783eda494a465ac3218165ebce98dc6425cf381724c36d"
+  },
+  "checks": {
+    "initial_breakpoint_stop": {
+      "line": 7,
+      "locals": {
+        "value": "41"
+      },
+      "proofValid": true,
+      "reason": "breakpoint",
+      "status": "stopped",
+      "stopSequence": 1
+    },
+    "inspect_without_continue": {
+      "line": 8,
+      "locals": {
+        "marker": "'before'",
+        "value": "41"
+      },
+      "proofValid": true,
+      "status": "inspected",
+      "stopSequence": 2
+    },
+    "step_in_same_session": {
+      "frameName": "inner",
+      "line": 2,
+      "proofValid": true,
+      "runtime": {
+        "isLocalProcess": true,
+        "name": "debug_target",
+        "pointerSize": 64,
+        "startMethod": "launch",
+        "systemProcessId": 488376
+      },
+      "session": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "stopped",
+      "stopSequence": 3
+    },
+    "step_out_same_session": {
+      "frameName": "main",
+      "line": 8,
+      "proofValid": true,
+      "runtime": {
+        "isLocalProcess": true,
+        "name": "debug_target",
+        "pointerSize": 64,
+        "startMethod": "launch",
+        "systemProcessId": 488376
+      },
+      "session": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "stopped",
+      "stopSequence": 4
+    },
+    "step_over_same_session": {
+      "line": 8,
+      "proofValid": true,
+      "runtime": {
+        "isLocalProcess": true,
+        "name": "debug_target",
+        "pointerSize": 64,
+        "startMethod": "launch",
+        "systemProcessId": 488376
+      },
+      "session": "9083d686-a141-487b-bf13-c18808abd324",
+      "status": "stopped",
+      "stopSequence": 2
+    },
+    "terminate_receipt": {
+      "runtime": {
+        "isLocalProcess": true,
+        "name": "debug_target",
+        "pointerSize": 64,
+        "startMethod": "launch",
+        "systemProcessId": 488376
+      },
+      "sessionStatus": "terminated",
+      "status": "terminated"
+    }
+  },
+  "debugger": "VS Code debugger bridge + ms-python.debugpy",
+  "fixture": "/tmp/issue1351-20260809T172544Z-live12/workspace/debug_target.py",
+  "invariants": {
+    "inspect_did_not_continue": true,
+    "paused_proofs_valid": true,
+    "same_runtime_pid_all_controls": true,
+    "same_session_all_controls": true,
+    "stop_sequence_advanced_by_steps": true,
+    "terminated": true
+  },
+  "live": true,
+  "mocked": false,
+  "proof_root": "/tmp/issue1351-20260809T172544Z-live12",
+  "runtime_identity": {
+    "isLocalProcess": true,
+    "name": "debug_target",
+    "pointerSize": 64,
+    "startMethod": "launch",
+    "systemProcessId": 488376
+  },
+  "schema": "agent_skills.ticket_proof.v1",
+  "service_commit": "34f074c65ddc00ce7312aeb4cba7d8b659b4ae3f",
+  "session_id": "9083d686-a141-487b-bf13-c18808abd324",
+  "ticket": "grahama1970/agent-skills#1351",
+  "worktree": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session"
+}

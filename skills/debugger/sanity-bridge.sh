@@ -92,6 +92,25 @@ assert source.index("verifyPendingStatus(outputPath, request)") < source.index("
 assert requester.index("Path(temp_name).replace(status_path)") < requester.index("Path(temp_name).replace(request_path)"), requester
 assert "const bridgeQueue = new AsyncKeyedQueue()" in source, source
 assert "await bridgeQueue.run('vscode-debugger-session'" in source, source
+assert "const activeSessions = new Map<string, vscode.DebugSession>()" in source, source
+assert "const sessionStates = new Map<string, BridgeSessionState>()" in source, source
+assert "const requestFileMtimes = new Map<string, number>()" in source, source
+assert "setInterval(() => void pollWorkspaceRequestFiles(), 1000)" in source, source
+assert "async function pollWorkspaceRequestFiles()" in source, source
+assert "async function processSessionControlRequest" in source, source
+assert "assertExpectedStopSequence(currentState, request)" in source, source
+assert "await session.customRequest(command, { threadId })" in source, source
+assert "action === 'inspect'" in source, source
+assert "action === 'stepOver'" in source, source
+assert "action === 'stepIn'" in source, source
+assert "action === 'stepOut'" in source, source
+assert "action === 'runTo'" in source, source
+assert "action === 'terminate'" in source, source
+assert "removeRequestedBreakpoints" in source, source
+assert "writeSessionEvents(folder, session.id)" in source, source
+assert "eventLog: sessionEvents.get(session.id)" in source, source
+assert "isDebugAdapterEvent(message, 'process')" in source, source
+assert "sanitizeRuntimeIdentity" in source, source
 assert "async function writeOwnedStatus" in source, source
 assert "readCurrentRequestOwner(filePath)" in source, source
 assert "usesSharedRequestOwner(filePath)" in source, source
@@ -113,6 +132,10 @@ assert "if (pending === pendingCapture)" in source, source
 assert "status: proofAssessment.proofValid ? 'stopped' : 'stopped-not-proof'" in source, source
 assert "proofAssessment," in source, source
 assert "Debugger bridge watch evaluation requires allowWatchEval: true" in protocol, protocol
+assert "export type BridgeAction" in protocol, protocol
+assert "debugger.session.v1" in protocol, protocol
+assert "export function validateSessionControlRequest" in protocol, protocol
+assert "export function assertExpectedStopSequence" in protocol, protocol
 assert "export class AsyncKeyedQueue" in protocol, protocol
 assert "export function decideOwnedStatusWritePath" in protocol, protocol
 assert "export function invalidRequestStatusPath" in protocol, protocol

@@ -242,6 +242,15 @@ the extension reads that request inside the trusted workspace, starts or
 continues the visible debug session, queries the stopped adapter for selected
 locals/watches, and writes a status/proof artifact back.
 
+The bridge is session-oriented. A start/restart/process request returns
+`debugger.session.v1` state with the VS Code debug session ID, selected
+thread/frame, current stop sequence, requested/verified breakpoints, and an
+event log reference. Follow-up `inspect`, `continue`, `stepOver`, `stepIn`,
+`stepOut`, `pause`, `runTo`, `removeBreakpoints`, `selectFrame`,
+`selectThread`, and `terminate` requests must bind `sessionId` and
+`expectedStopSequence` so a stale agent command cannot control a newer pause.
+`inspect` reads the already-paused selected frame without continuing execution.
+
 The bridge is intentionally fail-closed:
 
 - it does not auto-process stale request files on VS Code startup
