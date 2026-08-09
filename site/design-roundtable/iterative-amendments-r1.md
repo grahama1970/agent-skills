@@ -13,6 +13,17 @@ Status: first implementation slice plus next bounded amendments. Not a complianc
 - Deterministic guard: `npm run verify:proof-pilot`
 - Rendered proof: `/tmp/grahama-proof-pilot-desktop-v2.png`, `/tmp/grahama-proof-pilot-mobile-v2.png`, `/tmp/grahama-proof-pilot-geometry-v2.json`
 
+## Implemented Slice A2b
+
+**Type Direction Decision**
+
+- Target: `site/app/globals.css`, `site/app/layout.tsx`, `site/public/fonts/`
+- Change: replace the overused Fraunces display face with locally hosted Literata roman/italic variable cuts for the human claim and section-thesis register.
+- Why: Impeccable flagged Fraunces as an overused AI-template font. Literata keeps an editorial, screen-native proof-workshop voice without carrying the Fraunces startup-hero signature.
+- Template-residue removed: Fraunces font references, Fraunces-only `SOFT`/`WONK` variation axes, and unused Fraunces font assets.
+- Deterministic guard: `npm run verify:type-direction`
+- Still not proved by this slice: full G16 type fidelity, blind logo-off recognition, competitor-swap distinctiveness, performance, or accessibility.
+
 ## Next Amendments
 
 ### A2 About Proof Path Pilot

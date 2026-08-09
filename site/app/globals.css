@@ -3,21 +3,21 @@
 /* ============================================================
    grahama.co — winning comp (webclaude, design compete
    ask-tau-design-competition-…-5006fa2a0d33) ported faithfully.
-   Type roles: Fraunces = argument · system sans = prose ·
+   Type roles: Literata = argument · system sans = prose ·
    monospace = machine-produced text only.
    ============================================================ */
 
 @font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces-var.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: 'Literata';
+  src: url('/fonts/literata-latin-var.woff2') format('woff2');
+  font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces-italic-var.woff2') format('woff2');
-  font-weight: 100 900;
+  font-family: 'Literata';
+  src: url('/fonts/literata-latin-italic-var.woff2') format('woff2');
+  font-weight: 200 900;
   font-style: italic;
   font-display: swap;
 }
@@ -36,7 +36,7 @@
   --sage: #93a289;
   --line: rgba(236, 226, 211, 0.13);
   --line-2: rgba(236, 226, 211, 0.055);
-  --serif: 'Fraunces', 'Iowan Old Style', Palatino, Georgia, serif;
+  --serif: 'Literata', 'Iowan Old Style', Palatino, Georgia, serif;
   --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   --gut: clamp(18px, 3.2vw, 44px);
@@ -166,31 +166,29 @@ img {
 .h2 {
   font-family: var(--serif);
   font-weight: 600;
-  font-variation-settings: 'SOFT' 38, 'WONK' 1, 'opsz' 120;
+  font-variation-settings: 'opsz' 56;
   font-size: clamp(2rem, 4.4vw, 3.5rem);
   line-height: 1.03;
   letter-spacing: -0.02em;
   margin: 0.5em 0 0;
   max-width: 22ch;
 }
-/* Per-section headline voice — Fraunces set by hand, not one global setting.
-   Each axis choice is deliberate so the variation reads as art-direction, not
-   inconsistency: #work leans warm/editorial, #dream large & soft (a question
-   spoken aloud), #competence near-neutral/technical (it fronts a data table),
-   #ledger tight & plain (an inventory). Non-negotiable: Fraunces throughout. */
+/* Per-section headline voice — one display family, tuned by optical size and
+   weight so the site keeps an editorial proof-workshop register without an
+   overused startup-hero signature. */
 #work .h2 {
-  font-variation-settings: 'SOFT' 58, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
 }
 #dream .h2 {
-  font-variation-settings: 'SOFT' 74, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
   letter-spacing: -0.025em;
 }
 #competence .h2 {
-  font-variation-settings: 'SOFT' 12, 'WONK' 0, 'opsz' 96;
+  font-variation-settings: 'opsz' 48;
   letter-spacing: -0.015em;
 }
 #ledger .h2 {
-  font-variation-settings: 'SOFT' 20, 'WONK' 0, 'opsz' 84;
+  font-variation-settings: 'opsz' 44;
 }
 .lede {
   color: var(--muted);
@@ -239,7 +237,7 @@ section {
   font-weight: 600;
   font-size: 1.06rem;
   letter-spacing: -0.01em;
-  font-variation-settings: 'SOFT' 60, 'WONK' 1, 'opsz' 20;
+  font-variation-settings: 'opsz' 20;
   text-decoration: none;
 }
 .brandmark {
@@ -449,7 +447,7 @@ section {
 h1 {
   font-family: var(--serif);
   font-weight: 700;
-  font-variation-settings: 'SOFT' 26, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
   font-size: clamp(2.7rem, 7.1vw, 6.4rem);
   line-height: 0.94;
   letter-spacing: -0.032em;
@@ -460,7 +458,7 @@ h1 .it {
   font-style: italic;
   font-weight: 500;
   color: var(--brass);
-  font-variation-settings: 'SOFT' 90, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
   position: relative;
   display: inline-block;
   padding-inline: 0.02em;
@@ -888,7 +886,7 @@ h1 .it::after {
   font-family: var(--serif);
   font-weight: 600;
   font-size: clamp(1.35rem, 2.1vw, 1.95rem);
-  font-variation-settings: 'SOFT' 42, 'WONK' 1, 'opsz' 40;
+  font-variation-settings: 'opsz' 40;
   letter-spacing: -0.018em;
   line-height: 1.08;
   margin: 0;
@@ -898,7 +896,7 @@ h1 .it::after {
   font-family: var(--serif);
   font-style: italic;
   font-weight: 400;
-  font-variation-settings: 'SOFT' 80, 'WONK' 1, 'opsz' 20;
+  font-variation-settings: 'opsz' 20;
   color: var(--brass);
   font-size: clamp(0.98rem, 1.15vw, 1.08rem);
   line-height: 1.4;
@@ -1479,7 +1477,7 @@ h1 .it::after {
   font-family: var(--serif);
   font-weight: 600;
   font-size: clamp(1.08rem, 1.5vw, 1.32rem);
-  font-variation-settings: 'SOFT' 44, 'WONK' 1, 'opsz' 28;
+  font-variation-settings: 'opsz' 28;
   letter-spacing: -0.012em;
   margin: 0;
 }
@@ -1502,7 +1500,7 @@ h1 .it::after {
   font-size: 1.08rem;
   line-height: 1.5;
   color: var(--text);
-  font-variation-settings: 'SOFT' 80, 'WONK' 1, 'opsz' 20;
+  font-variation-settings: 'opsz' 20;
 }
 
 /* --- closer ----------------------------------------------- */
@@ -1532,7 +1530,7 @@ h1 .it::after {
 .shelved {
   font-family: var(--serif);
   font-weight: 700;
-  font-variation-settings: 'SOFT' 28, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
   font-size: clamp(2.3rem, 6.2vw, 5.2rem);
   line-height: 0.96;
   letter-spacing: -0.03em;
@@ -1541,7 +1539,7 @@ h1 .it::after {
 .shelved em {
   font-style: italic;
   color: var(--ember);
-  font-variation-settings: 'SOFT' 90, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
 }
 .accountability {
   color: var(--muted);
@@ -1592,7 +1590,7 @@ footer a:hover {
   font-style: italic;
   font-size: 1.02rem;
   color: var(--text);
-  font-variation-settings: 'SOFT' 80, 'WONK' 1, 'opsz' 20;
+  font-variation-settings: 'opsz' 20;
 }
 /* Public scope & data boundaries — a quiet full-width perimeter note under the
    footer grid; muted register, never louder than the ethos line above it. */
@@ -1923,7 +1921,7 @@ footer a:hover {
   font-size: clamp(1.15rem, 1.7vw, 1.5rem);
   line-height: 1.5;
   color: var(--text);
-  font-variation-settings: 'SOFT' 40, 'WONK' 0, 'opsz' 40;
+  font-variation-settings: 'opsz' 40;
 }
 
 /* Plain-English "what this proves" — the human claim above the raw payload. */
@@ -2527,7 +2525,7 @@ footer a:hover {
 .ledger-count {
   font-family: var(--serif);
   font-weight: 700;
-  font-variation-settings: 'SOFT' 38, 'WONK' 1, 'opsz' 144;
+  font-variation-settings: 'opsz' 72;
   font-size: clamp(3.4rem, 7vw, 6.8rem);
   line-height: 1;
   letter-spacing: -0.03em;
@@ -2824,7 +2822,7 @@ a.fig:hover .l::after,
   display: block;
   font-family: var(--serif);
   font-size: clamp(1.3rem, 2.2vw, 1.9rem);
-  font-variation-settings: 'SOFT' 50, 'opsz' 40;
+  font-variation-settings: 'opsz' 40;
   color: var(--text);
   margin-bottom: 0.7rem;
 }
@@ -3139,7 +3137,7 @@ a.fig:hover .l::after,
 .constellation-cap {
   font-family: var(--serif);
   font-size: clamp(1.1rem, 1.8vw, 1.5rem);
-  font-variation-settings: 'SOFT' 50, 'opsz' 40;
+  font-variation-settings: 'opsz' 40;
   color: var(--muted);
   margin-bottom: 0.8rem;
   max-width: 52ch;
@@ -3248,7 +3246,7 @@ a:hover .c-img { opacity: 1; }
   font-family: var(--serif);
   font-size: 46px;
   fill: var(--brass);
-  font-variation-settings: 'SOFT' 40, 'opsz' 48;
+  font-variation-settings: 'opsz' 48;
   pointer-events: none;
 }
 .c-mark-sub {
@@ -3392,7 +3390,7 @@ a:hover .c-plabel { fill: var(--brass); }
   font-family: var(--serif);
   font-size: 1.12rem;
   font-weight: 600;
-  font-variation-settings: 'SOFT' 40, 'opsz' 30;
+  font-variation-settings: 'opsz' 30;
   color: var(--text);
 }
 .rm-count {

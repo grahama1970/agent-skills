@@ -1,0 +1,129 @@
+{
+  "schema": "grahama.type_direction_receipt.v1",
+  "slice": "A2b",
+  "status": "BOUNDED_AMENDMENT_EVIDENCE_ONLY",
+  "mocked": "no",
+  "live": "yes",
+  "decision": {
+    "question": "Should the site alter the font after Impeccable overused-font warnings?",
+    "answer": "Yes. The display face was changed from Fraunces to locally hosted Literata roman and italic variable assets.",
+    "runtime_google_fonts": "no",
+    "reason_for_self_hosting": "Deterministic local build, fewer third-party requests, privacy, and performance control. Google Fonts was used only to discover and download the selected open font assets."
+  },
+  "changed_files": [
+    "site/app/globals.css",
+    "site/app/layout.tsx",
+    "site/package.json",
+    "site/scripts/verify_type_direction.py",
+    "site/public/fonts/literata-latin-var.woff2",
+    "site/public/fonts/literata-latin-italic-var.woff2",
+    "site/public/fonts/fraunces-var.woff2",
+    "site/public/fonts/fraunces-italic-var.woff2",
+    "site/design-roundtable/iterative-amendments-r1.md",
+    "site/design-roundtable/visual-world-brief.r1.yaml",
+    "site/design-roundtable/type-direction-a2b-receipt.r1.json"
+  ],
+  "commands": [
+    {
+      "command": "skills/brave-search/run.sh web \"Literata variable font optical size editorial evidence typography Google Fonts\" --count 5",
+      "cwd": "/home/graham/workspace/experiments/agent-skills",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "yes",
+      "result": "Returned 5 raw Brave results including Google Fonts and googlefonts/literata references describing Literata as a distinct variable family for digital text/long-form reading."
+    },
+    {
+      "command": "node /home/graham/workspace/experiments/impeccable/skill/scripts/detect.mjs --json --scope type site/app/globals.css site/app/layout.tsx site/components/receipt-ticket.tsx",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "[]"
+    },
+    {
+      "command": "npm run verify:type-direction",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable/site",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "OK: display type uses local Literata assets and no Fraunces-specific residue"
+    },
+    {
+      "command": "npm run verify:proof-pilot",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable/site",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "OK: Proof Workshop pilot exposes claim/evidence/boundary/judgment roles without global mono receipt skin"
+    },
+    {
+      "command": "npm run verify:qid",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable/site",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "OK: 51 interactive elements carry data-qid, data-qs-action, title"
+    },
+    {
+      "command": "skills/monitor-website/run.sh design-world-check --json",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "contract PASS; no_mono_on_human_labels PASS; responsive_choreography NOT_TESTED; distinctiveness_blind NOT_TESTED; craft_integrity_render NOT_TESTED; overall NOT_TESTED"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable/site",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "no",
+      "result": "Next 15.5.22 compiled/exported; 8 static pages generated; / first-load JS 303 kB; workspace-root warning remains."
+    },
+    {
+      "command": "Playwright screenshot and computed-style capture against http://127.0.0.1:43218/",
+      "cwd": "/home/graham/workspace/experiments/agent-skills-world-roundtable/site",
+      "exit_code": 0,
+      "mocked": "no",
+      "live": "yes",
+      "result": "Desktop/mobile screenshots captured; computed H1/H1 italic/H2/wordmark font-family is Literata; Literata normal and italic font faces report loaded."
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "/tmp/grahama-type-literata-desktop-settled.png",
+      "viewport": "1440x900",
+      "visual_observation": "Settled hero render uses the new editorial display face with readable claim hierarchy."
+    },
+    {
+      "path": "/tmp/grahama-type-literata-mobile.png",
+      "viewport": "390x844",
+      "visual_observation": "Mobile hero wraps without horizontal overflow and keeps the proof emphasis visible."
+    }
+  ],
+  "computed_style_sample": {
+    "desktop_h1": {
+      "fontFamily": "Literata, \"Iowan Old Style\", Palatino, Georgia, serif",
+      "fontStyle": "normal",
+      "fontWeight": "700",
+      "fontSize": "102.24px",
+      "fontVariationSettings": "\"opsz\" 72",
+      "opacity_after_2_2s": "1"
+    },
+    "desktop_h1_italic": {
+      "fontFamily": "Literata, \"Iowan Old Style\", Palatino, Georgia, serif",
+      "fontStyle": "italic",
+      "fontWeight": "500",
+      "fontVariationSettings": "\"opsz\" 72"
+    },
+    "mobile_overflow_x": 0
+  },
+  "does_not_prove": [
+    "Full best-practices-bespoke-design compliance",
+    "Impeccable G16 type fidelity PASS from an independent finish reviewer",
+    "G17 material fidelity",
+    "G18 creator/reviewer amend-loop integrity",
+    "Blind logo-off or competitor-swap distinctiveness",
+    "WCAG 2.2 AA or field performance"
+  ]
+}

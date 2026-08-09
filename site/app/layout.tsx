@@ -32,10 +32,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Preload the display face so the largest text (LCP) paints without a
-            late font discovery. Variable cuts are the only fonts. */}
+            late font discovery. Variable cuts are the only display fonts. */}
         <link
           rel="preload"
-          href="/fonts/fraunces-var.woff2"
+          href="/fonts/literata-latin-var.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"

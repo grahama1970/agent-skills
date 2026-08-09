@@ -166,6 +166,20 @@ selection:
 
 visual_grammar:
   typography:
+    current_display_family: "Literata"
+    display_family_status: "IMPLEMENTED_BOUNDED_A2B_NOT_FULL_G16"
+    display_family_source:
+      - source_id: "SRC-004"
+        title: "Brave raw search for Literata source descriptions"
+        location: "local command: skills/brave-search/run.sh web \"Literata variable font optical size editorial evidence typography Google Fonts\" --count 5"
+        source_type: "research"
+        authority: "supporting"
+      - source_id: "SRC-005"
+        title: "Local Literata latin variable assets"
+        location: "site/public/fonts/literata-latin-var.woff2; site/public/fonts/literata-latin-italic-var.woff2"
+        source_type: "implementation"
+        authority: "source"
+    hosting_rule: "Self-host selected display font assets; do not add runtime Google Fonts requests unless broader language coverage becomes a product requirement."
     display_role: "open claim or section thesis"
     reading_role: "human explanation and context"
     utility_role: "navigation, controls, labels"
