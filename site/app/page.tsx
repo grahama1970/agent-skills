@@ -92,6 +92,15 @@ export default function Home() {
   const capturedReceiptCount = (artifacts.artifacts as ReceiptArtifact[]).filter(
     (a) => a.capture_status === 'captured',
   ).length;
+  const primaryReceiptId =
+    RECEIPT_IDS.find((id) => receiptArtifacts[id].capture_status === 'captured') ??
+    RECEIPT_IDS[0];
+  const secondaryReceiptIds = RECEIPT_IDS.filter(
+    (id) => id !== primaryReceiptId && receiptArtifacts[id].capture_status === 'captured',
+  );
+  const unavailableReceiptIds = RECEIPT_IDS.filter(
+    (id) => receiptArtifacts[id].capture_status === 'unavailable',
+  );
   return (
     <>
       <HomeJsonLd />
@@ -503,8 +512,8 @@ export default function Home() {
           <div className="wrap">
             <div className="receipts-grid">
               <div className="receipts-copy">
-                <p className="kicker">
-                  <b>05</b> Receipts
+                <p className="receipt-margin">
+                  <span>Receipts</span>
                 </p>
                 <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
@@ -516,10 +525,34 @@ export default function Home() {
                   Missing sources stay visible as boundaries, not status widgets.
                 </p>
               </div>
-              <div className="tickets">
-                {RECEIPT_IDS.map((id) => {
-                  const receipt = receiptArtifacts[id];
+              <div className="receipt-stage">
+                {(() => {
+                  const receipt = receiptArtifacts[primaryReceiptId];
                   return receipt.capture_status === 'captured' ? (
+                    <ReceiptTicket
+                      key={primaryReceiptId}
+                      id={primaryReceiptId}
+                      variant="primary"
+                      title={receipt.title}
+                      callout={receipt.judgment}
+                      proves={receipt.proves}
+                      doesNotProve={receipt.does_not_prove}
+                      body={receipt.body}
+                      caption={receipt.caption}
+                    />
+                  ) : (
+                    <article className="receipt-boundary receipt-boundary-primary" key={primaryReceiptId}>
+                      <h3>{receipt.title}</h3>
+                      <p className="callout">{receipt.judgment}</p>
+                      <p>{receipt.unavailable_reason ?? receipt.caption}</p>
+                      <p className="does-not-prove">{receipt.does_not_prove}</p>
+                    </article>
+                  );
+                })()}
+                <div className="secondary-receipts">
+                  {secondaryReceiptIds.map((id) => {
+                  const receipt = receiptArtifacts[id];
+                  return (
                       <ReceiptTicket
                         key={id}
                         id={id}
@@ -530,15 +563,24 @@ export default function Home() {
                         body={receipt.body}
                         caption={receipt.caption}
                       />
-                    ) : (
-                      <article className="receipt-boundary" key={id}>
-                        <h3>{receipt.title}</h3>
-                        <p className="callout">{receipt.judgment}</p>
-                        <p>{receipt.unavailable_reason ?? receipt.caption}</p>
-                        <p className="does-not-prove">{receipt.does_not_prove}</p>
-                      </article>
                     );
-                })}
+                  })}
+                </div>
+                {unavailableReceiptIds.length > 0 && (
+                  <div className="receipt-boundaries">
+                    {unavailableReceiptIds.map((id) => {
+                      const receipt = receiptArtifacts[id];
+                      return (
+                        <article className="receipt-boundary" key={id}>
+                          <h3>{receipt.title}</h3>
+                          <p className="callout">{receipt.judgment}</p>
+                          <p>{receipt.unavailable_reason ?? receipt.caption}</p>
+                          <p className="does-not-prove">{receipt.does_not_prove}</p>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

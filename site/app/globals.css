@@ -92,7 +92,7 @@ img {
 }
 
 .machine {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
@@ -1298,14 +1298,43 @@ h1 .it::after {
   gap: var(--gut);
 }
 .receipts-copy {
-  grid-column: 1 / span 4;
+  grid-column: 1 / span 3;
 }
-.tickets {
-  grid-column: 5 / span 8;
+.receipt-margin {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: minmax(44px, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  font-family: var(--sans);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.receipt-margin::before {
+  content: '';
+  height: 1px;
+  background: var(--brass);
+  opacity: 0.85;
+}
+.receipt-stage {
+  grid-column: 4 / span 9;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
   gap: clamp(14px, 1.8vw, 26px);
   align-items: start;
+}
+.secondary-receipts,
+.receipt-boundaries {
+  grid-column: 6 / span 3;
+  display: grid;
+  gap: clamp(14px, 1.8vw, 26px);
+}
+.ticket-primary,
+.receipt-boundary-primary {
+  grid-column: 1 / span 5;
+  grid-row: span 2;
 }
 .ticket {
   background: var(--paper);
@@ -1333,9 +1362,10 @@ h1 .it::after {
   -webkit-mask-repeat: repeat-x, repeat-x;
   -webkit-mask-position: top, bottom;
 }
-.ticket:nth-child(1) { transform: rotate(-0.7deg); }
-.ticket:nth-child(2) { transform: rotate(0.45deg) translateY(14px); }
-.ticket:nth-child(3) { transform: rotate(-0.3deg) translateY(28px); }
+.ticket-primary { transform: rotate(-0.55deg); }
+.ticket-primary { min-height: 560px; }
+.ticket-secondary:nth-child(1) { transform: rotate(0.45deg) translateY(14px); }
+.ticket-secondary:nth-child(2) { transform: rotate(-0.3deg) translateY(28px); }
 .ticket:hover {
   transform: rotate(0deg) translateY(-4px);
   box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.95);
@@ -1380,6 +1410,20 @@ h1 .it::after {
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
+}
+.ticket-primary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(14px, 2vw, 24px);
+  align-items: start;
+}
+.ticket-primary .json {
+  font-size: 0.66rem;
+  line-height: 1.55;
+  padding-left: clamp(12px, 1.6vw, 18px);
+  border-left: 1px dashed rgba(26, 20, 17, 0.3);
+  max-height: none;
+  overflow: visible;
 }
 .ticket .foot {
   margin-top: 0.9rem;
@@ -1705,7 +1749,7 @@ footer a:hover {
   .fig { grid-template-columns: 1fr; border-bottom: 0; gap: 0.25rem; }
   .ledger-copy, .ledger-mosaic { grid-column: 1 / span 12; }
   .dream-head .a, .dream-head .b { grid-column: 1 / span 12; }
-  .receipts-copy, .tickets { grid-column: 1 / span 12; }
+  .receipts-copy, .receipt-stage { grid-column: 1 / span 12; }
   .about-copy, .track { grid-column: 1 / span 12; }
   .closer .a, .closer .b { grid-column: 1 / span 12; }
   .foot-a, .foot-b, .foot-c { grid-column: 1 / span 12; }
@@ -1715,8 +1759,34 @@ footer a:hover {
   body { font-size: 16px; }
   .cards { gap: clamp(30px, 7vw, 44px); }
   .card { grid-column: 1 / span 12 !important; grid-row: auto !important; margin-top: 0 !important; }
-  .tickets { grid-template-columns: 1fr; gap: 22px; }
-  .ticket, .ticket:nth-child(2), .ticket:nth-child(3) { transform: none; }
+  .receipt-stage,
+  .secondary-receipts,
+  .receipt-boundaries {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .ticket-primary,
+  .receipt-boundary-primary,
+  .secondary-receipts,
+  .receipt-boundaries {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .ticket,
+  .ticket-primary,
+  .ticket-secondary:nth-child(1),
+  .ticket-secondary:nth-child(2) {
+    transform: none;
+  }
+  .ticket-primary-grid {
+    grid-template-columns: 1fr;
+  }
+  .ticket-primary .json {
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 0.8rem;
+    border-top: 1px dashed rgba(26, 20, 17, 0.3);
+  }
   .mosaic { grid-template-columns: repeat(13, 1fr); gap: 4px; }
   .figs { grid-template-columns: 1fr 1fr; }
   /* Three stats in two columns would orphan the third — let it span the row. */
@@ -2577,6 +2647,10 @@ a.fig:hover .l::after,
     max-height: 40vh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  .ticket-primary .json {
+    max-height: none;
+    overflow: visible;
   }
   /* Keyboard-only affordances carry little value on touch; de-emphasize. */
   .stepper-hint,

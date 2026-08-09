@@ -12,6 +12,7 @@ export function ReceiptTicket({
   doesNotProve,
   body,
   caption,
+  variant = 'secondary',
 }: {
   id: string;
   title: string;
@@ -20,10 +21,31 @@ export function ReceiptTicket({
   doesNotProve: string;
   body: string;
   caption: string;
+  variant?: 'primary' | 'secondary';
 }) {
   const [raw, setRaw] = useState(false);
+  if (variant === 'primary') {
+    return (
+      <article className="ticket ticket-primary">
+        <h3>{title}</h3>
+        <div className="ticket-primary-grid">
+          <div className="ticket-summary">
+            <p className="callout">{callout}</p>
+            <p className="proves">{proves}</p>
+            <p className="does-not-prove">{doesNotProve}</p>
+            <p className="human">
+              {caption}. The judgment, proof boundary, and raw payload stay together;
+              the summary is never the only evidence.
+            </p>
+          </div>
+          <pre className="json">{body}</pre>
+        </div>
+        <p className="foot">{caption}</p>
+      </article>
+    );
+  }
   return (
-    <article className="ticket">
+    <article className="ticket ticket-secondary">
       <h3>{title}</h3>
       <p className="callout">{callout}</p>
       <p className="proves">{proves}</p>
