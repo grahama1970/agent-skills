@@ -174,9 +174,9 @@ Latest sweep: `msh-20260628-084135`
 
 | Inventory | Count |
 |---|---:|
-| Skills | 344 |
+| Skills | 346 |
 | With `run.sh` | 292 |
-| With `sanity.sh` | 290 |
+| With `sanity.sh` | 291 |
 | Agent directories | 92 |
 | With `AGENTS.md` | 86 |
 | With `persona.yaml` | 51 |

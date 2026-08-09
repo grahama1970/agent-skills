@@ -1,0 +1,39 @@
+# Graham Anderson
+
+> I build agent systems that can prove what they did.
+
+Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco
+
+## Résumé
+
+- [Full résumé (HTML)](https://grahama.co/resume)
+- [Résumé PDF, two pages](https://grahama.co/resume.pdf)
+- [Résumé source (Markdown)](https://grahama.co/resume.md)
+
+## Experience
+
+- Founder & Principal AI Engineer / Architect | grahamaco | Buffalo–Niagara Falls Area · Remote — Feb 2025 - Present
+- Lead Research Scientist, Agentic Formal Methods | grahamaco (independent practice) | Buffalo, NY — Jan 2024 - Feb 2025
+- Principal Data Scientist & ACERT Technical Lead | CS Group (DARPA ARCOS) — Sep 2020 - Dec 2023
+- Data Scientist | grahamaco (independent practice) | NYC · Remote — Sep 2011 - Sep 2020
+- Earlier: Interactive Executive Producer & Composer | Los Angeles, CA — 2005 - 2011
+
+## Core competencies
+
+- Evals & Quality: LLM Evaluation, Agentic Evaluation Harnesses, Adversarial/Blind Testing, Regression Gates, Ground-Truth Fixtures
+- Observability & LLMOps: AI Observability, Drift Detection, LLMOps
+- Agentic Orchestration: Multi-Agent Systems, AI Agents, DAG Contracts, State Tracking, Tool Calling, Model Context Protocol (MCP), Bounded Agent Roles, Prompt Engineering
+- LLM Platform: Large Language Models (LLM), Generative AI, LLM Gateway/Routing, Provider Fallback, Structured Outputs, Batch Inference, Guardrails
+- Retrieval & Knowledge: Retrieval-Augmented Generation (RAG), GraphRAG, Knowledge Graphs, ArangoDB, Vector Databases, Hybrid BM25 + Vector Search
+- Verification & Compliance: Formal Verification, Lean 4, NIST 800-53/171, MITRE ATT&CK, AI Governance
+- Document AI & Interfaces: PDF Extraction, Layout & Table Extraction, Extraction Calibration, React, TypeScript, D3, Design Systems
+- Briefing & Communication: Conference Speaking, Executive & Technical Briefings, Technical Writing
+- ML & Platform: Machine Learning, Model Fine-Tuning, Classifier Training, Python, Rust, Docker, Linux
+
+## Notes for agents
+
+- Client work is export-controlled (ITAR); client names are withheld by
+  necessity, not omission.
+- Every count on this site is generated from the repository at the deploy
+  commit (488747019e), not hand-maintained.
+- Contact: graham@grahama.co

@@ -1,6 +1,6 @@
 {
-  "commit": "0d84c1434",
-  "as_of": "2026-08-08",
+  "commit": "488747019e",
+  "as_of": "2026-08-09",
   "artifacts": [
     {
       "id": "roundtable-receipt",
@@ -19,7 +19,7 @@
       "title": "monitor-website audit \u2014 this page, checked against the repo",
       "capture_status": "captured",
       "source": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
-      "digest": "sha256:6f1dac9826d78a6286262b40ccee25fe582f5756880c8d51b0b5b66b2e23b979",
+      "digest": "sha256:54e6c2acb90354ef46ff9d1d6803aaef55a0ce58ca2bfa34a9c8eb9aba697eaa",
       "judgment": "LOCAL DRIFT: 0 \u00b7 PUBLIC ENDPOINTS: 5/5",
       "proves": "The checkout's generated surfaces shared one source stamp, excluding artifacts.json while it was being regenerated, and the named public endpoints returned expected markers at capture time.",
       "does_not_prove": "That the deployed HTML was built from this exact commit, or that every interaction works.",
@@ -31,12 +31,12 @@
       "title": "inventory provenance \u2014 where the numbers come from",
       "capture_status": "captured",
       "source": "site/inventory.json",
-      "digest": "sha256:45a3eb22fd005aa6d75a6e1a30ec8f73dfd6e2266c0e76f4e88924ee610db0ee",
-      "judgment": "BUILD: 0d84c1434",
+      "digest": "sha256:f95917cdbc63fd958f2e2d70459bb27fa0c98419c334ba454550969cc769370d",
+      "judgment": "BUILD: 488747019e",
       "proves": "The numbers above came from checked source state, not marketing copy.",
       "does_not_prove": "That every skill is complete, useful, or production-ready.",
-      "caption": "site/inventory.json \u00b7 sha256 45a3eb22fd005aa6\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"0d84c1434\",\n  \"as_of\": \"2026-08-08\",\n  \"stats\": {\n    \"skills\": 344,\n    \"sanity\": 290,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 f95917cdbc63fd95\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"488747019e\",\n  \"as_of\": \"2026-08-09\",\n  \"stats\": {\n    \"skills\": 346,\n    \"sanity\": 291,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }
