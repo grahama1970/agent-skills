@@ -1,0 +1,128 @@
+{
+  "schema": "grahama.distinctiveness_blind.v1",
+  "status": "PASS",
+  "source_commit": "fixture-source-commit",
+  "prompt": {
+    "path": "skills/monitor-website/fixtures/design-world/distinctiveness/fixture-prompt.md",
+    "sha256": "90dabc19a266ef862e0af83ec9c3319aca8bea6d8aa50c5efc041422d3fb9363"
+  },
+  "contact_sheet": {
+    "path": "skills/monitor-website/fixtures/design-world/distinctiveness/fixture-contact-sheet.txt",
+    "sha256": "58dc9803de9d7e0ab25e124c80ef28b17de087788b88edc7a3ef5525c8efe1c9"
+  },
+  "thresholds": {
+    "min_raters": 5,
+    "logo_off_min_correct_ratio": 0.8,
+    "min_positive_classification": 4,
+    "max_generic_ai_template_primary": 1,
+    "min_competitor_swap_tension": 4,
+    "min_cross_screen_family": 4,
+    "max_reference_or_craft_leakage_risk": "medium"
+  },
+  "aggregate": {
+    "usable": 5,
+    "logo_off_correct": 5,
+    "positive_classification": 5,
+    "generic_ai_template_primary": 0,
+    "competitor_swap_tension": 5,
+    "cross_screen_family": 5,
+    "high_leakage_risk": 0
+  },
+  "raters": [
+    {
+      "rater_id": "fixture-rater-1",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-1.md",
+        "sha256": "4ca34754359dd519352899879785982be47f18719576a63b522942ac7c684256"
+      },
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 91,
+      "ten_second_classification": "Evidence-first claim workshop",
+      "generic_ai_template_primary": false,
+      "evidence_first_signals": ["proof boundary", "evidence margin", "bounded judgment"],
+      "non_color_invariants": ["narrative versus machine roles", "provenance margins", "explicit does-not-prove boundary"],
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "low, fixture",
+      "verdict": "PASS"
+    },
+    {
+      "rater_id": "fixture-rater-2",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-2.md",
+        "sha256": "6bed4a9148c89639d3ad835c7d60e1458c3b22a2c44dd945d7808ba2640fba88"
+      },
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 88,
+      "ten_second_classification": "Accountability evidence interface",
+      "generic_ai_template_primary": false,
+      "evidence_first_signals": ["hashes", "source labels", "judgment boundaries"],
+      "non_color_invariants": ["claim-to-evidence structure", "local source blocks", "machine evidence separated from prose"],
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "none, fixture",
+      "verdict": "PASS"
+    },
+    {
+      "rater_id": "fixture-rater-3",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-3.md",
+        "sha256": "34b98ee1592d4dc424cf3abbf939b5c1057bc4b1eb19d90f173e1665c9889e2d"
+      },
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 84,
+      "ten_second_classification": "Bounded proof portfolio",
+      "generic_ai_template_primary": false,
+      "evidence_first_signals": ["observed artifact", "deterministic rule", "does-not-prove field"],
+      "non_color_invariants": ["evidence margins", "proof-line connectors", "explicit unresolved gaps"],
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "low, fixture",
+      "verdict": "PASS"
+    },
+    {
+      "rater_id": "fixture-rater-4",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-4.md",
+        "sha256": "8b5f4485d26cec43c90d320133d4d25778891d4f4e0afc0186f0ce4590f80979"
+      },
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 79,
+      "ten_second_classification": "Claim-to-judgment evidence system",
+      "generic_ai_template_primary": false,
+      "evidence_first_signals": ["receipt table", "source-generated counts", "proof limits"],
+      "non_color_invariants": ["human labels separated from machine values", "local provenance stamps", "bounded judgment panels"],
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "medium, fixture",
+      "verdict": "PASS"
+    },
+    {
+      "rater_id": "fixture-rater-5",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-5.md",
+        "sha256": "1d7ab6c1a4fa0a8c90ee8e45be616eb427deb196304759d3f438040bf684fee7"
+      },
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 86,
+      "ten_second_classification": "Proof-led systems portfolio",
+      "generic_ai_template_primary": false,
+      "evidence_first_signals": ["evidence-first hierarchy", "immutable locator", "bounded judgment"],
+      "non_color_invariants": ["source traces", "proof boundaries", "narrative-machine role split"],
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "low, fixture",
+      "verdict": "PASS"
+    }
+  ]
+}

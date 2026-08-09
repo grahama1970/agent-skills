@@ -29,6 +29,12 @@ Current deterministic evidence:
   - `responsive_choreography: PASS`, `routes: 6`, `viewports: 5`, `checks: 30`, `failures: 0`
   - `craft_integrity_render: PASS`, `rendered_screens: 3`
   - `distinctiveness_blind: NOT_TESTED`, needs rendered screenshot corpus / blind-rater outputs
+- `skills/monitor-website/run.sh design-world-check --json --distinctiveness-receipt skills/monitor-website/fixtures/design-world/distinctiveness/valid-distinctiveness-receipt.json`
+  - fixture-only `distinctiveness_blind: PASS`
+  - computed counts: `usable: 5`, `logo_off_correct: 5`, `generic_ai_template_primary: 0`, `competitor_swap_tension: 5`, `cross_screen_family: 5`
+- `skills/monitor-website/run.sh design-world-check --json --distinctiveness-receipt skills/monitor-website/fixtures/design-world/distinctiveness/invalid-too-few-raters.json`
+  - expected failure: `distinctiveness_blind: FAIL`
+  - verifies too few raters, wrong logo-off match, missing classification/signals/invariants, generic-template vote, missing swap/family votes, and high leakage risk are rejected
 - `skills/monitor-website/run.sh audit --no-live --json`
   - `ok: true`
   - `drift: []`
@@ -52,6 +58,7 @@ Previously recorded deterministic checks in this worktree:
 - `best-practices-font` exists and validates against `best-practices-skills`.
 - The site has a selected visual world, territory selection, font receipt, craft-integrity receipt, visual asset registry, effects registry, and generated source surfaces.
 - The major deterministic checks for provenance, territory separation, narrative premise, font role, responsive geometry, visual assets, effects, case compositions, copy, generated data, and build have usable local receipts.
+- `design-world-check` now has a deterministic blind-rater receipt validator. It can accept a complete five-rater receipt and reject incomplete or contradictory normalized rater data. The production receipt is intentionally absent, so this does not establish G11.
 - The rater prompt and contact sheet are stable:
   - `site/design-roundtable/distinctiveness-rater-prompt.r2.md`
   - prompt SHA-256: `0b77bd0f02f95581e040c8736dec872106688b057404ef85b0cdb7b744f33644`

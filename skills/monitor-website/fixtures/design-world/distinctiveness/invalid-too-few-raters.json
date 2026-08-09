@@ -1,0 +1,43 @@
+{
+  "schema": "grahama.distinctiveness_blind.v1",
+  "status": "PASS",
+  "source_commit": "fixture-source-commit",
+  "prompt": {
+    "path": "skills/monitor-website/fixtures/design-world/distinctiveness/fixture-prompt.md",
+    "sha256": "90dabc19a266ef862e0af83ec9c3319aca8bea6d8aa50c5efc041422d3fb9363"
+  },
+  "contact_sheet": {
+    "path": "skills/monitor-website/fixtures/design-world/distinctiveness/fixture-contact-sheet.txt",
+    "sha256": "58dc9803de9d7e0ab25e124c80ef28b17de087788b88edc7a3ef5525c8efe1c9"
+  },
+  "thresholds": {
+    "min_raters": 5,
+    "logo_off_min_correct_ratio": 0.8,
+    "min_positive_classification": 4,
+    "max_generic_ai_template_primary": 1,
+    "min_competitor_swap_tension": 4,
+    "min_cross_screen_family": 4,
+    "max_reference_or_craft_leakage_risk": "medium"
+  },
+  "raters": [
+    {
+      "rater_id": "fixture-rater-1",
+      "usable": true,
+      "fresh_context": true,
+      "raw_output": {
+        "path": "skills/monitor-website/fixtures/design-world/distinctiveness/raw-rater-1.md",
+        "sha256": "4ca34754359dd519352899879785982be47f18719576a63b522942ac7c684256"
+      },
+      "logo_off_match": "Generic AI Systems Portfolio",
+      "logo_off_confidence": 91,
+      "ten_second_classification": "",
+      "generic_ai_template_primary": true,
+      "evidence_first_signals": [],
+      "non_color_invariants": ["INSUFFICIENT"],
+      "competitor_swap_tension": false,
+      "cross_screen_family": false,
+      "reference_or_craft_leakage_risk": "high, fixture",
+      "verdict": "FAIL"
+    }
+  ]
+}

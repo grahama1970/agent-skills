@@ -73,6 +73,9 @@ capabilities:
   font-template-residue-audit:
     providers:
       - best-practices-font
+  monitor-website:
+    providers:
+      - monitor-website
   ui-polish-guidance:
     providers:
       - emil-design-eng

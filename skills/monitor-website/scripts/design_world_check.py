@@ -283,6 +283,224 @@ def validate_craft_integrity(receipt_path: Path) -> dict:
     }
 
 
+def _bool_field(value: object) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"yes", "true"}:
+            return True
+        if lowered in {"no", "false"}:
+            return False
+    return None
+
+
+def _risk_rank(value: object) -> int | None:
+    ranks = {"none": 0, "low": 1, "medium": 2, "high": 3}
+    if not isinstance(value, str):
+        return None
+    return ranks.get(value.strip().lower().split(",", 1)[0])
+
+
+def _listish(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    if isinstance(value, str):
+        return [part.strip() for part in value.split(",") if part.strip()]
+    return []
+
+
+def validate_distinctiveness_blind(receipt_path: Path) -> dict:
+    """Validate a blind-rater aggregate receipt.
+
+    This does not collect raters or decide the design is good. It only checks
+    that raw rater outputs exist, required fields are normalized, and the
+    pre-registered thresholds are met.
+    """
+    if not receipt_path.is_file():
+        return {
+            "status": "NOT_TESTED",
+            "needs": f"blind distinctiveness receipt missing: {receipt_path}",
+        }
+    try:
+        receipt = json.loads(receipt_path.read_text())
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": [f"blind distinctiveness receipt is not JSON: {exc}"],
+        }
+
+    errors: list[str] = []
+    if receipt.get("schema") != "grahama.distinctiveness_blind.v1":
+        errors.append("schema must be grahama.distinctiveness_blind.v1")
+    if receipt.get("status") != "PASS":
+        errors.append("receipt status must be PASS")
+    if not str(receipt.get("source_commit", "")).strip():
+        errors.append("source_commit missing")
+
+    for key in ("prompt", "contact_sheet"):
+        item = receipt.get(key) or {}
+        path_value = item.get("path")
+        digest = item.get("sha256")
+        if not path_value:
+            errors.append(f"{key}.path missing")
+            continue
+        p = _repo_path(str(path_value))
+        if not p.is_file():
+            errors.append(f"{key}.path missing file: {path_value}")
+            continue
+        if not _is_sha256(digest):
+            errors.append(f"{key}.sha256 invalid")
+        elif _sha256(p) != digest:
+            errors.append(f"{key}.sha256 mismatch")
+
+    thresholds = receipt.get("thresholds") or {}
+    min_raters = int(thresholds.get("min_raters", 5))
+    min_logo_ratio = float(thresholds.get("logo_off_min_correct_ratio", 0.8))
+    min_positive = int(thresholds.get("min_positive_classification", 4))
+    max_generic = int(thresholds.get("max_generic_ai_template_primary", 1))
+    min_swap = int(thresholds.get("min_competitor_swap_tension", 4))
+    min_family = int(thresholds.get("min_cross_screen_family", 4))
+    max_risk_name = str(thresholds.get("max_reference_or_craft_leakage_risk", "medium"))
+    max_risk = _risk_rank(max_risk_name)
+    if max_risk is None:
+        errors.append("thresholds.max_reference_or_craft_leakage_risk must be none|low|medium|high")
+        max_risk = 2
+
+    raters = receipt.get("raters") or []
+    if len(raters) < min_raters:
+        errors.append(f"at least {min_raters} raters required")
+    seen_ids: set[str] = set()
+    counts = {
+        "usable": 0,
+        "logo_off_correct": 0,
+        "positive_classification": 0,
+        "generic_ai_template_primary": 0,
+        "competitor_swap_tension": 0,
+        "cross_screen_family": 0,
+        "high_leakage_risk": 0,
+    }
+
+    for i, rater in enumerate(raters):
+        label = f"raters[{i}]"
+        rid = str(rater.get("rater_id", "")).strip()
+        if not rid:
+            errors.append(f"{label}: rater_id missing")
+        elif rid in seen_ids:
+            errors.append(f"{label}: duplicate rater_id {rid}")
+        seen_ids.add(rid)
+        if rater.get("usable") is not True:
+            errors.append(f"{label}: usable must be true")
+        else:
+            counts["usable"] += 1
+        if rater.get("fresh_context") is not True:
+            errors.append(f"{label}: fresh_context must be true")
+
+        raw = rater.get("raw_output") or {}
+        raw_path_value = raw.get("path")
+        raw_digest = raw.get("sha256")
+        if not raw_path_value:
+            errors.append(f"{label}: raw_output.path missing")
+        else:
+            raw_path = _repo_path(str(raw_path_value))
+            if not raw_path.is_file():
+                errors.append(f"{label}: raw output missing: {raw_path_value}")
+            elif not _is_sha256(raw_digest):
+                errors.append(f"{label}: raw_output.sha256 invalid")
+            elif _sha256(raw_path) != raw_digest:
+                errors.append(f"{label}: raw_output.sha256 mismatch")
+
+        if rater.get("logo_off_match") == "Proof Workshop":
+            counts["logo_off_correct"] += 1
+        else:
+            errors.append(f"{label}: logo_off_match must be Proof Workshop")
+        confidence = rater.get("logo_off_confidence")
+        if not isinstance(confidence, (int, float)) or not (0 <= confidence <= 100):
+            errors.append(f"{label}: logo_off_confidence must be 0..100")
+        if str(rater.get("ten_second_classification", "")).strip():
+            counts["positive_classification"] += 1
+        else:
+            errors.append(f"{label}: ten_second_classification missing")
+        generic = _bool_field(rater.get("generic_ai_template_primary"))
+        if generic is None:
+            errors.append(f"{label}: generic_ai_template_primary must be boolean/yes/no")
+        elif generic:
+            counts["generic_ai_template_primary"] += 1
+        if not _listish(rater.get("evidence_first_signals")):
+            errors.append(f"{label}: evidence_first_signals missing")
+        invariants = _listish(rater.get("non_color_invariants"))
+        if len(invariants) < 3 or any(v.upper() == "INSUFFICIENT" for v in invariants):
+            errors.append(f"{label}: at least three non-color invariants required")
+        swap = _bool_field(rater.get("competitor_swap_tension"))
+        if swap is True:
+            counts["competitor_swap_tension"] += 1
+        elif swap is None:
+            errors.append(f"{label}: competitor_swap_tension must be boolean/yes/no")
+        family = _bool_field(rater.get("cross_screen_family"))
+        if family is True:
+            counts["cross_screen_family"] += 1
+        elif family is None:
+            errors.append(f"{label}: cross_screen_family must be boolean/yes/no")
+        risk = _risk_rank(rater.get("reference_or_craft_leakage_risk"))
+        if risk is None:
+            errors.append(f"{label}: reference_or_craft_leakage_risk must start with none|low|medium|high")
+        elif risk > max_risk:
+            counts["high_leakage_risk"] += 1
+        if rater.get("verdict") != "PASS":
+            errors.append(f"{label}: verdict must be PASS")
+
+    required_logo = int(min_raters * min_logo_ratio + 0.999999)
+    threshold_failures = []
+    if counts["usable"] < min_raters:
+        threshold_failures.append(f"usable raters {counts['usable']} < {min_raters}")
+    if counts["logo_off_correct"] < required_logo:
+        threshold_failures.append(f"logo-off matches {counts['logo_off_correct']} < {required_logo}")
+    if counts["positive_classification"] < min_positive:
+        threshold_failures.append(f"positive classifications {counts['positive_classification']} < {min_positive}")
+    if counts["generic_ai_template_primary"] > max_generic:
+        threshold_failures.append(f"generic-AI-primary votes {counts['generic_ai_template_primary']} > {max_generic}")
+    if counts["competitor_swap_tension"] < min_swap:
+        threshold_failures.append(f"competitor-swap tension {counts['competitor_swap_tension']} < {min_swap}")
+    if counts["cross_screen_family"] < min_family:
+        threshold_failures.append(f"cross-screen family votes {counts['cross_screen_family']} < {min_family}")
+    if counts["high_leakage_risk"]:
+        threshold_failures.append(f"leakage risk votes above {max_risk_name}: {counts['high_leakage_risk']}")
+    errors.extend(threshold_failures)
+
+    aggregate = receipt.get("aggregate") or {}
+    for key, value in counts.items():
+        if key in aggregate and aggregate.get(key) != value:
+            errors.append(f"aggregate.{key} must equal computed count {value}")
+
+    if errors:
+        return {
+            "status": "FAIL",
+            "receipt": str(receipt_path),
+            "errors": errors,
+            "counts": counts,
+        }
+    return {
+        "status": "PASS",
+        "receipt": str(receipt_path),
+        "counts": counts,
+        "thresholds": {
+            "min_raters": min_raters,
+            "logo_off_min_correct_ratio": min_logo_ratio,
+            "min_positive_classification": min_positive,
+            "max_generic_ai_template_primary": max_generic,
+            "min_competitor_swap_tension": min_swap,
+            "min_cross_screen_family": min_family,
+            "max_reference_or_craft_leakage_risk": max_risk_name,
+        },
+        "does_not_prove": [
+            "Ask/browser attachment transport health",
+            "performance budgets",
+            "independent Impeccable finish review",
+        ],
+    }
+
+
 def validate_pr1_source_lock(contract: dict, brief_path: Path, selection_path: Path) -> dict[str, dict]:
     gates: dict[str, dict] = {}
     provenance_errors: list[str] = []
@@ -407,6 +625,7 @@ def main(argv=None) -> int:
     ap.add_argument("--font-receipt", default=str(SITE / "design-roundtable" / "font-receipt.r1.json"))
     ap.add_argument("--responsive-geometry", default=None)
     ap.add_argument("--craft-integrity", default=None)
+    ap.add_argument("--distinctiveness-receipt", default=None)
     ap.add_argument("--visual-world-brief", default=str(SITE / "design-roundtable" / "visual-world-brief.r1.yaml"))
     ap.add_argument("--territory-selection", default=str(SITE / "design-roundtable" / "territory-selection.r1.json"))
     ap.add_argument("--json", action="store_true")
@@ -445,10 +664,12 @@ def main(argv=None) -> int:
         or str(SITE / "design-roundtable" / "craft-integrity.r1.json")
     )
     result["gates"]["craft_integrity_render"] = validate_craft_integrity(_repo_path(craft_integrity))
-    # Gates that require evidence this command cannot supply.
-    for g in ("distinctiveness_blind",):
-        result["gates"][g] = {"status": "NOT_TESTED",
-                              "needs": "rendered screenshot corpus / blind-rater outputs (#1343)"}
+    distinctiveness_receipt = (
+        a.distinctiveness_receipt
+        or c.get("distinctiveness_blind_receipt")
+        or str(SITE / "design-roundtable" / "distinctiveness-blind.r1.json")
+    )
+    result["gates"]["distinctiveness_blind"] = validate_distinctiveness_blind(_repo_path(distinctiveness_receipt))
 
     statuses = [g["status"] for g in result["gates"].values()]
     if "FAIL" in statuses:
