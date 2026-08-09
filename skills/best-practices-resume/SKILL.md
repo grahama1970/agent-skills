@@ -35,6 +35,8 @@ taxonomy:
 disciplines:
   - engineering-standards
   - content-creation
+domains:
+  - marketing
 ---
 
 # Best Practices: Resume
@@ -118,26 +120,37 @@ fails the second reader; prose a parser cannot extract never reaches the first.
     Gates" but `Regression Testing`. Confirm each mapping against its own
     autocomplete — do not assume the absence of a term means the absence of the
     capability.
-18. **The site is a machine surface too.** `llms.txt`, `robots.txt`,
+18. **Feature the resume on LinkedIn as a link, never an uploaded file.** An
+    uploaded PDF in Featured is a snapshot: it goes stale the moment RESUME.md
+    changes, and `/surf` cannot replace it — the CLI has no upload verb (only
+    `webgpt.download`), so a stale upload can only be fixed by hand. A Featured
+    link to `https://grahama.co/resume` tracks the source automatically. Add it
+    through the Featured overflow menu → "Add a link"; the flow is two steps
+    (URL, then a title/description form) and the *second* Save is the one that
+    commits — a single Save click after entering the URL silently does nothing.
+    LinkedIn exposes no edit control for an existing Featured item, so
+    correcting one means delete-and-re-add: treat the wording as expensive and
+    prefer open-ended counts ("340+ skills") over exact ones that decay.
+19. **The site is a machine surface too.** `llms.txt`, `robots.txt`,
     `sitemap.xml` and a schema.org `Person` with a real `jobTitle` and non-empty
     `knowsAbout` are read before any prose. `jobTitle` takes one title, not the
     keyword headline.
 
 ## Verification rules
 
-19. **Verify the artifact that was served, not the one you built.** A stale PDF
+20. **Verify the artifact that was served, not the one you built.** A stale PDF
     once reached production because it was built correctly, then committed after
     a concurrent process reverted the working tree. Fetch the public URL.
-20. **Normalise before asserting a string is missing from a PDF.** PyMuPDF
+21. **Normalise before asserting a string is missing from a PDF.** PyMuPDF
     returns typographic ligatures, so "Brie**fi**ng" extracts as "Brieﬁng" and
     "Bu**ff**alo" as "Buﬀalo"; line wrapping splits phrases across newlines.
     Apply `unicodedata.normalize("NFKC", …)` and collapse whitespace first. This
     produced three separate false alarms in one session, twice nearly prompting
     a "fix" to content that was never broken.
-21. **A green local build is not a green deploy.** A `GITHUB_TOKEN` push cannot
+22. **A green local build is not a green deploy.** A `GITHUB_TOKEN` push cannot
     trigger another workflow, so an artifact committed by one workflow will not
     redeploy the site. Build the artifact in the deploying workflow instead.
-22. **Do not run a production build beside a running dev server.** `next build`
+23. **Do not run a production build beside a running dev server.** `next build`
     overwrites the `.next` a running `next dev` holds, and the dev server then
     serves module-not-found errors that look like application bugs.
 
