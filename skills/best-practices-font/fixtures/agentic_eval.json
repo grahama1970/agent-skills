@@ -1,0 +1,25 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "best-practices-font",
+  "eval_not_required": "This is a standards skill with one deterministic receipt validator; deeper agentic trials should be added when an executable font-selection workflow is introduced.",
+  "trials": [
+    {
+      "id": "positive-font-receipt",
+      "type": "positive",
+      "input": "fixtures/valid-font-receipt.json",
+      "expected": "validator_passes"
+    },
+    {
+      "id": "negative-missing-world",
+      "type": "negative",
+      "input": "fixtures/invalid-font-receipt.json",
+      "expected": "validator_fails"
+    },
+    {
+      "id": "adversarial-proof-scope",
+      "type": "adversarial",
+      "input": "receipt claims full bespoke compliance without does_not_prove",
+      "expected": "skill rejects scope inflation"
+    }
+  ]
+}

@@ -131,6 +131,21 @@ capabilities:
   resume-artifact-handoff:
     providers:
       - resume
+  font-world-contract:
+    providers:
+      - best-practices-font
+  type-role-hierarchy:
+    providers:
+      - best-practices-font
+  font-pairing-rationale:
+    providers:
+      - best-practices-font
+  font-proof-receipt:
+    providers:
+      - best-practices-font
+  font-template-residue-audit:
+    providers:
+      - best-practices-font
   house-conformance-gate: [pitchdeck]
   house-style-measurement: [pitchdeck]
   author-voice-profile: [pitchdeck]

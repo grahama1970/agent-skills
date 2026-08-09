@@ -1,0 +1,10 @@
+{
+  "schema": "font.proof_receipt.v1",
+  "type_position": "Looks nicer.",
+  "roles": {},
+  "assets": [],
+  "evidence": {},
+  "gates": {
+    "F0": "READY"
+  }
+}

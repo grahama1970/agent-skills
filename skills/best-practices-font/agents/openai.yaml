@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Font"
+  short_description: "World-fit typography and hierarchy"
+  default_prompt: "Use $best-practices-font to choose a font system and proof-check the hierarchy against my visual world."

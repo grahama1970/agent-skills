@@ -1,0 +1,39 @@
+{
+  "schema": "font.proof_receipt.v1",
+  "world_model": "Proof Workshop",
+  "type_position": "Editorial display claims, plainspoken reading, mono only for raw artifacts.",
+  "roles": {
+    "display": {"family": "Literata", "purpose": "claim voice"},
+    "reading": {"family": "system-ui", "purpose": "body prose"},
+    "utility": {"family": "system-ui", "purpose": "controls and labels"},
+    "data": {"family": "ui-monospace", "purpose": "ids and timestamps"},
+    "code": {"family": "ui-monospace", "purpose": "raw output"}
+  },
+  "assets": [
+    {
+      "family": "Literata",
+      "path_or_url": "site/public/fonts/literata-latin-var.woff2",
+      "source": "Google Fonts static asset",
+      "license": "OFL",
+      "hosting": "self-hosted"
+    }
+  ],
+  "evidence": {
+    "commands": [{"command": "npm run build", "exit_code": 0}],
+    "screenshots": [{"path": "/tmp/example.png", "viewport": "390x844"}],
+    "computed_styles": [{"selector": "h1", "fontFamily": "Literata"}]
+  },
+  "gates": {
+    "F0": "PASS",
+    "F1": "PASS",
+    "F2": "PASS",
+    "F3": "PASS",
+    "F4": "NOT_TESTED",
+    "F5": "PASS",
+    "F6": "PASS",
+    "F7": "NOT_TESTED",
+    "F8": "PASS",
+    "F9": "PASS"
+  },
+  "does_not_prove": ["full bespoke-design compliance", "field performance"]
+}
