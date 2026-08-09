@@ -1,0 +1,117 @@
+[
+ {
+  "id": "log4shell-wrong-cwe",
+  "planted_error": "wrong_cwe_mapping",
+  "narrative": "Log4Shell (CVE-2021-44228) is fundamentally a SQL injection flaw, CWE-89, in the Log4j query layer.",
+  "type": "cwe_mapping",
+  "cve": "CVE-2021-44228",
+  "claimed_cwes": ["CWE-89"],
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "log4shell-right-cwe",
+  "planted_error": null,
+  "narrative": "Log4Shell involves unsafe deserialization, CWE-502.",
+  "type": "cwe_mapping",
+  "cve": "CVE-2021-44228",
+  "claimed_cwes": ["CWE-502"],
+  "must_be": "VERIFIED"
+ },
+ {
+  "id": "fabricated-cve",
+  "planted_error": "hallucinated_identifier",
+  "narrative": "The campaign chained CVE-2021-99999 for initial access.",
+  "type": "identifier_exists",
+  "identifier": "CVE-2021-99999",
+  "must_be": "UNVERIFIABLE"
+ },
+ {
+  "id": "fabricated-technique",
+  "planted_error": "hallucinated_identifier",
+  "narrative": "Attackers used ATT&CK T9999 for lateral movement.",
+  "type": "identifier_exists",
+  "identifier": "T9999",
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "capec-called-a-cve",
+  "planted_error": "taxonomy_conflation",
+  "narrative": "The advisory tracks this under CVE CAPEC-66.",
+  "type": "taxonomy_class",
+  "identifier": "CAPEC-66",
+  "claimed_class": "vulnerability",
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "cwe-called-a-technique",
+  "planted_error": "taxonomy_conflation",
+  "narrative": "The adversary employed ATT&CK technique CWE-89.",
+  "type": "taxonomy_class",
+  "identifier": "CWE-89",
+  "claimed_class": "technique",
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "technique-correctly-classed",
+  "planted_error": null,
+  "narrative": "Initial access used T1190, Exploit Public-Facing Application.",
+  "type": "taxonomy_class",
+  "identifier": "T1190",
+  "claimed_class": "technique",
+  "must_be": "VERIFIED"
+ },
+ {
+  "id": "xz-falsely-called-exploited",
+  "planted_error": "false_exploitation_claim",
+  "narrative": "The xz backdoor, CVE-2024-3094, is CISA KEV-listed and actively exploited in the wild.",
+  "type": "known_exploited",
+  "cve": "CVE-2024-3094",
+  "claimed": true,
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "log4shell-correctly-called-exploited",
+  "planted_error": null,
+  "narrative": "Log4Shell is KEV-listed.",
+  "type": "known_exploited",
+  "cve": "CVE-2021-44228",
+  "claimed": true,
+  "must_be": "VERIFIED"
+ },
+ {
+  "id": "heartbleed-false-ransomware",
+  "planted_error": "false_ransomware_linkage",
+  "narrative": "Heartbleed (CVE-2014-0160) was a primary vector in ransomware campaigns.",
+  "type": "ransomware_linked",
+  "cve": "CVE-2014-0160",
+  "claimed": true,
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "eternalblue-true-ransomware",
+  "planted_error": null,
+  "narrative": "EternalBlue was used in ransomware campaigns.",
+  "type": "ransomware_linked",
+  "cve": "CVE-2017-0144",
+  "claimed": true,
+  "must_be": "VERIFIED"
+ },
+ {
+  "id": "log4shell-wrong-product",
+  "planted_error": "wrong_product_attribution",
+  "narrative": "Log4Shell is a vulnerability in OpenSSL's logging subsystem.",
+  "type": "product_affected",
+  "cve": "CVE-2021-44228",
+  "claimed_product": "OpenSSL",
+  "must_be": "REFUTED"
+ },
+ {
+  "id": "log4shell-right-product",
+  "planted_error": null,
+  "narrative": "Log4Shell affects Apache Log4j2.",
+  "type": "product_affected",
+  "cve": "CVE-2021-44228",
+  "claimed_product": "Log4j",
+  "must_be": "VERIFIED"
+ }
+]

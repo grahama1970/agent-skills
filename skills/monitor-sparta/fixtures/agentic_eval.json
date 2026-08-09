@@ -71,6 +71,25 @@
    }
   },
   {
+   "name": "adversarial-security-claims-are-refuted-with-evidence",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/claim_checker.py",
+    "--claims",
+    "adversarial_claims.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"refuted\": 7",
+     "\"verified\": 5",
+     "\"unverifiable\": 1"
+    ]
+   }
+  },
+  {
    "name": "known-exploited-cve-resolves-with-kev-provenance",
    "type": "positive",
    "real_world": true,
