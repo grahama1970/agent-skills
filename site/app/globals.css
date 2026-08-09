@@ -358,10 +358,12 @@ section {
 }
 .hero-main > .eyebrow { order: 1; }
 .hero-main > h1 { order: 2; }
-.hero-main > .hero-outcomes { order: 3; }
-.hero-main > .hero-intake { order: 4; }
-.hero-main > .hero-actions { order: 5; }
-.hero-main > .hero-bio { order: 6; }
+.hero-main > .hero-source-note { order: 3; }
+.hero-main > .hero-outcomes { order: 4; }
+.hero-main > .hero-intake { order: 5; }
+.hero-main > .hero-actions { order: 6; }
+.hero-main > .hero-agent-prompt { order: 7; }
+.hero-main > .hero-bio { order: 8; }
 /* Keyboard-shortcut helper is application chrome on touch; hide it there. */
 @media (pointer: coarse) {
   [data-qid='nav:action:shortcuts'] {
@@ -456,11 +458,58 @@ h1 .it::after {
   font-style: normal;
   font-weight: 500;
 }
+.hero-source-note {
+  max-width: 48ch;
+  margin: clamp(1.15rem, 2vw, 1.55rem) 0 0;
+  color: var(--muted);
+  font-size: clamp(0.98rem, 1.2vw, 1.12rem);
+  line-height: 1.62;
+}
+.hero-source-note a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: clamp(1.7rem, 2.6vw, 2.4rem);
+}
+.hero-agent-prompt {
+  margin-top: 0.72rem;
+  max-width: 48ch;
+}
+.hero-agent-prompt__button {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--brass);
+  font: inherit;
+  font-family: var(--sans);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.hero-agent-prompt__button span {
+  display: inline-block;
+  transition: transform 0.22s ease;
+}
+.hero-agent-prompt__button:hover span {
+  transform: translateX(3px);
+}
+.hero-agent-prompt p {
+  margin: 0.38rem 0 0;
+  color: var(--faint);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.hero-agent-prompt__status {
+  color: var(--muted);
 }
 .btn {
   --bg: var(--brass);
@@ -501,9 +550,8 @@ h1 .it::after {
   border-color: var(--line);
   box-shadow: none;
   font-family: var(--sans);
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 0.88rem;
+  letter-spacing: 0.005em;
 }
 .btn.ghost:hover {
   border-color: var(--brass);
@@ -1886,6 +1934,22 @@ footer a {
 footer a:hover {
   color: var(--brass);
 }
+.foot-link-label {
+  display: block;
+  color: var(--faint);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  word-break: normal;
+}
+.footer-source-note {
+  max-width: 34ch;
+  margin: 0.62rem 0 0;
+  color: var(--faint);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
 .ethos {
   font-family: var(--serif);
   font-style: italic;
@@ -2020,11 +2084,13 @@ footer a:hover {
   }
   .hero-main > .eyebrow { order: 1; }
   .hero-main > h1 { order: 2; }
-  .hero-main > .hero-outcomes { order: 3; }
-  .hero-main > .hero-intake { order: 4; }
-  .hero-main > .hero-actions { order: 5; }
+  .hero-main > .hero-source-note { order: 3; }
+  .hero-main > .hero-outcomes { order: 4; }
+  .hero-main > .hero-intake { order: 5; }
+  .hero-main > .hero-actions { order: 6; }
+  .hero-main > .hero-agent-prompt { order: 7; }
   .hero-main > .hero-bio {
-    order: 6;
+    order: 8;
     margin-top: clamp(1.4rem, 4vw, 2.2rem);
   }
   .hero-side { grid-column: 1 / span 12; padding-top: 0; }
@@ -2055,6 +2121,15 @@ footer a:hover {
   .hero-actions {
     margin-top: 1rem;
     gap: 0.65rem;
+  }
+  .hero-source-note {
+    max-width: 34rem;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .hero-agent-prompt {
+    margin-top: 0.62rem;
   }
   .btn {
     padding: 0.68em 0.95em;

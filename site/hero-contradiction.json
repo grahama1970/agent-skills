@@ -15,7 +15,7 @@
     "href": "https://github.com/grahama1970/agent-skills/blob/main/site/design-roundtable/proof-workshop-pilot-receipt.r1.json"
   },
   "secondary_action": {
-    "label": "Read the code",
+    "label": "Open the repository",
     "href": "https://github.com/grahama1970/agent-skills"
   }
 }

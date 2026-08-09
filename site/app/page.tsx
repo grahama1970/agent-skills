@@ -1,4 +1,5 @@
 import heroContradiction from '@/hero-contradiction.json';
+import { CopyAgentPrompt } from '@/components/copy-agent-prompt';
 import { HeroContradictionPlate } from '@/components/hero-contradiction-plate';
 import { PersonaDreamCase } from '@/components/cases/persona-dream-case';
 import { SpartaCase } from '@/components/cases/sparta-case';
@@ -46,6 +47,21 @@ export default function Home() {
                 <h1>
                   I build agent systems that can <span className="it">prove</span> what they did.
                 </h1>
+                <p className="hero-source-note">
+                  This site explains the work. The public{' '}
+                  <a
+                    href={REPO}
+                    data-qid="hero:link:source-repository"
+                    data-qs-action="HERO_OPEN_SOURCE_REPOSITORY"
+                    title="Open the agent-skills repository"
+                  >
+                    agent-skills repository
+                  </a>{' '}
+                  holds the source.
+                  Browse here, or open the repository directly and ask your agent
+                  to trace a question through the contracts, code, checks, receipts,
+                  and visible gaps.
+                </p>
                 <div className="hero-actions">
                   <a
                     className="btn"
@@ -63,9 +79,10 @@ export default function Home() {
                     data-qs-action="HERO_OPEN_REPO"
                     title="Open the agent-skills repository on GitHub"
                   >
-                    Read the code
+                    {heroContradiction.secondary_action.label} <span className="arrow">↗</span>
                   </a>
                 </div>
+                <CopyAgentPrompt />
               </div>
               <HeroContradictionPlate />
             </div>
@@ -231,8 +248,12 @@ export default function Home() {
                   data-qs-action="FOOTER_OPEN_REPO"
                   title="Open the agent-skills repository"
                 >
-                  github.com/grahama1970/agent-skills
+                  <span className="foot-link-label">Canonical public source</span>
+                  <span>github.com/grahama1970/agent-skills</span>
                 </a>
+                <p className="footer-source-note">
+                  The site is editorial; repository files and retained artifacts determine what can actually be verified.
+                </p>
               </div>
               <div className="foot-b">
                 <p className="lab">Inventory</p>
