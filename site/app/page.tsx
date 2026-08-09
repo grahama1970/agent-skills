@@ -96,8 +96,18 @@ export default function Home() {
                   what they did.
                 </h1>
                 <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
-                  An unusual résumé: commercial
-                  composer for <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
+                  An unusual{' '}
+                  <a
+                    href="/resume"
+                    data-qid="hero:link:resume-receipt"
+                    data-qs-action="HERO_OPEN_RESUME_RECEIPT"
+                    title="The résumé — the receipt for these credentials"
+                    style={{ color: 'var(--brass)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                  >
+                    résumé
+                  </a>
+                  : commercial composer for{' '}
+                  <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
                   and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
                   Webby-recognized producer for{' '}
                   <em style={{ ['--i' as string]: 3 }}>Sony</em>,{' '}
