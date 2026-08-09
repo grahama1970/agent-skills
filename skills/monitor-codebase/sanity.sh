@@ -106,7 +106,7 @@ else
   check "Fallow-style contract files exist" "fail"
 fi
 
-if python3 -m py_compile "$SKILL_DIR/fallow_contract.py" "$SKILL_DIR/quality_checks.py" "$SKILL_DIR/embedding_coverage.py" 2>/dev/null; then
+if python3 -m py_compile "$SKILL_DIR/fallow_contract.py" "$SKILL_DIR/quality_checks.py" "$SKILL_DIR/embedding_coverage.py" "$SKILL_DIR/autofix_docstrings.py" 2>/dev/null; then
   check "Python monitor scanners compile" "ok"
 else
   check "Python monitor scanners compile" "fail"

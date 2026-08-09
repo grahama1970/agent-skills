@@ -66,6 +66,8 @@ health trends over time.
 | `scan --all` | Scan every project in the registry |
 | `scan --all --force` | Force full scan on all projects (ignore change detection) |
 | `scan <project> --fix` | Scan and run an orchestrated fix workflow for violations |
+| `propose-docstrings <target> --output candidates.jsonl` | Emit read-only, hash-bound docstring candidates |
+| `apply-docstrings candidates.jsonl --branch-or-worktree <path> --receipt receipt.json` | Apply only reviewed candidates with stale-source and AST-equivalence gates |
 | `audit <project> [--base REF]` | Run a changed-file audit and emit a Fallow-style `pass`/`warn`/`fail` verdict |
 | `cache-state [project...] [--force]` | Refresh project-state only for projects with new commits |
 | `report [project]` | Show latest findings from memory |
@@ -201,7 +203,7 @@ Projects are tracked by git HEAD hash. On `scan --all`:
 | 3 | `run_best_practices_checks()` | Grep-based: missing run.sh/sanity.sh for skills plus TypeScript/React/Rust/KDE/StreamDeck patterns |
 | 4 | `quality_checks.py` | AST-based and file-content checks: Python, TypeScript, Rust, prompt templates, inline prompts, regex classifiers, tests, hardcoded paths, bespoke AQL |
 | 4.5 | `/security-scan` | Secrets detection (gitleaks), dependency vulnerabilities (pip-audit/trivy), SAST (Semgrep) |
-| 5 | `autofix_docstrings.py` | Auto-generate missing docstrings via /treesitter + /scillm (**--fix only**, scan is read-only) |
+| 5 | `autofix_docstrings.py` | Emit read-only docstring proposals (**--fix only**); source mutation requires separate `apply-docstrings` with approved candidates |
 | 6 | `/ingest-code --treesitter` | CWE scan + treesitter symbol extraction + semantic embedding via `/memory learn` (embedding-at-insert contract) |
 | 6.1 | `embedding_coverage.py` | Compare expected source files against Qdrant-synced `code_symbols` records for the `monitor-<project>` scope |
 | 7 | `/skills-ci` | Full skills-ci scan (only if project has skills/ or .pi/skills/ dir) |
@@ -287,6 +289,31 @@ When coverage is not clean, `fallow_contract.py` emits normalized
 | `prompts/**/*`, `*prompt*.md`, `*prompt*.txt` | best-practices-prompt, review-prompt | rationale headers, concrete output contracts, review payloads |
 | `*/plasmoids/*`, `*/kde-*` | best-practices-kde | KDE/Plasma patterns |
 | `*/streamdeck/*` | best-practices-streamdeck | StreamDeck patterns |
+
+## Docstring Proposal Workflow
+
+Docstring remediation is proposal-first. Normal scans and `scan --fix` must not
+write source merely because a symbol is undocumented.
+
+Use:
+
+```bash
+skills/monitor-codebase/run.sh propose-docstrings PROJECT --output candidates.jsonl
+skills/monitor-codebase/run.sh apply-docstrings candidates.jsonl \
+  --branch-or-worktree /bounded/repo-or-worktree \
+  --receipt docstring-apply-receipt.json
+```
+
+Proposal records are `monitor_codebase.docstring_candidate.v1` JSONL rows bound
+to repository path, symbol kind, qualified name, source range, source hash,
+documentation-need policy, and static evidence. Generated prose is not accepted
+as source evidence during proposal. Application requires `approval.status:
+"approved"` plus a non-empty `proposed_docstring`; stale hashes, unsupported
+claims, parameter mismatches, return/yield/raise mismatches, compile failures,
+and non-docstring AST changes are rejected.
+
+Generated prose becomes authored source evidence only after the reviewed patch
+is applied to a repository/worktree and the project is re-ingested.
 
 ## Fix Workflow
 

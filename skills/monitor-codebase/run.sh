@@ -484,12 +484,16 @@ scan_project() {
 
   # Step 5: auto-fix docstrings (only in --fix mode — scan is read-only)
   if [[ "$do_fix" == "true" ]]; then
-    echo "[5/10] Auto-fixing missing docstrings..."
+    echo "[5/10] Proposing missing docstrings (read-only)..."
     for d in $scan_dirs; do
-      python3 "$SKILL_DIR/autofix_docstrings.py" "$d" 2>&1 || true
+      local scan_slug
+      scan_slug=$(basename "$d" | tr -cd '[:alnum:]_.-')
+      local docstring_candidates="$ARTIFACTS_DIR/${project_name}_docstring_candidates_${TIMESTAMP}_${scan_slug}.jsonl"
+      python3 "$SKILL_DIR/autofix_docstrings.py" propose-docstrings "$d" \
+        --output "$docstring_candidates" 2>&1 || true
     done
   else
-    echo "[5/10] Docstring autofix skipped (scan mode is read-only, use --fix)"
+    echo "[5/10] Docstring proposals skipped (scan mode is read-only, use --fix)"
   fi
 
   # Step 6: ingest-code rescan (scoped to configured dirs)
@@ -1003,6 +1007,14 @@ cmd_cache_state() {
   python3 "$SKILL_DIR/cache_state.py" "$@"
 }
 
+cmd_propose_docstrings() {
+  python3 "$SKILL_DIR/autofix_docstrings.py" propose-docstrings "$@"
+}
+
+cmd_apply_docstrings() {
+  python3 "$SKILL_DIR/autofix_docstrings.py" apply-docstrings "$@"
+}
+
 cmd_create_pr() {
   # Create a PR with a violation summary from the latest nightly fix run.
   # Usage: run.sh create-pr [--base main] [--title "..."]
@@ -1226,6 +1238,8 @@ case "${1:-help}" in
   report)      shift; cmd_report "$@" ;;
   estimate)    cmd_estimate ;;
   cache-state) shift; cmd_cache_state "$@" ;;
+  propose-docstrings) shift; cmd_propose_docstrings "$@" ;;
+  apply-docstrings) shift; cmd_apply_docstrings "$@" ;;
   create-pr)   shift; cmd_create_pr "$@" ;;
   pr-comment)  shift; cmd_pr_comment "$@" ;;
   visualize)   shift; cmd_visualize "$@" ;;
@@ -1239,6 +1253,8 @@ case "${1:-help}" in
     echo "  report [project]              Show latest findings"
     echo "  estimate                      Estimate runtime for scan --all"
     echo "  cache-state [project...] [--force]  Refresh project-state for changed projects"
+    echo "  propose-docstrings <target> --output candidates.jsonl  Emit read-only docstring candidates"
+    echo "  apply-docstrings candidates.jsonl --branch-or-worktree <path> --receipt receipt.json"
     echo "  create-pr [--base main] [--title ...]  Create PR with violation summary"
     echo "  pr-comment <pr_number> [project]  Add violation comment to a PR"
     echo "  visualize <project> [--format svg|png|pdf]  Generate dep graph + health charts"

@@ -1,0 +1,44 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "ticket": {
+    "repo": "grahama1970/agent-skills",
+    "issue": 1349
+  },
+  "status": "ready_for_close",
+  "mocked": "no",
+  "live": "yes",
+  "service_commit_before": "15107ccde7279f6a91a5c5ebca5e5153a697a6c8",
+  "proofs": [
+    {
+      "name": "unit_docstring_proposal_matrix",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349 uv run pytest skills/monitor-codebase/tests/test_docstring_proposals.py -q",
+      "exit_code": 0,
+      "result": "12 passed in 0.14s",
+      "mocked": "no",
+      "live": "yes",
+      "proved": "Required/recommended/optional/exempt classification, reviewed apply, stale rejection, malformed rejection, unsupported-claim rejection, contract mismatch rejection, and AST rollback behavior."
+    },
+    {
+      "name": "monitor_codebase_sanity",
+      "command": "bash skills/monitor-codebase/sanity.sh",
+      "exit_code": 0,
+      "result": "25 passed, 0 failed, 1 warnings",
+      "mocked": "no",
+      "live": "yes",
+      "proved": "Monitor-codebase skill runtime dependencies and Python scanner compilation."
+    },
+    {
+      "name": "live_docstring_workflow_proof",
+      "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1349 python3 skills/monitor-codebase/scripts/prove_docstring_proposals.py --out /tmp/monitor-codebase-docstring-proof",
+      "exit_code": 0,
+      "result": "status=pass",
+      "mocked": "no",
+      "live": "yes",
+      "artifact": "artifacts/tickets/agent-skills-1349/live-proof-summary.json",
+      "artifact_sha256": "sha256:c2c3841837dc19f5157e954f37af73104b1d19733dee8f88962c803efeb03eae",
+      "proved": "Proposal CLI does not mutate source; reviewed apply inserts one docstring; stale, malformed, unsupported, and AST-changing candidates are rejected or rolled back."
+    }
+  ],
+  "worktree_audit_ok": false,
+  "worktree_audit_note": "The repository contained unrelated pre-existing dirty files outside the monitor-codebase ticket scope. Only issue #1349 files and artifacts are staged for commit."
+}
