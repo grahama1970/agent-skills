@@ -766,32 +766,51 @@ def _probe_browser_provider_availability(
 
     started = time.time()
     try:
-        completed = subprocess.run(
+        # #1307: the availability script spawns surf -> node grandchildren.
+        # subprocess.run(timeout) kills only the direct child on timeout, so a
+        # wedged surf/node grandchild keeps the stdout pipe open and
+        # communicate() hangs PAST the timeout indefinitely (no artifact, no
+        # timeout receipt). Run in a new session and hard-kill the whole
+        # process group on timeout so the 180s bound actually terminates.
+        proc = subprocess.Popen(
             command,
             cwd=str(ASK_ROOT),
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=timeout_seconds,
-            check=False,
+            start_new_session=True,
         )
-        command_receipt = {
-            "command": command,
-            "returncode": completed.returncode,
-            "stdout": completed.stdout[:20000],
-            "stderr": completed.stderr[:8000],
-            "duration_seconds": round(time.time() - started, 3),
-            "timed_out": False,
-        }
-    except subprocess.TimeoutExpired as exc:
-        command_receipt = {
-            "command": command,
-            "returncode": 124,
-            "stdout": str(exc.stdout or "")[:20000],
-            "stderr": str(exc.stderr or "browser availability probe timed out")[:8000],
-            "duration_seconds": round(time.time() - started, 3),
-            "timed_out": True,
-        }
+        try:
+            stdout_text, stderr_text = proc.communicate(timeout=timeout_seconds)
+            command_receipt = {
+                "command": command,
+                "returncode": proc.returncode,
+                "stdout": (stdout_text or "")[:20000],
+                "stderr": (stderr_text or "")[:8000],
+                "duration_seconds": round(time.time() - started, 3),
+                "timed_out": False,
+            }
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                pass
+            try:
+                stdout_text, stderr_text = proc.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    pass
+                stdout_text, stderr_text = proc.communicate()
+            command_receipt = {
+                "command": command,
+                "returncode": 124,
+                "stdout": (stdout_text or "")[:20000],
+                "stderr": ((stderr_text or "") + "\n[ask] browser availability probe timed out; killed process group\n")[:8000],
+                "duration_seconds": round(time.time() - started, 3),
+                "timed_out": True,
+            }
     except OSError as exc:
         command_receipt = {
             "command": command,
