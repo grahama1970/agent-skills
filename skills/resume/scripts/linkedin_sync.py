@@ -58,11 +58,13 @@ LINKEDIN_SKILL_CAP = 50
 LEDGER = REPO / "skills" / "resume" / "local" / "linkedin-synced.json"
 
 SKILLS_HEADINGS = ("CORE COMPETENCIES", "TOP SKILLS", "SKILLS")
+WEB_ONLY_HEADINGS = ("DEEPER DETAIL",)
+
 # Resume phrasing that LinkedIn has no entry for, mapped to the taxonomy name it
-# does index. Verified by probing LinkedIn's own autocomplete, not guessed: it
-# has no "AI Observability" or "Regression Gates", but it does have "MLOps" and
-# "Regression Testing". Without this the sync silently drops half the resume's
-# vocabulary from the profile a recruiter actually searches.
+# does index. Each pair was confirmed against LinkedIn's own autocomplete, not
+# assumed: it has no "AI Observability" but does index MLOps, and no "Regression
+# Gates" but does index Regression Testing. Without this the sync drops half the
+# resume's vocabulary from the field recruiters actually search.
 TAXONOMY_ALIASES = {
     "AI Observability": "MLOps",
     "Drift Detection": "Anomaly Detection",
@@ -72,8 +74,24 @@ TAXONOMY_ALIASES = {
     "Guardrails": "Responsible AI",
     "Model Fine-Tuning": "Fine Tuning",
     "Hybrid BM25 + Vector Search": "Semantic Search",
+    "Conference Speaking": "Public Speaking",
+    "Executive & Technical Briefings": "Public Speaking",
+    "PDF Extraction": "Data Extraction",
+    "Layout & Table Extraction": "Data Extraction",
+    "Extraction Calibration": "Data Extraction",
+    "Classifier Training": "Deep Learning",
+    "Batch Inference": "Distributed Systems",
 }
-WEB_ONLY_HEADINGS = ("DEEPER DETAIL",)
+
+# Terms LinkedIn has neither an entry nor an equivalent for. Recorded so a later
+# run does not re-probe them: its search returns nothing for NIST or MITRE, and
+# it has no concept of a DAG contract or a bounded agent role. These stay
+# resume-only, which is the right outcome rather than a gap to chase.
+NO_LINKEDIN_EQUIVALENT = frozenset({
+    "DAG Contracts", "Bounded Agent Roles", "State Tracking", "Tool Calling",
+    "LLM Gateway/Routing", "Provider Fallback", "Ground-Truth Fixtures",
+    "NIST 800-53/171", "MITRE ATT&CK", "Structured Outputs",
+})
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
@@ -253,7 +271,20 @@ def build_plan(resume: Path, tab: str) -> Plan:
         # equality would re-offer a skill the profile already holds.
         return key in synced or any(key in x or x in key for x in synced if x)
 
-    missing = [d for d in declared if not on_profile(d) and not already_synced(d)]
+    def satisfied(term: str) -> bool:
+        # Covered when the profile holds the term OR the taxonomy name it maps
+        # to. Checking only the literal term made plan report every aliased
+        # skill as missing while apply quietly did the right thing.
+        alias = TAXONOMY_ALIASES.get(term)
+        for candidate in (term, alias):
+            if candidate and (on_profile(candidate) or already_synced(candidate)):
+                return True
+        return False
+
+    missing = [
+        d for d in declared
+        if d not in NO_LINKEDIN_EQUIVALENT and not satisfied(d)
+    ]
     over = max(0, len(present) + len(missing) - LINKEDIN_SKILL_CAP)
     return Plan(declared, present, missing, over)
 
