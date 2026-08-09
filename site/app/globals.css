@@ -2251,19 +2251,11 @@ footer a:hover {
   opacity: 0.22;
 }
 .path-line {
-  stroke-dasharray: 1000; /* matches pathLength — draw always reaches the end */
-  stroke-dashoffset: 1000;
-}
-/* The trail draws in once, forward only. (An earlier non-monotonic version made
-   the line's endpoint retract, which read as a glitch — a self-erasing line, not
-   a search. Backtracking belongs to a tracer dot, not the trail itself.) */
-@keyframes trace-converge {
-  0% { stroke-dashoffset: 1000; }
-  100% { stroke-dashoffset: 0; }
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
 }
 .path-node {
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;
 }
 .path-node.is-final {
   filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7));
@@ -2274,57 +2266,11 @@ footer a:hover {
   stroke-dasharray: 0.5 6;
 }
 .final-clip {
-  width: 0;
+  width: 82px;
 }
 .goal-ring {
   opacity: 0;
   stroke-width: 1.5;
-}
-.is-visible .path-line {
-  stroke-dashoffset: 0;
-  animation: trace-converge 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.is-visible .path-node {
-  opacity: 1;
-}
-/* Waypoints light up only AFTER the line has drawn to them — never a dot
-   floating ahead of the trail. Staggered left→right once the draw completes. */
-.is-visible .n1 { transition-delay: 2s; }
-.is-visible .n2 { transition-delay: 2.1s; }
-.is-visible .n3 { transition-delay: 2.2s; }
-.is-visible .n4 { transition-delay: 2.3s; }
-.is-visible .n5 { transition-delay: 2.4s; }
-/* The goal lights up only when the hesitant dotted approach arrives (~3.4s). */
-.is-visible .n6 { transition-delay: 3.35s; }
-/* Goal lock: the final waypoint flares once as it lights up, then settles. */
-.is-visible .path-node.is-final {
-  animation: node-lock 0.9s ease-out 3.35s both;
-}
-@keyframes node-lock {
-  0% { filter: drop-shadow(0 0 0 rgba(226, 172, 98, 0)); }
-  40% { filter: drop-shadow(0 0 11px rgba(255, 240, 214, 0.95)); }
-  100% { filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7)); }
-}
-/* Dotted final segment: a left→right wipe with hesitancy, then acceleration —
-   the present drawn tentatively, stuttering, then committed. */
-.is-visible .final-clip {
-  animation: final-hesi 1.6s linear 2s forwards;
-}
-@keyframes final-hesi {
-  0% { width: 0; }
-  28% { width: 20px; } /* tentative first reach */
-  42% { width: 18px; } /* hesitate — pull back */
-  56% { width: 25px; } /* still unsure */
-  100% { width: 82px; } /* accelerate — commit to now */
-}
-/* Focus ring: expands and glows once as the line lands on the goal. */
-.is-visible .goal-ring {
-  animation: goal-ring 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 3.35s both;
-}
-@keyframes goal-ring {
-  0% { r: 3.6; opacity: 0; stroke-width: 2; }
-  35% { r: 8.5; opacity: 0.9; stroke-width: 1.75; }
-  100% { r: 13; opacity: 0; stroke-width: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .path-line {
