@@ -3,7 +3,7 @@
   "source_receipt": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
   "source_receipt_sha256": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd",
   "source_url": "https://github.com/grahama1970/agent-skills/blob/main/site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
-  "reported_claim": "Proof Workshop pilot exposes claim, evidence, boundary, and judgment roles.",
+  "reported_claim": "The pilot receipt exposes claim, evidence, boundary, and judgment roles.",
   "observed_evidence": "The same receipt records status PILOT_EVIDENCE_ONLY and mobile document_overflow_ignoring_fixed_layers = 639.",
   "artifact_path": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
   "artifact_digest": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd",
