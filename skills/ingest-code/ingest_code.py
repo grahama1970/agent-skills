@@ -34,6 +34,7 @@ from dotenv import load_dotenv
 from code_memory_client import CodeMemoryClient
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
+from incremental_index import IncrementalIndex, transform_version
 from ingest_code_cwe import scan_file_cwe
 
 load_dotenv(override=False)
@@ -1393,6 +1394,13 @@ def scan(
     # inspectable extraction evidence even when later upserts fail.
     code_symbol_scan_roots: list[Path] = []
     code_symbol_records: list[CodeSymbolRecord] = []
+    # Defined here so Phase 4 is safe on the paths that skip treesitter:
+    # a None plan means "no incremental information", which falls back to
+    # processing everything rather than silently skipping work.
+    index = None
+    index_plan = None
+    current_entries: dict[str, str] = {}
+    code_symbols_pruned = 0
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
@@ -1406,6 +1414,24 @@ def scan(
             code_symbol_records.extend(root_records)
             print(f"Code graph: {len(root_records)} symbols extracted from {scan_root}", flush=True)
         local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, code_symbol_records)
+        # Incremental gate: only symbols whose content changed under the
+        # CURRENT extractor need reprocessing, and symbols whose source is
+        # gone must be pruned rather than left answering recall queries.
+        incremental_state = path / "artifacts" / "ingest-code" / "incremental-state.json"
+        index = IncrementalIndex(
+            incremental_state,
+            transform_version(
+                [
+                    Path(__file__),
+                    Path(__file__).parent / "code_symbol_record.py",
+                    Path(__file__).parent / "treesitter_scan.py",
+                ],
+                extra=f"scope={scope}",
+            ),
+        )
+        current_entries = {r.symbol_id: r.effective_content_hash for r in code_symbol_records}
+        index_plan = index.plan(current_entries)
+        print(f"Incremental: {json.dumps(index_plan.summary())}", flush=True)
         precomputed_edges = extract_edges(files, path)
         repo_name = path.resolve().name
         code_graph_artifact = write_code_graph_bundle(
@@ -1553,8 +1579,26 @@ def scan(
             print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
         else:
             verification_samples: list[dict[str, str]] = []
-            memory_result = CodeMemoryClient().upsert_code_symbols(code_symbol_records)
+            client = CodeMemoryClient()
+            pending = set(index_plan.to_process) if index_plan else None
+            upsert_records = (
+                [r for r in code_symbol_records if r.symbol_id in pending]
+                if pending is not None
+                else code_symbol_records
+            )
+            memory_result = client.upsert_code_symbols(upsert_records)
             code_symbols_stored = memory_result.stored
+            if index_plan and index_plan.deleted:
+                prune_result = client.prune_code_symbols(list(index_plan.deleted))
+                code_symbols_pruned = prune_result.stored
+                for error in prune_result.errors[:3]:
+                    print(f"  [WARN] prune: {error}", file=sys.stderr, flush=True)
+                print(f"Code index: {code_symbols_pruned} stale symbols pruned", flush=True)
+            # Commit only after the writes landed: a state file written ahead
+            # of a failed upsert would mark unstored symbols as done and they
+            # would never be retried.
+            if not memory_result.errors:
+                index.commit(current_entries)
             for error in memory_result.errors[:5]:
                 print(f"  [WARN] {error}", file=sys.stderr, flush=True)
             for record in code_symbol_records[:memory_result.stored]:
@@ -1576,6 +1620,8 @@ def scan(
         "edges_found": edges_total,
         "edges_stored": edges_stored,
         "code_symbols_stored": code_symbols_stored,
+        "code_symbols_pruned": code_symbols_pruned,
+        "incremental": index_plan.summary() if index_plan else None,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,

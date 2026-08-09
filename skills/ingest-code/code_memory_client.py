@@ -128,6 +128,46 @@ class CodeMemoryClient:
             return f"HTTP {response.status_code}: {detail}"
         return f"HTTP {response.status_code}"
 
+    def prune_code_symbols(
+        self,
+        symbol_ids: list[str],
+        collection: str = "code_symbols",
+        batch_size: int = 100,
+    ) -> MemoryWriteResult:
+        """Remove symbols whose source no longer exists.
+
+        Ingestion is otherwise append-only, so a deleted function keeps
+        answering recall queries forever. Pruning is a correctness operation,
+        not a cleanup nicety.
+
+        Failures are collected rather than raised: a prune that cannot reach
+        memory must not fail the ingest that already succeeded, and the
+        unpruned ids stay in the state file so the next run retries them.
+        """
+        if not symbol_ids:
+            return MemoryWriteResult(stored=0, errors=[])
+        removed = 0
+        errors: list[str] = []
+        with self._client() as client:
+            for start in range(0, len(symbol_ids), max(1, batch_size)):
+                batch = symbol_ids[start : start + max(1, batch_size)]
+                try:
+                    response = client.post(
+                        "/delete",
+                        json={"collection": collection, "keys": batch},
+                    )
+                except Exception as exc:
+                    errors.append(str(exc))
+                    continue
+                if 200 <= response.status_code < 300:
+                    removed += len(batch)
+                    continue
+                detail = getattr(response, "text", "") or ""
+                errors.append(
+                    f"HTTP {response.status_code}: {detail}" if detail else f"HTTP {response.status_code}"
+                )
+        return MemoryWriteResult(stored=removed, errors=errors)
+
     def store_legacy_code_symbol(
         self,
         record: CodeSymbolRecord,

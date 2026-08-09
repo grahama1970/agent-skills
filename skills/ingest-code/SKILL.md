@@ -204,6 +204,41 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
 
 The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codebase", <stem>, <path>]` for discovery via recall.
 
+## Incremental Re-Indexing
+
+Re-ingesting a repo processes only what changed. State lives at
+`artifacts/ingest-code/incremental-state.json`, mapping each `symbol_id` to its
+`content_hash` plus the `transform_version` that produced it.
+
+The memoization key is `(content_hash, transform_version)`, never
+`content_hash` alone. `transform_version` is derived by hashing the extractor's
+own source (`ingest_code.py`, `code_symbol_record.py`, `treesitter_scan.py`), so
+editing the extractor invalidates every cached symbol automatically — including
+files whose bytes did not change. A content-only key would serve output from
+the superseded extractor forever, and a hand-bumped constant gets forgotten in
+exactly the run where it mattered.
+
+Each run reports its plan:
+
+```
+Incremental: {"unchanged": 812, "added": 3, "changed": 1, "deleted": 2, "invalidated_by_transform": false}
+```
+
+**Deletions are pruned, not left behind.** Symbols whose source no longer exists
+are removed from the `code_symbols` collection. Ingestion is otherwise
+append-only, so without this a function deleted months ago keeps answering
+recall queries — a wrong-answer bug, not a housekeeping one.
+
+Two ordering rules the implementation depends on:
+
+- State is committed only after the upsert succeeds. Committing first would
+  mark unstored symbols as done and they would never be retried.
+- Deletions are computed against the real previous state even when a transform
+  bump invalidates everything, so a full re-index never loses the delete set.
+
+A missing or corrupt state file degrades to a full re-index rather than failing
+the ingest.
+
 ## Local Agent Artifacts
 
 `/ingest-code` also leaves local artifacts for project agents that cannot or
