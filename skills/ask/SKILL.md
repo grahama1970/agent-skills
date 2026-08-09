@@ -182,11 +182,27 @@ delivery independently with `herdr pane read <pane_id>` when it matters.
 `scripts/herdr_e2e_probe.sh` does exactly that and is wired into the agentic
 evals as `herdr-live-delivery-readback-e2e`.
 
-Known limitation: every **`opencode`** pane observed returns 0 bytes from
-`herdr pane read`, so delivery to those panes cannot be confirmed. `claude` and
-`codex` panes read back normally. The e2e probe restricts itself to readable
-agents for that reason — a pass on an unreadable pane would be
-indistinguishable from a silent failure.
+**Bidirectional round-trip** is proven separately by
+`scripts/herdr_roundtrip_probe.sh` (eval case
+`herdr-bidirectional-roundtrip-e2e`): it sends a nonce challenge and waits for
+the agent's *reply*, requiring two or more occurrences — one for the echoed
+prompt, one for the answer. Counting is harness-agnostic; reply markers are not
+(codex renders `›` for input and `•` for output, other harnesses differ).
+Round-trip needs a harness that echoes and answers in the pane, so it is
+expected to work with pi/codex/claude-style TUIs and to skip elsewhere.
+
+**Some panes report `idle` but are dead.** A blank readback is not about which
+agent is running — it is about whether anything is still drawing to the
+terminal. A live `opencode` pane spawns a separate TUI child
+(`~/.cache/opencode/tui/tui-*`) that renders the screen; the panes that read
+back as 0 bytes have the `opencode` process alive with **no TUI child**, so the
+screen is genuinely empty and nothing can receive input. Herdr reports both
+states as `agent_status: idle`, so status alone cannot tell them apart.
+
+The rule that follows: **a pane whose screen cannot be read is not proven
+addressable.** Both probes check readability before sending, which is also what
+prevents a message being stranded in a wedged session — the failure mode that
+produced `submitted: true` with nothing delivered.
 
 ## Project-Agent Quickstart
 

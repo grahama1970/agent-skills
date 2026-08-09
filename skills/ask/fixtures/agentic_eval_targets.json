@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "the three peer target types /ask can address: Herdr sessions via monitor-herdr, model calls via tau, and web models via surf",
   "claims": {
-    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read",
+    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured",
     "does_not_prove": "that a targeted agent understood or acted on a delivered message, browser or model semantic correctness, or that a Herdr session works as a roundtable seat (no capture lane exists yet)"
   },
   "cases": [
@@ -172,6 +172,23 @@
         "exit_code": 0,
         "stdout_contains": [
           "PASS: marker present"
+        ]
+      }
+    },
+    {
+      "name": "herdr-bidirectional-roundtrip-e2e",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/herdr_roundtrip_probe.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS: round-trip confirmed"
         ]
       }
     }
