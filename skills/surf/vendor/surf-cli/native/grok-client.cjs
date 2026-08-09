@@ -942,7 +942,36 @@ async function waitForResponse(cdp, timeoutMs = 300000, userPrompt = '', signal)
       lowerBodyText.includes("message limit") ||
       lowerBodyText.includes("too many requests")
     ) {
-      throw new Error("Grok provider rate limited");
+      // Capture grok's own banner text, not just a generic string: grok's
+      // rate-limit notice frequently names when access returns ("try again
+      // in N minutes", "resets at HH:MM"). Discarding it forced callers to
+      // guess the cooldown; surface it so the reliability harness / caller
+      // can wait exactly until unblock instead of burning quota probing.
+      const banner = String(bodyText || "")
+        .split("\n")
+        .map((s) => s.trim())
+        .filter((ln) => {
+          const l = ln.toLowerCase();
+          return (
+            l.includes("limit") ||
+            l.includes("try again") ||
+            l.includes("reset") ||
+            l.includes("too many requests") ||
+            l.includes("supergrok") ||
+            (/\b\d+\s*(second|minute|hour)/.test(l) && l.length < 200)
+          );
+        })
+        .filter(Boolean)
+        .slice(0, 4)
+        .join(" | ")
+        .slice(0, 400);
+      const err = new Error(
+        banner
+          ? `Grok provider rate limited: ${banner}`
+          : "Grok provider rate limited"
+      );
+      err.rateLimitBanner = banner || null;
+      throw err;
     }
     if (
       lowerBodyText.includes("system is currently busy") ||
