@@ -24,6 +24,7 @@ provides:
   - responsive-art-direction-gates
   - bespoke-design-proof-receipt
 composes:
+  - impeccable
   - best-practices-design
   - best-practices-react
   - review-design
@@ -462,6 +463,8 @@ Every required gate uses one of `PASS`, `FAIL`, `NOT_TESTED`, or `BLOCKED`.
 | G13 Editability | Human can change required content/primitives | Flattened critical UI |
 | G14 Receipt integrity | Schema and artifact hashes validate | Missing or mutable evidence |
 | G15 Craft integrity | Every imperfection is real (authored/scanned), never simulated | Faked hand-drawn marks, random jitter, or distress on machine-output/evidence surfaces |
+| G16 Type fidelity (impeccable) | Display face character (compression, width, weight, contrast, terminals) matches the world | A face of different character — however well the layout matches |
+| G17 Material fidelity (impeccable) | Element material matches the world it implies | Flat CSS/clean vector where painted/textured/dimensional/photographic material is implied; CSS bevels, embossing, faked stamped-metal/chalk — **imitation material is the single most reliable mark of machine-made design** |
 
 ## Amendment: AI-Generated-Template Residue
 
@@ -470,6 +473,63 @@ bespoke; the load-bearing tells are structural (uniform chrome, identical card
 grids, one global type setting, mono-on-human-labels). Rank structural
 distinctiveness above decoration, and never ship *simulated* craft (gate G15).
 Full guidance: `references/ai-template-residue.md`.
+
+## From audit to amendment — the amend loop (composes with `$impeccable`)
+
+This skill defines the standard; **executing the fixes is an amend loop**, adopted
+from `$impeccable`. An audit that only reports gates is a broken design process —
+the gates must drive edits until they pass. The loop:
+
+```
+direction contract → build / render → finish-review (ordered material fixes)
+→ apply fixes → produce real assets → re-render → re-review → document
+```
+
+Roles (delegate to `$impeccable`'s agents; this skill supplies the gate rubric
+they review against):
+
+- **Finish review** (`impeccable-finish-reviewer`): fresh eyes on the rendered
+  artifact return an **ordered list of material fixes**. Fidelity, **type**, and
+  **material** outrank craft nits — a missing signature element or contradicted
+  material outranks every polish point. The reviewer does not edit.
+- **Apply** (`impeccable-manual-edit-applier`): the parent applies the fixes; the
+  reviewer never edits its own findings.
+- **Assets** (`impeccable-asset-producer`): real raster/vector assets are produced
+  from approved references — **never generated to fake authenticity or evidence**
+  (this is where concept-art-as-evidence gets replaced with real artifact
+  portraits). Keep synthetic imagery only where it genuinely *is* the product.
+- **Document** (`impeccable-documenter`): persist the built world (`DESIGN.md` /
+  `PRODUCT.md`) so a re-run extends the world instead of restarting it.
+
+Iterate the loop until every required gate is `PASS` (or `NOT_TESTED` with the
+missing evidence named). Do not hand-simulate a creator/reviewer loop: compile it
+as a `$tau` creator-reviewer DAG (creator applies fixes, reviewer returns
+`VERDICT: PASS/FAIL` against these gates) and let `$tau` run it with receipts.
+
+### Guard: opinionated world, not a polished template (bespoke-design owns this)
+
+`$impeccable` optimizes *finish* against a chosen world and approved comp — which
+means it can replace one templated design with another well-executed but generic
+one. **This skill owns the direction; impeccable owns the finish.** Before the
+amend loop runs, and at every re-review, bespoke-design's gates must hold that the
+world is **opinionated and brand-derived**, not a comp swapped in for polish:
+
+- **G2 / G11 competitor-swap is the guard.** If the brand name, nouns, and logo
+  could be swapped for a competitor and the composition still feels equally
+  plausible, the world is a template — reject it however impeccable the finish.
+- The direction must be **traceable to the brand's own evidence and premise**
+  (Phase 1 ledger), take a **specific point of view**, and make choices a generic
+  polish pass would not (e.g. grahama.co's *claim→evidence→bounded-judgment*
+  premise, monospace-as-machine-evidence, receipt/proof-boundary motif; SPARTA
+  Explorer's governed-evidence-thread premise). An adaptation is legitimate only
+  when it cites the evidence, product truth, or accessibility need that forced it.
+- Impeccable's finish must **sharpen** that opinion (real materials, type
+  fidelity, real assets), never sand it into house style. A re-review that makes
+  the page more generic fails G6/G11 even if craft scores rise.
+
+For grahama.co and SPARTA Explorer specifically: the goal is a distinct,
+opinionated world each — not two projects converging on the same polished
+dark-editorial template.
 
 ## Review Output
 
