@@ -7,7 +7,8 @@
     "build": "next build",
     "verify:qid": "python3 scripts/verify-data-qid.py",
     "verify:proof-pilot": "python3 scripts/verify_proof_pilot.py",
-    "verify:type-direction": "python3 scripts/verify_type_direction.py"
+    "verify:type-direction": "python3 scripts/verify_type_direction.py",
+    "verify:hero-contradiction": "python3 scripts/verify_hero_contradiction.py && python3 scripts/verify_hero_contradiction.py --fixture design-roundtable/fixtures/invalid-hero-contradiction.json --expect-fail"
   },
   "dependencies": {
     "@types/d3-force": "^3.0.10",

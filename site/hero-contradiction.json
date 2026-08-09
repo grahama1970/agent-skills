@@ -1,0 +1,21 @@
+{
+  "schema": "grahama.hero_contradiction.v1",
+  "source_receipt": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+  "source_receipt_sha256": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd",
+  "source_url": "https://github.com/grahama1970/agent-skills/blob/main/site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+  "reported_claim": "Proof Workshop pilot exposes claim, evidence, boundary, and judgment roles.",
+  "observed_evidence": "The same receipt records status PILOT_EVIDENCE_ONLY and mobile document_overflow_ignoring_fixed_layers = 639.",
+  "artifact_path": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+  "artifact_digest": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd",
+  "deterministic_rule": "A pilot receipt cannot be promoted to whole-page compliance while its own geometry record names document overflow outside the receipt section.",
+  "bounded_judgment": "PILOT_EVIDENCE_ONLY: useful local evidence, not a site-wide pass.",
+  "does_not_prove": "Full bespoke compliance, responsive choreography, blind distinctiveness, accessibility, performance, or Impeccable G16-G18 finish review.",
+  "primary_action": {
+    "label": "Open the artifact",
+    "href": "https://github.com/grahama1970/agent-skills/blob/main/site/design-roundtable/proof-workshop-pilot-receipt.r1.json"
+  },
+  "secondary_action": {
+    "label": "Read the code",
+    "href": "https://github.com/grahama1970/agent-skills"
+  }
+}

@@ -395,17 +395,18 @@ section {
   padding-top: clamp(48px, 7vw, 96px);
   padding-bottom: clamp(40px, 5vw, 72px);
   overflow: hidden;
+  min-height: calc(100svh - 58px);
+  display: flex;
+  align-items: center;
 }
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: var(--gut);
-  align-items: start;
+  align-items: center;
 }
 .hero-main {
-  grid-column: 1 / span 8;
-  /* Offer → outcomes → buyer line → CTA before the biography, at every width
-     (desktop now matches the stronger stacked order). Copy unchanged. */
+  grid-column: 1 / span 5;
   display: flex;
   flex-direction: column;
 }
@@ -453,6 +454,11 @@ h1 {
   letter-spacing: -0.032em;
   margin: 0.32em 0 0;
   text-wrap: balance;
+}
+.hero-main h1 {
+  max-width: 12.8ch;
+  font-size: clamp(2.8rem, 5.2vw, 4.9rem);
+  line-height: 0.98;
 }
 h1 .it {
   font-style: italic;
@@ -557,6 +563,90 @@ h1 .it::after {
   border-color: var(--brass);
   color: var(--brass);
   background: rgba(226, 172, 98, 0.05);
+}
+
+.hero-plate {
+  grid-column: 7 / span 6;
+  align-self: center;
+  border: 1px solid rgba(236, 226, 211, 0.22);
+  background:
+    linear-gradient(90deg, rgba(226, 172, 98, 0.08), transparent 46%),
+    rgba(24, 18, 17, 0.58);
+  padding: clamp(0.9rem, 1.55vw, 1.25rem);
+  color: var(--text);
+  min-width: 0;
+}
+.hero-plate__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.75rem;
+}
+.hero-plate__head span,
+.hero-plate__head a {
+  font-family: var(--sans);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.hero-plate__head span {
+  color: var(--faint);
+}
+.hero-plate__head a {
+  color: var(--brass);
+  text-decoration: none;
+}
+.hero-plate__fields {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+.hero-plate__row {
+  display: grid;
+  grid-template-columns: minmax(8.4rem, 0.36fr) minmax(0, 1fr);
+  gap: clamp(0.8rem, 1.6vw, 1.3rem);
+  padding: 0.68rem 0;
+  border-bottom: 1px solid var(--line-2);
+}
+.hero-plate__row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.hero-plate dt {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.hero-plate dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--muted);
+  font-size: clamp(0.88rem, 1vw, 0.98rem);
+  line-height: 1.5;
+}
+.hero-plate__row--claim dd,
+.hero-plate__row--judgment dd {
+  color: var(--text);
+}
+.hero-plate__row--evidence dd {
+  color: var(--brass);
+}
+.hero-plate__row--boundary dd {
+  color: var(--faint);
+}
+.hero-plate .machine {
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.hero-plate__digest {
+  margin-top: 0.35rem;
+  color: var(--faint);
 }
 
 /* inventory rail */
@@ -1715,6 +1805,7 @@ footer a:hover {
 /* --- responsive ------------------------------------------- */
 @media (max-width: 1080px) {
   .hero-main { grid-column: 1 / span 12; }
+  .hero-plate { grid-column: 1 / span 12; }
   /* Stacked viewports: put the offer, buyer line and CTA before the long
      biography so a visitor reaches the value without scrolling past a résumé.
      Copy is unchanged — only the visual order is. */
@@ -1744,6 +1835,49 @@ footer a:hover {
 }
 @media (max-width: 896px) {
   body { font-size: 16px; }
+  .hero {
+    min-height: auto;
+    align-items: flex-start;
+    padding-top: 26px;
+    padding-bottom: 28px;
+  }
+  .hero-main h1 {
+    max-width: 13.4ch;
+    font-size: clamp(2rem, 9.5vw, 2.55rem);
+    line-height: 1;
+    margin-top: 0.22em;
+  }
+  .hero-actions {
+    margin-top: 1rem;
+    gap: 0.65rem;
+  }
+  .btn {
+    padding: 0.68em 0.95em;
+    font-size: 0.84rem;
+  }
+  .hero-plate__row {
+    grid-template-columns: minmax(5.7rem, 0.34fr) minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.42rem 0;
+  }
+  .hero-plate {
+    padding: 0.72rem 0.82rem 0.82rem;
+  }
+  .hero-plate__head { padding-bottom: 0.48rem; }
+  .hero-plate dt,
+  .hero-plate__head span,
+  .hero-plate__head a {
+    font-size: 0.5rem;
+    letter-spacing: 0.13em;
+  }
+  .hero-plate dd {
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+  .hero-plate .machine {
+    font-size: 0.61rem;
+    line-height: 1.28;
+  }
   .cards { gap: clamp(30px, 7vw, 44px); }
   .card { grid-column: 1 / span 12 !important; grid-row: auto !important; margin-top: 0 !important; }
   .receipt-stage,

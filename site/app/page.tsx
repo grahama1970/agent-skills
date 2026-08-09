@@ -1,7 +1,5 @@
 import artifacts from '@/artifacts.json';
-import lineage from '@/generated/battle-lineage.json';
-import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
-import { HeroProofBridge } from '@/components/hero-proof-bridge';
+import heroContradiction from '@/hero-contradiction.json';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
@@ -11,10 +9,10 @@ import { CapabilityConstellation } from '@/components/capability-constellation';
 import { DreamStepper } from '@/components/dream-stepper';
 import { KeyboardNav } from '@/components/keyboard-nav';
 import { SiteNav } from '@/components/site-nav';
-import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { SkillMosaic } from '@/components/skill-mosaic';
 import { CompetenceMatrix } from '@/components/competence-matrix';
+import { HeroContradictionPlate } from '@/components/hero-contradiction-plate';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -115,54 +113,26 @@ export default function Home() {
           <div className="wrap">
             <div className="hero-grid">
               <div className="hero-main">
-                <p className="eyebrow rise" style={{ ['--d' as string]: '.05s' }}>
-                  <span className="dot" /> One-person practice{' '}
-                  <span aria-hidden="true">/</span> agent systems, formal
-                  methods, evidence
-                </p>
                 <h1 className="rise" style={{ ['--d' as string]: '.12s' }}>
                   I build agent systems that can{' '}
-                  <span className="it proof-origin" data-proof-origin>
+                  <span className="it">
                     prove
                   </span>{' '}
                   what they did.
                 </h1>
-                <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
-                  An unusual{' '}
-                  <a
-                    href="/resume"
-                    data-qid="hero:link:resume-receipt"
-                    data-qs-action="HERO_OPEN_RESUME_RECEIPT"
-                    title="The résumé — the receipt for these credentials"
-                    style={{ color: 'var(--brass)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
-                  >
-                    résumé
-                  </a>
-                  : commercial composer for{' '}
-                  <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
-                  and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
-                  Webby-recognized producer for{' '}
-                  <em style={{ ['--i' as string]: 3 }}>Sony</em>,{' '}
-                  <em style={{ ['--i' as string]: 4 }}>DARPA</em> technical
-                  lead alongside{' '}
-                  <em style={{ ['--i' as string]: 5 }}>Lockheed Martin</em> and{' '}
-                  <em style={{ ['--i' as string]: 6 }}>MIT</em>.
-                  High-end creative and hard technical work, delivered by the
-                  same person, shipped as working code, in public.
-                </p>
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
                   <a
                     className="btn"
-                    href="#search"
-                    data-qid="hero:action:search"
-                    data-qs-action="HERO_OPEN_SEARCH"
-                    title="Describe your problem — find a project that fits, free to try"
+                    href={heroContradiction.primary_action.href}
+                    data-qid="hero:action:artifact"
+                    data-qs-action="HERO_OPEN_CONTRADICTION_ARTIFACT"
+                    title="Open the contradiction source receipt"
                   >
-                    Describe your problem <span className="arrow">↓</span>
+                    {heroContradiction.primary_action.label} <span className="arrow">→</span>
                   </a>
                   <a
                     className="btn ghost"
-                    href={REPO}
+                    href={heroContradiction.secondary_action.href}
                     data-qid="hero:action:repo"
                     data-qs-action="HERO_OPEN_REPO"
                     title="Open the agent-skills repository on GitHub"
@@ -171,107 +141,9 @@ export default function Home() {
                   </a>
                 </div>
               </div>
-              <aside
-                className="hero-side rise"
-                style={{ ['--d' as string]: '.5s' }}
-                aria-label="Skill inventory"
-              >
-                <div className="rail">
-                  <p className="rail-title">Inventory</p>
-                  <div className="figs">
-                    <a
-                      className="fig"
-                      href={`${REPO}/tree/main/skills`}
-                      data-qid="rail:link:skills"
-                      data-qs-action="RAIL_OPEN_SKILLS"
-                      title="Browse all skill contracts on GitHub"
-                    >
-                      <span className="n">{stats.skills}</span>
-                      <span className="l">skill contracts</span>
-                    </a>
-                    <a
-                      className="fig"
-                      href="#ledger"
-                      data-qid="rail:link:sanity"
-                      data-qs-action="RAIL_GOTO_LEDGER"
-                      title="See the coverage ledger, gaps included"
-                    >
-                      <span className="n">
-                        {stats.sanity}
-                        <small>
-                          {Math.round((stats.sanity / stats.skills) * 100)}%
-                        </small>
-                      </span>
-                      <span className="l">with sanity checks</span>
-                    </a>
-                    <a
-                      className="fig"
-                      href={`${REPO}/tree/main/agents`}
-                      data-qid="rail:link:agents"
-                      data-qs-action="RAIL_OPEN_AGENTS"
-                      title="Browse bounded agent definitions on GitHub"
-                    >
-                      <span className="n">{stats.agents}</span>
-                      <span className="l">bounded agents</span>
-                    </a>
-                  </div>
-                  <p className="prov">
-                    generated
-                    <br />
-                    <a
-                      href={`${REPO}/blob/main/site/scripts/gen_inventory.py`}
-                      data-qid="rail:link:generator"
-                      data-qs-action="RAIL_OPEN_GENERATOR"
-                      title="Read the generator script on GitHub"
-                      className="gen-link"
-                    >
-                      {inventory.generator}
-                    </a>
-                    <br />@{' '}
-                    <a
-                      href={`${REPO}/commit/${commit}`}
-                      data-qid="hero:link:commit"
-                      data-qs-action="HERO_OPEN_COMMIT"
-                      title={`Open commit ${commit} on GitHub`}
-                    >
-                      {commit}
-                    </a>{' '}
-                    · {as_of}
-                  </p>
-                  <HeroLineage data={lineage as HeroLineageData} />
-                </div>
-              </aside>
-              <HeroProofBridge />
+              <HeroContradictionPlate />
             </div>
           </div>
-          <figure
-            className="strip wipe"
-            aria-label="Horus Lupercal and Embry taking tea on a void-world terrace — a rendered persona-dream"
-          >
-            {/* Atmospheric dream band: poster by default; the clip loads + plays
-                only on motion-allowed, non-save-data devices. */}
-            <StripVideo />
-            <figcaption>
-              <b>Horus Lupercal &amp; Embry, taking tea in a dream</b>
-            </figcaption>
-          </figure>
-          <p className="strip-note">
-            Not a keyframe: a <em>rendered persona-dream</em>. Embry dreams a
-            quiet argument with Horus about building SPARTA Explorer as a{' '}
-            <em>campaign of proof</em>: no unsupported claim past the perimeter,
-            no receipt pretending to be a verdict. The pipeline dreams it from her
-            own memory residue, checks it&apos;s still her, and writes it back to
-            memory —{' '}
-            <a
-              href="#dream"
-              data-qid="strip:link:dream-study"
-              data-qs-action="STRIP_OPEN_DREAM_STUDY"
-              title="Jump to the persona-dream study (section 02)"
-            >
-              the study is below
-            </a>
-            .
-          </p>
         </section>
 
         <hr className="rule" />

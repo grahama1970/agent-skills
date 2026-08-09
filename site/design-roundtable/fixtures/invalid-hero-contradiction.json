@@ -1,0 +1,12 @@
+{
+  "schema": "grahama.hero_contradiction.v1",
+  "source_receipt": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+  "source_receipt_sha256": "missing",
+  "reported_claim": "Proof Workshop pilot proves the whole homepage is compliant.",
+  "observed_evidence": "No overflow.",
+  "artifact_path": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+  "artifact_digest": "missing",
+  "deterministic_rule": "",
+  "bounded_judgment": "PASS",
+  "does_not_prove": ""
+}
