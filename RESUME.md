@@ -13,7 +13,7 @@ U.S. citizen. Extensive experience delivering under export-controlled (ITAR) con
 This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
 
 ## ABOUT
-I build agentic pipelines that run in production, not prototypes: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it.
+I build agentic pipelines that run in production, not prototypes. This is current work, not a past chapter: roughly 4,500 commits across tau and agent-skills in the last six months alone, through August 2026. What that buys: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it.
 
 Four years on the prime-contractor team of a major DARPA program: Principal Data Scientist and ACERT Technical Lead on ARCOS, delivering knowledge-graph and LLM reasoning for automated certification of mission-critical software. Presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin. Defense, aerospace, and compliance, where an answer has to be traceable to evidence.
 
@@ -25,7 +25,7 @@ Open to contract engagements and full-time Principal/Staff AI Engineer, AI Archi
 
 ### Founder & Principal AI Engineer / Architect | grahamaco | Buffalo–Niagara Falls Area · Remote
 Feb 2025 - Present
-Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970.
+Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; every capability below was built or materially advanced in 2026. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970.
 - Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every handoff must produce a schema-valid receipt or validator result — no receipt, no action.
 - Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling.
 - Authored agent-skills: 340+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 90+ bounded worker roles, ~85% of them gated by deterministic sanity checks — public repo, private runtime.

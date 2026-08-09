@@ -114,7 +114,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "I build agentic pipelines that run in production, not prototypes: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it."
+       "v": "I build agentic pipelines that run in production, not prototypes. This is current work, not a past chapter: roughly 4,500 commits across tau and agent-skills in the last six months alone, through August 2026. What that buys: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and MCP, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it."
       }
      ]
     },
@@ -165,7 +165,7 @@
        "inline": [
         {
          "t": "text",
-         "v": "Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970."
+         "v": "Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; every capability below was built or materially advanced in 2026. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970."
         }
        ]
       },
@@ -541,10 +541,10 @@
    ]
   }
  ],
- "sourceCommit": "66076feaa",
+ "sourceCommit": "0d3ccf4ab",
  "asOf": "2026-08-08",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "ef83826c3aa03b5392559810b9bfe061ab495c8484b5c9db53ed3f501ac44139",
+ "sourceSha256": "969f91824541676ef34424fedb3281804effeb386e973ea45b134c044a2d2f7c",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -622,6 +622,6 @@
    }
   ]
  },
- "pdfSha256": "4cb278e94e8b72a8d3cd225af29c15ca101494929125794f6a96d8931d5d0b8b",
- "pdfBytes": 159838
+ "pdfSha256": "8a7ade283a7907551015877b5e4731c64dbe4398ad24d7ce46bce3d3bf173a24",
+ "pdfBytes": 160050
 }
