@@ -39,6 +39,94 @@ skill_available() {
     return 1
 }
 
+run_tau_handler_shortcut() {
+    local handler="$1"
+    shift
+    if [ "$#" -eq 0 ]; then
+        echo "Usage: ./run.sh ${handler} <question>" >&2
+        echo "Routes to: ./run.sh tau-dag <question> --dag-template single-call --handler ${handler} --execute --json" >&2
+        exit 2
+    fi
+
+    local repo="local/ask-skill"
+    local target="skill-ask-${handler}-single-call"
+    local immutable_goal="Answer the user question via the '${handler}' Tau browser handler with a non-empty response."
+    local execute=1
+    local json_output=1
+    local extra_args=()
+    local request_parts=()
+
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --compile-only|--no-execute)
+                execute=0
+                shift
+                ;;
+            --execute)
+                execute=1
+                shift
+                ;;
+            --json)
+                json_output=1
+                shift
+                ;;
+            --no-json)
+                json_output=0
+                shift
+                ;;
+            --repo)
+                if [ "$#" -lt 2 ]; then echo "--repo requires a value" >&2; exit 2; fi
+                repo="$2"
+                shift 2
+                ;;
+            --target)
+                if [ "$#" -lt 2 ]; then echo "--target requires a value" >&2; exit 2; fi
+                target="$2"
+                shift 2
+                ;;
+            --immutable-goal)
+                if [ "$#" -lt 2 ]; then echo "--immutable-goal requires a value" >&2; exit 2; fi
+                immutable_goal="$2"
+                shift 2
+                ;;
+            --ask-id|--run-output-root|--poll-timeout-seconds|--poll-interval-seconds|--browser-lock-timeout|--browser-tab-lifecycle|--attach-file)
+                if [ "$#" -lt 2 ]; then echo "$1 requires a value" >&2; exit 2; fi
+                extra_args+=("$1" "$2")
+                shift 2
+                ;;
+            --viewer-link|--local-fixture|--allow-provider-calls|--require-provider-calls|--no-poll)
+                extra_args+=("$1")
+                shift
+                ;;
+            --)
+                shift
+                request_parts+=("$@")
+                break
+                ;;
+            *)
+                request_parts+=("$@")
+                break
+                ;;
+        esac
+    done
+
+    if [ "${#request_parts[@]}" -eq 0 ]; then
+        echo "Usage: ./run.sh ${handler} <question>" >&2
+        exit 2
+    fi
+
+    local request="${request_parts[*]}"
+    local cmd=(uv run --project "$SCRIPT_DIR" python -m ask.tau_dag_cli run "$request" --repo "$repo" --target "$target" --immutable-goal "$immutable_goal" --dag-template single-call --handler "$handler")
+    if [ "$execute" -eq 1 ]; then
+        cmd+=(--execute)
+    fi
+    if [ "$json_output" -eq 1 ]; then
+        cmd+=(--json)
+    fi
+    cmd+=("${extra_args[@]}")
+    exec "${cmd[@]}"
+}
+
 show_help() {
     cat <<'EOF'
 /ask — Low-cognitive-load learning and querying
@@ -55,6 +143,7 @@ Commands:
   team-plan <request> Plan a role-based multi-agent team and preview/run its Tau DAG
   herdr <verb>      Talk to another agent's Herdr session by name (list|who|send)
   tau-dag <request> Compile a human request into a strict Tau DAG
+  webgpt <question>  Shortcut: Tau single-call handler webgpt (also webclaude/webkimi/webgemini/webgrok)
   compete <request> Compile isolated competitors into a Tau compete DAG
   browser-availability Probe provider tabs for visible rate/capacity blockers
   os learn          Crawl and index embry-os internals (skills, packages, config)
@@ -248,6 +337,10 @@ Examples:
   # Independent parallel adversarial reviewers
   ./run.sh ask "Review this architecture" --parallel-review --parallel-reviewers 3 --parallel-review-focus correctness,tests,maintainability
 
+  # Pi skill-command browser handler shortcut (executes through Tau, not the removed direct WebGPT oracle)
+  ./run.sh webgpt What is 2 + 2?
+  ./run.sh webgpt --compile-only What is 2 + 2?
+
   # Compile a strict Tau DAG and stop before execution if fields are incomplete
   ./run.sh tau-dag "Ask 2 GPT 5.6 xhigh subagents to solve X, then Claude Fable reviews by criteria Y and Z" --repo local/tau --target issue-123 --criterion Y --criterion Z --json
 
@@ -278,6 +371,11 @@ EOF
 }
 
 case "${1:-help}" in
+    webgpt|webclaude|webkimi|webgemini|webgrok)
+        handler="$1"
+        shift
+        run_tau_handler_shortcut "$handler" "$@"
+        ;;
     herdr)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.herdr_cli "$@"

@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "regression: every resolved 2026-08-05 ask/surf ticket class stays fixed; each case maps to a closed ticket or contract change",
   "claims": {
-    "proves": "the join never re-stamps failure codes on passing seats (#1217), killed browser lanes keep the recovery-ladder command contract, compete lane budgets stay on per-handler envelopes (unstarve contract), tool-less Tau turns never demand tool_calling (empty_terminal_output class), the auth resolver chain holds (#1223), and the plan->tau compiler invariants hold (review independence, freeze hash, strength selection)",
+    "proves": "the join never re-stamps failure codes on passing seats (#1217), killed browser lanes keep the recovery-ladder command contract, compete lane budgets stay on per-handler envelopes (unstarve contract), tool-less Tau turns never demand tool_calling (empty_terminal_output class), the auth resolver chain holds (#1223), the plan->tau compiler invariants hold (review independence, freeze hash, strength selection), the browser-availability probe hard-kills its whole process group on timeout so a wedged surf/node grandchild cannot outlive the deadline (#1307), and the live-roundtable reliability harness hard-bounds every trial (outer timeout + bounded poll deadline) so no browser submit can hang indefinitely and monopolize a provider lane",
     "does_not_prove": "live provider/browser behavior (covered by the orchestration and lock-recovery fixtures) or classes from still-open tickets (#1222 desktop placement, scillm#32 key churn)"
   },
   "cases": [
@@ -126,6 +126,41 @@
         "exit_code": 0,
         "stdout_contains": [
           "passed"
+        ]
+      }
+    },
+    {
+      "name": "browser-probe-hard-kills-process-group-on-timeout-1307",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "pytest",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_browser_probe_timeout_1307.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "live-roundtable-trial-is-hard-bounded-no-indefinite-hang",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "grep -qE '^[[:space:]]*timeout[[:space:]]+[0-9]+[[:space:]]+\"\\$ASK_DIR/run.sh\" tau-dag' /home/graham/workspace/experiments/agent-skills/skills/ask/scripts/live_roundtable_reliability.sh && grep -qE -- '--poll-timeout-seconds[[:space:]]+[0-9]+' /home/graham/workspace/experiments/agent-skills/skills/ask/scripts/live_roundtable_reliability.sh && echo LIVE_TRIAL_HARD_BOUNDED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LIVE_TRIAL_HARD_BOUNDED"
         ]
       }
     }

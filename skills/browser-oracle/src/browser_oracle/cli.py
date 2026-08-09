@@ -386,6 +386,44 @@ def _move_new_window_to_reviewer_desktop(before: list[str] | None = None) -> dic
         return {"status": "failed", "reason": str(exc)[:200]}
 
 
+@app.command("window-snapshot")
+def window_snapshot_cmd(
+    json_out: bool = typer.Option(True, "--json/--no-json", help="Emit JSON."),
+) -> None:
+    """List current Chrome windows, to be passed to `place-window --before`.
+
+    Callers that create a window themselves (Ask provisions its own per-seat
+    windows through Surf) need the before-state to identify what they created.
+    Position in wmctrl output is not creation order, so the diff is the only
+    reliable identity.
+    """
+    windows = _wmctrl_chrome_windows()
+    payload = {"schema": "browser_oracle.window_snapshot.v1", "windows": windows}
+    typer.echo(json.dumps(payload, indent=2, sort_keys=True) if json_out else "\n".join(windows))
+
+
+@app.command("place-window")
+def place_window_cmd(
+    before: str = typer.Option("", "--before", help="Comma-separated window ids from window-snapshot."),
+    desktop: str = typer.Option("", "--desktop", help="Desktop index; default is the reviewer desktop."),
+    json_out: bool = typer.Option(True, "--json/--no-json", help="Emit JSON."),
+) -> None:
+    """Move the newly created Chrome window to the reviewer desktop.
+
+    Exposes the placement used by `open-bind` so callers that provision their
+    own windows land them in the same place instead of scattering windows
+    across whichever desktop the human is using.
+
+    Placement is a courtesy to the workspace, never a proof boundary: this
+    command always exits 0 and reports what happened.
+    """
+    prior = [w.strip() for w in before.split(",") if w.strip()]
+    if desktop:
+        os.environ["BROWSER_ORACLE_REVIEWER_DESKTOP"] = desktop
+    result = _move_new_window_to_reviewer_desktop(prior) or {"status": "disabled"}
+    typer.echo(json.dumps(result, indent=2, sort_keys=True) if json_out else str(result.get("status")))
+
+
 @app.command("open-bind")
 def open_bind_cmd(
     name: str = typer.Argument(..., help="Project name to bind."),

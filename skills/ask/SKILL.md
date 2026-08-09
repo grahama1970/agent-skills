@@ -82,15 +82,23 @@ manual summary, or an invented review for `$ask`.
 
 ## Runtime Entrypoint
 
-Run commands from this directory. `./run.sh tau-dag "<request>"` maps to the
-Typer `tau-dag run` subcommand internally. `./run.sh team-plan "<request>"
---team <preset>` renders a role-based multi-agent plan and frozen Tau DAG
-preview; execution requires explicit `--execute --live` (see README "Team
-Orchestration").
+Run commands from this directory. Pi skill-command syntax such as
+`/skill:ask webgpt What is 2 + 2?` is a first-class shortcut: the leading
+browser handler (`webgpt`, `webclaude`, `webkimi`, `webgemini`, or `webgrok`)
+routes to a Tau `single-call` browser-handler DAG with `--execute --json`. This
+is only a compatibility shortcut for Pi users; it must not use the removed
+direct WebGPT oracle path.
+
+`./run.sh tau-dag "<request>"` maps to the Typer `tau-dag run` subcommand
+internally. `./run.sh team-plan "<request>" --team <preset>` renders a
+role-based multi-agent plan and frozen Tau DAG preview; execution requires
+explicit `--execute --live` (see README "Team Orchestration").
 
 ```bash
 cd skills/ask
 ./run.sh --help
+./run.sh webgpt What is 2 + 2?
+./run.sh webgpt --compile-only What is 2 + 2?
 ./run.sh ask --help
 ./run.sh tau-dag run --help
 ```
@@ -258,6 +266,20 @@ after the run. Use `--browser-tab-lifecycle reuse-bound` only when the human
 intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
+
+Ask-created browser seat windows land on **Desktop 2** (wmctrl index 1). They
+are reviewer windows Ask provisioned, not windows the human asked for, so they
+belong on the reviewer desktop rather than on top of current work. Override with
+`ASK_REVIEWER_DESKTOP=<index>`; set it empty to disable placement and leave
+windows wherever Chrome puts them.
+
+Placement is cosmetic and never fails a run. It reuses `browser-oracle
+place-window` — the same logic `open-bind` uses — rather than reimplementing
+it, because two details there are easy to get wrong: wmctrl output order is not
+creation order (a last-sorts heuristic moved the wrong window), so the window is
+identified by diffing a snapshot taken before creation; and `wmctrl` returning 0
+does not mean the move stuck, because KDE can bounce a freshly-mapped window
+back to the active desktop, so the move is verified by readback and retried.
 
 Pass local evidence a browser seat must actually see with `--attach-file <path>`
 (repeatable) on `tau-dag run` or `compete`. Ask forwards each file to Surf as
@@ -792,6 +814,7 @@ Use the narrowest mode that matches the user request.
 | --- | --- | --- |
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
+| Pi browser-handler shortcut | `./run.sh webgpt What is 2 + 2?` from `/skill:ask webgpt What is 2 + 2?` | Rewrites to Tau `single-call` with `--handler webgpt --execute --json`; use `--compile-only` to emit the DAG without live browser transport. |
 | Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
 | Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology concurrent --execute --json` | Roundtable is prompt-to-Tau-DAG. Browser handlers get an Ask-owned fresh window by default. Preserve `browser-tab-lifecycle.json`, `dag.json`, command specs, handler receipts, and join receipts. |
 | Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --execute --json` | Isolated candidates plus compete scorecard and winner continuation request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
