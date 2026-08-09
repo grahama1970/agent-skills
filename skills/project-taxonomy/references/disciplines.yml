@@ -116,6 +116,9 @@ skills:
   best-practices-prompt: [engineering-standards, model-ops]
   best-practices-python: [engineering-standards, developer-tooling]
   best-practices-react: [engineering-standards, ui-design-engineering]
+  best-practices-resume:
+    - engineering-standards
+    - content-creation
   best-practices-readme: [engineering-standards, content-creation]
   best-practices-report: [engineering-standards, content-creation]
   best-practices-roundtable: [engineering-standards, agentic-orchestration]

@@ -23,6 +23,7 @@ composes:
   - surf
   - agentic-evals
 complies:
+  - best-practices-resume
   - best-practices-skills
   - best-practices-python
 taxonomy:
