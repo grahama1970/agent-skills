@@ -433,6 +433,8 @@ Reject these shortcuts:
 - producing three nearly identical territories;
 - adding random squiggles, stars, gradients, grain, arches, stickers, or collages
   merely to signal “bespoke”;
+- **imitation material** — CSS bevel/emboss, faux letterpress, faux foil, faux
+  stamped-metal, or a gradient standing in for a produced texture/asset;
 - using image generation to fabricate evidence or cultural specificity;
 - hiding weak information architecture under decorative density;
 - approving desktop beauty while mobile becomes a stacked residue;
@@ -465,6 +467,26 @@ Every required gate uses one of `PASS`, `FAIL`, `NOT_TESTED`, or `BLOCKED`.
 | G15 Craft integrity | Every imperfection is real (authored/scanned), never simulated | Faked hand-drawn marks, random jitter, or distress on machine-output/evidence surfaces |
 | G16 Type fidelity (impeccable) | Display face character (compression, width, weight, contrast, terminals) matches the world | A face of different character — however well the layout matches |
 | G17 Material fidelity (impeccable) | Element material matches the world it implies | Flat CSS/clean vector where painted/textured/dimensional/photographic material is implied; CSS bevels, embossing, faked stamped-metal/chalk — **imitation material is the single most reliable mark of machine-made design** |
+| G18 Amend-loop integrity | An ordered finish-review ran; the applier ≠ the reviewer | One agent both found and applied a fix; no finish-review report |
+| G19 World persistence | `DESIGN.md`/`PRODUCT.md` written so a re-run extends the world | A re-run restarts the world instead of extending it |
+| G20 Asset provenance | Every raster/vector carries source + method ∈ {authored, scanned, photographed, licensed, synthetic-as-product} + license | An asset with no provenance, or generated art standing in as evidence |
+
+**Precedence (impeccable):** an open G16/G17 or a missing-signature-element
+contradiction outranks every polish item. A finish-review that leads with a craft
+nit while a type/material contradiction is open is itself a `FAIL`. Re-run G9
+(accessibility) and G10 (performance) after asset production — real material is
+the standard regression path.
+
+**Distinctness gate (multi-project):** when two projects share an owner, unlabeled
+screens from both go to raters against both briefs; `FAIL` below threshold, or if
+the two share ≥3 of {display-face character, palette anchor+field, motif family,
+composition model, chrome pattern}. Freeze a hashed direction-contract before the
+amend loop and declare `protected_invariants` (premise, motif family, type
+character, composition model, the ≥3 component invariants); changing one without a
+recorded amendment citing evidence/product-truth/accessibility/implementation is
+an automatic `FAIL`. Distinctiveness is **monotonic**: re-run the logo-off and
+competitor-swap on the post-finish artifact — any drop in recognition or rise in
+swap-plausibility fails, regardless of craft scores.
 
 ## Amendment: AI-Generated-Template Residue
 
