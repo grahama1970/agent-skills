@@ -1,0 +1,9 @@
+schema: grahama.homepage_beats.v1
+beats:
+  - id: proposition
+    section_id: top
+    job: "Missing the rest of the homepage beats."
+required_depth_routes:
+  - /missing/
+banned_homepage_imports: []
+banned_homepage_tokens: []

@@ -1,0 +1,45 @@
+schema: grahama.homepage_beats.v1
+beats:
+  - id: proposition
+    section_id: top
+    job: "State the proposition and show one contradiction plate."
+  - id: flagship
+    section_id: flagship
+    job: "Show one dominant flagship investigation."
+  - id: supporting
+    section_id: supporting
+    job: "Show three compact supporting investigations."
+  - id: proof-method
+    section_id: proof-method
+    job: "Preview the proof method and route to the full walkthrough."
+  - id: person
+    section_id: about
+    job: "State person, accountability, and contact."
+required_depth_routes:
+  - /explore.html
+  - /ledger.html
+  - /how-proof-works.html
+  - /capabilities.html
+banned_homepage_imports:
+  - "@/components/capability-search"
+  - "@/components/capability-constellation"
+  - "@/components/research-map"
+  - "@/components/proof-legend"
+  - "@/components/competence-matrix"
+  - "@/components/dream-stepper"
+  - "@/components/skill-mosaic"
+  - "@/components/proof-explainer"
+  - "@/components/receipt-ticket"
+  - "@/artifacts.json"
+  - "@/generated/battle-lineage.json"
+  - "@/components/strip-video"
+banned_homepage_tokens:
+  - "content.projects.map"
+  - "RECEIPT_IDS"
+  - "<CapabilitySearch"
+  - "<CapabilityConstellation"
+  - "<CompetenceMatrix"
+  - "<DreamStepper"
+  - "<SkillMosaic"
+  - "<ProofExplainer"
+  - "<ReceiptTicket"

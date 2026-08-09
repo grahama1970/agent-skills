@@ -649,6 +649,192 @@ h1 .it::after {
   color: var(--faint);
 }
 
+/* --- five-beat homepage ---------------------------------- */
+.home-beat {
+  padding-block: clamp(70px, 9vw, 132px);
+}
+.flagship-grid,
+.proof-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gut);
+  align-items: center;
+}
+.beat-copy {
+  grid-column: 1 / span 5;
+}
+.flagship-artifact {
+  grid-column: 7 / span 6;
+  min-height: clamp(360px, 42vw, 560px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: clamp(1rem, 2.2vw, 1.6rem);
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(12, 9, 8, 0.08), rgba(12, 9, 8, 0.76)),
+    var(--img),
+    #17100f;
+  background-size: cover;
+  background-position: center;
+}
+.flagship-artifact span {
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.flagship-artifact b {
+  max-width: 38ch;
+  font-family: var(--serif);
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  line-height: 1.08;
+  font-weight: 600;
+}
+.case-boundary {
+  margin: 1.6rem 0 0;
+  display: grid;
+  gap: 0.8rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+.case-boundary div {
+  display: grid;
+  grid-template-columns: 6.8rem 1fr;
+  gap: 0.8rem;
+}
+.case-boundary dt {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.case-boundary dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.case-boundary a,
+.supporting-head a,
+.text-link {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.supporting-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: clamp(1.6rem, 3vw, 2.5rem);
+}
+.supporting-head a {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.support-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+}
+.support-index a {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr;
+  gap: 0.45rem 0.85rem;
+  min-height: 100%;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.support-index span {
+  grid-row: span 2;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+}
+.support-index b {
+  font-family: var(--serif);
+  font-size: clamp(1.2rem, 1.6vw, 1.55rem);
+  line-height: 1.1;
+}
+.support-index em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.proof-preview-grid > div {
+  grid-column: 1 / span 5;
+}
+.method-steps {
+  grid-column: 7 / span 5;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+.method-steps li {
+  display: grid;
+  grid-template-columns: 6.4rem 1fr;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--line);
+}
+.method-steps span {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.method-steps b {
+  font-weight: 500;
+  color: var(--text);
+}
+.proof-preview .text-link {
+  grid-column: 7 / span 5;
+  justify-self: start;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+}
+.person-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 1.4rem 0 0;
+}
+.depth-page {
+  min-height: 100vh;
+  background: var(--ink);
+}
+.depth-head {
+  padding-top: clamp(70px, 9vw, 130px);
+  padding-bottom: clamp(28px, 5vw, 70px);
+}
+.depth-head h1 {
+  max-width: 12ch;
+}
+.receipt-depth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+}
+
 /* inventory rail */
 .rail {
   border-top: 1px solid var(--line);
@@ -1806,6 +1992,17 @@ footer a:hover {
 @media (max-width: 1080px) {
   .hero-main { grid-column: 1 / span 12; }
   .hero-plate { grid-column: 1 / span 12; }
+  .beat-copy,
+  .flagship-artifact,
+  .proof-preview-grid > div,
+  .method-steps,
+  .proof-preview .text-link {
+    grid-column: 1 / span 12;
+  }
+  .support-index,
+  .receipt-depth-grid {
+    grid-template-columns: 1fr;
+  }
   /* Stacked viewports: put the offer, buyer line and CTA before the long
      biography so a visitor reaches the value without scrolling past a résumé.
      Copy is unchanged — only the visual order is. */
