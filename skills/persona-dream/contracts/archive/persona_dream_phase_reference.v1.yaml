@@ -1,9 +1,11 @@
-schema: persona_dream.pipeline.v1
-status: PASS_PERSONA_DREAM_PIPELINE_CONTRACT
+schema: persona_dream.phase_reference.v1
+status: RETIRED_REFERENCE_NOT_CANONICAL
+superseded_by: contracts/dream_spine.v1.yaml
 purpose: >
-  Canonical machine-readable Persona Dream phase contract. README explains the
-  research purpose; SKILL.md owns runtime behavior; this file owns phase IDs,
-  phase names, evidence boundaries, side-effect classes, and gate vocabulary.
+  Retired reference for the older 16-phase Persona Dream phase map. The
+  canonical executable pipeline definition is contracts/dream_spine.v1.yaml.
+  This file is retained only as historical phase vocabulary and must not be
+  used as the active pipeline authority.
 
 evidence_classes:
   - historical_memory
@@ -289,4 +291,3 @@ publication_backend:
     - provider_fetch_proven
     - provider_submit_ready
     - provider_return
-

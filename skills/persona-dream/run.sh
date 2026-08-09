@@ -181,7 +181,7 @@ Commands:
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
   analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
   validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
-  check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
+  check-pipeline-contract  Validate the canonical executable dream spine contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
   bootstrap-phase11-payload-binding Create the active-revision Standard payload binding without provider calls
@@ -768,7 +768,7 @@ case "$COMMAND" in
   run-causal-replay)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_causal_replay.py" "$@"
     ;;
-  check-pipeline-contract)
+  check-pipeline-contract|check-persona-dream-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
     ;;
   write-phase10-reproducibility-receipt)

@@ -1,0 +1,34 @@
+{
+  "schema": "agent_skills.ticket_proof_summary.v1",
+  "ticket": "agent-skills#1345",
+  "created_at": "2026-08-09T18:12:22Z",
+  "source_commit_at_proof": "daf229ec92740e3d49a1e3ce9826b5284a4cc018",
+  "mocked": "no",
+  "live": "no",
+  "actual_provider_call_attempts": 0,
+  "commands": [
+    "./skills/persona-dream/run.sh dream-spec --run-dir /tmp/taxonomy-proof-1345 --persona embry --idea kai",
+    "./skills/persona-dream/run.sh check-persona-dream-pipeline-contract --contract skills/persona-dream/contracts/dream_spine.v1.yaml --receipt-out /tmp/taxonomy-proof-1345/pipeline-contract-check.json --json",
+    "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_pipeline_contract_and_phase10_reproducibility.py skills/persona-dream/tests/test_pipeline_spine.py"
+  ],
+  "artifacts": {
+    "artifacts/tickets/agent-skills-1345/dag-spec.json": "sha256:4fc7ce6871802dbb186e8e5509a575e34f8f9fa6088fd17eac29e9ec314da90c",
+    "artifacts/tickets/agent-skills-1345/pipeline-contract-check.json": "sha256:7621dc1c1551c113ed3f1b1b90925deef463a485c38e7e5c8a05e1e7c3d71653"
+  },
+  "result": {
+    "status": "PASS_PERSONA_DREAM_PIPELINE_CONTRACT",
+    "node_set": [
+      "dream_cycle",
+      "journal_entry"
+    ],
+    "active_competing_contracts": []
+  },
+  "does_not_prove": [
+    "runtime spine execution",
+    "dream quality",
+    "voice synthesis",
+    "optional video branch completion",
+    "provider readiness",
+    "provider submit"
+  ]
+}

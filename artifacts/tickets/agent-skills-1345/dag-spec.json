@@ -1,0 +1,99 @@
+{
+  "extensions": {
+    "contract": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/contracts/dream_spine.v1.yaml",
+    "contract_sha256": "sha256:2fc6c08d6f16271e299f3812c8414e481f1497c7a303f8f311aae36b58c5684f",
+    "created_at": "2026-08-09T18:11:58Z"
+  },
+  "goal": {
+    "completion_criteria": [
+      "every spine node returns a schema-valid PASS node receipt",
+      "each node produced the artifacts its step declared in the contract",
+      "the terminal node 'journal_entry' produced its artifact"
+    ],
+    "goal_hash": "sha256:313f973300cd3c1c282ca00da5241992a6ad5699bba9708f8ca90cef392ef8b3",
+    "goal_id": "persona-dream-spine",
+    "goal_version": 1,
+    "summary": "Produce a dream from memory residue and journal it. Terminates at the journal entry; the video lane is an optional branch and conversation is a downstream consumer, not a step."
+  },
+  "nodes": [
+    {
+      "accepted_context_from": [],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/scripts/dag_step.py",
+        "--node-id",
+        "dream_cycle",
+        "--command",
+        "autonomous-dream-cycle",
+        "--receipt",
+        "/tmp/taxonomy-proof-1345/dag_receipts/dream_cycle.json",
+        "--run-dir",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/reports/goal_v3/cycles/cycle_20260809T181158Z",
+        "--artifact-dir",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/reports/goal_v3/cycles/cycle_20260809T181158Z",
+        "--produces",
+        "storyboard_plan.json,selection_receipt.v1.json,residue_links.json,phase14_tom.json,observation_packet.json",
+        "--proves",
+        "residue was selected, dreamt, observed, interpreted, and persisted",
+        "--does-not-prove",
+        "that the dream is meaningful or that recall improves",
+        "--goal-hash",
+        "sha256:313f973300cd3c1c282ca00da5241992a6ad5699bba9708f8ca90cef392ef8b3",
+        "--step-arg=--persona",
+        "--step-arg=embry",
+        "--step-arg=--cycle-id",
+        "--step-arg=cycle_20260809T181158Z",
+        "--step-arg=--about",
+        "--step-arg=kai"
+      ],
+      "depends_on": [],
+      "max_attempts": 1,
+      "node_id": "dream_cycle",
+      "receipt_path": "/tmp/taxonomy-proof-1345/dag_receipts/dream_cycle.json",
+      "role": "backend",
+      "timeout_seconds": 1800
+    },
+    {
+      "accepted_context_from": [
+        "dream_cycle"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/scripts/dag_step.py",
+        "--node-id",
+        "journal_entry",
+        "--command",
+        "write-dream-journal",
+        "--receipt",
+        "/tmp/taxonomy-proof-1345/dag_receipts/journal_entry.json",
+        "--run-dir",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/reports/goal_v3/cycles/cycle_20260809T181158Z",
+        "--artifact-dir",
+        "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/persona-dream/reports/goal_v3/cycles/cycle_20260809T181158Z",
+        "--produces",
+        "dream_journal.v1.json,dream_journal.md",
+        "--proves",
+        "she wrote an entry conforming to persona_journal.v1",
+        "--does-not-prove",
+        "that the entry is true of events",
+        "--goal-hash",
+        "sha256:313f973300cd3c1c282ca00da5241992a6ad5699bba9708f8ca90cef392ef8b3",
+        "--step-arg=--cycle",
+        "--step-arg=cycle_20260809T181158Z",
+        "--step-arg=--persona",
+        "--step-arg=embry"
+      ],
+      "depends_on": [
+        "dream_cycle"
+      ],
+      "max_attempts": 1,
+      "node_id": "journal_entry",
+      "receipt_path": "/tmp/taxonomy-proof-1345/dag_receipts/journal_entry.json",
+      "role": "backend",
+      "timeout_seconds": 1800
+    }
+  ],
+  "run_dir": "/tmp/taxonomy-proof-1345/dag_run",
+  "run_id": "dream-cycle_20260809T181158Z",
+  "schema": "tau.generic_dag_spec.v1"
+}

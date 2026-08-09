@@ -31,15 +31,19 @@ repro_module = load_module(
 )
 
 
-def test_pipeline_contract_has_01_16_and_funnel_boundary():
+def test_pipeline_contract_is_the_executable_dream_spine():
     receipt = check_contract_module.check_pipeline_contract(
-        ROOT / "contracts/persona_dream_pipeline.v1.yaml"
+        ROOT / "contracts/dream_spine.v1.yaml"
     )
 
     assert receipt["status"] == "PASS_PERSONA_DREAM_PIPELINE_CONTRACT"
-    assert receipt["phase_count"] == 16
-    assert receipt["workstreams"] == ["A", "B", "E"]
-    assert receipt["publication_backend"] == "tailscale_funnel"
+    assert receipt["canonical_contract_schema"] == "persona_dream.dream_spine.v1"
+    assert receipt["step_count"] == 2
+    assert receipt["node_set"] == ["dream_cycle", "journal_entry"]
+    assert receipt["terminal_step"] == "journal_entry"
+    assert "dream_journal.md" in receipt["produced_artifacts"]
+    assert receipt["active_competing_contracts"] == []
+    assert receipt["retired_references"]
     assert receipt["actual_provider_call_attempts"] == 0
     assert receipt["live"] == "no"
 
