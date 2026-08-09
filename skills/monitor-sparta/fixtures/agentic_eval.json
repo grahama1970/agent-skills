@@ -60,13 +60,33 @@
     "python3",
     "../scripts/analyst_probe.py",
     "resolve",
-    "CVE-2021-44228"
+    "CVE-2024-3094"
    ],
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
      "UNVERIFIED_LOCALLY",
      "NOT evidence"
+    ]
+   }
+  },
+  {
+   "name": "known-exploited-cve-resolves-with-kev-provenance",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "python3",
+    "../scripts/analyst_probe.py",
+    "resolve",
+    "CVE-2021-44228"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "RESOLVED",
+     "CISA_KEV",
+     "known_exploited",
+     "Log4j"
     ]
    }
   }

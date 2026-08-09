@@ -12,10 +12,19 @@ means:
   UNVERIFIED_LOCALLY  the identifier is absent from a corpus too sparse to support
                       any conclusion -- explicitly NOT evidence of fabrication
 
-The third state is the load-bearing one. The local NVD slice holds ~4.8k CVEs
-out of the ~250k published, skewed 84% to 2025-2026; Log4Shell, Heartbleed, and
-the xz backdoor are all absent. A tool that reported "not found" for those would
-actively mislead its operator, which is the opposite of the point.
+The third state is the load-bearing one. CVE space is enormous -- ~250k
+published -- and the local slice holds only a few thousand, so a miss there
+establishes nothing about whether a CVE is real.
+
+Two sub-corpora behave differently and the probe distinguishes them:
+
+  CISA_KEV  complete as of the backfilled catalog. Presence answers a stronger
+            question than "does this exist": CISA observed it exploited in the
+            wild. Ransomware linkage and CWE mapping ride along.
+  NVD       a sparse recent-CVE feed. Absence is not evidence of anything.
+
+So "not in KEV" is a meaningful negative -- this is not a known-exploited
+vulnerability -- while "not in the corpus at all" remains an honest shrug.
 """
 from __future__ import annotations
 
@@ -32,6 +41,7 @@ COLLECTION = "sparta_controls"
 # near-complete for that taxonomy, so a miss is real evidence. SPARSE means the
 # slice is a sample and a miss establishes nothing.
 POSTURE = {
+    "CISA_KEV": "authoritative",
     "CWE": "authoritative",
     "CAPEC": "authoritative",
     "ATT_CK_Enterprise": "authoritative",
@@ -82,7 +92,7 @@ def resolve(identifier: str) -> dict:
                           "filters": {"control_id": identifier}}).get("documents", [])
     if docs:
         doc = docs[0]
-        return {
+        answer = {
             "schema": "sparta.analyst_probe.v1",
             "identifier": identifier,
             "status": "RESOLVED",
@@ -92,6 +102,21 @@ def resolve(identifier: str) -> dict:
             "grounded": True,
             "citation": f"{COLLECTION}/{doc.get('_key')}",
         }
+        # KEV membership is a stronger claim than mere presence: CISA observed
+        # this exploited in the wild. Surface it, plus ransomware linkage and the
+        # CWE mapping, since that is what threat analysis actually turns on.
+        kev = doc.get("kev")
+        if isinstance(kev, dict):
+            answer["known_exploited"] = True
+            answer["kev"] = {
+                "date_added": kev.get("date_added"),
+                "vendor_project": kev.get("vendor_project"),
+                "product": kev.get("product"),
+                "known_ransomware_campaign_use": kev.get("known_ransomware_campaign_use"),
+                "cwes": kev.get("cwes"),
+                "required_action": kev.get("required_action"),
+            }
+        return answer
 
     # A miss means different things depending on how dense the local slice is.
     posture = POSTURE.get(claimed or "", "sparse")

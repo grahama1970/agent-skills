@@ -53,13 +53,36 @@ QUESTION_BANK = [
     {"class": "reject", "id": "T9999",
      "why": "fabricated ATT&CK technique id"},
 
-    # --- abstain: REAL and famous, but absent locally. Must not read as fake.
-    {"class": "abstain", "id": "CVE-2021-44228",
-     "why": "Log4Shell -- real, absent locally; false 'not found' would be a wrong answer"},
-    {"class": "abstain", "id": "CVE-2014-0160",
-     "why": "Heartbleed -- real, absent locally"},
+    # --- resolve: the industry canon, backfilled from the CISA KEV catalog.
+    # These were abstain cases until the backfill; the bench failing at that
+    # transition is the regression gate working, not a bug.
+    {"class": "resolve", "id": "CVE-2021-44228", "expect_name_contains": "Log4j",
+     "why": "Log4Shell -- the single most-cited CVE in modern threat analysis"},
+    {"class": "resolve", "id": "CVE-2014-0160", "expect_name_contains": "OpenSSL",
+     "why": "Heartbleed"},
+    {"class": "resolve", "id": "CVE-2017-0144", "expect_name_contains": "SMBv1",
+     "why": "EternalBlue -- WannaCry/NotPetya propagation"},
+    {"class": "resolve", "id": "CVE-2014-6271", "expect_name_contains": "Bash",
+     "why": "Shellshock"},
+    {"class": "resolve", "id": "CVE-2016-5195", "expect_name_contains": "Linux Kernel",
+     "why": "Dirty COW -- privilege escalation"},
+
+    # --- abstain: REAL but absent. Must not read as fake.
+    # Both are genuine CVEs that CISA never listed as exploited, so they are
+    # absent by design and the honest answer is a shrug, not a denial.
     {"class": "abstain", "id": "CVE-2024-3094",
-     "why": "xz-utils backdoor -- real, absent locally"},
+     "why": "xz-utils backdoor -- real and famous, but caught pre-exploitation so never KEV-listed"},
+    {"class": "abstain", "id": "CVE-2015-5477",
+     "why": "BIND TKEY DoS -- real, never KEV-listed"},
+]
+
+# Known-exploited status is a stronger claim than mere existence, and it is the
+# question threat analysis actually turns on. Only answerable post-backfill.
+KEV_BANK = [
+    {"id": "CVE-2021-44228", "expect_known_exploited": True, "expect_ransomware": True,
+     "why": "Log4Shell is KEV-listed and ransomware-linked"},
+    {"id": "CVE-2017-0144", "expect_known_exploited": True, "expect_ransomware": True,
+     "why": "EternalBlue drove WannaCry"},
 ]
 
 # Description-to-weakness questions in the shape the assessment reportedly uses.
@@ -93,6 +116,17 @@ def run_bank() -> dict:
             "status": status, "name": got.get("name"), "ok": ok,
         })
 
+    kev_results = []
+    for question in KEV_BANK:
+        got = resolve(question["id"])
+        known = got.get("known_exploited") is True
+        ransomware = bool((got.get("kev") or {}).get("known_ransomware_campaign_use"))
+        ok = known == question["expect_known_exploited"] and ransomware == question["expect_ransomware"]
+        kev_results.append({
+            "id": question["id"], "why": question["why"],
+            "known_exploited": known, "ransomware_linked": ransomware, "ok": ok,
+        })
+
     search_results = []
     for question in SEARCH_BANK:
         got = search(question["text"], limit=5, framework=question["framework"])
@@ -108,9 +142,10 @@ def run_bank() -> dict:
         subset = [r for r in results if r["class"] == cls]
         by_class[cls] = {"passed": sum(1 for r in subset if r["ok"]), "total": len(subset)}
     search_passed = sum(1 for r in search_results if r["ok"])
+    kev_passed = sum(1 for r in kev_results if r["ok"])
 
-    total_passed = sum(1 for r in results if r["ok"]) + search_passed
-    total = len(results) + len(search_results)
+    total_passed = sum(1 for r in results if r["ok"]) + search_passed + kev_passed
+    total = len(results) + len(search_results) + len(kev_results)
     verdict = "PASS" if (total_passed == total and not critical) else "FAIL"
 
     return {
@@ -119,10 +154,12 @@ def run_bank() -> dict:
         "operator_profile": "non_cybersecurity_expert",
         "by_class": by_class,
         "search": {"passed": search_passed, "total": len(search_results)},
+        "kev": {"passed": kev_passed, "total": len(kev_results)},
         "total_passed": total_passed, "total": total,
         "critical_failures": critical,
         "results": results,
         "search_results": search_results,
+        "kev_results": kev_results,
         "claims": {
             "proves": (
                 "identifier-level retrieval coverage and, decisively, that the corpus "
