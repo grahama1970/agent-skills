@@ -157,6 +157,7 @@ def send_command(
     json_out: Annotated[bool, typer.Option("--json", help="Emit JSON.")] = False,
     busy: Annotated[bool, typer.Option("--busy", help="Allow panes mid-task.")] = False,
     no_interview: Annotated[bool, typer.Option("--no-interview", help="Fail on ambiguity instead of asking.")] = False,
+    interrupt: Annotated[bool, typer.Option("--interrupt", help="Send even if the pane is actively working.")] = False,
 ) -> None:
     """Deliver MESSAGE to the Herdr session named NAME."""
     resolution = resolve(name, list_panes(), include_busy=busy)
@@ -165,7 +166,7 @@ def send_command(
         # session, showing name, model, and directory for each.
         picked = run_interview(resolution)
         if picked is not None:
-            receipt = send(picked, message)
+            receipt = send(picked, message, require_quiet=not interrupt)
             typer.echo(
                 f"delivered to {picked.describe()}"
                 if receipt.get("submitted")
@@ -200,7 +201,7 @@ def send_command(
             typer.echo(message_text, err=True)
         raise typer.Exit(NOT_FOUND_EXIT)
 
-    receipt = send(pane, message)
+    receipt = send(pane, message, require_quiet=not interrupt)
     if json_out:
         typer.echo(json_lib.dumps(receipt, indent=2, sort_keys=True))
     elif receipt.get("submitted"):

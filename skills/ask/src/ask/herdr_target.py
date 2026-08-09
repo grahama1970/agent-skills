@@ -36,9 +36,11 @@ Failure modes
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -187,6 +189,53 @@ def parse_panes(stdout: str) -> list[HerdrPane]:
     return panes
 
 
+DEFAULT_SETTLE_SECONDS = 6.0
+
+
+def pane_digest(pane_id: str, *, bin_path: str | None = None, lines: int = 60) -> str | None:
+    """Fingerprint a pane's current screen, or None if it cannot be read."""
+    command = [bin_path or herdr_bin(), "pane", "read", pane_id, "--source", "recent", "--lines", str(lines)]
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0:
+        return None
+    return hashlib.sha256((completed.stdout or "").encode("utf-8")).hexdigest()
+
+
+def is_quiescent(
+    pane_id: str,
+    *,
+    settle_seconds: float = DEFAULT_SETTLE_SECONDS,
+    bin_path: str | None = None,
+) -> tuple[bool, str]:
+    """True when the pane's screen stops changing, i.e. no work is in flight.
+
+    ``agent_status`` cannot answer this. Herdr reports ``idle`` between the
+    turns of an active task, and it exposes no idle-age field to compensate --
+    the pane record carries only agent, status, cwd, and ids. So a pane running
+    a long ticket-closure job reads ``idle`` in the gaps, and eight probe
+    messages went into exactly such a pane on 2026-08-09 while it was working.
+
+    Sampling the screen twice is the signal that survives that: an agent mid-task
+    redraws (output, spinners, streamed tokens), a settled one does not.
+
+    A pane that cannot be read is reported not-quiescent rather than quiescent,
+    because an unreadable pane cannot show evidence of work either way.
+    """
+    first = pane_digest(pane_id, bin_path=bin_path)
+    if first is None:
+        return False, "pane could not be read; activity is unknown"
+    time.sleep(max(0.5, settle_seconds))
+    second = pane_digest(pane_id, bin_path=bin_path)
+    if second is None:
+        return False, "pane became unreadable while sampling"
+    if first != second:
+        return False, f"pane changed during a {settle_seconds:g}s sample; work is in flight"
+    return True, "screen unchanged"
+
+
 def _repo_aliases(panes: list[HerdrPane], repo_map: dict[str, str] | None) -> dict[str, str]:
     """Map a GitHub repo slug to the directory name it is checked out as.
 
@@ -280,6 +329,8 @@ def send(
     *,
     bin_path: str | None = None,
     timeout: float = 30.0,
+    require_quiet: bool = True,
+    settle_seconds: float = DEFAULT_SETTLE_SECONDS,
 ) -> dict[str, object]:
     """Submit a prompt to one pane via `herdr pane run`, which appends Enter.
 
@@ -287,6 +338,20 @@ def send(
     from herdr's own exit status; this is delivery proof, not proof the agent
     understood or acted on the prompt.
     """
+    if require_quiet:
+        # Default-on: interrupting an agent mid-task has to be a decision
+        # somebody made, not something that happens because a status field
+        # said "idle" during a gap between turns.
+        quiet, why = is_quiescent(pane.pane_id, settle_seconds=settle_seconds, bin_path=bin_path)
+        if not quiet:
+            return {
+                "submitted": False,
+                "pane_id": pane.pane_id,
+                "agent": pane.agent,
+                "cwd": pane.cwd,
+                "reason": f"pane is busy: {why}",
+                "busy": True,
+            }
     command = [bin_path or herdr_bin(), "pane", "run", pane.pane_id, prompt]
     try:
         completed = subprocess.run(

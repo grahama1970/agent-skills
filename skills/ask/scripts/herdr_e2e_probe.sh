@@ -50,9 +50,24 @@ TARGET=""
 for pane in "${CANDIDATES[@]}"; do
   # Readable now, before anything is sent: a pane that cannot be read cannot
   # prove delivery, and discovering that afterwards would strand a message.
-  if [ "$("$HERDR" pane read "$pane" --source recent --lines 5 2>/dev/null | wc -c)" -gt 0 ]; then
-    TARGET="$pane"; break
+  [ "$("$HERDR" pane read "$pane" --source recent --lines 5 2>/dev/null | wc -c)" -gt 0 ] || continue
+  # Quiescence, not agent_status: herdr reports idle between the turns of an
+  # active task. Sample the screen twice and skip anything still redrawing, so
+  # a probe never lands in a pane doing real work.
+  d1="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
+  sleep 5
+  d2="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
+  if [ "$d1" != "$d2" ]; then
+    echo "skipping $pane: screen still changing (work in flight)"
+    continue
   fi
+  # No composer heuristic here on purpose. Matching the last `>`/`›` line was
+  # tried and is wrong in both directions: it reads a harness's TRANSCRIPT of
+  # the previously submitted prompt as if it were live input, and it flags
+  # greyed placeholder hints ("Implement {feature}") as real text. Quiescence
+  # above is the signal that holds across harnesses; delivery is verified
+  # afterwards rather than predicted beforehand.
+  TARGET="$pane"; break
 done
 
 if [ -z "$TARGET" ]; then

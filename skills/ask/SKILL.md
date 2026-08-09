@@ -204,6 +204,30 @@ addressable.** Both probes check readability before sending, which is also what
 prevents a message being stranded in a wedged session — the failure mode that
 produced `submitted: true` with nothing delivered.
 
+### Never interrupt a pane mid-task
+
+`send` refuses a pane that is still working, and `agent_status` cannot decide
+that: Herdr reports `idle` between the turns of an active task, and its pane
+record exposes no idle-age field (only agent, status, cwd, and ids). On
+2026-08-09 eight probe messages landed in a pane running a ticket-closure job
+for exactly that reason.
+
+The signal that works is the screen itself. `is_quiescent()` samples the pane
+twice a few seconds apart and treats any change as work in flight — an agent
+mid-task redraws, a settled one does not. An unreadable pane counts as busy,
+never as free. Pass `--interrupt` when interrupting is the intent.
+
+A composer heuristic was tried and removed: matching the last `>`/`›` line
+reads a harness's transcript of the previously submitted prompt as if it were
+live input, and flags greyed placeholder hints like `Implement {feature}` as
+real text. Delivery is verified after the fact instead of predicted before it.
+
+Two conditions the probes report honestly rather than as `/ask` failures: a
+target that received the message but is **out of provider credits** (skip, not
+fail), and a `pane run` that types text which the harness leaves **unsent in
+the composer** — observed once on a Claude Code pane, where `submitted: true`
+was reported for a message still sitting at the prompt.
+
 ## Project-Agent Quickstart
 
 Start here when the user asks for a single model call, roundtable, competition,

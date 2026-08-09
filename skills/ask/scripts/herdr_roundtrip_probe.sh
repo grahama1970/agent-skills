@@ -40,9 +40,24 @@ for p in sorted(panes, key=lambda x: str(x.get("pane_id"))):
 # a live agent from a process whose UI has died -- herdr reports both as idle.
 TARGET=""
 for pane in "${CANDIDATES[@]}"; do
-  if [ "$("$HERDR" pane read "$pane" --source recent --lines 5 2>/dev/null | wc -c)" -gt 0 ]; then
-    TARGET="$pane"; break
+  [ "$("$HERDR" pane read "$pane" --source recent --lines 5 2>/dev/null | wc -c)" -gt 0 ] || continue
+  # Quiescence, not agent_status: herdr reports idle between the turns of an
+  # active task. Sample the screen twice and skip anything still redrawing, so
+  # a probe never lands in a pane doing real work.
+  d1="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
+  sleep 5
+  d2="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
+  if [ "$d1" != "$d2" ]; then
+    echo "skipping $pane: screen still changing (work in flight)"
+    continue
   fi
+  # No composer heuristic here on purpose. Matching the last `>`/`›` line was
+  # tried and is wrong in both directions: it reads a harness's TRANSCRIPT of
+  # the previously submitted prompt as if it were live input, and it flags
+  # greyed placeholder hints ("Implement {feature}") as real text. Quiescence
+  # above is the signal that holds across harnesses; delivery is verified
+  # afterwards rather than predicted beforehand.
+  TARGET="$pane"; break
 done
 [ -n "$TARGET" ] || { echo "SKIP: no rendering idle pane available"; exit 0; }
 
@@ -64,10 +79,20 @@ for _ in $(seq 1 12); do
   sleep 5
 done
 
-# One occurrence means the prompt landed but no answer came back. Report it as
-# the partial result it is rather than as a delivery failure.
 final="$("$HERDR" pane read "$TARGET" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")"
+tail_text="$("$HERDR" pane read "$TARGET" --source recent --lines 40 2>/dev/null)"
+
+# An agent that cannot answer for provider reasons is not an /ask defect.
+# Observed live: delivery landed verbatim at the prompt and the reply never
+# came because the pane was out of usage credits. Reporting that as FAIL would
+# make the suite red for someone else's billing.
+if printf '%s' "$tail_text" | grep -qiE "out of usage credits|usage limit|weekly limit|rate limit|quota"; then
+  echo "SKIP: $TARGET received the message but cannot reply (provider limit reached)"
+  exit 0
+fi
+
 if [ "$final" -eq 1 ]; then
+  # Delivery is confirmed; only the reply is missing. Say which half worked.
   echo "FAIL: delivered to $TARGET but the agent never replied (one-way only)"
 else
   echo "FAIL: nonce never appeared in $TARGET"

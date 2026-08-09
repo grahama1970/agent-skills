@@ -127,3 +127,51 @@ def test_interview_options_carry_machine_readable_fields(panes: list[HerdrPane])
     assert options[0]["model"] == "codex"
     assert options[0]["directory"].endswith("/memory")
     assert options[0]["pane_id"] == "w11:p13"
+
+
+def test_send_refuses_a_pane_whose_screen_is_still_changing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """agent_status says idle between turns; only the screen tells the truth.
+
+    Eight probe messages went into a pane running a ticket-closure job on
+    2026-08-09 because it reported idle in the gaps between its turns.
+    """
+    from ask import herdr_target as ht
+
+    changing = iter(["digest-a", "digest-b"])
+    monkeypatch.setattr(ht, "pane_digest", lambda *a, **k: next(changing))
+    monkeypatch.setattr(ht.time, "sleep", lambda _s: None)
+    sent: list[str] = []
+    monkeypatch.setattr(ht.subprocess, "run", lambda *a, **k: sent.append("ran"))
+
+    pane = HerdrPane(pane_id="w1:p1", agent="codex", status="idle", cwd="/tmp")
+    receipt = ht.send(pane, "must not arrive")
+
+    assert receipt["submitted"] is False
+    assert receipt["busy"] is True
+    assert sent == [], "nothing may be delivered to a working pane"
+
+
+def test_send_proceeds_once_the_screen_settles(monkeypatch: pytest.MonkeyPatch) -> None:
+    from ask import herdr_target as ht
+
+    monkeypatch.setattr(ht, "pane_digest", lambda *a, **k: "stable")
+    monkeypatch.setattr(ht.time, "sleep", lambda _s: None)
+
+    class Ok:
+        returncode = 0
+        stderr = ""
+
+    monkeypatch.setattr(ht.subprocess, "run", lambda *a, **k: Ok())
+    pane = HerdrPane(pane_id="w1:p1", agent="codex", status="idle", cwd="/tmp")
+    assert ht.send(pane, "hello")["submitted"] is True
+
+
+def test_an_unreadable_pane_is_treated_as_busy_not_free(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A pane that cannot be read cannot show evidence of work either way."""
+    from ask import herdr_target as ht
+
+    monkeypatch.setattr(ht, "pane_digest", lambda *a, **k: None)
+    monkeypatch.setattr(ht.time, "sleep", lambda _s: None)
+    quiet, why = ht.is_quiescent("w1:p1")
+    assert quiet is False
+    assert "could not be read" in why
