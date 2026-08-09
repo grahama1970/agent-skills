@@ -1,8 +1,8 @@
 {
   "schema": "grahama.craft_integrity.v1",
   "status": "PASS",
-  "generated_at": "2026-08-09T15:35:00Z",
-  "source_commit": "258ac77c54809c7d641c40d0cb3d2b2227080a7d",
+  "generated_at": "2026-08-09T16:36:00Z",
+  "source_commit": "517857ec8be3a877b6d74f27bfa1f535772725d9",
   "visual_assets_check": {
     "command": "skills/monitor-website/run.sh visual-assets-check --json",
     "status": "PASS",
@@ -29,7 +29,7 @@
       "height": 900,
       "status": 200,
       "path": "site/design-roundtable/rendered-screens/home-desktop.png",
-      "sha256": "63d7d56f6cb505dd873492fd459e5f68d078994a0f8cb6f96af02f8b81d8aa08",
+      "sha256": "24694441d4774d28ec4986a89e4d4eb841f7f7940498c7510137c9279a063fd1",
       "metrics": {
         "innerWidth": 1440,
         "scrollWidth": 1440,
@@ -43,7 +43,7 @@
       "height": 1024,
       "status": 200,
       "path": "site/design-roundtable/rendered-screens/ledger-tablet.png",
-      "sha256": "bc8b5972c09c0dbbdc74ff523a09ce6572cea74985ed19f2cbb958799b77c495",
+      "sha256": "227ae233570ab39a837919564c8dfea652b0165f92cebc94738effd409cba76e",
       "metrics": {
         "innerWidth": 768,
         "scrollWidth": 768,
@@ -57,7 +57,7 @@
       "height": 900,
       "status": 200,
       "path": "site/design-roundtable/rendered-screens/explore-desktop.png",
-      "sha256": "3f5b609e52feaf502356c958e7f0ae9ee96b917cf65b7b586bded33ec65c35ac",
+      "sha256": "19dec32258c21ec6c2fac35518456960d4db7d34e0853bf1676c19e6dcc6a7da",
       "metrics": {
         "innerWidth": 1440,
         "scrollWidth": 1440,
