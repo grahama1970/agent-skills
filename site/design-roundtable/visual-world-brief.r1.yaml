@@ -1,0 +1,374 @@
+schema_version: "bespoke-visual-world-brief.v1"
+status: "PROVISIONAL_NOT_APPROVED"
+project:
+  name: "grahama.co"
+  surface: "portfolio"
+  implementation_target: "/home/graham/workspace/experiments/agent-skills/site"
+  human_approver: "Graham"
+  frozen_at: "2026-08-09T13:07:56Z"
+
+provenance:
+  source_revision: "origin/main a57f8c1ef5ffaaefdc7e3309e8c8ce12967cfd26"
+  source_bundle_sha256: "NOT_ESTABLISHED"
+  authoritative_sources:
+    - source_id: "SRC-001"
+      title: "Human immutable goal confirmation"
+      location: "site/design-roundtable/interview-decision-r1.json"
+      source_type: "stakeholder"
+      authority: "authoritative"
+    - source_id: "SRC-002"
+      title: "Ask roundtable no-attachment run"
+      location: "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-grahama-co-visual-world-directio-5add1d91b57f"
+      source_type: "research"
+      authority: "supporting"
+    - source_id: "SRC-003"
+      title: "Prior local proof summary"
+      location: "site/design-roundtable/grahama-world-roundtable-r1-noattachments.md"
+      source_type: "first-party"
+      authority: "supporting"
+
+user_job:
+  primary_audience: "People evaluating Graham's agent-systems work"
+  primary_job: "Understand what claims are made, what artifacts support them, and what the evidence does not prove."
+  primary_decision: "Whether Graham's work is credible enough to inspect further or contact him."
+  desired_earned_feeling: "oriented, respected, and able to audit rather than being marketed at"
+  anxieties_or_failure_modes:
+    - "AI claims look broader than their evidence."
+    - "Portfolio polish hides missing proof."
+    - "The site looks like a generic AI consultancy or dark-editorial template."
+  secondary_audiences:
+    - "Collaborators"
+    - "Reviewers"
+    - "Prospective technical partners"
+
+brand_truths:
+  - claim_id: "CLM-001"
+    claim: "The core premise is claim -> evidence -> bounded judgment."
+    source_ids: ["SRC-001"]
+    confidence: "high"
+    audience_relevance: "Visitors need to distinguish claim, artifact, and scope."
+    visual_implication: "Layout must make assertion, evidence, gap, and judgment distinguishable by structure."
+    prohibited_inference: "Do not imply that every claim is true or complete."
+  - claim_id: "CLM-002"
+    claim: "Receipts are already fail-closed and artifact-first in the recent site slice."
+    source_ids: ["SRC-003"]
+    confidence: "medium"
+    audience_relevance: "The existing receipt infrastructure can become a component primitive."
+    visual_implication: "Evidence objects can be visually dominant without becoming the whole page skin."
+    prohibited_inference: "Do not claim full-site bespoke compliance from this slice."
+
+personality_tensions:
+  - axis: "learned <-> plainspoken"
+    position: "learned structure with plainspoken boundaries"
+    source_claim_ids: ["CLM-001"]
+    audience_consequence: "The visitor can inspect complex work without guessing what is being claimed."
+  - axis: "precise <-> improvisational"
+    position: "precise evidence grammar with room for authored section composition"
+    source_claim_ids: ["CLM-001", "CLM-002"]
+    audience_consequence: "The site can feel custom without weakening proof discipline."
+  - axis: "archival <-> future-facing"
+    position: "artifact record, not nostalgia"
+    source_claim_ids: ["CLM-002"]
+    audience_consequence: "Receipts feel operational rather than decorative."
+  - axis: "quiet <-> theatrical"
+    position: "quiet proof surfaces with selective visual emphasis on real evidence"
+    source_claim_ids: ["CLM-001"]
+    audience_consequence: "Attention goes to artifacts and bounded conclusions."
+
+narrative_premise:
+  sentence: >-
+    This experience behaves like an open proof workshop so that evaluators can
+    inspect claims, artifacts, gaps, and bounded judgments while feeling oriented
+    and unconvinced only where the evidence is insufficient.
+  source_claim_ids: ["CLM-001", "CLM-002"]
+  why_it_belongs_to_this_brand: "It derives from the site's stated claim/evidence/boundary premise and recent receipt work."
+  why_it_helps_the_user_job: "It makes credibility inspectable rather than asserted."
+  forbidden_literalizations:
+    - "fake workshop hardware"
+    - "decorative lab grids"
+    - "paper grain as authenticity"
+    - "graph/map ornament"
+
+concept_territories:
+  - id: "T1"
+    name: "Proof Workshop"
+    semantic_premise: "Claims, evidence, traces, gaps, and judgments are assembled as inspectable semantic objects."
+    emotional_posture: "active, precise, unfinished in the honest sense"
+    typography_strategy: "human narrative separate from machine output and evidence locators"
+    composition_model: "varied sections sharing causal grammar rather than identical receipt cards"
+    image_or_illustration_logic: "real artifacts and screenshots only; no synthetic proof imagery"
+    primary_motif: "endpoint-valid trace between claim, artifact, gap, and judgment"
+    motion_behavior: "optional reveal of sequence; static state remains complete"
+    evidence_claim_ids: ["CLM-001", "CLM-002"]
+    keyframe_artifacts: []
+    accessibility_risks:
+      - "connectors may become visual-only semantics"
+    implementation_risks:
+      - "trace decoration without real endpoints"
+    exclusions:
+      - "fake industrial styling"
+      - "generic node graphs"
+  - id: "T2"
+    name: "Annotated Evidence Ledger"
+    semantic_premise: "A typeset ledger of auditable claims with evidence rail and explicit boundary labels."
+    emotional_posture: "careful, accountable, editorial"
+    typography_strategy: "three registers: human claim, machine evidence, labeled boundary"
+    composition_model: "asymmetric claim lane plus evidence/boundary rail"
+    image_or_illustration_logic: "verbatim artifact blocks, not illustrative decoration"
+    primary_motif: "evidence rail and boundary label"
+    motion_behavior: "minimal; rail can fold responsively"
+    evidence_claim_ids: ["CLM-001", "CLM-002"]
+    keyframe_artifacts: []
+    accessibility_risks:
+      - "rail content may be separated from DOM reading order"
+    implementation_risks:
+      - "receipt-card repetition"
+    exclusions:
+      - "tax-form stiffness"
+      - "global receipt-paper skin"
+  - id: "T3"
+    name: "Calibration Path"
+    semantic_premise: "About and method journeys become measured paths where waypoints carry evidence payloads."
+    emotional_posture: "sequential, diagnostic, self-correcting"
+    typography_strategy: "path labels editorial, evidence payloads machine-readable"
+    composition_model: "path-first only where sequence is the claim"
+    image_or_illustration_logic: "real work artifacts at waypoints"
+    primary_motif: "visible break for missing or insufficient evidence"
+    motion_behavior: "reduced-motion complete; motion may only clarify sequence"
+    evidence_claim_ids: ["CLM-001"]
+    keyframe_artifacts: []
+    accessibility_risks:
+      - "map/path may fail linear reading"
+    implementation_risks:
+      - "SPARTA or persona-dream convergence"
+    exclusions:
+      - "career timeline decoration"
+      - "ornamental provenance graph"
+
+selection:
+  selected_territory_id: "T1"
+  decided_by: "provisional roundtable synthesis; human approval still required"
+  decided_at: "2026-08-09T13:07:56Z"
+  must_pass_results:
+    claim_and_audience_fit: "NOT_TESTED"
+    content_hierarchy: "NOT_TESTED"
+    competitor_distinctiveness: "NOT_TESTED"
+    system_scalability: "NOT_TESTED"
+    accessibility_feasibility: "NOT_TESTED"
+    responsive_feasibility: "NOT_TESTED"
+    implementation_editability: "NOT_TESTED"
+  rationale: "Roundtable convergence favored proof/evidence structure while dissent warned against making receipt cards or paper material the whole brand."
+  rejected_territories:
+    - territory_id: "T2"
+      reason: "Keep as component/rail discipline, not the entire page architecture until boards prove it is not generic."
+    - territory_id: "T3"
+      reason: "Use for About/method sequence only; global path or graph surface risks decoration and cross-project convergence."
+
+visual_grammar:
+  typography:
+    display_role: "open claim or section thesis"
+    reading_role: "human explanation and context"
+    utility_role: "navigation, controls, labels"
+    data_or_annotation_role: "machine output, hashes, ids, paths, timestamps"
+    hierarchy_rules:
+      - "Claims, evidence, and bounded judgments must be distinguishable by role, not color alone."
+      - "Judgment text cannot visually overpower the evidence it summarizes."
+    wrapping_rules:
+      - "Long hashes and paths wrap only at declared delimiters."
+      - "Mobile reading order remains claim, evidence, gap if present, bounded judgment."
+    fallback_rules:
+      - "If custom fonts fail, role separation remains visible through size, weight, structure, and labels."
+    prohibited_uses:
+      - "monospace for human labels"
+      - "display face for dense evidence"
+  palette:
+    anchor: "NOT_SELECTED"
+    field: "NOT_SELECTED"
+    signal: "NOT_SELECTED"
+    atmosphere: "NOT_SELECTED"
+    semantic_states: {}
+    contrast_rules:
+      - "No identity-critical distinction may depend on color alone."
+      - "Future implementation must meet WCAG 2.2 AA."
+    prohibited_combinations:
+      - "dark-editorial template shared with other Graham-owned surfaces"
+  motif_family:
+    primary_device: "endpoint-valid trace"
+    meaning: "shows how a claim is connected to an artifact, gap, or bounded judgment"
+    source_claim_ids: ["CLM-001"]
+    macro_uses:
+      - "section composition when relationship between objects is the content"
+    component_uses:
+      - "receipt/artifact adjacency"
+      - "judgment boundary"
+    micro_uses:
+      - "provenance locators"
+    prohibited_uses:
+      - "decorative section rules"
+      - "unexplained arrows"
+      - "ornamental serial numbers"
+  imagery:
+    subject_rules:
+      - "Use real artifacts, screenshots, source outputs, or generated images only when synthetic output is itself the product."
+    crop_rules:
+      - "Crops must preserve enough context to inspect the artifact."
+    treatment_rules:
+      - "No fake authenticity textures."
+    sequencing_rules:
+      - "Evidence appears before promotional interpretation."
+    provenance_rules:
+      - "Every raster/vector asset needs source, method, and license."
+    alt_text_rules:
+      - "Alt text states artifact identity and evidence relevance."
+  spatial_grammar:
+    grid: "asymmetric proof assembly with role-based lanes"
+    reading_lane: "human claim and explanation remain calm and linear"
+    focal_scale: "primary evidence is visually dominant over secondary commentary"
+    rhythm: "quantized spacing; avoid ad-hoc gaps"
+    permitted_ruptures:
+      - "visible break for missing or insufficient evidence"
+      - "bounded judgment frame"
+    forbidden_ruptures:
+      - "decorative split lines without semantic endpoints"
+  material_language:
+    line: "functional provenance or endpoint relation only"
+    border: "artifact edge or judgment boundary"
+    texture: "none until real material provenance exists"
+    depth: "minimal; must encode layer or focus, not premium finish"
+    radius: "restrained and tokenized"
+    shadow: "none or functional focus/layer only"
+  motion:
+    purpose:
+      - "reveal relationship sequence"
+      - "focus evidence object"
+    allowed_properties:
+      - "opacity"
+      - "transform"
+    prohibited_motion:
+      - "motion-only meaning"
+      - "decorative route animation"
+    duration_range_ms: "NOT_SELECTED"
+    reduced_motion_equivalent: "static relationship remains complete"
+  voice:
+    headline_behavior: "states a specific claim or proof tension"
+    label_behavior: "labels scope, artifact, gap, and boundary plainly"
+    call_to_action_behavior: "offers inspection, contact, or artifact opening without overclaiming"
+    wit_boundary: "precise, not cute"
+    prohibited_tones:
+      - "AI hype"
+      - "unbounded certainty"
+      - "generic consultancy promise"
+  component_invariants:
+    - id: "INV-001"
+      rule: "Claims, evidence, gaps, and judgments have distinct structural roles."
+      survives_without_color_or_logo: true
+    - id: "INV-002"
+      rule: "Evidence is artifact-shaped and visually dominant relative to commentary."
+      survives_without_color_or_logo: true
+    - id: "INV-003"
+      rule: "Every judgment has a local bounded-scope treatment."
+      survives_without_color_or_logo: true
+    - id: "INV-004"
+      rule: "Every connector has semantic endpoints; decorative lines are forbidden."
+      survives_without_color_or_logo: true
+  responsive_choreography:
+    small:
+      - "Role order remains claim, evidence, gap if present, bounded judgment."
+      - "Rails fold into labeled blocks, not hidden side content."
+    medium:
+      - "Evidence may sit adjacent to claim if reading order is preserved."
+    large:
+      - "Asymmetric proof lanes can show claim and artifact relation simultaneously."
+    extra_wide:
+      - "Do not stretch reading measure; use extra space for evidence context."
+    text_zoom_200_percent:
+      - "No horizontal overflow; connectors degrade to labels if needed."
+
+controlled_abundance_map:
+  expressive_zones:
+    - "primary evidence object"
+    - "gap/boundary moment"
+  calm_reading_zones:
+    - "human explanation"
+    - "about narrative"
+  calm_task_zones:
+    - "navigation"
+    - "contact"
+    - "search/filter controls"
+  transition_zones:
+    - "claim to evidence"
+    - "evidence to bounded judgment"
+  maximum_simultaneous_expressive_devices: 2
+
+page_beat_sheets:
+  - page_id: "home"
+    user_job: "Understand how the site makes claims and supports them."
+    beats:
+      - orientation: "state the proof-workshop premise"
+      - tension_or_question: "what is claimed, and what can be inspected"
+      - explanation: "show the method in plain language"
+      - proof: "surface a dominant real artifact or receipt"
+      - consequence: "state the bounded judgment"
+      - next_action: "inspect artifacts or contact Graham"
+    required_content:
+      - "existing real claims"
+      - "existing receipt identifiers"
+      - "scope boundaries"
+    prohibited_template_sections:
+      - "generic hero / three-card / CTA stack"
+      - "decorative serial sections"
+
+component_inventory:
+  - component_id: "proof-pilot"
+    semantic_purpose: "Represent one claim, one evidence object, one gap if needed, and one bounded judgment."
+    content_constraints:
+      - "uses existing claim and receipt content"
+      - "adds no new product metric or award"
+    identity_bearing_rules:
+      - "role geometry"
+      - "evidence dominance"
+      - "local bounded judgment"
+    variants_and_states:
+      - "normal"
+      - "keyboard focus"
+      - "missing optional artifact"
+      - "reduced motion"
+    responsive_transformation:
+      - "adjacent lanes become ordered labeled blocks"
+    accessibility_behavior:
+      - "semantic roles preserved in DOM order"
+      - "connector meaning duplicated in text"
+    prohibited_uses:
+      - "decorative connector without endpoints"
+
+acceptance:
+  required_viewports:
+    - "390x844"
+    - "768x1024"
+    - "1440x900"
+    - "extra-wide"
+  required_stress_fixtures:
+    - "long headline"
+    - "long labels"
+    - "high-density content"
+    - "no-image or failed-image"
+    - "keyboard traversal"
+    - "reduced motion"
+    - "200 percent text zoom"
+  blind_test:
+    rater_count: 5
+    representative_screen_count: 3
+    same_category_decoy_brief_count: 3
+    pre_registered_threshold: "80 percent correct"
+  accessibility_target: "WCAG 2.2 AA"
+  performance_target:
+    percentile: 75
+    lcp_seconds_max: 2.5
+    inp_milliseconds_max: 200
+    cls_max: 0.1
+
+exclusions:
+  living_designer_style_transfer: true
+  unsupported_cultural_references: true
+  fabricated_evidence: true
+  generic_trend_devices_without_brief_provenance: true

@@ -1,0 +1,45 @@
+version: 1
+kind: roundtable-launch-plan
+metadata:
+  title: grahama.co visual-world direction roundtable r1
+  created: "2026-08-09"
+  plan_type: design
+  phase_boundary: "Roundtable and synthesis only; no implementation in this phase."
+  immutable_goal: "Produce a receipt-backed grahama.co visual-world direction contract and prioritized executable slice manifest that makes the site more uniquely bespoke while preserving claim-to-evidence-to-bounded-judgment, then stop before implementation."
+  primary_persona:
+    name: "Graham"
+    role: "site owner and final approver"
+    source: "chat confirmation on 2026-08-09"
+capability_overlap:
+  - "$ask owns the live provider roundtable runtime and receipt protocol."
+  - "$best-practices-roundtable owns equal-context panel construction, receipt reading, dissent preservation, and advisory-only synthesis."
+  - "$best-practices-bespoke-design owns evidence-first visual-world direction and acceptance gates."
+  - "Impeccable owns finish/polish/amend loops after a selected world model exists; it does not replace the direction gate."
+questions_blockers:
+  - "None for roundtable launch; implementation remains gated on synthesis and later human/design acceptance."
+tasks:
+  - id: r1-1
+    title: "Compile equal-context roundtable packet"
+    runner: local
+    definition_of_done:
+      command: "test -s site/design-roundtable/grahama-world-roundtable-r1.md"
+      assertion: "Shared packet exists and includes objective, acceptance bar, evidence, constraints, handler questions, and proof boundary."
+  - id: r1-2
+    title: "Run /ask tau-dag roundtable"
+    runner: skill
+    skill: ask
+    definition_of_done:
+      command: "Read Ask JSON output and locate run_dir with dag.json and handler receipts."
+      assertion: "Roundtable receipts exist for webclaude, webgpt, webgemini, and webkimi, or failure packets name provider-specific blockers."
+  - id: r1-3
+    title: "Synthesize world model and slice manifest"
+    runner: local
+    definition_of_done:
+      command: "Read each handler response and write attributed synthesis with dissent and local proof boundary."
+      assertion: "Synthesis does not claim implementation completion and names the next verifiable design slice."
+stop_condition:
+  status: "Stop after synthesis. Do not edit grahama.co UI in this phase."
+  required_receipts:
+    - "Ask run_dir/dag.json"
+    - "Ask handler node receipts or recovery packets"
+    - "Attributed synthesis artifact"

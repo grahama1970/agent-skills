@@ -1,0 +1,23 @@
+{
+  "title": "grahama.co visual-world roundtable scope lock",
+  "recorded_at": "2026-08-09",
+  "source": "human chat confirmation",
+  "question": "Should the immutable goal be: Produce a receipt-backed grahama.co visual-world direction contract and prioritized executable slice manifest that makes the site more uniquely bespoke while preserving claim-to-evidence-to-bounded-judgment, then stop before implementation?",
+  "answer": "yes",
+  "phase_boundary": "Run /ask roundtable first. Do not implement UI changes until after the roundtable receipts are read and synthesized.",
+  "handlers": [
+    "webclaude",
+    "webgpt",
+    "webgemini",
+    "webkimi"
+  ],
+  "named_skills": [
+    "ask",
+    "best-practices-roundtable",
+    "best-practices-bespoke-design",
+    "impeccable",
+    "interview",
+    "plan"
+  ],
+  "immutable_goal": "Produce a receipt-backed grahama.co visual-world direction contract and prioritized executable slice manifest that makes the site more uniquely bespoke while preserving claim-to-evidence-to-bounded-judgment, then stop before implementation."
+}
