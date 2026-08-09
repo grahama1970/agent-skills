@@ -1367,6 +1367,15 @@ h1 .it::after {
   color: #3f6b45;
   font-weight: 600;
 }
+.ticket .proves,
+.ticket .does-not-prove,
+.receipt-boundary .does-not-prove {
+  margin: 0.7rem 0 0;
+}
+.ticket .does-not-prove,
+.receipt-boundary .does-not-prove {
+  color: #6f5c4b;
+}
 .ticket .json {
   white-space: pre-wrap;
   word-break: break-word;
@@ -1379,6 +1388,25 @@ h1 .it::after {
   font-size: 0.62rem;
   letter-spacing: 0.05em;
   color: #7a6653;
+}
+.receipt-boundary {
+  border: 1px dashed rgba(236, 226, 211, 0.24);
+  color: var(--muted);
+  padding: 1rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.receipt-boundary h3 {
+  margin: 0 0 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.receipt-boundary .callout {
+  color: var(--ember);
+  font-weight: 700;
 }
 
 /* --- about ------------------------------------------------ */
