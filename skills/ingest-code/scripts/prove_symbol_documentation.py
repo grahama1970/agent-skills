@@ -77,6 +77,7 @@ def _by_name(records: list[Any]) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, default=Path("/tmp/ingest-code-symbol-documentation-proof"))
+    parser.add_argument("--allow-live", action="store_true", help="Acknowledge this proof reads live filesystem files.")
     args = parser.parse_args()
 
     out = args.out.resolve()

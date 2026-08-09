@@ -6,12 +6,12 @@
     "summary": "18 pytest cases passed; ingest-code sanity Result: PASS; mock evidence checker reported OK across 578 test files."
   },
   "e2e": {
-    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1348-rebased uv run --no-project --isolated --with typer --with httpx --with loguru --with python-dotenv python skills/ingest-code/scripts/prove_symbol_documentation.py --out /tmp/ingest-code-symbol-documentation-proof-rebased",
+    "command": "PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1348-liveflag uv run --no-project --isolated --with typer --with httpx --with loguru --with python-dotenv python skills/ingest-code/scripts/prove_symbol_documentation.py --allow-live --out /tmp/ingest-code-symbol-documentation-proof-liveflag",
     "exit_code": 0,
     "mocked": false,
     "live": true,
-    "artifact": "/tmp/ingest-code-symbol-documentation-proof-rebased/proof-summary.json",
-    "artifact_sha256": "25a5f2e233545395b1df0be5ff753af3f217c8f0980f0476aa96f95885947a4a",
+    "artifact": "/tmp/ingest-code-symbol-documentation-proof-liveflag/proof-summary.json",
+    "artifact_sha256": "b8d802fa84daadc94cc5486e3aa927e01f12316ea0fcc000b2a15f4088f19a06",
     "summary": "Real git fixture and Tree-sitter adapter exercised authored docstring preservation, no source mutation, documentation-need classification, current derived-summary admission, stale summary rejection, generated-file exemption, and bundle readback evidence hashes; proof-summary status=pass."
   }
 }

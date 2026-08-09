@@ -9,11 +9,11 @@
     "source_files_unchanged": true,
     "stale_derived_summary_rejected": true
   },
-  "bundle_checksums_sha256": "sha256:9208545482ead25c4cfb6ff53b09e960e42e383ed9ea741263c0fdb01f43d87f",
-  "bundle_path": "/tmp/ingest-code-symbol-documentation-proof-rebased/fixture-repo/artifacts/ingest-code/code-graph",
+  "bundle_checksums_sha256": "sha256:78869d814762d1815bf24fd9977d726c279632691df48cfce091ab310ea92307",
+  "bundle_path": "/tmp/ingest-code-symbol-documentation-proof-liveflag/fixture-repo/artifacts/ingest-code/code-graph",
   "live": true,
   "mocked": false,
-  "repo": "/tmp/ingest-code-symbol-documentation-proof-rebased/fixture-repo",
+  "repo": "/tmp/ingest-code-symbol-documentation-proof-liveflag/fixture-repo",
   "schema": "ingest-code.symbol_documentation_proof.v1",
   "source_hashes_after": {
     "documented.py": "sha256:83bb51d1684ac1c36bdfb5312753df61922ab5b717b40474f181ba137ffcd056",

@@ -52,19 +52,20 @@ Result: `OK: checked 578 test file(s); no mock+proof claim violations`.
 ## Live Filesystem Proof
 
 ```bash
-PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1348-rebased uv run --no-project --isolated \
+PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1348-liveflag uv run --no-project --isolated \
   --with typer --with httpx --with loguru --with python-dotenv \
   python skills/ingest-code/scripts/prove_symbol_documentation.py \
-  --out /tmp/ingest-code-symbol-documentation-proof-rebased
+  --allow-live \
+  --out /tmp/ingest-code-symbol-documentation-proof-liveflag
 ```
 
 Result: `status=pass`, `mocked=false`, `live=true`.
 
 Receipt:
 
-- `/tmp/ingest-code-symbol-documentation-proof-rebased/proof-summary.json`
+- `/tmp/ingest-code-symbol-documentation-proof-liveflag/proof-summary.json`
 - `artifacts/tickets/agent-skills-1348/live-proof-summary.json`
-- SHA-256: `25a5f2e233545395b1df0be5ff753af3f217c8f0980f0476aa96f95885947a4a`
+- SHA-256: `b8d802fa84daadc94cc5486e3aa927e01f12316ea0fcc000b2a15f4088f19a06`
 
 Key readback assertions:
 
