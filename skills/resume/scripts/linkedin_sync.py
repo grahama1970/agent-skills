@@ -58,6 +58,21 @@ LINKEDIN_SKILL_CAP = 50
 LEDGER = REPO / "skills" / "resume" / "local" / "linkedin-synced.json"
 
 SKILLS_HEADINGS = ("CORE COMPETENCIES", "TOP SKILLS", "SKILLS")
+# Resume phrasing that LinkedIn has no entry for, mapped to the taxonomy name it
+# does index. Verified by probing LinkedIn's own autocomplete, not guessed: it
+# has no "AI Observability" or "Regression Gates", but it does have "MLOps" and
+# "Regression Testing". Without this the sync silently drops half the resume's
+# vocabulary from the profile a recruiter actually searches.
+TAXONOMY_ALIASES = {
+    "AI Observability": "MLOps",
+    "Drift Detection": "Anomaly Detection",
+    "Regression Gates": "Regression Testing",
+    "Agentic Evaluation Harnesses": "Model Evaluation",
+    "Adversarial/Blind Testing": "AI Safety",
+    "Guardrails": "Responsible AI",
+    "Model Fine-Tuning": "Fine Tuning",
+    "Hybrid BM25 + Vector Search": "Semantic Search",
+}
 WEB_ONLY_HEADINGS = ("DEEPER DETAIL",)
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
@@ -317,7 +332,7 @@ def apply(
         added: list[dict[str, str]] = []
         skipped: list[str] = []
         for term in current.missing[:limit]:
-            canonical = add_skill(tab, term)
+            canonical = add_skill(tab, TAXONOMY_ALIASES.get(term, term))
             (added.append({"requested": term, "stored_as": canonical}) if canonical
              else skipped.append(term))
         after = live_skills(tab)
