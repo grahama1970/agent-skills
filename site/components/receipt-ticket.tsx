@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 
-/** Paper-ticket receipt with a Human / Raw JSON toggle. The human view is
- *  the callout + caption; raw is the captured payload, untouched. */
+/** Proof Workshop pilot: the receipt is not just a paper skin. It exposes the
+ *  four roles the site world now depends on: claim, evidence, boundary, and
+ *  bounded judgment. Raw payload remains untouched. */
 export function ReceiptTicket({
   id,
   title,
@@ -26,30 +27,52 @@ export function ReceiptTicket({
   const [raw, setRaw] = useState(false);
   if (variant === 'primary') {
     return (
-      <article className="ticket ticket-primary">
-        <h3>{title}</h3>
+      <article
+        className="ticket ticket-primary proof-workshop-pilot"
+        data-proof-pilot="receipt"
+      >
+        <header className="ticket-claim" data-proof-role="claim">
+          <span className="proof-role-label">Claim</span>
+          <h3>{title}</h3>
+        </header>
         <div className="ticket-primary-grid">
-          <div className="ticket-summary">
-            <p className="callout">{callout}</p>
+          <div className="ticket-summary" data-proof-role="evidence">
+            <span className="proof-role-label">Evidence</span>
             <p className="proves">{proves}</p>
-            <p className="does-not-prove">{doesNotProve}</p>
-            <p className="human">
+            <p className="human proof-context">
               {caption}. The judgment, proof boundary, and raw payload stay together;
               the summary is never the only evidence.
             </p>
           </div>
-          <pre className="json">{body}</pre>
+          <div className="ticket-raw" data-proof-role="raw-artifact">
+            <span className="proof-role-label">Raw artifact</span>
+            <pre className="json">{body}</pre>
+          </div>
         </div>
-        <p className="foot">{caption}</p>
+        <div className="ticket-boundary" data-proof-role="boundary">
+          <span className="proof-role-label">Does not prove</span>
+          <p className="does-not-prove">{doesNotProve}</p>
+        </div>
+        <div className="ticket-judgment" data-proof-role="judgment">
+          <span className="proof-role-label">Bounded judgment</span>
+          <p className="callout">{callout}</p>
+        </div>
       </article>
     );
   }
   return (
-    <article className="ticket ticket-secondary">
-      <h3>{title}</h3>
-      <p className="callout">{callout}</p>
-      <p className="proves">{proves}</p>
-      <p className="does-not-prove">{doesNotProve}</p>
+    <article
+      className="ticket ticket-secondary proof-workshop-pilot"
+      data-proof-pilot="receipt"
+    >
+      <header className="ticket-claim" data-proof-role="claim">
+        <span className="proof-role-label">Claim</span>
+        <h3>{title}</h3>
+      </header>
+      <div className="ticket-summary" data-proof-role="evidence">
+        <span className="proof-role-label">Evidence</span>
+        <p className="proves">{proves}</p>
+      </div>
       <button
         type="button"
         data-qid={`receipts:toggle:${id}`}
@@ -61,14 +84,24 @@ export function ReceiptTicket({
         {raw ? '← return to summary' : 'inspect raw receipt →'}
       </button>
       {raw ? (
-        <pre className="json">{body}</pre>
+        <div className="ticket-raw" data-proof-role="raw-artifact">
+          <span className="proof-role-label">Raw artifact</span>
+          <pre className="json">{body}</pre>
+        </div>
       ) : (
-        <p className="human">
+        <p className="human proof-context">
           {caption}. The judgment, proof boundary, and raw payload stay together;
           the summary is never the only evidence.
         </p>
       )}
-      <p className="foot">{caption}</p>
+      <div className="ticket-boundary" data-proof-role="boundary">
+        <span className="proof-role-label">Does not prove</span>
+        <p className="does-not-prove">{doesNotProve}</p>
+      </div>
+      <div className="ticket-judgment" data-proof-role="judgment">
+        <span className="proof-role-label">Bounded judgment</span>
+        <p className="callout">{callout}</p>
+      </div>
     </article>
   );
 }

@@ -1,0 +1,96 @@
+{
+  "schema": "grahama.design_amendment_receipt.v1",
+  "status": "PILOT_EVIDENCE_ONLY",
+  "created_at": "2026-08-09T13:36:00Z",
+  "world_model": "Proof Workshop / Annotated Evidence Ledger",
+  "implemented_slice": "A1 receipt proof-workshop roles",
+  "changed_files": [
+    "site/components/receipt-ticket.tsx",
+    "site/app/globals.css",
+    "site/package.json",
+    "site/scripts/verify_proof_pilot.py",
+    "site/design-roundtable/iterative-amendments-r1.md"
+  ],
+  "local_commands": [
+    {
+      "command": "npm run verify:proof-pilot",
+      "status": "PASS",
+      "result": "OK: Proof Workshop pilot exposes claim/evidence/boundary/judgment roles without global mono receipt skin"
+    },
+    {
+      "command": "npm run verify:qid",
+      "status": "PASS",
+      "result": "OK: 51 interactive elements carry data-qid, data-qs-action, title"
+    },
+    {
+      "command": "skills/monitor-website/run.sh design-world-check --json",
+      "status": "NOT_TESTED",
+      "result": "contract PASS; no_mono_on_human_labels PASS; responsive_choreography, distinctiveness_blind, craft_integrity_render NOT_TESTED"
+    },
+    {
+      "command": "npm run build",
+      "status": "PASS",
+      "result": "Next.js compiled successfully; generated 8 static pages; exported 2 routes; / first-load JS 303 kB"
+    },
+    {
+      "command": "node /home/graham/workspace/experiments/impeccable/skill/scripts/detect.mjs --json site/components/receipt-ticket.tsx site/app/globals.css site/design-roundtable/iterative-amendments-r1.md",
+      "status": "WARN",
+      "result": "side-tab warning removed; remaining warnings are two global overused-font warnings for Fraunces"
+    }
+  ],
+  "rendered_artifacts": [
+    {
+      "viewport": "1440x1100",
+      "path": "/tmp/grahama-proof-pilot-desktop-v2.png"
+    },
+    {
+      "viewport": "390x844",
+      "path": "/tmp/grahama-proof-pilot-mobile-v2.png"
+    },
+    {
+      "type": "geometry",
+      "path": "/tmp/grahama-proof-pilot-geometry-v2.json"
+    }
+  ],
+  "geometry_results": {
+    "desktop": {
+      "pilots": 3,
+      "role_counts": {
+        "claim": 3,
+        "evidence": 3,
+        "boundary": 3,
+        "judgment": 3
+      },
+      "receipt_section_overflow": 0,
+      "document_overflow_ignoring_fixed_layers": 0
+    },
+    "mobile": {
+      "pilots": 3,
+      "role_counts": {
+        "claim": 3,
+        "evidence": 3,
+        "boundary": 3,
+        "judgment": 3
+      },
+      "receipt_section_overflow": 0,
+      "document_overflow_ignoring_fixed_layers": 639,
+      "overflow_note": "Overflow source is outside #receipts, primarily Dream stepper controls; not counted as proof of whole-page responsive compliance."
+    }
+  },
+  "does_not_prove": [
+    "whole-site best-practices-bespoke-design compliance",
+    "blind distinctiveness",
+    "accessibility conformance",
+    "LCP/INP/CLS targets",
+    "Impeccable G16/G17/G18 finish-review pass",
+    "that Fraunces is the final type direction"
+  ],
+  "next_amendments": [
+    "About Proof Path Pilot",
+    "Type Direction Decision",
+    "Competence Matrix as Evidence Index",
+    "Decorative Serial Removal by Replacement",
+    "Missing Evidence State",
+    "Impeccable Finish Review Input"
+  ]
+}
