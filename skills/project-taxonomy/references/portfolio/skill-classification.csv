@@ -1,0 +1,339 @@
+skill,operational_category,capability_role,portfolio_class,program_family,research_area,research_area_title,secondary_area,github_area_label,github_area_topic,has_sanity,confidence,classification_basis,review_priority
+batch-report,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+best-practices-cots,best-practices,standards,support-enabler,,,,,,,False,high,curated-or-explicit,none
+best-practices-github-ticket,best-practices,standards,support-enabler,,,,,,,True,high,curated-or-explicit,none
+best-practices-greenfield,best-practices,standards,support-enabler,,,,,,,False,high,curated-or-explicit,none
+best-practices-kde,best-practices,standards,support-enabler,,,,,,,True,high,curated-or-explicit,none
+best-practices-port,best-practices,standards,support-enabler,,,,,,,False,high,curated-or-explicit,none
+best-practices-python,best-practices,standards,support-enabler,,,,,,,True,high,curated-or-explicit,none
+best-practices-readme,best-practices,standards,support-enabler,,,,,,,True,high,curated-or-explicit,none
+best-practices-report,best-practices,standards,support-enabler,,,,,,,False,high,curated-or-explicit,none
+best-practices-rust,best-practices,standards,support-enabler,,,,,,,False,high,curated-or-explicit,none
+bootcamp,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ccopy,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+cleanup,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+clipboard,core,capability,support-enabler,,,,,,,False,high,curated-or-explicit,none
+clipboard-file,core,capability,support-enabler,,,,,,,False,high,curated-or-explicit,none
+cui-marker,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+dashboard,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+dum-dum,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+herdr-workstation,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+monitor-website,monitor,monitor,support-enabler,,,,,,,True,high,curated-or-explicit,none
+monitor-workstation,monitor,monitor,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-buzz,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-costs,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-discord,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-docker,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-f36-plant,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-google,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-nzbgeek,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-streamdeck,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-workstation,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+service-status,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+sync-sites,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ticket,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
+agent-inbox,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+agent-status,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+agents-registry,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+align,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+ask,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+assistant,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+assistant-lab,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+best-practices-agent,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+best-practices-plan,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+best-practices-roundtable,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+best-practices-skills,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+best-practices-subagent,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+best-practices-tau-dag,best-practices,standards,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+browser-oracle,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+checkpoint,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+code-runner,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+codex,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+create-code,create,creator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+create-status-surface,create,creator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,medium,rule-derived,human-review
+cursor-agents,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+goal-helper,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+handoff,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+local-page-analysis-capture,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+loop,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+monitor-codebase,monitor,monitor,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+monitor-herdr,monitor,monitor,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+monitor-pi,monitor,monitor,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+monitor-skills,monitor,monitor,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+oc-subagent,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+ops-pi-term,ops,operator,support-enabler,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+orchestrate,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+plan,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+plan-iterate,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+project-watchdog,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+remote-control,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+scheduler,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+skill-lab,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+skills-broadcast,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+subagent-runner,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,False,high,curated-or-explicit,none
+surf,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+surf-qml,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+switchboard,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+task-monitor,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+tau,core,orchestrator,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+webgpt,core,capability,research-capability,autonomous-systems,agent-systems,Agent Systems & Orchestration,,area: agent-systems,ra-agent-systems,True,high,curated-or-explicit,none
+best-practices-arangodb,best-practices,standards,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+best-practices-project-state,best-practices,standards,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,False,high,curated-or-explicit,none
+consume-book,consume,consumer,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,research-intelligence,area: memory,ra-memory,True,high,contract-reviewed,none
+consume-youtube,consume,consumer,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,research-intelligence,area: memory,ra-memory,True,high,contract-reviewed,none
+create-context,create,creator,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+create-intent-map,create,creator,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+create-journal-entry,create,creator,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+embedding,core,memory-service,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+episodic-archiver,core,memory-service,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+intent-mapper,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+learn-datalake,learn,learner,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,extraction-document-intelligence,area: memory,ra-memory,True,high,contract-reviewed,none
+memory,core,memory-service,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+mine-transcripts,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+monitor-episodic-archiver,monitor,monitor,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,contract-reviewed,none
+monitor-memory,monitor,monitor,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,medium,rule-derived,human-review
+monitor-taxonomy,monitor,monitor,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+ops-arango,ops,operator,support-enabler,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+persona-journal,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+project-knowledge,core,memory-service,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+project-state,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+recommend-skill-chain,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+taxonomy,core,capability,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+vector-store,core,memory-service,research-capability,autonomous-systems,memory-knowledge,Memory & Knowledge Systems,,area: memory,ra-memory,True,high,curated-or-explicit,none
+benchmark-models,core,capability,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+best-practices-prompt,best-practices,standards,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+best-practices-scillm,best-practices,standards,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,False,high,curated-or-explicit,none
+chutes-call,core,model-gateway,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+create-classifier,create,creator,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+create-gpt,create,creator,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+create-regressor,create,creator,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+gpt-lab,core,capability,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+monitor-claude,monitor,monitor,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+monitor-ollama,monitor,monitor,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,False,medium,rule-derived,human-review
+ops-chutes,ops,operator,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+ops-claude,ops,operator,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+ops-llm,ops,operator,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+ops-runpod,ops,operator,support-enabler,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+prompt-lab,core,capability,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+rate-limit-recovery,core,capability,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+scillm,core,model-gateway,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,high,curated-or-explicit,none
+train-convo-steering,train,trainer,research-capability,autonomous-systems,model-systems-learning,Model Infrastructure & Learning,,area: model-systems,ra-model-systems,True,medium,rule-derived,human-review
+clean-text,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+corpus-report,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+create-annotated-pdf,create,creator,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+create-sentence-markup,create,creator,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+create-table,create,creator,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+create-table-classifier,create,creator,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+doc2qra,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extract-controls,extract,extractor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extract-entities,extract,extractor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extract-html,extract,extractor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extract-pdf,extract,extractor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extract-tables,extract,extractor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+extractor,core,document-service,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+fact-extractor,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,False,high,curated-or-explicit,none
+fetcher,core,document-service,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+ingest-book,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+ingest-code,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+ingest-doc,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+ingest-kindle,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+ingest-training-datalake,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,model-systems-learning,area: extraction,ra-extraction,True,high,contract-reviewed,none
+ingest-website,ingest,ingestor,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+monitor-pdfs,monitor,monitor,support-enabler,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,medium,rule-derived,human-review
+pdf-lab,core,document-service,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+pdf-screenshot,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+review-extraction,review,reviewer,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,False,high,curated-or-explicit,none
+review-pdf,review,reviewer,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+table-lab,core,document-service,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+treesitter,core,capability,research-capability,evidence-assurance,extraction-document-intelligence,Extraction & Document Intelligence,,area: extraction,ra-extraction,True,high,curated-or-explicit,none
+best-practices-sparta,best-practices,standards,support-enabler,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,False,high,curated-or-explicit,none
+cmmc-assessor,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+compliance-timeline,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+create-evidence-case,create,creator,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+create-gsn-diagram,create,creator,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+create-qras,create,creator,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,False,high,curated-or-explicit,none
+data-audit,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+evidence-case-lab,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,False,high,curated-or-explicit,none
+evidence-case-viewer,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,False,high,curated-or-explicit,none
+export-oscal,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+governance,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+ingest-compliance-doc,ingest,ingestor,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",extraction-document-intelligence,area: compliance-assurance,ra-compliance-assurance,True,medium,rule-derived,human-review
+ingest-sparta,ingest,ingestor,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,False,high,curated-or-explicit,none
+monitor-sparta,monitor,monitor,support-enabler,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+ops-compliance,ops,operator,support-enabler,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+qra-review,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+reality-check-sparta,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+review-assurance-case,review,reviewer,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",verification-formal-methods,area: compliance-assurance,ra-compliance-assurance,False,high,contract-reviewed,none
+review-sparta,review,reviewer,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+sparta-qra-validator-gpt,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+sparta-review,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+sparta-stress-test,core,capability,research-capability,evidence-assurance,governance-compliance,"Compliance, Governance & Assurance",,area: compliance-assurance,ra-compliance-assurance,True,high,curated-or-explicit,none
+analytics,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+argue,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+arxiv,core,researcher,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+brave-search,core,researcher,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+consume-feed,consume,consumer,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,medium,rule-derived,human-review
+context7,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+create-paper,create,creator,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+create-report,create,creator,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,False,high,curated-or-explicit,none
+discover-books,discover,discoverer,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+discover-contacts,discover,discoverer,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+discover-talent,discover,discoverer,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+distill,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+dogpile,core,researcher,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+github-search,core,researcher,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+interview,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+mailbox-mining,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+monitor-contacts,monitor,monitor,support-enabler,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+monitor-opportunities,monitor,monitor,support-enabler,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+ops-darpa,ops,operator,support-enabler,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+ops-sam-gov,ops,operator,support-enabler,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+paper-lab,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+perplexity,core,researcher,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+provider-packet,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,False,high,curated-or-explicit,none
+social-bridge,core,capability,research-capability,evidence-assurance,research-intelligence,Research Intelligence & Evidence Synthesis,,area: research-intelligence,ra-research-intelligence,True,high,curated-or-explicit,none
+analyze-elf,core,capability,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+anvil,core,adversarial-runner,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+battle,core,adversarial-runner,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+best-practices-competition,best-practices,standards,support-enabler,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+best-practices-security,best-practices,standards,support-enabler,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,False,high,curated-or-explicit,none
+hack,core,adversarial-runner,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+monitor-misuse,monitor,monitor,support-enabler,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,False,high,curated-or-explicit,none
+monitor-security,monitor,monitor,support-enabler,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,medium,rule-derived,human-review
+security-scan,core,capability,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+thunderdome,core,adversarial-runner,research-capability,evidence-assurance,security-adaptive-defense,"Security, Hacking & Adaptive Defense",,area: security-hacking,ra-security-hacking,True,high,curated-or-explicit,none
+agentic-evals,core,evaluator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+assess,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+batch-quality,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+best-practices-self-improvement-loop,best-practices,standards,support-enabler,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+classifier-lab,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+classifier-lab-subagent,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+code-review-runner,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+create-pdf-fixture,create,creator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+create-peer-review,create,creator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+debug-fetcher,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+debug-pdf,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+debugger,core,evaluator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+edge-verifier,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+eval-skills,core,evaluator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+extractor-quality-check,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+fixture-tricky,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+formalize-request,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+goal-drift,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+grounded,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,False,high,curated-or-explicit,none
+lean4-prove,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+learn-timeout,learn,learner,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+lie-detector,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+llm-eval-lab,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+match-requirement,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,False,high,curated-or-explicit,none
+monitor-drift-sensors,monitor,monitor,support-enabler,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+monitor-skill-health,monitor,monitor,support-enabler,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+nico-qa,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+project-drift,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+quality-audit,core,evaluator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+regressor-lab,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+review-code,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,medium,rule-derived,human-review
+review-page,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,medium,rule-derived,human-review
+review-paper,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",research-intelligence,area: verification,ra-verification,True,high,contract-reviewed,none
+review-plan,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,medium,rule-derived,human-review
+review-prompt,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",model-systems-learning,area: verification,ra-verification,True,high,contract-reviewed,none
+review-question,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,medium,rule-derived,human-review
+review-readme,review,reviewer,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,medium,rule-derived,human-review
+skills-ci,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+test,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+test-interactions,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+test-lab,core,evaluator,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,True,high,curated-or-explicit,none
+webgpt-review,core,capability,research-capability,evidence-assurance,verification-formal-methods,"Verification, Evaluation & Formal Methods",,area: verification,ra-verification,False,high,curated-or-explicit,none
+animation-vocabulary,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+apple-design,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+best-practices-d3,best-practices,standards,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+best-practices-design,best-practices,standards,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+best-practices-kling-contact-sheet,best-practices,standards,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+best-practices-react,best-practices,standards,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+best-practices-streamdeck,best-practices,standards,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+casting-agent,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+consume-midi,consume,consumer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+consume-movie,consume,consumer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,medium,rule-derived,human-review
+consume-music,consume,consumer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-architecture,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-cast,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-design,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+create-design-board,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-figure,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-icon,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-image,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-ksml,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-lut,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-midi,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-mockup,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-movie,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-music,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-react-designs,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-score,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-sound-design,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-stems,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-story,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-storyboard,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-streamdeck-page,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-styleguide,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+create-text,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+create-walkthrough,create,creator,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+discover-lut,discover,discoverer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,research-intelligence,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+discover-movies,discover,discoverer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+discover-music,discover,discoverer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,research-intelligence,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+emil-design-eng,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+figure-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+find-animation-opportunities,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+improve-animations,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+ingest-movie,ingest,ingestor,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,extraction-document-intelligence,area: creative-media,ra-creative-media,True,medium,rule-derived,human-review
+ingest-yt-history,ingest,ingestor,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,extraction-document-intelligence,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+learn-artist,learn,learner,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,medium,rule-derived,human-review
+learn-movie,learn,learner,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,medium,rule-derived,human-review
+mockup-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+music-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+ops-stitch,ops,operator,support-enabler,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+phart-dag-chart,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+pick-ui-library,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+pitchdeck,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+png-svg-converter,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+project-infographic,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+prototype,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+prototype-react-iterate,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+review-animations,review,reviewer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+review-design,review,reviewer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+review-music,review,reviewer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+review-story,review,reviewer,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+sfx-catalog,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+sprite-atlas,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,False,high,curated-or-explicit,none
+story-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+streamdeck-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+ux-lab,core,capability,research-capability,human-centered-ai,creative-media-design,Generative Media & Creative Systems,,area: creative-media,ra-creative-media,True,high,curated-or-explicit,none
+best-practices-chat,best-practices,standards,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+best-practices-chat-ux,best-practices,standards,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+best-practices-chatterbox-agent,best-practices,standards,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+best-practices-converse,best-practices,standards,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+conversation-lab,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+converse,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+create-persona,create,creator,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+embry-config,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+embry-dashboard,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+embry-voice-control,core,multimodal-system,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+get-subtitles,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+hum,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+ingest-audiobook,ingest,ingestor,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",extraction-document-intelligence,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+ingest-youtube,ingest,ingestor,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+learn-voice,learn,learner,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+monitor-personas,monitor,monitor,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+ops-embry-agent,ops,operator,support-enabler,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+orpheus-tts-voice-trainer,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,False,high,curated-or-explicit,none
+persona-dream,core,multimodal-system,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+personaplex,core,multimodal-system,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+review-conversation,review,reviewer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+review-persona,review,reviewer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+train-persona,train,trainer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",model-systems-learning,area: voice-persona,ra-voice-persona,True,medium,rule-derived,human-review
+train-voice,train,trainer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",model-systems-learning,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+tts-horus,tts,renderer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+tts-train,tts,renderer,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+voice-lab,core,multimodal-system,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+voice-segment-selector,core,capability,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none
+watch,core,multimodal-system,research-capability,human-centered-ai,multimodal-persona-interaction,"Multimodal, Voice & Persona Systems",,area: voice-persona,ra-voice-persona,True,high,curated-or-explicit,none

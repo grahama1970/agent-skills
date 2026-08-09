@@ -1,0 +1,55 @@
+label,kind,color,description,recommended_use
+family: autonomous-systems,family,0969DA,"Control planes, memory, and model infrastructure for bounded, inspectable agent work.",portfolio roll-up; optional on issues/PRs
+family: evidence-assurance,family,8250DF,"Acquisition, analysis, attack/defense, governance, and proof systems that preserve source and author",portfolio roll-up; optional on issues/PRs
+family: human-centered-ai,family,BF3989,"Voice, persona, multimodal interaction, and creative generation with measurable lineage and human re",portfolio roll-up; optional on issues/PRs
+area: agent-systems,research-area,1F6FEB,Agent Systems & Orchestration,exactly one primary area per research-owning repository/work item
+area: memory,research-area,8957E5,Memory & Knowledge Systems,exactly one primary area per research-owning repository/work item
+area: extraction,research-area,2DA44E,Extraction & Document Intelligence,exactly one primary area per research-owning repository/work item
+area: research-intelligence,research-area,1B7C83,Research Intelligence & Evidence Synthesis,exactly one primary area per research-owning repository/work item
+area: security-hacking,research-area,CF222E,"Security, Hacking & Adaptive Defense",exactly one primary area per research-owning repository/work item
+area: compliance-assurance,research-area,BF8700,"Compliance, Governance & Assurance",exactly one primary area per research-owning repository/work item
+area: verification,research-area,0550AE,"Verification, Evaluation & Formal Methods",exactly one primary area per research-owning repository/work item
+area: model-systems,research-area,218BFF,Model Infrastructure & Learning,exactly one primary area per research-owning repository/work item
+area: voice-persona,research-area,D15704,"Multimodal, Voice & Persona Systems",exactly one primary area per research-owning repository/work item
+area: creative-media,research-area,A371F7,Generative Media & Creative Systems,exactly one primary area per research-owning repository/work item
+method: zero-trust,method,BFDADC,Untrusted outputs require independent gates.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: provenance,method,BFDADC,"Carries source, lineage, hashes, or origin metadata.",selectively on issues/PRs; prefer repository topics for persistent methods
+method: fail-closed,method,BFDADC,Missing or invalid evidence blocks or degrades honestly.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: typed-receipts,method,BFDADC,Produces schema-bound execution or evidence receipts.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: deterministic-gates,method,BFDADC,Acceptance is computed by executable rules.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: bounded-autonomy,method,BFDADC,"Autonomy has explicit scope, budget, or stop conditions.",selectively on issues/PRs; prefer repository topics for persistent methods
+method: human-in-the-loop,method,BFDADC,A human retains review or decision authority.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: graph-retrieval,method,BFDADC,Uses graph structure or traversal for recall.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: vector-retrieval,method,BFDADC,Uses semantic/vector retrieval.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: formal-verification,method,BFDADC,"Uses a proof assistant, compiler, or formal model.",selectively on issues/PRs; prefer repository topics for persistent methods
+method: adversarial-testing,method,BFDADC,Includes negative or adversarial cases.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: adaptive-lineage,method,BFDADC,Evolves candidates with inherited deltas and selection.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: sandboxed-execution,method,BFDADC,Runs untrusted work in an isolated environment.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: multimodal,method,BFDADC,"Combines text with audio, image, or video.",selectively on issues/PRs; prefer repository topics for persistent methods
+method: local-first,method,BFDADC,Designed for local or policy-bounded operation.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: capability-routing,method,BFDADC,"Selects providers, engines, or tools by declared capability.",selectively on issues/PRs; prefer repository topics for persistent methods
+method: policy-as-code,method,BFDADC,Encodes policy as inspectable machine rules.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: preregistered-study,method,BFDADC,Declares hypotheses and gates before evaluation.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: blinded-evaluation,method,BFDADC,Reduces evaluator knowledge of experimental condition.,selectively on issues/PRs; prefer repository topics for persistent methods
+method: negative-controls,method,BFDADC,Uses controls that should not produce the claimed effect.,selectively on issues/PRs; prefer repository topics for persistent methods
+portfolio: research-owning,portfolio-class,6E7781,Independent research question and proof surface.,repository governance and portfolio accounting
+portfolio: research-platform,portfolio-class,6E7781,Shared platform that hosts multiple research capabilities.,repository governance and portfolio accounting
+portfolio: research-infrastructure,portfolio-class,6E7781,Infrastructure that is itself a research system.,repository governance and portfolio accounting
+portfolio: support-enabler,portfolio-class,6E7781,Supports a research area but is not counted as a separate line.,repository governance and portfolio accounting
+portfolio: adapted-platform,portfolio-class,6E7781,Upstream platform used as substrate; count only local delta.,repository governance and portfolio accounting
+portfolio: public-projection,portfolio-class,6E7781,Public documentation or projection of another implementation.,repository governance and portfolio accounting
+portfolio: evaluation-fixture,portfolio-class,6E7781,Purpose-built fixture for testing another system.,repository governance and portfolio accounting
+portfolio: portfolio-collateral,portfolio-class,6E7781,"Career, communication, or packaging surface.",repository governance and portfolio accounting
+evidence: unit-tested,evidence-posture,D4C5F9,Focused deterministic tests exist.,issues/PRs only when a receipt supports the label
+evidence: integration-tested,evidence-posture,D4C5F9,Multiple components are exercised together.,issues/PRs only when a receipt supports the label
+evidence: live-proof,evidence-posture,D4C5F9,A non-mocked live path has a retained receipt.,issues/PRs only when a receipt supports the label
+evidence: adversarial-tested,evidence-posture,D4C5F9,Negative or adversarial cases have been exercised.,issues/PRs only when a receipt supports the label
+evidence: human-reviewed,evidence-posture,D4C5F9,A named human review or acceptance step exists.,issues/PRs only when a receipt supports the label
+evidence: preregistered,evidence-posture,D4C5F9,Experimental hypothesis and analysis were declared in advance.,issues/PRs only when a receipt supports the label
+evidence: reproducible,evidence-posture,D4C5F9,"Inputs, commands, environment, and outputs are retained.",issues/PRs only when a receipt supports the label
+evidence: not-established,evidence-posture,D4C5F9,The claimed evidence posture is not yet established.,issues/PRs only when a receipt supports the label
+status: active,status,C2E0C6,Current active work.,repository or roadmap status
+status: experimental,status,C2E0C6,Exploratory or falsifiable research.,repository or roadmap status
+status: maintenance,status,C2E0C6,Maintained but not a current research focus.,repository or roadmap status
+status: paused,status,C2E0C6,Intentionally paused.,repository or roadmap status
+status: archived,status,C2E0C6,No longer active; retained for history.,repository or roadmap status
