@@ -7,6 +7,51 @@ export type BridgeBreakpoint = {
   line: number;
 };
 
+export type BridgeAuthority = {
+  uiKind: string;
+  remoteName: string | null;
+  extensionHostKind: 'ui' | 'workspace' | 'unknown';
+  workspaceUriScheme: string;
+  workspaceUriAuthority: string;
+  workspacePath: string;
+};
+
+export type BridgeArtifactLocations = {
+  requestPath?: string;
+  statusPath?: string;
+  sessionEventsPath?: string;
+};
+
+export type BridgeSourceSymbolRange = {
+  file: string;
+  sourceSha256: string;
+  kind: 'function' | 'class' | 'module';
+  name: string;
+  startLine: number;
+  endLine: number;
+};
+
+export type BridgeBreakpointEvidence = {
+  requested: BridgeBreakpoint;
+  vscodeBreakpoint?: BridgeBreakpoint & {
+    enabled?: boolean;
+  };
+  adapter?: {
+    verification: 'verified' | 'unverified' | 'unavailable';
+    resolved?: BridgeBreakpoint;
+    message?: string;
+  };
+  actual?: {
+    file?: string;
+    line?: number;
+    function?: string;
+  };
+  sourceSymbolRange?: BridgeSourceSymbolRange;
+  relocated: boolean;
+  accepted: boolean;
+  reason: string;
+};
+
 export type BridgeAction =
   | 'start'
   | 'restart'
@@ -47,6 +92,10 @@ export type BridgeRequest = {
   threadId?: number;
   frameId?: number;
   stackDepth?: number;
+  expectedRemoteName?: string;
+  expectedWorkspaceUriScheme?: string;
+  expectedWorkspaceUriAuthority?: string;
+  expectedExtensionHostKind?: 'ui' | 'workspace';
 };
 
 export type BridgeStoppedState = {
@@ -58,6 +107,7 @@ export type BridgeStoppedState = {
   error?: string;
   frame?: unknown;
   stackFrames?: unknown[];
+  breakpointEvidence?: BridgeBreakpointEvidence[];
   scopes?: unknown[];
   locals?: Record<string, string>;
   watches?: Record<string, string>;
@@ -72,6 +122,8 @@ export type BridgeSessionState = {
   vscodeSessionType: string;
   vscodeSessionName: string;
   workspace: string;
+  authority?: BridgeAuthority;
+  artifactLocations?: BridgeArtifactLocations;
   runtime?: Record<string, unknown>;
   status: BridgeSessionStatus;
   stopSequence: number;
@@ -98,6 +150,7 @@ export type BridgeSessionEvent = {
   reason?: string;
   adapterEvent?: string;
   adapterCommand?: string;
+  authority?: BridgeAuthority;
   createdAt: string;
 };
 
@@ -251,6 +304,22 @@ export function validateRequest(request: BridgeRequest) {
   }
   if ((request.watches?.length ?? 0) > 0 && request.allowWatchEval !== true) {
     throw new Error('Debugger bridge watch evaluation requires allowWatchEval: true.');
+  }
+  if (request.expectedRemoteName !== undefined && typeof request.expectedRemoteName !== 'string') {
+    throw new Error('Debugger bridge expectedRemoteName must be a string.');
+  }
+  if (request.expectedWorkspaceUriScheme !== undefined && typeof request.expectedWorkspaceUriScheme !== 'string') {
+    throw new Error('Debugger bridge expectedWorkspaceUriScheme must be a string.');
+  }
+  if (request.expectedWorkspaceUriAuthority !== undefined && typeof request.expectedWorkspaceUriAuthority !== 'string') {
+    throw new Error('Debugger bridge expectedWorkspaceUriAuthority must be a string.');
+  }
+  if (
+    request.expectedExtensionHostKind !== undefined &&
+    request.expectedExtensionHostKind !== 'ui' &&
+    request.expectedExtensionHostKind !== 'workspace'
+  ) {
+    throw new Error('Debugger bridge expectedExtensionHostKind must be "ui" or "workspace".');
   }
   validateSessionControlRequest(request);
 }
@@ -419,8 +488,12 @@ function requestClaimPath(outputPath: string, requestId: string) {
 }
 
 export function assessProofValidity(request: BridgeRequest, stoppedState: BridgeStoppedState): ProofAssessment {
+  const acceptedBreakpointEvidence =
+    (stoppedState.breakpointEvidence ?? []).some((evidence) => evidence.accepted === true);
   const stopProofValid =
-    stoppedState.reason === 'breakpoint' && stoppedState.matchedBreakpoint === true && stoppedState.error === undefined;
+    stoppedState.reason === 'breakpoint' &&
+    (stoppedState.matchedBreakpoint === true || acceptedBreakpointEvidence) &&
+    stoppedState.error === undefined;
   const requestedLocals = request.locals ?? [];
   const requestedWatches = request.watches ?? [];
   const locals = stoppedState.locals ?? {};

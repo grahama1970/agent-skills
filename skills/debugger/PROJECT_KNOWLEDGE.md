@@ -40,6 +40,7 @@
 | 2026-05-27 | Add redacted debugger lesson distillation | Prior debugger proof can become a reusable lesson only after raw locals, watches, secrets, and local paths are removed |
 | 2026-05-27 | Add advisory memory recall normalization | Memory can guide breakpoint selection but cannot satisfy fresh debugger proof for the current bug |
 | 2026-08-09 | Add session-oriented VS Code bridge controls | The bridge now supports same-session inspect, step, pause/run-to, breakpoint mutation, frame/thread selection, termination, stale sequence rejection, and DAP-derived runtime identity without scraping the Variables pane |
+| 2026-08-09 | Qualify VS Code bridge Remote SSH authority and relocated breakpoint evidence | The bridge is declared as a workspace extension, request writers can require `ssh-remote` + workspace host authority, receipts include authority/artifact metadata, and relocated declaration-line breakpoints require current source hash plus symbol-range evidence |
 
 ## Open Questions
 
@@ -103,6 +104,10 @@
     `artifacts/tickets/agent-skills-1351/`. The live VS Code/debugpy run shows
     a persistent session across initial breakpoint stop, inspect without
     continue, stepOver, stepIn, stepOut, and terminate receipts.
+  - Issue `agent-skills#1353` adds `sanity-bridge-remote-ssh.sh`; on a local
+    non-Remote-SSH shell it must emit a typed
+    `remote_ssh_extension_host_unavailable` receipt rather than simulating the
+    required local-client/remote-workspace proof.
 
 ## Key Files
 
@@ -125,12 +130,14 @@
 | `fixtures/memory/` | Deterministic memory recall fixture for advisory-only normalization |
 | `vscode-bridge/` | Companion VS Code extension bridge for visible debug-session control and DAP proof |
 | `references/vscode-bridge.md` | Bridge implementation notes, status ownership rules, and current limitations |
+| `fixtures/remote-ssh/` | Remote SSH bridge fixture for declaration-line breakpoint relocation proof |
 | `sanity.sh` | Python harness sanity checks |
 | `sanity-typescript.sh` | TypeScript launch writer sanity checks |
 | `sanity-rust.sh` | Rust launch writer sanity checks |
 | `sanity-e2e-typescript.sh` | Real TypeScript breakpoint/local-state E2E proof |
 | `sanity-e2e-rust.sh` | Real Rust breakpoint/local-state E2E proof through rust-gdb |
 | `sanity-bridge.sh` | Bridge protocol and smoke checks |
+| `sanity-bridge-remote-ssh.sh` | Remote SSH bridge authority and relocated-breakpoint proof gate |
 | `sanity-proof-schema.sh` | Canonical proof-schema and adapter validation sanity check |
 | `sanity-lesson-distillation.sh` | Redaction sanity check for proof-to-lesson distillation |
 | `sanity-memory-recall.sh` | Advisory-only sanity check for memory recall normalization |

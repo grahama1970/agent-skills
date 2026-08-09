@@ -1,13 +1,19 @@
+import * as crypto from 'node:crypto';
+import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import {
   AsyncKeyedQueue,
   assertExpectedStopSequence,
   type BridgeBreakpoint,
+  type BridgeAuthority,
+  type BridgeArtifactLocations,
+  type BridgeBreakpointEvidence,
   type BridgeRequest,
   type BridgeSessionEvent,
   type BridgeSessionState,
   type BridgeSessionStatus,
+  type BridgeSourceSymbolRange,
   assertWorkspacePath,
   assessProofValidity,
   assessSessionControlValidity,
@@ -36,6 +42,7 @@ type StoppedState = {
   stackFrames?: unknown[];
   matchedBreakpoint?: boolean;
   adapterBreakpointVerification?: string;
+  breakpointEvidence?: BridgeBreakpointEvidence[];
   scopes?: unknown[];
   locals?: Record<string, string>;
   watches?: Record<string, string>;
@@ -59,9 +66,15 @@ const sessionEvents = new Map<string, BridgeSessionEvent[]>();
 const requestFileMtimes = new Map<string, number>();
 const bridgeQueue = new AsyncKeyedQueue();
 let watcher: vscode.FileSystemWatcher | undefined;
+let extensionHostKind: BridgeAuthority['extensionHostKind'] = 'unknown';
 
 export function activate(context: vscode.ExtensionContext) {
   channel.appendLine('Debugger Bridge activated.');
+  extensionHostKind = context.extension.extensionKind === vscode.ExtensionKind.Workspace
+    ? 'workspace'
+    : context.extension.extensionKind === vscode.ExtensionKind.UI
+      ? 'ui'
+      : 'unknown';
 
   context.subscriptions.push(channel);
   context.subscriptions.push(
@@ -170,7 +183,7 @@ async function processRequestUri(uri: vscode.Uri) {
     raw = Buffer.from(bytes).toString('utf8');
     parsedRequest = JSON.parse(raw) as BridgeRequest;
     parsedHash = canonicalRequestHash(parsedRequest);
-    await processBridgeRequest(parsedRequest, parsedHash, true);
+    await processBridgeRequest(parsedRequest, parsedHash, true, uri.fsPath);
   } catch (error) {
     const statusPath = requestErrorStatusPath(uri.fsPath, parsedRequest);
     const errorStatus = {
@@ -208,7 +221,12 @@ function requestErrorStatusPath(requestFilePath: string, request?: BridgeRequest
   }
 }
 
-async function processBridgeRequest(request: BridgeRequest, computedRequestHash?: string, requirePendingStatus = false) {
+async function processBridgeRequest(
+  request: BridgeRequest,
+  computedRequestHash?: string,
+  requirePendingStatus = false,
+  requestPath?: string,
+) {
   validateRequest(request);
   if (!vscode.workspace.isTrusted) {
     throw new Error('Debugger bridge refuses to run in an untrusted VS Code workspace.');
@@ -217,11 +235,17 @@ async function processBridgeRequest(request: BridgeRequest, computedRequestHash?
   const requestHash = request.requestHash as string;
   const folder = resolveWorkspaceFolder(request.workspace);
   const outputPath = resolveWorkspacePath(folder, request.output ?? '.vscode/debugger-bridge/status.json');
+  const authority = buildBridgeAuthority(folder);
+  validateBridgeAuthority(request, authority);
+  const artifactLocations: BridgeArtifactLocations = {
+    requestPath,
+    statusPath: outputPath,
+  };
   if (requestHash !== computedRequestHash) {
     throw new Error('Debugger bridge requestHash does not match canonical request content.');
   }
   await bridgeQueue.run('vscode-debugger-session', () =>
-    processBridgeRequestForOutput(request, requestId, requestHash, folder, outputPath, requirePendingStatus),
+    processBridgeRequestForOutput(request, requestId, requestHash, folder, outputPath, requirePendingStatus, authority, artifactLocations),
   );
 }
 
@@ -232,6 +256,8 @@ async function processBridgeRequestForOutput(
   folder: vscode.WorkspaceFolder,
   outputPath: string,
   requirePendingStatus: boolean,
+  authority: BridgeAuthority,
+  artifactLocations: BridgeArtifactLocations,
 ) {
   if (processedRequestIds.has(requestId)) {
     if (processedRequestHashes.get(requestId) === requestHash) {
@@ -260,6 +286,8 @@ async function processBridgeRequestForOutput(
     id: request.id,
     requestHash,
     proofValid: false,
+    authority,
+    artifactLocations,
   };
   if (isSessionControlAction(action)) {
     await processSessionControlRequest(request, requestId, requestHash, folder, outputPath, statusBase, requirePendingStatus);
@@ -360,7 +388,13 @@ async function processSessionControlRequest(
   requestHash: string,
   folder: vscode.WorkspaceFolder,
   outputPath: string,
-  statusBase: { id: string | undefined; requestHash: string; proofValid: boolean },
+  statusBase: {
+    id: string | undefined;
+    requestHash: string;
+    proofValid: boolean;
+    authority: BridgeAuthority;
+    artifactLocations: BridgeArtifactLocations;
+  },
   requirePendingStatus: boolean,
 ) {
   const session = sessionForRequest(request);
@@ -569,6 +603,10 @@ function upsertSessionState(
     vscodeSessionType: session.type,
     vscodeSessionName: session.name,
     workspace: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
+    authority: bridgeAuthorityForCurrentWorkspace(),
+    artifactLocations: {
+      sessionEventsPath: `.vscode/debugger-bridge/session-events.${safeSessionId(session.id)}.json`,
+    },
     runtime: patch.runtime ?? prior?.runtime,
     status,
     stopSequence,
@@ -598,6 +636,7 @@ function recordSessionEvent(state: BridgeSessionState, request: BridgeRequest | 
     requestHash: request?.requestHash,
     threadId: state.selectedThreadId,
     frameId: state.selectedFrameId,
+    authority: state.authority,
     createdAt: state.updatedAt,
   });
   sessionEvents.set(state.vscodeSessionId, events);
@@ -615,6 +654,63 @@ async function writeSessionEvents(folder: vscode.WorkspaceFolder, sessionId: str
 
 function safeSessionId(value: string) {
   return value.replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+
+function bridgeAuthorityForCurrentWorkspace() {
+  const folder = vscode.workspace.workspaceFolders?.[0];
+  if (!folder) {
+    return undefined;
+  }
+  return buildBridgeAuthority(folder);
+}
+
+function buildBridgeAuthority(folder: vscode.WorkspaceFolder): BridgeAuthority {
+  return {
+    uiKind: vscode.UIKind[vscode.env.uiKind] ?? String(vscode.env.uiKind),
+    remoteName: vscode.env.remoteName ?? null,
+    extensionHostKind,
+    workspaceUriScheme: folder.uri.scheme,
+    workspaceUriAuthority: folder.uri.authority,
+    workspacePath: folder.uri.fsPath,
+  };
+}
+
+function validateBridgeAuthority(request: BridgeRequest, authority: BridgeAuthority) {
+  const mismatches: string[] = [];
+  if (request.expectedRemoteName !== undefined && request.expectedRemoteName !== (authority.remoteName ?? '')) {
+    mismatches.push(`remoteName expected ${request.expectedRemoteName || '<local>'} got ${authority.remoteName ?? '<local>'}`);
+  }
+  if (
+    request.expectedWorkspaceUriScheme !== undefined &&
+    request.expectedWorkspaceUriScheme !== authority.workspaceUriScheme
+  ) {
+    mismatches.push(
+      `workspaceUriScheme expected ${request.expectedWorkspaceUriScheme} got ${authority.workspaceUriScheme}`,
+    );
+  }
+  if (
+    request.expectedWorkspaceUriAuthority !== undefined &&
+    request.expectedWorkspaceUriAuthority !== authority.workspaceUriAuthority
+  ) {
+    mismatches.push(
+      `workspaceUriAuthority expected ${request.expectedWorkspaceUriAuthority || '<none>'} got ${
+        authority.workspaceUriAuthority || '<none>'
+      }`,
+    );
+  }
+  if (
+    request.expectedExtensionHostKind !== undefined &&
+    request.expectedExtensionHostKind !== authority.extensionHostKind
+  ) {
+    mismatches.push(
+      `extensionHostKind expected ${request.expectedExtensionHostKind} got ${authority.extensionHostKind}`,
+    );
+  }
+  if (mismatches.length > 0) {
+    throw new Error(
+      `debugger_bridge_authority_mismatch: ${mismatches.join('; ')}. Install/update the bridge in the active workspace extension host and rerun the request from that workspace.`,
+    );
+  }
 }
 
 function frameIdFromState(state: StoppedState) {
@@ -844,11 +940,12 @@ async function captureStoppedState(
     threadId,
     frame,
     stackFrames,
-    matchedBreakpoint: frameMatchesRequestedBreakpoint(frame, request),
     adapterBreakpointVerification: 'unavailable-vscode-api',
     locals: {},
     watches: {},
   };
+  state.breakpointEvidence = await breakpointEvidenceForFrame(frame, request);
+  state.matchedBreakpoint = state.breakpointEvidence.some((evidence) => evidence.accepted);
 
   if (!frame?.id) {
     state.error = 'No stack frame was available at the stopped breakpoint.';
@@ -885,6 +982,128 @@ async function captureStoppedState(
   }
 
   return state;
+}
+
+async function breakpointEvidenceForFrame(frame: unknown, request: BridgeRequest): Promise<BridgeBreakpointEvidence[]> {
+  const breakpoints = request.breakpoints ?? [];
+  if (breakpoints.length === 0) {
+    return [];
+  }
+  const line = (frame as { line?: unknown }).line;
+  const sourcePath = (frame as { source?: { path?: unknown } }).source?.path;
+  const functionName = (frame as { name?: unknown }).name;
+  const actual = {
+    file: typeof sourcePath === 'string' ? path.resolve(sourcePath) : undefined,
+    line: typeof line === 'number' ? line : undefined,
+    function: typeof functionName === 'string' ? functionName : undefined,
+  };
+  return Promise.all(breakpoints.map(async (breakpoint) => breakpointEvidence(breakpoint, request, actual)));
+}
+
+async function breakpointEvidence(
+  breakpoint: BridgeBreakpoint,
+  request: BridgeRequest,
+  actual: { file?: string; line?: number; function?: string },
+): Promise<BridgeBreakpointEvidence> {
+  const normalizedBreakpointPath = path.resolve(
+    request.workspace && !path.isAbsolute(breakpoint.file)
+      ? path.join(request.workspace, breakpoint.file)
+      : breakpoint.file,
+  );
+  const vscodeBreakpoint = vscode.debug.breakpoints.find((candidate): candidate is vscode.SourceBreakpoint => (
+    candidate instanceof vscode.SourceBreakpoint &&
+    path.resolve(candidate.location.uri.fsPath) === normalizedBreakpointPath &&
+    candidate.location.range.start.line + 1 === breakpoint.line
+  ));
+  const evidence: BridgeBreakpointEvidence = {
+    requested: { file: normalizedBreakpointPath, line: breakpoint.line },
+    vscodeBreakpoint: vscodeBreakpoint
+      ? {
+          file: vscodeBreakpoint.location.uri.fsPath,
+          line: vscodeBreakpoint.location.range.start.line + 1,
+          enabled: vscodeBreakpoint.enabled,
+        }
+      : undefined,
+    adapter: {
+      verification: 'unavailable',
+      message: 'VS Code extension API does not expose adapter setBreakpoints response for API-added breakpoints.',
+    },
+    actual,
+    relocated: actual.line !== undefined && breakpoint.line !== actual.line,
+    accepted: false,
+    reason: 'actual stopped frame did not match requested source file',
+  };
+  if (actual.file === undefined || actual.line === undefined) {
+    evidence.reason = 'actual stopped frame has no source path or line';
+    return evidence;
+  }
+  if (path.resolve(actual.file) !== normalizedBreakpointPath) {
+    return evidence;
+  }
+  if (actual.line === breakpoint.line) {
+    evidence.accepted = true;
+    evidence.reason = 'actual stopped frame matched requested breakpoint line';
+    return evidence;
+  }
+  const symbolRange = await sourceSymbolRangeForLine(normalizedBreakpointPath, breakpoint.line);
+  evidence.sourceSymbolRange = symbolRange;
+  if (
+    symbolRange &&
+    actual.line >= symbolRange.startLine &&
+    actual.line <= symbolRange.endLine &&
+    (actual.function === undefined || symbolRange.name === '<module>' || actual.function === symbolRange.name)
+  ) {
+    evidence.accepted = true;
+    evidence.reason = 'actual stopped frame is an adapter-relocated executable line inside the requested current symbol range';
+    return evidence;
+  }
+  evidence.reason = 'actual stopped frame is outside the requested current symbol range';
+  return evidence;
+}
+
+async function sourceSymbolRangeForLine(filePath: string, oneBasedLine: number): Promise<BridgeSourceSymbolRange | undefined> {
+  let content: string;
+  try {
+    content = await fs.readFile(filePath, 'utf8');
+  } catch {
+    return undefined;
+  }
+  const lines = content.split(/\r?\n/);
+  const index = oneBasedLine - 1;
+  const sourceLine = lines[index] ?? '';
+  const match = /^(\s*)(?:async\s+def|def|class)\s+([A-Za-z_][A-Za-z0-9_]*)/.exec(sourceLine);
+  const sourceSha256 = `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
+  if (!match) {
+    return {
+      file: filePath,
+      sourceSha256,
+      kind: 'module',
+      name: '<module>',
+      startLine: oneBasedLine,
+      endLine: oneBasedLine,
+    };
+  }
+  const declarationIndent = match[1].length;
+  let endLine = lines.length;
+  for (let i = index + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+      continue;
+    }
+    const indent = line.length - line.trimStart().length;
+    if (indent <= declarationIndent) {
+      endLine = i;
+      break;
+    }
+  }
+  return {
+    file: filePath,
+    sourceSha256,
+    kind: sourceLine.trimStart().startsWith('class ') ? 'class' : 'function',
+    name: match[2],
+    startLine: oneBasedLine,
+    endLine,
+  };
 }
 
 function frameMatchesRequestedBreakpoint(frame: unknown, request: BridgeRequest) {

@@ -41,6 +41,53 @@
       "type": "string",
       "minLength": 1
     },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uiKind",
+        "remoteName",
+        "extensionHostKind",
+        "workspaceUriScheme",
+        "workspaceUriAuthority",
+        "workspacePath"
+      ],
+      "properties": {
+        "uiKind": {
+          "type": "string"
+        },
+        "remoteName": {
+          "type": ["string", "null"]
+        },
+        "extensionHostKind": {
+          "enum": ["ui", "workspace", "unknown"]
+        },
+        "workspaceUriScheme": {
+          "type": "string"
+        },
+        "workspaceUriAuthority": {
+          "type": "string"
+        },
+        "workspacePath": {
+          "type": "string"
+        }
+      }
+    },
+    "artifactLocations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requestPath": {
+          "type": "string"
+        },
+        "statusPath": {
+          "type": "string"
+        },
+        "sessionEventsPath": {
+          "type": "string"
+        }
+      }
+    },
     "runtime": {
       "type": "object",
       "additionalProperties": true

@@ -1,0 +1,43 @@
+{
+  "base_commit": "d2abb498eccfa3a83bbaca9ed1031016517b856b",
+  "blocker": "remote_ssh_extension_host_unavailable",
+  "commit_ref": "enclosing_git_commit",
+  "deterministic_checks": [
+    {
+      "command": "bash skills/debugger/sanity-bridge.sh",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "bash skills/debugger/sanity-bridge-remote-ssh.sh --out /tmp/agent-skills-1353-remote-static",
+      "exit_code": 0,
+      "result": "deterministic_only"
+    },
+    {
+      "command": "bash skills/debugger/sanity-bridge-remote-ssh.sh --allow-live --out /tmp/agent-skills-1353-remote-ssh-final-<timestamp>",
+      "exit_code": 30,
+      "result": "blocked_remote_ssh_extension_host_unavailable"
+    },
+    {
+      "command": "bash skills/debugger/scripts/install_vscode_bridge.sh --report-json /tmp/agent-skills-1353-install-recheck-<timestamp>/install.json",
+      "exit_code": 0,
+      "result": "local install report emitted installed=true"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "passed"
+    }
+  ],
+  "install_report": "artifacts/tickets/agent-skills-1353/install-report.json",
+  "install_report_sha256": "sha256:8bfa1fab87fc3389ca003c7567cff64fe8112b6fc17f8fefc09a4d3086f96185",
+  "live": false,
+  "mocked": false,
+  "next_command": "Open this repository through VS Code Remote SSH, then rerun: bash skills/debugger/sanity-bridge-remote-ssh.sh --allow-live --out <proof-dir>",
+  "remote_ssh_receipt": "artifacts/tickets/agent-skills-1353/remote-ssh-proof-summary.json",
+  "remote_ssh_receipt_sha256": "sha256:941839e046430b48d6126bc6d4a857bed4a568b189b9567b6eee066bfa46941b",
+  "schema": "agent_skills.ticket_proof_summary.v1",
+  "status": "blocked_live_remote_ssh_required",
+  "ticket": "agent-skills#1353",
+  "updated_at": "2026-08-09T17:49:22.462842+00:00"
+}

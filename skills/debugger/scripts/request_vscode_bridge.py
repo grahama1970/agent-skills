@@ -36,6 +36,15 @@ def safe_file_name(value: str) -> str:
     return "".join(char if char.isalnum() or char in "_.-" else "_" for char in value)
 
 
+def default_expected_remote_name() -> str | None:
+    explicit = os.environ.get("VSCODE_REMOTE_NAME")
+    if explicit:
+        return explicit
+    if os.environ.get("SSH_CONNECTION") and os.environ.get("VSCODE_IPC_HOOK_CLI"):
+        return "ssh-remote"
+    return None
+
+
 def main(
     workspace: Annotated[Path, typer.Option("--workspace", help="Open VS Code workspace folder.")] = Path.cwd(),
     action: Annotated[
@@ -94,6 +103,25 @@ def main(
     thread_id: Annotated[int | None, typer.Option("--thread-id", help="DAP thread id for session control.")] = None,
     frame_id: Annotated[int | None, typer.Option("--frame-id", help="DAP frame id for inspection/selection.")] = None,
     stack_depth: Annotated[int, typer.Option("--stack-depth", help="Bounded stack frames to capture for inspection.")] = 1,
+    expect_remote_name: Annotated[
+        str | None,
+        typer.Option(
+            "--expect-remote-name",
+            help="Require the bridge to run under this VS Code remoteName; use empty string for local.",
+        ),
+    ] = None,
+    expect_workspace_uri_scheme: Annotated[
+        str | None,
+        typer.Option("--expect-workspace-uri-scheme", help="Require this VS Code workspace URI scheme."),
+    ] = None,
+    expect_workspace_uri_authority: Annotated[
+        str | None,
+        typer.Option("--expect-workspace-uri-authority", help="Require this VS Code workspace URI authority."),
+    ] = None,
+    expect_extension_host_kind: Annotated[
+        Literal["ui", "workspace"] | None,
+        typer.Option("--expect-extension-host-kind", help="Require the bridge extension host kind."),
+    ] = "workspace",
 ) -> None:
     workspace = workspace.resolve()
     bridge_dir = workspace / ".vscode" / "debugger-bridge"
@@ -124,6 +152,10 @@ def main(
         "threadId": thread_id,
         "frameId": frame_id,
         "stackDepth": stack_depth,
+        "expectedRemoteName": expect_remote_name if expect_remote_name is not None else default_expected_remote_name(),
+        "expectedWorkspaceUriScheme": expect_workspace_uri_scheme,
+        "expectedWorkspaceUriAuthority": expect_workspace_uri_authority,
+        "expectedExtensionHostKind": expect_extension_host_kind,
     }
     request = {key: value for key, value in request.items() if value is not None}
     request["requestHash"] = canonical_request_hash(request)

@@ -1,0 +1,21 @@
+{
+  "blocker": "remote_ssh_extension_host_unavailable",
+  "live": false,
+  "mocked": false,
+  "next_command": "Open this repository through VS Code Remote SSH, then rerun: bash skills/debugger/sanity-bridge-remote-ssh.sh --allow-live --out <proof-dir>",
+  "observed": {
+    "remote_name": null,
+    "ssh_connection_present": false,
+    "vscode_ipc_hook_cli_present": false
+  },
+  "proof_dir": "/tmp/agent-skills-1353-remote-ssh-final-20260809T174827Z",
+  "required": {
+    "extension_host_kind": "workspace",
+    "local_client": "macOS VS Code or equivalent local VS Code client",
+    "remote_name": "ssh-remote",
+    "remote_workspace": "Ubuntu workspace opened through Remote SSH"
+  },
+  "schema": "debugger.remote_ssh_bridge_proof.v1",
+  "status": "blocked",
+  "updated_at": "2026-08-09T17:48:27.663005+00:00"
+}

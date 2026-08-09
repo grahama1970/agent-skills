@@ -53,6 +53,7 @@ assert request["output"].startswith(".vscode/debugger-bridge/status.debugger-"),
 assert request["output"].endswith(".json"), request
 assert request["replaceBreakpoints"] is True, request
 assert request["saveBeforeStart"] is True, request
+assert request["expectedExtensionHostKind"] == "workspace", request
 assert request["requestHash"], request
 payload = {key: value for key, value in request.items() if key != "requestHash"}
 expected_hash = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -84,6 +85,7 @@ source = Path(sys.argv[2]).read_text()
 protocol = Path(sys.argv[3]).read_text()
 requester = Path(sys.argv[1]).parent.parent.joinpath("scripts", "request_vscode_bridge.py").read_text()
 assert "onStartupFinished" in package["activationEvents"], package
+assert package["extensionKind"] == ["workspace"], package
 assert "void processWorkspaceRequestFile({ missingOk: true })" not in source, source
 assert "canonicalRequestHash(parsedRequest)" in source, source
 assert "verifyPendingStatus(outputPath, request)" in source, source
@@ -111,6 +113,11 @@ assert "writeSessionEvents(folder, session.id)" in source, source
 assert "eventLog: sessionEvents.get(session.id)" in source, source
 assert "isDebugAdapterEvent(message, 'process')" in source, source
 assert "sanitizeRuntimeIdentity" in source, source
+assert "validateBridgeAuthority(request, authority)" in source, source
+assert "debugger_bridge_authority_mismatch" in source, source
+assert "breakpointEvidenceForFrame(frame, request)" in source, source
+assert "sourceSymbolRangeForLine" in source, source
+assert "actual stopped frame is an adapter-relocated executable line inside the requested current symbol range" in source, source
 assert "async function writeOwnedStatus" in source, source
 assert "readCurrentRequestOwner(filePath)" in source, source
 assert "usesSharedRequestOwner(filePath)" in source, source
@@ -133,6 +140,10 @@ assert "status: proofAssessment.proofValid ? 'stopped' : 'stopped-not-proof'" in
 assert "proofAssessment," in source, source
 assert "Debugger bridge watch evaluation requires allowWatchEval: true" in protocol, protocol
 assert "export type BridgeAction" in protocol, protocol
+assert "export type BridgeAuthority" in protocol, protocol
+assert "export type BridgeBreakpointEvidence" in protocol, protocol
+assert "expectedExtensionHostKind" in protocol, protocol
+assert "acceptedBreakpointEvidence" in protocol, protocol
 assert "debugger.session.v1" in protocol, protocol
 assert "export function validateSessionControlRequest" in protocol, protocol
 assert "export function assertExpectedStopSequence" in protocol, protocol
@@ -143,6 +154,9 @@ assert "maxRequestAgeMs must be an integer between 100 and 300000" in protocol, 
 assert "export function assertWorkspacePath" in protocol, protocol
 assert "export async function claimRequestId" in protocol, protocol
 assert "export async function isRequestAlreadyClaimed" in protocol, protocol
+assert "default_expected_remote_name" in requester, requester
+assert "--expect-remote-name" in requester, requester
+assert "--expect-extension-host-kind" in requester, requester
 PY
 
 uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/validate_debugger_proof.py" \

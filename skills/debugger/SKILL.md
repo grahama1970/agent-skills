@@ -314,10 +314,26 @@ A valid VS Code debugger proof includes:
 - the generated `.vscode/launch.json` configuration path and name
 - the `setBreakpoints` request or visible breakpoint configuration
 - proof the breakpoint was verified when the adapter exposes it, or an explicit `adapterBreakpointVerification: unavailable-vscode-api` limitation plus proof the stopped frame matches the requested source line
+- for Remote SSH workspaces, proof that the bridge extension ran in the
+  workspace extension host with the expected `remoteName` and that request,
+  status, and session artifacts were written in the remote workspace
+- when a breakpoint is requested on a declaration line, receipt evidence for
+  requested path/line, VS Code breakpoint state, actual stopped frame, and the
+  current source hash/symbol range that justifies any relocated executable line
 - proof execution stopped with reason `breakpoint`
 - the paused source file, line, and frame
 - inspected variables from the paused frame
 - analysis of what those variables prove
+
+Run the Remote SSH bridge authority gate when debugging from Graham's normal
+local-client/remote-Ubuntu workflow:
+
+```bash
+bash "$SKILL_DIR/sanity-bridge-remote-ssh.sh" --allow-live --out /tmp/debugger-remote-ssh-proof
+```
+
+If the shell is not inside a Remote SSH workspace, that command must write a
+typed blocked receipt instead of treating local VS Code as equivalent.
 
 The project-agent may drive the VS Code debugger through DAP in a terminal when a GUI is not required. The proof still must show that the breakpoint was set, hit, and used to inspect live runtime state.
 

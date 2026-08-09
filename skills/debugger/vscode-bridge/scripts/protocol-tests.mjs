@@ -85,6 +85,13 @@ try {
     expectedStopSequence: 1,
     removeBreakpoints: [{ file: 'src/app.ts', line: 12 }],
   });
+  validateRequest({
+    ...request,
+    expectedRemoteName: 'ssh-remote',
+    expectedWorkspaceUriScheme: 'file',
+    expectedWorkspaceUriAuthority: '',
+    expectedExtensionHostKind: 'workspace',
+  });
 
   await writeFile(
     statusPath,
@@ -203,6 +210,8 @@ try {
       }),
     /stackDepth/,
   );
+  throwsWith(() => validateRequest({ ...request, expectedExtensionHostKind: 'browser' }), /expectedExtensionHostKind/);
+  throwsWith(() => validateRequest({ ...request, expectedRemoteName: 42 }), /expectedRemoteName/);
   assert.notEqual(tampered.requestHash, canonicalRequestHash(tampered));
 
   const oldRequest = withFreshRequestMetadata({
@@ -314,6 +323,26 @@ try {
     assessProofValidity(
       { locals: ['value'], watches: ['value + 1'] },
       { reason: 'breakpoint', matchedBreakpoint: true, locals: { value: '14' }, watches: { 'value + 1': '15' } },
+    ).proofValid,
+    true,
+  );
+  assert.equal(
+    assessProofValidity(
+      { locals: ['value'] },
+      {
+        reason: 'breakpoint',
+        matchedBreakpoint: false,
+        breakpointEvidence: [
+          {
+            requested: { file: 'src/app.py', line: 1 },
+            actual: { file: 'src/app.py', line: 2, function: 'main' },
+            relocated: true,
+            accepted: true,
+            reason: 'actual stopped frame is an adapter-relocated executable line inside the requested current symbol range',
+          },
+        ],
+        locals: { value: '14' },
+      },
     ).proofValid,
     true,
   );

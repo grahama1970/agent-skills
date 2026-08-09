@@ -1,0 +1,12 @@
+{
+  "extension_kind": [
+    "workspace"
+  ],
+  "install_context": "local",
+  "installed": true,
+  "installed_version": "0.2.0",
+  "remote_name": null,
+  "schema": "debugger.vscode_bridge_install.v1",
+  "updated_at": "2026-08-09T17:47:05.731909+00:00",
+  "vsix": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1351-vscode-session/skills/debugger/vscode-bridge/debugger-vscode-bridge-0.2.0.vsix"
+}
