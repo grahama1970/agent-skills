@@ -1,51 +1,132 @@
-# Handoff Report: grahama.co — bespoke-design amendment
+# Handoff Report: grahama.co Bespoke-Design Compliance
 
-**Timestamp**: 2026-08-09
-**Active agent**: Claude (Opus 4.8)
-**Scope**: make grahama.co (`site/`) pass `$best-practices-bespoke-design` — i.e. read hand-made/opinionated, not AI-generated.
+**Timestamp**: 2026-08-09T16:45:52Z
+**Active agent**: Codex
+**Repository**: `/home/graham/workspace/experiments/agent-skills-font-integrate`
+**Current commit inspected**: `70bbe47f054d0f0a354c5b72fd085460f12c930a`
+**Immutable goal**: implement `best-practices-font`, compose it into grahama.co design workflows, then iterate grahama.co until `best-practices-bespoke-design` passes or a concrete blocker is reached.
 
-## 1. Overview
-- **Ecosystem**: Next.js 15 static export (`site/`), deployed to GitHub Pages (grahama.co) via `.github/workflows/site-deploy.yml`.
-- **Standard being applied**: `skills/best-practices-bespoke-design` (installed + amended this session; see §3).
-- **HEAD when written**: `104e6b08b` (main). All work below is committed + pushed to `origin/main`.
+## 1. Project Overview
 
-## 2. The skill itself (best-practices-bespoke-design)
-Installed, taxonomy-registered, broadcast, and **integrated with `$impeccable`** this session:
-- `composes: impeccable`; amend loop (`direction → render → finish-review → apply → assets → re-review → document`) delegating to impeccable's finish-reviewer / manual-edit-applier / asset-producer.
-- Gates: G15 craft + **G16 type fidelity** + **G17 material fidelity** ("imitation material is the single most reliable mark of machine-made design").
-- A `/tau` creator-reviewer DAG reviewed the integration → **VERDICT: FAIL** → fixes applied: **G18 amend-loop integrity, G19 world persistence, G20 asset provenance**, a precedence clause, and a **distinctness gate** (frozen hashed direction-contract + `protected_invariants`; two owner-shared projects sharing ≥3 of {face, palette, motif, composition, chrome} = FAIL; monotonic distinctiveness).
-- **Guard (important):** bespoke-design owns DIRECTION, impeccable owns FINISH. impeccable can swap one template for another polished one — the competitor-swap gate (G2/G11) must block that. grahama.co and SPARTA Explorer must be **distinct opinionated worlds**, not one shared dark-editorial template.
+- **Ecosystem**: Next.js static site under `site/`, skill tooling under `skills/monitor-website`.
+- **Core purpose**: grahama.co presents Graham's agent-systems work through the selected Proof Workshop visual world: claim -> evidence -> bounded judgment.
+- **Current source of truth**: this integration worktree, not the older dirty `/home/graham/workspace/experiments/agent-skills` checkout.
 
-## 3. What shipped to grahama.co this session (all on origin/main)
-- `62aed0f55` **Mono = machine-output only** — 39 human labels → editorial sans; enforced by `design-world-check` (mono gate fails the build if they regress).
-- Per-instance Fraunces axes; per-section warm grounds.
-- `4293fe650` **Accessibility → Lighthouse 100** (contrast on paper plates, invalid ARIA role, inline-link underline, accessible-name mismatches).
-- `f76fef600`/`a13323d89`/`8d3432947` **Perf**: Fraunces preload; hero video deferred + re-encoded (1068→420 KiB); all webp re-encoded (−756 KiB).
-- `3692853cd` **Em-dash cadence** trimmed ("Not X — Y" → colons) + tracked in `copy-audit` (`em_dash_cadence`, ratio now 0.098).
-- `104e6b08b` **Credentials receipted** — hero "An unusual **résumé**:" now links to `/resume`, resolving the one claim→evidence contradiction (Adidas/Pepsi/Sony/DARPA/… were bare name-drops with no receipt).
-- Contract tooling: `site/design-world.yml` + `DESIGN_WORLD.md` + `run.sh design-world-check`; `site/VOICE.md` + `voice-anchors.yml` + `run.sh copy-audit`. Tickets **#1337 and #1298 CLOSED**.
+## 2. Current State
 
-## 4. Gate state (does it pass? — honest)
-**Not a formal READY.** Passing (measured): G0/G1/G4/G5/**G6**, **G9 (a11y 100)**, **G15**, best-practices 100, G8 evidenced (CLS 0, 10 breakpoints), design-world-check mono gate PASS, copy-audit PASS.
-**Open:**
-- **G10 performance** — deployed **66** (LCP 5.9s on `.wordmark-text` = font timing; payload now ~1.9 MB after opts). Not green. Re-measure `lighthouse https://grahama.co/` after the perf commits fully deploy; further wins = more image/JS trimming.
-- **G11 distinctiveness** — **1 valid blind rater** (webgemini matched the correct brief) + webgpt expert verdict "reads bespoke", NOT the 5-rater threshold. Blocker: browser image-upload fails for webclaude/webgpt (webgemini works). Workaround: host the screenshot at a URL, or human raters.
-- **Section-template sameness** (webgpt/webclaude) — every section uses the same kicker–headline–lede–rule entrance; vary a few (Receipts = oversized artifact, About = visual path). Not started.
+The full bespoke-design goal is **not achieved**. The deterministic site checks are strong, but the blind-distinctiveness gate remains unresolved.
 
-## 5. Key decisions (do not re-litigate)
-- **Concept-art cards KEPT.** Rendered a real-screenshot swap for battle; reverted it — the illustrations (surfboard/dog-pack/dreaming-robot) are MORE distinctive than plain UI screenshots. The site separates identity-imagery (illustration) from evidence (receipts/proof machinery). Do not mechanically replace them (would regress G6/G11). Keep synthetic where it IS the product (persona-dream ✓, sparta montage ✓).
-- **webgpt/tau out-judge solo work here** — use `$brave-search → $ask webgpt` and `/tau` creator-reviewer, then execute. Solo hand-waving failed repeatedly.
+Current deterministic evidence:
 
-## 6. Next steps (ranked)
-1. **A webgpt "definitive ordered amendment plan" run is IN FLIGHT** — background task `bmqh560ew` (target `grahama-amend-plan`). Read its `run_dir` response (or the tab) and execute the returned list item by item.
-2. Vary section entrances (section-template sameness) — design-only, safe.
-3. Re-measure deployed perf; trim remaining payload/JS toward green.
-4. G11: get ≥5 blind raters via a hosted screenshot URL (browser upload is the blocker).
-5. **SPARTA Explorer** needs its OWN opinionated world (governed-evidence-thread premise), not a reskin of grahama.co — the distinctness gate (G-distinctness) now requires it.
+- `skills/monitor-website/run.sh design-world-check --json`
+  - overall `status: NOT_TESTED`
+  - `contract: PASS`
+  - `provenance_source_lock: PASS`
+  - `territory_separation: PASS`, `territory_count: 3`
+  - `narrative_premise: PASS`, `selected_territory_id: T1`
+  - `no_mono_on_human_labels: PASS`
+  - `font_receipt: PASS`
+  - `responsive_choreography: PASS`, `routes: 6`, `viewports: 5`, `checks: 30`, `failures: 0`
+  - `craft_integrity_render: PASS`, `rendered_screens: 3`
+  - `distinctiveness_blind: NOT_TESTED`, needs rendered screenshot corpus / blind-rater outputs
+- `skills/monitor-website/run.sh audit --no-live --json`
+  - `ok: true`
+  - `drift: []`
+  - README/site stats: `skills: 346`, `sanity: 291`, `agents: 92`
 
-## 7. Key files
-- `site/app/page.tsx`, `site/app/globals.css`, `site/components/*` (dream-stepper, strip-video, competence-matrix).
-- `site/design-world.yml` / `DESIGN_WORLD.md` / `VOICE.md` / `voice-anchors.yml`.
-- `skills/monitor-website/scripts/design_world_check.py`; `site/scripts/copy_audit.py`.
-- `skills/best-practices-bespoke-design/SKILL.md` (+ `references/ai-template-residue.md`).
-- Perf/a11y measured with `lighthouse` (installed globally) against the local static build (`site/out/` served) OR the live CDN — **prefer the live CDN**; the local python server understates perf (no gzip).
+Previously recorded deterministic checks in this worktree:
+
+- `skills/monitor-website/run.sh visual-assets-check --json` -> `PASS`
+- `skills/monitor-website/run.sh effects-check --json` -> `PASS`
+- `skills/monitor-website/run.sh case-composition-check --json` -> `PASS`
+- `skills/monitor-website/run.sh copy-audit --json` -> `PASS`
+- `skills/monitor-website/sanity.sh` -> OK
+- `cd site && python3 scripts/verify-data-qid.py` -> OK, 50 interactive elements checked
+- `cd site && npm run verify:proof-pilot` -> OK
+- `cd site && npm run verify:type-direction` -> OK
+- `cd site && npm run build` -> passed
+- `python3 scripts/check_mock_evidence_claims.py` -> OK
+
+## 3. What Is Working
+
+- `best-practices-font` exists and validates against `best-practices-skills`.
+- The site has a selected visual world, territory selection, font receipt, craft-integrity receipt, visual asset registry, effects registry, and generated source surfaces.
+- The major deterministic checks for provenance, territory separation, narrative premise, font role, responsive geometry, visual assets, effects, case compositions, copy, generated data, and build have usable local receipts.
+- The rater prompt and contact sheet are stable:
+  - `site/design-roundtable/distinctiveness-rater-prompt.r2.md`
+  - prompt SHA-256: `0b77bd0f02f95581e040c8736dec872106688b057404ef85b0cdb7b744f33644`
+  - `site/design-roundtable/rendered-screens/distinctiveness-blind-contact-sheet.jpg`
+  - contact-sheet SHA-256: `694f7a3cd42a6401196e414b4daafdf5c5bf2d3e6268cdc148175c52383f109a`
+
+## 4. What Is Currently Broken Or Unresolved
+
+### G11 Distinctiveness Is Still Not Established
+
+`best-practices-bespoke-design` requires blind, swap, family, and leakage testing. The current design-world checker still reports `distinctiveness_blind: NOT_TESTED`. Do not claim `READY`.
+
+### Ask Browser Attachment Evidence Is Not Reliable Enough
+
+Do not launch another broad `/ask` browser roundtable until the attachment path and provider metadata issue is handled.
+
+Observed attempts:
+
+- R3 WebGemini relative-path run:
+  - run directory: `/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/grahama-distinctiveness-blind-r3-webgemini`
+  - result: `BLOCKED` / `MISSING_SENTINEL`
+  - concrete cause: `browser_attachment_missing: requested attachment(s) not readable: ../../site/design-roundtable/rendered-screens/distinctiveness-blind-contact-sheet.jpg`
+  - response chars: `0`
+- R4 WebGemini absolute-path run:
+  - run directory: `/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/grahama-distinctiveness-blind-r4-webgemini-abs`
+  - command was interrupted after the user objected to local-path churn, but artifacts exist
+  - node receipt: `status: NEEDS_ATTENTION`
+  - failure code: `browser_attachment_unavailable`
+  - requested attachment path was absolute and locally readable
+  - raw response contains a sentinel and a plausible rater answer, but Ask rejected it because attachment metadata was unavailable: `attachment.attached: false`
+  - treat the R4 response as advisory only; do not count it toward the five-rater threshold
+
+### Clipboard / Manual Bundle
+
+A containment bundle was created and copied to the desktop clipboard as a file item:
+
+- zip: `/tmp/grahama-bespoke-g11-handoff-20260809T164552Z.zip`
+- SHA-256: `018418276d72f9caca63bd4a686a00aa82159b664081ddced3d7c04eb0a10f44`
+- clipboard verification: `TARGET=text/uri-list`, `URI=file:///tmp/grahama-bespoke-g11-handoff-20260809T164552Z.zip`
+
+Bundle contents:
+
+- `rater-packet/distinctiveness-rater-prompt.r2.md`
+- `rater-packet/distinctiveness-blind-contact-sheet.jpg`
+- `rater-packet/grahama-distinctiveness-rater-packet.pdf`
+- `ask-r3-webgemini-relative/` receipts for the failed relative-path run
+- `ask-r4-webgemini-absolute/` receipts and advisory response for the interrupted absolute-path run
+- `README.md` explaining why the receipts are not compliance proof
+
+## 5. Next Steps
+
+1. Stop broad browser-agent churn. Do not open more blank/unsubmitted browser windows.
+2. Use the zip bundle for a human or manually controlled model review, or repair Ask/Surf attachment metadata first.
+3. If using `/ask` again, run one lane only, with a single uploadable bundle and no local paths in the model-facing prompt. Inspect `node-receipt.json` before launching another lane.
+4. To satisfy G11, collect at least five usable fresh-context rater outputs and create a validation receipt that `design-world-check` can consume.
+5. Only after G11 has real receipts should `design-world-check` be changed from `NOT_TESTED` to `PASS` for distinctiveness.
+6. After G11, run the final command set from the WebGPT eight-PR plan, including accessibility, performance, build, and receipt validation.
+
+## 6. Key Files
+
+- `skills/monitor-website/local/HANDOFF.md`
+- `skills/monitor-website/scripts/design_world_check.py`
+- `site/design-world.yml`
+- `site/DESIGN_WORLD.md`
+- `site/design-roundtable/visual-world-brief.r1.yaml`
+- `site/design-roundtable/territory-selection.r1.json`
+- `site/design-roundtable/distinctiveness-rater-prompt.r2.md`
+- `site/design-roundtable/rendered-screens/distinctiveness-blind-contact-sheet.jpg`
+- `site/design-roundtable/font-receipt.r1.json`
+- `site/design-roundtable/responsive-geometry.r1.json`
+- `site/design-roundtable/craft-integrity.r1.json`
+
+## 7. Stop Condition
+
+The original goal remains active and **not met** until either:
+
+- every `best-practices-bespoke-design` gate, including G11, G16, G17, G18, G19, and G20, has a local receipt and the final verifier set passes; or
+- the same Ask/browser attachment blocker repeats across the required blocked-audit turns and no manual/human or alternate rater route is available.
