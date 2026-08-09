@@ -1,0 +1,42 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1350,
+  "ticket": {
+    "repo": "grahama1970/agent-skills",
+    "issue": 1350
+  },
+  "unit": {
+    "command": "UV_PROJECT_ENVIRONMENT=/tmp/ingest-code-1350-venv PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1350 uv run --project skills/ingest-code pytest skills/ingest-code/tests/test_debug_affordances.py -q",
+    "exit_code": 0,
+    "passed": 11,
+    "mocked": false,
+    "live": true,
+    "proved": "Static debugger candidate classification for pure, fixture-bound, async, generator, context manager, class/factory, pytest, CLI, HTTP, worker, unsafe, overload, ambiguous-name, deterministic, source-change, and non-mutation cases."
+  },
+  "e2e": {
+    "command": "UV_PROJECT_ENVIRONMENT=/tmp/ingest-code-1350-venv PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1350 python3 skills/ingest-code/scripts/prove_debug_affordances.py --live --out /tmp/ingest-code-debug-affordances-proof",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1350-debug-affordances/artifacts/tickets/agent-skills-1350/live-proof-summary.json",
+    "artifact_sha256": "sha256:2369a4007d7f764a1c91cff657d4e1ec3e08e55f41913c5438e4efad9b4036e7",
+    "proved": "A real local fixture repo emitted and read back debug_invocations.jsonl with checksum inclusion, no verified statuses, deterministic repeat, source-change invalidation, explicit unsafe/needs-fixture states, and no source mutation before the intentional edit."
+  },
+  "sanity": {
+    "command": "UV_PROJECT_ENVIRONMENT=/tmp/ingest-code-1350-venv PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1350 bash skills/ingest-code/sanity.sh",
+    "exit_code": 0,
+    "result": "Result: PASS",
+    "mocked": false,
+    "live": true
+  },
+  "adjacent": {
+    "command": "UV_PROJECT_ENVIRONMENT=/tmp/ingest-code-1350-venv PYTHONPYCACHEPREFIX=/tmp/codex-pycache-1350 uv run --project skills/ingest-code pytest skills/ingest-code/tests/test_code_graph_artifact.py skills/ingest-code/tests/test_incremental_components.py -q",
+    "exit_code": 0,
+    "passed": 7
+  },
+  "mocked": "no",
+  "live": "yes",
+  "service_commit_before": "517857ec8be3a877b6d74f27bfa1f535772725d9",
+  "worktree_audit_ok": false,
+  "worktree_audit_note": "Ticket work was performed in the ticket-scoped clean worktree .worktrees/issue-1350-debug-affordances because the primary worktree contained unrelated dirty files."
+}

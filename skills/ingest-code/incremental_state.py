@@ -102,9 +102,14 @@ def build_transform_fingerprints(skill_root: Path, *, scope: str, patterns: Iter
             [skill_root / "code_graph_artifact.py"],
             extra="typed-edges-v1",
         ),
+        "debug_invocation_candidates": transform_fingerprint(
+            "debug_invocation_candidates",
+            [skill_root / "debug_affordance.py"],
+            extra="debugger-invocation-candidate-v1",
+        ),
         "artifact_writer_schema": transform_fingerprint(
             "artifact_writer_schema",
-            [skill_root / "code_graph_artifact.py"],
+            [skill_root / "code_graph_artifact.py", skill_root / "debug_affordance.py"],
             extra="bundle-v1",
         ),
     }

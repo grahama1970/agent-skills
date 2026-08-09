@@ -40,6 +40,7 @@ Codebase ingestion into `/memory`:
 2. **Phase 2 — CWE Scanning**: `/taxonomy` extracts security-relevant patterns (bridge tags + CWE mappings) per file.
 3. **Phase 3 — Relationship Edges**: Python import analysis stores resolved code dependency edges in `/memory`; the local code-graph bundle also records typed import/call/inheritance occurrences, including inactive unresolved and ambiguous candidates for audit.
 4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits rich `code_symbol` records to `/memory` via `/upsert` into the `code_symbols` collection.
+5. **Static Debugger Affordances**: Code-graph bundles emit `debugger.invocation_candidate.v1` rows in `debug_invocations.jsonl`. These are candidate routes only; `$debugger` must prove a candidate at runtime before Memory can promote it.
 
 Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured code symbols are stored through `/memory /upsert`; `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to Qdrant directly.
 
@@ -318,6 +319,7 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic typed `DEFINES`/`IMPORTS`/`CALLS`/`INHERITS` occurrence edges with resolution status, active traversal gate, source spans, confidence, and provenance |
+| `artifacts/ingest-code/code-graph/debug_invocations.jsonl` | Static debugger invocation candidates bound to current symbol/source version, with pytest/CLI/HTTP/worker/direct/factory hints plus side-effect and fixture limitations |
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
@@ -325,6 +327,32 @@ should not query `/memory` during a task:
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
+
+## Static Debugger Invocation Candidates
+
+`debug_invocations.jsonl` is a handoff artifact for `$debugger`, not proof that
+an invocation works. Each row is bound to repository, branch, commit,
+`symbol_id`, `symbol_version_id`, source path/range, content hash, and
+`ingest-code.debug_affordance.v1`.
+
+Supported v1 invocation kinds are `pytest`, `cli`, `http`, `attach_runtime`,
+`direct`, and `factory_method`.
+
+Status values remain static and conservative:
+
+- `candidate_static`: a static candidate that still needs debugger proof.
+- `needs_fixture`: required arguments, async/generator/context-manager behavior,
+  HTTP/app context, overload declarations, classes, or ordinary instance methods
+  need a fixture or adapter.
+- `unsafe_direct`: static evidence found filesystem, database, network, mutation,
+  or destructive indicators, so no direct command is emitted.
+- `attach_runtime`: a worker/runtime attach point is visible, but a live runtime
+  harness is required.
+
+`ingest-code` does not execute candidates, create launch configurations, or
+mark anything `verified_*`. Runtime promotion belongs to `$debugger` and Memory.
+Changing `debug_affordance.py` invalidates incremental file-component reuse via
+the `debug_invocation_candidates` transform fingerprint.
 
 ## Related Skills
 
