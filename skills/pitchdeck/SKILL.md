@@ -28,7 +28,6 @@ provides:
   - react-deck-payload
   - house-style-measurement
   - author-voice-profile
-  - nearest-slide-layout-retrieval
   - native-editable-icon-library
 composes:
   - memory
@@ -137,7 +136,7 @@ skill actually calls, not what it could plausibly use.
 | Skill | Used for | Where |
 |-------|----------|-------|
 | `best-practices-slide-design` | House theme, exemplars, render envelope, band asset; the design rules the compiler measures against | `design_system.py`, `design_lint.py`, `document_pptx.py`, `voice_profile.py` |
-| `embedding` | Multimodal slide vectors (:8603) for visual sync and nearest-layout retrieval | `visual_sync.py`, `layout_retrieval.py` |
+| `embedding` | Multimodal slide vectors (:8603) for visual sync; ALSO used by research-only layout retrieval, which is not in the compiler path | `visual_sync.py` |
 | `memory` | Per-deck summaries and recall; the ONLY route to ArangoDB | `memory_sync.py` |
 | `ux-lab` | Shared `ChatWell` powering the claim-review chat in the browser deck | `ui/src/components/DeckChat.tsx` |
 | `browser-oracle` + `surf` + `ask` | Visual review of rendered slides by a browser oracle | `.ask/browser-oracles.yaml` (project `pitchdeck-review`) |
@@ -284,6 +283,37 @@ a separate decision, not something this export implies.
 Verified: 6 slides / 26 elements / 8 assets projected with zero gaps; scene
 illustrations reach the React payload on the architecture and roadmap slides;
 PDF renders from the templated PPTX (sha256 recorded in its receipt).
+
+## Readiness (adversarially audited, 2026-08-08)
+
+An external adversarial audit of this skill returned **NOT_READY**, and the
+finding is recorded here rather than softened. Archived at
+`outputs/state-review-2026-08-08.md`.
+
+The blocking reason was categorical: a diagram carried one element-level
+binding, so a label could reach a slide without string-level claim proof. That
+is now fixed (#1328) — every emitted string, diagram labels included, carries its
+own binding, and `verify-publish` consumes compiler-emitted AssertionAtoms rather
+than a hand-maintained approvals list.
+
+What the audit corrected in how this skill reports itself:
+
+- **"All gates green" was never true** while `test_case13_browser_vs_libreoffice_visual_diff`
+  is a strict xfail. An expected failure is an acknowledged unproved requirement,
+  not evidence. Release status must fail on it (#1329).
+- **PPTX is the only candidate publication artifact.** PDF and the React deck are
+  PREVIEWS until each has its own delivered-artifact verification (#1329).
+- **house-conformance was validated on positive controls only.** The author's own
+  decks passing proves the analyzer runs, not that it discriminates house
+  accuracy; real negative controls are pending (#1333).
+- **A corpus median is descriptive, not normative** — the cover-density finding is
+  advisory, not a defect to satisfy by adding a visual.
+- **Authorship is not a machine gate.** Blind attribution is retained as a
+  diagnostic only (#1316 deprecated).
+- **Test count, LOC, command count and icon count are not readiness evidence.**
+
+Honest status: a supervised internal authoring system. A knowledgeable operator
+should review every visible label and slide before external use.
 
 ## Publish verification (the final boundary)
 
