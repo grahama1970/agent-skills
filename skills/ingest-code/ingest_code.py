@@ -1072,11 +1072,15 @@ def extract_python_imports(filepath: Path) -> list[dict]:
 
     imports = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
+        if isinstance(node, ast.ImportFrom):
             imports.append({
-                "module": node.module,
+                "module": node.module or "",
                 "names": [alias.name for alias in node.names],
                 "line": node.lineno,
+                "col_offset": getattr(node, "col_offset", 0),
+                "end_line": getattr(node, "end_lineno", node.lineno),
+                "end_col_offset": getattr(node, "end_col_offset", 0),
+                "level": int(getattr(node, "level", 0) or 0),
             })
         elif isinstance(node, ast.Import):
             for alias in node.names:
@@ -1084,6 +1088,10 @@ def extract_python_imports(filepath: Path) -> list[dict]:
                     "module": alias.name,
                     "names": [],
                     "line": node.lineno,
+                    "col_offset": getattr(node, "col_offset", 0),
+                    "end_line": getattr(node, "end_lineno", node.lineno),
+                    "end_col_offset": getattr(node, "end_col_offset", 0),
+                    "level": 0,
                 })
     return imports
 
@@ -1091,11 +1099,13 @@ def extract_python_imports(filepath: Path) -> list[dict]:
 def build_module_index(files: list[Path], codebase_root: Path) -> dict[str, Path]:
     """Build a mapping from Python module dotted path → file path."""
     index: dict[str, Path] = {}
+    root = codebase_root.resolve()
     for fp in files:
+        fp = fp.resolve()
         if fp.suffix != ".py":
             continue
         try:
-            rel = fp.relative_to(codebase_root)
+            rel = fp.relative_to(root)
         except ValueError:
             continue
         # Convert path to module: src/extractor/pipeline/steps/s05.py → src.extractor.pipeline.steps.s05
@@ -1112,6 +1122,24 @@ def build_module_index(files: list[Path], codebase_root: Path) -> dict[str, Path
     return index
 
 
+def _resolve_python_relative_import_module(
+    filepath: Path,
+    codebase_root: Path,
+    module: str,
+    level: int,
+) -> str:
+    if level <= 0:
+        return module
+    try:
+        rel = filepath.resolve().relative_to(codebase_root.resolve())
+    except ValueError:
+        return module
+    package_parts = list(rel.parent.parts)
+    keep_count = max(0, len(package_parts) - level + 1)
+    module_parts = [part for part in module.split(".") if part]
+    return ".".join([*package_parts[:keep_count], *module_parts])
+
+
 def extract_edges(
     files: list[Path],
     codebase_root: Path,
@@ -1119,9 +1147,11 @@ def extract_edges(
 ) -> list[dict]:
     """Extract import-based dependency edges between files in the codebase.
 
-    Returns list of {from_file, to_file, edge_type, module, names}.
-    Only includes edges where both files are in the scanned codebase.
+    The returned records preserve unresolved and candidate imports for the code
+    graph artifact, but only resolved edges are active for traversal/storage.
     """
+    codebase_root = codebase_root.resolve()
+    files = [filepath.resolve() for filepath in files]
     module_index = build_module_index(files, codebase_root)
     edges: list[dict] = []
 
@@ -1130,17 +1160,48 @@ def extract_edges(
             continue
         imports = extract_python_imports(filepath)
         for imp in imports:
-            module = imp["module"]
-            # Try to resolve to a file in this codebase
+            module = _resolve_python_relative_import_module(
+                filepath,
+                codebase_root,
+                imp["module"],
+                int(imp.get("level") or 0),
+            )
+            candidate_files: list[str] = []
+            for name in imp.get("names", []):
+                candidate = module_index.get(".".join(part for part in [module, name] if part))
+                if candidate and candidate != filepath:
+                    candidate_files.append(str(candidate))
             target = module_index.get(module)
-            if not target or target == filepath:
-                continue  # External dep or self-import
+            if candidate_files and (not target or target.name == "__init__.py"):
+                unique_candidates = sorted(set(candidate_files))
+                if len(unique_candidates) == 1:
+                    target = Path(unique_candidates[0])
+                    candidate_files = []
+            if not target and candidate_files:
+                if len(set(candidate_files)) == 1:
+                    target = Path(candidate_files[0])
+                    candidate_files = []
+            resolution_status = "resolved" if target and target != filepath else "unresolved"
             edges.append({
                 "from_file": str(filepath),
-                "to_file": str(target),
+                "to_file": str(target) if resolution_status == "resolved" else None,
                 "edge_type": "depends_on",
                 "module": module,
                 "names": imp.get("names", []),
+                "line": imp.get("line"),
+                "col_offset": imp.get("col_offset"),
+                "end_line": imp.get("end_line"),
+                "end_col_offset": imp.get("end_col_offset"),
+                "level": imp.get("level", 0),
+                "resolution_status": resolution_status,
+                "resolution_method": "python_import_alias_and_scope",
+                "candidate_files": sorted(set(candidate_files)),
+                "unresolved_reason": "" if resolution_status == "resolved" else "module_not_in_scan",
+                "attempted_resolution_stages": [
+                    "exact_module_path",
+                    "relative_import_module_scope",
+                    "candidate_or_unresolved",
+                ],
             })
 
     return edges
@@ -1151,6 +1212,8 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, m
     if dry_run:
         stored = 0
         for edge in edges:
+            if edge.get("resolution_status", "resolved") != "resolved" or not edge.get("to_file"):
+                continue
             from_name = Path(edge["from_file"]).name
             to_name = Path(edge["to_file"]).name
             names = ", ".join(edge.get("names", [])[:3])
@@ -1164,6 +1227,8 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, m
     # (lessons may be stored as scope="code" or scope="extractor")
     batch = []
     for edge in edges:
+        if edge.get("resolution_status", "resolved") != "resolved" or not edge.get("to_file"):
+            continue
         from_name = Path(edge["from_file"]).name
         to_name = Path(edge["to_file"]).name
         batch.append({

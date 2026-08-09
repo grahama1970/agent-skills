@@ -38,7 +38,7 @@ Codebase ingestion into `/memory`:
 
 1. **Phase 1 — Functional Knowledge**: Python AST extracts module docstrings, function signatures, class hierarchies. Markdown parser extracts section-level knowledge from CONTEXT.md, README.md, etc. Generic parser handles TS/JS exports.
 2. **Phase 2 — CWE Scanning**: `/taxonomy` extracts security-relevant patterns (bridge tags + CWE mappings) per file.
-3. **Phase 3 — Relationship Edges**: Python import analysis stores code dependency edges in `/memory`.
+3. **Phase 3 — Relationship Edges**: Python import analysis stores resolved code dependency edges in `/memory`; the local code-graph bundle also records typed import/call/inheritance occurrences, including inactive unresolved and ambiguous candidates for audit.
 4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits rich `code_symbol` records to `/memory` via `/upsert` into the `code_symbols` collection.
 
 Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured code symbols are stored through `/memory /upsert`; `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to Qdrant directly.
@@ -135,6 +135,24 @@ Each record includes:
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
 
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
+
+### Typed Code Edges
+
+The local `edges.jsonl` bundle uses typed `CodeEdgeRecord` entries for file and symbol relationships:
+
+| Field | Purpose |
+|-------|---------|
+| `from_id`, `from_entity_type`, `to_id`, `to_entity_type` | Stable file/symbol endpoints; resolved edges must point at records present in the same bundle |
+| `edge_type` | One of `DEFINES`, `IMPORTS`, `CALLS`, `INHERITS`, `IMPLEMENTS` |
+| `resolution_status` | `resolved`, `candidate`, or `unresolved`; also mirrored as legacy `status` |
+| `resolution_method`, `confidence`, `provenance`, `synthesized_by` | How the edge was produced and how strong the static resolution is |
+| `source_path`, `source_start_line`, `source_end_line`, `source_start_column`, `source_end_column` | Exact source occurrence span for the edge |
+| `active_for_traversal` | `true` only for resolved edges; candidates and unresolved references are never traversal-active |
+| `raw_reference`, `candidate_ids`, `candidate_descriptors`, `unresolved_reason`, `attempted_resolution_stages` | Audit data for alias, relative import, ambiguous dispatch, and reflection/dynamic call cases |
+
+Current Python support resolves exact file imports, relative imports, explicit import aliases, local lexical calls, inherited method calls, and same-module/package call targets. Same-named functions that cannot be disambiguated are emitted as inactive candidates. Dynamic/reflection calls such as `getattr(...)` are emitted as inactive unresolved references unless a later resolver can prove a concrete target.
+
+Only resolved legacy import dependencies are sent to `/memory /add-edges`. The local typed bundle is the provenance receipt; candidates and unresolved edges are retained there for review but are not admitted as canonical active graph edges.
 
 ## Directory Filtering
 
@@ -252,7 +270,7 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/manifest.json` | Bundle metadata, repository identity, scan roots, dirty tracked-worktree state, counts, and artifact list |
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
-| `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic resolved import edges between scanned files |
+| `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic typed `DEFINES`/`IMPORTS`/`CALLS`/`INHERITS` occurrence edges with resolution status, active traversal gate, source spans, confidence, and provenance |
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
