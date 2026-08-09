@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "ccf584df6",
+  "sourceCommit": "9ae398e8f7",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -29,6 +29,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
       "question": "How does an agent prove which browser tab actually answered?",
+      "abstract": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "surf"
@@ -41,6 +44,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
       "question": "How do you build an agent harness that doesn't trust agents?",
+      "abstract": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "tau"
@@ -53,6 +59,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md",
       "question": "How many times should provider glue be written? Once.",
+      "abstract": "One execution surface for any model — chat, image, batch, tools, agents, receipts.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "scillm"
@@ -65,6 +74,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
       "question": "What was true at the moment the bug happened?",
+      "abstract": "Real breakpoints and paused-frame state — prove runtime truth before patching.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "debugger"
@@ -86,6 +98,9 @@
       "lens": "hybrid",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
       "question": "Can a dream give a persona more than memory can?",
+      "abstract": "Preregistered study: dreams as inspectable intermediates whose certified affect drives the persona’s live voice — emotion tags, tone, identity held stable.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "persona-dream"
@@ -107,6 +122,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
       "question": "What if extraction had no knobs to mislead you with?",
+      "abstract": "Zero-choice document extraction: one file in, one truthful result envelope out.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "extractor"
@@ -119,6 +137,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md",
       "question": "What did the research sweep fail to reach?",
+      "abstract": "Multi-source research with traceable citations and honest used/skipped/degraded provider reporting.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "dogpile"
@@ -131,6 +152,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md",
       "question": "What was on screen at that exact moment?",
+      "abstract": "Video into timestamped frames, transcript, and reports — evidence agents can re-query from memory.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "watch"
@@ -152,6 +176,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/sparta-public",
       "question": "Who decides, when the AI sounds sure? Humans do.",
+      "abstract": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
+      "taxonomy": "Compliance, security & governance",
+      "hasSanityCheck": false,
       "visibility": "public-overview",
       "evidenceAccess": "abstract",
       "img": "sparta-explorer"
@@ -173,6 +200,9 @@
       "lens": "technical",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
       "question": "What do you do with exploit code you can't trust? Breed it.",
+      "abstract": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "battle"

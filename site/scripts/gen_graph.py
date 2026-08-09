@@ -52,6 +52,7 @@ def main() -> None:
     rmap = _load("research-map.json")
     vis = {v["slug"]: v for v in _load("project-visibility.json")["projects"]}
     content = {p["slug"]: p for p in _load("content.json")["projects"]}
+    inventory = {s["n"]: s for s in _load("inventory.json")["skills"]}
 
     nodes = [{"id": "practice", "type": "practice", "label": "one practice",
               "lens": "hybrid"}]
@@ -78,12 +79,17 @@ def main() -> None:
         for s in a["systems"]:
             slug = s["slug"]
             v = vis.get(slug, {})
+            c = content.get(slug, {})
+            inv = inventory.get(slug)
             pid = f"project:{slug}"
             nodes.append({
                 "id": pid, "type": "project", "label": s["name"], "slug": slug,
                 "lens": a["lens"],
-                "href": v.get("href") or content.get(slug, {}).get("href"),
-                "question": content.get(slug, {}).get("question", ""),
+                "href": v.get("href") or c.get("href"),
+                "question": c.get("question", ""),
+                "abstract": c.get("blurb") or c.get("why", ""),
+                "taxonomy": inv["c"] if inv else a["title"],
+                "hasSanityCheck": bool(inv and inv.get("s")),
                 "visibility": v.get("visibility", "public"),
                 "evidenceAccess": v.get("evidence_access", "source"),
                 "img": slug,

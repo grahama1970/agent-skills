@@ -3031,6 +3031,56 @@ a.fig:hover .l::after,
     #0a0705;
   overflow: hidden;
 }
+.inspector-card {
+  position: fixed;
+  z-index: 1000;
+  width: min(310px, calc(100vw - 24px));
+  pointer-events: none;
+  background: rgba(16, 13, 11, 0.97);
+  border: 1px solid var(--line);
+  padding: 0.85rem 0.95rem;
+  color: var(--text);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+}
+.inspector-card.is-hidden {
+  visibility: hidden;
+}
+.inspector-card__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: baseline;
+}
+.inspector-card__title {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.08;
+}
+.inspector-card__lens,
+.inspector-card__taxonomy,
+.status-badge {
+  font-family: var(--sans);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.inspector-card__taxonomy {
+  margin: 0.45rem 0 0;
+  color: var(--faint);
+}
+.inspector-card__abstract {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.status-badge {
+  display: inline-block;
+  margin-top: 0.7rem;
+  border: 1px solid var(--line);
+  padding: 0.2rem 0.45rem;
+}
 .constellation-svg {
   display: block;
   width: 100%;
