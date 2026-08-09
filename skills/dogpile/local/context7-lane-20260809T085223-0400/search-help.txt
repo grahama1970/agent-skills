@@ -1,0 +1,153 @@
+Using CPython 3.12.10
+Creating virtual environment at: skills/dogpile/.venv
+Installed 36 packages in 60ms
+                                                                                
+ Usage: cli.py search [OPTIONS] QUERY                                           
+                                                                                
+ Aggregate search results from multiple sources.                                
+                                                                                
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    query      TEXT  Search query [required]                                │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --preset          -p                      TEXT             Use a resource    │
+│                                                            preset            │
+│                                                            (vulnerability_r… │
+│                                                            red_team,         │
+│                                                            blue_team, etc.)  │
+│ --interactive         --no-interactive                     Enable            │
+│                                                            ambiguity/intent  │
+│                                                            check             │
+│                                                            [default:         │
+│                                                            interactive]      │
+│ --tailor              --no-tailor                          Tailor queries    │
+│                                                            per service       │
+│                                                            [default: tailor] │
+│ --github-skill        --no-github-ski…                     Use               │
+│                                                            /github-search    │
+│                                                            skill             │
+│                                                            [default:         │
+│                                                            github-skill]     │
+│ --auto-preset                                              Auto-detect       │
+│                                                            preset from query │
+│ --with-perplexi…                                           Deprecated:       │
+│                                                            record Perplexity │
+│                                                            as skipped; never │
+│                                                            calls the paid    │
+│                                                            API               │
+│ --with-readarr                                             Include local     │
+│                                                            Readarr/Usenet    │
+│                                                            book search       │
+│ --with-wayback                                             Include Wayback   │
+│                                                            archive lookup    │
+│ --with-feeds                                               Include           │
+│                                                            configured        │
+│                                                            consume-feed RSS  │
+│                                                            monitor dry-run   │
+│ --feed-limit                              INTEGER RANGE    Max feed items    │
+│                                           [1<=x<=25]       per source when   │
+│                                                            --with-feeds is   │
+│                                                            used              │
+│                                                            [default: 3]      │
+│ --feed-pack                               TEXT             Dogpile feed pack │
+│                                                            to use with       │
+│                                                            --with-feeds;     │
+│                                                            empty string uses │
+│                                                            consume-feed      │
+│                                                            config            │
+│                                                            [default:         │
+│                                                            security_code]    │
+│ --with-context7                                            Include Context7  │
+│                                                            current           │
+│                                                            library/API       │
+│                                                            documentation     │
+│                                                            lookup            │
+│ --context7-libr…                          TEXT             Library name or   │
+│                                                            Context7 library  │
+│                                                            ID for            │
+│                                                            --with-context7,  │
+│                                                            e.g. react or     │
+│                                                            /facebook/react   │
+│ --context7-toke…                          INTEGER RANGE    Max Context7      │
+│                                           [500<=x<=10000]  documentation     │
+│                                                            tokens to request │
+│                                                            [default: 3000]   │
+│ --html-report                                              Write a           │
+│                                                            self-contained    │
+│                                                            HTML/CSS report   │
+│ --open-report                                              Open the HTML     │
+│                                                            report in your    │
+│                                                            browser           │
+│ --report-file                             PATH             Write the HTML    │
+│                                                            report to a       │
+│                                                            specific path     │
+│ --persona                                 TEXT             Review/research   │
+│                                                            persona whose     │
+│                                                            priorities shape  │
+│                                                            LLM analysis and  │
+│                                                            query tailoring   │
+│ --rationale                               TEXT             Why the dogpile   │
+│                                                            is being run now, │
+│                                                            including blocker │
+│                                                            context           │
+│ --context                                 TEXT             Concrete problem  │
+│                                                            context and       │
+│                                                            constraints       │
+│ --context-file                            PATH             Additional        │
+│                                                            context read from │
+│                                                            a local file      │
+│ --read-n                                  INTEGER RANGE    Deep-read the     │
+│                                           [1<=x<=15]       top-N             │
+│                                                            domain-diverse    │
+│                                                            Brave sources     │
+│                                                            into synthesis    │
+│                                                            (Deep-Research    │
+│                                                            style); 1 keeps   │
+│                                                            the single        │
+│                                                            best-of-top-3     │
+│                                                            pick              │
+│                                                            [default: 1]      │
+│ --with-ip-disco…                                           Discover          │
+│                                                            IP-only/domainle… │
+│                                                            hosts via         │
+│                                                            Shodan/Censys and │
+│                                                            deep-read them    │
+│                                                            (opt-in,          │
+│                                                            key-gated;        │
+│                                                            degrades if no    │
+│                                                            key/plan)         │
+│ --ip-limit                                INTEGER RANGE    Max IP hosts to   │
+│                                           [1<=x<=25]       discover when     │
+│                                                            --with-ip-discov… │
+│                                                            is used           │
+│                                                            [default: 5]      │
+│ --output-dir                              PATH             Per-run artifact  │
+│                                                            directory for     │
+│                                                            partial results,  │
+│                                                            packet, report,   │
+│                                                            and adapter       │
+│                                                            outputs.          │
+│ --security-pack…                          PATH             Write             │
+│                                                            dogpile.security… │
+│                                                            JSON to this      │
+│                                                            path.             │
+│ --target-canoni…                          TEXT             Target canonical  │
+│                                                            id for downstream │
+│                                                            adapter metadata. │
+│                                                            [default:         │
+│                                                            fixture-target]   │
+│ --target-immuta…                          TEXT             Target immutable  │
+│                                                            ref for           │
+│                                                            downstream        │
+│                                                            adapter metadata. │
+│                                                            [default:         │
+│                                                            sha256:fixture]   │
+│ --target-url                              TEXT             Target URL for    │
+│                                                            downstream        │
+│                                                            adapter metadata. │
+│                                                            [default:         │
+│                                                            file:///fixtures… │
+│ --help                                                     Show this message │
+│                                                            and exit.         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+

@@ -1,0 +1,37 @@
+{
+  "doctor": {
+    "receipt": "/home/graham/workspace/experiments/agent-skills-dogpile-context7-proof-20260809T085223-0400/skills/dogpile/local/context7-lane-20260809T085223-0400/doctor/receipt.json",
+    "status": "passed_with_skips",
+    "summary": {
+      "active_family": null,
+      "blocked_by_systemic_failure": 0,
+      "failed": 0,
+      "latest_failure_signature": null,
+      "not_run": 0,
+      "passed": 14,
+      "skipped": 14
+    }
+  },
+  "does_not_prove": [
+    "live Context7 API validity or quota",
+    "live provider health",
+    "semantic search quality",
+    "Hack scan execution",
+    "Battle runtime proof"
+  ],
+  "feature_eval": {
+    "receipt": "/home/graham/workspace/experiments/agent-skills-dogpile-context7-proof-20260809T085223-0400/skills/dogpile/local/context7-lane-20260809T085223-0400/feature-eval/receipt.json",
+    "status": "passed",
+    "summary": {
+      "active_family": null,
+      "blocked_by_systemic_failure": 0,
+      "failed": 0,
+      "latest_failure_signature": null,
+      "not_run": 0,
+      "passed": 26
+    }
+  },
+  "live": false,
+  "mocked": false,
+  "proof_scope": "deterministic_static_and_contract_receipts_only"
+}
