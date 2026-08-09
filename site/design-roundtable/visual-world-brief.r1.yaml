@@ -1,15 +1,15 @@
 schema_version: "bespoke-visual-world-brief.v1"
-status: "PROVISIONAL_NOT_APPROVED"
+status: "SOURCE_LOCKED_FOR_PR1"
 project:
   name: "grahama.co"
   surface: "portfolio"
   implementation_target: "/home/graham/workspace/experiments/agent-skills/site"
   human_approver: "Graham"
-  frozen_at: "2026-08-09T13:07:56Z"
+  frozen_at: "2026-08-09T14:20:00Z"
 
 provenance:
-  source_revision: "origin/main a57f8c1ef5ffaaefdc7e3309e8c8ce12967cfd26"
-  source_bundle_sha256: "NOT_ESTABLISHED"
+  source_revision: "origin/main 4460974e3d030ad4398d6eecd6b1325ad3bbbd00"
+  source_bundle_sha256: "fdc5c6cd4e7250c3af7ed210289143af7e52eb1b83bb267bd06a2d432239fadf"
   authoritative_sources:
     - source_id: "SRC-001"
       title: "Human immutable goal confirmation"
@@ -26,6 +26,11 @@ provenance:
       location: "site/design-roundtable/grahama-world-roundtable-r1-noattachments.md"
       source_type: "first-party"
       authority: "supporting"
+    - source_id: "SRC-006"
+      title: "Territory selection and board digest record"
+      location: "site/design-roundtable/territory-selection.r1.json"
+      source_type: "selection_record"
+      authority: "authoritative"
 
 user_job:
   primary_audience: "People evaluating Graham's agent-systems work"
@@ -100,7 +105,13 @@ concept_territories:
     primary_motif: "endpoint-valid trace between claim, artifact, gap, and judgment"
     motion_behavior: "optional reveal of sequence; static state remains complete"
     evidence_claim_ids: ["CLM-001", "CLM-002"]
-    keyframe_artifacts: []
+    keyframe_artifacts:
+      - path: "site/design-roundtable/territory-boards/proof-workshop.desktop.svg"
+        viewport: "desktop"
+        sha256: "3c85d321437775758d2ee6f58781cc80cc28babe8e45ccebca33938de7e0c6e9"
+      - path: "site/design-roundtable/territory-boards/proof-workshop.mobile.svg"
+        viewport: "mobile"
+        sha256: "77dd57b30a06a1e498b69bdccb1f0f77bb1afec4bd677f3eedcd6b0ddd0887dc"
     accessibility_risks:
       - "connectors may become visual-only semantics"
     implementation_risks:
@@ -118,7 +129,13 @@ concept_territories:
     primary_motif: "evidence rail and boundary label"
     motion_behavior: "minimal; rail can fold responsively"
     evidence_claim_ids: ["CLM-001", "CLM-002"]
-    keyframe_artifacts: []
+    keyframe_artifacts:
+      - path: "site/design-roundtable/territory-boards/annotated-evidence-ledger.desktop.svg"
+        viewport: "desktop"
+        sha256: "6a8ebe6f553a5399e7c86498fe3332c12df3a384dc26f097843af4b38fab8e78"
+      - path: "site/design-roundtable/territory-boards/annotated-evidence-ledger.mobile.svg"
+        viewport: "mobile"
+        sha256: "f3eba9fcd3ee21db41534604286464ff35cc4a2ef7dfaf20b498156243a86e27"
     accessibility_risks:
       - "rail content may be separated from DOM reading order"
     implementation_risks:
@@ -136,7 +153,13 @@ concept_territories:
     primary_motif: "visible break for missing or insufficient evidence"
     motion_behavior: "reduced-motion complete; motion may only clarify sequence"
     evidence_claim_ids: ["CLM-001"]
-    keyframe_artifacts: []
+    keyframe_artifacts:
+      - path: "site/design-roundtable/territory-boards/calibration-path.desktop.svg"
+        viewport: "desktop"
+        sha256: "27e28a6cab7470150fa18e92c6d8fca1ab14c1ebfda329428fa2db25d8658e02"
+      - path: "site/design-roundtable/territory-boards/calibration-path.mobile.svg"
+        viewport: "mobile"
+        sha256: "5a7cb53d9734e48af3c5c01d436395c6019eb396718b5c06004b1b6df43909a5"
     accessibility_risks:
       - "map/path may fail linear reading"
     implementation_risks:
@@ -147,17 +170,18 @@ concept_territories:
 
 selection:
   selected_territory_id: "T1"
-  decided_by: "provisional roundtable synthesis; human approval still required"
-  decided_at: "2026-08-09T13:07:56Z"
+  decided_by: "Graham instruction accepting WebGPT PR1: select Proof Workshop and record rejected territories"
+  decided_at: "2026-08-09T14:20:00Z"
+  selection_record: "site/design-roundtable/territory-selection.r1.json"
   must_pass_results:
-    claim_and_audience_fit: "NOT_TESTED"
-    content_hierarchy: "NOT_TESTED"
-    competitor_distinctiveness: "NOT_TESTED"
-    system_scalability: "NOT_TESTED"
-    accessibility_feasibility: "NOT_TESTED"
-    responsive_feasibility: "NOT_TESTED"
-    implementation_editability: "NOT_TESTED"
-  rationale: "Roundtable convergence favored proof/evidence structure while dissent warned against making receipt cards or paper material the whole brand."
+    claim_and_audience_fit: "RECORDED: selected territory maps to CLM-001 and CLM-002"
+    content_hierarchy: "RECORDED: all boards preserve identical claim/evidence/rule/judgment/boundary content"
+    competitor_distinctiveness: "RECORDED_FOR_PR1_ONLY: three territories are separated; blind G11 remains later"
+    system_scalability: "RECORDED: selected territory supports varied semantic objects rather than one ledger or path skin"
+    accessibility_feasibility: "RECORDED_FOR_PR1_ONLY: mobile boards exist; WCAG G9 remains later"
+    responsive_feasibility: "RECORDED_FOR_PR1_ONLY: desktop and mobile boards exist; rendered G8 remains later"
+    implementation_editability: "RECORDED: boards use real text/SVG/source files, not flattened production UI"
+  rationale: "Proof Workshop was selected because it makes the claim/evidence/bounded-judgment premise structural while preserving room for different page beats and artifact types."
   rejected_territories:
     - territory_id: "T2"
       reason: "Keep as component/rail discipline, not the entire page architecture until boards prove it is not generic."

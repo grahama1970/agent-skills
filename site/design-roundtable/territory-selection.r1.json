@@ -1,0 +1,105 @@
+{
+  "schema": "grahama.territory_selection.v1",
+  "created_at": "2026-08-09T14:20:00Z",
+  "project": "grahama.co",
+  "status": "SOURCE_LOCKED_FOR_PR1",
+  "selection_source": {
+    "type": "human_instruction_accepting_webgpt_plan",
+    "record": "Current task: implement WebGPT PR sequence; PR 1 explicitly records Graham's selection of Proof Workshop.",
+    "authority": "operator"
+  },
+  "identical_board_content": {
+    "reported_claim": "A claim is permissible only when traceable to evidence and a local boundary.",
+    "observed_evidence": "artifact: site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+    "artifact_path": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+    "artifact_digest": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd",
+    "deterministic_rule": "Claim, evidence, gap, and judgment must have different structural roles.",
+    "bounded_judgment": "PILOT_EVIDENCE_ONLY",
+    "does_not_prove": "whole-site bespoke compliance, blind recognition, accessibility, performance, or Impeccable G16-G18 finish review"
+  },
+  "board_constraints": {
+    "grayscale": true,
+    "logo_removed": true,
+    "brand_name_removed": true,
+    "identical_claims_evidence_and_judgments": true,
+    "territory_specific_invented_copy": false
+  },
+  "territories": [
+    {
+      "id": "T1",
+      "name": "Proof Workshop",
+      "composition_model": "causal assembly around semantic endpoints",
+      "artifacts": [
+        {
+          "viewport": "desktop",
+          "path": "site/design-roundtable/territory-boards/proof-workshop.desktop.svg",
+          "sha256": "3c85d321437775758d2ee6f58781cc80cc28babe8e45ccebca33938de7e0c6e9"
+        },
+        {
+          "viewport": "mobile",
+          "path": "site/design-roundtable/territory-boards/proof-workshop.mobile.svg",
+          "sha256": "77dd57b30a06a1e498b69bdccb1f0f77bb1afec4bd677f3eedcd6b0ddd0887dc"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "name": "Annotated Evidence Ledger",
+      "composition_model": "ledger columns with claim lane, evidence lane, and boundary lane",
+      "artifacts": [
+        {
+          "viewport": "desktop",
+          "path": "site/design-roundtable/territory-boards/annotated-evidence-ledger.desktop.svg",
+          "sha256": "6a8ebe6f553a5399e7c86498fe3332c12df3a384dc26f097843af4b38fab8e78"
+        },
+        {
+          "viewport": "mobile",
+          "path": "site/design-roundtable/territory-boards/annotated-evidence-ledger.mobile.svg",
+          "sha256": "f3eba9fcd3ee21db41534604286464ff35cc4a2ef7dfaf20b498156243a86e27"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "name": "Calibration Path",
+      "composition_model": "ordered calibration path where waypoints carry the same evidence payload",
+      "artifacts": [
+        {
+          "viewport": "desktop",
+          "path": "site/design-roundtable/territory-boards/calibration-path.desktop.svg",
+          "sha256": "27e28a6cab7470150fa18e92c6d8fca1ab14c1ebfda329428fa2db25d8658e02"
+        },
+        {
+          "viewport": "mobile",
+          "path": "site/design-roundtable/territory-boards/calibration-path.mobile.svg",
+          "sha256": "5a7cb53d9734e48af3c5c01d436395c6019eb396718b5c06004b1b6df43909a5"
+        }
+      ]
+    }
+  ],
+  "selected_territory_id": "T1",
+  "selection_rationale": [
+    "Best preserves the claim -> evidence -> bounded-judgment premise as a structural system rather than a page skin.",
+    "Keeps evidence visually dominant while leaving room for different section compositions in later PRs.",
+    "Creates a stronger guard against generic AI-portfolio styling than a ledger-only or path-only metaphor."
+  ],
+  "rejected_territories": [
+    {
+      "territory_id": "T2",
+      "reason": "Strong component discipline, but as the whole site it risks repeating receipt-card or ledger chrome across unrelated beats."
+    },
+    {
+      "territory_id": "T3",
+      "reason": "Useful for About and sequence-specific surfaces, but as the whole site it risks ornamental path/graph behavior and weaker dense evidence hierarchy."
+    }
+  ],
+  "does_not_prove": [
+    "blind logo-off recognition",
+    "competitor-swap distinctiveness",
+    "cross-screen family recognition",
+    "responsive implementation fidelity",
+    "WCAG 2.2 AA",
+    "p75 LCP, INP, or CLS",
+    "Impeccable G16, G17, or G18 finish review"
+  ]
+}

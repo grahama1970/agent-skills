@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Territory board A desktop, logo-off grayscale</title>
+  <desc id="desc">A grayscale composition showing the same claim, evidence, rule, judgment, boundary, and locator content as the other territory boards.</desc>
+  <rect width="1440" height="900" fill="#f2f2f2"/>
+  <rect x="72" y="64" width="1296" height="772" fill="#fbfbfb" stroke="#202020" stroke-width="2"/>
+  <text x="108" y="116" font-family="Arial, sans-serif" font-size="18" fill="#606060" letter-spacing="2">BOARD A / LOGO-OFF / GRAYSCALE</text>
+  <text x="108" y="178" font-family="Georgia, serif" font-size="58" fill="#111111">claim -> evidence -> bounded judgment</text>
+  <line x1="190" y1="300" x2="646" y2="300" stroke="#111111" stroke-width="3"/>
+  <line x1="794" y1="300" x2="1250" y2="300" stroke="#111111" stroke-width="3"/>
+  <circle cx="160" cy="300" r="30" fill="#fbfbfb" stroke="#111111" stroke-width="3"/>
+  <rect x="646" y="254" width="148" height="92" fill="#111111"/>
+  <circle cx="1280" cy="300" r="30" fill="#fbfbfb" stroke="#111111" stroke-width="3"/>
+  <g font-family="Arial, sans-serif" fill="#111111">
+    <text x="108" y="390" font-size="20" font-weight="700">CLAIM</text>
+    <text x="108" y="424" font-size="23">A claim is permissible only when traceable to evidence</text>
+    <text x="108" y="456" font-size="23">and a local boundary.</text>
+    <text x="108" y="538" font-size="20" font-weight="700">EVIDENCE</text>
+    <text x="108" y="572" font-size="22">artifact: site/design-roundtable/</text>
+    <text x="108" y="604" font-size="22">proof-workshop-pilot-receipt.r1.json</text>
+    <text x="108" y="636" font-size="20">sha256: 2d9957d2f715f049ff89a403f375b771</text>
+    <text x="108" y="664" font-size="20">00300f7b8f573a85dae8699a70dd5afd</text>
+    <text x="108" y="744" font-size="20" font-weight="700">DETERMINISTIC RULE</text>
+    <text x="108" y="776" font-size="22">Claim, evidence, gap, and judgment use different structural roles.</text>
+    <text x="820" y="390" font-size="20" font-weight="700">BOUNDED JUDGMENT</text>
+    <text x="820" y="426" font-size="27">PILOT_EVIDENCE_ONLY</text>
+    <text x="820" y="538" font-size="20" font-weight="700">WHAT THIS DOES NOT PROVE</text>
+    <text x="820" y="572" font-size="22">whole-site bespoke compliance, blind recognition,</text>
+    <text x="820" y="604" font-size="22">accessibility, performance, or Impeccable</text>
+    <text x="820" y="636" font-size="22">G16-G18 finish review.</text>
+  </g>
+</svg>

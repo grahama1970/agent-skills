@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Territory board B desktop, logo-off grayscale</title>
+  <desc id="desc">A grayscale ledger composition showing the same claim, evidence, rule, judgment, boundary, and locator content as the other territory boards.</desc>
+  <rect width="1440" height="900" fill="#f1f1f1"/>
+  <rect x="84" y="76" width="1272" height="748" fill="#ffffff" stroke="#202020" stroke-width="2"/>
+  <text x="118" y="126" font-family="Arial, sans-serif" font-size="18" fill="#606060" letter-spacing="2">BOARD B / LOGO-OFF / GRAYSCALE</text>
+  <line x1="520" y1="168" x2="520" y2="780" stroke="#111111" stroke-width="2"/>
+  <line x1="960" y1="168" x2="960" y2="780" stroke="#111111" stroke-width="2"/>
+  <g font-family="Arial, sans-serif" fill="#111111">
+    <text x="118" y="210" font-size="20" font-weight="700">CLAIM</text>
+    <text x="118" y="252" font-family="Georgia, serif" font-size="36">A claim is permissible only</text>
+    <text x="118" y="296" font-family="Georgia, serif" font-size="36">when traceable to evidence</text>
+    <text x="118" y="340" font-family="Georgia, serif" font-size="36">and a local boundary.</text>
+    <text x="566" y="210" font-size="20" font-weight="700">EVIDENCE</text>
+    <text x="566" y="252" font-size="22">artifact:</text>
+    <text x="566" y="286" font-size="22">site/design-roundtable/</text>
+    <text x="566" y="320" font-size="22">proof-workshop-pilot-receipt.r1.json</text>
+    <text x="566" y="398" font-size="20" font-weight="700">LOCATOR</text>
+    <text x="566" y="438" font-size="18">2d9957d2f715f049ff89a403f375b771</text>
+    <text x="566" y="468" font-size="18">00300f7b8f573a85dae8699a70dd5afd</text>
+    <text x="1008" y="210" font-size="20" font-weight="700">RULE</text>
+    <text x="1008" y="250" font-size="21">Different structural roles:</text>
+    <text x="1008" y="282" font-size="21">claim / evidence / gap / judgment.</text>
+    <text x="1008" y="396" font-size="20" font-weight="700">JUDGMENT</text>
+    <text x="1008" y="436" font-size="25">PILOT_EVIDENCE_ONLY</text>
+    <text x="1008" y="558" font-size="20" font-weight="700">DOES NOT PROVE</text>
+    <text x="1008" y="596" font-size="21">whole-site bespoke compliance,</text>
+    <text x="1008" y="628" font-size="21">blind recognition, accessibility,</text>
+    <text x="1008" y="660" font-size="21">performance, or G16-G18 review.</text>
+  </g>
+</svg>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Territory boards contact sheet</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, sans-serif;
+        background: #e8e8e8;
+        color: #111;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+      h1 {
+        margin: 0 0 18px;
+        font-family: Georgia, serif;
+        font-size: 28px;
+        font-weight: 500;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+      }
+      figure {
+        margin: 0;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #444;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #aaa;
+      }
+      figcaption {
+        margin-top: 8px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #555;
+      }
+      @media (max-width: 760px) {
+        body {
+          padding: 14px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Territory boards: logo-off grayscale source lock</h1>
+    <main class="grid">
+      <figure>
+        <img src="proof-workshop.desktop.svg" alt="Board A desktop territory board" />
+        <figcaption>Board A desktop</figcaption>
+      </figure>
+      <figure>
+        <img src="proof-workshop.mobile.svg" alt="Board A mobile territory board" />
+        <figcaption>Board A mobile</figcaption>
+      </figure>
+      <figure>
+        <img src="annotated-evidence-ledger.desktop.svg" alt="Board B desktop territory board" />
+        <figcaption>Board B desktop</figcaption>
+      </figure>
+      <figure>
+        <img src="annotated-evidence-ledger.mobile.svg" alt="Board B mobile territory board" />
+        <figcaption>Board B mobile</figcaption>
+      </figure>
+      <figure>
+        <img src="calibration-path.desktop.svg" alt="Board C desktop territory board" />
+        <figcaption>Board C desktop</figcaption>
+      </figure>
+      <figure>
+        <img src="calibration-path.mobile.svg" alt="Board C mobile territory board" />
+        <figcaption>Board C mobile</figcaption>
+      </figure>
+    </main>
+  </body>
+</html>

@@ -8,6 +8,21 @@ the audit boundary; it does **not** redesign the homepage.
 > A claim becomes permissible only when it can be traced through evidence to a
 > bounded judgment.
 
+## Source Lock
+Source bundle: `fdc5c6cd4e7250c3af7ed210289143af7e52eb1b83bb267bd06a2d432239fadf`
+
+Selected territory: `T1` / Proof Workshop.
+
+Selection record: `site/design-roundtable/territory-selection.r1.json`.
+
+Territory boards:
+- `site/design-roundtable/territory-boards/proof-workshop.desktop.svg`
+- `site/design-roundtable/territory-boards/proof-workshop.mobile.svg`
+- `site/design-roundtable/territory-boards/annotated-evidence-ledger.desktop.svg`
+- `site/design-roundtable/territory-boards/annotated-evidence-ledger.mobile.svg`
+- `site/design-roundtable/territory-boards/calibration-path.desktop.svg`
+- `site/design-roundtable/territory-boards/calibration-path.mobile.svg`
+
 ## Non-color invariants (recognizable without palette or logo)
 1. **Narrative vs machine roles** — human prose and machine-emitted values never
    share a typeface; monospace marks program output only.
