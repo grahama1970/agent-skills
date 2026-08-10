@@ -120,7 +120,20 @@ export default function Home() {
                 </h1>
                 <p className="hero-repo-model">
                   This site explains the work. The public{' '}
-                  <code>agent-skills</code> repository holds the source.
+                  <a
+                    href={REPO}
+                    data-qid="hero:link:repo-inline"
+                    data-qs-action="HERO_OPEN_REPO_INLINE"
+                    title="Open the public agent-skills repository on GitHub"
+                  >
+                    <code>agent-skills</code>
+                  </a>{' '}
+                  repository holds the source.
+                </p>
+                <p className="hero-outcomes">
+                  I take on hard-to-staff agent, compliance, and multimodal R&amp;D
+                  and deliver working systems whose behavior, evidence, and limits
+                  your team can inspect.
                 </p>
                 <p className="hero-repo-model hero-repo-model--follow">
                   Browse here, or open the repository directly and ask your
@@ -171,6 +184,15 @@ export default function Home() {
                 <div className="hero-actions">
                   <a
                     className="btn"
+                    href="#contact"
+                    data-qid="hero:action:describe-problem"
+                    data-qs-action="HERO_DESCRIBE_PROBLEM"
+                    title="Jump to the contact section"
+                  >
+                    Describe the problem <span className="arrow">→</span>
+                  </a>
+                  <a
+                    className="btn ghost"
                     href={REPO}
                     data-qid="hero:action:repo"
                     data-qs-action="HERO_OPEN_REPO"
@@ -309,12 +331,34 @@ export default function Home() {
                 <p className="kicker">
                   <b>Tau</b> Public proof dossiers
                 </p>
-                <h2 className="h2">Ten questions with code, checks, and gaps.</h2>
+                <h2 className="h2">Ten public dossiers with code, checks, and gaps.</h2>
               </div>
-              <p className="count">repo-linked · each case states how far evidence goes</p>
+              <p className="count">public artifact → proof boundary → visible gap</p>
             </div>
             <ResearchMap />
             <ProofLegend />
+            <div className="private-boundary" aria-label="Public and private work boundary">
+              <p className="private-boundary__lead">
+                Most current work is export-controlled or sensitive. The public
+                pattern here is deliberately narrower: problem class, public
+                artifact, what it proves, and what it does not prove. Private
+                systems stay private.
+              </p>
+              <dl className="private-boundary__grid">
+                <div>
+                  <dt>Public</dt>
+                  <dd>Owned/open skills, receipts, proof dossiers, and synthetic or product-owned visuals.</dd>
+                </div>
+                <div>
+                  <dt>Private</dt>
+                  <dd>Client names, program details, data, screenshots, private repos, and evidence counts.</dd>
+                </div>
+                <div>
+                  <dt>Handoff</dt>
+                  <dd>Source, checks, runbooks, and boundary notes delivered inside the client stack where practical.</dd>
+                </div>
+              </dl>
+            </div>
             <div className="cards">
               {content.projects.map((p, i) => {
                 const meta = CARD_META[p.slug];
@@ -664,6 +708,11 @@ export default function Home() {
                     once.
                   </li>
                 </ul>
+                <p className="continuity-note">
+                  Principal-led, not principal-dependent: the deliverable is
+                  source your team owns, deterministic checks, runbooks, and
+                  plain boundary notes so another engineer can continue the work.
+                </p>
                 <a
                   className="btn"
                   href="mailto:graham@grahama.co"

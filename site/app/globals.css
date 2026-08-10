@@ -374,11 +374,11 @@ section {
 }
 .hero-main > .eyebrow { order: 1; }
 .hero-main > h1 { order: 2; }
-.hero-main > .hero-repo-model { order: 3; }
-.hero-main > .hero-outcomes { order: 5; }
+.hero-main > .hero-outcomes { order: 3; }
+.hero-main > .hero-actions { order: 4; }
+.hero-main > .hero-repo-model { order: 5; }
+.hero-main > .hero-trace-protocol { order: 6; }
 .hero-main > .hero-intake { order: 6; }
-.hero-main > .hero-actions { order: 7; }
-.hero-main > .hero-trace-protocol { order: 4; }
 .hero-main > .hero-bio { order: 8; }
 /* Keyboard-shortcut helper is application chrome on touch; hide it there. */
 @media (pointer: coarse) {
@@ -466,6 +466,17 @@ h1 .it::after {
   font-family: var(--mono);
   font-size: 0.95em;
   color: var(--brass);
+}
+.hero-repo-model a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: rgba(226, 172, 98, 0.45);
+}
+.hero-repo-model a:hover {
+  color: var(--text);
+  text-decoration-color: var(--brass);
 }
 .hero-trace-protocol {
   margin: clamp(0.9rem, 1.5vw, 1.2rem) 0 0;
@@ -798,6 +809,42 @@ h1 .it::after {
   letter-spacing: 0.16em;
   color: var(--faint);
   text-transform: uppercase;
+}
+.private-boundary {
+  margin-top: clamp(1.4rem, 2.4vw, 2.2rem);
+  padding: 1.25rem 0 1.35rem;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.private-boundary__lead {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+.private-boundary__grid {
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.7rem);
+}
+.private-boundary__grid div {
+  min-width: 0;
+}
+.private-boundary__grid dt {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.private-boundary__grid dd {
+  margin: 0.45rem 0 0;
+  color: var(--faint);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 .cards {
   display: grid;
@@ -1198,7 +1245,7 @@ h1 .it::after {
   }
 }
 
-/* --- dream case study ------------------------------------- */
+/* --- dream study ------------------------------------------ */
 .dream {
   background: linear-gradient(180deg, transparent, rgba(24, 18, 17, 0.72) 12%, rgba(24, 18, 17, 0.72) 88%, transparent);
 }
@@ -1495,6 +1542,7 @@ h1 .it::after {
   grid-template-columns: repeat(12, 1fr);
   gap: var(--gut);
   align-items: end;
+  padding-bottom: 1rem;
 }
 .closer .a {
   grid-column: 1 / span 7;
@@ -1514,9 +1562,10 @@ h1 .it::after {
   font-weight: 700;
   font-variation-settings: 'SOFT' 28, 'WONK' 1, 'opsz' 144;
   font-size: clamp(2.3rem, 6.2vw, 5.2rem);
-  line-height: 0.96;
-  letter-spacing: -0.03em;
+  line-height: 1.04;
+  letter-spacing: 0;
   margin: 0.4em 0 0;
+  padding-bottom: 0.12em;
 }
 .shelved em {
   font-style: italic;
@@ -1528,6 +1577,13 @@ h1 .it::after {
   font-size: 1rem;
   max-width: 40ch;
   margin: 0 0 0.4rem;
+}
+.continuity-note {
+  margin: 0.85rem 0 1.1rem;
+  max-width: 42ch;
+  color: var(--faint);
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 
 /* --- footer ----------------------------------------------- */
@@ -1801,11 +1857,11 @@ footer a:hover {
   }
   .hero-main > .eyebrow { order: 1; }
   .hero-main > h1 { order: 2; }
-  .hero-main > .hero-repo-model { order: 3; }
-  .hero-main > .hero-outcomes { order: 4; }
+  .hero-main > .hero-outcomes { order: 3; }
+  .hero-main > .hero-actions { order: 4; }
+  .hero-main > .hero-repo-model { order: 5; }
   .hero-main > .hero-intake { order: 5; }
-  .hero-main > .hero-actions { order: 6; }
-  .hero-main > .hero-trace-protocol { order: 4; }
+  .hero-main > .hero-trace-protocol { order: 6; }
   .hero-main > .hero-bio {
     order: 8;
     margin-top: clamp(1.4rem, 4vw, 2.2rem);
@@ -1835,6 +1891,7 @@ footer a:hover {
   
   .panel { aspect-ratio: 4/3; }
   .film { grid-auto-columns: minmax(150px, 1fr); }
+  .private-boundary__grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -3732,65 +3789,99 @@ h1 .proof-origin::after {
   text-transform: uppercase;
 }
 
-/* Static proof state. The original timed sequence was visually coherent but it
-   delayed representative LCP by about five seconds. Keep the proof graph as an
-   inspectable instrument; do not make first paint wait for a choreography. */
+/* Finite proof trace. This is semantic motion, not ambient decoration: the
+   path from claim to branch, retained runner, receipt, and return judgment. */
 .hero-grid.proof-ready .proof-lineage__edge--trunk {
-  animation: none;
-  stroke-dashoffset: 0;
+  animation: proof-draw 240ms var(--ease-wire-snap) 1.18s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--branch-a,
 .hero-grid.proof-ready .proof-lineage__edge--branch-b {
-  animation: none;
-  stroke-dashoffset: 0;
+  animation: proof-draw 620ms var(--ease-wire-snap) 1.35s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__node--g1a,
 .hero-grid.proof-ready .proof-lineage__node--g1b {
-  animation: none;
-  opacity: 1;
+  animation: proof-fade 220ms ease-out 1.78s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__eval-halo {
-  animation: none;
-  opacity: 0.26;
+  animation: proof-evaluate 900ms var(--ease-entrance) 2.15s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__judge-dot {
-  animation: none;
-  opacity: 0.9;
+  animation: proof-judge-dot 900ms var(--ease-entrance) 2.15s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__selected-overlay {
-  animation: none;
-  opacity: 1;
+  animation: proof-fade 300ms ease-out 3.05s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__runner-outline,
 .hero-grid.proof-ready .proof-lineage__role {
-  animation: none;
-  opacity: 1;
+  animation: proof-fade 300ms ease-out 3.12s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--selected {
-  animation: none;
-  stroke-dashoffset: 0;
+  animation: proof-draw 500ms var(--ease-wire-snap) 3.05s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--evidence {
-  animation: none;
-  stroke-dashoffset: 0;
+  animation: proof-draw 650ms var(--ease-wire-snap) 3.55s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__token--evidence {
-  display: none;
+  animation: proof-token 650ms linear 3.55s both;
 }
 .hero-grid.proof-ready .proof-lineage__receipt {
-  animation: none;
-  opacity: 1;
+  animation: proof-fade 180ms ease-out 4.08s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__edge--g2 {
-  animation: none;
-  stroke-dashoffset: 0;
+  animation: proof-draw 240ms var(--ease-wire-snap) 4.12s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__node--g2 {
-  animation: none;
-  opacity: 1;
+  animation: proof-fade 220ms ease-out 4.28s forwards;
 }
 .hero-grid.proof-ready .proof-lineage__token--return {
-  display: none;
+  animation: proof-token 360ms linear 4.44s both;
+}
+
+@keyframes proof-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes proof-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes proof-evaluate {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  28%,
+  62% {
+    opacity: 0.8;
+  }
+}
+@keyframes proof-judge-dot {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  35%,
+  70% {
+    opacity: 0.9;
+  }
+}
+@keyframes proof-token {
+  0% {
+    opacity: 0;
+    offset-distance: 0%;
+  }
+  10% {
+    opacity: 1;
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -41,8 +41,9 @@ registered_effects:
     trigger: proof instrument ready state
     semantic_purpose: "Show the bounded proof path from claim, through runner and receipt, back to judgment."
     allowed_selectors: [".proof-bridge.is-ready", ".hero-grid.proof-ready"]
-    motion: static source-to-receipt graph
-    reduced_motion_equivalent: identical static proof graph with tokens hidden
+    allowed_keyframes: [proof-draw, proof-fade, proof-evaluate, proof-judge-dot, proof-token]
+    motion: finite source-to-receipt trace
+    reduced_motion_equivalent: static proof graph with tokens hidden
   - id: unusual-career-path
     trigger: about section enters viewport
     semantic_purpose: "Explain the non-linear career path: conventional route, crossed-back trail, and unresolved final approach to the current practice."
