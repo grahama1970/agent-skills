@@ -1845,6 +1845,23 @@ def _enrich_extraction_result(result: dict, text: str) -> dict:
 # (collection, limit, field names) -> (KeywordProcessor, entity_map)
 _ENTITY_DICT_CACHE: dict = {}
 
+# Same key -> how many keywords the dictionary actually held. Lets a caller tell
+# "no matches" apart from "nothing was loaded", which are otherwise identical.
+_LAST_DICTIONARY_SIZE: dict = {}
+
+
+def dictionary_size(collection: str, limit: int, name_field: str = "name",
+                    label_field: str = "control_id", type_field: str = "node_type",
+                    framework_field: str = "source_framework") -> int | None:
+    """Keywords loaded for the last extraction over this dictionary, or None.
+
+    Exists so an empty result is interpretable: zero matches against 391,227
+    keywords is an answer, zero against 798 is a load failure.
+    """
+    return _LAST_DICTIONARY_SIZE.get(
+        (collection, limit, name_field, label_field, type_field, framework_field)
+    )
+
 
 def _extract_nlp_entities(
     *,
@@ -1873,23 +1890,16 @@ def _extract_nlp_entities(
     # Aho-Corasick handles millions of keywords; the cost was never the matching.
     # Cached per process, so a batch run pays the load once.
     cache_key = (collection, limit, name_field, label_field, type_field, framework_field)
+    # The cache guards the LOAD, never the result. An empty extraction is a valid
+    # result: keying the cache on "did this text match anything" meant every
+    # question that grounded nothing -- most of them in a batch -- fell through
+    # and refetched all 391k entities, costing 11s each while the log claimed a
+    # cache hit.
     cached = _ENTITY_DICT_CACHE.get(cache_key)
-    if cached is not None:
-        kp, entity_map = cached
-        found_keywords = kp.extract_keywords(text, span_info=True)
-        entities = []
-        seen_ids = set()
-        for keyword, start, end in found_keywords:
-            entity = entity_map.get(keyword)
-            if entity and entity["id"] not in seen_ids:
-                entities.append({**entity, "span": [start, end], "mention": text[start:end]})
-                seen_ids.add(entity["id"])
-        if entities:
-            return entities
 
-    # 1. Load entity dictionary from ArangoDB collection
+    # 1. Load entity dictionary from ArangoDB collection (skipped when cached)
     try:
-        docs = _list_documents_paged(
+        docs = [] if cached is not None else _list_documents_paged(
             client=client,
             collection=collection,
             limit=limit,
@@ -1914,9 +1924,14 @@ def _extract_nlp_entities(
         logger.warning(f"Failed to load entities from {collection}: {e}")
         docs = []
 
-    # 2. Build FlashText keyword processor from entity names
-    kp = KeywordProcessor(case_sensitive=False)
-    entity_map: dict[str, dict] = {}  # keyword -> entity doc
+    # 2. Build FlashText keyword processor from entity names, or reuse the
+    # cached trie. Rebuilding 391k keywords per call costs ~0.9s on top of the
+    # refetch, for a dictionary that has not changed.
+    if cached is not None:
+        kp, entity_map = cached
+    else:
+        kp = KeywordProcessor(case_sensitive=False)
+        entity_map: dict[str, dict] = {}  # keyword -> entity doc
 
     for doc in docs:
         name = doc.get(name_field, "")
@@ -1948,8 +1963,27 @@ def _extract_nlp_entities(
                     "exists": True,
                 }
 
-    logger.info(f"Loaded {len(entity_map)} entities from {collection} into FlashText")
-    _ENTITY_DICT_CACHE[cache_key] = (kp, entity_map)
+    if cached is None:
+        logger.info(f"Loaded {len(entity_map)} entities from {collection} into FlashText")
+        _ENTITY_DICT_CACHE[cache_key] = (kp, entity_map)
+    else:
+        logger.debug(f"Reusing cached {len(entity_map)}-entity dictionary for {collection}")
+
+    # A zero result is ambiguous: either the text genuinely contains no known
+    # entity, or the dictionary never loaded. Those look identical to a caller
+    # and are indistinguishable in a log that only reports matches. At
+    # limit=500 against a 391k collection, a question naming CWE-89 and T1190
+    # returned zero -- a bug that read exactly like a correct empty answer.
+    #
+    # So the dictionary size is always reported. An empty extraction over a
+    # 391,227-entity dictionary is an answer; an empty extraction over 798 is a
+    # symptom.
+    _LAST_DICTIONARY_SIZE[cache_key] = len(entity_map)
+    if not entity_map:
+        logger.warning(
+            f"Entity dictionary for {collection} is EMPTY -- every extraction will "
+            "return nothing. This is a load failure, not an absence of matches."
+        )
 
     # 3. Extract mentioned entities from input text
     found_keywords = kp.extract_keywords(text, span_info=True)
@@ -1962,7 +1996,8 @@ def _extract_nlp_entities(
             seen_ids.add(entity["id"])
 
     # 3b. RapidFuzz fallback: if FlashText found nothing, try fuzzy matching
-    if len(entities) == 0:
+    _fuzzy_enabled = os.environ.get("EXTRACT_ENTITIES_FUZZY", "1").strip().lower() not in {"0", "false", "no"}
+    if len(entities) == 0 and _fuzzy_enabled:
         from rapidfuzz import fuzz, process as rfprocess
 
         # Extract candidate words from text (skip stop words)
@@ -1972,10 +2007,22 @@ def _extract_nlp_entities(
         }
         words = [w for w in text.lower().replace(",", " ").replace(".", " ").split() if w not in stop and len(w) > 2]
 
-        # Try each word against all entity names
+        # Try each word against entity names.
+        #
+        # Stage order is deliberate and unchanged: Flashtext (Aho-Corasick) runs
+        # FIRST for exact matching, and this fuzzy pass only runs when it found
+        # nothing. That ordering is the point -- fuzzy exists to recover what
+        # exact matching MISSED, such as "CWE-7" for "CWE-79", so scoring only
+        # Flashtext's own hits would find nothing new and make the stage useless.
+        #
+        # The cost is O(words x dictionary): on a 391k-entity dictionary that
+        # measured 11.6s for one question, fine interactively and ruinous across a
+        # batch where most items match nothing exactly. Bulk callers set
+        # EXTRACT_ENTITIES_FUZZY=0 to keep exact matching and skip did-you-mean.
         all_names = list(entity_map.keys())
-        for word in words:
-            matches = rfprocess.extract(word, all_names, scorer=fuzz.ratio, limit=3, score_cutoff=70)
+        for word in words[:12]:
+            matches = rfprocess.extract(word, all_names, scorer=fuzz.ratio, limit=3,
+                                        score_cutoff=70)
             for match_name, score, _ in matches:
                 entity = entity_map.get(match_name)
                 if entity and entity["id"] not in seen_ids:

@@ -1,23 +1,82 @@
 {
-  "version": 2,
-  "skill": "extract-entities",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "extract-entities",
+ "trials": 3,
+ "proof_scope": "live two-stage extraction over a real corpus: dictionary completeness, stage order, typo recovery, caching, and whether a zero result is interpretable",
+ "claims": {
+  "proves": "that the dictionary loads uncapped, that Flashtext does EXACT matching first and RapidFuzz only recovers what it could not see, that repeat and empty calls reuse the cached trie, and that a zero result is reported alongside the dictionary size that produced it",
+  "does_not_prove": "extraction PRECISION -- nothing validates that an exact hit is contextually correct, only that it is exact. A control named with a common phrase will match wherever that phrase appears."
+ },
+ "cases": [
+  {
+   "name": "sanity",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "name": "stage-bench-live",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../scripts/stage_bench.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "VERDICT: PASS",
+     "dictionary=391227"
+    ]
+   }
+  },
+  {
+   "name": "zero-result-is-not-silently-a-load-failure",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../scripts/stage_bench.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "zero_result_is_interpretable",
+     "an answer, not a load failure"
+    ]
+   }
+  },
+  {
+   "name": "empty-extraction-does-not-refetch-the-dictionary",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "uv",
+    "run",
+    "--project",
+    "..",
+    "python",
+    "../scripts/stage_bench.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "empty_result_does_not_refetch"
+    ]
+   }
+  }
+ ]
 }
