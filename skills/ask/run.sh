@@ -332,6 +332,10 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/probe_browser_provider_availability.py" "$@"
         ;;
+    close-stale-tabs)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/close_stale_ask_tabs.py" "$@"
+        ;;
     webgpt-project)
         shift
         echo "WebGPT/ChatGPT routing has been removed from /ask. Use \$surf webgpt.submit or the project-level \$webgpt workflow directly." >&2
