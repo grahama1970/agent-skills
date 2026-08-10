@@ -336,6 +336,23 @@ chmod 755 ~/.streamdeck
 ./sanity.sh --verbose
 ```
 
+### Agentic Evaluation
+
+`ops-streamdeck` composes with `agentic-evals` and carries a committed
+multi-trial fixture at `fixtures/agentic_eval.json`.
+
+Use this fixture after changing the skill contract, `run.sh`, service-control
+logic, button execution behavior, health checks, or Stream Deck config safety
+rules:
+
+```bash
+../agentic-evals/run.sh run fixtures/agentic_eval.json
+```
+
+The eval exercises a live local status path and a fail-closed malformed button
+request. It does not prove physical button rendering, USB hardware availability,
+light behavior, daemon API correctness, or safe persistent config mutation.
+
 ### Adding New Features
 
 To add new button commands:
