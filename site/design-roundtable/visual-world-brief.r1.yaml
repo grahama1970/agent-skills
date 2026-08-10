@@ -9,7 +9,7 @@ project:
 
 provenance:
   source_revision: "origin/main 4460974e3d030ad4398d6eecd6b1325ad3bbbd00"
-  source_bundle_sha256: "fdc5c6cd4e7250c3af7ed210289143af7e52eb1b83bb267bd06a2d432239fadf"
+  source_bundle_sha256: "ca0bcccda85397684b9a7fe43e510a2de4b98177a5069e8e6bdad912bfeaf45d"
   authoritative_sources:
     - source_id: "SRC-001"
       title: "Human immutable goal confirmation"
