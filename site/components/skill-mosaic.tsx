@@ -85,6 +85,7 @@ export function SkillMosaic() {
       data-qid={`ledger:cell:${s.n}`}
       data-qs-action="LEDGER_OPEN_SKILL"
       title={`${s.n} · ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
+      data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ sanity-checked' : '○ contract only'}`}
       className={`cell${s.s ? '' : ' out'}`}
       style={{
         ['--i' as string]: i,
@@ -98,6 +99,22 @@ export function SkillMosaic() {
   };
 
   let gi = 0;
+  const legend = (
+    <div className="legend">
+      <span>
+        <i className="swatch" /> <b>{checked}</b> sanity-checked
+      </span>
+      <span>
+        <i className="swatch out" /> <b>{skills.length - checked}</b>{' '}
+        contract-only
+      </span>
+      <span>
+        <b>{skills.length}</b> total · <b>{inventory.stats.agents}</b> bounded
+        agents
+      </span>
+    </div>
+  );
+
   return (
     <div className="ledger-mosaic">
       <div className="ledger-tools">
@@ -154,6 +171,7 @@ export function SkillMosaic() {
           </button>
         ))}
       </div>
+      {legend}
       {isMobile ? (
         <ul
           className="ledger-list"
@@ -202,19 +220,6 @@ export function SkillMosaic() {
           {skills.map((s, i) => renderCell(s, i))}
         </div>
       )}
-      <div className="legend">
-        <span>
-          <i className="swatch" /> <b>{checked}</b> sanity-checked
-        </span>
-        <span>
-          <i className="swatch out" /> <b>{skills.length - checked}</b>{' '}
-          contract-only
-        </span>
-        <span>
-          <b>{skills.length}</b> total · <b>{inventory.stats.agents}</b> bounded
-          agents
-        </span>
-      </div>
     </div>
   );
 }

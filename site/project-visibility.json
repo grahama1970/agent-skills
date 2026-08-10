@@ -1,6 +1,6 @@
 {
   "schema": "grahama.project_visibility.v1",
-  "sourceCommit": "0d84c1434",
+  "sourceCommit": "dddc844f41",
   "projects": [
     {
       "slug": "persona-dream",

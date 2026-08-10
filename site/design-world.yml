@@ -5,17 +5,6 @@
 schema: grahama.design_world.v1
 version: 1
 approved_by: operator
-source_bundle_sha256: fdc5c6cd4e7250c3af7ed210289143af7e52eb1b83bb267bd06a2d432239fadf
-visual_world_brief: site/design-roundtable/visual-world-brief.r1.yaml
-territory_selection: site/design-roundtable/territory-selection.r1.json
-responsive_geometry_receipt: site/design-roundtable/responsive-geometry.r1.json
-craft_integrity_receipt: site/design-roundtable/craft-integrity.r1.json
-selected_territory:
-  id: T1
-  name: Proof Workshop
-  board_artifacts:
-    - site/design-roundtable/territory-boards/proof-workshop.desktop.svg
-    - site/design-roundtable/territory-boards/proof-workshop.mobile.svg
 premise: >
   A claim becomes permissible only when it can be traced through evidence to a
   bounded judgment.
@@ -35,10 +24,10 @@ invariants:
       unresolved remainder (visible gaps, never hidden).
 role_grammar:
   typography:
-    display: Literata (self-hosted variable roman/italic, optical-size tuned) # headlines / argument
+    display: Fraunces (variable, per-instance axes)   # headlines / argument
     reading: system sans                              # human prose
     utility: system sans small-caps                   # eyebrows, labels
-    data: Literata / tabular figures                  # inventory numbers
+    data: Fraunces / tabular figures                  # inventory numbers
     annotation: system sans italic                    # asides, captions
     machine_output: monospace                         # SHAs, counts, paths ONLY
   color_roles:

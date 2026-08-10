@@ -19,6 +19,7 @@ export interface DreamPhase {
 export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   const [idx, setIdx] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const [armed, setArmed] = useState(false);
   const scrubLock = useRef(false);
   const cur = phases[idx];
   const go = (next: number) =>
@@ -98,6 +99,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
   // Preload the current frame and its immediate neighbours as you scrub, so a
   // swap never waits on the network.
   useEffect(() => {
+    if (!armed) return;
     for (const j of [idx - 1, idx, idx + 1]) {
       const p = phases[j];
       if (p) {
@@ -105,7 +107,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
         img.src = `/dream/${p.f}.webp`;
       }
     }
-  }, [idx, phases]);
+  }, [armed, idx, phases]);
   // Preload the remaining frames only once the Dream section nears the
   // viewport — mobile visitors who never scroll this far don't pay for all 11.
   useEffect(() => {
@@ -114,6 +116,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
+          setArmed(true);
           for (const p of phases) {
             const img = new Image();
             img.src = `/dream/${p.f}.webp`;
@@ -194,7 +197,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
               key={i}
               className={`stepper-layer${active === i ? ' is-active' : ''}`}
               style={{
-                ['--img' as string]: `url('/dream/${b.f}.webp')`,
+                ['--img' as string]: armed ? `url('/dream/${b.f}.webp')` : 'none',
                 ['--tint' as string]: b.t,
               }}
               aria-hidden="true"
@@ -231,7 +234,7 @@ export function DreamStepper({ phases }: { phases: DreamPhase[] }) {
               title={`${p.n} — ${p.c}`}
               onClick={() => setIdx(i)}
               className={`stepper-thumb${i === idx ? ' is-current' : ''}`}
-              style={{ ['--img' as string]: `url('/dream/${p.f}.webp')` }}
+              style={{ ['--img' as string]: armed ? `url('/dream/${p.f}.webp')` : 'none' }}
             >
               <span className="sr-only">{p.c}</span>
               <i>{p.n}</i>

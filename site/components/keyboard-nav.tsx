@@ -171,13 +171,13 @@ export function KeyboardNav() {
         data-qs-action="NAV_OPEN_SHORTCUTS"
         title="Keyboard shortcuts — press J/K to jump sections, ? for help"
         onClick={() => (open ? close() : openModal())}
-        className="machine hidden items-center gap-1.5 rounded border border-line px-2 py-1 text-mute hover:border-accent hover:text-ink md:inline-flex"
+        className="shortcut-trigger machine"
       >
-        <span className="uppercase tracking-wide">Nav</span>
-        <kbd className="hint-kbd rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
+        <span>Nav</span>
+        <kbd className="hint-kbd">
           J
         </kbd>
-        <kbd className="hint-kbd rounded border border-line bg-paper px-1.5 py-0.5 text-[0.675rem] font-semibold text-ink">
+        <kbd className="hint-kbd">
           K
         </kbd>
       </button>
@@ -195,10 +195,10 @@ export function KeyboardNav() {
         aria-hidden={!open}
         className={`shortcut-modal${open ? ' is-active' : ''}`}
       >
-        <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-accent">⌨</span>
-            <h2 id="shortcut-modal-title" className="machine !text-[0.95rem] font-bold text-ink">
+        <div className="shortcut-modal__head">
+          <div className="shortcut-modal__title-row">
+            <span aria-hidden="true" className="shortcut-modal__icon">⌨</span>
+            <h2 id="shortcut-modal-title" className="shortcut-modal__title machine">
               Keyboard Shortcuts
             </h2>
           </div>
@@ -208,41 +208,41 @@ export function KeyboardNav() {
             data-qs-action="SHORTCUTS_CLOSE"
             title="Close shortcuts modal"
             onClick={close}
-            className="rounded px-2 text-xl leading-none text-mute hover:text-ink"
+            className="shortcut-modal__close"
           >
             ×
           </button>
         </div>
-        <div className="flex flex-col gap-5 p-5">
+        <div className="shortcut-modal__body">
           {SHORTCUTS.map((group) => (
             <div key={group.category}>
-              <h3 className="machine mb-2 uppercase tracking-wider text-mute">
+              <h3 className="shortcut-modal__group machine">
                 {group.category}
               </h3>
-              <dl className="m-0 flex flex-col gap-1.5">
+              <dl className="shortcut-modal__list">
                 {group.items.map((item) => (
                   <div
                     key={item.desc}
-                    className="flex items-center justify-between text-[0.8rem]"
+                    className="shortcut-modal__item"
                   >
-                    <dt className="m-0">
+                    <dt>
                       {item.keys.map((k, i) => (
                         <span key={k + i}>
-                          {i > 0 && <span className="text-mute"> + </span>}
-                          <kbd className="machine rounded border border-line bg-paper px-1.5 py-0.5 text-[0.725rem] font-semibold text-ink">
+                          {i > 0 && <span className="shortcut-modal__plus"> + </span>}
+                          <kbd className="shortcut-modal__kbd machine">
                             {k}
                           </kbd>
                         </span>
                       ))}
                     </dt>
-                    <dd className="machine m-0 text-mute">{item.desc}</dd>
+                    <dd className="shortcut-modal__desc machine">{item.desc}</dd>
                   </div>
                 ))}
               </dl>
             </div>
           ))}
         </div>
-        <div className="machine border-t border-line px-5 py-3 text-center text-mute">
+        <div className="shortcut-modal__foot machine">
           Press ? or Esc anytime to dismiss
         </div>
       </div>

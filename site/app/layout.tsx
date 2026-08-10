@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ProjectTargetHighlighter } from '@/components/project-target-highlighter';
 import './globals.css';
 
 const description =
@@ -31,17 +32,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Preload the display face so the largest text (LCP) paints without a
-            late font discovery. Variable cuts are the only display fonts. */}
         <link
           rel="preload"
-          href="/fonts/literata-latin-var.woff2"
+          href="/fonts/fraunces-site-subset.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
         />
       </head>
       <body>
+        <ProjectTargetHighlighter />
         {children}
       </body>
     </html>

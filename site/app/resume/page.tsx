@@ -148,7 +148,7 @@ export default function ResumePage() {
     lede: string;
     intro: Block[];
     sections: { title: string; blocks: Block[] }[];
-    downloads: { pdf: string; markdown: string; docx?: string };
+    downloads: { pdf: string; markdown: string };
     sourceCommit: string;
     asOf: string;
     jsonLd: unknown;
@@ -216,24 +216,6 @@ export default function ResumePage() {
             </svg>
             <span>Markdown</span>
           </a>
-          {doc.downloads.docx ? (
-            <a
-              className="cv-btn"
-              href={doc.downloads.docx}
-              download
-              data-qid="resume:link:docx"
-              data-qs-action="RESUME_DOWNLOAD_DOCX"
-              title="Download the résumé as a Word document (best for older ATS)"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                <path d="M16 13H8" />
-                <path d="M16 17H8" />
-              </svg>
-              <span>Word</span>
-            </a>
-          ) : null}
           <span className="cv-actions-note">Full version — the PDF is a 2-page cut</span>
         </div>
 

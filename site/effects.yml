@@ -27,14 +27,23 @@ registered_effects:
     trigger: user command
     semantic_purpose: "Open keyboard shortcut modal, toast, lightbox, and explicit disclosures."
     allowed_selectors: [".modal-overlay", ".shortcut-modal", ".toast", ".lightbox"]
+    allowed_keyframes: [frame-in, fade-in, zoom-in]
     motion: finite opacity or position transition
     reduced_motion_equivalent: instant state change
   - id: evidence-viewer-feedback
     trigger: user selection
     semantic_purpose: "Indicate selected receipt, ledger, or proof-method item."
     allowed_selectors: [".ticket-toggle", ".ledger-chip", ".stepper-controls > button"]
+    allowed_keyframes: [card-land]
     motion: finite state feedback
     reduced_motion_equivalent: static selected state
+  - id: proof-lineage-sequence
+    trigger: proof instrument ready state
+    semantic_purpose: "Show the bounded proof path from claim, through runner and receipt, back to judgment."
+    allowed_selectors: [".proof-bridge.is-ready", ".hero-grid.proof-ready"]
+    allowed_keyframes: [proof-bridge-wire, proof-draw, proof-fade, proof-evaluate, proof-judge-dot, proof-token]
+    motion: finite source-to-receipt trace
+    reduced_motion_equivalent: static proof graph with tokens hidden
 removed_homepage_effects:
   - fixed .glow layer
   - fixed .grain layer

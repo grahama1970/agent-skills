@@ -12,26 +12,29 @@ import { useEffect, useRef, useState } from 'react';
  *  pointer-type gate. */
 export function StripVideo() {
   const ref = useRef<HTMLVideoElement>(null);
+  const [armed, setArmed] = useState(false);
   const [play, setPlay] = useState(false);
 
   // Defer the ~1 MB clip until the strip nears the viewport, so it never sits on
-  // the initial-load critical path (the hero above it must paint fast). Honours
-  // reduced-motion and save-data — those keep the static poster.
+  // the initial-load critical path (the hero above it must paint fast). The
+  // poster is also armed lazily; reduced-motion/save-data get the poster only
+  // once the strip nears the viewport.
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const saveData =
       (navigator as unknown as { connection?: { saveData?: boolean } }).connection
         ?.saveData ?? false;
-    if (reduce || saveData) return;
     const el = ref.current;
     if (!el || typeof IntersectionObserver === 'undefined') {
-      setPlay(true);
+      setArmed(true);
+      if (!reduce && !saveData) setPlay(true);
       return;
     }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setPlay(true);
+          setArmed(true);
+          if (!reduce && !saveData) setPlay(true);
           io.disconnect();
         }
       },
@@ -54,7 +57,7 @@ export function StripVideo() {
       playsInline
       autoPlay={play}
       preload={play ? 'auto' : 'none'}
-      poster="/dream/horus-embry-hero.webp"
+      poster={armed ? '/dream/horus-embry-hero.webp' : undefined}
     >
       {play && <source src="/dream/horus-embry.mp4" type="video/mp4" />}
     </video>

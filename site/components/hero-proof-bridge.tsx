@@ -117,46 +117,6 @@ export function HeroProofBridge() {
             pathLength="1"
           />
           <path id="hero-proof-inbound" d={geometry.inbound} fill="none" stroke="none" />
-          {/* Claim leaves "prove". */}
-          <rect
-            className="proof-bridge__token proof-bridge__token--out"
-            x="-1.5"
-            y="-1.5"
-            width="3"
-            height="3"
-          >
-            <animateMotion begin="0.8s" dur="0.55s" fill="freeze">
-              <mpath href="#hero-proof-outbound" />
-            </animateMotion>
-            <animate
-              attributeName="opacity"
-              values="0;1;1;0"
-              keyTimes="0;0.08;0.9;1"
-              begin="0.8s"
-              dur="0.55s"
-              fill="freeze"
-            />
-          </rect>
-          {/* Receipt returns after the local lineage has resolved. */}
-          <rect
-            className="proof-bridge__token proof-bridge__token--return"
-            x="-1.75"
-            y="-1.75"
-            width="3.5"
-            height="3.5"
-          >
-            <animateMotion begin="4.82s" dur="0.38s" fill="freeze">
-              <mpath href="#hero-proof-inbound" />
-            </animateMotion>
-            <animate
-              attributeName="opacity"
-              values="0;1;1;0"
-              keyTimes="0;0.08;0.9;1"
-              begin="4.82s"
-              dur="0.38s"
-              fill="freeze"
-            />
-          </rect>
         </>
       )}
     </svg>

@@ -20,7 +20,7 @@ const SCOUT_LABEL: Record<string, string> = {
 const EXAMPLES = [
   'voice agent that remembers',
   'red team',
-  'compliance evidence',
+  'proof boundaries',
   'which browser tab acted',
   'RAG extraction',
   'video generation',
@@ -30,7 +30,7 @@ const EXAMPLES = [
 // range of "does Graham have experience with X" this search actually answers.
 const PROMPTS = [
   'a voice agent that remembers previous conversations',
-  'generating compliance evidence from a control catalog',
+  'tracing a claim to a bounded judgment',
   'extracting tables and figures from messy PDFs',
   'proving which browser tab an agent acted in',
   'red-teaming an adaptive adversary over many rounds',
@@ -67,17 +67,15 @@ export function CapabilitySearch() {
   return (
     <div className="capsearch" aria-label="Search the practice by problem">
       <p className="capsearch-intro">
-        I gravitate to the experimental, hard-to-staff work — but this is about
-        what <em>you</em> need. Describe a problem or a capability.
+        Pick a repo question. The map returns the public skill, project route,
+        proof boundary, and visible gap an agent can inspect.
       </p>
       <p className="capsearch-nodemo">
-        No &ldquo;book a demo.&rdquo; Describe the problem — I&rsquo;ll point you
-        to the closest public project, tell you what runs now and what needs
-        setup, and leave the gaps visible. Start there; <em>then</em> let&rsquo;s
-        talk.
+        Search by problem, capability, or evidence question. The answer is a
+        source trail, not a sales claim.
       </p>
       <label className="capsearch-label" htmlFor="capsearch-input">
-        What interests you?
+        What should your agent inspect?
       </label>
       <input
         id="capsearch-input"
@@ -87,7 +85,7 @@ export function CapabilitySearch() {
         onChange={(e) => setQuery(e.target.value)}
         data-qid="search:input:capability"
         data-qs-action="SEARCH_CAPABILITY"
-        title="Type a problem or capability to find matching projects and skills"
+        title="Type a repo question, problem, or capability to find matching projects and skills"
         placeholder={`e.g. ${PROMPTS[promptIdx]}`}
         autoComplete="off"
       />
@@ -219,7 +217,7 @@ export function CapabilitySearch() {
                       data-qs-action="SCOUT_OPEN_README"
                       title={`Open ${scout.name} on GitHub`}
                     >
-                      Start with the README ↗
+                      Open README on GitHub ↗
                     </a>
                   )}
                   <a

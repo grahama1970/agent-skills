@@ -1,14 +1,14 @@
 {
-  "commit": "0d84c1434",
-  "as_of": "2026-08-08",
+  "commit": "dddc844f41",
+  "as_of": "2026-08-10",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 344,
+  "totalSkills": 346,
   "disciplineCount": 18,
   "disciplines": [
     {
       "id": "evaluation-quality",
       "label": "Evaluation quality",
-      "skillCount": 73,
+      "skillCount": 74,
       "lenses": [],
       "areas": [],
       "projects": []
@@ -19,6 +19,21 @@
       "skillCount": 66,
       "lenses": [],
       "areas": [],
+      "projects": []
+    },
+    {
+      "id": "content-creation",
+      "label": "Content creation",
+      "skillCount": 53,
+      "lenses": [
+        "creative"
+      ],
+      "areas": [
+        {
+          "id": "creative-media",
+          "title": "Creative & media research"
+        }
+      ],
       "projects": []
     },
     {
@@ -58,24 +73,9 @@
       ]
     },
     {
-      "id": "content-creation",
-      "label": "Content creation",
-      "skillCount": 50,
-      "lenses": [
-        "creative"
-      ],
-      "areas": [
-        {
-          "id": "creative-media",
-          "title": "Creative & media research"
-        }
-      ],
-      "projects": []
-    },
-    {
       "id": "ui-design-engineering",
       "label": "UI design engineering",
-      "skillCount": 42,
+      "skillCount": 43,
       "lenses": [
         "creative"
       ],
@@ -187,7 +187,7 @@
     {
       "id": "engineering-standards",
       "label": "Engineering standards",
-      "skillCount": 34,
+      "skillCount": 37,
       "lenses": [
         "technical"
       ],
@@ -275,7 +275,7 @@
     {
       "id": "research-retrieval",
       "label": "Research retrieval",
-      "skillCount": 25,
+      "skillCount": 26,
       "lenses": [
         "technical"
       ],
