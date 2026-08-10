@@ -1,0 +1,16 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1336,
+  "unit": {
+    "command": "uv run --project skills/battle pytest skills/battle/tests/test_adaptive_lineage_backend_verifier.py -q",
+    "exit_code": 0,
+    "passed": 14
+  },
+  "e2e": {
+    "command": "cd skills/battle && ./run.sh arena-adaptive-lineage-qualification battle-004 --fresh --require-live --forbid-mock --require-exact-replay --proof-dir local/issue-1336-adaptive-lineage-qualification-20260810T143931Z",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/home/graham/workspace/experiments/agent-skills-issue-1336-battle-adaptive-lineage/skills/battle/local/issue-1336-adaptive-lineage-qualification-20260810T143931Z/command-output.json"
+  }
+}
