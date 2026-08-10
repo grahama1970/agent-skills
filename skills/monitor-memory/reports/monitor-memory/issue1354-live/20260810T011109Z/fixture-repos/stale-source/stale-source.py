@@ -1,0 +1,2 @@
+def changed():
+    return 'changed'

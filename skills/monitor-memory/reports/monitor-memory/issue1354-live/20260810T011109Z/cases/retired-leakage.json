@@ -1,0 +1,51 @@
+{
+  "case_id": "retired-leakage",
+  "context": {
+    "code_index_id": "ci_retired-leakage",
+    "generation_id": "cg_current_retired-leakage",
+    "scope": "retired-leakage",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/retired-leakage/retired-leakage.py"
+  },
+  "description": "retired symbol leakage canary through current recall route",
+  "expected_status": "fail",
+  "live": true,
+  "mocked": false,
+  "observed_status": "fail",
+  "passed": true,
+  "probe": "code-projection-retired-recall-leakage",
+  "result": {
+    "details": {
+      "leaks": [
+        {
+          "code_index_id": "ci_retired-leakage",
+          "generation_id": "cg_current_retired-leakage",
+          "history_available": true,
+          "leaked": true,
+          "receipt_ref": "proof/retired-leakage",
+          "route": "generic_bm25",
+          "scope": "retired-leakage",
+          "symbol_id": "sym_retired_retired-leakage"
+        }
+      ],
+      "missing_history": [],
+      "remediation": "reindex",
+      "rows": [
+        {
+          "code_index_id": "ci_retired-leakage",
+          "generation_id": "cg_current_retired-leakage",
+          "history_available": true,
+          "leaked": true,
+          "receipt_ref": "proof/retired-leakage",
+          "route": "generic_bm25",
+          "scope": "retired-leakage",
+          "symbol_id": "sym_retired_retired-leakage"
+        }
+      ]
+    },
+    "message": "1 retired recall leakage route(s)",
+    "name": "code-projection-retired-recall-leakage",
+    "probe_id": "CP06",
+    "status": "fail",
+    "tier": 8
+  }
+}

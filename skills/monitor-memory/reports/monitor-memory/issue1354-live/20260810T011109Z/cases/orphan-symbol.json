@@ -1,0 +1,127 @@
+{
+  "case_id": "orphan-symbol",
+  "context": {
+    "code_index_id": "ci_orphan-symbol",
+    "generation_id": "cg_current_orphan-symbol",
+    "scope": "orphan-symbol",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/orphan-symbol/orphan-symbol.py"
+  },
+  "description": "active Arango symbol lacks current semantic point metadata",
+  "expected_status": "fail",
+  "live": true,
+  "mocked": false,
+  "observed_status": "fail",
+  "passed": true,
+  "probe": "code-projection-semantic-parity",
+  "result": {
+    "details": {
+      "issues": [
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "generation_id": "cg_current_orphan-symbol",
+          "missing_point_count": 1,
+          "missing_point_sample": [
+            {
+              "_key": "cs_orphan-symbol_0",
+              "generation_id": "cg_current_orphan-symbol",
+              "qdrant_point_id": "",
+              "semantic_sync_state": "pending",
+              "symbol_id": "sym_orphan-symbol_0"
+            }
+          ],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "orphan-symbol",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        }
+      ],
+      "limitations": [
+        "Qdrant point payload is inferred from Arango sync metadata unless GMO semantic diagnostics collection is present"
+      ],
+      "remediation": "retry_outbox",
+      "rows": [
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "generation_id": "cg_current_healthy",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "healthy",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "generation_id": "cg_current_two-active",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "two-active",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "generation_id": "cg_current_count-mismatch",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "count-mismatch",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "generation_id": "cg_current_incomplete-preserves",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "incomplete-preserves",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "generation_id": "cg_current_orphan-symbol",
+          "missing_point_count": 1,
+          "missing_point_sample": [
+            {
+              "_key": "cs_orphan-symbol_0",
+              "generation_id": "cg_current_orphan-symbol",
+              "qdrant_point_id": "",
+              "semantic_sync_state": "pending",
+              "symbol_id": "sym_orphan-symbol_0"
+            }
+          ],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "orphan-symbol",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        }
+      ]
+    },
+    "message": "1 code index semantic parity issue(s)",
+    "name": "code-projection-semantic-parity",
+    "probe_id": "CP04",
+    "status": "fail",
+    "tier": 8
+  }
+}

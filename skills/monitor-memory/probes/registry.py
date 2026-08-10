@@ -12,7 +12,20 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Optional
 
-from loguru import logger
+try:
+    from loguru import logger
+except ModuleNotFoundError:  # pragma: no cover - repo-root pytest fallback
+    class _Logger:
+        def info(self, *_args, **_kwargs) -> None:
+            pass
+
+        def warning(self, *_args, **_kwargs) -> None:
+            pass
+
+        def error(self, *_args, **_kwargs) -> None:
+            pass
+
+    logger = _Logger()
 
 
 class ProbeStatus(str, Enum):
@@ -85,7 +98,7 @@ def run_probes(
 ) -> list[ProbeResult]:
     """Execute probes and collect results."""
     # Import tier modules to trigger registration
-    from probes import tier1_data, tier1_local_memory, tier1_taxonomy_evolution, tier2_persona, tier3_smoke, tier4_projects, tier5_infra, tier6_models, tier7_pytest  # noqa: F401
+    from probes import tier1_data, tier1_local_memory, tier1_taxonomy_evolution, tier2_persona, tier3_smoke, tier4_projects, tier5_infra, tier6_models, tier7_pytest, tier_code_projection  # noqa: F401
 
     selected = get_probes(tier=tier, probe_name=probe_name)
     if not selected:

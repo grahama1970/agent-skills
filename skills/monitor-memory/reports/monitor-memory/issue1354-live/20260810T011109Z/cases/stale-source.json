@@ -1,0 +1,45 @@
+{
+  "case_id": "stale-source",
+  "context": {
+    "code_index_id": "ci_stale-source",
+    "generation_id": "cg_current_stale-source",
+    "scope": "stale-source",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/stale-source/stale-source.py"
+  },
+  "description": "live source file hash differs from indexed code-symbol hash",
+  "expected_status": "warn",
+  "live": true,
+  "mocked": false,
+  "observed_status": "warn",
+  "passed": true,
+  "probe": "code-projection-source-freshness",
+  "result": {
+    "details": {
+      "current_count": 8,
+      "limitations": [
+        "sampled check; stale snippets must not be treated modification-ready"
+      ],
+      "missing": [],
+      "remediation": "reindex",
+      "sampled": 9,
+      "stale": [
+        {
+          "_key": "cs_stale-source_0",
+          "code_index_id": "ci_stale-source",
+          "content_hash": "sha256:22b55ea444bbf40f8d6db7ce1f6544f59ef2d1ce35de1f82a02903c265053c1b",
+          "generation_id": "cg_current_stale-source",
+          "observed_sha256": "sha256:fc44dd7d2b1e6201aae9cebfef93d53a73771f5e3d66647535804fe0c3d8dc1b",
+          "path": "stale-source.py",
+          "root": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/stale-source",
+          "scope": "stale-source",
+          "symbol_id": "sym_stale-source_0"
+        }
+      ]
+    },
+    "message": "8 current, 1 stale, 0 missing source sample(s)",
+    "name": "code-projection-source-freshness",
+    "probe_id": "CP07",
+    "status": "warn",
+    "tier": 8
+  }
+}

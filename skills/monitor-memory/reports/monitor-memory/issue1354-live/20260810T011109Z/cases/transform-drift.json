@@ -1,0 +1,154 @@
+{
+  "case_id": "transform-drift",
+  "context": {
+    "code_index_id": "ci_transform-drift",
+    "generation_id": "cg_current_transform-drift",
+    "scope": "transform-drift",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/transform-drift/transform-drift.py"
+  },
+  "description": "active generation transform fingerprint drift",
+  "expected_status": "warn",
+  "live": true,
+  "mocked": false,
+  "observed_status": "warn",
+  "passed": true,
+  "probe": "code-projection-transform-drift",
+  "result": {
+    "details": {
+      "drift": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "config_fingerprint": "sha256:config",
+          "drift": "transform_fingerprint",
+          "generation_id": "cg_current_transform-drift",
+          "scope": "transform-drift",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "old-transform"
+        }
+      ],
+      "expected_semantic_text_schema": "memory.code_symbol_semantic_text.v1",
+      "expected_transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1",
+      "remediation": "reindex",
+      "rows": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_healthy",
+          "scope": "healthy",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_two-active",
+          "scope": "two-active",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_count-mismatch",
+          "scope": "count-mismatch",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_incomplete-preserves",
+          "scope": "incomplete-preserves",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_orphan-symbol",
+          "scope": "orphan-symbol",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_retired-qdrant",
+          "scope": "retired-qdrant",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_outbox-backlog",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_outbox-backlog",
+          "scope": "outbox-backlog",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_retired-leakage",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_retired-leakage",
+          "scope": "retired-leakage",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_stale-source",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_stale-source",
+          "scope": "stale-source",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_transform-drift",
+          "scope": "transform-drift",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "old-transform"
+        }
+      ]
+    },
+    "message": "1 transform/semantic fingerprint drift(s)",
+    "name": "code-projection-transform-drift",
+    "probe_id": "CP08",
+    "status": "warn",
+    "tier": 8
+  }
+}

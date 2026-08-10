@@ -1,0 +1,1122 @@
+[
+  {
+    "details": {
+      "bad_active_counts": [
+        {
+          "active_generation_count": 2,
+          "active_generation_id": "cg_current_two-active",
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "current_record_generation_ids": [
+            "cg_current_two-active",
+            "cg_second_two-active"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": true,
+          "pointer_status": "active",
+          "scope": "two-active",
+          "stale_staging_count": 0
+        }
+      ],
+      "issues": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "generation_id": "cg_current_two-active",
+          "issues": [
+            "mixed_current_records"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": true,
+          "scope": "two-active",
+          "stale_staging_count": 0
+        }
+      ],
+      "limitations": [
+        "read-only monitor; projection activation remains owned by Memory/GMO"
+      ],
+      "remediation": "reapply_projection",
+      "rows": [
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_healthy",
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "current_record_generation_ids": [
+            "cg_current_healthy"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "healthy",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 2,
+          "active_generation_id": "cg_current_two-active",
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "current_record_generation_ids": [
+            "cg_current_two-active",
+            "cg_second_two-active"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": true,
+          "pointer_status": "active",
+          "scope": "two-active",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_count-mismatch",
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "current_record_generation_ids": [
+            "cg_current_count-mismatch"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "count-mismatch",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_incomplete-preserves",
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "current_record_generation_ids": [
+            "cg_current_incomplete-preserves"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "incomplete-preserves",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_orphan-symbol",
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "current_record_generation_ids": [
+            "cg_current_orphan-symbol"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "orphan-symbol",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_retired-qdrant",
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "current_record_generation_ids": [
+            "cg_current_retired-qdrant"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "retired-qdrant",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_outbox-backlog",
+          "branch": "main",
+          "code_index_id": "ci_outbox-backlog",
+          "current_record_generation_ids": [
+            "cg_current_outbox-backlog"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "outbox-backlog",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_retired-leakage",
+          "branch": "main",
+          "code_index_id": "ci_retired-leakage",
+          "current_record_generation_ids": [
+            "cg_current_retired-leakage"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "retired-leakage",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_stale-source",
+          "branch": "main",
+          "code_index_id": "ci_stale-source",
+          "current_record_generation_ids": [
+            "cg_current_stale-source"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "stale-source",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_transform-drift",
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "current_record_generation_ids": [
+            "cg_current_transform-drift"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "transform-drift",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_stale-doc-debug",
+          "branch": "main",
+          "code_index_id": "ci_stale-doc-debug",
+          "current_record_generation_ids": [
+            "cg_current_stale-doc-debug"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "stale-doc-debug",
+          "stale_staging_count": 0
+        },
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_inefficient-noop",
+          "branch": "main",
+          "code_index_id": "ci_inefficient-noop",
+          "current_record_generation_ids": [
+            "cg_current_inefficient-noop"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "inefficient-noop",
+          "stale_staging_count": 0
+        }
+      ]
+    },
+    "message": "2 code index generation invariant issue(s)",
+    "name": "code-projection-active-generation",
+    "probe_id": "CP01",
+    "status": "fail"
+  },
+  {
+    "details": {
+      "issues": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "count_mismatch": true,
+          "generation_id": "cg_current_count-mismatch",
+          "issues": [
+            "count_mismatch"
+          ],
+          "missing_bundle_digest": false,
+          "scope": "count-mismatch"
+        }
+      ],
+      "remediation": "reapply_projection",
+      "rows": [
+        {
+          "accepted_bundle_digest": "sha256:bundle-healthy",
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_healthy",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "healthy"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-two-active",
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_two-active",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "two-active"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-count-mismatch",
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "count_mismatch": true,
+          "expected_counts": {
+            "edges": 9,
+            "files": 9,
+            "symbols": 9
+          },
+          "generation_id": "cg_current_count-mismatch",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "count-mismatch"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-incomplete-preserves",
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_incomplete-preserves",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "incomplete-preserves"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-orphan-symbol",
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_orphan-symbol",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "orphan-symbol"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-retired-qdrant",
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_retired-qdrant",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "retired-qdrant"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-outbox-backlog",
+          "branch": "main",
+          "code_index_id": "ci_outbox-backlog",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_outbox-backlog",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "outbox-backlog"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-retired-leakage",
+          "branch": "main",
+          "code_index_id": "ci_retired-leakage",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_retired-leakage",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "retired-leakage"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-stale-source",
+          "branch": "main",
+          "code_index_id": "ci_stale-source",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_stale-source",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "stale-source"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-transform-drift",
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_transform-drift",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "transform-drift"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-stale-doc-debug",
+          "branch": "main",
+          "code_index_id": "ci_stale-doc-debug",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_stale-doc-debug",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "stale-doc-debug"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-inefficient-noop",
+          "branch": "main",
+          "code_index_id": "ci_inefficient-noop",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_inefficient-noop",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "inefficient-noop"
+        }
+      ]
+    },
+    "message": "1 bundle reconciliation issue(s)",
+    "name": "code-projection-bundle-reconciliation",
+    "probe_id": "CP02",
+    "status": "fail"
+  },
+  {
+    "details": {
+      "issues": [],
+      "remediation": "observe",
+      "rows": [
+        {
+          "active_after_generation_id": "cg_current_incomplete-preserves",
+          "active_before_generation_id": "cg_current_incomplete-preserves",
+          "active_generation_mutated": false,
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "current_keyset_mutated": false,
+          "generation_id": "cg_rejected_incomplete-preserves",
+          "scope": "incomplete-preserves",
+          "status": "rejected"
+        }
+      ]
+    },
+    "message": "incomplete receipt immutability preserved",
+    "name": "code-projection-incomplete-immutability",
+    "probe_id": "CP03",
+    "status": "pass"
+  },
+  {
+    "details": {
+      "issues": [
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "generation_id": "cg_current_orphan-symbol",
+          "missing_point_count": 1,
+          "missing_point_sample": [
+            {
+              "_key": "cs_orphan-symbol_0",
+              "generation_id": "cg_current_orphan-symbol",
+              "qdrant_point_id": "",
+              "semantic_sync_state": "pending",
+              "symbol_id": "sym_orphan-symbol_0"
+            }
+          ],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "orphan-symbol",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "generation_id": "cg_current_retired-qdrant",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 1,
+          "retired_point_sample": [
+            {
+              "_key": "cs_retired_retired-qdrant",
+              "generation_id": "cg_old_retired-qdrant",
+              "qdrant_point_id": "qp_retired_retired-qdrant",
+              "symbol_id": "sym_retired_retired-qdrant"
+            }
+          ],
+          "scope": "retired-qdrant",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        }
+      ],
+      "limitations": [
+        "Qdrant point payload is inferred from Arango sync metadata unless GMO semantic diagnostics collection is present"
+      ],
+      "remediation": "retry_outbox",
+      "rows": [
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "generation_id": "cg_current_healthy",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "healthy",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "generation_id": "cg_current_two-active",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "two-active",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "generation_id": "cg_current_count-mismatch",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "count-mismatch",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "generation_id": "cg_current_incomplete-preserves",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "incomplete-preserves",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "generation_id": "cg_current_orphan-symbol",
+          "missing_point_count": 1,
+          "missing_point_sample": [
+            {
+              "_key": "cs_orphan-symbol_0",
+              "generation_id": "cg_current_orphan-symbol",
+              "qdrant_point_id": "",
+              "semantic_sync_state": "pending",
+              "symbol_id": "sym_orphan-symbol_0"
+            }
+          ],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "orphan-symbol",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "generation_id": "cg_current_retired-qdrant",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 1,
+          "retired_point_sample": [
+            {
+              "_key": "cs_retired_retired-qdrant",
+              "generation_id": "cg_old_retired-qdrant",
+              "qdrant_point_id": "qp_retired_retired-qdrant",
+              "symbol_id": "sym_retired_retired-qdrant"
+            }
+          ],
+          "scope": "retired-qdrant",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_outbox-backlog",
+          "generation_id": "cg_current_outbox-backlog",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "outbox-backlog",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_retired-leakage",
+          "generation_id": "cg_current_retired-leakage",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "retired-leakage",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_stale-source",
+          "generation_id": "cg_current_stale-source",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "stale-source",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "generation_id": "cg_current_transform-drift",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "transform-drift",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_stale-doc-debug",
+          "generation_id": "cg_current_stale-doc-debug",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "stale-doc-debug",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        },
+        {
+          "active_symbol_count": 1,
+          "branch": "main",
+          "code_index_id": "ci_inefficient-noop",
+          "generation_id": "cg_current_inefficient-noop",
+          "missing_point_count": 0,
+          "missing_point_sample": [],
+          "retired_point_count": 0,
+          "retired_point_sample": [],
+          "scope": "inefficient-noop",
+          "stale_text_count": 0,
+          "stale_text_sample": []
+        }
+      ]
+    },
+    "message": "2 code index semantic parity issue(s)",
+    "name": "code-projection-semantic-parity",
+    "probe_id": "CP04",
+    "status": "fail"
+  },
+  {
+    "details": {
+      "failed": 1,
+      "pending_or_failed": 1,
+      "remediation": "retry_outbox",
+      "rows": [
+        {
+          "code_index_id": "ci_outbox-backlog",
+          "count": 1,
+          "last_error": "simulated qdrant outage",
+          "oldest": "2026-08-10T01:11:09Z",
+          "scope": "outbox-backlog",
+          "state": "failed"
+        }
+      ]
+    },
+    "message": "1 pending/retrying/failed code-symbol outbox row(s)",
+    "name": "code-projection-outbox-backlog",
+    "probe_id": "CP05",
+    "status": "fail"
+  },
+  {
+    "details": {
+      "leaks": [
+        {
+          "code_index_id": "ci_retired-leakage",
+          "generation_id": "cg_current_retired-leakage",
+          "history_available": true,
+          "leaked": true,
+          "receipt_ref": "proof/retired-leakage",
+          "route": "generic_bm25",
+          "scope": "retired-leakage",
+          "symbol_id": "sym_retired_retired-leakage"
+        }
+      ],
+      "missing_history": [],
+      "remediation": "reindex",
+      "rows": [
+        {
+          "code_index_id": "ci_retired-leakage",
+          "generation_id": "cg_current_retired-leakage",
+          "history_available": true,
+          "leaked": true,
+          "receipt_ref": "proof/retired-leakage",
+          "route": "generic_bm25",
+          "scope": "retired-leakage",
+          "symbol_id": "sym_retired_retired-leakage"
+        }
+      ]
+    },
+    "message": "1 retired recall leakage route(s)",
+    "name": "code-projection-retired-recall-leakage",
+    "probe_id": "CP06",
+    "status": "fail"
+  },
+  {
+    "details": {
+      "current_count": 11,
+      "limitations": [
+        "sampled check; stale snippets must not be treated modification-ready"
+      ],
+      "missing": [],
+      "remediation": "reindex",
+      "sampled": 12,
+      "stale": [
+        {
+          "_key": "cs_stale-source_0",
+          "code_index_id": "ci_stale-source",
+          "content_hash": "sha256:22b55ea444bbf40f8d6db7ce1f6544f59ef2d1ce35de1f82a02903c265053c1b",
+          "generation_id": "cg_current_stale-source",
+          "observed_sha256": "sha256:fc44dd7d2b1e6201aae9cebfef93d53a73771f5e3d66647535804fe0c3d8dc1b",
+          "path": "stale-source.py",
+          "root": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/stale-source",
+          "scope": "stale-source",
+          "symbol_id": "sym_stale-source_0"
+        }
+      ]
+    },
+    "message": "11 current, 1 stale, 0 missing source sample(s)",
+    "name": "code-projection-source-freshness",
+    "probe_id": "CP07",
+    "status": "warn"
+  },
+  {
+    "details": {
+      "drift": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "config_fingerprint": "sha256:config",
+          "drift": "transform_fingerprint",
+          "generation_id": "cg_current_transform-drift",
+          "scope": "transform-drift",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "old-transform"
+        }
+      ],
+      "expected_semantic_text_schema": "memory.code_symbol_semantic_text.v1",
+      "expected_transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1",
+      "remediation": "reindex",
+      "rows": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_healthy",
+          "scope": "healthy",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_two-active",
+          "scope": "two-active",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_count-mismatch",
+          "scope": "count-mismatch",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_incomplete-preserves",
+          "scope": "incomplete-preserves",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_orphan-symbol",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_orphan-symbol",
+          "scope": "orphan-symbol",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_retired-qdrant",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_retired-qdrant",
+          "scope": "retired-qdrant",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_outbox-backlog",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_outbox-backlog",
+          "scope": "outbox-backlog",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_retired-leakage",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_retired-leakage",
+          "scope": "retired-leakage",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_stale-source",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_stale-source",
+          "scope": "stale-source",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_transform-drift",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_transform-drift",
+          "scope": "transform-drift",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "old-transform"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_stale-doc-debug",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_stale-doc-debug",
+          "scope": "stale-doc-debug",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        },
+        {
+          "branch": "main",
+          "code_index_id": "ci_inefficient-noop",
+          "config_fingerprint": "sha256:config",
+          "generation_id": "cg_current_inefficient-noop",
+          "scope": "inefficient-noop",
+          "semantic_text_schemas": [
+            "memory.code_symbol_semantic_text.v1"
+          ],
+          "transform_fingerprint": "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1"
+        }
+      ]
+    },
+    "message": "1 transform/semantic fingerprint drift(s)",
+    "name": "code-projection-transform-drift",
+    "probe_id": "CP08",
+    "status": "warn"
+  },
+  {
+    "details": {
+      "remediation": "human_review",
+      "rows": [
+        {
+          "code_index_id": "ci_count-mismatch",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "count-mismatch",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_healthy",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "healthy",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_incomplete-preserves",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "incomplete-preserves",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_inefficient-noop",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "inefficient-noop",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_orphan-symbol",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "orphan-symbol",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_outbox-backlog",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "outbox-backlog",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_retired-leakage",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "retired-leakage",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_retired-qdrant",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "retired-qdrant",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-doc-debug",
+          "status": "stale"
+        },
+        {
+          "code_index_id": "ci_stale-source",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-source",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_transform-drift",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "transform-drift",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_two-active",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "two-active",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "debugger_recipe",
+          "scope": "stale-doc-debug",
+          "status": "needs_fixture"
+        }
+      ],
+      "stale": [
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-doc-debug",
+          "status": "stale"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "debugger_recipe",
+          "scope": "stale-doc-debug",
+          "status": "needs_fixture"
+        }
+      ]
+    },
+    "message": "2 stale/rejected doc/debugger status bucket(s)",
+    "name": "code-projection-doc-debugger-staleness",
+    "probe_id": "CP09",
+    "status": "warn"
+  },
+  {
+    "details": {
+      "inefficient": [
+        {
+          "bytes_read": 1024,
+          "code_index_id": "ci_inefficient-noop",
+          "created_at": "2026-08-10T01:11:09Z",
+          "discovered_files": 100,
+          "duration_ms": 1200,
+          "embedding_reuse_count": 20,
+          "generation_id": "cg_current_inefficient-noop",
+          "parsed_files": 80,
+          "rebuilt_edges": 80,
+          "rebuilt_symbols": 80,
+          "reparse_pct": 80.0,
+          "reused_files": 20,
+          "scope": "inefficient-noop"
+        }
+      ],
+      "remediation": "human_review",
+      "rows": [
+        {
+          "bytes_read": 1024,
+          "code_index_id": "ci_inefficient-noop",
+          "created_at": "2026-08-10T01:11:09Z",
+          "discovered_files": 100,
+          "duration_ms": 1200,
+          "embedding_reuse_count": 20,
+          "generation_id": "cg_current_inefficient-noop",
+          "parsed_files": 80,
+          "rebuilt_edges": 80,
+          "rebuilt_symbols": 80,
+          "reused_files": 20,
+          "scope": "inefficient-noop"
+        }
+      ],
+      "warn_reparse_pct": 25.0
+    },
+    "message": "1 inefficient no-op/near-no-op ingest receipt(s)",
+    "name": "code-projection-delta-efficiency",
+    "probe_id": "CP10",
+    "status": "warn"
+  }
+]

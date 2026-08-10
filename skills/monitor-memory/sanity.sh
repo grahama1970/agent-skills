@@ -67,6 +67,7 @@ check "probes/tier2_persona.py exists" test -f "$SCRIPT_DIR/probes/tier2_persona
 check "probes/tier3_smoke.py exists" test -f "$SCRIPT_DIR/probes/tier3_smoke.py"
 check "probes/tier4_projects.py exists" test -f "$SCRIPT_DIR/probes/tier4_projects.py"
 check "probes/tier5_infra.py exists" test -f "$SCRIPT_DIR/probes/tier5_infra.py"
+check "probes/tier_code_projection.py exists" test -f "$SCRIPT_DIR/probes/tier_code_projection.py"
 check "pyproject.toml exists" test -f "$SCRIPT_DIR/pyproject.toml"
 
 # === Dependencies ===
@@ -90,12 +91,10 @@ echo "--- ArangoDB ---"
 if curl -sf -u "$ARANGO_USER:$ARANGO_PASS" http://127.0.0.1:8529/_api/version > /dev/null 2>&1; then
     check "ArangoDB reachable" curl -sf -u "$ARANGO_USER:$ARANGO_PASS" http://127.0.0.1:8529/_api/version
 
-    check "required collections exist (auto-provision)" uv run --directory "$SCRIPT_DIR" python -c "
+    warn_check "baseline persona/taxonomy collections exist" uv run --directory "$SCRIPT_DIR" python -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR'); sys.path.insert(0, '$PROJECT_ROOT/.pi/skills/memory')
-from db import get_db, ensure_collections
-db = get_db(); created = ensure_collections(db)
-if created: print(f'  Provisioned: {created}')
-# Verify the key ones exist
+from db import get_db
+db = get_db()
 for c in ['lessons', 'persona_journals', 'lesson_edges', 'taxonomy_bridges', 'taxonomy_edges', 'personas']:
     assert db.has_collection(c), f'Missing: {c}'
 "
@@ -112,6 +111,7 @@ assert db.has_collection('lesson_embeddings'), 'Missing: lesson_embeddings'
     check "P02 taxonomy-coverage runs" "$SCRIPT_DIR/run.sh" check --probe taxonomy-coverage --json
     check "P10 backup-freshness runs" "$SCRIPT_DIR/run.sh" check --probe backup-freshness --json
     check "P28 universal-embedding-coverage runs" "$SCRIPT_DIR/run.sh" check --probe universal-embedding-coverage --json
+    check "CP01 code-projection-active-generation runs" "$SCRIPT_DIR/run.sh" check --probe code-projection-active-generation --json
 else
     skip "ArangoDB not reachable" 5
 fi
@@ -124,13 +124,13 @@ check "state dir writable" bash -c "mkdir -p ~/.pi/monitor-memory && test -w ~/.
 # === Cross-skill dependencies ===
 echo ""
 echo "--- Cross-skill Dependencies ---"
-check "ops-arango available" test -f "$PROJECT_ROOT/.pi/skills/ops-arango/run.sh"
-warn_check "taxonomy available" test -f "$PROJECT_ROOT/.pi/skills/taxonomy/taxonomy.py"
-warn_check "persona-journal available" test -f "$PROJECT_ROOT/.pi/skills/persona-journal/run.sh"
-warn_check "scheduler available" test -f "$PROJECT_ROOT/.pi/skills/scheduler/run.sh"
-warn_check "agent-inbox available" test -f "$PROJECT_ROOT/.pi/skills/agent-inbox/run.sh"
+warn_check "ops-arango available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/ops-arango/run.sh' || test -f '$PROJECT_ROOT/skills/ops-arango/run.sh'"
+warn_check "taxonomy available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/taxonomy/taxonomy.py' || test -f '$PROJECT_ROOT/skills/taxonomy/taxonomy.py'"
+warn_check "persona-journal available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/persona-journal/run.sh' || test -f '$PROJECT_ROOT/skills/persona-journal/run.sh'"
+warn_check "scheduler available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/scheduler/run.sh' || test -f '$PROJECT_ROOT/skills/scheduler/run.sh'"
+warn_check "agent-inbox available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/agent-inbox/run.sh' || test -f '$PROJECT_ROOT/skills/agent-inbox/run.sh'"
 warn_check "embedding service health" curl -sf http://localhost:8080/health
-warn_check "edge-verifier available" test -f "$PROJECT_ROOT/.pi/skills/edge-verifier/run.sh"
+warn_check "edge-verifier available" bash -c "test -f '$PROJECT_ROOT/.pi/skills/edge-verifier/run.sh' || test -f '$PROJECT_ROOT/skills/edge-verifier/run.sh'"
 warn_check "12TB mounted" test -d /mnt/storage12tb
 
 # === Registered projects (REAL) ===

@@ -1,0 +1,60 @@
+{
+  "case_id": "inefficient-noop",
+  "context": {
+    "code_index_id": "ci_inefficient-noop",
+    "generation_id": "cg_current_inefficient-noop",
+    "scope": "inefficient-noop",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/inefficient-noop/inefficient-noop.py"
+  },
+  "description": "no-op ingest reparses too much of the repository",
+  "expected_status": "warn",
+  "live": true,
+  "mocked": false,
+  "observed_status": "warn",
+  "passed": true,
+  "probe": "code-projection-delta-efficiency",
+  "result": {
+    "details": {
+      "inefficient": [
+        {
+          "bytes_read": 1024,
+          "code_index_id": "ci_inefficient-noop",
+          "created_at": "2026-08-10T01:11:09Z",
+          "discovered_files": 100,
+          "duration_ms": 1200,
+          "embedding_reuse_count": 20,
+          "generation_id": "cg_current_inefficient-noop",
+          "parsed_files": 80,
+          "rebuilt_edges": 80,
+          "rebuilt_symbols": 80,
+          "reparse_pct": 80.0,
+          "reused_files": 20,
+          "scope": "inefficient-noop"
+        }
+      ],
+      "remediation": "human_review",
+      "rows": [
+        {
+          "bytes_read": 1024,
+          "code_index_id": "ci_inefficient-noop",
+          "created_at": "2026-08-10T01:11:09Z",
+          "discovered_files": 100,
+          "duration_ms": 1200,
+          "embedding_reuse_count": 20,
+          "generation_id": "cg_current_inefficient-noop",
+          "parsed_files": 80,
+          "rebuilt_edges": 80,
+          "rebuilt_symbols": 80,
+          "reused_files": 20,
+          "scope": "inefficient-noop"
+        }
+      ],
+      "warn_reparse_pct": 25.0
+    },
+    "message": "1 inefficient no-op/near-no-op ingest receipt(s)",
+    "name": "code-projection-delta-efficiency",
+    "probe_id": "CP10",
+    "status": "warn",
+    "tier": 8
+  }
+}

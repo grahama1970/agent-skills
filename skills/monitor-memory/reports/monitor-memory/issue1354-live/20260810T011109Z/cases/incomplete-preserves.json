@@ -1,0 +1,40 @@
+{
+  "case_id": "incomplete-preserves",
+  "context": {
+    "code_index_id": "ci_incomplete-preserves",
+    "generation_id": "cg_current_incomplete-preserves",
+    "scope": "incomplete-preserves",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/incomplete-preserves/incomplete-preserves.py"
+  },
+  "description": "rejected generation preserves prior active pointer and keyset",
+  "expected_status": "pass",
+  "live": true,
+  "mocked": false,
+  "observed_status": "pass",
+  "passed": true,
+  "probe": "code-projection-incomplete-immutability",
+  "result": {
+    "details": {
+      "issues": [],
+      "remediation": "observe",
+      "rows": [
+        {
+          "active_after_generation_id": "cg_current_incomplete-preserves",
+          "active_before_generation_id": "cg_current_incomplete-preserves",
+          "active_generation_mutated": false,
+          "branch": "main",
+          "code_index_id": "ci_incomplete-preserves",
+          "current_keyset_mutated": false,
+          "generation_id": "cg_rejected_incomplete-preserves",
+          "scope": "incomplete-preserves",
+          "status": "rejected"
+        }
+      ]
+    },
+    "message": "incomplete receipt immutability preserved",
+    "name": "code-projection-incomplete-immutability",
+    "probe_id": "CP03",
+    "status": "pass",
+    "tier": 8
+  }
+}

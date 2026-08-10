@@ -1,0 +1,38 @@
+{
+  "case_id": "outbox-backlog",
+  "context": {
+    "code_index_id": "ci_outbox-backlog",
+    "generation_id": "cg_current_outbox-backlog",
+    "scope": "outbox-backlog",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/outbox-backlog/outbox-backlog.py"
+  },
+  "description": "semantic outbox backlog and simulated outage",
+  "expected_status": "fail",
+  "live": true,
+  "mocked": false,
+  "observed_status": "fail",
+  "passed": true,
+  "probe": "code-projection-outbox-backlog",
+  "result": {
+    "details": {
+      "failed": 1,
+      "pending_or_failed": 1,
+      "remediation": "retry_outbox",
+      "rows": [
+        {
+          "code_index_id": "ci_outbox-backlog",
+          "count": 1,
+          "last_error": "simulated qdrant outage",
+          "oldest": "2026-08-10T01:11:09Z",
+          "scope": "outbox-backlog",
+          "state": "failed"
+        }
+      ]
+    },
+    "message": "1 pending/retrying/failed code-symbol outbox row(s)",
+    "name": "code-projection-outbox-backlog",
+    "probe_id": "CP05",
+    "status": "fail",
+    "tier": 8
+  }
+}

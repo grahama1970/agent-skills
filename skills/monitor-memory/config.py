@@ -11,7 +11,14 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from loguru import logger
+try:
+    from loguru import logger
+except ModuleNotFoundError:  # pragma: no cover - repo-root pytest fallback
+    class _Logger:
+        def debug(self, *_args, **_kwargs) -> None:
+            pass
+
+    logger = _Logger()
 
 # --- dotenv (MUST be before any os.getenv) ---
 SKILLS_DIR = Path(__file__).resolve().parents[1]
@@ -67,6 +74,18 @@ BACKUP_MAX_AGE_HOURS = 26
 EDGE_MAX_AGE_HOURS = 26
 DISK_WARN_PCT = 85.0
 SECURITY_MAX_AGE_DAYS = 7
+CODE_PROJECTION_OUTBOX_WARN_COUNT = int(os.getenv("CODE_PROJECTION_OUTBOX_WARN_COUNT", "0"))
+CODE_PROJECTION_OUTBOX_FAIL_COUNT = int(os.getenv("CODE_PROJECTION_OUTBOX_FAIL_COUNT", "25"))
+CODE_PROJECTION_SOURCE_SAMPLE_LIMIT = int(os.getenv("CODE_PROJECTION_SOURCE_SAMPLE_LIMIT", "25"))
+CODE_PROJECTION_EFFICIENCY_WARN_REPARSE_PCT = float(os.getenv("CODE_PROJECTION_EFFICIENCY_WARN_REPARSE_PCT", "25.0"))
+CODE_PROJECTION_EXPECTED_TRANSFORM_FINGERPRINT = os.getenv(
+    "CODE_PROJECTION_EXPECTED_TRANSFORM_FINGERPRINT",
+    "ingest-code.code_graph_bundle.v1:p5_finalize.code_projection.v1",
+)
+CODE_PROJECTION_EXPECTED_SEMANTIC_TEXT_SCHEMA = os.getenv(
+    "CODE_PROJECTION_EXPECTED_SEMANTIC_TEXT_SCHEMA",
+    "memory.code_symbol_semantic_text.v1",
+)
 
 # --- Auto-fix limits ---
 EMBEDDING_FIX_BATCH = 500       # Docs per nightly run per collection
@@ -82,7 +101,22 @@ EMBEDDABLE_COLLECTIONS = {
     "lessons": (["problem", "playbook"], "lesson_embeddings"),
     "lean_theorems": (["lean_code", "notes", "error"], None),
     "agent_conversations": (["topic", "body", "summary"], None),
-    "code_symbols": (["name", "kind", "signature", "docstring"], None),
+    "code_symbols": ([
+        "retrieval_text",
+        "text",
+        "solution",
+        "repo",
+        "path",
+        "language",
+        "symbol_kind",
+        "symbol_name",
+        "qualified_name",
+        "signature",
+        "source_docstring",
+        "derived_summary",
+        "code",
+        "lexical_terms",
+    ], None),
     "doc_chunks": (["title", "content"], None),
     "horus_lore_chunks": (["content"], None),
     "horus_lore_docs": (["content"], None),

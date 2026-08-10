@@ -32,6 +32,7 @@ Tiers:
   5  Infrastructure (lightweight)
   6  Model Health (registry, shadow, training data)
   7  Pytest Suite (339+ tests: health, unit, performance)
+  8  Code Projection Health (generation, retrieval, semantic parity)
 
 Examples:
   ./run.sh check --tier 1 --autofix --json
@@ -72,13 +73,16 @@ case "${1:-help}" in
         "$SCHEDULER" register \
             --name "monitor-memory-t7" --cron "30 6 * * *" \
             --command "$SCRIPT_DIR/run.sh check --tier 7 --json > ~/.pi/monitor-memory/report_t7.json"
+        "$SCHEDULER" register \
+            --name "monitor-memory-t8" --cron "45 6 * * *" \
+            --command "$SCRIPT_DIR/run.sh check --tier 8 --json > ~/.pi/monitor-memory/report_t8.json"
 
         # Best-practices docs ingestion updates (run before T1 so docs are fresh)
         BEST_PRACTICES_DIR="$PROJECT_ROOT/.pi/skills"
         "$SCHEDULER" register \
             --name "docs-update-arangodb" --cron "45 4 * * *" \
             --command "$BEST_PRACTICES_DIR/best-practices-arangodb/run.sh update 2>&1 | head -20"
-        echo "Registered 7 nightly jobs + 1 docs-update job with scheduler"
+        echo "Registered 8 nightly jobs + 1 docs-update job with scheduler"
         ;;
     help|-h|--help)
         usage

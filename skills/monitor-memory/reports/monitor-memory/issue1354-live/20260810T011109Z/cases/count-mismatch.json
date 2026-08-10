@@ -1,0 +1,98 @@
+{
+  "case_id": "count-mismatch",
+  "context": {
+    "code_index_id": "ci_count-mismatch",
+    "generation_id": "cg_current_count-mismatch",
+    "scope": "count-mismatch",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/count-mismatch/count-mismatch.py"
+  },
+  "description": "active bundle expected counts mismatch observed Arango rows",
+  "expected_status": "fail",
+  "live": true,
+  "mocked": false,
+  "observed_status": "fail",
+  "passed": true,
+  "probe": "code-projection-bundle-reconciliation",
+  "result": {
+    "details": {
+      "issues": [
+        {
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "count_mismatch": true,
+          "generation_id": "cg_current_count-mismatch",
+          "issues": [
+            "count_mismatch"
+          ],
+          "missing_bundle_digest": false,
+          "scope": "count-mismatch"
+        }
+      ],
+      "remediation": "reapply_projection",
+      "rows": [
+        {
+          "accepted_bundle_digest": "sha256:bundle-healthy",
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_healthy",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "healthy"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-two-active",
+          "branch": "main",
+          "code_index_id": "ci_two-active",
+          "count_mismatch": false,
+          "expected_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "generation_id": "cg_current_two-active",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "two-active"
+        },
+        {
+          "accepted_bundle_digest": "sha256:bundle-count-mismatch",
+          "branch": "main",
+          "code_index_id": "ci_count-mismatch",
+          "count_mismatch": true,
+          "expected_counts": {
+            "edges": 9,
+            "files": 9,
+            "symbols": 9
+          },
+          "generation_id": "cg_current_count-mismatch",
+          "missing_bundle_digest": false,
+          "observed_counts": {
+            "edges": 1,
+            "files": 1,
+            "symbols": 1
+          },
+          "scope": "count-mismatch"
+        }
+      ]
+    },
+    "message": "1 bundle reconciliation issue(s)",
+    "name": "code-projection-bundle-reconciliation",
+    "probe_id": "CP02",
+    "status": "fail",
+    "tier": 8
+  }
+}

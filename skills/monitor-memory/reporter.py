@@ -13,10 +13,52 @@ import os
 import time
 from pathlib import Path
 
-from loguru import logger
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
+try:
+    from loguru import logger
+except ModuleNotFoundError:  # pragma: no cover - repo-root pytest fallback
+    class _Logger:
+        def info(self, *_args, **_kwargs) -> None:
+            pass
+
+        def warning(self, *_args, **_kwargs) -> None:
+            pass
+
+        def error(self, *_args, **_kwargs) -> None:
+            pass
+
+        def debug(self, *_args, **_kwargs) -> None:
+            pass
+
+    logger = _Logger()
+
+try:
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+except ModuleNotFoundError:  # pragma: no cover - repo-root pytest fallback
+    class Console:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def print(self, *args, **kwargs) -> None:
+            pass
+
+        def print_json(self, data: str) -> None:
+            print(data)
+
+    class Panel:
+        def __init__(self, value: str, *args, **kwargs) -> None:
+            self.value = value
+
+    class Table:
+        def __init__(self, *args, **kwargs) -> None:
+            self.rows = []
+
+        def add_column(self, *args, **kwargs) -> None:
+            pass
+
+        def add_row(self, *args, **kwargs) -> None:
+            self.rows.append(args)
 
 from probes import ProbeResult, ProbeStatus
 
@@ -179,6 +221,7 @@ def _save_state(
                 "tier": r.tier,
                 "status": r.status.value,
                 "message": r.message,
+                "details": r.details,
                 "auto_fixable": r.auto_fixable,
                 "fix_applied": r.fix_applied,
             }

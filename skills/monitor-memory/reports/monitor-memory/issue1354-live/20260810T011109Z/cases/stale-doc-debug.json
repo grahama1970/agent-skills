@@ -1,0 +1,128 @@
+{
+  "case_id": "stale-doc-debug",
+  "context": {
+    "code_index_id": "ci_stale-doc-debug",
+    "generation_id": "cg_current_stale-doc-debug",
+    "scope": "stale-doc-debug",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/stale-doc-debug/stale-doc-debug.py"
+  },
+  "description": "stale derived summary and unsafe debugger recipe state",
+  "expected_status": "warn",
+  "live": true,
+  "mocked": false,
+  "observed_status": "warn",
+  "passed": true,
+  "probe": "code-projection-doc-debugger-staleness",
+  "result": {
+    "details": {
+      "remediation": "human_review",
+      "rows": [
+        {
+          "code_index_id": "ci_count-mismatch",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "count-mismatch",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_healthy",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "healthy",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_incomplete-preserves",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "incomplete-preserves",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_orphan-symbol",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "orphan-symbol",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_outbox-backlog",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "outbox-backlog",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_retired-leakage",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "retired-leakage",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_retired-qdrant",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "retired-qdrant",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-doc-debug",
+          "status": "stale"
+        },
+        {
+          "code_index_id": "ci_stale-source",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-source",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_transform-drift",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "transform-drift",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_two-active",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "two-active",
+          "status": "current"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "debugger_recipe",
+          "scope": "stale-doc-debug",
+          "status": "needs_fixture"
+        }
+      ],
+      "stale": [
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "derived_summary",
+          "scope": "stale-doc-debug",
+          "status": "stale"
+        },
+        {
+          "code_index_id": "ci_stale-doc-debug",
+          "count": 1,
+          "kind": "debugger_recipe",
+          "scope": "stale-doc-debug",
+          "status": "needs_fixture"
+        }
+      ]
+    },
+    "message": "2 stale/rejected doc/debugger status bucket(s)",
+    "name": "code-projection-doc-debugger-staleness",
+    "probe_id": "CP09",
+    "status": "warn",
+    "tier": 8
+  }
+}

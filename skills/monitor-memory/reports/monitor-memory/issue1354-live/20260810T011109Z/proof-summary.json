@@ -1,0 +1,53 @@
+{
+  "aggregate_receipt": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/aggregate-tier8.json",
+  "artifacts": {
+    "aggregate-tier8.json": "sha256:08f5d6910885e88962773fc53f79e7d1ced60001a4812af0cc772d39325b9b23",
+    "cases/count-mismatch.json": "sha256:49f83e9637f2c9564295f08ab4e9869d2192f34eb8297fed785d02f02beadcdc",
+    "cases/healthy.json": "sha256:996e760e3f356fa6e808c1fc4433b21b6b4447801027d766daae7c39697fcb2c",
+    "cases/incomplete-preserves.json": "sha256:aa29a3973dc795fbdeaa112103c214ce93ab1a9dfd9eeef513e07f2118ca164e",
+    "cases/inefficient-noop.json": "sha256:0df55ca4a39644d847236c4430b7f1c3870e28072f53a67c2551a1526812da3e",
+    "cases/orphan-symbol.json": "sha256:e8a4afbcd42ec2dea843f5e5246595108b185656003114f976aea1e26048de4e",
+    "cases/outbox-backlog.json": "sha256:4a8f19cd62367e06f450cb53c2d3aef6398c9e789abefc5f3af79f02b075e078",
+    "cases/retired-leakage.json": "sha256:33a85304b897e68a4959afcd44013f4aaf7892b45f2c1241abdc22689d6f7e0f",
+    "cases/retired-qdrant.json": "sha256:9432b28c7b16015bc79817c117058b5db0697d37f6c4a73c494f2900792b08c0",
+    "cases/stale-doc-debug.json": "sha256:8bfb2c05f38ab821a539c8a1658ddc9c2c6b64eb382af4220ba745636b74a433",
+    "cases/stale-source.json": "sha256:2e8128da0b57309029f452edc0c3ee53f246ceadf978a0bab1bedb3dc08a6888",
+    "cases/transform-drift.json": "sha256:b469d7cb97c0c7b386072185337c67edf7817c0987b1bc972e0d8d4e7efadd8b",
+    "cases/two-active.json": "sha256:7a4a54235ff010b347df96924f7fdbf4c093180c0f7a1781b25b10fd97fa5311"
+  },
+  "case_count": 12,
+  "case_receipts": [
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/healthy.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/two-active.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/count-mismatch.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/incomplete-preserves.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/orphan-symbol.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/retired-qdrant.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/outbox-backlog.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/retired-leakage.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/stale-source.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/transform-drift.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/stale-doc-debug.json",
+    "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1354-code-projection/skills/monitor-memory/reports/monitor-memory/issue1354-live/20260810T011109Z/cases/inefficient-noop.json"
+  ],
+  "created_at": "2026-08-10T01:11:09Z",
+  "database": "monitor_memory_issue1354_20260810t011109z",
+  "failed_cases": [],
+  "live": true,
+  "mocked": false,
+  "passed_cases": 12,
+  "run_id": "20260810T011109Z",
+  "schema": "monitor_memory.code_projection_probe_proof.v1",
+  "stable_probe_ids": [
+    "CP01",
+    "CP02",
+    "CP03",
+    "CP04",
+    "CP05",
+    "CP06",
+    "CP07",
+    "CP08",
+    "CP09",
+    "CP10"
+  ]
+}

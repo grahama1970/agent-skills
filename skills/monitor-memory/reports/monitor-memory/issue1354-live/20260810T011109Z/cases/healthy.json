@@ -1,0 +1,42 @@
+{
+  "case_id": "healthy",
+  "context": {
+    "code_index_id": "ci_healthy",
+    "generation_id": "cg_current_healthy",
+    "scope": "healthy",
+    "source_path": "reports/monitor-memory/issue1354-live/20260810T011109Z/fixture-repos/healthy/healthy.py"
+  },
+  "description": "fully healthy active generation and semantic parity",
+  "expected_status": "pass",
+  "live": true,
+  "mocked": false,
+  "observed_status": "pass",
+  "passed": true,
+  "probe": "code-projection-active-generation",
+  "result": {
+    "details": {
+      "remediation": "observe",
+      "rows": [
+        {
+          "active_generation_count": 1,
+          "active_generation_id": "cg_current_healthy",
+          "branch": "main",
+          "code_index_id": "ci_healthy",
+          "current_record_generation_ids": [
+            "cg_current_healthy"
+          ],
+          "missing_active_pointer": false,
+          "mixed_current_records": false,
+          "pointer_status": "active",
+          "scope": "healthy",
+          "stale_staging_count": 0
+        }
+      ]
+    },
+    "message": "1 active code index pointer(s) unique",
+    "name": "code-projection-active-generation",
+    "probe_id": "CP01",
+    "status": "pass",
+    "tier": 8
+  }
+}
