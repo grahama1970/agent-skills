@@ -1,5 +1,13 @@
 """Two-stage matching policy: rough candidates, then a filter that can say no.
 
+Scope, because it decides every threshold below: this skill establishes
+NEAR-EXACT IDENTITY for compliance use. A control ID may never be approximated —
+answering CWE-32 for CWE-23 is not a helpful correction, it is a different
+weakness asserted with confidence. Semantic judgement about whether an entity is
+the one a sentence meant belongs downstream in the /memory pipeline (intent ->
+recall -> /create-evidence-case), which grounds a CAE verdict in crosswalk edges
+and deterministic gates. Precision over recall here is the requirement.
+
 Stage 1 (Flashtext, trie): rough candidates via `max_cost`. This is only
 possible since the dependency moved to upstream flashtext -- PyPI 2.7 has no
 `max_cost` and is exact-only, which is why the previous design could not be

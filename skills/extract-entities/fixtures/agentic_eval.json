@@ -5,7 +5,7 @@
  "proof_scope": "live two-stage extraction plus the matching policy: dictionary completeness, stage order and cost model, typo recovery, identifier safety, and whether a zero result is interpretable",
  "claims": {
   "proves": "that the dictionary loads uncapped, that Flashtext does EXACT matching first and RapidFuzz only recovers what it could not see, that repeat and empty calls reuse the cached trie, and that a zero result is reported alongside the dictionary size that produced it; and that stage two rejects identifier near-misses, rejects ambiguous ties, and refuses a dictionary-sized candidate set",
-  "does_not_prove": "whether a Flashtext hit is CONTEXTUALLY correct. The policy proves a match is safe to make, not that the entity is the one the sentence meant."
+  "does_not_prove": "contextual correctness -- whether the entity is the one the sentence MEANT. That is not this skill's job and not a gap in it: /extract-entities establishes near-exact identity for compliance, where a control ID may never be approximated, and the semantic layer runs downstream in the /memory pipeline (intent -> recall -> /create-evidence-case), which grounds a CAE verdict in crosswalk edges and deterministic gates. Precision over recall here is the requirement, not a limitation."
  },
  "cases": [
   {
