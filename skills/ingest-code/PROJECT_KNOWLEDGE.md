@@ -14,6 +14,7 @@
 - 2026-08-09: `scan --treesitter` now has a file-component reuse cache at `artifacts/ingest-code/incremental-components.json`. The cache stores source fingerprints, explicit transform fingerprints, serialized symbols, and component hashes from the last accepted complete bundle. No-op runs can reuse cached symbol components without invoking Tree-sitter for unchanged files; source edits, deletes, transform changes, corrupt cache rows, and incomplete prior bundles fail closed to recomputation.
 - 2026-08-09: `CodeSymbolRecord` now emits provenance-safe documentation metadata. Authored source docstrings remain in `source_docstring`/`docstring`; generated summaries are stored only as current `derived_summary` metadata when bound to the current `symbol_version_id`, source hash, and `summary_evidence` hash. Canonical retrieval text is emitted as `retrieval_text` with `retrieval_text_sha256` and `purpose_source`; `/ingest-code` does not rewrite source files to add docstrings.
 - 2026-08-09: Code-graph bundles now include `debug_invocations.jsonl` with static `debugger.invocation_candidate.v1` rows. These are current-symbol/source-version-bound handoff records for `$debugger`; ingest-code never executes them or marks them verified. Unsafe direct calls, needs-fixture cases, classes, async/generator/context-manager symbols, HTTP routes, and worker attach points fail closed through explicit status/limitations.
+- 2026-08-10: `evals/cocoindex-incremental` now provides an eval-only pinned CocoIndex comparison. It verifies `cocoindex==1.0.19`, runs native and CocoIndex scheduler arms over copied offline fixtures, blocks outbound network during fixture mutation, compares normalized code-graph bundles, and emits bounded receipts plus `decision.md`. The disposition is intentionally evidence-bounded; CocoIndex remains noncanonical and is not a production dependency.
 - The `scan` and `rescan` CLIs now support `--treesitter` with `--code-index` / `--no-code-index`. The default with `--treesitter` is complete projection application through Memory/GMO; rescan builds a complete projection bundle for lifecycle correctness even when lesson/CWE extraction is scoped by `--since`.
 - `.ingest-code.json` now records `code_index` metadata: `backend=memory`, `collection=code_symbols`, `symbols_stored`, `lexical_terms`, `line_ranges`, `content_hashes`, `hybrid_retrieval_capable`, `projection_generation_id`, and `projection_bundle_digest`.
 - Relationship edge storage was moved through the same Unix-socket memory client path instead of the stale `MEMORY_SERVICE_URL` path.
@@ -32,6 +33,7 @@
 | 2026-08-09 | Add disposable file-component reuse state for complete bundles | Complete bundle generation does not need full source reparsing on no-op runs, but cache reuse must be gated by source fingerprints, transform fingerprints, component hashes, and prior complete-bundle acceptance. |
 | 2026-08-09 | Keep generated symbol summaries separate from authored docstrings | Memory retrieval benefits from purpose text, but generated prose must not pollute source docstrings, source hashes, or provenance evidence. |
 | 2026-08-10 | Make complete bundle application the default code-index write path for `scan` | Memory/GMO owns projection generation activation, absence-based retirement, semantic projection, and receipt binding. Independent symbol batches cannot prove complete repository lifecycle authority. |
+| 2026-08-10 | Keep CocoIndex as an isolated scheduler experiment | The current native component cache already preserves the deterministic bundle authority. CocoIndex can be compared only behind that same bundle contract and cannot write Memory/GMO or indexed repositories. |
 
 ## Open Questions
 
@@ -52,6 +54,7 @@
 | symbol_summary.py | Provenance-safe source-docstring status, documentation-need classification, summary evidence, and retrieval text construction |
 | debug_affordance.py | Static debugger invocation candidate extraction for Python symbols |
 | incremental_state.py | File-component cache, source fingerprints, transform fingerprints, and reuse receipts for complete bundle generation |
+| evals/cocoindex-incremental/ | Eval-only native-vs-CocoIndex incremental comparison and bounded receipts |
 | code_memory_client.py | Unix-socket `/memory` wrapper for `/code/projection/apply`, compatibility `/upsert`, `/learn`, and edge storage |
 | SKILL.md | Skill contract and operator-facing documentation |
 | PROJECT_KNOWLEDGE.md | Shared project knowledge |

@@ -1,0 +1,51 @@
+{
+  "artifact_dir": "/tmp/issue-1355-cocoindex-proof-r8",
+  "backend_effects": {
+    "arangodb": false,
+    "memory": false,
+    "qdrant": false
+  },
+  "created_at": "2026-08-10T01:26:14.307394+00:00",
+  "decision": "retain experiment as inconclusive",
+  "dependency": {
+    "installed_package_sha256": "sha256:b7fc2e19d191f8490c0665f1e6419e8ec70333f0b6a9495333679130dc2e0897",
+    "module_file": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1355-cocoindex/skills/ingest-code/evals/cocoindex-incremental/.venv/lib/python3.12/site-packages/cocoindex/__init__.py",
+    "package": "cocoindex",
+    "version": "1.0.19",
+    "wheel": "cocoindex-1.0.19-cp311-abi3-manylinux_2_28_x86_64.whl",
+    "wheel_sha256": "sha256:a7f3e398f5aef8fb6dfe032730dc2995ef46e6a0941511eab0e5845eee3a04ba"
+  },
+  "external_effects": false,
+  "fixture_root": "/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1355-cocoindex/skills/ingest-code/tests/fixtures/code-graph/python",
+  "live": true,
+  "mocked": false,
+  "network_guard": "python socket disabled during scenario execution",
+  "network_used": false,
+  "scenarios": [
+    "initial_full_run",
+    "exact_noop_replay",
+    "one_function_edit",
+    "line_only_movement",
+    "file_add_delete_rename",
+    "grammar_scanner_fingerprint_change",
+    "edge_resolver_only_change",
+    "semantic_text_only_change",
+    "cache_corruption",
+    "interrupted_run_recovery",
+    "prior_incomplete_bundle"
+  ],
+  "schema": "ingest-code.cocoindex_incremental_eval.execution_receipt.v1",
+  "source_modified": false,
+  "status": "pass",
+  "status_checks": {
+    "all_bundles_complete": true,
+    "all_normalized_digests_equal": true,
+    "all_scenarios_ran_both_arms": true,
+    "all_schema_counts_equal": true,
+    "external_effects_false": true,
+    "network_used_false": true,
+    "noop_cocoindex_reused_files": true,
+    "noop_native_reused_files": true,
+    "source_modified_false": true
+  }
+}

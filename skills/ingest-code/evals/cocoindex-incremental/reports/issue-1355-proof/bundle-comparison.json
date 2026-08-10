@@ -1,0 +1,310 @@
+[
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:de7f3ae68677176a6535c7b1f08b769b34b5a5e124727bc9761e5868cb19627f",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:4ca6ea5fddd957a46e2cdb4703528dc54d5a785c5319bce5e1599b1468aa37e3",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/initial_full_run/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:8d4f626fda5a31e294b5523156fd2d64bdf04f30d221e30093e60098c7901e47",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:4ca6ea5fddd957a46e2cdb4703528dc54d5a785c5319bce5e1599b1468aa37e3",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/initial_full_run/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "initial_full_run",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:de7f3ae68677176a6535c7b1f08b769b34b5a5e124727bc9761e5868cb19627f",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:4ca6ea5fddd957a46e2cdb4703528dc54d5a785c5319bce5e1599b1468aa37e3",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/exact_noop_replay/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:8d4f626fda5a31e294b5523156fd2d64bdf04f30d221e30093e60098c7901e47",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:4ca6ea5fddd957a46e2cdb4703528dc54d5a785c5319bce5e1599b1468aa37e3",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/exact_noop_replay/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "exact_noop_replay",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:eead024b7f046f378c5d7ae458da778e6654c585886f037543a2a4fbdfe5cdce",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:59acb3d376eb36e3179eeb3920113c6c5b673c0be3aeda2ef591b1c999643fd0",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/one_function_edit/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:a5acf04960636748c583c905f0bb0cb6601e0d87bfdef65d9217fc5a83765250",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:59acb3d376eb36e3179eeb3920113c6c5b673c0be3aeda2ef591b1c999643fd0",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/one_function_edit/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "one_function_edit",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:c74d41769242cecfa2209303f7fe6081375f2b26565a116ee76dd07b6070fe1e",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:18d9bf5746e063e191cece84c2028ce67ce8e3cbf94dc1e601c4ca4912e81335",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/line_only_movement/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:204afb3c09f0ea8252c284fe1213fba921d5ff9f742d8a11ddff4c75e6878d2e",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:18d9bf5746e063e191cece84c2028ce67ce8e3cbf94dc1e601c4ca4912e81335",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/line_only_movement/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "line_only_movement",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/file_add_delete_rename/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/file_add_delete_rename/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "file_add_delete_rename",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/grammar_scanner_fingerprint_change/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/grammar_scanner_fingerprint_change/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "grammar_scanner_fingerprint_change",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/edge_resolver_only_change/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/edge_resolver_only_change/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "edge_resolver_only_change",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/semantic_text_only_change/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/semantic_text_only_change/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "semantic_text_only_change",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/cache_corruption/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/cache_corruption/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "cache_corruption",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/interrupted_run_recovery/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/interrupted_run_recovery/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "interrupted_run_recovery",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  },
+  {
+    "both_arms_ran": true,
+    "cocoindex_bundle": {
+      "checksums_sha256": "sha256:d55d4b1dab35c995e4156d3edf06fd5275281f0ed955d50adf3a068f7597c7c8",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/cocoindex/runs/prior_incomplete_bundle/bundle",
+      "symbols": 0
+    },
+    "native_bundle": {
+      "checksums_sha256": "sha256:56bd393397b58397cfb2a47990651e40e6d45124c6207c3752677bda8e374f8a",
+      "complete": true,
+      "edges": 0,
+      "files": 0,
+      "normalized_digest": "sha256:13ad5bbdd443769fb6de63f1c21c9be8686cece6eef75895d45f8dda4d060b3b",
+      "path": "/tmp/issue-1355-cocoindex-proof-r8/native/runs/prior_incomplete_bundle/bundle",
+      "symbols": 0
+    },
+    "normalized_bundle_digest_equal": true,
+    "scenario": "prior_incomplete_bundle",
+    "schema_counts_equal": {
+      "edges": true,
+      "files": true,
+      "symbols": true
+    }
+  }
+]

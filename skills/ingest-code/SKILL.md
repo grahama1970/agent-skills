@@ -313,6 +313,33 @@ by default. The legacy per-symbol Memory upsert path remains only under
 `--compat-symbol-upsert` and emits a visible warning because it is not
 complete-projection lifecycle authority.
 
+### CocoIndex Incremental Evaluation
+
+`skills/ingest-code/evals/cocoindex-incremental/run.sh --offline-fixtures`
+compares the native file-component cache against a pinned noncanonical
+CocoIndex scheduler adapter. CocoIndex is eval-only and must not become Memory
+state, a retrieval authority, or a production dependency from benchmark claims
+alone.
+
+The eval pins `cocoindex==1.0.19`, verifies the installed package checksum,
+copies fixtures into an isolated artifact directory, blocks outbound network
+connections during fixture execution, and emits:
+
+```text
+execution-receipt.json
+native-results.json
+cocoindex-results.json
+bundle-comparison.json
+invalidations.json
+recovery-results.json
+decision.md
+```
+
+The adapter may use CocoIndex memoized functions as disposable scheduling/cache
+evidence, but both arms must emit the existing backend-neutral code-graph bundle
+shape. The command fails closed if either arm does not run, if normalized bundle
+digests diverge, if fixtures are modified, or if backend effects are observed.
+
 ## Local Agent Artifacts
 
 `/ingest-code` also leaves local artifacts for project agents that cannot or

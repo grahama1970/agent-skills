@@ -1,0 +1,65 @@
+{
+  "cocoindex": {
+    "cache_corruption": 4,
+    "edge_resolver_only_change": 4,
+    "exact_noop_replay": 0,
+    "file_add_delete_rename": 2,
+    "grammar_scanner_fingerprint_change": 4,
+    "initial_full_run": 4,
+    "interrupted_run_recovery": 0,
+    "line_only_movement": 1,
+    "one_function_edit": 1,
+    "prior_incomplete_bundle": 0,
+    "semantic_text_only_change": 4
+  },
+  "native": {
+    "cache_corruption": {
+      "pkg/__init__.py": "transform_fingerprint_changed",
+      "pkg/added.py": "transform_fingerprint_changed",
+      "pkg/consumer_renamed.py": "transform_fingerprint_changed",
+      "pkg/provider.py": "transform_fingerprint_changed"
+    },
+    "edge_resolver_only_change": {
+      "pkg/__init__.py": "transform_fingerprint_changed",
+      "pkg/added.py": "transform_fingerprint_changed",
+      "pkg/consumer_renamed.py": "transform_fingerprint_changed",
+      "pkg/provider.py": "transform_fingerprint_changed"
+    },
+    "exact_noop_replay": {},
+    "file_add_delete_rename": {
+      "pkg/added.py": "missing_component",
+      "pkg/consumer_renamed.py": "missing_component"
+    },
+    "grammar_scanner_fingerprint_change": {
+      "pkg/__init__.py": "transform_fingerprint_changed",
+      "pkg/added.py": "transform_fingerprint_changed",
+      "pkg/consumer_renamed.py": "transform_fingerprint_changed",
+      "pkg/provider.py": "transform_fingerprint_changed"
+    },
+    "initial_full_run": {
+      "pkg/__init__.py": "missing_component",
+      "pkg/consumer.py": "missing_component",
+      "pkg/other.py": "missing_component",
+      "pkg/provider.py": "missing_component"
+    },
+    "interrupted_run_recovery": {},
+    "line_only_movement": {
+      "pkg/provider.py": "source_fingerprint_changed"
+    },
+    "one_function_edit": {
+      "pkg/provider.py": "source_fingerprint_changed"
+    },
+    "prior_incomplete_bundle": {
+      "pkg/__init__.py": "prior_bundle_not_complete",
+      "pkg/added.py": "prior_bundle_not_complete",
+      "pkg/consumer_renamed.py": "prior_bundle_not_complete",
+      "pkg/provider.py": "prior_bundle_not_complete"
+    },
+    "semantic_text_only_change": {
+      "pkg/__init__.py": "transform_fingerprint_changed",
+      "pkg/added.py": "transform_fingerprint_changed",
+      "pkg/consumer_renamed.py": "transform_fingerprint_changed",
+      "pkg/provider.py": "transform_fingerprint_changed"
+    }
+  }
+}
