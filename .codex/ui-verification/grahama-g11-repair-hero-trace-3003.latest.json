@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-08-09T21:36:54.036124+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:3003/",
+  "name": "grahama-g11-repair-hero-trace-3003",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-g11-repair-hero-trace-3003/20260809T213642Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-g11-repair-hero-trace-3003/20260809T213642Z.read.json"
+}

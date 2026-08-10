@@ -4,534 +4,764 @@ policy:
   simulated_craft_allowed: false
   altered_machine_evidence_allowed: false
 assets:
-  - id: tau-sanity-receipt
-    path: site/public/artifacts/tau-sanity-receipt.svg
-    kind: image
-    source: skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json
-    creation_method: source_rendered_from_public_artifact
-    sha256: 3a8fc8e2bc6376e472f824da9db9df697122d2630949c1ae8f4acc001c369daf
-    project_ids: [tau]
-    public_approval: true
-    role: evidence
-    caption: "Tau sanity receipt excerpt: targeted receipt, harness, TUI adapter, and proof-manifest checks."
-    alt_text: "Tau sanity receipt excerpt showing exit code 0, 45 passed, and explicit proof boundaries."
-    crop: full SVG rendering of selected receipt fields
-    does_not_establish: "Fresh browser chat UI rendering, fresh live provider semantics, or production SPARTA Chat readiness."
-    altered_or_distressed_machine_evidence: false
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: sparta-countermeasure-mapper-source
-    path: site/public/artifacts/sparta-countermeasure-mapper-source.svg
-    kind: image
-    source: skills/ingest-website/run/sparta/sparta.aerospace.org_countermeasures_mapper.md
-    creation_method: source_rendered_from_public_artifact
-    sha256: 2cf9508c3588af68b1a829fd40024dd438a413efc1f9bd43c50aa7ea07e8aa6e
-    project_ids: [sparta-explorer]
-    public_approval: true
-    role: evidence
-    caption: "SPARTA countermeasure relationship excerpt from public source extraction."
-    alt_text: "SPARTA countermeasure mapper excerpt connecting countermeasures, techniques, and coverage gaps."
-    crop: full SVG rendering of selected extracted source fields
-    does_not_establish: "A live Explorer UI state, full corpus quality, or complete SPARTA risk reduction."
-    altered_or_distressed_machine_evidence: false
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: persona-dream-idea-gate-receipt
-    path: site/public/artifacts/persona-dream-idea-gate-receipt.svg
-    kind: image
-    source: skills/persona-dream/experiments/20260612-horus-embry-storyboard-first/artifacts/phase_01_idea_anti_hallucination_gate.json
-    creation_method: source_rendered_from_public_artifact
-    sha256: dcc5371394d7bd439b6c98f1c124eb53903b7e3429ad29d1c88c36227499d09a
-    project_ids: [persona-dream]
-    public_approval: true
-    role: evidence
-    caption: "persona-dream Phase 1 idea gate receipt with explicit anti-hallucination boundary."
-    alt_text: "persona-dream idea gate receipt showing PASS_RECORDED_IDEA_ONLY and does-not-prove boundaries."
-    crop: full SVG rendering of selected receipt fields
-    does_not_establish: "Persona memories, emotional beats, story completeness, or generated panel quality."
-    altered_or_distressed_machine_evidence: false
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: proof-workshop-pilot-receipt
-    path: site/public/artifacts/proof-workshop-pilot-receipt.svg
-    kind: image
-    source: site/design-roundtable/proof-workshop-pilot-receipt.r1.json
-    creation_method: source_rendered_from_public_artifact
-    sha256: 4b65f306198ebd9e2befcfe2b83da9238b5bd7a9f1403f56d7c1c73e3fd589d6
-    project_ids: [grahama-co]
-    public_approval: true
-    role: evidence
-    caption: "Proof Workshop pilot receipt showing PILOT_EVIDENCE_ONLY and the mobile overflow boundary."
-    alt_text: "Proof Workshop pilot receipt excerpt with status PILOT_EVIDENCE_ONLY and mobile overflow 639."
-    crop: full SVG rendering of selected receipt fields
-    does_not_establish: "Whole-site bespoke compliance, accessibility, performance, blind distinctiveness, or Impeccable finish review."
-    altered_or_distressed_machine_evidence: false
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: grahama-og
-    path: site/public/og.png
-    kind: image
-    source: site metadata preview asset
-    creation_method: authored_site_asset
-    sha256: 0877f9c555a193558897ea630af5e10aee9095fc1516032ae57084d16a80dabf
-    project_ids: [grahama-co]
-    public_approval: true
-    role: decoration
-    caption: "Open Graph preview for grahama.co."
-    alt_text: "grahama.co Open Graph preview image."
-    crop: full
-    does_not_establish: "Any technical claim or evidence state."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: grahama-icon
-    path: site/app/icon.svg
-    kind: image
-    source: site app icon
-    creation_method: authored_vector
-    sha256: 09c42a49a9db081c98d435c1d405e845f0cb54ab8c99bc9298db34dd73bcd612
-    project_ids: [grahama-co]
-    public_approval: true
-    role: decoration
-    caption: "Small browser icon for grahama.co."
-    alt_text: "Graham co mark."
-    crop: full
-    does_not_establish: "Brand distinctiveness without the system screens."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-tau-concept
-    path: site/public/projects/tau.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 2cd16ca1097d88341501b4935b88a9c09d609e714eac7a8ee1c8a9589787b458
-    project_ids: [tau]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic Tau project illustration retained only as decorative project imagery."
-    alt_text: "Synthetic illustration for the Tau project."
-    crop: cover
-    does_not_establish: "Tau execution, receipts, runtime behavior, or proof depth."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-sparta-explorer-concept
-    path: site/public/projects/sparta-explorer.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: f2c27757fd18a002dcb37dcd4ec7448cc57bd397ede760439f67faee38a04d16
-    project_ids: [sparta-explorer]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic SPARTA Explorer project illustration retained only as decorative imagery."
-    alt_text: "Synthetic illustration for SPARTA Explorer."
-    crop: cover
-    does_not_establish: "SPARTA evidence relationships, corpus integrity, or live Explorer behavior."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-sparta-montage
-    path: site/public/projects/sparta-montage.webp
-    kind: image
-    source: project card montage
-    creation_method: synthetic_illustration
-    sha256: f394047db67e117ed9eb998e068f15db63ca3c1c57c05cad32a12304984dfbbc
-    project_ids: [sparta-explorer]
-    public_approval: true
-    role: decoration
-    caption: "SPARTA montage retained only as decorative project imagery."
-    alt_text: "Decorative SPARTA Explorer montage."
-    crop: cover
-    does_not_establish: "A real SPARTA Explorer state or evidence relationship."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-persona-dream-concept
-    path: site/public/projects/persona-dream.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 34a8b7658a05bc1fa83be0359d926e2211954fcf0eb1356326f17c7ac465391b
-    project_ids: [persona-dream]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic persona-dream project illustration retained as project imagery only."
-    alt_text: "Synthetic illustration for persona-dream."
-    crop: cover
-    does_not_establish: "Pipeline validity, memory grounding, or receipt quality."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-battle-concept
-    path: site/public/projects/battle.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 1561b20750c22626025901059aa30257fb41f9badfb8b188c650b87513da5cc3
-    project_ids: [battle]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic battle project illustration."
-    alt_text: "Synthetic illustration for battle."
-    crop: cover
-    does_not_establish: "Exploit results, safety, or runtime behavior."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-debugger-concept
-    path: site/public/projects/debugger.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 75ff20cc4996b15b893901371ac913dbbb5ea765916ec1d95fa97726dcc315b8
-    project_ids: [debugger]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic debugger project illustration."
-    alt_text: "Synthetic illustration for debugger."
-    crop: cover
-    does_not_establish: "Debugger state, variable inspection, or runtime proof."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-dogpile-concept
-    path: site/public/projects/dogpile.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 7df872fbd1c8d743fb12d1381454e7bf93d0154e8ffab02e15622254e9b428ae
-    project_ids: [dogpile]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic dogpile project illustration."
-    alt_text: "Synthetic illustration for dogpile."
-    crop: cover
-    does_not_establish: "Research quality, source coverage, or freshness."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-extractor-concept
-    path: site/public/projects/extractor.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 5e972efb0d1341b5694c678bb08425f20ad4cc9d9fee038fa6e55bebb801d01d
-    project_ids: [extractor]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic extractor project illustration."
-    alt_text: "Synthetic illustration for extractor."
-    crop: cover
-    does_not_establish: "Extraction accuracy or validation status."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-scillm-concept
-    path: site/public/projects/scillm.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 6eaee26d9751ef7eb7f67fc48861ccfd489617e91767a84dc6688a8d9f53105f
-    project_ids: [scillm]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic scillm project illustration."
-    alt_text: "Synthetic illustration for scillm."
-    crop: cover
-    does_not_establish: "Provider routing, live model behavior, or latency."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-surf-concept
-    path: site/public/projects/surf.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 59c61c7aeeaf02209b1914945cb884c2fe48ed76072fbc6d6a4bb5d55e9398fd
-    project_ids: [surf]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic surf project illustration."
-    alt_text: "Synthetic illustration for surf."
-    crop: cover
-    does_not_establish: "Browser control, authentication, or live page state."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: project-watch-concept
-    path: site/public/projects/watch.webp
-    kind: image
-    source: project card illustration
-    creation_method: synthetic_illustration
-    sha256: 8d82bcdd494c41729df02bb4153a2f1cf894dd77a1ad9c364a0def70a5e02596
-    project_ids: [watch]
-    public_approval: true
-    role: decoration
-    caption: "Synthetic watch project illustration."
-    alt_text: "Synthetic illustration for watch."
-    crop: cover
-    does_not_establish: "Monitoring coverage or live operational state."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-research-loop
-    path: site/public/dream/research-loop.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/research-loop.webp
-    creation_method: synthetic_as_product_output
-    sha256: e467de236100f4fc20cb04ec6037f10bc2d54a03edfc3c0aca90ba09e8fcf108
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated output used to explain the project sequence, not as evidence."
-    alt_text: "Generated persona-dream research loop image."
-    crop: full
-    does_not_establish: "Memory grounding, receipt correctness, or phase completion."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-embry-memory-desk
-    path: site/public/dream/embry-memory-desk.webp
-    kind: image
-    source: persona-dream generated project output
-    creation_method: synthetic_as_product_output
-    sha256: 1c5443a55e62fb6365945193dbdbaca9555d02b4b4f0b8eb68c1e7b60e0b3388
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated image labeled as product output."
-    alt_text: "Generated persona-dream image of Embry at a memory desk."
-    crop: cover
-    does_not_establish: "Source memory truth or pipeline gate success."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-horus-embry-hero
-    path: site/public/dream/horus-embry-hero.webp
-    kind: image
-    source: persona-dream generated project output
-    creation_method: synthetic_as_product_output
-    sha256: c9c5a90c5ae3cea673e62ae314861ed852f4a946ec8894aeb160eee0a0f35d86
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated hero output."
-    alt_text: "Generated persona-dream image of Horus and Embry."
-    crop: cover
-    does_not_establish: "Technical evidence or provenance quality."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-horus-embry-tea
-    path: site/public/dream/horus-embry-tea.webp
-    kind: image
-    source: persona-dream generated project output
-    creation_method: synthetic_as_product_output
-    sha256: f9f82e3637881571897a410d30f2f8160012b314043b3d8e3a5e3ded6fbdf60b
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated tea-scene output."
-    alt_text: "Generated persona-dream image of a tea scene."
-    crop: cover
-    does_not_establish: "Memory or story completeness."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-horus-embry-video
-    path: site/public/dream/horus-embry.mp4
-    kind: video
-    source: persona-dream generated project output
-    creation_method: synthetic_as_product_output
-    sha256: 17e93cf2215cb71df83689b7af261db2422dc649d38fb425cb004926da5aa39f
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated video output."
-    alt_text: "Generated persona-dream video output."
-    crop: full
-    does_not_establish: "Provider reliability, receipt correctness, or story truth."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase01
-    path: site/public/dream/phase01-idea-memory-residue.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase01-idea-memory-residue.webp
-    creation_method: synthetic_as_product_output
-    sha256: 8815b4e3151d413bf3e084d3d2d544ca551f2765bea417ec691fa2474447f80e
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 1 output."
-    alt_text: "Generated persona-dream Phase 1 image."
-    crop: full
-    does_not_establish: "The Phase 1 gate; use the registered receipt asset for evidence."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase02
-    path: site/public/dream/phase02-story-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase02-story-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: b4dfa2577b061d4e7b002ce3355acf06dcdcd47a0f24716aefb58d1394f132c4
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 2 content output."
-    alt_text: "Generated persona-dream Phase 2 content pane."
-    crop: full
-    does_not_establish: "Story or memory gate success."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase03
-    path: site/public/dream/phase03-crew-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase03-crew-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: 4a9ec8aa884c045e8b480cb47b5fce5cfd6948ea71b746fc95030be038f6a7e7
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 3 content output."
-    alt_text: "Generated persona-dream Phase 3 content pane."
-    crop: full
-    does_not_establish: "Crew evidence or source-memory accuracy."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase04
-    path: site/public/dream/phase04-contact-sheets-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase04-contact-sheets-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: fb5febe7f53da38bdd3b6e38b15f7af03bce4c70efdb12e3fc1381b3dcdb9553
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 4 contact-sheet output."
-    alt_text: "Generated persona-dream Phase 4 contact sheet."
-    crop: full
-    does_not_establish: "Panel approval or model readiness."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase05
-    path: site/public/dream/phase05-voices-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase05-voices-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: ceea6226356c6ed3c22bc725d5dae8691f9c1fc1bce2e8517c63b400c5b0bd82
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 5 voice output."
-    alt_text: "Generated persona-dream Phase 5 voices pane."
-    crop: full
-    does_not_establish: "Voice quality or chosen provider success."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase06
-    path: site/public/dream/phase06-script-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase06-script-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: 24e2168ff1874a79e2c8de50b30cdbf5c524cce3187dca51e5e304883aff2e1c
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 6 script output."
-    alt_text: "Generated persona-dream Phase 6 script pane."
-    crop: full
-    does_not_establish: "Script acceptance or factual grounding."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase07
-    path: site/public/dream/phase07-storyboard-content-pane.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase07-storyboard-content-pane.webp
-    creation_method: synthetic_as_product_output
-    sha256: 60773e254dc6c9f1b788c13d67794f40aead6d5135dc8a4a22dea116b0120e21
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 7 storyboard output."
-    alt_text: "Generated persona-dream Phase 7 storyboard pane."
-    crop: full
-    does_not_establish: "Storyboard review pass or image-source completeness."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase08
-    path: site/public/dream/phase08-media-lock.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase08-media-lock.webp
-    creation_method: synthetic_as_product_output
-    sha256: 2eb2f0fa9fff604a2420391b74e00eb9f63fa75fa307c21590c5df02fa8a2f7a
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 8 media-lock output."
-    alt_text: "Generated persona-dream Phase 8 media lock image."
-    crop: full
-    does_not_establish: "Media lock approval or downstream provider readiness."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
-  - id: dream-phase09
-    path: site/public/dream/phase09-video-provider-current.webp
-    kind: image
-    source: skills/persona-dream/assets/readme/phase09-video-provider-current.webp
-    creation_method: synthetic_as_product_output
-    sha256: 0ed24eaea5b9e5dcc144e9ce266b5424e4480ee3e5faba218b090397f0dfe60a
-    project_ids: [persona-dream]
-    public_approval: true
-    role: explanation
-    caption: "persona-dream generated Phase 9 provider output."
-    alt_text: "Generated persona-dream Phase 9 provider image."
-    crop: full
-    does_not_establish: "Provider call success or final media acceptance."
-    rights:
-      owner: Graham Anderson
-      license: all-rights-reserved
-      third_party_basis: null
+- id: tau-sanity-receipt
+  path: site/public/artifacts/tau-sanity-receipt.svg
+  kind: image
+  source: skills/tau/proofs/p0-operator-wrapper-20260705T1200Z/sanity.json
+  creation_method: source_rendered_from_public_artifact
+  sha256: 3a8fc8e2bc6376e472f824da9db9df697122d2630949c1ae8f4acc001c369daf
+  project_ids:
+  - tau
+  public_approval: true
+  role: evidence
+  caption: 'Tau sanity receipt excerpt: targeted receipt, harness, TUI adapter, and proof-manifest checks.'
+  alt_text: Tau sanity receipt excerpt showing exit code 0, 45 passed, and explicit proof boundaries.
+  crop: full SVG rendering of selected receipt fields
+  does_not_establish: Fresh browser chat UI rendering, fresh live provider semantics, or production SPARTA Chat readiness.
+  altered_or_distressed_machine_evidence: false
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: sparta-countermeasure-mapper-source
+  path: site/public/artifacts/sparta-countermeasure-mapper-source.svg
+  kind: image
+  source: skills/ingest-website/run/sparta/sparta.aerospace.org_countermeasures_mapper.md
+  creation_method: source_rendered_from_public_artifact
+  sha256: 2cf9508c3588af68b1a829fd40024dd438a413efc1f9bd43c50aa7ea07e8aa6e
+  project_ids:
+  - sparta-explorer
+  public_approval: true
+  role: evidence
+  caption: SPARTA countermeasure relationship excerpt from public source extraction.
+  alt_text: SPARTA countermeasure mapper excerpt connecting countermeasures, techniques, and coverage gaps.
+  crop: full SVG rendering of selected extracted source fields
+  does_not_establish: A live Explorer UI state, full corpus quality, or complete SPARTA risk reduction.
+  altered_or_distressed_machine_evidence: false
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: persona-dream-idea-gate-receipt
+  path: site/public/artifacts/persona-dream-idea-gate-receipt.svg
+  kind: image
+  source: skills/persona-dream/experiments/20260612-horus-embry-storyboard-first/artifacts/phase_01_idea_anti_hallucination_gate.json
+  creation_method: source_rendered_from_public_artifact
+  sha256: dcc5371394d7bd439b6c98f1c124eb53903b7e3429ad29d1c88c36227499d09a
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: evidence
+  caption: persona-dream Phase 1 idea gate receipt with explicit anti-hallucination boundary.
+  alt_text: persona-dream idea gate receipt showing PASS_RECORDED_IDEA_ONLY and does-not-prove boundaries.
+  crop: full SVG rendering of selected receipt fields
+  does_not_establish: Persona memories, emotional beats, story completeness, or generated panel quality.
+  altered_or_distressed_machine_evidence: false
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: proof-workshop-pilot-receipt
+  path: site/public/artifacts/proof-workshop-pilot-receipt.svg
+  kind: image
+  source: site/design-roundtable/proof-workshop-pilot-receipt.r1.json
+  creation_method: source_rendered_from_public_artifact
+  sha256: 4b65f306198ebd9e2befcfe2b83da9238b5bd7a9f1403f56d7c1c73e3fd589d6
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: evidence
+  caption: Proof Workshop pilot receipt showing PILOT_EVIDENCE_ONLY and the mobile overflow boundary.
+  alt_text: Proof Workshop pilot receipt excerpt with status PILOT_EVIDENCE_ONLY and mobile overflow 639.
+  crop: full SVG rendering of selected receipt fields
+  does_not_establish: Whole-site bespoke compliance, accessibility, performance, blind distinctiveness, or Impeccable finish
+    review.
+  altered_or_distressed_machine_evidence: false
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: grahama-og
+  path: site/public/og.png
+  kind: image
+  source: site metadata preview asset
+  creation_method: authored_site_asset
+  sha256: 0877f9c555a193558897ea630af5e10aee9095fc1516032ae57084d16a80dabf
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Open Graph preview for grahama.co.
+  alt_text: grahama.co Open Graph preview image.
+  crop: full
+  does_not_establish: Any technical claim or evidence state.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: grahama-icon
+  path: site/app/icon.svg
+  kind: image
+  source: site app icon
+  creation_method: authored_vector
+  sha256: 09c42a49a9db081c98d435c1d405e845f0cb54ab8c99bc9298db34dd73bcd612
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Small browser icon for grahama.co.
+  alt_text: Graham co mark.
+  crop: full
+  does_not_establish: Brand distinctiveness without the system screens.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-tau-concept
+  path: site/public/projects/tau.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 2cd16ca1097d88341501b4935b88a9c09d609e714eac7a8ee1c8a9589787b458
+  project_ids:
+  - tau
+  public_approval: true
+  role: decoration
+  caption: Synthetic Tau project illustration retained only as decorative project imagery.
+  alt_text: Synthetic illustration for the Tau project.
+  crop: cover
+  does_not_establish: Tau execution, receipts, runtime behavior, or proof depth.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-sparta-explorer-concept
+  path: site/public/projects/sparta-explorer.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: f2c27757fd18a002dcb37dcd4ec7448cc57bd397ede760439f67faee38a04d16
+  project_ids:
+  - sparta-explorer
+  public_approval: true
+  role: decoration
+  caption: Synthetic SPARTA Explorer project illustration retained only as decorative imagery.
+  alt_text: Synthetic illustration for SPARTA Explorer.
+  crop: cover
+  does_not_establish: SPARTA evidence relationships, corpus integrity, or live Explorer behavior.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-sparta-montage
+  path: site/public/projects/sparta-montage.webp
+  kind: image
+  source: project card montage
+  creation_method: synthetic_illustration
+  sha256: f394047db67e117ed9eb998e068f15db63ca3c1c57c05cad32a12304984dfbbc
+  project_ids:
+  - sparta-explorer
+  public_approval: true
+  role: decoration
+  caption: SPARTA montage retained only as decorative project imagery.
+  alt_text: Decorative SPARTA Explorer montage.
+  crop: cover
+  does_not_establish: A real SPARTA Explorer state or evidence relationship.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-persona-dream-concept
+  path: site/public/projects/persona-dream.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 34a8b7658a05bc1fa83be0359d926e2211954fcf0eb1356326f17c7ac465391b
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: decoration
+  caption: Synthetic persona-dream project illustration retained as project imagery only.
+  alt_text: Synthetic illustration for persona-dream.
+  crop: cover
+  does_not_establish: Pipeline validity, memory grounding, or receipt quality.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-battle-concept
+  path: site/public/projects/battle.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 1561b20750c22626025901059aa30257fb41f9badfb8b188c650b87513da5cc3
+  project_ids:
+  - battle
+  public_approval: true
+  role: decoration
+  caption: Synthetic battle project illustration.
+  alt_text: Synthetic illustration for battle.
+  crop: cover
+  does_not_establish: Exploit results, safety, or runtime behavior.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-debugger-concept
+  path: site/public/projects/debugger.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 75ff20cc4996b15b893901371ac913dbbb5ea765916ec1d95fa97726dcc315b8
+  project_ids:
+  - debugger
+  public_approval: true
+  role: decoration
+  caption: Synthetic debugger project illustration.
+  alt_text: Synthetic illustration for debugger.
+  crop: cover
+  does_not_establish: Debugger state, variable inspection, or runtime proof.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-dogpile-concept
+  path: site/public/projects/dogpile.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 7df872fbd1c8d743fb12d1381454e7bf93d0154e8ffab02e15622254e9b428ae
+  project_ids:
+  - dogpile
+  public_approval: true
+  role: decoration
+  caption: Synthetic dogpile project illustration.
+  alt_text: Synthetic illustration for dogpile.
+  crop: cover
+  does_not_establish: Research quality, source coverage, or freshness.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-extractor-concept
+  path: site/public/projects/extractor.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 5e972efb0d1341b5694c678bb08425f20ad4cc9d9fee038fa6e55bebb801d01d
+  project_ids:
+  - extractor
+  public_approval: true
+  role: decoration
+  caption: Synthetic extractor project illustration.
+  alt_text: Synthetic illustration for extractor.
+  crop: cover
+  does_not_establish: Extraction accuracy or validation status.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-scillm-concept
+  path: site/public/projects/scillm.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 6eaee26d9751ef7eb7f67fc48861ccfd489617e91767a84dc6688a8d9f53105f
+  project_ids:
+  - scillm
+  public_approval: true
+  role: decoration
+  caption: Synthetic scillm project illustration.
+  alt_text: Synthetic illustration for scillm.
+  crop: cover
+  does_not_establish: Provider routing, live model behavior, or latency.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-surf-concept
+  path: site/public/projects/surf.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 59c61c7aeeaf02209b1914945cb884c2fe48ed76072fbc6d6a4bb5d55e9398fd
+  project_ids:
+  - surf
+  public_approval: true
+  role: decoration
+  caption: Synthetic surf project illustration.
+  alt_text: Synthetic illustration for surf.
+  crop: cover
+  does_not_establish: Browser control, authentication, or live page state.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-watch-concept
+  path: site/public/projects/watch.webp
+  kind: image
+  source: project card illustration
+  creation_method: synthetic_illustration
+  sha256: 8d82bcdd494c41729df02bb4153a2f1cf894dd77a1ad9c364a0def70a5e02596
+  project_ids:
+  - watch
+  public_approval: true
+  role: decoration
+  caption: Synthetic watch project illustration.
+  alt_text: Synthetic illustration for watch.
+  crop: cover
+  does_not_establish: Monitoring coverage or live operational state.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-research-loop
+  path: site/public/dream/research-loop.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/research-loop.webp
+  creation_method: synthetic_as_product_output
+  sha256: e467de236100f4fc20cb04ec6037f10bc2d54a03edfc3c0aca90ba09e8fcf108
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated output used to explain the project sequence, not as evidence.
+  alt_text: Generated persona-dream research loop image.
+  crop: full
+  does_not_establish: Memory grounding, receipt correctness, or phase completion.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-embry-memory-desk
+  path: site/public/dream/embry-memory-desk.webp
+  kind: image
+  source: persona-dream generated project output
+  creation_method: synthetic_as_product_output
+  sha256: 1c5443a55e62fb6365945193dbdbaca9555d02b4b4f0b8eb68c1e7b60e0b3388
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated image labeled as product output.
+  alt_text: Generated persona-dream image of Embry at a memory desk.
+  crop: cover
+  does_not_establish: Source memory truth or pipeline gate success.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-horus-embry-hero
+  path: site/public/dream/horus-embry-hero.webp
+  kind: image
+  source: persona-dream generated project output
+  creation_method: synthetic_as_product_output
+  sha256: c9c5a90c5ae3cea673e62ae314861ed852f4a946ec8894aeb160eee0a0f35d86
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated hero output.
+  alt_text: Generated persona-dream image of Horus and Embry.
+  crop: cover
+  does_not_establish: Technical evidence or provenance quality.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-horus-embry-tea
+  path: site/public/dream/horus-embry-tea.webp
+  kind: image
+  source: persona-dream generated project output
+  creation_method: synthetic_as_product_output
+  sha256: f9f82e3637881571897a410d30f2f8160012b314043b3d8e3a5e3ded6fbdf60b
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated tea-scene output.
+  alt_text: Generated persona-dream image of a tea scene.
+  crop: cover
+  does_not_establish: Memory or story completeness.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-horus-embry-video
+  path: site/public/dream/horus-embry.mp4
+  kind: video
+  source: persona-dream generated project output
+  creation_method: synthetic_as_product_output
+  sha256: 17e93cf2215cb71df83689b7af261db2422dc649d38fb425cb004926da5aa39f
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated video output.
+  alt_text: Generated persona-dream video output.
+  crop: full
+  does_not_establish: Provider reliability, receipt correctness, or story truth.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase01
+  path: site/public/dream/phase01-idea-memory-residue.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase01-idea-memory-residue.webp
+  creation_method: synthetic_as_product_output
+  sha256: 8815b4e3151d413bf3e084d3d2d544ca551f2765bea417ec691fa2474447f80e
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 1 output.
+  alt_text: Generated persona-dream Phase 1 image.
+  crop: full
+  does_not_establish: The Phase 1 gate; use the registered receipt asset for evidence.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase02
+  path: site/public/dream/phase02-story-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase02-story-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: b4dfa2577b061d4e7b002ce3355acf06dcdcd47a0f24716aefb58d1394f132c4
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 2 content output.
+  alt_text: Generated persona-dream Phase 2 content pane.
+  crop: full
+  does_not_establish: Story or memory gate success.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase03
+  path: site/public/dream/phase03-crew-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase03-crew-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: 4a9ec8aa884c045e8b480cb47b5fce5cfd6948ea71b746fc95030be038f6a7e7
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 3 content output.
+  alt_text: Generated persona-dream Phase 3 content pane.
+  crop: full
+  does_not_establish: Crew evidence or source-memory accuracy.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase04
+  path: site/public/dream/phase04-contact-sheets-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase04-contact-sheets-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: fb5febe7f53da38bdd3b6e38b15f7af03bce4c70efdb12e3fc1381b3dcdb9553
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 4 contact-sheet output.
+  alt_text: Generated persona-dream Phase 4 contact sheet.
+  crop: full
+  does_not_establish: Panel approval or model readiness.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase05
+  path: site/public/dream/phase05-voices-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase05-voices-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: ceea6226356c6ed3c22bc725d5dae8691f9c1fc1bce2e8517c63b400c5b0bd82
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 5 voice output.
+  alt_text: Generated persona-dream Phase 5 voices pane.
+  crop: full
+  does_not_establish: Voice quality or chosen provider success.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase06
+  path: site/public/dream/phase06-script-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase06-script-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: 24e2168ff1874a79e2c8de50b30cdbf5c524cce3187dca51e5e304883aff2e1c
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 6 script output.
+  alt_text: Generated persona-dream Phase 6 script pane.
+  crop: full
+  does_not_establish: Script acceptance or factual grounding.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase07
+  path: site/public/dream/phase07-storyboard-content-pane.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase07-storyboard-content-pane.webp
+  creation_method: synthetic_as_product_output
+  sha256: 60773e254dc6c9f1b788c13d67794f40aead6d5135dc8a4a22dea116b0120e21
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 7 storyboard output.
+  alt_text: Generated persona-dream Phase 7 storyboard pane.
+  crop: full
+  does_not_establish: Storyboard review pass or image-source completeness.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase08
+  path: site/public/dream/phase08-media-lock.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase08-media-lock.webp
+  creation_method: synthetic_as_product_output
+  sha256: 2eb2f0fa9fff604a2420391b74e00eb9f63fa75fa307c21590c5df02fa8a2f7a
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 8 media-lock output.
+  alt_text: Generated persona-dream Phase 8 media lock image.
+  crop: full
+  does_not_establish: Media lock approval or downstream provider readiness.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: dream-phase09
+  path: site/public/dream/phase09-video-provider-current.webp
+  kind: image
+  source: skills/persona-dream/assets/readme/phase09-video-provider-current.webp
+  creation_method: synthetic_as_product_output
+  sha256: 0ed24eaea5b9e5dcc144e9ce266b5424e4480ee3e5faba218b090397f0dfe60a
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: explanation
+  caption: persona-dream generated Phase 9 provider output.
+  alt_text: Generated persona-dream Phase 9 provider image.
+  crop: full
+  does_not_establish: Provider call success or final media acceptance.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-battle-node-thumb
+  path: site/public/projects/thumbs/battle.webp
+  kind: image
+  source: site/public/projects/battle.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 7b8c2a128f27b188d02a5bd9f8650cfa01feb0b86d16fee2c286a5c7cf744ace
+  project_ids:
+  - battle
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for battle.
+  alt_text: Decorative constellation thumbnail for battle.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-debugger-node-thumb
+  path: site/public/projects/thumbs/debugger.webp
+  kind: image
+  source: site/public/projects/debugger.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 13b99d42c225c6506e7d8e399daa983bd39a98028c9168a2631cc0d6d676147d
+  project_ids:
+  - debugger
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for debugger.
+  alt_text: Decorative constellation thumbnail for debugger.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-dogpile-node-thumb
+  path: site/public/projects/thumbs/dogpile.webp
+  kind: image
+  source: site/public/projects/dogpile.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 17817e5418f7c671eec6421e3f82687fc92758f73841b2aa1f768c847d3edb3a
+  project_ids:
+  - dogpile
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for dogpile.
+  alt_text: Decorative constellation thumbnail for dogpile.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-extractor-node-thumb
+  path: site/public/projects/thumbs/extractor.webp
+  kind: image
+  source: site/public/projects/extractor.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: d0235d169af881fd1c7469f555de8ceeda9f6691a10fc47362551220c7e063cd
+  project_ids:
+  - extractor
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for extractor.
+  alt_text: Decorative constellation thumbnail for extractor.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-persona-dream-node-thumb
+  path: site/public/projects/thumbs/persona-dream.webp
+  kind: image
+  source: site/public/projects/persona-dream.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: b1073e3eaa6d037b5d0c006065c86b012833a672ff7c7dce1bc03aad87fe71e9
+  project_ids:
+  - persona-dream
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for persona-dream.
+  alt_text: Decorative constellation thumbnail for persona-dream.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-scillm-node-thumb
+  path: site/public/projects/thumbs/scillm.webp
+  kind: image
+  source: site/public/projects/scillm.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 338b1d69577ad8016b35c4d518b277acd3c071baf7090fd727971f252a62b412
+  project_ids:
+  - scillm
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for scillm.
+  alt_text: Decorative constellation thumbnail for scillm.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-sparta-explorer-node-thumb
+  path: site/public/projects/thumbs/sparta-explorer.webp
+  kind: image
+  source: site/public/projects/sparta-explorer.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 7d2cde05fe82d8de9ffe4f6b7e24eb4196b4dc35f15b9992f9ecf8a8a98e383b
+  project_ids:
+  - sparta-explorer
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for SPARTA Explorer.
+  alt_text: Decorative constellation thumbnail for SPARTA Explorer.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-sparta-montage-node-thumb
+  path: site/public/projects/thumbs/sparta-montage.webp
+  kind: image
+  source: site/public/projects/sparta-montage.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: b20c48ce49283e4d0d4f432fcbfd5959f2716a96e75366c81bbb1000183be4b6
+  project_ids:
+  - sparta-montage
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for SPARTA montage.
+  alt_text: Decorative constellation thumbnail for SPARTA montage.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-surf-node-thumb
+  path: site/public/projects/thumbs/surf.webp
+  kind: image
+  source: site/public/projects/surf.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 4956a51d59d7f7320b884c4ee3e7797df041d6d311e869912de006501b0b6f9e
+  project_ids:
+  - surf
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for surf.
+  alt_text: Decorative constellation thumbnail for surf.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-tau-node-thumb
+  path: site/public/projects/thumbs/tau.webp
+  kind: image
+  source: site/public/projects/tau.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: 3f4800e0828aca0f4a65abb302df773e5fa57edc118dac4f42af0843dbed02d1
+  project_ids:
+  - tau
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for Tau.
+  alt_text: Decorative constellation thumbnail for Tau.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-watch-node-thumb
+  path: site/public/projects/thumbs/watch.webp
+  kind: image
+  source: site/public/projects/watch.webp
+  creation_method: downsampled_from_registered_project_illustration
+  sha256: b8ae71420c2d1fa045661799f07284c00f9dcb7b02eb503cc8f5cddb797438e1
+  project_ids:
+  - watch
+  public_approval: true
+  role: decoration
+  caption: 128px constellation thumbnail for watch.
+  alt_text: Decorative constellation thumbnail for watch.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null

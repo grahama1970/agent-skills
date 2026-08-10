@@ -31,11 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Preload the display face so the largest text (LCP) paints without a
-            late font discovery. Variable cuts are the only fonts. */}
         <link
           rel="preload"
-          href="/fonts/fraunces-var.woff2"
+          href="/fonts/fraunces-site-subset.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"

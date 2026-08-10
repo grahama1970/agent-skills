@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-08-09T20:52:02.638110+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:3003/",
+  "name": "grahama-search-copy-dedup-3003",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-search-copy-dedup-3003/20260809T205150Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-search-copy-dedup-3003/20260809T205150Z.read.json"
+}

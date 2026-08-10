@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-08-09T21:41:46.795201+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "file:///home/graham/workspace/experiments/agent-skills/site/design-roundtable/live-collaboration-ledger.html",
+  "name": "grahama-g11-repair-ledger-provider-state",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-g11-repair-ledger-provider-state/20260809T214141Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-g11-repair-ledger-provider-state/20260809T214141Z.read.json"
+}
