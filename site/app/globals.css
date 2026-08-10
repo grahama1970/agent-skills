@@ -3127,6 +3127,9 @@ a.fig:hover .l::after,
   margin-bottom: 0.8rem;
   max-width: 52ch;
 }
+.constellation-title {
+  display: block;
+}
 .constellation-field {
   position: relative;
   border: 1px solid var(--line-2);
@@ -3309,12 +3312,13 @@ a:hover .c-img { opacity: 1; }
   filter: drop-shadow(0 0 2px rgba(209, 112, 60, 0.5));
 }
 .constellation-hint {
+  display: block;
+  margin-top: 0.28rem;
   font-style: normal;
   font-family: var(--sans);
   font-size: 0.7rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   color: var(--faint);
-  text-transform: uppercase;
 }
 .constellation-sr {
   position: absolute;
