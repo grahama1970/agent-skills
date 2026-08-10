@@ -208,10 +208,7 @@ def _list_documents_paged(
     if total_limit == 0:
         return []
 
-    docs: list[dict] = []
-    offset = 0
-    while len(docs) < total_limit:
-        batch_limit = min(_MEMORY_LIST_MAX_LIMIT, total_limit - len(docs))
+    def _page(offset: int, batch_limit: int) -> list[dict]:
         payload = {
             "collection": collection,
             "limit": batch_limit,
@@ -222,15 +219,35 @@ def _list_documents_paged(
             payload["q"] = q
         if filters:
             payload["filters"] = filters
-
         r = client.post("/list", json=payload)
         r.raise_for_status()
-        batch = r.json().get("documents", [])
-        if not batch:
-            break
-        docs.extend(batch)
-        if len(batch) < batch_limit:
-            break
+        return r.json().get("documents", [])
+
+    # The daemon caps a page at 500 rows, so a large dictionary needs many
+    # requests -- 782 of them for 391k entities. Issued sequentially that is ~20s
+    # of pure round-trip latency for work the server answers in 25ms a page.
+    # Fetched concurrently instead: the cap is the daemon's, the waiting was ours.
+    #
+    # Probing the first page tells us whether concurrency is worth it at all;
+    # small dictionaries stay on the simple path.
+    first = _page(0, min(_MEMORY_LIST_MAX_LIMIT, total_limit))
+    docs: list[dict] = list(first)
+    if len(first) >= _MEMORY_LIST_MAX_LIMIT and total_limit > _MEMORY_LIST_MAX_LIMIT:
+        from concurrent.futures import ThreadPoolExecutor
+
+        offsets = list(range(_MEMORY_LIST_MAX_LIMIT, total_limit, _MEMORY_LIST_MAX_LIMIT))
+        with ThreadPoolExecutor(max_workers=32) as pool:
+            futures = {
+                offset: pool.submit(_page, offset,
+                                    min(_MEMORY_LIST_MAX_LIMIT, total_limit - offset))
+                for offset in offsets
+            }
+            # Ordered by offset so the dictionary is deterministic across runs.
+            for offset in offsets:
+                batch = futures[offset].result()
+                if not batch:
+                    break
+                docs.extend(batch)
         offset += len(batch)
 
     return docs
@@ -1825,6 +1842,10 @@ def _enrich_extraction_result(result: dict, text: str) -> dict:
     return _enrich_request_cues(result, text)
 
 
+# (collection, limit, field names) -> (KeywordProcessor, entity_map)
+_ENTITY_DICT_CACHE: dict = {}
+
+
 def _extract_nlp_entities(
     *,
     text: str,
@@ -1838,6 +1859,33 @@ def _extract_nlp_entities(
     limit: int,
 ) -> list[dict]:
     from flashtext import KeywordProcessor
+
+    # Dictionary cache, keyed by the fields that determine its contents.
+    #
+    # The dictionary was refetched and the trie rebuilt on EVERY call: 391k
+    # entities means 782 paged requests and ~43s, discarded immediately. Callers
+    # linking a corpus of questions paid that per question, which made the only
+    # affordable option a small `limit` -- and a small limit returns nothing. At
+    # limit=500 a question naming CWE-89, T1190 and Brute Force grounded ZERO
+    # entities; uncapped it grounds four, two of them matched by NAME rather than
+    # id, which is the whole point of Flashtext over pattern matching.
+    #
+    # Aho-Corasick handles millions of keywords; the cost was never the matching.
+    # Cached per process, so a batch run pays the load once.
+    cache_key = (collection, limit, name_field, label_field, type_field, framework_field)
+    cached = _ENTITY_DICT_CACHE.get(cache_key)
+    if cached is not None:
+        kp, entity_map = cached
+        found_keywords = kp.extract_keywords(text, span_info=True)
+        entities = []
+        seen_ids = set()
+        for keyword, start, end in found_keywords:
+            entity = entity_map.get(keyword)
+            if entity and entity["id"] not in seen_ids:
+                entities.append({**entity, "span": [start, end], "mention": text[start:end]})
+                seen_ids.add(entity["id"])
+        if entities:
+            return entities
 
     # 1. Load entity dictionary from ArangoDB collection
     try:
@@ -1901,6 +1949,7 @@ def _extract_nlp_entities(
                 }
 
     logger.info(f"Loaded {len(entity_map)} entities from {collection} into FlashText")
+    _ENTITY_DICT_CACHE[cache_key] = (kp, entity_map)
 
     # 3. Extract mentioned entities from input text
     found_keywords = kp.extract_keywords(text, span_info=True)
