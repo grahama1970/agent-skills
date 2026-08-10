@@ -8,7 +8,14 @@ dependencies = [
     "loguru>=0.7,<0.7.3",
     "rich>=13.0",
     "httpx>=0.27",
-    "flashtext>=2.7",
+    # PyPI's flashtext 2.7 was released in February 2018 and has no fuzzy support:
+    # extract_keywords(sentence, span_info=False). Upstream master added
+    # `max_cost`, giving trie-based Levenshtein matching -- verified here as
+    # extract_keywords(sentence, span_info=False, max_cost=0), where max_cost=1
+    # recovers "Brute Forse" -> "Brute Force". That matters because trie fuzzy is
+    # O(text) while scoring every candidate with RapidFuzz is O(dictionary),
+    # measured at 11.6s per miss against 391k entities.
+    "flashtext @ git+https://github.com/vi3k6i5/flashtext.git",
     "rapidfuzz>=3.0",
     "openpyxl>=3.1",
 ]
