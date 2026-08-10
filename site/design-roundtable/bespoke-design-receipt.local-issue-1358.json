@@ -1,0 +1,811 @@
+{
+  "schema_version": "bespoke-design-receipt.v1",
+  "project": {
+    "name": "grahama.co",
+    "surface": "http://127.0.0.1:3003/",
+    "source_revision": "f4a665c10f7028115ed701ec71536683af7d606f",
+    "implementation_revision": "dirty-local-issue-1358-evidence-bundle",
+    "generated_at": "2026-08-10T14:51:43.619358+00:00",
+    "fixture": false
+  },
+  "source_provenance": {
+    "source_bundle_sha256": "99ecef96b0a9cd80353e6299ccb62d08d976ff24f7b13f1765a6aadaf0bcc524",
+    "authoritative_source_count": 15,
+    "supporting_source_count": 40
+  },
+  "concept_territories": [
+    {
+      "id": "proof-workshop",
+      "name": "Proof Workshop",
+      "semantic_premise": "Claims become permissible only when traced through evidence to bounded judgments.",
+      "emotional_posture": "disciplined, skeptical, inspectable",
+      "typography_strategy": "serif authored claims, sans utility labels, monospace machine evidence",
+      "composition_model": "claim-to-evidence layouts with visible proof gaps and receipt margins",
+      "image_logic": "render actual artifacts, ledgers, and project evidence rather than atmospheric decoration",
+      "primary_motif": "receipt ledger",
+      "evidence_claim_ids": [
+        "source-bundle",
+        "proof-workshop-pilot"
+      ]
+    },
+    {
+      "id": "adversarial-lab",
+      "name": "Adversarial Lab",
+      "semantic_premise": "Design foregrounds tests, counterexamples, and exploit evolution as the source of confidence.",
+      "emotional_posture": "tense, forensic, adversarial",
+      "typography_strategy": "compressed labels and technical specimen typography emphasize challenge traces",
+      "composition_model": "case files and adversarial sequences arranged around failure and repair",
+      "image_logic": "show traces, harnesses, and adversarial artifacts as primary visuals",
+      "primary_motif": "challenge trace",
+      "evidence_claim_ids": [
+        "proof-workshop-pilot"
+      ]
+    },
+    {
+      "id": "source-atlas",
+      "name": "Source Atlas",
+      "semantic_premise": "The repository is the real terrain and the site is a navigable map over contracts and receipts.",
+      "emotional_posture": "cartographic, precise, accountable",
+      "typography_strategy": "map labels and machine paths separate routes from prose",
+      "composition_model": "source routes, graph links, and searchable project terrain guide inspection",
+      "image_logic": "visualize maps, ledgers, and route crops rather than portfolio thumbnails",
+      "primary_motif": "source map",
+      "evidence_claim_ids": [
+        "source-bundle",
+        "section-corpus-manifest"
+      ]
+    }
+  ],
+  "selected_territory_id": "proof-workshop",
+  "visual_grammar": {
+    "narrative_premise": "The site explains the work while the repository records contracts, checks, receipts, and visible gaps for agent inspection.",
+    "non_color_invariants": [
+      "human narrative roles are visually separated from machine evidence roles",
+      "local provenance and receipt margins appear beside claims",
+      "unresolved gaps remain visible as bounded evidence states",
+      "claim-to-judgment sequences structure proof sections"
+    ],
+    "motif_mappings": [
+      {
+        "motif": "ledger cells",
+        "meaning_or_job": "show checked versus contract-only skills without hiding gaps",
+        "source_claim_ids": [
+          "proof-workshop-pilot"
+        ]
+      },
+      {
+        "motif": "receipt cards",
+        "meaning_or_job": "bind public claims to source files, hashes, and bounded audit text",
+        "source_claim_ids": [
+          "source-bundle"
+        ]
+      },
+      {
+        "motif": "section crops",
+        "meaning_or_job": "make responsive choreography and craft reviewable by human and web LLM raters",
+        "source_claim_ids": [
+          "section-corpus-manifest"
+        ]
+      }
+    ],
+    "responsive_transformations": [
+      "hero proof inventory stacks into ordered phone crops",
+      "work taxonomy remains section-readable across phone, tablet, and desktop",
+      "ledger and proof sections split tall content into ordered review segments",
+      "receipts remain readable as section crops instead of full-page screenshots"
+    ],
+    "controlled_abundance": {
+      "expressive_zones": [
+        "hero proof trace",
+        "work dossier cards",
+        "adaptive lineage graph"
+      ],
+      "calm_reading_zones": [
+        "proof method explanations",
+        "receipt summaries",
+        "about and contact text"
+      ],
+      "calm_task_zones": [
+        "search input",
+        "ledger grid",
+        "repository action links"
+      ]
+    }
+  },
+  "artifacts": [
+    {
+      "artifact_id": "source-bundle",
+      "kind": "source_bundle",
+      "path": "site/design-roundtable/source-bundle-issue-1358-20260810T141835Z.json",
+      "sha256": "99ecef96b0a9cd80353e6299ccb62d08d976ff24f7b13f1765a6aadaf0bcc524"
+    },
+    {
+      "artifact_id": "visual-world-brief",
+      "kind": "visual_world_brief",
+      "path": "site/design-roundtable/visual-world-brief.r1.yaml",
+      "sha256": "46ed2b8d4f13104f4187918ea43ae251b23d10c3002578dacc9a5c058be92950"
+    },
+    {
+      "artifact_id": "territory-selection",
+      "kind": "selection_record",
+      "path": "site/design-roundtable/territory-selection.r1.json",
+      "sha256": "084830ea166f70b2157b7e212cef38612e6028feb1acbabd5f3fb63b2aab0ce6"
+    },
+    {
+      "artifact_id": "proof-workshop-pilot",
+      "kind": "evidence_ledger",
+      "path": "site/design-roundtable/proof-workshop-pilot-receipt.r1.json",
+      "sha256": "2d9957d2f715f049ff89a403f375b77100300f7b8f573a85dae8699a70dd5afd"
+    },
+    {
+      "artifact_id": "design-world-check",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/design-world-check.latest.json",
+      "sha256": "cff54f7046cf3fae0e66173b6dc174c0e1e89f8792cf1fb8310565de1b21e9e5"
+    },
+    {
+      "artifact_id": "effects-check",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/effects-check.latest.json",
+      "sha256": "1dd83fd8a91a94e5fbc71f87dff0918b7bfcfc74751edafcbd3cdd4644a83292"
+    },
+    {
+      "artifact_id": "visual-assets-check",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/visual-assets-check.latest.json",
+      "sha256": "ec10a802be779b4fde2f355ac91f72578b40b0213f92eede98ac4d386b0be972"
+    },
+    {
+      "artifact_id": "copy-audit",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/copy-audit.latest.json",
+      "sha256": "54ff76f3831dc9360132c16cba29df2c426be5eeae8166af137e60bbeded0985"
+    },
+    {
+      "artifact_id": "accessibility-local",
+      "kind": "accessibility_receipt",
+      "path": "site/design-roundtable/accessibility-local-3003.r1.json",
+      "sha256": "7653ed2889833b3c36f445a45dd41ceaf28dc6d805c5c3677a6f7b60f633b3b2"
+    },
+    {
+      "artifact_id": "performance-local",
+      "kind": "performance_receipt",
+      "path": "site/design-roundtable/performance-local-3003.r1.json",
+      "sha256": "b1a1b30e2ef3e28f904e324a041ae56d6f6d8264ea440365ec17c3a4ecd868a5"
+    },
+    {
+      "artifact_id": "responsive-geometry",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/responsive-geometry.r1.json",
+      "sha256": "9146030998281dec25818b492e5b6c086f43d7b2e734f3277db5f324ab78bbee"
+    },
+    {
+      "artifact_id": "distinctiveness-blind",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/distinctiveness-blind.r1.json",
+      "sha256": "81ae7f43017126ed12251a48ba6d51b3ebe01175420e701e222f363b11396907"
+    },
+    {
+      "artifact_id": "craft-integrity",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/craft-integrity.r1.json",
+      "sha256": "5b2a0ce7503b1a76cf8de106d21f304c5ffffd5c161e0665a1f9cbe47d00e9ca"
+    },
+    {
+      "artifact_id": "section-corpus-manifest",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/manifest.json",
+      "sha256": "5d53711db67ffe6a2710bff0da5f09c710b7f2014b006d0361d74460377a7552"
+    },
+    {
+      "artifact_id": "blind-contact-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/distinctiveness-blind-current-issue-1358-20260810T141835Z.png",
+      "sha256": "bbf4731d7e2a59b0d64a1195c433426d74a72aea2da56006a4b68948a39f69a1"
+    },
+    {
+      "artifact_id": "blind-contact-sidecar",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/rendered-screens/distinctiveness-blind-current-issue-1358-20260810T141835Z.json",
+      "sha256": "0fa0225047c0237627fa03154937ad7e94ba2e867e63b6ac1c8c88dc4a464ae6"
+    },
+    {
+      "artifact_id": "rater-prompt",
+      "kind": "rater_input",
+      "path": "site/design-roundtable/distinctiveness-rater-prompt.issue-1358-20260810T141835Z.md",
+      "sha256": "fa10b8bcefa7de603f311676ee16b4fe36f25a1c30fd672969db1e977a68f3bf"
+    },
+    {
+      "artifact_id": "finish-review-neutral",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/finish-review-issue-1358-20260810T141835Z-neutral.md",
+      "sha256": "c9f6fc45450902bc5e18e93c572add13e6ecf8746b1fdb86ba4ed8f27840358c"
+    },
+    {
+      "artifact_id": "finish-review-neutral-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/finish-review-issue-1358-20260810T141835Z-neutral.meta.json",
+      "sha256": "4940317d8f8022a04c3a6187c49531b48ddec7f61413cbc39f2855d0cb65ee0b"
+    },
+    {
+      "artifact_id": "lighthouse-local",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/lighthouse-local-3003.latest.json",
+      "sha256": "3022f15e07dd6765022a1868ea2cc25ce677c51922b0f9dd2a5fe1bd60832102"
+    },
+    {
+      "artifact_id": "rater-01-output",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.md",
+      "sha256": "36b4694135466084aa81e5fa1652d717bf7c975b5ddf350c52146fc3b3dda112"
+    },
+    {
+      "artifact_id": "rater-01-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.meta.json",
+      "sha256": "b673acebcd636395d63b3927d6bb45ee0621ec97d7454316bcc864a8556003e1"
+    },
+    {
+      "artifact_id": "rater-02-output",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.md",
+      "sha256": "c37ef1d87496ca3cdb7bae87b50c14b5fde2f4f6d4293760b48edbd2ca10cd73"
+    },
+    {
+      "artifact_id": "rater-02-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.meta.json",
+      "sha256": "75dd99c9956cae685f2f871d7e06e06251c7ef2cfdd248bd6337bfc0730a93e4"
+    },
+    {
+      "artifact_id": "rater-03-output",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.md",
+      "sha256": "8cdb1aa5e7899bc1001df7ea1bab4aef8288086257af6a60e8898ce3a4dd7f66"
+    },
+    {
+      "artifact_id": "rater-03-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.meta.json",
+      "sha256": "0d8215ddc707dd015bceea28c3c662fbc2cce8aaf9fc6dd4d1d78d156e64adf5"
+    },
+    {
+      "artifact_id": "rater-04-output",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.md",
+      "sha256": "f333634e3e772e6add09c49818a11f34a1cb8c2cd3a95119f3690ff9d661d6cb"
+    },
+    {
+      "artifact_id": "rater-04-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.meta.json",
+      "sha256": "dd0f2425323e72b48c8c3586766c2b2e90894d74dc1109cfcd8f4bb169944631"
+    },
+    {
+      "artifact_id": "rater-05-output",
+      "kind": "rater_output",
+      "path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.md",
+      "sha256": "5fae401b59463b4597f89bbd2bbb27a4440cf744ebfe2c60106cef81c64eba0e"
+    },
+    {
+      "artifact_id": "rater-05-meta",
+      "kind": "browser_receipt",
+      "path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.meta.json",
+      "sha256": "260ec11589602b3e054cfc6ba41efa1bc0f0182dc2ba4a3091daa9d6af66102f"
+    },
+    {
+      "artifact_id": "section-top-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-top-contact-sheet.png",
+      "sha256": "aa5d01ffcca9433302db1327fd91fab61d874d1ba933feff5f5507432985e24a"
+    },
+    {
+      "artifact_id": "section-search-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-search-contact-sheet.png",
+      "sha256": "5868e2f3d31b7ec5d6b13f546ac49369a1ad07b86cb5cca611d5b3e568b5677b"
+    },
+    {
+      "artifact_id": "section-work-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-work-contact-sheet.png",
+      "sha256": "d5714fd18679b18bcbad17660f0888e4787e056261be0ff8109eb915ab0f234b"
+    },
+    {
+      "artifact_id": "section-competence-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-competence-contact-sheet.png",
+      "sha256": "581328b9f80a41e1fc97fdc7b1398d7ac9e25ba4b076336c1e2c846827f7d95f"
+    },
+    {
+      "artifact_id": "section-dream-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-dream-contact-sheet.png",
+      "sha256": "e1094309a31ee4b901f4f2bcb3562f91b6fa4320def89948086c1ca6f62699fe"
+    },
+    {
+      "artifact_id": "section-ledger-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-ledger-contact-sheet.png",
+      "sha256": "6b802deb04cf9ca478a29cd3fd5330ddf44bd311ba4f1216e2864b03f0553bb4"
+    },
+    {
+      "artifact_id": "section-proof-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-proof-contact-sheet.png",
+      "sha256": "7aec855d4b68b9f52418c365645affd6c5f86639aa9af167a16e0db2add29a39"
+    },
+    {
+      "artifact_id": "section-receipts-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-receipts-contact-sheet.png",
+      "sha256": "9c9d5c19bf17d8d05400a8b94f2bb79af639a02b8e932d0e9ada6263fce0fb1c"
+    },
+    {
+      "artifact_id": "section-about-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-about-contact-sheet.png",
+      "sha256": "bf49ee0e78c723bca9f19b76d38f3d556343ea3acc327305019322c95f76e3ff"
+    },
+    {
+      "artifact_id": "section-contact-sheet",
+      "kind": "screenshot",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-contact-contact-sheet.png",
+      "sha256": "32bb22d97e15f83572da13454974e9ddd9b3554327ab379d25616f63581e840c"
+    }
+  ],
+  "blind_tests": {
+    "logo_off": {
+      "status": "PASS",
+      "correct_assignments": 30,
+      "total_assignments": 30,
+      "raw_output_artifact_ids": [
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output"
+      ]
+    },
+    "competitor_swap": {
+      "status": "PASS",
+      "conflict_channels": [
+        "voice",
+        "hierarchy",
+        "components",
+        "spatial_grammar"
+      ],
+      "raw_output_artifact_ids": [
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output"
+      ]
+    },
+    "cross_screen_family": {
+      "status": "PASS",
+      "correct_groupings": 5,
+      "total_groupings": 5,
+      "observed_non_color_invariants": [
+        "human narrative separated from machine evidence",
+        "visible proof boundaries and unresolved gaps",
+        "local provenance margins with hashes and receipt references"
+      ],
+      "raw_output_artifact_ids": [
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output"
+      ]
+    },
+    "reference_leakage": {
+      "status": "PASS",
+      "reference_corpus_artifact_ids": [
+        "visual-world-brief",
+        "blind-contact-sheet"
+      ],
+      "distinctive_combination_copied": false,
+      "raw_output_artifact_ids": [
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output",
+        "finish-review-neutral"
+      ]
+    }
+  },
+  "gates": {
+    "G0": {
+      "status": "PASS",
+      "summary": "Source provenance and project surface are pinned to local source/evidence artifacts.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G1": {
+      "status": "PASS",
+      "summary": "Three distinct concept territories were recorded before selecting Proof Workshop.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G2": {
+      "status": "PASS",
+      "summary": "Selected territory is explicit and traceable to the visual-world brief and selection receipt.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G3": {
+      "status": "PASS",
+      "summary": "Narrative premise maps claims to evidence and bounded judgments.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G4": {
+      "status": "PASS",
+      "summary": "Non-color visual invariants separate human prose, machine evidence, and visible proof gaps.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G5": {
+      "status": "PASS",
+      "summary": "Motifs are mapped to evidence jobs rather than decorative style alone.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G6": {
+      "status": "PASS",
+      "summary": "Responsive choreography is represented by section-level crops across five viewports.",
+      "evidence_artifact_ids": [
+        "blind-contact-sheet",
+        "blind-contact-sidecar",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "section-competence-sheet",
+        "section-corpus-manifest",
+        "section-dream-sheet",
+        "section-ledger-sheet",
+        "section-search-sheet",
+        "section-top-sheet",
+        "section-work-sheet",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G7": {
+      "status": "PASS",
+      "summary": "Controlled abundance separates expressive hero/work zones from calm reading/task zones.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G8": {
+      "status": "PASS",
+      "summary": "Copy audit passes and site/repository/agent-inspection positioning is present.",
+      "evidence_artifact_ids": [
+        "copy-audit",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G9": {
+      "status": "PASS",
+      "summary": "Local accessibility receipt passes Lighthouse accessibility and rendered copy checks.",
+      "evidence_artifact_ids": [
+        "accessibility-local",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "lighthouse-local",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G10": {
+      "status": "PASS",
+      "summary": "Local performance receipt passes Lighthouse performance thresholds for localhost static export.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "lighthouse-local",
+        "performance-local",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G11": {
+      "status": "PASS",
+      "summary": "Blind distinctiveness passes with five fresh raters over section-crop review units.",
+      "evidence_artifact_ids": [
+        "blind-contact-sheet",
+        "blind-contact-sidecar",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output",
+        "rater-prompt",
+        "responsive-geometry",
+        "section-competence-sheet",
+        "section-corpus-manifest",
+        "section-dream-sheet",
+        "section-ledger-sheet",
+        "section-search-sheet",
+        "section-top-sheet",
+        "section-work-sheet",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G12": {
+      "status": "PASS",
+      "summary": "Competitor-swap tension is confirmed in hierarchy, components, voice, and spatial grammar.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output",
+        "rater-prompt",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G13": {
+      "status": "PASS",
+      "summary": "Cross-screen family grouping is confirmed with repeated non-color invariants.",
+      "evidence_artifact_ids": [
+        "blind-contact-sheet",
+        "blind-contact-sidecar",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output",
+        "rater-prompt",
+        "responsive-geometry",
+        "section-competence-sheet",
+        "section-corpus-manifest",
+        "section-dream-sheet",
+        "section-ledger-sheet",
+        "section-search-sheet",
+        "section-top-sheet",
+        "section-work-sheet",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G14": {
+      "status": "PASS",
+      "summary": "Reference leakage review records no copied distinctive combination.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "rater-01-output",
+        "rater-02-output",
+        "rater-03-output",
+        "rater-04-output",
+        "rater-05-output",
+        "rater-prompt",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G15": {
+      "status": "PASS",
+      "summary": "Effects and visual assets checks pass without unregistered decorative animation findings.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "effects-check",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G16": {
+      "status": "PASS",
+      "summary": "Neutral finish review passes type fidelity for display, utility, reading, and machine roles.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "finish-review-neutral",
+        "finish-review-neutral-meta",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G17": {
+      "status": "PASS",
+      "summary": "Neutral finish review passes material fidelity; surfaces remain flat and function-first.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "finish-review-neutral",
+        "finish-review-neutral-meta",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G18": {
+      "status": "PASS",
+      "summary": "Neutral finish review passes amend-loop integrity; previous false review is preserved as rejected counterevidence.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "finish-review-neutral",
+        "finish-review-neutral-meta",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G19": {
+      "status": "PASS",
+      "summary": "World persistence is shown across hero, search, work, ledger, proof, receipts, and route-level crops.",
+      "evidence_artifact_ids": [
+        "blind-contact-sheet",
+        "blind-contact-sidecar",
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "section-competence-sheet",
+        "section-corpus-manifest",
+        "section-dream-sheet",
+        "section-ledger-sheet",
+        "section-search-sheet",
+        "section-top-sheet",
+        "section-work-sheet",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    },
+    "G20": {
+      "status": "PASS",
+      "summary": "Asset provenance and rights metadata are checked by visual-assets-check with zero findings.",
+      "evidence_artifact_ids": [
+        "craft-integrity",
+        "design-world-check",
+        "distinctiveness-blind",
+        "proof-workshop-pilot",
+        "responsive-geometry",
+        "source-bundle",
+        "territory-selection",
+        "visual-assets-check",
+        "visual-world-brief"
+      ]
+    }
+  },
+  "final_status": "READY",
+  "notes": "Local-only readiness receipt for issue 1358. No production deploy or push to grahama.co is claimed."
+}

@@ -3,8 +3,8 @@
   "status": "PASS",
   "registry": "site/visual-assets.yml",
   "counts": {
-    "registered_assets": 31,
-    "public_visuals": 31,
+    "registered_assets": 42,
+    "public_visuals": 42,
     "evidence_assets": 4,
     "findings": 0
   },

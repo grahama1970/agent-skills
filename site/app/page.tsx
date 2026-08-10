@@ -2,18 +2,20 @@ import artifacts from '@/artifacts.json';
 import lineage from '@/generated/battle-lineage.json';
 import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
 import { HeroProofBridge } from '@/components/hero-proof-bridge';
-import { ReceiptTicket } from '@/components/receipt-ticket';
 import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
 import { ProofExplainer } from '@/components/proof-explainer';
-import { CapabilitySearch } from '@/components/capability-search';
-import { CapabilityConstellation } from '@/components/capability-constellation';
-import { DreamStepper } from '@/components/dream-stepper';
-import { KeyboardNav } from '@/components/keyboard-nav';
+import {
+  DeferredCapabilityConstellation,
+  DeferredCapabilitySearch,
+  DeferredDreamStepper,
+  DeferredKeyboardNav,
+  DeferredReceiptTicket,
+  DeferredSkillMosaic,
+} from '@/components/deferred-surfaces';
 import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
-import { SkillMosaic } from '@/components/skill-mosaic';
 import { CompetenceMatrix } from '@/components/competence-matrix';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
@@ -97,9 +99,9 @@ export default function Home() {
       <HomeJsonLd />
       <div className="glow" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
-      <div className="page">
+      <main className="page">
         <SiteNav />
-        <KeyboardNav />
+        <DeferredKeyboardNav />
 
         {/* ===================== HERO ===================== */}
         <section className="hero ruledbg" id="top">
@@ -120,9 +122,11 @@ export default function Home() {
                 </h1>
                 <p className="hero-repo-model rise" style={{ ['--d' as string]: '.2s' }}>
                   This site explains the work. The public{' '}
-                  <code>agent-skills</code> repository holds the source. Browse
-                  here, or open the repository directly and ask your agent to
-                  trace a question through the contracts, code, checks,
+                  <code>agent-skills</code> repository holds the source.
+                </p>
+                <p className="hero-repo-model hero-repo-model--follow rise" style={{ ['--d' as string]: '.2s' }}>
+                  Browse here, or open the repository directly and ask your
+                  agent to trace a question through the contracts, code, checks,
                   receipts, and visible gaps.
                 </p>
                 <ol className="hero-trace-protocol rise" style={{ ['--d' as string]: '.24s' }} aria-label="Repository inspection path">
@@ -215,7 +219,7 @@ export default function Home() {
                       <span className="n">
                         {stats.sanity}
                         <small>
-                          {Math.round((stats.sanity / stats.skills) * 100)}%
+                          ({Math.round((stats.sanity / stats.skills) * 100)}%)
                         </small>
                       </span>
                       <span className="l">with sanity checks</span>
@@ -295,8 +299,8 @@ export default function Home() {
         {/* ===================== SEARCH ===================== */}
         <section id="search" className="search-band">
           <div className="wrap">
-            <CapabilitySearch />
-            <CapabilityConstellation />
+            <DeferredCapabilitySearch />
+            <DeferredCapabilityConstellation />
           </div>
         </section>
 
@@ -348,12 +352,20 @@ export default function Home() {
                       <div
                         className="shot"
                         style={{
-                          ['--img' as string]: `url('/projects/${meta.img ?? p.slug}.webp')`,
                           ['--tint' as string]: meta.tint,
                         }}
                         role="img"
                         aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — governed evidence thread from program manager and engineer through policy gate to pilot, Embry OS' : `${p.name} — concept art`}
-                      />
+                      >
+                        <img
+                          className="shot-img"
+                          src={`/projects/${meta.img ?? p.slug}.webp`}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          aria-hidden="true"
+                        />
+                      </div>
                     </a>
                     <div className="card-body">
                       <span className="idx">{String(i + 1).padStart(2, '0')}</span>
@@ -460,7 +472,7 @@ export default function Home() {
                 </span>
               </p>
             </div>
-            <DreamStepper phases={DREAM_PHASES} />
+            <DeferredDreamStepper phases={DREAM_PHASES} />
           </div>
         </section>
 
@@ -485,7 +497,7 @@ export default function Home() {
                   built on receipts doesn&apos;t get to hide its holes.
                 </p>
               </div>
-              <SkillMosaic />
+              <DeferredSkillMosaic />
             </div>
             <p className="ledger-close">
               All of it points back to the line at the top: a system that can
@@ -545,7 +557,7 @@ export default function Home() {
                 {RECEIPT_IDS.map((id) => {
                   const receipt = receiptArtifacts[id];
                   return receipt.capture_status === 'captured' ? (
-                      <ReceiptTicket
+                      <DeferredReceiptTicket
                         key={id}
                         id={id}
                         title={receipt.title}
@@ -732,7 +744,7 @@ export default function Home() {
             </div>
           </div>
         </footer>
-      </div>
+      </main>
     </>
   );
 }

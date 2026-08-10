@@ -1,5 +1,3 @@
-@import 'tailwindcss';
-
 /* ============================================================
    grahama.co — winning comp (webclaude, design compete
    ask-tau-design-competition-…-5006fa2a0d33) ported faithfully.
@@ -9,19 +7,11 @@
 
 @font-face {
   font-family: 'Fraunces';
-  src: url('/fonts/fraunces-var.woff2') format('woff2');
+  src: url('/fonts/fraunces-site-subset.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
-  font-display: swap;
+  font-display: optional;
 }
-@font-face {
-  font-family: 'Fraunces';
-  src: url('/fonts/fraunces-italic-var.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-
 :root {
   --ink: #0c0908;
   --ink-1: #110d0b;
@@ -85,6 +75,17 @@ a {
 img {
   max-width: 100%;
   display: block;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 :focus-visible {
   outline: 2px solid var(--brass);
@@ -201,6 +202,18 @@ section {
   position: relative;
   padding-block: clamp(64px, 9vw, 140px);
 }
+.deferred-surface {
+  display: block;
+}
+.deferred-surface--constellation {
+  min-height: clamp(430px, 72vw, 760px);
+}
+.deferred-surface--dream {
+  min-height: clamp(360px, 52vw, 620px);
+}
+.deferred-surface--ledger {
+  min-height: clamp(540px, 62vw, 760px);
+}
 /* Per-section warm ground — art-directed, not one flat --ink. Each shift is a
    few points within the warm family (kept subtle for cohesion / trust, per
    best-practices-bespoke-design G6): a faint temperature move section to
@@ -213,7 +226,6 @@ section {
 #dream { background-color: #100a0a; }      /* a hair warmer/redder */
 #ledger { background-color: #0b0908; }     /* deepest ink */
 #contact { background-color: #100c0a; }
-
 /* --- top bar ---------------------------------------------- */
 .topbar {
   position: sticky;
@@ -363,6 +375,9 @@ section {
   .nav a {
     padding-block: 0.65rem;
   }
+  .grain {
+    inset: 0;
+  }
 }
 
 /* --- hero ------------------------------------------------- */
@@ -432,13 +447,14 @@ h1 {
   text-wrap: balance;
 }
 h1 .it {
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--brass);
   font-variation-settings: 'SOFT' 90, 'WONK' 1, 'opsz' 144;
   position: relative;
   display: inline-block;
   padding-inline: 0.02em;
+  transform: skewX(-8deg);
 }
 h1 .it::after {
   content: none;
@@ -460,12 +476,18 @@ h1 .it::after {
   font-size: clamp(1.02rem, 1.3vw, 1.2rem);
   line-height: 1.66;
 }
+#top em {
+  font-style: normal;
+}
 .hero-repo-model {
   margin-top: clamp(1rem, 1.8vw, 1.45rem);
   max-width: 62ch;
   color: var(--text);
   font-size: clamp(1rem, 1.18vw, 1.14rem);
   line-height: 1.58;
+}
+.hero-repo-model--follow {
+  margin-top: 0.45rem;
 }
 .hero-repo-model code {
   font-family: var(--mono);
@@ -518,7 +540,11 @@ h1 .it::after {
   --bg: var(--brass);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 0.7em;
+  max-width: 100%;
+  min-width: 0;
   background: var(--bg);
   color: #170f09;
   text-decoration: none;
@@ -528,6 +554,7 @@ h1 .it::after {
   padding: 0.82em 1.25em;
   border-radius: 2px;
   border: 1px solid transparent;
+  overflow-wrap: anywhere;
   transition:
     transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
     box-shadow 0.22s ease,
@@ -809,11 +836,13 @@ h1 .it::after {
   grid-template-columns: repeat(12, 1fr);
   gap: clamp(28px, 3.4vw, 58px) var(--gut);
   margin-top: clamp(2.4rem, 4vw, 4rem);
+  min-width: 0;
 }
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .shot-link {
   display: block;
@@ -837,15 +866,22 @@ h1 .it::after {
   background-color: #181110;
   background-image:
     linear-gradient(180deg, rgba(12, 9, 8, 0) 42%, rgba(12, 9, 8, 0.62) 100%),
-    var(--img),
     radial-gradient(130% 130% at 22% 12%, var(--tint), transparent 72%);
-  background-size: cover, cover, cover;
+  background-size: cover, cover;
   background-position: center;
   border: 1px solid var(--line-2);
   transition:
     transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
     border-color 0.4s ease;
   transform-origin: center;
+}
+.shot-img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .card:hover .shot,
 .card:focus-visible .shot {
@@ -866,6 +902,7 @@ h1 .it::after {
   grid-template-columns: auto 1fr;
   gap: 0.2rem 1.15rem;
   padding-top: 1.05rem;
+  min-width: 0;
 }
 .idx {
   font-family: var(--sans);
@@ -887,6 +924,9 @@ h1 .it::after {
   letter-spacing: -0.018em;
   line-height: 1.08;
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .q {
   grid-column: 2;
@@ -898,14 +938,18 @@ h1 .it::after {
   font-size: clamp(0.98rem, 1.15vw, 1.08rem);
   line-height: 1.4;
   margin: 0.42em 0 0;
-  max-width: 44ch;
+  max-width: min(44ch, 100%);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .d {
   grid-column: 2;
   color: var(--muted);
   font-size: 0.95rem;
   margin: 0.6em 0 0;
-  max-width: 52ch;
+  max-width: min(52ch, 100%);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .chip {
   grid-column: 2;
@@ -958,9 +1002,10 @@ h1 .it::after {
 }
 .proof-legend__item {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
   align-items: baseline;
   gap: 0.75rem;
+  min-width: 0;
 }
 .proof-legend__chip {
   font-family: var(--mono);
@@ -989,6 +1034,8 @@ h1 .it::after {
   color: var(--muted);
   font-size: 0.86rem;
   line-height: 1.5;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .proof-legend__foot {
   margin-top: 1.2rem;
@@ -1300,7 +1347,7 @@ h1 .it::after {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(14px, 1.8vw, 26px);
-  align-items: start;
+  align-items: stretch;
 }
 .ticket {
   background: var(--paper);
@@ -1308,7 +1355,9 @@ h1 .it::after {
   font-family: var(--mono);
   font-size: 0.72rem;
   line-height: 1.72;
-  padding: 1.15rem 1.05rem 1.4rem;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
   box-shadow:
     0 22px 44px -26px rgba(0, 0, 0, 0.9),
     0 2px 0 rgba(255, 255, 255, 0.15) inset;
@@ -1329,8 +1378,8 @@ h1 .it::after {
   -webkit-mask-position: top, bottom;
 }
 .ticket:nth-child(1) { transform: rotate(-0.7deg); }
-.ticket:nth-child(2) { transform: rotate(0.45deg) translateY(14px); }
-.ticket:nth-child(3) { transform: rotate(-0.3deg) translateY(28px); }
+.ticket:nth-child(2) { transform: rotate(0.45deg); }
+.ticket:nth-child(3) { transform: rotate(-0.3deg); }
 .ticket:hover {
   transform: rotate(0deg) translateY(-4px);
   box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.95);
@@ -1377,7 +1426,7 @@ h1 .it::after {
   margin: 0;
 }
 .ticket .foot {
-  margin-top: 0.9rem;
+  margin-top: auto;
   padding-top: 0.6rem;
   border-top: 1px dashed rgba(26, 20, 17, 0.3);
   font-size: 0.62rem;
@@ -1569,6 +1618,120 @@ footer a:hover {
   color: var(--faint);
   font-size: 0.84rem;
   line-height: 1.6;
+}
+
+.shortcut-trigger {
+  display: none;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.shortcut-trigger span {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.shortcut-trigger:hover {
+  border-color: var(--brass);
+  color: var(--text);
+}
+.hint-kbd,
+.shortcut-modal__kbd {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--text);
+  font-weight: 650;
+}
+.hint-kbd {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.675rem;
+}
+.shortcut-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.25rem;
+}
+.shortcut-modal__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.shortcut-modal__icon {
+  color: var(--brass);
+}
+.shortcut-modal__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.shortcut-modal__close {
+  border: 0;
+  border-radius: 4px;
+  padding: 0 0.5rem;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.shortcut-modal__close:hover {
+  color: var(--text);
+}
+.shortcut-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+.shortcut-modal__group {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.shortcut-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+}
+.shortcut-modal__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+.shortcut-modal__item dt,
+.shortcut-modal__desc {
+  margin: 0;
+}
+.shortcut-modal__plus,
+.shortcut-modal__desc {
+  color: var(--muted);
+}
+.shortcut-modal__kbd {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.725rem;
+}
+.shortcut-modal__foot {
+  border-top: 1px solid var(--line);
+  padding: 0.75rem 1.25rem;
+  color: var(--muted);
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .shortcut-trigger {
+    display: inline-flex;
+  }
 }
 
 /* --- load choreography ------------------------------------ */
@@ -1918,7 +2081,9 @@ footer a:hover {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.28em 0.65em;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* Cell hover popover: live-evidence micro-preview. */
@@ -3196,6 +3361,7 @@ a:hover .c-plabel { fill: var(--brass); }
 .rm-area {
   background: var(--ink);
   padding: 1rem 1.2rem 1.1rem;
+  min-width: 0;
 }
 /* Odd final area spans the row instead of sitting alone in a two-col grid. */
 .research-map .rm-area:last-child:nth-child(odd) {
@@ -3203,6 +3369,7 @@ a:hover .c-plabel { fill: var(--brass); }
 }
 .rm-title {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.8rem;
@@ -3212,6 +3379,7 @@ a:hover .c-plabel { fill: var(--brass); }
   font-weight: 600;
   font-variation-settings: 'SOFT' 40, 'opsz' 30;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 .rm-count {
   flex: 0 0 auto;
@@ -3258,6 +3426,9 @@ a:hover .c-plabel { fill: var(--brass); }
   max-width: 54ch;
   border-left: 2px solid rgba(226, 172, 98, 0.35);
   padding-left: 0.9em;
+  min-width: 0;
+  max-width: min(54ch, 100%);
+  overflow-wrap: anywhere;
 }
 
 /* Explicit GitHub action bar on work cards. */
@@ -3266,11 +3437,15 @@ a:hover .c-plabel { fill: var(--brass); }
   margin-top: 1.1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--line-2);
+  min-width: 0;
+  max-width: 100%;
 }
 .github-repo-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.35rem 0.65rem;
   background: rgba(236, 226, 211, 0.04);
   border: 1px solid var(--line);
@@ -3280,6 +3455,11 @@ a:hover .c-plabel { fill: var(--brass); }
   color: var(--muted);
   text-decoration: none;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.github-repo-link .gh-path {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .github-repo-link .gh-icon {
   opacity: 0.75;
@@ -3347,7 +3527,9 @@ a:hover .c-plabel { fill: var(--brass); }
   opacity: 0;
 }
 .proof-bridge.is-ready .proof-bridge__wire {
-  animation: proof-bridge-wire 5.25s linear both;
+  animation: none;
+  opacity: 0.24;
+  stroke-dashoffset: 0;
 }
 .proof-bridge__token {
   opacity: 0;
@@ -3528,51 +3710,65 @@ h1 .proof-origin::after {
   text-transform: uppercase;
 }
 
-/* Sequence */
+/* Static proof state. The original timed sequence was visually coherent but it
+   delayed representative LCP by about five seconds. Keep the proof graph as an
+   inspectable instrument; do not make first paint wait for a choreography. */
 .hero-grid.proof-ready .proof-lineage__edge--trunk {
-  animation: proof-draw 240ms var(--ease-wire-snap) 1.18s forwards;
+  animation: none;
+  stroke-dashoffset: 0;
 }
 .hero-grid.proof-ready .proof-lineage__edge--branch-a,
 .hero-grid.proof-ready .proof-lineage__edge--branch-b {
-  animation: proof-draw 620ms var(--ease-wire-snap) 1.35s forwards;
+  animation: none;
+  stroke-dashoffset: 0;
 }
 .hero-grid.proof-ready .proof-lineage__node--g1a,
 .hero-grid.proof-ready .proof-lineage__node--g1b {
-  animation: proof-fade 220ms ease-out 1.78s forwards;
+  animation: none;
+  opacity: 1;
 }
 .hero-grid.proof-ready .proof-lineage__eval-halo {
-  animation: proof-evaluate 900ms var(--ease-entrance) 2.15s forwards;
+  animation: none;
+  opacity: 0.26;
 }
 .hero-grid.proof-ready .proof-lineage__judge-dot {
-  animation: proof-judge-dot 900ms var(--ease-entrance) 2.15s forwards;
+  animation: none;
+  opacity: 0.9;
 }
 .hero-grid.proof-ready .proof-lineage__selected-overlay {
-  animation: proof-fade 300ms ease-out 3.05s forwards;
+  animation: none;
+  opacity: 1;
 }
 .hero-grid.proof-ready .proof-lineage__runner-outline,
 .hero-grid.proof-ready .proof-lineage__role {
-  animation: proof-fade 300ms ease-out 3.12s forwards;
+  animation: none;
+  opacity: 1;
 }
 .hero-grid.proof-ready .proof-lineage__edge--selected {
-  animation: proof-draw 500ms var(--ease-wire-snap) 3.05s forwards;
+  animation: none;
+  stroke-dashoffset: 0;
 }
 .hero-grid.proof-ready .proof-lineage__edge--evidence {
-  animation: proof-draw 650ms var(--ease-wire-snap) 3.55s forwards;
+  animation: none;
+  stroke-dashoffset: 0;
 }
 .hero-grid.proof-ready .proof-lineage__token--evidence {
-  animation: proof-token 650ms linear 3.55s both;
+  display: none;
 }
 .hero-grid.proof-ready .proof-lineage__receipt {
-  animation: proof-fade 180ms ease-out 4.08s forwards;
+  animation: none;
+  opacity: 1;
 }
 .hero-grid.proof-ready .proof-lineage__edge--g2 {
-  animation: proof-draw 240ms var(--ease-wire-snap) 4.12s forwards;
+  animation: none;
+  stroke-dashoffset: 0;
 }
 .hero-grid.proof-ready .proof-lineage__node--g2 {
-  animation: proof-fade 220ms ease-out 4.28s forwards;
+  animation: none;
+  opacity: 1;
 }
 .hero-grid.proof-ready .proof-lineage__token--return {
-  animation: proof-token 360ms linear 4.44s both;
+  display: none;
 }
 
 @keyframes proof-draw {

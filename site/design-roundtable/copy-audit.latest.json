@@ -7,7 +7,7 @@
     "private-abstracts.json",
     "app/page.tsx"
   ],
-  "strings_scanned": 371,
+  "strings_scanned": 372,
   "anchors_checked": 3,
   "violations": [],
   "em_dash_cadence": {

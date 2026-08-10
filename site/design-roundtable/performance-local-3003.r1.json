@@ -1,0 +1,41 @@
+{
+  "schema": "grahama.local_performance_receipt.v1",
+  "status": "PASS",
+  "generated_at": "2026-08-10T14:48:52.780014+00:00",
+  "url": "http://127.0.0.1:3003/",
+  "source_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
+  "mocked": false,
+  "live": true,
+  "lighthouse": {
+    "path": "site/design-roundtable/lighthouse-local-3003.latest.json",
+    "sha256": "3022f15e07dd6765022a1868ea2cc25ce677c51922b0f9dd2a5fe1bd60832102",
+    "categories": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  "metrics": {
+    "lcp_ms": 2407.5084,
+    "cls": 0,
+    "tbt_ms": 61,
+    "fcp_ms": 1236.7541999999999,
+    "speed_index_ms": 1236.7541999999999
+  },
+  "thresholds": {
+    "lcp_ms_max": 2500,
+    "cls_max": 0.1,
+    "performance_score_min": 0.9
+  },
+  "failures": [],
+  "does_not_prove": [
+    "field p75 INP from real users",
+    "production CDN performance",
+    "network variability outside localhost static export"
+  ],
+  "source_state": {
+    "head_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
+    "worktree_state": "dirty-uncommitted-current-local-render"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "schema": "agentic_evals.report.v1",
+  "source": "skills/best-practices-bespoke-design/fixtures/agentic_eval.json",
+  "mocked": false,
+  "fixture_backed": true,
+  "live": false,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "declared local commands met explicit fixture expectations across repeated trials",
+    "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_count": 4,
+  "trial_count": 8,
+  "cases": [
+    {
+      "name": "real-grahama-local-receipt-validates",
+      "type": "positive",
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 159.692,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"status\": \"PASS\",\n  \"schema_validation_used\": true,\n  \"receipt\": \"../../../site/design-roundtable/bespoke-design-receipt.local-issue-1358.json\"\n}\n",
+          "stderr": "",
+          "duration_ms": 165.703,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"status\": \"PASS\",\n  \"schema_validation_used\": true,\n  \"receipt\": \"../../../site/design-roundtable/bespoke-design-receipt.local-issue-1358.json\"\n}\n",
+          "stderr": "",
+          "duration_ms": 153.681,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "invalid-receipt-fails-closed",
+      "type": "adversarial",
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 136.031,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"status\": \"FAIL\",\n  \"schema_validation_used\": true,\n  \"error_count\": 2,\n  \"errors\": [\n    \"$.blind_tests.logo_off: PASS requires at least 80% correct\",\n    \"$.final_status: READY is illegal unless every required gate is PASS\"\n  ]\n}\n",
+          "stderr": "",
+          "duration_ms": 134.211,
+          "timed_out": false
+        },
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"status\": \"FAIL\",\n  \"schema_validation_used\": true,\n  \"error_count\": 2,\n  \"errors\": [\n    \"$.blind_tests.logo_off: PASS requires at least 80% correct\",\n    \"$.final_status: READY is illegal unless every required gate is PASS\"\n  ]\n}\n",
+          "stderr": "",
+          "duration_ms": 137.852,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "g11-section-crop-subgates-covered",
+      "type": "positive",
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 486.998,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "...                                                                      [100%]\n3 passed in 0.19s\n",
+          "stderr": "",
+          "duration_ms": 477.651,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "...                                                                      [100%]\n3 passed in 0.20s\n",
+          "stderr": "",
+          "duration_ms": 496.345,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "g11-default-reviewer-workflow-is-bounded",
+      "type": "adversarial",
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 29.5,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "bounded_reviewer_workflow_ok\n",
+          "stderr": "",
+          "duration_ms": 29.184,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "bounded_reviewer_workflow_ok\n",
+          "stderr": "",
+          "duration_ms": 29.816,
+          "timed_out": false
+        }
+      ]
+    }
+  ]
+}

@@ -383,6 +383,34 @@ threshold fails, G11 is `FAIL`, not `NOT_TESTED`. Transport acknowledgements,
 old browser tabs, previous-corpus rater results, and advisory reviewer responses
 must never be counted as G11 rater evidence.
 
+#### Default Reviewer Workflow
+
+The default G11 path is simple and bounded:
+
+1. Render section, component, or page-state crops with a manifest.
+2. Assemble reviewable contact sheets from those crops.
+3. Submit the same crop packet to a small fresh rater set, preferably distributed
+   across WebClaude, WebGPT, WebKimi, and WebGemini when those lanes are
+   available.
+4. Ask each rater to answer the registered logo-off, competitor-swap,
+   cross-screen-family, template-residue, and leakage questions directly.
+5. Aggregate the raw answers into the G11 subgates.
+
+Do not build a larger orchestration system, dashboard, or multi-hour browser
+campaign before this path has been attempted. A model that can see the section
+crops is expected to judge the section-level design questions directly; use the
+formal receipt to preserve that judgment, not to make the review process more
+complex than the design question.
+
+Browser tab budget is part of the gate UX. A normal G11 run should use no more
+than one controlled reviewer tab per backend plus one local site tab. Opening a
+new tab per rater, retry, or prompt variant is a process failure unless a prior
+tab is explicitly closed or documented as unusable. If three reviewer attempts in
+one provider family fail with the same transport, upload, context-length, or
+rate-limit signature, stop that provider family, preserve the three receipts, and
+continue with other providers or mark the remaining seats
+`blocked_by_systemic_failure`. Do not open parallel tabs to outrun the failure.
+
 #### A. Logo-Off Recognition
 
 Remove brand name and logo. Fresh-context raters receive the target brief and at

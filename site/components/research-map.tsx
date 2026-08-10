@@ -25,7 +25,9 @@ export function ResearchMap() {
         <section className="rm-area" key={a.id}>
           <h3 className="rm-title">
             {a.title}
-            <span className="rm-count">{a.skillCount} skills</span>
+            <span className="rm-count">
+              {a.skillCount} {a.skillCount === 1 ? 'skill' : 'skills'}
+            </span>
           </h3>
           <p className="rm-blurb">{a.blurb}</p>
           <p className="rm-systems">

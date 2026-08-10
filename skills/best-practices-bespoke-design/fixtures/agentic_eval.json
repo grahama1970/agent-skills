@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "skill": "best-practices-bespoke-design",
+  "trials": 2,
+  "proof_scope": "receipt validator and G11 section-crop gate hardening",
+  "claims": {
+    "proves": "the real receipt validator accepts a complete G0-G20 local grahama.co receipt, rejects an intentionally invalid receipt, and monitor-website exposes G11 section-crop subgate coverage through its pytest tests",
+    "does_not_prove": "live browser rater behavior, future WebGPT/Kimi availability, human design acceptance, or production grahama.co deployment readiness"
+  },
+  "cases": [
+    {
+      "name": "real-grahama-local-receipt-validates",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/validate_receipt.py",
+        "../../../site/design-roundtable/bespoke-design-receipt.local-issue-1358.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "bespoke-design-receipt.local-issue-1358.json"
+        ]
+      }
+    },
+    {
+      "name": "invalid-receipt-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "python3",
+        "../scripts/validate_receipt.py",
+        "failing-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "READY is illegal unless every required gate is PASS"
+        ]
+      }
+    },
+    {
+      "name": "g11-section-crop-subgates-covered",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "../../../skills/monitor-website/tests/test_design_world_check_g11_subgates.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "g11-default-reviewer-workflow-is-bounded",
+      "type": "adversarial",
+      "command": [
+        "python3",
+        "-c",
+        "from pathlib import Path\ntext=Path('../SKILL.md').read_text()\nneed=['Default Reviewer Workflow','WebClaude, WebGPT, WebKimi, and WebGemini','Browser tab budget','one controlled reviewer tab per backend','blocked_by_systemic_failure']\nmissing=[s for s in need if s not in text]\nassert not missing, missing\nprint('bounded_reviewer_workflow_ok')"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "bounded_reviewer_workflow_ok"
+        ]
+      }
+    }
+  ]
+}

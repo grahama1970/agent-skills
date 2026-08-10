@@ -1,0 +1,220 @@
+{
+  "schema": "grahama.local_accessibility_receipt.v1",
+  "status": "PASS",
+  "generated_at": "2026-08-10T14:48:52.780014+00:00",
+  "url": "http://127.0.0.1:3003/",
+  "source_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
+  "mocked": false,
+  "live": true,
+  "lighthouse": {
+    "path": "site/design-roundtable/lighthouse-local-3003.latest.json",
+    "sha256": "3022f15e07dd6765022a1868ea2cc25ce677c51922b0f9dd2a5fe1bd60832102",
+    "categories": {
+      "performance": 0.98,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  "semantic_structure": {
+    "title": "Graham Anderson \u2014 agent systems that prove what they did",
+    "url": "http://127.0.0.1:3003/",
+    "landmarks": [
+      {
+        "tag": "nav",
+        "role": null,
+        "text": "Work Dream Inventory Receipts About"
+      },
+      {
+        "tag": "header",
+        "role": null,
+        "text": "G c grahama .co Work Dream Inventory Receipts About"
+      },
+      {
+        "tag": "footer",
+        "role": null,
+        "text": "Contact graham@grahama.co github.com/grahama1970/agent-skills github.com/grahama1970/agent-skills/blob/main/RESUME.md Inventory 344 skill contracts 290 with san"
+      },
+      {
+        "tag": "main",
+        "role": null,
+        "text": "G c grahama .co Work Dream Inventory Receipts About One-person practice / agent systems, formal methods, evidence I build agent systems that can prove what they"
+      }
+    ],
+    "headings": [
+      {
+        "level": 1,
+        "text": "I build agent systems that can prove what they did.",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "Ten questions with code, checks, and gaps.",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Agentic pipelines & orchestration 49 skills",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Agentic memory & persona 28 skills",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Extraction & evidence 66 skills",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Compliance, security & governance 56 skills",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Adaptive-lineage hacking 1 skill",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "persona-dream dream-affect voice study",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "surf authenticated browser control",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "battle exploit-evolution arena",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "t'au zero-trust agent harness",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "extractor",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "dogpile",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "watch",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "scillm",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "debugger",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "sparta explorer space-cyber evidence workbench",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "What the work adds up to.",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "Can a persona dream itself a personality?",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "Every contract, including the ones without checks.",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "One real run, from goal to receipt.",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Goal",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Bounded context",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Constrained execution",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Captured evidence",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Deterministic judgment",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "Receipt",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "No claim ships without one.",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "tau node receipt \u2014 the run that designed this site",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "monitor-website audit \u2014 this page, checked against the repo",
+        "hidden": false
+      },
+      {
+        "level": 3,
+        "text": "inventory provenance \u2014 where the numbers come from",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "An unusual path, on purpose. Composer \u2014 Adidas, Pepsi, X-Games Executive producer, Sony DARPA ARCOS \u2014 principal data scientist AFRL \u201cHacker\u201d challenge coin Lean 4 formal methods This practice",
+        "hidden": false
+      }
+    ]
+  },
+  "rendered_copy_checks": {
+    "no_rendered_1_skills": true,
+    "adaptive_lineage_label": [
+      "Adaptive-lineage hacking",
+      "self.__next_f.push([1,\"20:[\\\"$\\\",\\\"$L50\\\",null,{}]\\n24:[\\\"$\\\",\\\"section\\\",\\\"adaptive-lineage\\\",{\\\"className\\\":\\\"rm-area\\\",\\\"children\\\":[[\\\"$\\\",\\\"h3\\\",null,{\\\"className\\\":\\\"rm-title\\\",\\\"children\\\":[\\\"Adaptive-lineage hacking\\\",[\\\"$\\\",\\\"span\\\",null,{\\\"className\\\":\\\"rm-count\\\",\\\"children\\\":[1,\\\" \\\",\\\"skill\\\"]}]]}],[\\\"$\\\",\\\"p\\\",null,{\\\"className\\\":\\\"rm-blurb\\\",\\\"children\\\":\\\"Adversarial evolution and security testing scored by deterministic proof gates.\\\"}],[\\\"$\\\",\\\"p\\\",null,{\\\"className\\\":\\\"rm-systems\\\",\\\"children\\\":[[\\\"$\\\",\\\"span\\\",\\\"battle\\\",{\\\"children\\\":[false,[\\\"$\\\",\\\"a\\\",null,{\\\"href\\\":\\\"#project-battle\\\",\\\"data-qid\\\":\\\"researchmap:jump:battle\\\",\\\"data-qs-action\\\":\\\"RESEARCHMAP_JUMP_PROJECT\\\",\\\"title\\\":\\\"Jump to battle below\\\",\\\"children\\\":\\\"battle\\\"}]]}]]}]]}]\\n\"])"
+    ]
+  },
+  "failures": [],
+  "does_not_prove": [
+    "full manual WCAG 2.2 AA audit",
+    "screen reader speech quality",
+    "all keyboard workflows and all browser assistive tech combinations"
+  ]
+}

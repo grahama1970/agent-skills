@@ -1,141 +1,240 @@
 {
   "schema": "monitor_website.responsive_geometry_check.v1",
   "status": "PASS",
-  "generated_at": "2026-08-10T02:09:18Z",
-  "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+  "generated_at": "2026-08-10T14:45:59.209862+00:00",
+  "source_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
   "mocked": false,
   "live": true,
   "counts": {
-    "routes": 6,
     "viewports": 5,
-    "checks": 30,
+    "sections": 10,
+    "screenshots": 148,
     "failures": 0
   },
   "section_corpus_manifest": {
-    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
-    "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/manifest.json",
+    "sha256": "5d53711db67ffe6a2710bff0da5f09c710b7f2014b006d0361d74460377a7552",
     "schema": "grahama.responsive_section_corpus.v1",
     "counts": {
       "viewports": 5,
       "sections": 10,
-      "screenshots": 50,
+      "screenshots": 148,
       "failures": 0
     },
-    "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review."
+    "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review.",
+    "segmentation": "ordered section/subsection crops; tall sections split into reviewable segments"
   },
   "section_contact_sheets": [
     {
       "section_id": "top",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-top-contact-sheet.png",
-      "sha256": "d64e5306ebdd8897b29d71bd484256c5c6c9d4a99507df314e6471d10c1afb2c",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-top-contact-sheet.png",
+      "sha256": "aa5d01ffcca9433302db1327fd91fab61d874d1ba933feff5f5507432985e24a",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-430",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "search",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-search-contact-sheet.png",
-      "sha256": "aa96928d916a683880a6b168df287232d43eef45d506af58da5dfdafbce7d41d",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-search-contact-sheet.png",
+      "sha256": "5868e2f3d31b7ec5d6b13f546ac49369a1ad07b86cb5cca611d5b3e568b5677b",
       "viewports": [
         "phone-390",
         "phone-430",
         "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "work",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-work-contact-sheet.png",
-      "sha256": "3f3a801d7cbc9ab4744ad6edf8ef70bdb7f1498f53c883876610c8ef3989ab39",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-work-contact-sheet.png",
+      "sha256": "d5714fd18679b18bcbad17660f0888e4787e056261be0ff8109eb915ab0f234b",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-430",
+        "phone-430",
+        "phone-430",
+        "phone-430",
+        "phone-430",
+        "phone-430",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
+        "desktop-1440",
+        "desktop-1440",
+        "desktop-1440",
+        "desktop-1440",
+        "desktop-1440",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "competence",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-competence-contact-sheet.png",
-      "sha256": "8d64b11c0be4b52ae8b349d154ad634c3c5536d0cca15b8f34393a85b81eceeb",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-competence-contact-sheet.png",
+      "sha256": "581328b9f80a41e1fc97fdc7b1398d7ac9e25ba4b076336c1e2c846827f7d95f",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-430",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "dream",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-dream-contact-sheet.png",
-      "sha256": "586798b9a15fd2b54f8e7cb081573785be20a8aba02b4ecbf91d01ce50a8e83f",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-dream-contact-sheet.png",
+      "sha256": "e1094309a31ee4b901f4f2bcb3562f91b6fa4320def89948086c1ca6f62699fe",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "ledger",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-ledger-contact-sheet.png",
-      "sha256": "309c456d3d45ffe7cdf8e1f2f6f0d3fe51a8173c1c72d083086b74961cff5f91",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-ledger-contact-sheet.png",
+      "sha256": "6b802deb04cf9ca478a29cd3fd5330ddf44bd311ba4f1216e2864b03f0553bb4",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "proof",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-proof-contact-sheet.png",
-      "sha256": "2446f09ec16d2117b2a45c65063fa7f6b1c9a7add19dc4f0067f1539607e3ab6",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-proof-contact-sheet.png",
+      "sha256": "7aec855d4b68b9f52418c365645affd6c5f86639aa9af167a16e0db2add29a39",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-390",
+        "phone-430",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "receipts",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-receipts-contact-sheet.png",
-      "sha256": "11c074f665839058a1b230697902274605f0c7f745bf2757bf258b808fa76db1",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-receipts-contact-sheet.png",
+      "sha256": "9c9d5c19bf17d8d05400a8b94f2bb79af639a02b8e932d0e9ada6263fce0fb1c",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
+        "desktop-1366",
         "desktop-1366",
         "desktop-1440"
       ]
     },
     {
       "section_id": "about",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-about-contact-sheet.png",
-      "sha256": "64740b36b2abe288f8699ff41b4eca818eed8a057077dfa3cf77c981cdd31b28",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-about-contact-sheet.png",
+      "sha256": "bf49ee0e78c723bca9f19b76d38f3d556343ea3acc327305019322c95f76e3ff",
       "viewports": [
         "phone-390",
+        "phone-390",
+        "phone-430",
         "phone-430",
         "tablet-768",
+        "tablet-768",
         "desktop-1366",
+        "desktop-1366",
+        "desktop-1440",
         "desktop-1440"
       ]
     },
     {
       "section_id": "contact",
-      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-contact-contact-sheet.png",
-      "sha256": "3c5b4f84d0038bd8e6ed7a739e121873735d0870f09f3f1a55b172d37075fee2",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/section-contact-contact-sheet.png",
+      "sha256": "32bb22d97e15f83572da13454974e9ddd9b3554327ab379d25616f63581e840c",
       "viewports": [
         "phone-390",
         "phone-430",
@@ -147,8 +246,42 @@
   ],
   "failures": [],
   "does_not_prove": [
-    "Accessibility completion is outside this responsive screenshot receipt.",
-    "Performance metrics are outside this responsive screenshot receipt.",
-    "Blind distinctiveness is recorded separately in distinctiveness-blind.r1.json."
+    "blind-rater distinctiveness",
+    "WCAG 2.2 AA completion",
+    "performance budgets",
+    "independent finish-loop review",
+    "full bespoke-design READY status"
+  ],
+  "source_state": {
+    "head_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
+    "worktree_state": "dirty-uncommitted-current-local-render",
+    "note": "Section corpus regenerated after rebuilding site/out served on localhost:3003."
+  },
+  "viewport_contact_sheets": [
+    {
+      "viewport_id": "phone-390",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/phone-390-contact-sheet.png",
+      "sha256": "9abd96238ccfd91a051cba515bbb34a4b28020dd055803c459706bef04ab2102"
+    },
+    {
+      "viewport_id": "phone-430",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/phone-430-contact-sheet.png",
+      "sha256": "165d734629927fe1e8c514747edd541476f8e79c55f16227637a0e40742f9b36"
+    },
+    {
+      "viewport_id": "tablet-768",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/tablet-768-contact-sheet.png",
+      "sha256": "a6937f7ed80af807d4b13481ad93fc2b40c8fb15370f0cd59f3f4aa63f83f76b"
+    },
+    {
+      "viewport_id": "desktop-1366",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1366-contact-sheet.png",
+      "sha256": "3ba8c7285353f5760d8e4a77a59ddf27bf7cd5d2598fb847a454929c9bf68ac4"
+    },
+    {
+      "viewport_id": "desktop-1440",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-contact-sheet.png",
+      "sha256": "531ade27188e9dd493dced7668cc581bbe6499c6af27026ec8d56cdb2921d89b"
+    }
   ]
 }

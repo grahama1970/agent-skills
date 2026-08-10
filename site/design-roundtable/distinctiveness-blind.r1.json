@@ -1,89 +1,36 @@
 {
   "schema": "grahama.distinctiveness_blind.v1",
   "status": "PASS",
-  "generated_at": "2026-08-10T02:02:17Z",
-  "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+  "generated_at": "2026-08-10T14:45:59.209862+00:00",
+  "source_commit": "f4a665c10f7028115ed701ec71536683af7d606f",
+  "source_state": "dirty local render after issue-1358 repairs; current evidence paths listed in this receipt",
   "mocked": false,
   "live": true,
-  "review_unit": "section/page-state crops only; not a full-page website screenshot",
+  "review_unit": "six current section/page-state crops assembled from the responsive section corpus; not a full-page or whole-site screenshot",
   "contact_sheet": {
-    "path": "site/design-roundtable/rendered-screens/distinctiveness-blind-section-corpus-20260810T014115Z.png",
-    "sha256": "a99922c757dce817d800b136cfc11c6040b9ec99e18d1c1dcbdea294f0a15eda",
-    "sidecar_path": "site/design-roundtable/rendered-screens/distinctiveness-blind-section-corpus-20260810T014115Z.json",
-    "sidecar_sha256": "c8691da8ddb325719c9448a23d2330d010dbc79d473861402b078bc52d8c7896",
+    "path": "site/design-roundtable/rendered-screens/distinctiveness-blind-current-issue-1358-20260810T141835Z.png",
+    "sha256": "bbf4731d7e2a59b0d64a1195c433426d74a72aea2da56006a4b68948a39f69a1",
+    "sidecar_path": "site/design-roundtable/rendered-screens/distinctiveness-blind-current-issue-1358-20260810T141835Z.json",
+    "sidecar_sha256": "0fa0225047c0237627fa03154937ad7e94ba2e867e63b6ac1c8c88dc4a464ae6",
     "crop_count": 6,
-    "selected_crops": [
-      {
-        "label": "phone-430 / #top",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-00-top.png",
-        "source_sha256": "e0b2b332dc2d083f0b1317798c5a2e35bd90750ee14e1b960a4c3b43ac1e10d6",
-        "rendered_size": [
-          720,
-          1413
-        ]
-      },
-      {
-        "label": "desktop-1440 / #search",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-01-search.png",
-        "source_sha256": "7e4cf040af0f1c6b3dae5424bda2f4a50cb701e962206ae9e80b85757491c815",
-        "rendered_size": [
-          720,
-          421
-        ]
-      },
-      {
-        "label": "desktop-1440 / #work",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-02-work.png",
-        "source_sha256": "945c9a661a061a7c15c939bdaf91ff4e7b1284dec1d68651b3e008434b0e2cdf",
-        "rendered_size": [
-          720,
-          421
-        ]
-      },
-      {
-        "label": "tablet-768 / #ledger",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-05-ledger.png",
-        "source_sha256": "8e5c0214ce75b285d0c77a8535a773d946ee8940afe515afa67fed59af9d64b9",
-        "rendered_size": [
-          720,
-          916
-        ]
-      },
-      {
-        "label": "desktop-1440 / #proof",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-06-proof.png",
-        "source_sha256": "1f9c89bf0b13f938c6667ea2e03ff17d99088ea856d39c9727897b1030550e74",
-        "rendered_size": [
-          720,
-          421
-        ]
-      },
-      {
-        "label": "desktop-1440 / #receipts",
-        "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-07-receipts.png",
-        "source_sha256": "a87ae7605401cb2818742b6f2f6053c97359957c33ecb0514a38e599b78a046a",
-        "rendered_size": [
-          720,
-          421
-        ]
-      }
-    ]
+    "selection": "hero, search, work, ledger, proof, and receipts section/page-state crops from current corpus"
   },
   "section_corpus_manifest": {
-    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
-    "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/manifest.json",
+    "sha256": "5d53711db67ffe6a2710bff0da5f09c710b7f2014b006d0361d74460377a7552",
     "schema": "grahama.responsive_section_corpus.v1",
     "counts": {
       "viewports": 5,
       "sections": 10,
-      "screenshots": 50,
+      "screenshots": 148,
       "failures": 0
     },
-    "low_information_guard": null
+    "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review.",
+    "segmentation": "ordered section/subsection crops; tall sections split into reviewable segments"
   },
   "prompt": {
-    "path": "site/design-roundtable/distinctiveness-rater-prompt.r4.md",
-    "sha256": "063c0cb786472472017f82d937b10e03cf7b32c523dc82f34eff44daafeaedae"
+    "path": "site/design-roundtable/distinctiveness-rater-prompt.issue-1358-20260810T141835Z.md",
+    "sha256": "fa10b8bcefa7de603f311676ee16b4fe36f25a1c30fd672969db1e977a68f3bf"
   },
   "thresholds": {
     "min_raters": 5,
@@ -101,39 +48,12 @@
     "generic_ai_template_primary": 0,
     "competitor_swap_tension": 5,
     "cross_screen_family": 5,
-    "high_leakage_risk": 0
+    "high_leakage_risk": 0,
+    "status": "REPLAYED_FROM_CURRENT_RAW_OUTPUTS"
   },
   "raters": [
     {
       "seat": 1,
-      "provider": "kimi",
-      "rater_id": "Kimi-K2",
-      "fresh_context": true,
-      "usable": true,
-      "transport_proof": {
-        "status": "completed",
-        "proof_status": "response_proven",
-        "submitted_to_kimi": true,
-        "attachment_delivery_proven": true,
-        "failure": null,
-        "meta_path": "site/design-roundtable/provider-receipts/rater-r4-01-kimi.meta.json",
-        "submitted_prompt_path": "site/design-roundtable/provider-receipts/rater-r4-01-kimi.submitted.md"
-      },
-      "output_path": "site/design-roundtable/rater-outputs/rater-r4-01-kimi.md",
-      "raw_output_path": "site/design-roundtable/rater-outputs/rater-r4-01-kimi.raw.md",
-      "logo_off_match": "Proof Workshop",
-      "logo_off_confidence": 96,
-      "ten_second_classification": "Inspectable evidence system with visible gaps",
-      "generic_ai_template_primary": false,
-      "positive_classification": true,
-      "competitor_swap_tension": true,
-      "cross_screen_family": true,
-      "reference_or_craft_leakage_risk": "low, residual project nouns are present but the structural logic of visible gaps contract-only states and goal-to-receipt bounded proof is so dominant that noun swapping would not resolve the conceptual conflict with generic portfolio or enterprise dashboard patterns",
-      "high_leakage_risk": false,
-      "verdict": "PASS"
-    },
-    {
-      "seat": 2,
       "provider": "kimi",
       "rater_id": "Kimi-K2-Instruct",
       "fresh_context": true,
@@ -143,20 +63,66 @@
         "proof_status": "response_proven",
         "submitted_to_kimi": true,
         "attachment_delivery_proven": true,
+        "controlled_tab_id": "837381943",
+        "raw_contains_sentinel": true,
+        "clean_contains_sentinel": false,
+        "focus_changed": false,
         "failure": null,
-        "meta_path": "site/design-roundtable/provider-receipts/rater-r4-02-kimi.meta.json",
-        "submitted_prompt_path": "site/design-roundtable/provider-receipts/rater-r4-02-kimi.submitted.md"
+        "meta_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.meta.json",
+        "submitted_prompt_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.submitted.md",
+        "sentinel": "<<<KIMI_DONE:20260810T142201Z:a2c2b11f>>>",
+        "started_at": "2026-08-10T14:22:01Z",
+        "finished_at": "2026-08-10T14:24:26Z"
       },
-      "output_path": "site/design-roundtable/rater-outputs/rater-r4-02-kimi.md",
-      "raw_output_path": "site/design-roundtable/rater-outputs/rater-r4-02-kimi.raw.md",
+      "output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.md",
+      "raw_output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-01-kimi.raw.md",
       "logo_off_match": "Proof Workshop",
-      "logo_off_confidence": 96,
-      "ten_second_classification": "Evidence-bound agent systems with visible proof gaps",
+      "logo_off_confidence": 95,
+      "ten_second_classification": "Evidence-first agent systems portfolio with visible proof gaps",
       "generic_ai_template_primary": false,
       "positive_classification": true,
+      "evidence_first_signals": "sanity-check percentages in hero sidebar, visible contract gaps in ledger grid, hash-check artifacts in proof section, receipt excerpts with provenance, explicit \"what it does not prove\" disclaimers, bounded context declarations, skill contract grid with checked versus unchecked states",
+      "non_color_invariants": "visible unresolved gaps treated as first-class UI elements rather than omissions (ledger holes, proof disclaimers, missing-source boundaries), claim-to-judgment pipeline with explicit bounded context and immutable hash receipts, human narrative voice separated from machine evidence metrics and artifact dumps",
       "competitor_swap_tension": true,
       "cross_screen_family": true,
-      "reference_or_craft_leakage_risk": "low \u2014 the dark styling and grid layouts are visually conventional, but the information architecture (evidence-state cells, visible-gap philosophy, receipt-bound claims, hash-verified proof chains) is so deeply specific to the proof-workshop concept that swapping nouns would leave structural contradictions rather than plausible alternatives",
+      "reference_or_craft_leakage_risk": "low, the contract ledger grid and receipt artifact layout appear custom-built for this specific proof-workshop concept and would not survive noun substitution into a generic portfolio or B2B dashboard",
+      "high_leakage_risk": false,
+      "verdict": "PASS"
+    },
+    {
+      "seat": 2,
+      "provider": "kimi",
+      "rater_id": "Kimi-K2-202508",
+      "fresh_context": true,
+      "usable": true,
+      "transport_proof": {
+        "status": "completed",
+        "proof_status": "response_proven",
+        "submitted_to_kimi": true,
+        "attachment_delivery_proven": true,
+        "controlled_tab_id": "837381946",
+        "raw_contains_sentinel": true,
+        "clean_contains_sentinel": false,
+        "focus_changed": false,
+        "failure": null,
+        "meta_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.meta.json",
+        "submitted_prompt_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.submitted.md",
+        "sentinel": "<<<KIMI_DONE:20260810T142432Z:e90a654d>>>",
+        "started_at": "2026-08-10T14:24:32Z",
+        "finished_at": "2026-08-10T14:26:55Z"
+      },
+      "output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.md",
+      "raw_output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-02-kimi.raw.md",
+      "logo_off_match": "Proof Workshop",
+      "logo_off_confidence": 94,
+      "ten_second_classification": "Evidence-first agent systems with visible proof boundaries and epistemic humility",
+      "generic_ai_template_primary": false,
+      "positive_classification": true,
+      "evidence_first_signals": "ledger grid with filled sanity-checked cells versus outlined contract-only gaps,proof section with explicit \"does not prove\" negative epistemology calls,receipt cards carrying build hashes and artifact provenance,hero framing around \"prove what they did\" with bounded agent counts,work section badges indicating inspectable evidence depth rather than grades",
+      "non_color_invariants": "claim-to-judgment structure with explicit negative epistemology (visible \"does not prove\" statements alongside proof claims),visible gaps as intentional design feature rather than missing content (ledger grid holes and \"contract-only\" cells stay exposed),evidence/provenance margins with cryptographic hashes and artifact receipts (build hashes, source file lists, and checked state annotations in receipt cards),bounded context with fail-closed conditions declared up front (proof section shows limits, required evidence, and stop conditions before execution)",
+      "competitor_swap_tension": true,
+      "cross_screen_family": true,
+      "reference_or_craft_leakage_risk": "low, the grid ledger, receipt card format, and proof-step visualization with negative epistemology callouts appear bespoke and do not map cleanly onto common portfolio, dashboard, or security research templates",
       "high_leakage_risk": false,
       "verdict": "PASS"
     },
@@ -171,27 +137,36 @@
         "proof_status": "response_proven",
         "submitted_to_kimi": true,
         "attachment_delivery_proven": true,
+        "controlled_tab_id": "837381949",
+        "raw_contains_sentinel": true,
+        "clean_contains_sentinel": false,
+        "focus_changed": false,
         "failure": null,
-        "meta_path": "site/design-roundtable/provider-receipts/rater-r4-03-kimi.meta.json",
-        "submitted_prompt_path": "site/design-roundtable/provider-receipts/rater-r4-03-kimi.submitted.md"
+        "meta_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.meta.json",
+        "submitted_prompt_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.submitted.md",
+        "sentinel": "<<<KIMI_DONE:20260810T142701Z:f4b42f18>>>",
+        "started_at": "2026-08-10T14:27:01Z",
+        "finished_at": "2026-08-10T14:28:33Z"
       },
-      "output_path": "site/design-roundtable/rater-outputs/rater-r4-03-kimi.md",
-      "raw_output_path": "site/design-roundtable/rater-outputs/rater-r4-03-kimi.raw.md",
+      "output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.md",
+      "raw_output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-03-kimi.raw.md",
       "logo_off_match": "Proof Workshop",
-      "logo_off_confidence": 95,
-      "ten_second_classification": "Evidence-accountable agent practice with bounded judgments and visible gaps",
+      "logo_off_confidence": 96,
+      "ten_second_classification": "Evidence-first agent systems with visible proof boundaries and generated receipts",
       "generic_ai_template_primary": false,
       "positive_classification": true,
+      "evidence_first_signals": "sanity-check counts and bounded-agent tallies in hero, START/CHECK/INSPECT/STOP execution trace, work-section access-state badges labeled as evidence locations not grades, ledger grid with deliberately visible empty contract cells, explicit \"does not prove\" boundary markers in proof section, generated artifact receipts with checksums and build hashes",
+      "non_color_invariants": "human narrative roles separated from machine evidence roles (hero prose vs. code traces and generated receipts); visible proof boundaries with explicit \"does not prove\" callouts at each pipeline stage; unresolved gaps deliberately surfaced rather than hidden (ledger statement: \"gaps stay visible on purpose\"); claim-to-judgment structure from fixed goal through bounded context to final receipt",
       "competitor_swap_tension": true,
       "cross_screen_family": true,
-      "reference_or_craft_leakage_risk": "low, logo and brand name successfully removed; residual project nouns are content-native and do not reveal the review sheet assembly process",
+      "reference_or_craft_leakage_risk": "low \u2014 contract grid, receipt cards, and proof-boundary markers appear purpose-built for the evidence-workshop concept rather than templated",
       "high_leakage_risk": false,
       "verdict": "PASS"
     },
     {
       "seat": 4,
       "provider": "kimi",
-      "rater_id": "Kimi-K2",
+      "rater_id": "Kimi K2",
       "fresh_context": true,
       "usable": true,
       "transport_proof": {
@@ -199,20 +174,29 @@
         "proof_status": "response_proven",
         "submitted_to_kimi": true,
         "attachment_delivery_proven": true,
+        "controlled_tab_id": "837381952",
+        "raw_contains_sentinel": true,
+        "clean_contains_sentinel": false,
+        "focus_changed": false,
         "failure": null,
-        "meta_path": "site/design-roundtable/provider-receipts/rater-r4-04-kimi.meta.json",
-        "submitted_prompt_path": "site/design-roundtable/provider-receipts/rater-r4-04-kimi.submitted.md"
+        "meta_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.meta.json",
+        "submitted_prompt_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.submitted.md",
+        "sentinel": "<<<KIMI_DONE:20260810T142838Z:af0a61c3>>>",
+        "started_at": "2026-08-10T14:28:38Z",
+        "finished_at": "2026-08-10T14:30:12Z"
       },
-      "output_path": "site/design-roundtable/rater-outputs/rater-r4-04-kimi.md",
-      "raw_output_path": "site/design-roundtable/rater-outputs/rater-r4-04-kimi.raw.md",
+      "output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.md",
+      "raw_output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-04-kimi.raw.md",
       "logo_off_match": "Proof Workshop",
       "logo_off_confidence": 95,
-      "ten_second_classification": "Evidence-first agent systems with visible proof trails and accountable gaps",
+      "ten_second_classification": "Evidence-first agent systems with visible proof boundaries and cryptographic receipts",
       "generic_ai_template_primary": false,
       "positive_classification": true,
+      "evidence_first_signals": "ledger grid with sanity-checked filled cells and contract-only outlined gaps, receipt cards carrying SHA256 hashes and build IDs, explicit \"what it does not prove\" statements on proof steps, \"gaps stay visible on purpose\" copy, bounded context as a named proof stage, evidence access states labeled as \"not grades\"",
+      "non_color_invariants": "visible proof boundaries with explicit negative provenance statements on every receipt and proof step, intentionally unresolved gaps in the ledger grid where 54 contract-only cells remain outlined rather than filled, claim-to-judgment hierarchy from contracts through sanity checks to cryptographic receipts, bounded context and bounded agents treated as structural constraints rather than marketing features, local provenance margins with per-artifact build IDs and source-file hashes",
       "competitor_swap_tension": true,
       "cross_screen_family": true,
-      "reference_or_craft_leakage_risk": "low, the evidence-ledger grid and receipt-card pattern are conceptually specific to proof-workshop logic; a competitor could imitate the surface but would struggle to maintain structural coherence across all six screens without adopting the same underlying model",
+      "reference_or_craft_leakage_risk": "none, the evidence-first architecture and visible-gaps philosophy are structurally embedded across all six screens with consistent terminology and logic",
       "high_leakage_risk": false,
       "verdict": "PASS"
     },
@@ -227,52 +211,48 @@
         "proof_status": "response_proven",
         "submitted_to_kimi": true,
         "attachment_delivery_proven": true,
+        "controlled_tab_id": "837381955",
+        "raw_contains_sentinel": true,
+        "clean_contains_sentinel": false,
+        "focus_changed": true,
         "failure": null,
-        "meta_path": "site/design-roundtable/provider-receipts/rater-r4-05-kimi.meta.json",
-        "submitted_prompt_path": "site/design-roundtable/provider-receipts/rater-r4-05-kimi.submitted.md"
+        "meta_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.meta.json",
+        "submitted_prompt_path": "site/design-roundtable/provider-receipts/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.submitted.md",
+        "sentinel": "<<<KIMI_DONE:20260810T143017Z:7b69b93b>>>",
+        "started_at": "2026-08-10T14:30:17Z",
+        "finished_at": "2026-08-10T14:33:38Z"
       },
-      "output_path": "site/design-roundtable/rater-outputs/rater-r4-05-kimi.md",
-      "raw_output_path": "site/design-roundtable/rater-outputs/rater-r4-05-kimi.raw.md",
+      "output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.md",
+      "raw_output_path": "site/design-roundtable/rater-outputs/issue-1358-20260810T141835Z/rater-1358-20260810T141835Z-05-kimi.raw.md",
       "logo_off_match": "Proof Workshop",
-      "logo_off_confidence": 94,
-      "ten_second_classification": "Evidence-first agent systems with visible proof gaps",
+      "logo_off_confidence": 96,
+      "ten_second_classification": "Evidence-first agent systems with cryptographic receipts and visible proof boundaries",
       "generic_ai_template_primary": false,
       "positive_classification": true,
+      "evidence_first_signals": "headline binds a human claim to machine-provability, inventory counts separate sanity-checked contracts from total, terminal interface exposes START/CHECK/INSPECT/STOP command traces, repo map frames search as evidence-access routes not sales pitches, project badges describe checkable access states rather than grades, ledger grid renders filled vs outlined cells to make unchecked contracts visible as gaps, proof section presents an actual run with per-step \"does not prove\" boundaries, receipt cards carry build hashes and source-file provenance for the page itself, explicit philosophy that missing sources stay visible as boundaries not status widgets",
+      "non_color_invariants": "human narrative claims are immediately grounded in machine-verifiable inventory counts and command traces, local evidence margins appear on every screen through hashes build IDs source-file provenance and run receipts, visible proof boundaries and unresolved gaps are treated as design features rather than defects",
       "competitor_swap_tension": true,
       "cross_screen_family": true,
-      "reference_or_craft_leakage_risk": "low, residual project nouns like \"Adaptive-lineage\" and \"battle\" appear in the search graph but the structural evidence framework (contract ledger, receipt pipeline, visible-gaps philosophy) is domain-agnostic and would create conceptual conflict with all three decoy briefs if nouns were swapped",
+      "reference_or_craft_leakage_risk": "low \u2014 the anti-perfectionist \"gaps stay visible\" philosophy, the specific provenance tooling references, and the consistent claim-to-receipt binding across all six screens indicate bespoke craft rather than template assembly",
       "high_leakage_risk": false,
       "verdict": "PASS"
     }
   ],
-  "excluded_transport_blockers": [
-    {
-      "provider": "webgpt",
-      "path": "site/design-roundtable/provider-receipts/g11-section-review-work.visible.webgpt.meta.json",
-      "reason": "ChatGPT image/prompt submit was not proven; not counted as rater evidence."
-    },
-    {
-      "provider": "webgpt",
-      "path": "site/design-roundtable/provider-receipts/g11-section-review-work.webgpt.receipt.json",
-      "reason": "Prepared prompt/hidden transport did not prove submission; not counted as rater evidence."
-    },
-    {
-      "provider": "claude",
-      "path": "site/design-roundtable/provider-receipts/g11-section-review-work.claude.meta.json",
-      "reason": "Attachment delivery was not proven; not counted as rater evidence."
-    },
-    {
-      "provider": "gemini",
-      "path": "site/design-roundtable/provider-receipts/g11-section-review-work.gemini.meta.json",
-      "reason": "Wrapper marked attachment metadata missing despite a response; treated as degraded advisory only, not counted as formal rater evidence."
-    }
-  ],
-  "does_not_prove": [
-    "Accessibility completion, keyboard completion, 200% text zoom, reduced-motion equivalence, and WCAG 2.2 AA are outside this G11 receipt.",
-    "Representative performance metrics such as LCP, INP, and CLS are outside this G11 receipt.",
-    "Independent impeccable-finish amend-loop review is outside this G11 receipt.",
-    "The five counted seats are all Kimi-backed live browser raters; this proves the section-crop G11 packet against the recorded threshold but does not prove cross-provider agreement."
-  ],
+  "g11_child_states": {
+    "corpus_current": "PASS",
+    "section_crop_review_units": "PASS",
+    "contact_sheet_current": "PASS",
+    "rater_transport_ready": "PASS",
+    "fresh_rater_set_complete": "PASS",
+    "raw_outputs_preserved": "PASS",
+    "aggregate_replay_ready": "PASS",
+    "thresholds_met": "PASS"
+  },
   "failure_signature": null,
-  "blocked_by_systemic_failure": false
+  "blocked_by_systemic_failure": false,
+  "does_not_prove": [
+    "production field distinctiveness",
+    "human designer acceptance",
+    "screen-reader transcript quality"
+  ]
 }

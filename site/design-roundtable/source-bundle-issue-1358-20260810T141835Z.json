@@ -1,0 +1,66 @@
+{
+  "schema": "grahama.source_bundle_manifest.v1",
+  "generated_at": "2026-08-10T14:51:43.619358+00:00",
+  "files": [
+    {
+      "path": "site/app/page.tsx",
+      "sha256": "e19fee14aa99332d439525142c89ccc4517d932b3787c4d43b22cfc2feaeaef0"
+    },
+    {
+      "path": "site/app/globals.css",
+      "sha256": "1e6ab0052da96fb62786d1cbf12c35c4271e4f0a209220263caf5c659df2fa58"
+    },
+    {
+      "path": "site/components/research-map.tsx",
+      "sha256": "4c88e0fe37ac7396a8a3b72f0c5a441a825484467c7e70de20f486902d1e6052"
+    },
+    {
+      "path": "site/components/capability-constellation.tsx",
+      "sha256": "8fee4e88d4f06c6fe9f4a54bdbe3f97de15952b60b47a2430248c65992c0f8e2"
+    },
+    {
+      "path": "site/design-world.yml",
+      "sha256": "38fa3685567854226e63b6c39599025577cbc06df1bf6ebf33481eb0cc581aca"
+    },
+    {
+      "path": "site/visual-assets.yml",
+      "sha256": "123f56ea8927b80a42730e4cfc196bb315eeffae3ad12af0d909768a5df0ccb3"
+    },
+    {
+      "path": "site/homepage-beats.yml",
+      "sha256": "2bd08db6b50e90fd577f26ca1e316ca4653ba241954a57ad7829175e770b0597"
+    },
+    {
+      "path": "site/flagship-compositions.yml",
+      "sha256": "e00f14584e43b94817d2c78938af64e89a81a563349abc7153ba76fa79e6fe68"
+    },
+    {
+      "path": "site/scripts/capture_responsive_section_corpus.py",
+      "sha256": "9f5a97862f360fdb9bf908ce2761dc812f5bbad7b82961b095c2590704e7252d"
+    },
+    {
+      "path": "skills/monitor-website/scripts/design_world_check.py",
+      "sha256": "35a4f84463a00cf2f0e6bc91a523e9036daa5c8722bcca639a2020282770a75f"
+    },
+    {
+      "path": "skills/monitor-website/scripts/effects_check.py",
+      "sha256": "7abf5739bfeee555745b2d536c0579b976404a9d5144ab737c5368b795577682"
+    },
+    {
+      "path": "skills/monitor-website/scripts/visual_assets_check.py",
+      "sha256": "514a0cc3da06d4dfd521f6e059f17e62e8abe0813a319f9c1336f09bd8bcec78"
+    },
+    {
+      "path": "skills/best-practices-bespoke-design/SKILL.md",
+      "sha256": "be0e7344773839f4fb0c7f5054f9ea54366e8d9fbb2be5a539cd41fa0d0075f3"
+    },
+    {
+      "path": "skills/best-practices-bespoke-design/scripts/validate_receipt.py",
+      "sha256": "c18bf465c8346e30fb8e24ac13991bd6fce50d17fde906b1c42aca275d0b9125"
+    },
+    {
+      "path": "skills/best-practices-bespoke-design/schemas/bespoke-design-receipt.schema.json",
+      "sha256": "488c0e46fadc15ae378edcd188ab82eea2fce3d33448a0203d3ecaf3830eaca1"
+    }
+  ]
+}

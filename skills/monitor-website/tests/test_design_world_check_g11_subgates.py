@@ -27,20 +27,20 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def test_current_g11_separates_ready_corpus_from_missing_fresh_raters():
+def test_current_g11_passes_with_current_section_crop_rater_packet():
     module = load_module()
 
     gate = module.distinctiveness_blind_gate()
 
-    assert gate["status"] == "NOT_TESTED"
-    assert gate["reason_code"] == "fresh_blind_raters_not_run_for_current_segmented_corpus"
-    assert gate["design_outcome_status"] == "NOT_TESTED"
-    assert gate["next_action"]["lane"] == "rater_submission"
+    assert gate["status"] == "PASS"
+    assert gate["design_outcome_status"] == "PASS"
     assert gate["subgates"]["corpus_current"]["status"] == "PASS"
     assert gate["subgates"]["section_crop_review_units"]["status"] == "PASS"
-    assert gate["subgates"]["fresh_rater_set_complete"]["status"] == "NOT_TESTED"
-    assert gate["subgates"]["fresh_rater_set_complete"]["usable"] == 0
+    assert gate["subgates"]["contact_sheet_current"]["status"] == "PASS"
+    assert gate["subgates"]["fresh_rater_set_complete"]["status"] == "PASS"
+    assert gate["subgates"]["fresh_rater_set_complete"]["usable"] >= 5
     assert gate["subgates"]["fresh_rater_set_complete"]["required"] == 5
+    assert gate["subgates"]["thresholds_met"]["status"] == "PASS"
 
 
 def write_distinctiveness_fixture(tmp_path: Path, aggregate: dict, raters: list[dict]) -> Path:
@@ -134,3 +134,32 @@ def test_completed_g11_rater_set_below_competitor_swap_threshold_fails(tmp_path,
     assert gate["subgates"]["raw_outputs_preserved"]["status"] == "PASS"
     assert gate["subgates"]["thresholds_met"]["status"] == "FAIL"
     assert "competitor_swap_tension 1 does not satisfy >= 4" in gate["subgates"]["thresholds_met"]["errors"]
+
+
+def test_g11_with_current_corpus_but_missing_fresh_raters_stays_not_tested(tmp_path, monkeypatch):
+    module = load_module()
+    roundtable = write_distinctiveness_fixture(
+        tmp_path,
+        aggregate={
+            "usable": 0,
+            "positive_classification": 0,
+            "competitor_swap_tension": 0,
+            "cross_screen_family": 0,
+            "generic_ai_template_primary": 0,
+        },
+        raters=[],
+    )
+    monkeypatch.setattr(module, "REPO", tmp_path)
+    monkeypatch.setattr(module, "DESIGN_ROUNDTABLE", roundtable)
+
+    gate = module.distinctiveness_blind_gate()
+
+    assert gate["status"] == "NOT_TESTED"
+    assert gate["reason_code"] == "fresh_blind_raters_not_run_for_current_segmented_corpus"
+    assert gate["design_outcome_status"] == "NOT_TESTED"
+    assert gate["next_action"]["lane"] == "rater_submission"
+    assert gate["subgates"]["corpus_current"]["status"] == "PASS"
+    assert gate["subgates"]["section_crop_review_units"]["status"] == "PASS"
+    assert gate["subgates"]["fresh_rater_set_complete"]["status"] == "NOT_TESTED"
+    assert gate["subgates"]["fresh_rater_set_complete"]["usable"] == 0
+    assert gate["subgates"]["fresh_rater_set_complete"]["required"] == 5

@@ -1,0 +1,99 @@
+{
+  "schema": "grahama.distinctiveness_rater_contact_sheet.v1",
+  "created_for": "agent-skills#1358",
+  "source_manifest": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/manifest.json",
+  "source_manifest_sha256": "5d53711db67ffe6a2710bff0da5f09c710b7f2014b006d0361d74460377a7552",
+  "review_unit": "six current section/page-state crops; not a whole-site or full-page screenshot",
+  "output": "site/design-roundtable/rendered-screens/distinctiveness-blind-current-issue-1358-20260810T141835Z.png",
+  "sha256": "bbf4731d7e2a59b0d64a1195c433426d74a72aea2da56006a4b68948a39f69a1",
+  "dimensions": {
+    "width": 808,
+    "height": 3556
+  },
+  "selected_crops": [
+    {
+      "label": "hero",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "desktop-1440",
+      "segment_index": 0,
+      "segment_count": 3,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-00-top-s01of03.png",
+      "source_sha256": "25911808b7423887fc4f0bd007ef51150645fcfdb94fc6c7bd88cc7b8a57dfd3",
+      "dimensions": {
+        "width": 1425,
+        "height": 809
+      }
+    },
+    {
+      "label": "search",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "desktop-1440",
+      "segment_index": 0,
+      "segment_count": 2,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-01-search-s01of02.png",
+      "source_sha256": "59f8c28a0a17c73f45926d95701113eae57043370a069848b6bd8e0bcbcdd48b",
+      "dimensions": {
+        "width": 1425,
+        "height": 817
+      }
+    },
+    {
+      "label": "work",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "desktop-1440",
+      "segment_index": 0,
+      "segment_count": 8,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-02-work-s01of08.png",
+      "source_sha256": "9da14695f9307c0e9ae1752062d86061a1b0a555fa146cb9d6ffb2558fd1c011",
+      "dimensions": {
+        "width": 1425,
+        "height": 817
+      }
+    },
+    {
+      "label": "ledger",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "tablet-768",
+      "segment_index": 0,
+      "segment_count": 3,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/tablet-768-05-ledger-s01of03.png",
+      "source_sha256": "521f04bee6073ff3ca8d5520b2c0f1b3d0f5bee759beeb55450dce45f2ef7d09",
+      "dimensions": {
+        "width": 753,
+        "height": 941
+      }
+    },
+    {
+      "label": "proof",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "desktop-1440",
+      "segment_index": 0,
+      "segment_count": 3,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-06-proof-s01of03.png",
+      "source_sha256": "08ecd92ec2c17bcb3bf52bb53e1beabbfcc46c7c4631665bef52fe84bdacf95c",
+      "dimensions": {
+        "width": 1425,
+        "height": 817
+      }
+    },
+    {
+      "label": "receipts",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "desktop-1440",
+      "segment_index": 0,
+      "segment_count": 1,
+      "source_path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T141835Z/desktop-1440-07-receipts-s01of01.png",
+      "source_sha256": "3d4cdc40b314edd9d4abcbf0c4807b63c89c88d2f48904a54484a037573b0e45",
+      "dimensions": {
+        "width": 1425,
+        "height": 817
+      }
+    }
+  ]
+}

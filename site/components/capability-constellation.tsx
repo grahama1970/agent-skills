@@ -90,12 +90,13 @@ function getInspectorData(node: GNode): InspectorData {
     };
   }
   if (node.type === 'area') {
+    const skillCount = node.skillCount ?? 0;
     return {
       title: node.title || node.label,
       lens: LENS_LABEL[node.lens ?? 'technical'] ?? '▲ technical',
       taxonomy: 'research area',
-      abstract: `Category group containing ${node.skillCount ?? 0} active skill contracts.`,
-      status: node.skillCount ? `${node.skillCount} skills` : 'category',
+      abstract: `Category group containing ${skillCount} active ${skillCount === 1 ? 'skill contract' : 'skill contracts'}.`,
+      status: node.skillCount ? `${node.skillCount} ${node.skillCount === 1 ? 'skill' : 'skills'}` : 'category',
     };
   }
   return {
@@ -421,7 +422,7 @@ export function CapabilityConstellation() {
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image
-                    href={`/projects/${n.img}.webp`}
+                    href={`/projects/thumbs/${n.img}.webp`}
                     x={x - r}
                     y={y - r}
                     width={r * 2}
@@ -512,7 +513,7 @@ export function CapabilityConstellation() {
             return (
               <li key={a.id}>
                 {a.label}
-                {a.skillCount ? ` (${a.skillCount} skills)` : ''}
+                {a.skillCount ? ` (${a.skillCount} ${a.skillCount === 1 ? 'skill' : 'skills'})` : ''}
                 {projs.length ? (
                   <ul>
                     {projs.map((p) => (
