@@ -535,11 +535,12 @@ def validate_distinctiveness_blind(receipt_path: Path) -> dict:
         if parent and _hash_mismatch(str(value), parent.get("sha256")):
             errors.append(f"referenced artifact hash mismatch: {field}")
 
-    subgates = {}
-    subgates.update(_corpus_subgates(receipt))
+    raw_subgates = {}
+    raw_subgates.update(_corpus_subgates(receipt))
     rater_subgates, rater_errors = _rater_subgates(receipt)
-    subgates.update(rater_subgates)
+    raw_subgates.update(rater_subgates)
     errors.extend(rater_errors)
+    subgates = _reduced_g11_subgates(raw_subgates)
 
     if any(subgate.get("status") == "FAIL" for subgate in subgates.values()):
         status = "FAIL"
@@ -568,21 +569,14 @@ def validate_distinctiveness_blind(receipt_path: Path) -> dict:
         "subgates": subgates,
         "evidence_pipeline_status": "PASS" if all(
             subgates.get(name, {}).get("status") == "PASS"
-            for name in (
-                "corpus_current",
-                "section_crop_review_units",
-                "contact_sheet_current",
-                "fresh_rater_set_complete",
-                "raw_outputs_preserved",
-                "aggregate_replay_ready",
-            )
+            for name in ("corpus_current", "raters_recorded")
         ) else ("FAIL" if any(s.get("status") == "FAIL" for s in subgates.values()) else "NOT_TESTED"),
         "design_outcome_status": subgates.get("thresholds_met", {}).get("status", "NOT_TESTED"),
     }
     if errors:
         gate["errors"] = errors
     if status != "PASS":
-        fresh = subgates.get("fresh_rater_set_complete") or {}
+        fresh = subgates.get("raters_recorded") or {}
         gate["next_action"] = {
             "lane": "rater_submission" if fresh.get("status") != "PASS" else "g11_receipt_repair_or_design_repair",
             "command": "submit current section-crop corpus to fresh raters and preserve raw outputs"
@@ -603,6 +597,47 @@ def _overall_status(gates: dict[str, dict]) -> str:
     if statuses and all(status == "PASS" for status in statuses):
         return "PASS"
     return "NOT_TESTED"
+
+
+def _combine_child_status(children: dict[str, dict]) -> str:
+    statuses = [child.get("status") for child in children.values()]
+    if "FAIL" in statuses:
+        return "FAIL"
+    if statuses and all(status == "PASS" for status in statuses):
+        return "PASS"
+    return "NOT_TESTED"
+
+
+def _reduced_g11_subgates(raw_subgates: dict[str, dict]) -> dict[str, dict]:
+    corpus_children = {
+        name: raw_subgates[name]
+        for name in ("corpus_current", "section_crop_review_units", "contact_sheet_current")
+        if name in raw_subgates
+    }
+    rater_children = {
+        name: raw_subgates[name]
+        for name in (
+            "rater_transport_ready",
+            "fresh_rater_set_complete",
+            "raw_outputs_preserved",
+            "aggregate_replay_ready",
+        )
+        if name in raw_subgates
+    }
+    fresh = raw_subgates.get("fresh_rater_set_complete") or {}
+    return {
+        "corpus_current": _subgate(
+            _combine_child_status(corpus_children),
+            children=corpus_children,
+        ),
+        "raters_recorded": _subgate(
+            _combine_child_status(rater_children),
+            usable=fresh.get("usable", 0),
+            required=fresh.get("required", 5),
+            children=rater_children,
+        ),
+        "thresholds_met": raw_subgates.get("thresholds_met", _subgate("NOT_TESTED")),
+    }
 
 
 def validate_pr1_source_lock(contract: dict, brief_path: Path, selection_path: Path) -> dict[str, dict]:

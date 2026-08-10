@@ -323,14 +323,10 @@ G11 is a composite gate, not a single vague reviewer verdict. Status reports and
 receipts must expose these child states separately:
 
 - `corpus_current` — the section/component/page-state crop manifest exists,
-  hashes match, counts are nonzero, and failures are zero;
-- `section_crop_review_units` — the rater input uses reviewable crops or contact
-  sheets assembled from crops, not one whole-site image;
-- `fresh_rater_set_complete` — at least the pre-registered number of fresh,
-  usable rater records exists for the current corpus;
-- `raw_outputs_preserved` — every counted rater has raw and parsed outputs;
-- `aggregate_replay_ready` — aggregate counts can be reconciled from counted
-  rater records;
+  hashes match, counts are nonzero, failures are zero, and rater inputs use
+  reviewable crops/contact sheets instead of one whole-site image;
+- `raters_recorded` — the pre-registered number of fresh usable rater records
+  exists and every counted rater has preserved raw/parsed output;
 - `thresholds_met` — logo-off, competitor-swap, cross-screen-family,
   generic-template, and leakage thresholds pass.
 
