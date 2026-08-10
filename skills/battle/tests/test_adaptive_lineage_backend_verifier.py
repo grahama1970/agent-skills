@@ -17,6 +17,106 @@ SCRIPT = (
 )
 
 
+def test_goal_qualification_writes_deterministic_bound_artifacts(
+    tmp_path: Path,
+) -> None:
+    from battle_skill.adaptive_lineage_goal_qualification import (
+        qualify_recovered_adaptive_lineage_run,
+    )
+
+    run_dir = _write_minimal_run(tmp_path / "run")
+    first = qualify_recovered_adaptive_lineage_run(
+        source_root=run_dir,
+        proof_dir=tmp_path / "proof-a",
+        battle_id="battle-004",
+        require_live=True,
+        forbid_mock=True,
+        require_exact_replay=True,
+    )
+    second = qualify_recovered_adaptive_lineage_run(
+        source_root=run_dir,
+        proof_dir=tmp_path / "proof-b",
+        battle_id="battle-004",
+        require_live=True,
+        forbid_mock=True,
+        require_exact_replay=True,
+    )
+    assert first["status"] == "PASS"
+    assert second["status"] == "PASS"
+    first_qualification = Path(first["qualification_path"]).read_bytes()
+    second_qualification = Path(second["qualification_path"]).read_bytes()
+    assert first_qualification == second_qualification
+    qualification = json.loads(first_qualification)
+    assert qualification["schema"] == "battle.adaptive_lineage_goal_qualification.v1"
+    assert qualification["status"] == "PASS"
+    assert qualification["battle_id"] == "battle-004"
+    assert qualification["counts"]["slot_hashes_matched"] == 4
+    assert qualification["counts"]["exact_replays_matched"] == 2
+    assert {
+        "campaign_path",
+        "integrity_path",
+        "prior_backend_path",
+        "verification_path",
+    } == {item["name"] for item in qualification["input_receipts"]}
+
+
+def test_goal_qualification_rejects_slot_tamper(tmp_path: Path) -> None:
+    from battle_skill.adaptive_lineage_goal_qualification import (
+        qualify_recovered_adaptive_lineage_run,
+    )
+
+    run_dir = _write_minimal_run(tmp_path / "slot-tamper")
+    slot = (
+        run_dir
+        / "generation-1"
+        / "reviewed"
+        / "immutable-slots"
+        / "generation-1-red.py"
+    )
+    slot.write_text("tampered\n", encoding="utf-8")
+    result = qualify_recovered_adaptive_lineage_run(
+        source_root=run_dir,
+        proof_dir=tmp_path / "proof",
+        battle_id="battle-004",
+        require_live=True,
+        forbid_mock=True,
+        require_exact_replay=True,
+    )
+    assert result["status"] == "FAIL"
+    verification = json.loads(
+        Path(result["verification_path"]).read_text(encoding="utf-8")
+    )
+    assert "slot_hash_mismatch:generation-1:red" in verification["errors"]
+
+
+def test_goal_qualification_rejects_replay_input_tamper(tmp_path: Path) -> None:
+    from battle_skill.adaptive_lineage_goal_qualification import (
+        qualify_recovered_adaptive_lineage_run,
+    )
+
+    run_dir = _write_minimal_run(tmp_path / "replay-input-tamper")
+    blue_exec = next(
+        run_dir.glob("generation-2/judge/replays/red-0__blue-0/patched/app.py")
+    )
+    blue_exec.write_text("def import_zip(): return 'tampered'\n", encoding="utf-8")
+    result = qualify_recovered_adaptive_lineage_run(
+        source_root=run_dir,
+        proof_dir=tmp_path / "proof",
+        battle_id="battle-004",
+        require_live=True,
+        forbid_mock=True,
+        require_exact_replay=True,
+    )
+    assert result["status"] == "FAIL"
+    verification = json.loads(
+        Path(result["verification_path"]).read_text(encoding="utf-8")
+    )
+    assert any(
+        "execution_hash_mismatch:blue_patched_app" in error
+        for error in verification["errors"]
+    )
+
+
 def test_backend_verifier_accepts_rehashed_receipts(tmp_path: Path) -> None:
     run_dir = _write_minimal_run(tmp_path / "run")
     completed = _run_verifier(run_dir)
@@ -43,7 +143,10 @@ def test_backend_verifier_rejects_rewired_blue_execution_bytes(tmp_path: Path) -
     assert completed.returncode == 1
     result = json.loads(completed.stdout)
     assert result["status"] == "FAIL"
-    assert any("execution_hash_mismatch:blue_patched_app" in error for error in result["errors"])
+    assert any(
+        "execution_hash_mismatch:blue_patched_app" in error
+        for error in result["errors"]
+    )
 
 
 def test_backend_verifier_rejects_each_slot_byte_tamper(tmp_path: Path) -> None:
@@ -60,7 +163,9 @@ def test_backend_verifier_rejects_each_slot_byte_tamper(tmp_path: Path) -> None:
             slot.write_text("tampered\n", encoding="utf-8")
             result = json.loads(_run_verifier(run_dir).stdout)
             assert result["status"] == "FAIL"
-            assert f"slot_hash_mismatch:generation-{generation}:{team}" in result["errors"]
+            assert (
+                f"slot_hash_mismatch:generation-{generation}:{team}" in result["errors"]
+            )
 
 
 @pytest.mark.parametrize(
@@ -105,7 +210,9 @@ def test_backend_verifier_rejects_replay_byte_tamper_and_duplicate_replay(
     tmp_path: Path,
 ) -> None:
     run_dir = _write_minimal_run(tmp_path / "replay-tamper")
-    replay = run_dir / "generation-1" / "judge-exact-replay" / "exact-replay-receipt.json"
+    replay = (
+        run_dir / "generation-1" / "judge-exact-replay" / "exact-replay-receipt.json"
+    )
     replay.write_text('{"status": "PASS", "matched": true}\n', encoding="utf-8")
     result = json.loads(_run_verifier(run_dir).stdout)
     assert result["status"] == "FAIL"
@@ -142,13 +249,21 @@ def test_backend_verifier_rejects_duplicate_missing_external_and_symlink_slots(
     assert "slot_paths_not_unique" in result["errors"]
 
     run_dir = _write_minimal_run(tmp_path / "missing-slot")
-    Path(json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))["slots"][0]["path"]).unlink()
+    Path(
+        json.loads(
+            (run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8")
+        )["slots"][0]["path"]
+    ).unlink()
     result = json.loads(_run_verifier(run_dir).stdout)
     assert result["status"] == "FAIL"
-    assert any("slot_not_regular:generation-1:red" in error for error in result["errors"])
+    assert any(
+        "slot_not_regular:generation-1:red" in error for error in result["errors"]
+    )
 
     run_dir = _write_minimal_run(tmp_path / "external-slot")
-    integrity = json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))
+    integrity = json.loads(
+        (run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8")
+    )
     external = tmp_path / "external.py"
     external.write_text("outside\n", encoding="utf-8")
     digest = _sha(external)
@@ -161,7 +276,9 @@ def test_backend_verifier_rejects_duplicate_missing_external_and_symlink_slots(
     assert "slot_outside_run:generation-1:red" in result["errors"]
 
     run_dir = _write_minimal_run(tmp_path / "symlink-slot")
-    integrity = json.loads((run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8"))
+    integrity = json.loads(
+        (run_dir / "artifact-integrity-receipt.json").read_text(encoding="utf-8")
+    )
     slot = Path(integrity["slots"][0]["path"])
     target = slot.with_suffix(".target.py")
     slot.rename(target)
@@ -243,7 +360,9 @@ def _write_minimal_run(root: Path) -> Path:
 
     replay_records: list[dict[str, object]] = []
     for generation in (1, 2):
-        judge = root / f"generation-{generation}" / "judge" / "replays" / "red-0__blue-0"
+        judge = (
+            root / f"generation-{generation}" / "judge" / "replays" / "red-0__blue-0"
+        )
         exact = (
             root
             / f"generation-{generation}"
@@ -254,7 +373,12 @@ def _write_minimal_run(root: Path) -> Path:
         )
         _write_attempt(root=root, generation=generation, attempt_dir=judge)
         _copy_attempt_with_workspaces(judge, exact)
-        replay_receipt = root / f"generation-{generation}" / "judge-exact-replay" / "exact-replay-receipt.json"
+        replay_receipt = (
+            root
+            / f"generation-{generation}"
+            / "judge-exact-replay"
+            / "exact-replay-receipt.json"
+        )
         _write_json(
             replay_receipt,
             {
@@ -297,7 +421,13 @@ def _write_minimal_run(root: Path) -> Path:
     }
     _write_json(integrity_path, integrity)
     for team in ("red", "blue"):
-        auth_path = root / "generation-2" / team / "research" / "research-query-authorization.json"
+        auth_path = (
+            root
+            / "generation-2"
+            / team
+            / "research"
+            / "research-query-authorization.json"
+        )
         _write_json(
             auth_path,
             {
@@ -311,6 +441,7 @@ def _write_minimal_run(root: Path) -> Path:
         {
             "schema": "battle.adaptive_red_blue_lineage_canary.v1",
             "status": "PASS",
+            "battle_id": "battle-004",
             "run_id": "test-run",
             "source_commit": "a" * 40,
             "source_tree": "b" * 40,
@@ -339,6 +470,20 @@ def _write_minimal_run(root: Path) -> Path:
             ],
         },
     )
+    _write_json(
+        root / "backend-verification.json",
+        {
+            "schema": "battle.adaptive_lineage_backend_verification.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": True,
+            "slot_hashes_matched": 4,
+            "slot_hashes_required": 4,
+            "exact_replays_matched": 2,
+            "exact_replays_required": 2,
+            "errors": [],
+        },
+    )
     return root
 
 
@@ -351,7 +496,9 @@ def _run_verifier(run_dir: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _rewrite_integrity_and_campaign(run_dir: Path, integrity: dict[str, object]) -> None:
+def _rewrite_integrity_and_campaign(
+    run_dir: Path, integrity: dict[str, object]
+) -> None:
     integrity_path = run_dir / "artifact-integrity-receipt.json"
     _write_json(integrity_path, integrity)
     campaign_path = run_dir / "campaign-receipt.json"
@@ -408,9 +555,7 @@ def _write_attempt(*, root: Path, generation: int, attempt_dir: Path) -> None:
             ],
             "container_input_hash_pass": True,
             "container_input_hashes": [
-                _container_hash_receipt(
-                    {"red_exploit_submission.py": red_sha}
-                ),
+                _container_hash_receipt({"red_exploit_submission.py": red_sha}),
                 _container_hash_receipt(
                     {
                         "app.py": blue_sha,
@@ -429,10 +574,14 @@ def _copy_attempt_with_workspaces(source: Path, target: Path) -> None:
     for binding in payload["judge_input_byte_bindings"]:
         for key in ("execution_path",):
             binding[key] = binding[key].replace(str(source), str(target))
-    receipt.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    receipt.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
-def _binding(role: str, source: Path, execution: Path, source_sha: str) -> dict[str, object]:
+def _binding(
+    role: str, source: Path, execution: Path, source_sha: str
+) -> dict[str, object]:
     return {
         "role": role,
         "source_path": str(source),
@@ -464,4 +613,6 @@ def _sha(path: Path) -> str:
 
 def _write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )

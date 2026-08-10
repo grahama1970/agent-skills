@@ -1,0 +1,154 @@
+{
+  "battle_id": "battle-004",
+  "checks": [
+    {
+      "name": "campaign_receipt_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/campaign-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact_integrity_receipt_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/artifact-integrity-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_backend_verification_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/backend-verification.json",
+      "status": "PASS"
+    },
+    {
+      "errors": [],
+      "name": "fresh_backend_verification_pass",
+      "status": "PASS"
+    },
+    {
+      "actual": "battle-004",
+      "expected": "battle-004",
+      "name": "battle_id_matches",
+      "status": "PASS"
+    },
+    {
+      "actual": "PASS",
+      "name": "campaign_status_pass",
+      "status": "PASS"
+    },
+    {
+      "campaign_live": true,
+      "name": "live_required",
+      "status": "PASS",
+      "verification_live": true
+    },
+    {
+      "campaign_mocked": false,
+      "name": "mock_forbidden",
+      "status": "PASS",
+      "verification_mocked": false
+    },
+    {
+      "fixture_fallback_used": false,
+      "name": "fixture_fallback_forbidden",
+      "status": "PASS"
+    },
+    {
+      "matched": 4,
+      "name": "immutable_slots_match_required_count",
+      "required": 4,
+      "status": "PASS"
+    },
+    {
+      "matched": 2,
+      "name": "exact_replays_match_required_count",
+      "required": 2,
+      "status": "PASS"
+    },
+    {
+      "exact_replay_attempt_count": 2,
+      "judge_attempt_count": 4,
+      "name": "docker_observed_input_hashes_bound",
+      "status": "PASS"
+    },
+    {
+      "generation_check": {
+        "bad_status": [],
+        "generations": [
+          1,
+          2
+        ],
+        "missing": [],
+        "ok": true
+      },
+      "name": "red_blue_generation_ids_valid",
+      "status": "PASS"
+    },
+    {
+      "exact_replays_matched": 2,
+      "name": "prior_backend_verification_pass",
+      "slot_hashes_matched": 4,
+      "status": "PASS"
+    }
+  ],
+  "counts": {
+    "exact_replay_attempt_count": 2,
+    "exact_replays_matched": 2,
+    "exact_replays_required": 2,
+    "judge_attempt_count": 4,
+    "slot_hashes_matched": 4,
+    "slot_hashes_required": 4
+  },
+  "fixture_fallback_used": false,
+  "input_receipts": [
+    {
+      "exists": true,
+      "name": "campaign_path",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/campaign-receipt.json",
+      "sha256": "ae21dfab2c7154b2c534173fa2bf649c64ea49b2c8a4c916716b805bd2e5c388"
+    },
+    {
+      "exists": true,
+      "name": "integrity_path",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/artifact-integrity-receipt.json",
+      "sha256": "8e2a595ffa7160813e1b38ea4ee9a7a85a35282f1020c50b671906d47c9e00c1"
+    },
+    {
+      "exists": true,
+      "name": "prior_backend_path",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/backend-verification.json",
+      "sha256": "d7338c7dd8b7d48a95c09d8d3b60d412e0019b7dba0826a294f91ff19a475de4"
+    },
+    {
+      "exists": true,
+      "name": "verification_path",
+      "path": "adaptive-lineage-verification.json",
+      "sha256": "21f6818606cb764d0fe23dbb5bb0b3eb4809d065e796bcaa52199c0897ae4396"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "production readiness",
+      "UX acceptance",
+      "a new live Tau/Docker campaign was rerun",
+      "security exploit success beyond the referenced Judge receipts",
+      "patch effectiveness outside the recovered battle-004 replay inputs"
+    ],
+    "proves": [
+      "the recovered battle-004 adaptive Red/Blue lineage receipts rehash under the backend verifier",
+      "the qualification receipt is bound to campaign, artifact-integrity, prior backend, and fresh verification inputs",
+      "the recovered run is non-mocked, live, fixture-free, and exact-replay checked for this receipt set"
+    ]
+  },
+  "requirements": {
+    "forbid_mock": true,
+    "require_exact_replay": true,
+    "require_live": true,
+    "required_exact_replay_count": 2,
+    "required_slot_count": 4
+  },
+  "schema": "battle.adaptive_lineage_goal_qualification.v1",
+  "source_commit": "9e596716b30ad690285eeb6b3b11438a0e828657",
+  "source_run_dir": "/tmp/battle-1199-recovery-20260808T162547Z",
+  "source_run_id": "battle-1199-recovery-20260808T162547Z",
+  "source_tree": "08022e1014830a438182aa7a49499f56cc03ec7a",
+  "status": "PASS"
+}

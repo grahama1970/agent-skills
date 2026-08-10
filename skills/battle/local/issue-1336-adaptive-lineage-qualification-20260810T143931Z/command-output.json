@@ -1,0 +1,101 @@
+{
+  "battle_id": "battle-004",
+  "checks": [
+    {
+      "name": "campaign_receipt_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/campaign-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact_integrity_receipt_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/artifact-integrity-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_backend_verification_present",
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/backend-verification.json",
+      "status": "PASS"
+    },
+    {
+      "errors": [],
+      "name": "fresh_backend_verification_pass",
+      "status": "PASS"
+    },
+    {
+      "actual": "battle-004",
+      "expected": "battle-004",
+      "name": "battle_id_matches",
+      "status": "PASS"
+    },
+    {
+      "actual": "PASS",
+      "name": "campaign_status_pass",
+      "status": "PASS"
+    },
+    {
+      "campaign_live": true,
+      "name": "live_required",
+      "status": "PASS",
+      "verification_live": true
+    },
+    {
+      "campaign_mocked": false,
+      "name": "mock_forbidden",
+      "status": "PASS",
+      "verification_mocked": false
+    },
+    {
+      "fixture_fallback_used": false,
+      "name": "fixture_fallback_forbidden",
+      "status": "PASS"
+    },
+    {
+      "matched": 4,
+      "name": "immutable_slots_match_required_count",
+      "required": 4,
+      "status": "PASS"
+    },
+    {
+      "matched": 2,
+      "name": "exact_replays_match_required_count",
+      "required": 2,
+      "status": "PASS"
+    },
+    {
+      "exact_replay_attempt_count": 2,
+      "judge_attempt_count": 4,
+      "name": "docker_observed_input_hashes_bound",
+      "status": "PASS"
+    },
+    {
+      "generation_check": {
+        "bad_status": [],
+        "generations": [
+          1,
+          2
+        ],
+        "missing": [],
+        "ok": true
+      },
+      "name": "red_blue_generation_ids_valid",
+      "status": "PASS"
+    },
+    {
+      "exact_replays_matched": 2,
+      "name": "prior_backend_verification_pass",
+      "slot_hashes_matched": 4,
+      "status": "PASS"
+    }
+  ],
+  "fresh_verification_requested": true,
+  "live": true,
+  "mocked": false,
+  "proof_dir": "/home/graham/workspace/experiments/agent-skills-issue-1336-battle-adaptive-lineage/skills/battle/local/issue-1336-adaptive-lineage-qualification-20260810T143931Z",
+  "qualification_path": "/home/graham/workspace/experiments/agent-skills-issue-1336-battle-adaptive-lineage/skills/battle/local/issue-1336-adaptive-lineage-qualification-20260810T143931Z/adaptive-lineage-qualification.json",
+  "qualification_sha256": "52b38e9b775671a13b39dfd79a6d2794191da8a7ce73df7741ab1585b6233130",
+  "schema": "battle.adaptive_lineage_goal_qualification_command.v1",
+  "source_run_dir": "/tmp/battle-1199-recovery-20260808T162547Z",
+  "status": "PASS",
+  "verification_path": "/home/graham/workspace/experiments/agent-skills-issue-1336-battle-adaptive-lineage/skills/battle/local/issue-1336-adaptive-lineage-qualification-20260810T143931Z/adaptive-lineage-verification.json",
+  "verification_sha256": "21f6818606cb764d0fe23dbb5bb0b3eb4809d065e796bcaa52199c0897ae4396"
+}

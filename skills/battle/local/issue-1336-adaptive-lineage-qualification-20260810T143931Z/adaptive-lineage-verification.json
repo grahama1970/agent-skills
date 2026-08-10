@@ -1,0 +1,125 @@
+{
+  "attempt_records": [
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    }
+  ],
+  "checked_file_count": 24,
+  "checked_files": [
+    "/tmp/battle-1199-recovery-20260808T162547Z/artifact-integrity-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/campaign-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/exact-replay-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/app.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge/replays/red-0__blue-0/patched/app.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/reviewed/immutable-slots/generation-1-red.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/exact-replay-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/patched/app.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge/replays/red-0__blue-0/patched/app.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+    "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/reviewed/immutable-slots/generation-2-red.py"
+  ],
+  "errors": [],
+  "exact_replay_attempt_count": 2,
+  "exact_replays_matched": 2,
+  "exact_replays_required": 2,
+  "judge_attempt_count": 4,
+  "live": true,
+  "mocked": false,
+  "replay_records": [
+    {
+      "actual_sha256": "ea6c96f1b85f3d14fa67f56a879fd4f9f4fa58cf1f5d72a2b06557f01d277554",
+      "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+      "expected_sha256": "ea6c96f1b85f3d14fa67f56a879fd4f9f4fa58cf1f5d72a2b06557f01d277554",
+      "generation": 1,
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/judge-exact-replay/exact-replay-receipt.json",
+      "replay_docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917"
+    },
+    {
+      "actual_sha256": "d4fbc7ff6d283475ea900622348277fb41b26193a43bc0aa531f6147ff18b9da",
+      "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+      "expected_sha256": "d4fbc7ff6d283475ea900622348277fb41b26193a43bc0aa531f6147ff18b9da",
+      "generation": 2,
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/judge-exact-replay/exact-replay-receipt.json",
+      "replay_docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917"
+    }
+  ],
+  "run_dir": "/tmp/battle-1199-recovery-20260808T162547Z",
+  "schema": "battle.adaptive_lineage_backend_verification.v1",
+  "slot_hashes_matched": 4,
+  "slot_hashes_required": 4,
+  "slot_records": [
+    {
+      "actual_sha256": "6080dd0e35dc30a10accee45d9259d10727f75eddd921e754f973587a1e71ee2",
+      "expected_sha256": "6080dd0e35dc30a10accee45d9259d10727f75eddd921e754f973587a1e71ee2",
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/reviewed/immutable-slots/generation-1-red.py",
+      "slot_key": "generation-1:red"
+    },
+    {
+      "actual_sha256": "2540a655ed392ec25e159d1168c1eb01619a26a04531a44cc7c3525864bf2039",
+      "expected_sha256": "2540a655ed392ec25e159d1168c1eb01619a26a04531a44cc7c3525864bf2039",
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+      "slot_key": "generation-1:blue"
+    },
+    {
+      "actual_sha256": "ae9813878861719a17318f963465070b774203a5145c915ee3faaac22536aa9d",
+      "expected_sha256": "ae9813878861719a17318f963465070b774203a5145c915ee3faaac22536aa9d",
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/reviewed/immutable-slots/generation-2-red.py",
+      "slot_key": "generation-2:red"
+    },
+    {
+      "actual_sha256": "d19fe936368e7e4d715377be352ce025b3ee520a52eba0e026582d715221374e",
+      "expected_sha256": "d19fe936368e7e4d715377be352ce025b3ee520a52eba0e026582d715221374e",
+      "matched": true,
+      "path": "/tmp/battle-1199-recovery-20260808T162547Z/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+      "slot_key": "generation-2:blue"
+    }
+  ],
+  "status": "PASS"
+}

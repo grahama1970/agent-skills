@@ -524,7 +524,31 @@ def arena_adaptive_lineage_qualification(
     battle_id: str = typer.Argument(
         "battle-004", help="Canonical Battle ID for the adaptive-lineage qualification."
     ),
-    out: Path = typer.Option(..., help="Artifact output directory."),
+    out: Optional[Path] = typer.Option(None, help="Artifact output directory."),
+    proof_dir: Optional[Path] = typer.Option(
+        None,
+        help="Proof directory for recovered battle-004 Red/Blue lineage qualification.",
+    ),
+    source_root: Optional[Path] = typer.Option(
+        None,
+        help="Recovered adaptive Red/Blue lineage run directory.",
+    ),
+    fresh: bool = typer.Option(
+        False,
+        help="Recompute recovered-run verification before writing qualification artifacts.",
+    ),
+    require_live: bool = typer.Option(
+        False,
+        help="Require recovered receipts and verification to be live.",
+    ),
+    forbid_mock: bool = typer.Option(
+        False,
+        help="Reject mocked recovered receipts and verification.",
+    ),
+    require_exact_replay: bool = typer.Option(
+        False,
+        help="Require 2/2 exact Judge replay receipts to rehash.",
+    ),
     query: str = typer.Option(
         "OWASP file upload zip slip path traversal vulnerability",
         help="Brave Search query for canonical BATTLE-004 scenario selection.",
@@ -553,8 +577,32 @@ def arena_adaptive_lineage_qualification(
     LIVE Tau specimen provider. The emitted battle.adaptive_lineage_qualification.v1
     receipt controls the exit code (0 only on PASS). Runs the specimen loop once.
     """
-    import datetime as _dt
     import json as _json
+
+    if proof_dir is not None:
+        from .adaptive_lineage_goal_qualification import (
+            DEFAULT_RECOVERED_RUN_DIR,
+            qualify_recovered_adaptive_lineage_run,
+        )
+
+        result = qualify_recovered_adaptive_lineage_run(
+            source_root=source_root or DEFAULT_RECOVERED_RUN_DIR,
+            proof_dir=proof_dir,
+            battle_id=battle_id,
+            require_live=require_live,
+            forbid_mock=forbid_mock,
+            require_exact_replay=require_exact_replay,
+        )
+        result["fresh_verification_requested"] = fresh
+        print(_json.dumps(result, indent=2, sort_keys=True))
+        if result.get("status") != "PASS":
+            raise typer.Exit(1)
+        return
+
+    if out is None:
+        raise typer.BadParameter("--out is required unless --proof-dir is supplied")
+
+    import datetime as _dt
 
     from .arena_live_battle_proof import run_live_adaptive_lineage_qualification
 
@@ -635,6 +683,7 @@ def arena_prekill_survival_proof(
     print(_json.dumps(result, indent=2, sort_keys=True))
     if result.get("status") != "PASS":
         raise typer.Exit(1)
+
 
 @app.command("validate-ux-contract")
 def validate_ux_contract(
@@ -2139,7 +2188,9 @@ def prove_containerized_deployment_smoke(
     ),
 ):
     """Prove a Git-archived Battle package can run frontend/backend in Docker."""
-    from .containerized_deployment_smoke import prove_containerized_deployment_smoke as _prove
+    from .containerized_deployment_smoke import (
+        prove_containerized_deployment_smoke as _prove,
+    )
 
     receipt = _prove(
         out_dir=out,
@@ -2200,7 +2251,9 @@ def validate_production_readiness(
     ),
 ):
     """Fail closed unless local and external production readiness receipts exist."""
-    from .production_readiness_contract import validate_production_readiness as _validate
+    from .production_readiness_contract import (
+        validate_production_readiness as _validate,
+    )
 
     receipt = _validate(
         out_dir=out,
@@ -2280,10 +2333,14 @@ def prove_production_infrastructure_deployment(
     ),
 ):
     """Probe production HTTPS/WSS infrastructure and emit a fail-closed receipt."""
-    from .production_infrastructure_probe import prove_production_infrastructure_deployment as _prove
+    from .production_infrastructure_probe import (
+        prove_production_infrastructure_deployment as _prove,
+    )
 
     websocket_bearer_token = (
-        os.environ.get(websocket_bearer_token_env) if websocket_bearer_token_env else None
+        os.environ.get(websocket_bearer_token_env)
+        if websocket_bearer_token_env
+        else None
     )
     receipt = _prove(
         out_dir=out,
@@ -2947,7 +3004,9 @@ def v16_arena_freeze(
         "--targets",
         help="Comma-separated V16 target IDs. Slice 1 supports RelayForge only.",
     ),
-    out: Path = typer.Option(..., "--out", help="Deterministic freeze output directory."),
+    out: Path = typer.Option(
+        ..., "--out", help="Deterministic freeze output directory."
+    ),
     image_digest: str = typer.Option(
         ...,
         "--image-digest",
