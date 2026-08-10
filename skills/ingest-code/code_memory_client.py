@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 import os
+from pathlib import Path
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -16,6 +20,16 @@ load_dotenv(override=False)
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
 DEFAULT_CODE_SYMBOLS_BATCH_SIZE = 100
 CODE_SYMBOLS_BATCH_SIZE_ENV = "CODE_SYMBOLS_QDRANT_BATCH_SIZE"
+CODE_GRAPH_ARTIFACTS = (
+    "manifest.json",
+    "files.jsonl",
+    "symbols.jsonl",
+    "edges.jsonl",
+    "debug_invocations.jsonl",
+    "diagnostics.jsonl",
+    "coverage.json",
+    "checksums.json",
+)
 
 
 @dataclass(frozen=True)
@@ -30,11 +44,36 @@ class CodeSymbolWriteResult(MemoryWriteResult):
     stored_records: tuple[CodeSymbolRecord, ...]
 
 
+@dataclass(frozen=True)
+class CodeProjectionApplyResult(MemoryWriteResult):
+    receipt: dict[str, Any] | None
+    request: dict[str, Any]
+    submitted_bundle_digest: str
+    checksums_digest: str
+
+
+def code_graph_bundle_digest(bundle_path: Path) -> str:
+    """Return a deterministic digest over the submitted code-graph bundle."""
+    hasher = hashlib.sha256()
+    for name in CODE_GRAPH_ARTIFACTS:
+        artifact = bundle_path / name
+        hasher.update(name.encode("utf-8"))
+        hasher.update(b"\0")
+        hasher.update(artifact.read_bytes() if artifact.exists() else b"<missing>")
+        hasher.update(b"\0")
+    return f"sha256:{hasher.hexdigest()}"
+
+
+def code_graph_checksums_digest(bundle_path: Path) -> str:
+    """Return the digest of checksums.json for the submitted code-graph bundle."""
+    return f"sha256:{hashlib.sha256((bundle_path / 'checksums.json').read_bytes()).hexdigest()}"
+
+
 class CodeMemoryClient:
     """Small Unix-socket client for memory-owned code indexing."""
 
-    def __init__(self, socket_path: str = MEMORY_SOCKET_PATH, timeout: float = 30.0):
-        self.socket_path = socket_path
+    def __init__(self, socket_path: str | None = None, timeout: float = 30.0):
+        self.socket_path = socket_path or os.environ.get("MEMORY_SOCKET_PATH") or MEMORY_SOCKET_PATH
         self.timeout = timeout
 
     def _client(self) -> httpx.Client:
@@ -86,6 +125,94 @@ class CodeMemoryClient:
             attempted=len(records),
             errors=errors,
             stored_records=tuple(stored_records),
+        )
+
+    def apply_code_projection_bundle(
+        self,
+        *,
+        bundle_path: Path,
+        scope: str,
+        repo: str,
+        branch: str,
+        root: str,
+        source_commit: str,
+        expected_counts: dict[str, int],
+        idempotency_key: str,
+    ) -> CodeProjectionApplyResult:
+        """Apply one complete code-graph bundle through Memory/GMO lifecycle authority."""
+        bundle_path = bundle_path.resolve()
+        submitted_digest = code_graph_bundle_digest(bundle_path)
+        checksums_digest = code_graph_checksums_digest(bundle_path)
+        request = {
+            "bundle_path": str(bundle_path),
+            "scope": scope,
+            "repo": repo,
+            "branch": branch,
+            "root": root,
+            "source_commit": source_commit,
+            "submitted_bundle_digest": submitted_digest,
+            "checksums_digest": checksums_digest,
+            "expected_counts": expected_counts,
+            "idempotency_key": idempotency_key,
+        }
+        try:
+            with self._client() as client:
+                response = client.post("/code/projection/apply", json=request)
+        except Exception as exc:
+            return CodeProjectionApplyResult(
+                stored=0,
+                attempted=int(expected_counts.get("symbols", 0)),
+                errors=[str(exc)],
+                receipt=None,
+                request=request,
+                submitted_bundle_digest=submitted_digest,
+                checksums_digest=checksums_digest,
+            )
+
+        if not (200 <= response.status_code < 300):
+            detail = getattr(response, "text", "") or ""
+            error = f"HTTP {response.status_code}: {detail}" if detail else f"HTTP {response.status_code}"
+            return CodeProjectionApplyResult(
+                stored=0,
+                attempted=int(expected_counts.get("symbols", 0)),
+                errors=[error],
+                receipt=None,
+                request=request,
+                submitted_bundle_digest=submitted_digest,
+                checksums_digest=checksums_digest,
+            )
+
+        try:
+            receipt = response.json()
+        except (json.JSONDecodeError, ValueError) as exc:
+            return CodeProjectionApplyResult(
+                stored=0,
+                attempted=int(expected_counts.get("symbols", 0)),
+                errors=[f"invalid application receipt JSON: {exc}"],
+                receipt=None,
+                request=request,
+                submitted_bundle_digest=submitted_digest,
+                checksums_digest=checksums_digest,
+            )
+
+        errors: list[str] = []
+        if receipt.get("submitted_bundle_digest") != submitted_digest:
+            errors.append("application receipt submitted_bundle_digest mismatch")
+        if receipt.get("checksums_digest") != checksums_digest:
+            errors.append("application receipt checksums_digest mismatch")
+        if not (receipt.get("generation") or {}).get("generation_id"):
+            errors.append("application receipt missing generation_id")
+        if receipt.get("status") != "applied":
+            errors.append(f"application receipt status is not applied: {receipt.get('status')}")
+
+        return CodeProjectionApplyResult(
+            stored=0 if errors else int(expected_counts.get("symbols", 0)),
+            attempted=int(expected_counts.get("symbols", 0)),
+            errors=errors,
+            receipt=receipt,
+            request=request,
+            submitted_bundle_digest=submitted_digest,
+            checksums_digest=checksums_digest,
         )
 
     def _resolve_batch_size(self, requested: int | None) -> int:
@@ -145,7 +272,7 @@ class CodeMemoryClient:
         unpruned ids stay in the state file so the next run retries them.
         """
         if not symbol_ids:
-            return MemoryWriteResult(stored=0, errors=[])
+            return MemoryWriteResult(stored=0, attempted=0, errors=[])
         removed = 0
         errors: list[str] = []
         with self._client() as client:

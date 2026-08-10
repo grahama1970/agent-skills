@@ -32,7 +32,7 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
-from code_memory_client import CodeMemoryClient
+from code_memory_client import CodeMemoryClient, code_graph_bundle_digest
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
 from incremental_index import IncrementalIndex, transform_version
@@ -199,6 +199,7 @@ def _write_ingest_marker(
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
     code_graph_artifact: dict[str, Any] | None = None,
+    code_projection_receipt: dict[str, Any] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -222,6 +223,19 @@ def _write_ingest_marker(
             "line_ranges": code_symbols_stored > 0,
             "content_hashes": code_symbols_stored > 0,
             "hybrid_retrieval_capable": code_symbols_stored > 0,
+            "projection_authority": "memory.code_projection.apply_receipt.v1"
+            if code_projection_receipt
+            else None,
+            "projection_generation_id": (
+                (code_projection_receipt.get("generation") or {}).get("generation_id")
+                if code_projection_receipt
+                else None
+            ),
+            "projection_bundle_digest": (
+                code_projection_receipt.get("submitted_bundle_digest")
+                if code_projection_receipt
+                else None
+            ),
         },
         "scope": scope,
         "run_status": run_status,
@@ -237,6 +251,7 @@ def _write_ingest_marker(
             ),
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
+            "code_projection_receipt": code_projection_receipt,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -383,6 +398,42 @@ def verify_embedding_recall(samples: list[dict[str, str]], sample_size: int = 10
         "failed": len(failures),
         "failures": failures,
     }
+
+
+def _expected_projection_counts(code_graph_artifact: dict[str, Any]) -> dict[str, int]:
+    counts = code_graph_artifact.get("counts") or {}
+    return {
+        "files": int(counts.get("files", 0)),
+        "symbols": int(counts.get("symbols", 0)),
+        "edges": int(counts.get("edges_active_for_traversal", counts.get("edges", 0))),
+    }
+
+
+def _apply_code_projection_artifact(
+    *,
+    path: Path,
+    scope: str,
+    code_graph_artifact: dict[str, Any],
+    client: CodeMemoryClient | None = None,
+):
+    """Submit one complete code graph artifact to Memory/GMO and require a bound receipt."""
+    expected_counts = _expected_projection_counts(code_graph_artifact)
+    bundle_path = Path(code_graph_artifact["path"])
+    submitted_bundle_digest = code_graph_bundle_digest(bundle_path)
+    idempotency_key = "ingest-code:" + hashlib.sha256(
+        json.dumps([scope, submitted_bundle_digest, expected_counts], sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
+    active_client = client or CodeMemoryClient()
+    return active_client.apply_code_projection_bundle(
+        bundle_path=bundle_path,
+        scope=scope,
+        repo=path.resolve().name,
+        branch=_current_branch(path),
+        root=str(path.resolve()),
+        source_commit=_current_commit(path),
+        expected_counts=expected_counts,
+        idempotency_key=idempotency_key,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1537,7 +1588,8 @@ def scan(
     cwe_only: bool = typer.Option(False, "--cwe-only", help="Only scan for CWEs (legacy mode)"),
     validate: bool = typer.Option(False, "--validate/--no-validate", help="Run LLM validation on CWEs"),
     treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for structured code symbols"),
-    code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
+    code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Apply treesitter code graph bundle to Memory/GMO projection"),
+    compat_symbol_upsert: bool = typer.Option(False, "--compat-symbol-upsert", help="Use legacy per-symbol upserts instead of complete projection application"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     batch_size: int = typer.Option(50, help="Files per batch"),
@@ -1568,6 +1620,7 @@ def scan(
     component_plan = None
     current_entries: dict[str, str] = {}
     code_symbols_pruned = 0
+    code_projection_receipt: dict[str, Any] | None = None
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
@@ -1773,10 +1826,53 @@ def scan(
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
     if treesitter and code_index and not cwe_only:
-        print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
+        print("\n--- Phase 4: Applying structured code projection ---", flush=True)
         if dry_run:
-            print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
+            print("  [DRY RUN] code projection application skipped", flush=True)
+        elif not code_graph_artifact:
+            print("  [ERROR] code graph artifact missing; refusing projection write", file=sys.stderr, flush=True)
+            raise SystemExit(1)
+        elif not compat_symbol_upsert:
+            apply_result = _apply_code_projection_artifact(
+                path=path,
+                scope=scope,
+                code_graph_artifact=code_graph_artifact,
+            )
+            if apply_result.errors:
+                for error in apply_result.errors[:5]:
+                    print(f"  [ERROR] projection apply: {error}", file=sys.stderr, flush=True)
+                raise SystemExit(1)
+            code_symbols_stored = apply_result.stored
+            code_projection_receipt = apply_result.receipt
+            if index:
+                index.commit(current_entries)
+            if component_state and component_plan and code_graph_artifact:
+                component_state.commit(
+                    current_sources=component_plan.current_sources,
+                    symbols_by_path=_symbols_by_path(code_symbol_records),
+                    bundle_digest=apply_result.submitted_bundle_digest,
+                    accepted_complete_bundle=bool(code_graph_artifact.get("complete")),
+                    receipt={
+                        "schema": "ingest-code.projection_application_receipt.v1",
+                        "component_plan": component_plan.summary(),
+                        "symbols_total": len(code_symbol_records),
+                        "symbols_written": apply_result.stored,
+                        "bundle_path": code_graph_artifact["path"],
+                        "memory_receipt": apply_result.receipt,
+                    },
+                )
+            print(
+                "Code projection: "
+                f"{code_symbols_stored} symbols activated via complete bundle",
+                flush=True,
+            )
         else:
+            print(
+                "  [WARN] --compat-symbol-upsert uses legacy per-symbol writes; "
+                "this is not complete-projection lifecycle authority",
+                file=sys.stderr,
+                flush=True,
+            )
             verification_samples: list[dict[str, str]] = []
             client = CodeMemoryClient()
             pending = set(index_plan.to_process) if index_plan else None
@@ -1842,6 +1938,7 @@ def scan(
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,
+        "code_projection_receipt": code_projection_receipt,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
@@ -1864,6 +1961,7 @@ def scan(
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
                 code_graph_artifact=code_graph_artifact,
+                code_projection_receipt=code_projection_receipt,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -1976,20 +2074,47 @@ def rescan(
         local_code_symbols_artifact = None
         local_code_symbols_written = 0
         codebase_ts_symbols = 0
+        code_graph_artifact: dict[str, Any] | None = None
+        code_projection_receipt: dict[str, Any] | None = None
         if treesitter and code_index:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
+            projection_files = collect_files(path, DEFAULT_GLOB_PATTERNS)
+            projection_records: list[CodeSymbolRecord] = []
             for scan_root in code_symbol_scan_roots:
-                root_stored = _store_treesitter_symbols_for_directory(
-                    scan_root,
-                    path,
-                    scope,
-                    verification_samples=verifiable_samples,
-                    local_artifact_path=local_code_symbols_artifact,
-                )
-                codebase_ts_symbols += root_stored
+                root_records = _scan_treesitter_symbol_records_for_directory(scan_root, path, scope)
+                projection_records.extend(root_records)
                 completed_code_symbol_scan_roots.append(scan_root)
-                print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
+                print(f"Treesitter: {len(root_records)} symbols extracted from {scan_root}", flush=True)
+            projection_records.sort(key=lambda item: (item.normalized_path, item.qualified_name, item.start_line))
+            local_code_symbols_written = _append_local_code_symbols(local_code_symbols_artifact, projection_records)
+            projection_edges = extract_edges(projection_files, path)
+            code_graph_artifact = write_code_graph_bundle(
+                codebase_root=path,
+                repo=path.resolve().name,
+                branch=_current_branch(path),
+                commit=_current_commit(path),
+                scan_roots=code_symbol_scan_roots,
+                files=projection_files,
+                symbols=projection_records,
+                edges=projection_edges,
+            )
+            apply_result = _apply_code_projection_artifact(
+                path=path,
+                scope=scope,
+                code_graph_artifact=code_graph_artifact,
+            )
+            if apply_result.errors:
+                for error in apply_result.errors[:5]:
+                    print(f"  [ERROR] projection apply: {error}", file=sys.stderr, flush=True)
+                raise SystemExit(1)
+            codebase_ts_symbols = apply_result.stored
+            code_projection_receipt = apply_result.receipt
+            for record in projection_records[:codebase_ts_symbols]:
+                verifiable_samples.append({
+                    "name": record.symbol_name,
+                    "problem": record.problem,
+                })
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
@@ -2010,6 +2135,8 @@ def rescan(
             completed_scan_roots=completed_code_symbol_scan_roots,
             local_code_symbols_artifact=local_code_symbols_artifact,
             local_code_symbols_written=local_code_symbols_written,
+            code_graph_artifact=code_graph_artifact,
+            code_projection_receipt=code_projection_receipt,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})

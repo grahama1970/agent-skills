@@ -1,0 +1,147 @@
+{
+  "commands": [
+    "MEMORY_SOCKET_PATH=/tmp/ingest-code-memory-1346.sock skills/ingest-code/run.sh scan /tmp/ingest-code-1346-live/repo --treesitter --code-index --scope issue1346-live",
+    "repeat same command for idempotent replay",
+    "delete /tmp/ingest-code-1346-live/repo/beta.py, repeat same scan command for retirement proof"
+  ],
+  "created_at": "2026-08-10T00:46:12.488327+00:00",
+  "direct_arango_readback": {
+    "active_edges": 4,
+    "active_files": 1,
+    "active_symbols": 3,
+    "code_generations": [
+      {
+        "activated_at": "2026-08-10T00:45:05.830708+00:00",
+        "expected_counts": {
+          "edges": 7,
+          "files": 2,
+          "symbols": 4
+        },
+        "generation_id": "cg_4ca11568b017d500dc23554a3a95bfaef69570b937f59b1a",
+        "status": "superseded",
+        "superseded_at": "2026-08-10T00:45:16.432778+00:00"
+      },
+      {
+        "activated_at": "2026-08-10T00:45:16.432778+00:00",
+        "expected_counts": {
+          "edges": 4,
+          "files": 1,
+          "symbols": 3
+        },
+        "generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+        "status": "active",
+        "superseded_at": null
+      }
+    ],
+    "code_indexes": [
+      {
+        "_key": "ci_c6f7e2bbbf12f4b19ec73af05562eb0b5ca0797f3cf5cbf8",
+        "active_generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+        "scope": "issue1346-live"
+      }
+    ],
+    "inactive_edges": 7,
+    "inactive_symbols": 4,
+    "semantic_projection_outbox_latest": [
+      {
+        "generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+        "operation": "upsert",
+        "state": "pending",
+        "symbol_id": "cs_9b5165b53d0979d55c5ff9ec071de6054f8057df"
+      },
+      {
+        "generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+        "operation": "upsert",
+        "state": "pending",
+        "symbol_id": "cs_ab987faeeff89ab4d52d4a1b2f430a3ed99c16f7"
+      },
+      {
+        "generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+        "operation": "upsert",
+        "state": "pending",
+        "symbol_id": "cs_ee09df6f5d0c2ee3fa0cb558582d7ec174d6b39c"
+      },
+      {
+        "generation_id": "cg_4ca11568b017d500dc23554a3a95bfaef69570b937f59b1a",
+        "operation": "delete",
+        "state": "pending",
+        "symbol_id": "cs_1f04b6ff2d9ccabe9dc5cb7b2ff172e667a3b931"
+      },
+      {
+        "generation_id": "cg_4ca11568b017d500dc23554a3a95bfaef69570b937f59b1a",
+        "operation": "upsert",
+        "state": "pending",
+        "symbol_id": "cs_1f04b6ff2d9ccabe9dc5cb7b2ff172e667a3b931"
+      }
+    ],
+    "semantic_projection_outbox_total": 8
+  },
+  "fixture_root": "/tmp/ingest-code-1346-live/repo",
+  "latest_marker_code_index": {
+    "backend": "memory",
+    "collection": "code_symbols",
+    "content_hashes": true,
+    "enabled": true,
+    "hybrid_retrieval_capable": true,
+    "lexical_terms": true,
+    "line_ranges": true,
+    "projection_authority": "memory.code_projection.apply_receipt.v1",
+    "projection_bundle_digest": "sha256:912ac5a363bafdcd762eb5376ba4db531401c871d9b3f66946ccc96264bb9d45",
+    "projection_generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8",
+    "symbols_stored": 3,
+    "treesitter": true
+  },
+  "latest_marker_path": "/tmp/ingest-code-1346-live/repo/.ingest-code.json",
+  "latest_projection_receipt": {
+    "applied_at": "2026-08-10T00:45:16Z",
+    "artifact_paths": {
+      "code_debug_invocations": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/code_debug_invocations.json",
+      "code_edges": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/code_edges.json",
+      "code_files": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/code_files.json",
+      "code_symbols": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/code_symbols.json",
+      "doc_chunks": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/doc_chunks.json",
+      "ingest_code_checksums": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/ingest_code_checksums.json",
+      "ingest_code_command": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/ingest_code_command.json",
+      "ingest_code_coverage": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/ingest_code_coverage.json",
+      "ingest_code_manifest": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/ingest_code_manifest.json",
+      "ingest_summary": "artifacts/code_projection_apply/code-projection-apply-1fec7087791ef4bd6b557655/p2_ingest/ingest_summary.json"
+    },
+    "bundle_path": "/tmp/ingest-code-1346-live/repo/artifacts/ingest-code/code-graph",
+    "checksums_digest": "sha256:25d3ef73a8ec1cfedb40b6d75f9e4b207859968896336fe3ec9eddcb12341de1",
+    "counts": {
+      "code_debug_recipes_imported": 0,
+      "code_debug_recipes_stale_marked": 0,
+      "code_edges_persisted": 4,
+      "code_files_persisted": 1,
+      "code_generation_activated": 1,
+      "code_generation_readback_edges": 4,
+      "code_generation_readback_files": 1,
+      "code_generation_readback_symbols": 3,
+      "code_generation_staged": 1,
+      "code_generation_superseded_previous": 1,
+      "code_semantic_projection_deletes_enqueued": 1,
+      "code_semantic_projection_upserts_enqueued": 3,
+      "code_symbols_persisted": 3,
+      "doc_chunks_persisted": 0
+    },
+    "generation": {
+      "accepted_bundle_digest": "sha256:935abe8fb6fb5e3a04353ec7e9f65c7cb3b8107a6cc5561edc890b5b1c8ca537",
+      "code_index_id": "ci_c6f7e2bbbf12f4b19ec73af05562eb0b5ca0797f3cf5cbf8",
+      "expected_counts": {
+        "edges": 4,
+        "files": 1,
+        "symbols": 3
+      },
+      "generation_id": "cg_fa5f5cbebd9f147a27f0bc0188a1f1e2d377b0c408fa23e8"
+    },
+    "run_id": "code-projection-apply-1fec7087791ef4bd6b557655",
+    "schema": "memory.code_projection.apply_receipt.v1",
+    "scope": "issue1346-live",
+    "status": "applied",
+    "submitted_bundle_digest": "sha256:912ac5a363bafdcd762eb5376ba4db531401c871d9b3f66946ccc96264bb9d45"
+  },
+  "live": "yes for Memory /code/projection/apply over Unix socket and Arango readback",
+  "memory_socket": "/tmp/ingest-code-memory-1346.sock",
+  "mocked": "no for live fixture; unit tests include fakes for narrow branches",
+  "schema": "agent-skills.ingest_code.issue1346_live_proof.v1"
+}

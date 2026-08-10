@@ -18,6 +18,7 @@ ARTIFACT_FILENAMES = (
     "files.jsonl",
     "symbols.jsonl",
     "edges.jsonl",
+    "debug_invocations.jsonl",
     "diagnostics.jsonl",
     "coverage.json",
 )
@@ -783,6 +784,7 @@ def write_code_graph_bundle(
         "files_skipped": sum(1 for item in file_records if item["status"] == "skipped"),
         "symbols": len(symbol_records),
         "edges": len(edge_records),
+        "debug_invocation_candidates": 0,
         "edges_active_for_traversal": sum(1 for item in edge_records if item["active_for_traversal"]),
         "edges_candidate": sum(1 for item in edge_records if item["resolution_status"] == "candidate"),
         "edges_resolved": sum(1 for item in edge_records if item["resolution_status"] == "resolved"),
@@ -813,6 +815,7 @@ def write_code_graph_bundle(
         "files.jsonl": _jsonl_bytes(file_records),
         "symbols.jsonl": _jsonl_bytes(symbol_records),
         "edges.jsonl": _jsonl_bytes(edge_records),
+        "debug_invocations.jsonl": b"",
         "diagnostics.jsonl": _jsonl_bytes(diagnostics),
         "coverage.json": _json_bytes(coverage),
     }
@@ -831,6 +834,7 @@ def write_code_graph_bundle(
         "manifest": str(output_dir / "manifest.json"),
         "coverage": str(output_dir / "coverage.json"),
         "checksums": str(output_dir / "checksums.json"),
+        "debug_invocations": str(output_dir / "debug_invocations.jsonl"),
         "counts": counts,
         "complete": coverage["complete"],
     }

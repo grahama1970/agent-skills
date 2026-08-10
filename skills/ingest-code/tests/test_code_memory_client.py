@@ -96,3 +96,11 @@ def test_upsert_code_symbols_uses_env_batch_size(monkeypatch) -> None:
     assert result.stored == 2
     assert result.attempted == 2
     assert fake.batch_sizes == [1, 1]
+
+
+def test_client_socket_path_honors_env_override(monkeypatch) -> None:
+    monkeypatch.setenv("MEMORY_SOCKET_PATH", "/tmp/memory-test.sock")
+
+    client = CodeMemoryClient()
+
+    assert client.socket_path == "/tmp/memory-test.sock"

@@ -39,9 +39,9 @@ Codebase ingestion into `/memory`:
 1. **Phase 1 — Functional Knowledge**: Python AST extracts module docstrings, function signatures, class hierarchies. Markdown parser extracts section-level knowledge from CONTEXT.md, README.md, etc. Generic parser handles TS/JS exports.
 2. **Phase 2 — CWE Scanning**: `/taxonomy` extracts security-relevant patterns (bridge tags + CWE mappings) per file.
 3. **Phase 3 — Relationship Edges**: Python import analysis stores resolved code dependency edges in `/memory`; the local code-graph bundle also records typed import/call/inheritance occurrences, including inactive unresolved and ambiguous candidates for audit.
-4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits rich `code_symbol` records to `/memory` via `/upsert` into the `code_symbols` collection.
+4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits a complete code-graph bundle and applies it through Memory/GMO's governed `/code/projection/apply` lifecycle endpoint.
 
-Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured code symbols are stored through `/memory /upsert`; `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to Qdrant directly.
+Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured files, symbols, and edges are canonicalized by Memory/GMO's complete projection lifecycle, not by independent per-symbol batches. `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to ArangoDB or Qdrant directly.
 
 ## Quick Start
 
@@ -76,8 +76,10 @@ Options:
   --cwe-only         Skip Phase 1, only run CWE scan
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
-  --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts
+  --code-index       Apply the complete Tree-sitter code graph bundle to Memory/GMO (default)
+  --no-code-index    Disable structured code projection application
+  --compat-symbol-upsert
+                     Use legacy per-symbol Memory upserts with a visible warning
   --dry-run          Preview without writing to /memory
   --scope            Memory scope (default: "code")
   --batch-size       Files per CWE scan batch (default: 50)
@@ -93,8 +95,8 @@ Options:
   -c, --codebase     Codebase path(s) to rescan (repeatable)
   --validate         Run LLM validation
   --treesitter       Run Tree-sitter scan for structured code symbols
-  --code-index       Upsert Tree-sitter symbols to memory `code_symbols` (default)
-  --no-code-index    Disable structured code-symbol upserts
+  --code-index       Apply the complete Tree-sitter code graph bundle to Memory/GMO (default)
+  --no-code-index    Disable structured code projection application
   --scope            Memory scope
 ```
 
@@ -121,8 +123,9 @@ Options:
 
 ### Phase 4: Structured Code Index (Tree-sitter → /memory)
 
-When `--treesitter --code-index` is enabled, `/ingest-code` emits `CodeSymbolRecord` documents to `/memory /upsert` with `collection="code_symbols"`.
-Before any code-symbol upsert, the same extraction pass writes a deterministic local code-graph bundle under `artifacts/ingest-code/code-graph/`.
+When `--treesitter --code-index` is enabled, `/ingest-code` writes a deterministic local code-graph bundle under `artifacts/ingest-code/code-graph/`, computes the submitted bundle digest and checksums digest, and submits the complete bundle to Memory/GMO through `/code/projection/apply`.
+
+The Memory/GMO receipt is the only canonical projection success signal. It must bind the submitted bundle digest, checksums digest, activated generation, and expected file/symbol/edge counts. If Memory/GMO is unavailable, rejects the bundle, or returns a receipt whose digest does not match the submitted bundle, the scan fails closed and does not fall back to per-symbol writes.
 
 Each record includes:
 
@@ -236,7 +239,8 @@ Two local state files may exist:
   fingerprints, serialized symbols, and a component hash.
 - `artifacts/ingest-code/incremental-state.json` is the legacy Memory-upsert
   retry state mapping each `symbol_id` to its `content_hash` plus the
-  `transform_version` that produced it.
+  `transform_version` that produced it. This state is used only by the explicit
+  `--compat-symbol-upsert` mode.
 
 The file-component key is repository, branch, and repository-relative path. The
 source fingerprint is a Git blob id for clean tracked files and an exact
@@ -264,26 +268,30 @@ Incremental: {"unchanged": 812, "added": 3, "changed": 1, "deleted": 2, "invalid
 File components: 1 parsed, 812 reused, 2 deleted
 ```
 
-**Deletions are pruned, not left behind.** Symbols whose source no longer exists
-are removed from the `code_symbols` collection. Ingestion is otherwise
-append-only, so without this a function deleted months ago keeps answering
-recall queries — a wrong-answer bug, not a housekeeping one.
+**Deletions are retired by complete projection, not left behind.** Symbols whose
+source no longer exists are absent from the next complete bundle. Memory/GMO
+uses that absence to retire no-longer-current files, symbols, and edges during
+generation activation. In explicit compatibility mode, symbols are pruned from
+the `code_symbols` collection because the legacy path cannot express a complete
+repository generation.
 
 Two ordering rules the implementation depends on:
 
-- State is committed only after the upsert succeeds. Committing first would
-  mark unstored symbols as done and they would never be retried.
-- Deletions are computed against the real previous state even when a transform
-  bump invalidates everything, so a full re-index never loses the delete set.
+- State is committed only after Memory/GMO returns an accepted projection
+  application receipt, or after the explicit compatibility upsert succeeds.
+  Committing first would mark unapplied symbols as done and they would never be
+  retried.
+- In compatibility mode, deletions are computed against the real previous state
+  even when a transform bump invalidates everything, so a full re-index never
+  loses the delete set.
 
 A missing or corrupt state file degrades to a full re-index rather than failing
 the ingest.
 
-`scan --treesitter --code-index` still uses the legacy per-symbol Memory upsert
-path until the governed bundle-application endpoint lands in
-`graph-memory-operator`. That compatibility path is not complete-projection
-lifecycle authority; closure of that contract is tracked separately by
-`agent-skills#1346`.
+`scan --treesitter --code-index` uses the governed bundle-application endpoint
+by default. The legacy per-symbol Memory upsert path remains only under
+`--compat-symbol-upsert` and emits a visible warning because it is not
+complete-projection lifecycle authority.
 
 ## Local Agent Artifacts
 
@@ -299,6 +307,7 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic typed `DEFINES`/`IMPORTS`/`CALLS`/`INHERITS` occurrence edges with resolution status, active traversal gate, source spans, confidence, and provenance |
+| `artifacts/ingest-code/code-graph/debug_invocations.jsonl` | Reserved v1 debug invocation candidates; currently empty unless a future extractor produces static debugger recipes |
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
@@ -311,7 +320,7 @@ offline inspection, review bundles, or deterministic receipts.
 
 | Skill | Relationship |
 |-------|--------------|
-| `/memory` | Storage backend — lesson records use compatibility storage; structured code symbols use `/upsert` |
+| `/memory` | Storage backend — lesson records use compatibility storage; structured code projection uses `/code/projection/apply` |
 | `/taxonomy` | CWE extraction engine (Phase 2) |
 | `/monitor-codebase` | Nightly orchestrator that calls `rescan` |
 | `/treesitter` | Structured symbol extraction for the memory-backed code index |

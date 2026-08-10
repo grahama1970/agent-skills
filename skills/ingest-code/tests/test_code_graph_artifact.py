@@ -99,6 +99,7 @@ def test_code_graph_bundle_is_deterministic_and_self_describing(tmp_path: Path) 
         "files.jsonl",
         "symbols.jsonl",
         "edges.jsonl",
+        "debug_invocations.jsonl",
         "diagnostics.jsonl",
         "coverage.json",
         "checksums.json",
