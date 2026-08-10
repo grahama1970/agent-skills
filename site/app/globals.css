@@ -843,6 +843,7 @@ h1 .it::after {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  scroll-margin-top: 92px;
 }
 .shot-link {
   display: block;
@@ -2399,11 +2400,18 @@ footer a:hover {
   opacity: 0.22;
 }
 .path-line {
-  stroke-dasharray: none;
-  stroke-dashoffset: 0;
+  stroke-dasharray: 1000; /* matches pathLength — draw always reaches the end */
+  stroke-dashoffset: 1000;
+}
+/* The trail draws in once, forward only. Backtracking belongs to the path shape,
+   not to a self-erasing stroke endpoint. */
+@keyframes trace-converge {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
 }
 .path-node {
-  opacity: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 .path-node.is-final {
   filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7));
@@ -2414,11 +2422,53 @@ footer a:hover {
   stroke-dasharray: 0.5 6;
 }
 .final-clip {
-  width: 82px;
+  width: 0;
 }
 .goal-ring {
   opacity: 0;
   stroke-width: 1.5;
+}
+.is-visible .path-line {
+  stroke-dashoffset: 0;
+  animation: trace-converge 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.is-visible .path-node {
+  opacity: 1;
+}
+/* Waypoints light up only after the line has drawn to them. */
+.is-visible .n1 { transition-delay: 2s; }
+.is-visible .n2 { transition-delay: 2.1s; }
+.is-visible .n3 { transition-delay: 2.2s; }
+.is-visible .n4 { transition-delay: 2.3s; }
+.is-visible .n5 { transition-delay: 2.4s; }
+/* The goal lights up only when the hesitant dotted approach arrives. */
+.is-visible .n6 { transition-delay: 3.35s; }
+.is-visible .path-node.is-final {
+  animation: node-lock 0.9s ease-out 3.35s both;
+}
+@keyframes node-lock {
+  0% { filter: drop-shadow(0 0 0 rgba(226, 172, 98, 0)); }
+  40% { filter: drop-shadow(0 0 11px rgba(255, 240, 214, 0.95)); }
+  100% { filter: drop-shadow(0 0 5px rgba(226, 172, 98, 0.7)); }
+}
+/* Dotted final segment: a left-to-right wipe with hesitancy, then commitment. */
+.is-visible .final-clip {
+  animation: final-hesi 1.6s linear 2s forwards;
+}
+@keyframes final-hesi {
+  0% { width: 0; }
+  28% { width: 20px; }
+  42% { width: 18px; }
+  56% { width: 25px; }
+  100% { width: 82px; }
+}
+.is-visible .goal-ring {
+  animation: goal-ring 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 3.35s both;
+}
+@keyframes goal-ring {
+  0% { r: 3.6; opacity: 0; stroke-width: 2; }
+  35% { r: 8.5; opacity: 0.9; stroke-width: 1.75; }
+  100% { r: 13; opacity: 0; stroke-width: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .path-line {
@@ -3177,6 +3227,16 @@ a.fig:hover .l::after,
 .card:target {
   animation: card-land 2.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
+.card:target .shot {
+  border-color: rgba(226, 172, 98, 0.75);
+  box-shadow:
+    0 0 0 2px rgba(226, 172, 98, 0.72),
+    0 0 34px rgba(226, 172, 98, 0.28);
+}
+.card:target .idx,
+.card:target .cname {
+  color: var(--brass);
+}
 @keyframes card-land {
   0% {
     box-shadow: 0 0 0 2px var(--brass), 0 0 26px 5px rgba(226, 172, 98, 0.4);
@@ -3189,6 +3249,9 @@ a.fig:hover .l::after,
   .card:target {
     animation: none;
     box-shadow: 0 0 0 2px var(--brass);
+  }
+  .card:target .shot {
+    box-shadow: 0 0 0 2px rgba(226, 172, 98, 0.72);
   }
 }
 .c-edge {

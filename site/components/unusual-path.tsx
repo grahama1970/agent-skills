@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
 // A wandering trail, not a chart. It curves, swings across the straight
 // "expected" route, and doubles back on itself once (a hook a line chart can
 // never make). The past is a solid line; the final approach to "this practice"
@@ -32,11 +36,32 @@ const TRACE_FINAL = 'M 286 58 C 322 58, 340 26, 362 26';
 /** The non-linear path under "An unusual path, on purpose." A faint dead-
  *  straight dashed line is the conventional route; the brass trail wanders,
  *  crosses it, and doubles back. The past is solid; the final approach to now
- *  is dotted and hesitant. */
+ *  is dotted and hesitant, and the goal dot pulses a focus ring on arrival.
+ *  Draws on scroll-in. */
 export function UnusualPath() {
+  const ref = useRef<SVGSVGElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <svg
-      className="unusual-path-svg"
+      ref={ref}
+      className={`unusual-path-svg${visible ? ' is-visible' : ''}`}
       viewBox="0 0 400 128"
       fill="none"
       role="img"
