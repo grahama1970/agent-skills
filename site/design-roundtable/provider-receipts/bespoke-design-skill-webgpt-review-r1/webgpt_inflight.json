@@ -1,0 +1,22 @@
+{
+  "schema": "surf.webgpt_inflight.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/bespoke-design-skill-webgpt-review-bundle.r1.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.meta.json",
+  "receipt_output": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.receipt.json",
+  "sentinel": "<<<WEBGPT_DONE:20260810T120755Z:96797a91>>>",
+  "requested_tab_id": "837381834",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "attach_file": null,
+  "attachment_paths": [],
+  "submit_pid": 1971251,
+  "updated_at": "2026-08-10T12:08:08Z",
+  "recovery_command": "surf webgpt.recover --artifact-dir /home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1 --finalize"
+}

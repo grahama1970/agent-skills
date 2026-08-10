@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-08-10T12:18:08Z",
+  "submitted_at": "2026-08-10T12:07:59Z",
+  "last_browser_observation_at": "2026-08-10T12:18:08Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.raw.md",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/provider-receipts/bespoke-design-skill-webgpt-review-r1/response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260810T120755Z:96797a91>>>",
+  "prepared_prompt_is_transport_proof": false
+}
