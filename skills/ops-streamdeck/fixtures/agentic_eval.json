@@ -2,21 +2,43 @@
   "version": 2,
   "skill": "ops-streamdeck",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Stream Deck operations command posture",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the skill entrypoint can query live local Stream Deck status and fails closed for malformed button execution requests",
+    "does_not_prove": "physical button rendering, USB hardware availability, light behavior, daemon API correctness, or safe persistent config mutation"
   },
   "cases": [
     {
-      "name": "sanity",
+      "name": "status-json-queries-local-streamdeck-state",
       "type": "positive",
+      "real_world": true,
       "command": [
         "bash",
-        "../sanity.sh"
+        "../run.sh",
+        "status",
+        "--json"
       ],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"services\"",
+          "\"buttons\""
+        ]
+      }
+    },
+    {
+      "name": "button-command-requires-id",
+      "type": "negative",
+      "command": [
+        "bash",
+        "../run.sh",
+        "button"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "Button ID required"
+        ]
       }
     }
   ]
