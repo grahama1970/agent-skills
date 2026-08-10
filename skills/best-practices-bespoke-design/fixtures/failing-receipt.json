@@ -386,6 +386,60 @@
         "A-IMPL",
         "A-RATER-OUT"
       ]
+    },
+    "G15": {
+      "status": "PASS",
+      "summary": "Craft marks and material imperfections are real or absent, not simulated.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    },
+    "G16": {
+      "status": "PASS",
+      "summary": "Type fidelity matches the selected visual world and role grammar.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    },
+    "G17": {
+      "status": "PASS",
+      "summary": "Material language is real for the world it implies, not CSS imitation.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    },
+    "G18": {
+      "status": "PASS",
+      "summary": "Finish amendments preserve reviewer/applier separation.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    },
+    "G19": {
+      "status": "PASS",
+      "summary": "World persistence docs let a later run extend the chosen system.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
+    },
+    "G20": {
+      "status": "PASS",
+      "summary": "Every raster/vector asset records source, method, and license.",
+      "evidence_artifact_ids": [
+        "A-SOURCE",
+        "A-IMPL",
+        "A-RATER-OUT"
+      ]
     }
   },
   "exceptions": [],

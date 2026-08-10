@@ -427,6 +427,14 @@ Required artifacts:
   `schemas/bespoke-design-receipt.schema.json`;
 - exact source revision and implementation revision.
 
+Receipt evidence must be current to the implementation it claims. A receipt that
+points at an older screenshot corpus, older source commit, modified artifact hash,
+or reviewer output from a different render is not a partial pass; it is stale
+evidence and the affected gate is `NOT_TESTED` or `FAIL` until regenerated.
+Historical reviewer rounds may be preserved for diagnosis, but they must not be
+counted as current acceptance unless their prompt, raw outputs, screenshot corpus,
+artifact hashes, and source state all match the implementation under review.
+
 Run:
 
 ```bash

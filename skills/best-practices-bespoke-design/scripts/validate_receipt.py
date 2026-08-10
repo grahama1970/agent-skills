@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 ALLOWED_STATUSES = {"PASS", "FAIL", "NOT_TESTED", "BLOCKED"}
-REQUIRED_GATES = {f"G{i}" for i in range(15)}
+REQUIRED_GATES = {f"G{i}" for i in range(21)}
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 PLACEHOLDER_RE = re.compile(r"\b(?:tbd|todo|placeholder|lorem ipsum|fill me|unknown)\b", re.I)
 

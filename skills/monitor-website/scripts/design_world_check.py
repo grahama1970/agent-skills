@@ -5,7 +5,7 @@ read receipt files when present and return NOT_TESTED only when evidence is
 absent — prose is not proof.
 """
 from __future__ import annotations
-import argparse, json, re, sys
+import argparse, hashlib, json, re, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
@@ -63,11 +63,50 @@ def _load_json(path: Path) -> tuple[dict | None, str | None]:
         return None, f"invalid_json: {exc}"
 
 
-def _artifact_exists(path_value: str) -> bool:
+def _resolve_artifact(path_value: str) -> Path:
     path = Path(path_value)
     if not path.is_absolute():
         path = REPO / path
-    return path.is_file()
+    return path
+
+
+def _artifact_exists(path_value: str) -> bool:
+    return _resolve_artifact(path_value).is_file()
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _lookup_field(root: dict, field: str) -> tuple[object | None, dict | None]:
+    value: object | None = root
+    parent: dict | None = None
+    for part in field.split("."):
+        if not isinstance(value, dict):
+            return None, None
+        parent = value
+        value = value.get(part)
+    return value, parent
+
+
+def _hash_mismatch(path_value: str, expected_sha256: object) -> dict | None:
+    if not isinstance(expected_sha256, str) or not expected_sha256:
+        return None
+    path = _resolve_artifact(path_value)
+    if not path.is_file():
+        return None
+    actual = _sha256_file(path)
+    if actual != expected_sha256:
+        return {
+            "path": path_value,
+            "expected_sha256": expected_sha256,
+            "actual_sha256": actual,
+        }
+    return None
 
 
 def _receipt_gate(
@@ -93,24 +132,30 @@ def _receipt_gate(
         errors.append("status must be one of PASS, FAIL, NOT_TESTED, BLOCKED")
 
     missing_artifacts = []
+    hash_mismatches = []
     for field in required_artifacts or []:
-        value = receipt
-        for part in field.split("."):
-            if not isinstance(value, dict):
-                value = None
-                break
-            value = value.get(part)
+        value, parent = _lookup_field(receipt, field)
         if not value or not _artifact_exists(str(value)):
             missing_artifacts.append(field)
+            continue
+        if parent:
+            mismatch = _hash_mismatch(str(value), parent.get("sha256"))
+            if mismatch:
+                mismatch["field"] = field
+                hash_mismatches.append(mismatch)
 
     if missing_artifacts:
         errors.append(f"missing referenced artifacts: {', '.join(missing_artifacts)}")
+    if hash_mismatches:
+        errors.append("referenced artifact hash mismatch")
 
     gate = {
         "status": "FAIL" if errors else status,
         "receipt": str(receipt_path),
         "source_commit": receipt.get("source_commit"),
     }
+    if "source_state" in receipt:
+        gate["source_state"] = receipt["source_state"]
     if errors:
         gate["errors"] = errors
     for field in evidence_fields:
@@ -118,6 +163,8 @@ def _receipt_gate(
             gate[field] = receipt[field]
     if missing_artifacts:
         gate["missing_artifacts"] = missing_artifacts
+    if hash_mismatches:
+        gate["hash_mismatches"] = hash_mismatches
     return gate
 
 
@@ -143,7 +190,7 @@ def responsive_choreography_gate() -> dict:
 
 
 def distinctiveness_blind_gate() -> dict:
-    return _receipt_gate(
+    gate = _receipt_gate(
         receipt_path=DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json",
         expected_schema="grahama.distinctiveness_blind.v1",
         needs="site/design-roundtable/distinctiveness-blind.r1.json with blind-rater outputs",
@@ -158,6 +205,38 @@ def distinctiveness_blind_gate() -> dict:
         ],
         required_artifacts=["contact_sheet.path", "section_corpus_manifest.path"],
     )
+    receipt, err = _load_json(DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json")
+    if err or not receipt or gate.get("status") != "PASS":
+        return gate
+
+    errors = []
+    thresholds = receipt.get("thresholds") or {}
+    aggregate = receipt.get("aggregate") or {}
+    raters = receipt.get("raters") or []
+    min_raters = int(thresholds.get("min_raters") or 5)
+    if int(aggregate.get("usable") or 0) < min_raters:
+        errors.append(f"PASS requires aggregate.usable >= {min_raters}")
+    if len([r for r in raters if isinstance(r, dict) and r.get("usable")]) < min_raters:
+        errors.append(f"PASS requires at least {min_raters} usable rater records")
+    if int(aggregate.get("positive_classification") or 0) < int(thresholds.get("min_positive_classification") or 0):
+        errors.append("PASS does not meet positive classification threshold")
+    if int(aggregate.get("competitor_swap_tension") or 0) < int(thresholds.get("min_competitor_swap_tension") or 0):
+        errors.append("PASS does not meet competitor-swap tension threshold")
+    if int(aggregate.get("cross_screen_family") or 0) < int(thresholds.get("min_cross_screen_family") or 0):
+        errors.append("PASS does not meet cross-screen-family threshold")
+    if int(aggregate.get("generic_ai_template_primary") or 0) > int(thresholds.get("max_generic_ai_template_primary") or 0):
+        errors.append("PASS exceeds generic AI/template classification threshold")
+    for index, rater in enumerate(raters):
+        if not isinstance(rater, dict) or not rater.get("usable"):
+            continue
+        for field in ("output_path", "raw_output_path"):
+            value = rater.get(field)
+            if not value or not _artifact_exists(str(value)):
+                errors.append(f"usable rater {index + 1} missing {field}")
+    if errors:
+        gate["status"] = "FAIL"
+        gate.setdefault("errors", []).extend(errors)
+    return gate
 
 
 def craft_integrity_render_gate() -> dict:
@@ -179,17 +258,26 @@ def craft_integrity_render_gate() -> dict:
     if err or not receipt:
         return gate
 
-    missing = _missing_paths(
-        [
-            str(screen.get("path") or "")
-            for screen in receipt.get("rendered_screens", [])
-            if isinstance(screen, dict)
-        ]
-    )
+    missing = []
+    hash_mismatches = []
+    for screen in receipt.get("rendered_screens", []):
+        if not isinstance(screen, dict):
+            continue
+        path = str(screen.get("path") or "")
+        if not path or not _artifact_exists(path):
+            missing.append(path)
+            continue
+        mismatch = _hash_mismatch(path, screen.get("sha256"))
+        if mismatch:
+            hash_mismatches.append(mismatch)
     if missing:
         gate["status"] = "FAIL"
         gate.setdefault("errors", []).append("missing rendered screenshot artifacts")
         gate["missing_artifacts"] = missing
+    if hash_mismatches:
+        gate["status"] = "FAIL"
+        gate.setdefault("errors", []).append("rendered screenshot hash mismatch")
+        gate["hash_mismatches"] = hash_mismatches
     return gate
 
 

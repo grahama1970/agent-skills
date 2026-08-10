@@ -31,18 +31,39 @@
         "generated_at"
       ],
       "properties": {
-        "name": {"type": "string", "minLength": 1},
-        "surface": {"type": "string", "minLength": 1},
-        "source_revision": {"type": "string", "minLength": 1},
-        "implementation_revision": {"type": "string", "minLength": 1},
-        "generated_at": {"type": "string", "format": "date-time"},
-        "fixture": {"type": "boolean", "default": false}
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "implementation_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "fixture": {
+          "type": "boolean",
+          "default": false
+        }
       }
     },
     "source_provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_bundle_sha256", "authoritative_source_count"],
+      "required": [
+        "source_bundle_sha256",
+        "authoritative_source_count"
+      ],
       "properties": {
         "source_bundle_sha256": {
           "type": "string",
@@ -76,18 +97,45 @@
           "evidence_claim_ids"
         ],
         "properties": {
-          "id": {"type": "string", "minLength": 1},
-          "name": {"type": "string", "minLength": 1},
-          "semantic_premise": {"type": "string", "minLength": 20},
-          "emotional_posture": {"type": "string", "minLength": 3},
-          "typography_strategy": {"type": "string", "minLength": 10},
-          "composition_model": {"type": "string", "minLength": 10},
-          "image_logic": {"type": "string", "minLength": 10},
-          "primary_motif": {"type": "string", "minLength": 3},
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "semantic_premise": {
+            "type": "string",
+            "minLength": 20
+          },
+          "emotional_posture": {
+            "type": "string",
+            "minLength": 3
+          },
+          "typography_strategy": {
+            "type": "string",
+            "minLength": 10
+          },
+          "composition_model": {
+            "type": "string",
+            "minLength": 10
+          },
+          "image_logic": {
+            "type": "string",
+            "minLength": 10
+          },
+          "primary_motif": {
+            "type": "string",
+            "minLength": 3
+          },
           "evidence_claim_ids": {
             "type": "array",
             "minItems": 1,
-            "items": {"type": "string", "minLength": 1},
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
             "uniqueItems": true
           }
         }
@@ -108,12 +156,18 @@
         "controlled_abundance"
       ],
       "properties": {
-        "narrative_premise": {"type": "string", "minLength": 20},
+        "narrative_premise": {
+          "type": "string",
+          "minLength": 20
+        },
         "non_color_invariants": {
           "type": "array",
           "minItems": 3,
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 8}
+          "items": {
+            "type": "string",
+            "minLength": 8
+          }
         },
         "motif_mappings": {
           "type": "array",
@@ -121,15 +175,28 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["motif", "meaning_or_job", "source_claim_ids"],
+            "required": [
+              "motif",
+              "meaning_or_job",
+              "source_claim_ids"
+            ],
             "properties": {
-              "motif": {"type": "string", "minLength": 2},
-              "meaning_or_job": {"type": "string", "minLength": 8},
+              "motif": {
+                "type": "string",
+                "minLength": 2
+              },
+              "meaning_or_job": {
+                "type": "string",
+                "minLength": 8
+              },
               "source_claim_ids": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
-                "items": {"type": "string", "minLength": 1}
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             }
           }
@@ -138,27 +205,43 @@
           "type": "array",
           "minItems": 3,
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 8}
+          "items": {
+            "type": "string",
+            "minLength": 8
+          }
         },
         "controlled_abundance": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["expressive_zones", "calm_reading_zones", "calm_task_zones"],
+          "required": [
+            "expressive_zones",
+            "calm_reading_zones",
+            "calm_task_zones"
+          ],
           "properties": {
             "expressive_zones": {
               "type": "array",
               "minItems": 1,
-              "items": {"type": "string", "minLength": 1}
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             },
             "calm_reading_zones": {
               "type": "array",
               "minItems": 1,
-              "items": {"type": "string", "minLength": 1}
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             },
             "calm_task_zones": {
               "type": "array",
               "minItems": 1,
-              "items": {"type": "string", "minLength": 1}
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
@@ -170,9 +253,17 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["artifact_id", "kind", "path", "sha256"],
+        "required": [
+          "artifact_id",
+          "kind",
+          "path",
+          "sha256"
+        ],
         "properties": {
-          "artifact_id": {"type": "string", "minLength": 1},
+          "artifact_id": {
+            "type": "string",
+            "minLength": 1
+          },
           "kind": {
             "enum": [
               "source_bundle",
@@ -190,20 +281,32 @@
               "other"
             ]
           },
-          "path": {"type": "string", "minLength": 1},
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
           "sha256": {
             "type": "string",
             "pattern": "^[a-f0-9]{64}$"
           },
-          "viewport": {"type": "string"},
-          "state": {"type": "string"}
+          "viewport": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
         }
       }
     },
     "blind_tests": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["logo_off", "competitor_swap", "cross_screen_family", "reference_leakage"],
+      "required": [
+        "logo_off",
+        "competitor_swap",
+        "cross_screen_family",
+        "reference_leakage"
+      ],
       "properties": {
         "logo_off": {
           "$ref": "#/$defs/logoOffTest"
@@ -237,24 +340,78 @@
         "G11",
         "G12",
         "G13",
-        "G14"
+        "G14",
+        "G15",
+        "G16",
+        "G17",
+        "G18",
+        "G19",
+        "G20"
       ],
       "properties": {
-        "G0": {"$ref": "#/$defs/gate"},
-        "G1": {"$ref": "#/$defs/gate"},
-        "G2": {"$ref": "#/$defs/gate"},
-        "G3": {"$ref": "#/$defs/gate"},
-        "G4": {"$ref": "#/$defs/gate"},
-        "G5": {"$ref": "#/$defs/gate"},
-        "G6": {"$ref": "#/$defs/gate"},
-        "G7": {"$ref": "#/$defs/gate"},
-        "G8": {"$ref": "#/$defs/gate"},
-        "G9": {"$ref": "#/$defs/gate"},
-        "G10": {"$ref": "#/$defs/gate"},
-        "G11": {"$ref": "#/$defs/gate"},
-        "G12": {"$ref": "#/$defs/gate"},
-        "G13": {"$ref": "#/$defs/gate"},
-        "G14": {"$ref": "#/$defs/gate"}
+        "G0": {
+          "$ref": "#/$defs/gate"
+        },
+        "G1": {
+          "$ref": "#/$defs/gate"
+        },
+        "G2": {
+          "$ref": "#/$defs/gate"
+        },
+        "G3": {
+          "$ref": "#/$defs/gate"
+        },
+        "G4": {
+          "$ref": "#/$defs/gate"
+        },
+        "G5": {
+          "$ref": "#/$defs/gate"
+        },
+        "G6": {
+          "$ref": "#/$defs/gate"
+        },
+        "G7": {
+          "$ref": "#/$defs/gate"
+        },
+        "G8": {
+          "$ref": "#/$defs/gate"
+        },
+        "G9": {
+          "$ref": "#/$defs/gate"
+        },
+        "G10": {
+          "$ref": "#/$defs/gate"
+        },
+        "G11": {
+          "$ref": "#/$defs/gate"
+        },
+        "G12": {
+          "$ref": "#/$defs/gate"
+        },
+        "G13": {
+          "$ref": "#/$defs/gate"
+        },
+        "G14": {
+          "$ref": "#/$defs/gate"
+        },
+        "G15": {
+          "$ref": "#/$defs/gate"
+        },
+        "G16": {
+          "$ref": "#/$defs/gate"
+        },
+        "G17": {
+          "$ref": "#/$defs/gate"
+        },
+        "G18": {
+          "$ref": "#/$defs/gate"
+        },
+        "G19": {
+          "$ref": "#/$defs/gate"
+        },
+        "G20": {
+          "$ref": "#/$defs/gate"
+        }
       }
     },
     "exceptions": {
@@ -263,48 +420,100 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["gate_id", "authorized_by", "rationale"],
+        "required": [
+          "gate_id",
+          "authorized_by",
+          "rationale"
+        ],
         "properties": {
-          "gate_id": {"type": "string", "pattern": "^G(?:[0-9]|1[0-4])$"},
-          "authorized_by": {"type": "string", "minLength": 1},
-          "rationale": {"type": "string", "minLength": 10}
+          "gate_id": {
+            "type": "string",
+            "pattern": "^G(?:[0-9]|1[0-9]|20)$"
+          },
+          "authorized_by": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 10
+          }
         }
       }
     },
     "final_status": {
-      "enum": ["READY", "NOT_READY", "BLOCKED"]
+      "enum": [
+        "READY",
+        "NOT_READY",
+        "BLOCKED"
+      ]
     },
-    "notes": {"type": "string"}
+    "notes": {
+      "type": "string"
+    }
   },
   "$defs": {
     "status": {
-      "enum": ["PASS", "FAIL", "NOT_TESTED", "BLOCKED"]
+      "enum": [
+        "PASS",
+        "FAIL",
+        "NOT_TESTED",
+        "BLOCKED"
+      ]
     },
     "gate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "summary", "evidence_artifact_ids"],
+      "required": [
+        "status",
+        "summary",
+        "evidence_artifact_ids"
+      ],
       "properties": {
-        "status": {"$ref": "#/$defs/status"},
-        "summary": {"type": "string", "minLength": 4},
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 4
+        },
         "evidence_artifact_ids": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
     "logoOffTest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "correct_assignments", "total_assignments", "raw_output_artifact_ids"],
+      "required": [
+        "status",
+        "correct_assignments",
+        "total_assignments",
+        "raw_output_artifact_ids"
+      ],
       "properties": {
-        "status": {"$ref": "#/$defs/status"},
-        "correct_assignments": {"type": "integer", "minimum": 0},
-        "total_assignments": {"type": "integer", "minimum": 0},
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "correct_assignments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_assignments": {
+          "type": "integer",
+          "minimum": 0
+        },
         "raw_output_artifact_ids": {
           "type": "array",
-          "items": {"type": "string", "minLength": 1},
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         }
       }
@@ -312,19 +521,37 @@
     "competitorSwapTest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "conflict_channels", "raw_output_artifact_ids"],
+      "required": [
+        "status",
+        "conflict_channels",
+        "raw_output_artifact_ids"
+      ],
       "properties": {
-        "status": {"$ref": "#/$defs/status"},
+        "status": {
+          "$ref": "#/$defs/status"
+        },
         "conflict_channels": {
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "enum": ["metaphor", "imagery", "voice", "hierarchy", "components", "motion", "spatial_grammar", "other"]
+            "enum": [
+              "metaphor",
+              "imagery",
+              "voice",
+              "hierarchy",
+              "components",
+              "motion",
+              "spatial_grammar",
+              "other"
+            ]
           }
         },
         "raw_output_artifact_ids": {
           "type": "array",
-          "items": {"type": "string", "minLength": 1},
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         }
       }
@@ -332,19 +559,39 @@
     "familyTest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "correct_groupings", "total_groupings", "observed_non_color_invariants", "raw_output_artifact_ids"],
+      "required": [
+        "status",
+        "correct_groupings",
+        "total_groupings",
+        "observed_non_color_invariants",
+        "raw_output_artifact_ids"
+      ],
       "properties": {
-        "status": {"$ref": "#/$defs/status"},
-        "correct_groupings": {"type": "integer", "minimum": 0},
-        "total_groupings": {"type": "integer", "minimum": 0},
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "correct_groupings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_groupings": {
+          "type": "integer",
+          "minimum": 0
+        },
         "observed_non_color_invariants": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 3}
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
         },
         "raw_output_artifact_ids": {
           "type": "array",
-          "items": {"type": "string", "minLength": 1},
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         }
       }
@@ -352,19 +599,34 @@
     "leakageTest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "reference_corpus_artifact_ids", "distinctive_combination_copied", "raw_output_artifact_ids"],
+      "required": [
+        "status",
+        "reference_corpus_artifact_ids",
+        "distinctive_combination_copied",
+        "raw_output_artifact_ids"
+      ],
       "properties": {
-        "status": {"$ref": "#/$defs/status"},
+        "status": {
+          "$ref": "#/$defs/status"
+        },
         "reference_corpus_artifact_ids": {
           "type": "array",
           "minItems": 1,
-          "items": {"type": "string", "minLength": 1},
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         },
-        "distinctive_combination_copied": {"type": "boolean"},
+        "distinctive_combination_copied": {
+          "type": "boolean"
+        },
         "raw_output_artifact_ids": {
           "type": "array",
-          "items": {"type": "string", "minLength": 1},
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         }
       }
