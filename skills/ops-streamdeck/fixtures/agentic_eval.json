@@ -40,6 +40,25 @@
           "Button ID required"
         ]
       }
+    },
+    {
+      "name": "button-info-exposes-nested-button-state",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "button",
+        "button-info",
+        "13"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"states\"",
+          "\"command\""
+        ]
+      }
     }
   ]
 }

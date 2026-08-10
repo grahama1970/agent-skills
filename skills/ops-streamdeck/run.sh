@@ -202,7 +202,10 @@ with open('$STREAMDECK_CONFIG') as f:
     cfg = json.load(f)
 deck_id = list(cfg['state'].keys())[0]
 btn = cfg['state'][deck_id]['buttons']['0'].get('$button_id', {})
-cmd = btn.get('command', '')
+state_id = str(btn.get('state', 0))
+states = btn.get('states', {})
+state = states.get(state_id) or states.get('0') or {}
+cmd = state.get('command', '') or btn.get('command', '')
 if not cmd:
     print('NO_COMMAND', file=sys.stderr)
     sys.exit(1)
@@ -241,10 +244,13 @@ print(f"{'ID':>4}  {'Text':20}  {'Command':40}  Icon")
 print("-" * 90)
 for btn_id in sorted(buttons.keys(), key=int):
     btn = buttons[btn_id]
-    text = btn.get("text", "")
-    cmd = btn.get("command", "")
     states = btn.get("states", {})
-    icon = states.get("0", {}).get("icon", "")
+    state_id = str(btn.get("state", 0))
+    state = states.get(state_id) or states.get("0", {})
+    text = state.get("text", "") or btn.get("text", "")
+    cmd = state.get("command", "") or btn.get("command", "")
+    states = btn.get("states", {})
+    icon = state.get("icon", "")
     if text or cmd or icon:
         icon_short = icon.split("/")[-1] if icon else ""
         print(f"{btn_id:>4}  {text:20}  {cmd:40}  {icon_short}")
