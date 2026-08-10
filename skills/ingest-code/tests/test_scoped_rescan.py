@@ -187,11 +187,44 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
     monkeypatch.setattr(
         ingest_code,
-        "_store_treesitter_symbols_for_directory",
-        lambda scan_root, codebase_root, scope, verification_samples, local_artifact_path=None: (
-            local_artifact_path.write_text('{"symbol_name": "app"}\n'), 2
-        )[1],
+        "_scan_treesitter_symbol_records_for_directory",
+        lambda scan_root, codebase_root, scope: [
+            ingest_code.CodeSymbolRecord(
+                scope=scope,
+                repo=repo.name,
+                root=str(repo),
+                branch="main",
+                commit="abc123",
+                path="app.py",
+                language="python",
+                symbol_kind="function",
+                symbol_name="app",
+                qualified_name="app",
+                start_line=1,
+                end_line=2,
+                code=source.read_text(),
+                content_hash="hash-app",
+            )
+        ],
     )
+
+    class FakeProjectionClient:
+        def apply_code_projection_bundle(self, **kwargs):
+            bundle_path = Path(kwargs["bundle_path"])
+            return SimpleNamespace(
+                stored=1,
+                attempted=1,
+                errors=[],
+                receipt={
+                    "status": "applied",
+                    "submitted_bundle_digest": ingest_code.code_graph_bundle_digest(bundle_path),
+                    "checksums_digest": "sha256:fixture",
+                    "generation": {"generation_id": "cg_rescan_marker"},
+                },
+                submitted_bundle_digest=ingest_code.code_graph_bundle_digest(bundle_path),
+            )
+
+    monkeypatch.setattr(ingest_code, "CodeMemoryClient", FakeProjectionClient)
 
     ingest_code.rescan(
         since=None,
@@ -211,7 +244,8 @@ def test_rescan_writes_fresh_marker_with_treesitter(monkeypatch, tmp_path: Path)
     assert status["scope"] == "memory"
     assert status["code_index"]["collection"] == "code_symbols"
     assert status["code_index"]["treesitter"] is True
-    assert status["code_index"]["symbols_stored"] == 2
+    assert status["code_index"]["symbols_stored"] == 1
+    assert status["code_index"]["projection_generation_id"] == "cg_rescan_marker"
     assert status["completed_scan_roots"] == [str(repo.resolve())]
     assert status["local_artifacts"]["code_symbols_written"] == 1
     assert status["local_artifacts"]["code_symbols_jsonl"].endswith("code-symbols.jsonl")
