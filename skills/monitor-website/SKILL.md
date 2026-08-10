@@ -100,17 +100,30 @@ Design/visual-identity maintenance of grahama.co composes with
 (readable): a narrative premise, three non-color invariants, the full role
 grammar, and the prohibited structural AI-template residue.
 
-A visual redesign may **never** be reported ready from prose confidence. Run:
+A visual redesign may **never** be reported ready from prose confidence. For
+normal local repair work, run the deterministic render lane:
 
 ```bash
-skills/monitor-website/run.sh design-world-check --json
+skills/monitor-website/run.sh design-render-check --json
 ```
 
-It validates the contract and the deterministically-checkable prohibitions
-(currently: monospace on human-written labels and the type receipt, against the declared
-machine-output/type-world boundary) and returns `NOT_TESTED` — never `PASS` — while
-rendered-screenshot and blind-review artifacts are absent (#1343). Treat a
-`FAIL` (e.g. human labels still in monospace) as residue to remove, not noise.
+It validates the source contract, source lock, deterministically-checkable
+prohibitions, type receipt, responsive section-crop geometry, and craft-render
+receipt. This lane may return `PASS`, but it explicitly **does not prove** formal
+bespoke-design READY, blind distinctiveness, competitor-swap resistance,
+accessibility completion, or field performance.
+
+Run the formal certification lane only when the current task is a final
+bespoke-design gate:
+
+```bash
+skills/monitor-website/run.sh design-certify --json
+```
+
+`design-certify` includes the G11 blind-rater receipt and exits nonzero unless
+every gate is `PASS`. Missing current rater outputs are `NOT_TESTED`, not a site
+render failure. `design-world-check` remains as a compatibility alias for the
+formal checker; prefer the two explicit commands above.
 
 ## Voice contract (#1298)
 

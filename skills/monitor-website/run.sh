@@ -11,11 +11,26 @@ if [[ "${1:-}" == "memory" ]]; then
   exec python3 scripts/site_memory.py "$@"
 fi
 
-# `design-world-check` validates site/design-world.yml (the bespoke visual-world
-# contract, #1337) and scans for deterministic AI-template residue. Returns
-# NOT_TESTED, never PASS, while rendered/blind evidence is absent.
+# `design-render-check` is the fast deterministic lane for local design work:
+# contract + source lock + typography boundary + rendered responsive/craft
+# receipts. It deliberately excludes the formal blind-rater G11 gate.
+if [[ "${1:-}" == "design-render-check" ]]; then
+  shift
+  exec python3 scripts/design_world_check.py --mode render "$@"
+fi
+
+# `design-certify` is the formal bespoke-design certification lane. It includes
+# the blind-rater G11 gate and exits nonzero unless every gate is PASS.
+if [[ "${1:-}" == "design-certify" ]]; then
+  shift
+  exec python3 scripts/design_world_check.py --mode certify --require-ready "$@"
+fi
+
+# Compatibility alias for the original formal gate. Prefer design-render-check
+# while iterating and design-certify only for formal release certification.
 if [[ "${1:-}" == "design-world-check" ]]; then
   shift
+  >&2 echo "monitor-website: design-world-check is a compatibility alias; use design-render-check for deterministic local render health or design-certify for formal READY."
   exec python3 scripts/design_world_check.py "$@"
 fi
 

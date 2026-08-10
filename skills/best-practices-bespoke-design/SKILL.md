@@ -267,6 +267,12 @@ full G0-G20 proof packets before this loop has answered the immediate decision.
 If the loop fails twice on the same blocker, preserve the two receipts and ask
 for a reviewer or human decision instead of expanding the machinery.
 
+For grahama.co, use explicit monitor lanes:
+`skills/monitor-website/run.sh design-render-check --json` for deterministic
+local render repair, and `skills/monitor-website/run.sh design-certify --json`
+only for formal READY. Missing blind-rater output is not a broken section crop;
+it means certification remains `NOT_TESTED`.
+
 ### Phase Summary
 
 Use the full phase detail only when it helps the current tier:
@@ -408,9 +414,6 @@ python scripts/validate_receipt.py path/to/bespoke-design-receipt.json
 10. **Keep the human voice.** Personal, precise language and a visible point of view
     can make a polished site feel inhabited rather than manufactured.
 
-Detailed evidence and project observations are in
-`references/owltastic-design-dna.md`.
-
 ## Misuse Guard
 
 Reject these shortcuts:
@@ -453,22 +456,16 @@ Return:
 ```markdown
 ## Position
 One sentence: what makes the work specific or generic.
-
 ## Evidence
 Claim-by-claim observations tied to sources or rendered artifacts.
-
 ## Distinctive Grammar
 The semantic premise and the non-color invariants that create the visual world.
-
 ## Genericity and Leakage Risks
 What could be swapped, copied, or reduced to a trend.
-
 ## Acceptance
 Gate statuses, failed tests, and exact artifact references.
-
 ## Uncertainties
 What screenshots, research, browser behavior, or source material cannot prove.
-
 ## Next Slice
 The smallest verifiable change that closes the highest-priority failed gate.
 ```
@@ -490,10 +487,10 @@ Stop and report the blocker when:
 
 ## References
 
-- `references/owltastic-design-dna.md` — detailed analysis and evidence basis.
-- `references/visual-world-brief.yaml` — fillable art-direction contract.
-- `references/acceptance-tests.md` — test procedures and receipt requirements.
-- `references/workflow-phases.md` — detailed phase checklists for non-lean runs.
-- `references/formal-certification.md` — full G0-G20 gate and amend-loop detail.
-- `schemas/bespoke-design-receipt.schema.json` — machine-readable receipt shape.
-- `fixtures/` — positive and negative validation fixtures.
+- `references/owltastic-design-dna.md`
+- `references/visual-world-brief.yaml`
+- `references/acceptance-tests.md`
+- `references/workflow-phases.md`
+- `references/formal-certification.md`
+- `schemas/bespoke-design-receipt.schema.json`
+- `fixtures/`

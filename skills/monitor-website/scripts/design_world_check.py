@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """design-world-check (#1337): validate grahama.co's visual-world contract and
-scan for deterministically-checkable AI-template residue. Returns NOT_TESTED
-rather than PASS when rendered/blind evidence is absent — prose is not proof.
+scan for deterministically-checkable AI-template residue.
+
+Render mode is the lean local lane for deterministic section-crop/craft health.
+Certify mode adds the formal blind-rater G11 gate. Keeping those lanes separate
+prevents a missing rater packet from hiding actionable local render failures,
+while still refusing formal READY without adversarial evidence.
 """
 from __future__ import annotations
 import argparse, hashlib, json, re, subprocess, sys
@@ -590,6 +594,17 @@ def validate_distinctiveness_blind(receipt_path: Path) -> dict:
     return gate
 
 
+def _overall_status(gates: dict[str, dict]) -> str:
+    statuses = [gate.get("status") for gate in gates.values()]
+    if "FAIL" in statuses:
+        return "FAIL"
+    if "NOT_TESTED" in statuses:
+        return "NOT_TESTED"
+    if statuses and all(status == "PASS" for status in statuses):
+        return "PASS"
+    return "NOT_TESTED"
+
+
 def validate_pr1_source_lock(contract: dict, brief_path: Path, selection_path: Path) -> dict[str, dict]:
     gates: dict[str, dict] = {}
     provenance_errors: list[str] = []
@@ -709,6 +724,17 @@ def validate_pr1_source_lock(contract: dict, brief_path: Path, selection_path: P
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--mode",
+        choices=("render", "certify"),
+        default="certify",
+        help="render checks deterministic local design evidence; certify also requires formal blind-rater G11 evidence",
+    )
+    ap.add_argument(
+        "--require-ready",
+        action="store_true",
+        help="exit nonzero unless the selected mode returns PASS",
+    )
     ap.add_argument("--contract", default=str(SITE / "design-world.yml"))
     ap.add_argument("--css-dir", default=str(SITE / "app"))
     ap.add_argument("--font-receipt", default=str(SITE / "design-roundtable" / "font-receipt.r1.json"))
@@ -721,6 +747,7 @@ def main(argv=None) -> int:
 
     contract_path = _repo_path(a.contract)
     result = {"schema": "monitor_website.design_world_check.v1",
+              "mode": a.mode,
               "contract": str(contract_path), "gates": {}}
     if not contract_path.is_file():
         result["gates"]["contract"] = {"status": "FAIL", "errors": ["contract file missing"]}
@@ -752,18 +779,33 @@ def main(argv=None) -> int:
         or str(SITE / "design-roundtable" / "craft-integrity.r1.json")
     )
     result["gates"]["craft_integrity_render"] = validate_craft_integrity(_repo_path(craft_integrity))
-    result["gates"]["distinctiveness_blind"] = validate_distinctiveness_blind(
-        DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json"
-    )
-
-    statuses = [g["status"] for g in result["gates"].values()]
-    if "FAIL" in statuses:
-        result["status"] = "FAIL"
-    elif "NOT_TESTED" in statuses:
-        result["status"] = "NOT_TESTED"   # never PASS without rendered/blind evidence
+    if a.mode == "certify":
+        result["gates"]["distinctiveness_blind"] = validate_distinctiveness_blind(
+            DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json"
+        )
     else:
-        result["status"] = "PASS"
+        result["omitted_formal_gates"] = {
+            "distinctiveness_blind": {
+                "status": "OMITTED",
+                "reason": "render mode checks deterministic local contract/render health only; G11 blind-rater certification is opt-in",
+                "next_command": "skills/monitor-website/run.sh design-certify --json",
+            }
+        }
+
+    result["status"] = _overall_status(result["gates"])
+    if a.mode == "render":
+        result["does_not_prove"] = [
+            "formal bespoke-design READY",
+            "blind distinctiveness",
+            "competitor-swap thresholds",
+            "independent accessibility completion",
+            "representative field performance",
+        ]
+    elif result["status"] != "PASS":
+        result["next_command"] = "submit current section-crop/contact-sheet corpus to fresh raters, then rerun skills/monitor-website/run.sh design-certify --json"
     print(json.dumps(result, indent=2))
+    if a.require_ready:
+        return 0 if result["status"] == "PASS" else 1
     return 0 if result["status"] != "FAIL" else 1
 
 
