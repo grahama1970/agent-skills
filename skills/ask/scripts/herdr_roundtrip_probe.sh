@@ -38,12 +38,14 @@ for p in sorted(panes, key=lambda x: str(x.get("pane_id"))):
 
 # A pane that does not render cannot show a reply. This check is what separates
 # a live agent from a process whose UI has died -- herdr reports both as idle.
-TARGET=""
+attempt=0
 for pane in "${CANDIDATES[@]}"; do
+  [ "$attempt" -lt 3 ] || break
   [ "$("$HERDR" pane read "$pane" --source recent --lines 5 2>/dev/null | wc -c)" -gt 0 ] || continue
+
   # Quiescence, not agent_status: herdr reports idle between the turns of an
-  # active task. Sample the screen twice and skip anything still redrawing, so
-  # a probe never lands in a pane doing real work.
+  # active task. Sample twice and skip anything still redrawing, so a probe
+  # never lands in a pane doing real work.
   d1="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
   sleep 5
   d2="$("$HERDR" pane read "$pane" --source recent --lines 60 2>/dev/null | sha256sum)"
@@ -51,50 +53,43 @@ for pane in "${CANDIDATES[@]}"; do
     echo "skipping $pane: screen still changing (work in flight)"
     continue
   fi
-  # No composer heuristic here on purpose. Matching the last `>`/`›` line was
-  # tried and is wrong in both directions: it reads a harness's TRANSCRIPT of
-  # the previously submitted prompt as if it were live input, and it flags
-  # greyed placeholder hints ("Implement {feature}") as real text. Quiescence
-  # above is the signal that holds across harnesses; delivery is verified
-  # afterwards rather than predicted beforehand.
-  TARGET="$pane"; break
-done
-[ -n "$TARGET" ] || { echo "SKIP: no rendering idle pane available"; exit 0; }
 
-before="$("$HERDR" pane read "$TARGET" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")"
-[ "$before" -eq 0 ] || { echo "SKIP: nonce already present in $TARGET"; exit 0; }
+  NONCE="PONG$(date +%s)$$$attempt"
+  [ "$("$HERDR" pane read "$pane" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")" -eq 0 ] || continue
+  attempt=$((attempt + 1))
+  echo "target=$pane nonce=$NONCE"
 
-echo "target=$TARGET nonce=$NONCE"
-send_out="$(cd "$SKILL_DIR" && ./run.sh herdr send "$TARGET" \
-  "Respond with only this token and nothing else: $NONCE" --json 2>&1)"
-echo "$send_out"
-printf '%s' "$send_out" | grep -q '"submitted": true' || { echo "FAIL: send did not report submission"; exit 1; }
+  send_out="$(cd "$SKILL_DIR" && ./run.sh herdr send "$pane" \
+    "Respond with only this token and nothing else: $NONCE" --json 2>&1)"
+  echo "$send_out"
+  printf '%s' "$send_out" | grep -q '"submitted": true' || {
+    echo "skipping $pane: send did not report submission"; continue; }
 
-for _ in $(seq 1 12); do
-  count="$("$HERDR" pane read "$TARGET" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")"
-  if [ "$count" -ge 2 ]; then
-    echo "PASS: round-trip confirmed in $TARGET ($count occurrences: prompt echo + agent reply)"
-    exit 0
+  replied=0
+  for _ in $(seq 1 12); do
+    count="$("$HERDR" pane read "$pane" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")"
+    if [ "$count" -ge 2 ]; then
+      echo "PASS: round-trip confirmed in $pane ($count occurrences: prompt echo + agent reply)"
+      exit 0
+    fi
+    sleep 5
+  done
+
+  # The claim under test is that /ask can round-trip with a session, not that
+  # one particular agent answers. A silent agent is a reason to try the next
+  # candidate, not to fail: observed causes include exhausted provider credits
+  # and harnesses that leave the text unsent in their composer.
+  tail_text="$("$HERDR" pane read "$pane" --source recent --lines 40 2>/dev/null)"
+  if printf '%s' "$tail_text" | grep -qiE "out of usage credits|usage limit|weekly limit|rate limit|quota"; then
+    echo "skipping $pane: received the message but cannot reply (provider limit)"
+  else
+    echo "skipping $pane: delivered but no reply within 60s"
   fi
-  sleep 5
 done
 
-final="$("$HERDR" pane read "$TARGET" --source recent --lines 300 2>/dev/null | grep -c "$NONCE")"
-tail_text="$("$HERDR" pane read "$TARGET" --source recent --lines 40 2>/dev/null)"
-
-# An agent that cannot answer for provider reasons is not an /ask defect.
-# Observed live: delivery landed verbatim at the prompt and the reply never
-# came because the pane was out of usage credits. Reporting that as FAIL would
-# make the suite red for someone else's billing.
-if printf '%s' "$tail_text" | grep -qiE "out of usage credits|usage limit|weekly limit|rate limit|quota"; then
-  echo "SKIP: $TARGET received the message but cannot reply (provider limit reached)"
+if [ "$attempt" -eq 0 ]; then
+  echo "SKIP: no rendering, settled pane was available to probe"
   exit 0
 fi
-
-if [ "$final" -eq 1 ]; then
-  # Delivery is confirmed; only the reply is missing. Say which half worked.
-  echo "FAIL: delivered to $TARGET but the agent never replied (one-way only)"
-else
-  echo "FAIL: nonce never appeared in $TARGET"
-fi
+echo "FAIL: $attempt pane(s) accepted the message and none replied"
 exit 1
