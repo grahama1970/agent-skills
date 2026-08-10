@@ -3223,18 +3223,22 @@ a.fig:hover .l::after,
 .ch-idle { color: var(--faint); }
 /* Land-here highlight: when a constellation node, search hit, or any anchor
    targets a project card, pulse a brass ring so the visitor sees where they
-   arrived. Pure CSS :target — no JS. Reduced motion holds a static ring. */
-.card:target {
+   arrived. The class lets repeat clicks on the same target replay the pulse. */
+.card:target,
+.card.target-highlight {
   animation: card-land 2.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.card:target .shot {
+.card:target .shot,
+.card.target-highlight .shot {
   border-color: rgba(226, 172, 98, 0.75);
   box-shadow:
     0 0 0 2px rgba(226, 172, 98, 0.72),
     0 0 34px rgba(226, 172, 98, 0.28);
 }
 .card:target .idx,
-.card:target .cname {
+.card:target .cname,
+.card.target-highlight .idx,
+.card.target-highlight .cname {
   color: var(--brass);
 }
 @keyframes card-land {
@@ -3250,7 +3254,8 @@ a.fig:hover .l::after,
     animation: none;
     box-shadow: 0 0 0 2px var(--brass);
   }
-  .card:target .shot {
+  .card:target .shot,
+  .card.target-highlight .shot {
     box-shadow: 0 0 0 2px rgba(226, 172, 98, 0.72);
   }
 }

@@ -96,3 +96,24 @@ skills/persona-dream/research/bakeoff/_agent_sample_outputs/
 
 # Root-level runtime goal receipts (skills/*/prompt-contracts/*/receipts stay tracked)
 /receipts/
+
+# grahama.co bespoke-design scratch evidence. Curated receipt files may be
+# force-added intentionally; bulk screenshots and reviewer run debris stay local.
+site/design-roundtable/**
+site/design-roundtable/rendered-screens/
+site/design-roundtable/provider-receipts/
+site/design-roundtable/rater-outputs/
+site/design-roundtable/tau-g11-repair-loop/
+site/design-roundtable/fixtures/
+site/design-roundtable/*-request*.md
+site/design-roundtable/*-prompt*.md
+site/design-roundtable/*review*.md
+site/design-roundtable/*review*.json
+site/design-roundtable/*review*.raw.md
+site/design-roundtable/*review*.submitted.md
+site/design-roundtable/*review*.meta.json
+site/design-roundtable/lighthouse-*.json
+site/design-roundtable/font-receipt*.json
+site/design-roundtable/*rater*.json
+site/design-roundtable/*rater*.md
+site/design-roundtable/live-collaboration-ledger.html

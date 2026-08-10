@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ProjectTargetHighlighter } from '@/components/project-target-highlighter';
 import './globals.css';
 
 const description =
@@ -40,6 +41,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <ProjectTargetHighlighter />
         {children}
       </body>
     </html>
