@@ -208,10 +208,7 @@ def _list_documents_paged(
     if total_limit == 0:
         return []
 
-    docs: list[dict] = []
-    offset = 0
-    while len(docs) < total_limit:
-        batch_limit = min(_MEMORY_LIST_MAX_LIMIT, total_limit - len(docs))
+    def _page(offset: int, batch_limit: int) -> list[dict]:
         payload = {
             "collection": collection,
             "limit": batch_limit,
@@ -222,15 +219,35 @@ def _list_documents_paged(
             payload["q"] = q
         if filters:
             payload["filters"] = filters
-
         r = client.post("/list", json=payload)
         r.raise_for_status()
-        batch = r.json().get("documents", [])
-        if not batch:
-            break
-        docs.extend(batch)
-        if len(batch) < batch_limit:
-            break
+        return r.json().get("documents", [])
+
+    # The daemon caps a page at 500 rows, so a large dictionary needs many
+    # requests -- 782 of them for 391k entities. Issued sequentially that is ~20s
+    # of pure round-trip latency for work the server answers in 25ms a page.
+    # Fetched concurrently instead: the cap is the daemon's, the waiting was ours.
+    #
+    # Probing the first page tells us whether concurrency is worth it at all;
+    # small dictionaries stay on the simple path.
+    first = _page(0, min(_MEMORY_LIST_MAX_LIMIT, total_limit))
+    docs: list[dict] = list(first)
+    if len(first) >= _MEMORY_LIST_MAX_LIMIT and total_limit > _MEMORY_LIST_MAX_LIMIT:
+        from concurrent.futures import ThreadPoolExecutor
+
+        offsets = list(range(_MEMORY_LIST_MAX_LIMIT, total_limit, _MEMORY_LIST_MAX_LIMIT))
+        with ThreadPoolExecutor(max_workers=32) as pool:
+            futures = {
+                offset: pool.submit(_page, offset,
+                                    min(_MEMORY_LIST_MAX_LIMIT, total_limit - offset))
+                for offset in offsets
+            }
+            # Ordered by offset so the dictionary is deterministic across runs.
+            for offset in offsets:
+                batch = futures[offset].result()
+                if not batch:
+                    break
+                docs.extend(batch)
         offset += len(batch)
 
     return docs
@@ -1825,6 +1842,29 @@ def _enrich_extraction_result(result: dict, text: str) -> dict:
     return _enrich_request_cues(result, text)
 
 
+from entity_match_policy import MAX_CANDIDATES, filter_candidates  # noqa: E402
+
+# (collection, limit, field names) -> (KeywordProcessor, entity_map)
+_ENTITY_DICT_CACHE: dict = {}
+
+# Same key -> how many keywords the dictionary actually held. Lets a caller tell
+# "no matches" apart from "nothing was loaded", which are otherwise identical.
+_LAST_DICTIONARY_SIZE: dict = {}
+
+
+def dictionary_size(collection: str, limit: int, name_field: str = "name",
+                    label_field: str = "control_id", type_field: str = "node_type",
+                    framework_field: str = "source_framework") -> int | None:
+    """Keywords loaded for the last extraction over this dictionary, or None.
+
+    Exists so an empty result is interpretable: zero matches against 391,227
+    keywords is an answer, zero against 798 is a load failure.
+    """
+    return _LAST_DICTIONARY_SIZE.get(
+        (collection, limit, name_field, label_field, type_field, framework_field)
+    )
+
+
 def _extract_nlp_entities(
     *,
     text: str,
@@ -1837,11 +1877,32 @@ def _extract_nlp_entities(
     scope: str,
     limit: int,
 ) -> list[dict]:
+    import string
     from flashtext import KeywordProcessor
 
-    # 1. Load entity dictionary from ArangoDB collection
+    # Dictionary cache, keyed by the fields that determine its contents.
+    #
+    # The dictionary was refetched and the trie rebuilt on EVERY call: 391k
+    # entities means 782 paged requests and ~43s, discarded immediately. Callers
+    # linking a corpus of questions paid that per question, which made the only
+    # affordable option a small `limit` -- and a small limit returns nothing. At
+    # limit=500 a question naming CWE-89, T1190 and Brute Force grounded ZERO
+    # entities; uncapped it grounds four, two of them matched by NAME rather than
+    # id, which is the whole point of Flashtext over pattern matching.
+    #
+    # Aho-Corasick handles millions of keywords; the cost was never the matching.
+    # Cached per process, so a batch run pays the load once.
+    cache_key = (collection, limit, name_field, label_field, type_field, framework_field)
+    # The cache guards the LOAD, never the result. An empty extraction is a valid
+    # result: keying the cache on "did this text match anything" meant every
+    # question that grounded nothing -- most of them in a batch -- fell through
+    # and refetched all 391k entities, costing 11s each while the log claimed a
+    # cache hit.
+    cached = _ENTITY_DICT_CACHE.get(cache_key)
+
+    # 1. Load entity dictionary from ArangoDB collection (skipped when cached)
     try:
-        docs = _list_documents_paged(
+        docs = [] if cached is not None else _list_documents_paged(
             client=client,
             collection=collection,
             limit=limit,
@@ -1866,9 +1927,31 @@ def _extract_nlp_entities(
         logger.warning(f"Failed to load entities from {collection}: {e}")
         docs = []
 
-    # 2. Build FlashText keyword processor from entity names
-    kp = KeywordProcessor(case_sensitive=False)
-    entity_map: dict[str, dict] = {}  # keyword -> entity doc
+    # 2. Build FlashText keyword processor from entity names, or reuse the
+    # cached trie. Rebuilding 391k keywords per call costs ~0.9s on top of the
+    # refetch, for a dictionary that has not changed.
+    if cached is not None:
+        kp, entity_map = cached
+    else:
+        kp = KeywordProcessor(case_sensitive=False)
+        # Longest-match discipline for structured identifiers.
+        #
+        # FlashText's default non-word boundary set is letters+digits+"_", so "-"
+        # and "." read as delimiters. A dictionary holding the prefix
+        # "F36B-M08-S01" therefore matches inside "F36B-M08-S01-C01" and reports a
+        # DIFFERENT component, and a bare segment like "S01" fires inside any id
+        # containing it. Verified: with defaults, keys ["F36B-M08-S01"] against
+        # "component F36B-M08-S01-C01 failed" returns ["F36B-M08-S01"].
+        #
+        # Treating "-" as a word character makes a match valid only when the whole
+        # identifier is delimited, so the longest entry in the trie wins and partial
+        # ids no longer fire. The same text then returns [].
+        #
+        # "." is deliberately NOT included: it would swallow the sentence-final
+        # delimiter, and "see CM0023, plus CM0023." then yields one match instead
+        # of two. Only "-" is load-bearing for these identifier shapes.
+        kp.set_non_word_boundaries(set(string.ascii_letters + string.digits + "_-"))
+        entity_map: dict[str, dict] = {}  # keyword -> entity doc
 
     for doc in docs:
         name = doc.get(name_field, "")
@@ -1900,7 +1983,27 @@ def _extract_nlp_entities(
                     "exists": True,
                 }
 
-    logger.info(f"Loaded {len(entity_map)} entities from {collection} into FlashText")
+    if cached is None:
+        logger.info(f"Loaded {len(entity_map)} entities from {collection} into FlashText")
+        _ENTITY_DICT_CACHE[cache_key] = (kp, entity_map)
+    else:
+        logger.debug(f"Reusing cached {len(entity_map)}-entity dictionary for {collection}")
+
+    # A zero result is ambiguous: either the text genuinely contains no known
+    # entity, or the dictionary never loaded. Those look identical to a caller
+    # and are indistinguishable in a log that only reports matches. At
+    # limit=500 against a 391k collection, a question naming CWE-89 and T1190
+    # returned zero -- a bug that read exactly like a correct empty answer.
+    #
+    # So the dictionary size is always reported. An empty extraction over a
+    # 391,227-entity dictionary is an answer; an empty extraction over 798 is a
+    # symptom.
+    _LAST_DICTIONARY_SIZE[cache_key] = len(entity_map)
+    if not entity_map:
+        logger.warning(
+            f"Entity dictionary for {collection} is EMPTY -- every extraction will "
+            "return nothing. This is a load failure, not an absence of matches."
+        )
 
     # 3. Extract mentioned entities from input text
     found_keywords = kp.extract_keywords(text, span_info=True)
@@ -1913,7 +2016,8 @@ def _extract_nlp_entities(
             seen_ids.add(entity["id"])
 
     # 3b. RapidFuzz fallback: if FlashText found nothing, try fuzzy matching
-    if len(entities) == 0:
+    _fuzzy_enabled = os.environ.get("EXTRACT_ENTITIES_FUZZY", "1").strip().lower() not in {"0", "false", "no"}
+    if len(entities) == 0 and _fuzzy_enabled:
         from rapidfuzz import fuzz, process as rfprocess
 
         # Extract candidate words from text (skip stop words)
@@ -1923,22 +2027,70 @@ def _extract_nlp_entities(
         }
         words = [w for w in text.lower().replace(",", " ").replace(".", " ").split() if w not in stop and len(w) > 2]
 
-        # Try each word against all entity names
-        all_names = list(entity_map.keys())
-        for word in words:
-            matches = rfprocess.extract(word, all_names, scorer=fuzz.ratio, limit=3, score_cutoff=70)
-            for match_name, score, _ in matches:
-                entity = entity_map.get(match_name)
-                if entity and entity["id"] not in seen_ids:
-                    entities.append({
-                        **entity,
-                        "span": [0, 0],
-                        "mention": word,
-                        "fuzzy_score": score,
-                        "fuzzy_match": match_name,
-                    })
-                    seen_ids.add(entity["id"])
-                    break  # One fuzzy match per word
+        # Try each word against entity names.
+        #
+        # Stage order is deliberate and unchanged: Flashtext (Aho-Corasick) runs
+        # FIRST for exact matching, and this fuzzy pass only runs when it found
+        # nothing. That ordering is the point -- fuzzy exists to recover what
+        # exact matching MISSED, such as "CWE-7" for "CWE-79", so scoring only
+        # Flashtext's own hits would find nothing new and make the stage useless.
+        #
+        # The cost is O(words x dictionary): on a 391k-entity dictionary that
+        # measured 11.6s for one question, fine interactively and ruinous across a
+        # batch where most items match nothing exactly. Bulk callers set
+        # EXTRACT_ENTITIES_FUZZY=0 to keep exact matching and skip did-you-mean.
+        # ROUGH STAGE: Flashtext with max_cost walks the trie in O(text) and
+        # yields a handful of near-miss keywords. This replaces scoring the whole
+        # dictionary with RapidFuzz, which is O(dictionary) -- measured at ~11s
+        # per miss against 391k entities, affordable interactively and fatal
+        # across a batch where most items miss.
+        #
+        # max_cost needs upstream flashtext; PyPI 2.7 is exact-only. If the
+        # installed build lacks it, fall back to the old scan rather than silently
+        # returning nothing, and say so loudly.
+        rough: list[str] = []
+        try:
+            for cost in (1, 2):
+                for keyword in kp.extract_keywords(text, max_cost=cost):
+                    if keyword not in rough:
+                        rough.append(keyword)
+                if rough:
+                    break
+        except TypeError:
+            logger.warning(
+                "flashtext build has no max_cost; falling back to a full-dictionary "
+                "RapidFuzz scan, which costs ~11s per miss on a large dictionary"
+            )
+            rough = list(entity_map.keys())
+
+        all_names = rough[:MAX_CANDIDATES]
+        for word in words[:12]:
+            # Score case-insensitively. The previous call compared a lowercased
+            # word against original-case keywords, so "cwe-88" scored 33 against
+            # "CWE-89" instead of 83 -- fuzzy was effectively dead, and that
+            # accident was the only thing preventing identifier confusion. Fixing
+            # the casing without the policy below would have silently started
+            # accepting CWE-89 for CWE-88.
+            matches = rfprocess.extract(word, all_names, scorer=fuzz.ratio, limit=3,
+                                        score_cutoff=70, processor=str.lower)
+            # Stage two decides. It may reject everything, which is the point: an
+            # identifier may differ only in punctuation and case, and an ambiguous
+            # best is evidence the match is unsafe rather than merely unranked.
+            decision = filter_candidates(word, [(name, score) for name, score, _ in matches])
+            if not decision.accepted:
+                logger.debug(f"fuzzy candidate for {word!r} rejected: {decision.reason}")
+                continue
+            entity = entity_map.get(decision.keyword)
+            if entity and entity["id"] not in seen_ids:
+                entities.append({
+                    **entity,
+                    "span": [0, 0],
+                    "mention": word,
+                    "fuzzy_score": decision.score,
+                    "fuzzy_match": decision.keyword,
+                    "match_policy": decision.reason,
+                })
+                seen_ids.add(entity["id"])
         if entities:
             logger.info(f"RapidFuzz fallback found {len(entities)} entities")
 
