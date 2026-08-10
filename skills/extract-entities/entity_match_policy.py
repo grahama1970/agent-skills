@@ -68,6 +68,38 @@ def normalise_identifier(token: str) -> str:
     return "".join(c for c in token.lower() if c.isalnum())
 
 
+# Characters that continue an identifier. A match flanked by any of these is a
+# fragment of a longer token, not a match in its own right.
+_ID_CONTINUATION = set("abcdefghijklmnopqrstuvwxyz0123456789-._()/")
+
+
+def is_fragment_of_larger_token(text: str, start: int, end: int) -> bool:
+    """True when a matched span is embedded inside a longer identifier.
+
+    Flashtext matches the longest keyword IN THE DICTIONARY, which is not the
+    same as the longest token in the TEXT. When a compound id is absent, it
+    happily grounds an inner component:
+
+        "F36B-M08-S02" with M08 in the dictionary -> ['M08']
+
+    That is a different control, asserted from a substring of the one the text
+    actually named -- the compliance failure this guard exists to stop. The exact
+    stage returns before any scoring, so nothing else is positioned to catch it.
+    """
+    before = text[start - 1].lower() if start > 0 else ""
+    after = text[end].lower() if end < len(text) else ""
+
+    # A trailing '.' is usually the end of a sentence, not part of an id. It only
+    # continues one when a character follows it: T1003.001 fragments, "see
+    # CWE-89." does not. Treating every trailing dot as continuation silently
+    # dropped every identifier that ended a sentence.
+    if after == ".":
+        following = text[end + 1].lower() if end + 1 < len(text) else ""
+        after = "." if following.isalnum() else ""
+
+    return before in _ID_CONTINUATION or after in _ID_CONTINUATION
+
+
 def looks_like_identifier(token: str) -> bool:
     """True when a token is an entity ID rather than prose.
 

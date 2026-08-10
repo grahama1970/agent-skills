@@ -24,6 +24,7 @@ from entity_match_policy import (  # noqa: E402
     CandidateSetTooLarge,
     MAX_CANDIDATES,
     filter_candidates,
+    is_fragment_of_larger_token,
     looks_like_identifier,
     normalise_identifier,
 )
@@ -40,6 +41,25 @@ def main() -> None:
         results.append({"case": name, "ok": bool(ok), "detail": detail})
         if not ok:
             failures.append(f"{name}: {detail}")
+
+    # --- longest match: a hit inside a longer identifier is not a hit.
+    # Flashtext returns the longest keyword IN THE DICTIONARY, not the longest
+    # token in the TEXT, so an absent compound id grounds an inner component:
+    # "F36B-M08-S02" yields M08, a different control taken from a substring of
+    # the one actually named.
+    fragment_cases = [
+        ("F36B-M08-S02", 5, 8, True, "inner component of a compound id"),
+        ("the M08 sensor", 4, 7, False, "standalone"),
+        ("CWE-895", 0, 6, True, "CWE-89 inside CWE-895"),
+        ("T1003.001", 0, 5, True, "T1003 inside its sub-technique"),
+        ("AC-2(1)", 0, 4, True, "AC-2 inside an enhancement"),
+        ("see CWE-89.", 4, 10, False, "sentence-final period is punctuation"),
+        ("uses AC-2 (see note)", 5, 9, False, "spaced parenthetical"),
+    ]
+    wrong_fragments = [why for text, s0, e0, expected, why in fragment_cases
+                       if is_fragment_of_larger_token(text, s0, e0) != expected]
+    check("longest_match_fragments_rejected", not wrong_fragments,
+          f"misjudged: {wrong_fragments or 'none'}")
 
     # --- identifiers: formatting may vary, alphanumerics may not.
     # This is the case the whole policy exists for. CWE-23 and CWE-32 are

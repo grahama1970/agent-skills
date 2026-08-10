@@ -1842,6 +1842,12 @@ def _enrich_extraction_result(result: dict, text: str) -> dict:
     return _enrich_request_cues(result, text)
 
 
+from entity_match_policy import (  # noqa: E402
+    MAX_CANDIDATES,
+    filter_candidates,
+    is_fragment_of_larger_token,
+)
+
 # (collection, limit, field names) -> (KeywordProcessor, entity_map)
 _ENTITY_DICT_CACHE: dict = {}
 
@@ -1875,6 +1881,7 @@ def _extract_nlp_entities(
     scope: str,
     limit: int,
 ) -> list[dict]:
+    import string
     from flashtext import KeywordProcessor
 
     # Dictionary cache, keyed by the fields that determine its contents.
@@ -1931,6 +1938,23 @@ def _extract_nlp_entities(
         kp, entity_map = cached
     else:
         kp = KeywordProcessor(case_sensitive=False)
+        # Longest-match discipline for structured identifiers.
+        #
+        # FlashText's default non-word boundary set is letters+digits+"_", so "-"
+        # and "." read as delimiters. A dictionary holding the prefix
+        # "F36B-M08-S01" therefore matches inside "F36B-M08-S01-C01" and reports a
+        # DIFFERENT component, and a bare segment like "S01" fires inside any id
+        # containing it. Verified: with defaults, keys ["F36B-M08-S01"] against
+        # "component F36B-M08-S01-C01 failed" returns ["F36B-M08-S01"].
+        #
+        # Treating "-" as a word character makes a match valid only when the whole
+        # identifier is delimited, so the longest entry in the trie wins and partial
+        # ids no longer fire. The same text then returns [].
+        #
+        # "." is deliberately NOT included: it would swallow the sentence-final
+        # delimiter, and "see CM0023, plus CM0023." then yields one match instead
+        # of two. Only "-" is load-bearing for these identifier shapes.
+        kp.set_non_word_boundaries(set(string.ascii_letters + string.digits + "_-"))
         entity_map: dict[str, dict] = {}  # keyword -> entity doc
 
     for doc in docs:
@@ -1991,9 +2015,21 @@ def _extract_nlp_entities(
     seen_ids = set()
     for keyword, start, end in found_keywords:
         entity = entity_map.get(keyword)
-        if entity and entity["id"] not in seen_ids:
-            entities.append({**entity, "span": [start, end], "mention": text[start:end]})
-            seen_ids.add(entity["id"])
+        if not entity or entity["id"] in seen_ids:
+            continue
+        # Flashtext returns the longest keyword IN THE DICTIONARY, which is not
+        # the longest token in the TEXT. Where a compound id is absent it grounds
+        # an inner component -- "F36B-M08-S02" yields M08 -- asserting a
+        # different control from a substring of the one actually named. This is
+        # the exact stage, so nothing downstream is positioned to catch it.
+        if is_fragment_of_larger_token(text, start, end):
+            logger.debug(
+                f"dropping {keyword!r}: fragment of the longer token "
+                f"{text[max(0, start - 12):end + 12]!r}"
+            )
+            continue
+        entities.append({**entity, "span": [start, end], "mention": text[start:end]})
+        seen_ids.add(entity["id"])
 
     # 3b. RapidFuzz fallback: if FlashText found nothing, try fuzzy matching
     _fuzzy_enabled = os.environ.get("EXTRACT_ENTITIES_FUZZY", "1").strip().lower() not in {"0", "false", "no"}
@@ -2019,27 +2055,79 @@ def _extract_nlp_entities(
         # measured 11.6s for one question, fine interactively and ruinous across a
         # batch where most items match nothing exactly. Bulk callers set
         # EXTRACT_ENTITIES_FUZZY=0 to keep exact matching and skip did-you-mean.
-        all_names = list(entity_map.keys())
-        for word in words[:12]:
-            matches = rfprocess.extract(word, all_names, scorer=fuzz.ratio, limit=3,
-                                        score_cutoff=70)
-            for match_name, score, _ in matches:
-                entity = entity_map.get(match_name)
-                if entity and entity["id"] not in seen_ids:
-                    entities.append({
-                        **entity,
-                        "span": [0, 0],
-                        "mention": word,
-                        "fuzzy_score": score,
-                        "fuzzy_match": match_name,
-                    })
-                    seen_ids.add(entity["id"])
-                    break  # One fuzzy match per word
+        # ROUGH STAGE: Flashtext with max_cost walks the trie in O(text) and
+        # yields a handful of near-miss keywords. This replaces scoring the whole
+        # dictionary with RapidFuzz, which is O(dictionary) -- measured at ~11s
+        # per miss against 391k entities, affordable interactively and fatal
+        # across a batch where most items miss.
+        #
+        # max_cost needs upstream flashtext; PyPI 2.7 is exact-only. If the
+        # installed build lacks it, fall back to the old scan rather than silently
+        # returning nothing, and say so loudly.
+        # Keep the SPAN, not just the keyword. The trie has already located the
+        # near-miss in the text, so the mention to score is that span --
+        # "Brute Forse" against "Brute Force". Re-scoring individual words
+        # instead threw the span away and compared "brute" to "Brute Force",
+        # which scores ~60 and is rejected: the rough stage found the match and
+        # the filter then failed to recognise it.
+        rough_spans: list[tuple[str, str]] = []  # (keyword, mention)
+        rough: list[str] = []
+        try:
+            for cost in (1, 2):
+                for keyword, start, end in kp.extract_keywords(text, span_info=True, max_cost=cost):
+                    if keyword not in rough:
+                        rough.append(keyword)
+                        rough_spans.append((keyword, text[start:end]))
+                if rough:
+                    break
+        except TypeError:
+            logger.warning(
+                "flashtext build has no max_cost; falling back to a full-dictionary "
+                "RapidFuzz scan, which costs ~11s per miss on a large dictionary"
+            )
+            rough = list(entity_map.keys())
+
+        # Score each trie hit against the text it actually matched.
+        #
+        # Case-insensitively, via `processor`: the previous call compared a
+        # lowercased word against original-case keywords, so "cwe-88" scored 33
+        # against "CWE-89" instead of 83. Fuzzy was effectively dead, and that
+        # accident was the only thing preventing identifier confusion -- fixing
+        # the casing without the policy below would silently have started
+        # accepting CWE-89 for CWE-88.
+        for keyword, mention in rough_spans[:MAX_CANDIDATES]:
+            score = fuzz.ratio(mention.lower(), keyword.lower())
+            # Stage two decides, and may reject everything. An identifier may
+            # differ only in punctuation and case; an ambiguous best is evidence
+            # the match is unsafe rather than merely unranked.
+            decision = filter_candidates(mention, [(keyword, score)])
+            if not decision.accepted:
+                logger.debug(f"fuzzy candidate {mention!r}->{keyword!r} rejected: {decision.reason}")
+                continue
+            entity = entity_map.get(decision.keyword)
+            if entity and entity["id"] not in seen_ids:
+                entities.append({
+                    **entity,
+                    "span": [0, 0],
+                    "mention": mention,
+                    "fuzzy_score": decision.score,
+                    "fuzzy_match": decision.keyword,
+                    "match_policy": decision.reason,
+                })
+                seen_ids.add(entity["id"])
         if entities:
             logger.info(f"RapidFuzz fallback found {len(entities)} entities")
 
-    # 4. Enrich with /recall context for each entity
-    for entity in entities:
+    # 4. Enrich with /recall context for each entity.
+    #
+    # One HTTP round trip PER ENTITY, measured at ~463ms each: a two-entity
+    # extraction costs 2.4s of which the matching is under a millisecond. That is
+    # fine interactively, where the context is what a human reads, and ruinous in
+    # bulk, where the caller wants identity and nothing else. Set
+    # EXTRACT_ENTITIES_RECALL=0 to skip it; grounding is unaffected because
+    # recall_context is display material, never proof.
+    _recall_enabled = os.environ.get("EXTRACT_ENTITIES_RECALL", "1").strip().lower() not in {"0", "false", "no"}
+    for entity in entities if _recall_enabled else []:
         try:
             recall_q = f"{entity['name']} {entity['type']} {entity.get('cluster', '')}"
             r = client.post("/recall", json={
