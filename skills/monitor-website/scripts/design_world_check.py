@@ -176,6 +176,250 @@ def _missing_paths(paths: list[str]) -> list[str]:
     return missing
 
 
+def _subgate(status: str, **fields) -> dict:
+    return {"status": status, **fields}
+
+
+def _corpus_subgates(receipt: dict) -> dict:
+    section_corpus = receipt.get("section_corpus_manifest") or {}
+    contact_sheet = receipt.get("contact_sheet") or {}
+    subgates: dict[str, dict] = {}
+
+    corpus_path_value = str(section_corpus.get("path") or "")
+    if not corpus_path_value:
+        subgates["corpus_current"] = _subgate(
+            "NOT_TESTED",
+            reason="section_corpus_manifest.path is missing",
+        )
+        subgates["section_crop_review_units"] = _subgate(
+            "NOT_TESTED",
+            reason="no segmented screenshot manifest is available",
+        )
+    else:
+        corpus_path = _resolve_artifact(corpus_path_value)
+        manifest, manifest_err = _load_json(corpus_path)
+        corpus_errors = []
+        if manifest_err:
+            corpus_errors.append(manifest_err)
+        else:
+            if manifest.get("schema") != "grahama.responsive_section_corpus.v1":
+                corpus_errors.append("manifest schema must be grahama.responsive_section_corpus.v1")
+            mismatch = _hash_mismatch(corpus_path_value, section_corpus.get("sha256"))
+            if mismatch:
+                corpus_errors.append("manifest sha256 does not match receipt")
+            counts = manifest.get("counts") or {}
+            if int(counts.get("screenshots") or 0) <= 0:
+                corpus_errors.append("manifest has no screenshots")
+            if int(counts.get("sections") or 0) <= 0:
+                corpus_errors.append("manifest has no sections")
+            if int(counts.get("viewports") or 0) <= 0:
+                corpus_errors.append("manifest has no viewports")
+            if int(counts.get("failures") or 0) != 0:
+                corpus_errors.append("manifest contains capture failures")
+        if manifest_err:
+            counts = {}
+        else:
+            counts = (manifest or {}).get("counts") or {}
+        subgates["corpus_current"] = _subgate(
+            "FAIL" if corpus_errors else "PASS",
+            path=corpus_path_value,
+            corpus_sha256=section_corpus.get("sha256"),
+            counts=counts,
+            errors=corpus_errors,
+        )
+
+        crop_errors = []
+        if not manifest_err and manifest:
+            note = " ".join(
+                str(v or "")
+                for v in (
+                    manifest.get("review_note"),
+                    section_corpus.get("review_note"),
+                    section_corpus.get("segmentation"),
+                )
+            ).lower()
+            if "section" not in note or "full-page" not in note:
+                crop_errors.append("manifest must state that review units are section/page-state crops, not full-page primary evidence")
+            screenshots = manifest.get("screenshots") or []
+            for index, shot in enumerate(screenshots):
+                if not isinstance(shot, dict):
+                    crop_errors.append(f"screenshot {index + 1} is not an object")
+                    continue
+                for field in ("route", "viewport_id", "path", "dimensions", "intended_proof"):
+                    if field not in shot:
+                        crop_errors.append(f"screenshot {index + 1} missing {field}")
+                intended = str(shot.get("intended_proof") or "").lower()
+                if "full-page" not in intended and "whole-site" not in intended:
+                    crop_errors.append(f"screenshot {index + 1} does not declare it is not a whole-page primary unit")
+                path = str(shot.get("path") or "")
+                if path and not _artifact_exists(path):
+                    crop_errors.append(f"screenshot {index + 1} artifact missing: {path}")
+        subgates["section_crop_review_units"] = _subgate(
+            "FAIL" if crop_errors else ("NOT_TESTED" if manifest_err else "PASS"),
+            screenshot_count=int(counts.get("screenshots") or 0),
+            errors=crop_errors,
+        )
+
+    contact_path_value = str(contact_sheet.get("path") or "")
+    contact_errors = []
+    if not contact_path_value:
+        subgates["contact_sheet_current"] = _subgate(
+            "NOT_TESTED",
+            reason="contact_sheet.path is missing",
+        )
+    else:
+        if not _artifact_exists(contact_path_value):
+            contact_errors.append("contact sheet artifact is missing")
+        else:
+            mismatch = _hash_mismatch(contact_path_value, contact_sheet.get("sha256"))
+            if mismatch:
+                contact_errors.append("contact sheet sha256 does not match receipt")
+        subgates["contact_sheet_current"] = _subgate(
+            "FAIL" if contact_errors else "PASS",
+            path=contact_path_value,
+            crop_count=contact_sheet.get("crop_count"),
+            errors=contact_errors,
+        )
+    return subgates
+
+
+def _rater_subgates(receipt: dict) -> tuple[dict, list[str]]:
+    thresholds = receipt.get("thresholds") or {}
+    aggregate = receipt.get("aggregate") or {}
+    raters = receipt.get("raters") or []
+    min_raters = int(thresholds.get("min_raters") or 5)
+    usable_raters = [r for r in raters if isinstance(r, dict) and r.get("usable")]
+    usable = int(aggregate.get("usable") or len(usable_raters))
+    completed = usable >= min_raters and len(usable_raters) >= min_raters
+    subgates: dict[str, dict] = {}
+    parent_errors: list[str] = []
+
+    subgates["rater_transport_ready"] = _subgate(
+        "NOT_TESTED" if not usable_raters else "PASS",
+        usable=usable,
+        counted_raters=len(usable_raters),
+        excluded_transport_blockers=len(receipt.get("excluded_transport_blockers") or []),
+        reason="no current-corpus rater submissions are counted" if not usable_raters else None,
+    )
+    subgates["fresh_rater_set_complete"] = _subgate(
+        "PASS" if completed else "NOT_TESTED",
+        usable=usable,
+        usable_records=len(usable_raters),
+        required=min_raters,
+        reason="fresh blind-rater set has not been run for the current segmented corpus" if not completed else None,
+    )
+
+    raw_errors = []
+    for index, rater in enumerate(usable_raters):
+        for field in ("output_path", "raw_output_path"):
+            value = rater.get(field)
+            if not value or not _artifact_exists(str(value)):
+                raw_errors.append(f"usable rater {index + 1} missing {field}")
+    raw_status = "FAIL" if raw_errors else ("PASS" if usable_raters else "NOT_TESTED")
+    if raw_errors:
+        parent_errors.extend(raw_errors)
+    subgates["raw_outputs_preserved"] = _subgate(
+        raw_status,
+        usable_records=len(usable_raters),
+        errors=raw_errors,
+    )
+
+    aggregate_keys = (
+        "positive_classification",
+        "competitor_swap_tension",
+        "cross_screen_family",
+        "generic_ai_template_primary",
+    )
+    aggregate_missing = [k for k in aggregate_keys if k not in aggregate]
+    aggregate_status = "FAIL" if aggregate_missing and usable_raters else ("PASS" if usable_raters else "NOT_TESTED")
+    subgates["aggregate_replay_ready"] = _subgate(
+        aggregate_status,
+        aggregate=aggregate,
+        missing=aggregate_missing,
+    )
+    if aggregate_status == "FAIL":
+        parent_errors.append(f"aggregate missing keys: {', '.join(aggregate_missing)}")
+
+    threshold_errors = []
+    checks = [
+        (
+            "positive_classification",
+            int(aggregate.get("positive_classification") or 0),
+            ">=",
+            int(thresholds.get("min_positive_classification") or 0),
+        ),
+        (
+            "competitor_swap_tension",
+            int(aggregate.get("competitor_swap_tension") or 0),
+            ">=",
+            int(thresholds.get("min_competitor_swap_tension") or 0),
+        ),
+        (
+            "cross_screen_family",
+            int(aggregate.get("cross_screen_family") or 0),
+            ">=",
+            int(thresholds.get("min_cross_screen_family") or 0),
+        ),
+        (
+            "generic_ai_template_primary",
+            int(aggregate.get("generic_ai_template_primary") or 0),
+            "<=",
+            int(thresholds.get("max_generic_ai_template_primary") or 0),
+        ),
+    ]
+    if completed:
+        for name, actual, op, expected in checks:
+            failed = actual < expected if op == ">=" else actual > expected
+            if failed:
+                threshold_errors.append(f"{name} {actual} does not satisfy {op} {expected}")
+        if threshold_errors:
+            parent_errors.extend(threshold_errors)
+    subgates["thresholds_met"] = _subgate(
+        "FAIL" if threshold_errors else ("PASS" if completed else "NOT_TESTED"),
+        checks=[
+            {"name": name, "actual": actual, "operator": op, "expected": expected}
+            for name, actual, op, expected in checks
+        ],
+        errors=threshold_errors,
+    )
+    return subgates, parent_errors
+
+
+def _g11_reason_and_next(gate: dict) -> tuple[str | None, dict | None]:
+    subgates = gate.get("subgates") or {}
+    failed = [name for name, subgate in subgates.items() if subgate.get("status") == "FAIL"]
+    if failed:
+        if "thresholds_met" in failed:
+            return "blind_distinctiveness_thresholds_not_met", {
+                "lane": "design_repair_or_rater_packet_audit",
+                "command": "inspect raw rater outputs, then repair only the failed design invariant or receipt aggregate",
+            }
+        if "raw_outputs_preserved" in failed or "aggregate_replay_ready" in failed:
+            return "blind_rater_output_integrity_failed", {
+                "lane": "rater_receipt_repair",
+                "command": "repair or quarantine the affected rater receipt records before counting them",
+            }
+        return "g11_input_artifacts_invalid", {
+            "lane": "corpus_repair",
+            "command": "regenerate section-crop corpus and contact sheet before rater submission",
+        }
+    fresh = subgates.get("fresh_rater_set_complete") or {}
+    if fresh.get("status") != "PASS":
+        return "fresh_blind_raters_not_run_for_current_segmented_corpus", {
+            "lane": "rater_submission",
+            "command": "submit current section-crop corpus to at least five fresh raters and preserve raw outputs",
+            "required_usable_raters": fresh.get("required", 5),
+            "current_usable_raters": fresh.get("usable", 0),
+        }
+    thresholds = subgates.get("thresholds_met") or {}
+    if thresholds.get("status") != "PASS":
+        return "blind_distinctiveness_thresholds_not_met", {
+            "lane": "design_repair_or_rater_packet_audit",
+            "command": "inspect threshold failures against raw rater outputs",
+        }
+    return None, None
+
+
 def responsive_choreography_gate() -> dict:
     return _receipt_gate(
         receipt_path=DESIGN_ROUNDTABLE / "responsive-geometry.r1.json",
@@ -206,7 +450,45 @@ def distinctiveness_blind_gate() -> dict:
         required_artifacts=["contact_sheet.path", "section_corpus_manifest.path"],
     )
     receipt, err = _load_json(DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json")
-    if err or not receipt or gate.get("status") != "PASS":
+    if err or not receipt:
+        return gate
+
+    subgates = {}
+    subgates.update(_corpus_subgates(receipt))
+    rater_subgates, rater_errors = _rater_subgates(receipt)
+    subgates.update(rater_subgates)
+    gate["subgates"] = subgates
+    gate["evidence_pipeline_status"] = "PASS" if all(
+        subgates.get(name, {}).get("status") == "PASS"
+        for name in (
+            "corpus_current",
+            "section_crop_review_units",
+            "contact_sheet_current",
+            "fresh_rater_set_complete",
+            "raw_outputs_preserved",
+            "aggregate_replay_ready",
+        )
+    ) else ("FAIL" if any(
+        subgate.get("status") == "FAIL" for subgate in subgates.values()
+    ) else "NOT_TESTED")
+    gate["design_outcome_status"] = subgates.get("thresholds_met", {}).get("status", "NOT_TESTED")
+    if rater_errors:
+        gate.setdefault("errors", []).extend(rater_errors)
+
+    if any(subgate.get("status") == "FAIL" for subgate in subgates.values()):
+        gate["status"] = "FAIL"
+    elif gate.get("status") == "PASS" and gate["design_outcome_status"] != "PASS":
+        gate["status"] = "FAIL"
+        gate.setdefault("errors", []).append("receipt claims PASS but G11 subgates are not all PASS")
+    elif gate.get("status") != "PASS":
+        gate["status"] = gate.get("status") or "NOT_TESTED"
+
+    reason_code, next_action = _g11_reason_and_next(gate)
+    if reason_code:
+        gate["reason_code"] = reason_code
+        gate["next_action"] = next_action
+
+    if gate.get("status") != "PASS":
         return gate
 
     errors = []

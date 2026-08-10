@@ -26,9 +26,14 @@
       "failures": []
     },
     "distinctiveness_blind": {
-      "status": "PASS",
+      "status": "NOT_TESTED",
       "receipt": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/distinctiveness-blind.r1.json",
-      "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+      "source_commit": "fbf7c6e2bdf6c850d65cddcf570499ff5f4bb367",
+      "source_state": {
+        "head_commit": "fbf7c6e2bdf6c850d65cddcf570499ff5f4bb367",
+        "worktree_state": "dirty-uncommitted-current-local-render",
+        "note": "Current render includes uncommitted local repairs; do not treat HEAD alone as the frozen implementation."
+      },
       "thresholds": {
         "min_raters": 5,
         "logo_off_min_correct_ratio": 0.8,
@@ -39,27 +44,29 @@
         "max_reference_or_craft_leakage_risk": "medium"
       },
       "aggregate": {
-        "usable": 5,
-        "logo_off_correct": 5,
-        "positive_classification": 5,
+        "usable": 0,
+        "logo_off_correct": 0,
+        "positive_classification": 0,
         "generic_ai_template_primary": 0,
-        "competitor_swap_tension": 5,
-        "cross_screen_family": 5,
-        "high_leakage_risk": 0
+        "competitor_swap_tension": 0,
+        "cross_screen_family": 0,
+        "high_leakage_risk": 0,
+        "status": "NOT_TESTED_CURRENT_CORPUS"
       },
       "section_corpus_manifest": {
-        "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
-        "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+        "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/manifest.json",
+        "sha256": "5edd2f32f1ffa69c368b79e310d66dc992141e1cb780997630bf61eb8fd17f0d",
         "schema": "grahama.responsive_section_corpus.v1",
         "counts": {
           "viewports": 5,
           "sections": 10,
-          "screenshots": 50,
+          "screenshots": 147,
           "failures": 0
         },
-        "low_information_guard": null
+        "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review.",
+        "segmentation": "ordered section/subsection crops; tall sections split into reviewable segments"
       },
-      "failure_signature": null,
+      "failure_signature": "fresh_blind_raters_not_run_for_current_segmented_corpus",
       "blocked_by_systemic_failure": false,
       "excluded_transport_blockers": [
         {
@@ -84,22 +91,124 @@
         }
       ],
       "does_not_prove": [
+        "Fresh-context blind distinctiveness for the current 20260810T030534Z segmented corpus has not been run yet.",
+        "The previous five Kimi raters are preserved under previous_blind_rater_round but are not counted as current-corpus acceptance.",
         "Accessibility completion, keyboard completion, 200% text zoom, reduced-motion equivalence, and WCAG 2.2 AA are outside this G11 receipt.",
-        "Representative performance metrics such as LCP, INP, and CLS are outside this G11 receipt.",
-        "Independent impeccable-finish amend-loop review is outside this G11 receipt.",
-        "The five counted seats are all Kimi-backed live browser raters; this proves the section-crop G11 packet against the recorded threshold but does not prove cross-provider agreement."
-      ]
+        "Independent Impeccable finish amend-loop review is outside this G11 receipt."
+      ],
+      "subgates": {
+        "corpus_current": {
+          "status": "PASS",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/manifest.json",
+          "corpus_sha256": "5edd2f32f1ffa69c368b79e310d66dc992141e1cb780997630bf61eb8fd17f0d",
+          "counts": {
+            "viewports": 5,
+            "sections": 10,
+            "screenshots": 147,
+            "failures": 0
+          },
+          "errors": []
+        },
+        "section_crop_review_units": {
+          "status": "PASS",
+          "screenshot_count": 147,
+          "errors": []
+        },
+        "contact_sheet_current": {
+          "status": "PASS",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/contact-sheet.png",
+          "crop_count": 147,
+          "errors": []
+        },
+        "rater_transport_ready": {
+          "status": "NOT_TESTED",
+          "usable": 0,
+          "counted_raters": 0,
+          "excluded_transport_blockers": 4,
+          "reason": "no current-corpus rater submissions are counted"
+        },
+        "fresh_rater_set_complete": {
+          "status": "NOT_TESTED",
+          "usable": 0,
+          "usable_records": 0,
+          "required": 5,
+          "reason": "fresh blind-rater set has not been run for the current segmented corpus"
+        },
+        "raw_outputs_preserved": {
+          "status": "NOT_TESTED",
+          "usable_records": 0,
+          "errors": []
+        },
+        "aggregate_replay_ready": {
+          "status": "NOT_TESTED",
+          "aggregate": {
+            "usable": 0,
+            "logo_off_correct": 0,
+            "positive_classification": 0,
+            "generic_ai_template_primary": 0,
+            "competitor_swap_tension": 0,
+            "cross_screen_family": 0,
+            "high_leakage_risk": 0,
+            "status": "NOT_TESTED_CURRENT_CORPUS"
+          },
+          "missing": []
+        },
+        "thresholds_met": {
+          "status": "NOT_TESTED",
+          "checks": [
+            {
+              "name": "positive_classification",
+              "actual": 0,
+              "operator": ">=",
+              "expected": 4
+            },
+            {
+              "name": "competitor_swap_tension",
+              "actual": 0,
+              "operator": ">=",
+              "expected": 4
+            },
+            {
+              "name": "cross_screen_family",
+              "actual": 0,
+              "operator": ">=",
+              "expected": 4
+            },
+            {
+              "name": "generic_ai_template_primary",
+              "actual": 0,
+              "operator": "<=",
+              "expected": 1
+            }
+          ],
+          "errors": []
+        }
+      },
+      "evidence_pipeline_status": "NOT_TESTED",
+      "design_outcome_status": "NOT_TESTED",
+      "reason_code": "fresh_blind_raters_not_run_for_current_segmented_corpus",
+      "next_action": {
+        "lane": "rater_submission",
+        "command": "submit current section-crop corpus to at least five fresh raters and preserve raw outputs",
+        "required_usable_raters": 5,
+        "current_usable_raters": 0
+      }
     },
     "craft_integrity_render": {
       "status": "PASS",
       "receipt": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/craft-integrity.r1.json",
-      "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+      "source_commit": "fbf7c6e2bdf6c850d65cddcf570499ff5f4bb367",
+      "source_state": {
+        "head_commit": "fbf7c6e2bdf6c850d65cddcf570499ff5f4bb367",
+        "worktree_state": "dirty-uncommitted-current-local-render",
+        "note": "Current render includes uncommitted local repairs; do not treat HEAD alone as the frozen implementation."
+      },
       "visual_assets_check": {
         "command": "skills/monitor-website/run.sh visual-assets-check --json",
         "status": "PASS",
         "counts": {
-          "registered_assets": 31,
-          "public_visuals": 31,
+          "registered_assets": 42,
+          "public_visuals": 42,
           "evidence_assets": 4,
           "findings": 0
         },
@@ -111,71 +220,261 @@
         "counts": {
           "registered_keyframes": 10,
           "declared_keyframes": 10,
-          "animation_uses": 19,
+          "animation_uses": 4,
           "findings": 0
         },
         "receipt": "site/design-roundtable/effects-check.latest.json"
       },
       "section_corpus_manifest": {
-        "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
-        "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+        "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/manifest.json",
+        "sha256": "5edd2f32f1ffa69c368b79e310d66dc992141e1cb780997630bf61eb8fd17f0d",
         "schema": "grahama.responsive_section_corpus.v1",
         "counts": {
           "viewports": 5,
           "sections": 10,
-          "screenshots": 50,
+          "screenshots": 147,
           "failures": 0
         },
-        "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review."
+        "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review.",
+        "segmentation": "ordered section/subsection crops; tall sections split into reviewable segments"
       },
       "rendered_screens": [
         {
           "id": "section-top-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-top-contact-sheet.png",
-          "sha256": "d64e5306ebdd8897b29d71bd484256c5c6c9d4a99507df314e6471d10c1afb2c"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "top",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-top-contact-sheet.png",
+          "sha256": "2d22dd5d6be1dbb6873a159d0fde3d6246c9f647e98f5b9c1dff9316298b15e2",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-search-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-search-contact-sheet.png",
-          "sha256": "aa96928d916a683880a6b168df287232d43eef45d506af58da5dfdafbce7d41d"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "search",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-search-contact-sheet.png",
+          "sha256": "c1203b10589b7b1703cf5e7abb8326ca9b46fd8127118590eff60e5f12905994",
+          "viewports": [
+            "phone-390",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-work-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-work-contact-sheet.png",
-          "sha256": "3f3a801d7cbc9ab4744ad6edf8ef70bdb7f1498f53c883876610c8ef3989ab39"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "work",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-work-contact-sheet.png",
+          "sha256": "71a64e3aa1f1edb0c30c05420c7c4ece42e76e2411c76898fff06ccab7626feb",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440"
+          ]
+        },
+        {
+          "id": "section-competence-contact-sheet",
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "competence",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-competence-contact-sheet.png",
+          "sha256": "e207804d04f4f87d8382c419fd0bd8aef644a1ae8e2d0c2a25f382800ed83ca6",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440"
+          ]
+        },
+        {
+          "id": "section-dream-contact-sheet",
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "dream",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-dream-contact-sheet.png",
+          "sha256": "99779823d1d334dc0f196e1db6658ba92d88073ba672d01b1a0647d298b2a490",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-ledger-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-ledger-contact-sheet.png",
-          "sha256": "309c456d3d45ffe7cdf8e1f2f6f0d3fe51a8173c1c72d083086b74961cff5f91"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "ledger",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-ledger-contact-sheet.png",
+          "sha256": "fa5b6d2b074dd6178474c136a40c52bfc272b4607c5c8a644dacb95cbbf54f03",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-proof-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-proof-contact-sheet.png",
-          "sha256": "2446f09ec16d2117b2a45c65063fa7f6b1c9a7add19dc4f0067f1539607e3ab6"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "proof",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-proof-contact-sheet.png",
+          "sha256": "28c3b24e9b1d2b85194d7e2b8705bcc0e90b3602c0c727165be6b8d82a07741d",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-receipts-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-receipts-contact-sheet.png",
-          "sha256": "11c074f665839058a1b230697902274605f0c7f745bf2757bf258b808fa76db1"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "receipts",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-receipts-contact-sheet.png",
+          "sha256": "a19015cacfaecc1fe05ac52fd8ac55b7ee5e58fe14cc99865a335414c19d57f9",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-about-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-about-contact-sheet.png",
-          "sha256": "64740b36b2abe288f8699ff41b4eca818eed8a057077dfa3cf77c981cdd31b28"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "about",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-about-contact-sheet.png",
+          "sha256": "ecb64bf8806b63a31c424c6fe3c56d0796426b12c87671a978659dcd293015a4",
+          "viewports": [
+            "phone-390",
+            "phone-390",
+            "phone-430",
+            "phone-430",
+            "tablet-768",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1366",
+            "desktop-1440",
+            "desktop-1440"
+          ]
         },
         {
           "id": "section-contact-contact-sheet",
-          "type": "section_contact_sheet",
-          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-contact-contact-sheet.png",
-          "sha256": "3c5b4f84d0038bd8e6ed7a739e121873735d0870f09f3f1a55b172d37075fee2"
+          "type": "section_contact_sheet_ordered_subcrops",
+          "section_id": "contact",
+          "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T030534Z/section-contact-contact-sheet.png",
+          "sha256": "0433cd1f8ba5b300a6ca06da63139f239bdb8901611b3f10e1497b4e0fcdc72a",
+          "viewports": [
+            "phone-390",
+            "phone-430",
+            "tablet-768",
+            "desktop-1366",
+            "desktop-1440"
+          ]
         }
       ],
       "prohibited_findings": [],
@@ -183,9 +482,9 @@
         "blind distinctiveness",
         "independent Impeccable finish review",
         "WCAG keyboard/contrast completion",
-        "performance budgets"
+        "field performance outside the local Lighthouse representative receipt"
       ]
     }
   },
-  "status": "PASS"
+  "status": "NOT_TESTED"
 }

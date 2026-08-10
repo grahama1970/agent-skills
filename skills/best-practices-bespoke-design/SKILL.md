@@ -362,6 +362,27 @@ single unreadable full-site image as primary evidence.
 
 ### Phase 9 — Run Adversarial Distinctiveness Tests
 
+G11 is a composite gate, not a single vague reviewer verdict. Status reports and
+receipts must expose these child states separately:
+
+- `corpus_current` — the section/component/page-state crop manifest exists,
+  hashes match, counts are nonzero, and failures are zero;
+- `section_crop_review_units` — the rater input uses reviewable crops or contact
+  sheets assembled from crops, not one whole-site image;
+- `fresh_rater_set_complete` — at least the pre-registered number of fresh,
+  usable rater records exists for the current corpus;
+- `raw_outputs_preserved` — every counted rater has raw and parsed outputs;
+- `aggregate_replay_ready` — aggregate counts can be reconciled from counted
+  rater records;
+- `thresholds_met` — logo-off, competitor-swap, cross-screen-family,
+  generic-template, and leakage thresholds pass.
+
+If the crop corpus is current but fresh raters are absent, G11 is `NOT_TESTED`
+with next lane `rater_submission`. If the fresh rater set is complete and a
+threshold fails, G11 is `FAIL`, not `NOT_TESTED`. Transport acknowledgements,
+old browser tabs, previous-corpus rater results, and advisory reviewer responses
+must never be counted as G11 rater evidence.
+
 #### A. Logo-Off Recognition
 
 Remove brand name and logo. Fresh-context raters receive the target brief and at
