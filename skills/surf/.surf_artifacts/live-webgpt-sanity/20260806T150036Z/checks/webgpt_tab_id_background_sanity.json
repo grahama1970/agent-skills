@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/webgpt_tab_id_background_sanity.json",
+  "description": "CDP js+click on --tab-id without changing activeTabId",
+  "detail": "exit=0",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "webgpt_tab_id_background_sanity",
+  "profile": "release",
+  "status": "pass"
+}

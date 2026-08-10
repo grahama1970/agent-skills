@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/reviewer_tab_not_foreground.json",
+  "description": "Reviewer ChatGPT tab is not the foreground tab (background-safe)",
+  "detail": "reviewer=837367456 active=837368175",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "reviewer_tab_not_foreground",
+  "profile": "release",
+  "status": "pass"
+}

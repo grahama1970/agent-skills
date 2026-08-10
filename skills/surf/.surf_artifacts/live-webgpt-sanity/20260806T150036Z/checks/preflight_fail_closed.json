@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/preflight_fail_closed.json",
+  "description": "webgpt.preflight rejects fake tab id and wrong expect-url",
+  "detail": "fake_tab=5 wrong_url=5",
+  "execution_status": "executed",
+  "expect_fail_closed": true,
+  "live_only": true,
+  "mocked": false,
+  "name": "preflight_fail_closed",
+  "profile": "release",
+  "status": "pass"
+}

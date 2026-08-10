@@ -1,0 +1,85 @@
+{
+  "active_submission_state": "terminal_finalization",
+  "agent_id": "surf-doctor",
+  "allowed_actions": [
+    "preserve_incident",
+    "classify_failure",
+    "read_only_reproduction",
+    "prepare_repair_packet"
+  ],
+  "browser_mutation_authorized": false,
+  "captured_at": "2026-08-06T15:04:34.221740+00:00",
+  "controlled_tab_id": "837367456",
+  "conversation_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "dag_spec": {
+    "max_attempts": 3,
+    "mode": "bounded_dag",
+    "nodes": [
+      "preserve_incident",
+      "classify_failure",
+      "reproduce_or_bound",
+      "prepare_repair"
+    ],
+    "schema": "subagent_dag.v1",
+    "stop_conditions": [
+      "diagnosis_and_repair_packet_written",
+      "same_failure_repeated_twice",
+      "architectural_change_required",
+      "browser_mutation_required"
+    ]
+  },
+  "failure_class": "chatgpt_empty_response_after_submit",
+  "forbidden_actions": [
+    "webgpt_resubmit",
+    "tab_activate",
+    "tab_close",
+    "tab_navigate",
+    "page_refresh",
+    "extension_reload"
+  ],
+  "proof_status": "delivery_not_proven",
+  "requested_tab_id": "837367456",
+  "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "schema": "surf_doctor.incident_request.v1",
+  "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+  "source_artifacts": [
+    {
+      "bytes": 4229,
+      "kind": "response_meta",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.json",
+      "sha256": "f98323f055dfc4d5bcc3ac17fd15a7933dc0b48b1de449f9951759926bbfceb2"
+    },
+    {
+      "bytes": 1407,
+      "kind": "submit_receipt",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md.receipt.json",
+      "sha256": "21f176c77a56e7222c25e28d4b7a64edcfebdae167557ab3efc1cc0a2ce94e78"
+    },
+    {
+      "bytes": 308,
+      "kind": "submitted_prompt",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.submitted.md",
+      "sha256": "bdfb814e66dc7e1bf4d35e8a566b746f2bd8da4ea194bd8bb618789d89e8cc08"
+    },
+    {
+      "bytes": 0,
+      "kind": "raw_response",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 652,
+      "kind": "heartbeat",
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/webgpt_heartbeat.json",
+      "sha256": "c33ff8bc8f415262a5172e450fd9bb0b1c4b59979fcf1774da238e51e7c49e7e"
+    },
+    {
+      "bytes": 316,
+      "kind": "stderr",
+      "path": "/tmp/surf-webgpt-submit-stderr.vwxnIH.log",
+      "sha256": "26f48cdfaf60c461ddd768ae448d5c4cfc66df68f50cf7befa0da5aa052a8956"
+    }
+  ],
+  "status": "PENDING_DIAGNOSIS",
+  "submitted_to_chatgpt": false
+}

@@ -180,6 +180,34 @@ cd ../..
 ./run.sh tab.list --json
 ```
 
+### Tab Age
+
+Chrome exposes no tab creation time — `tab.list` returns only id, title, url,
+active, and windowId — so age is observed and remembered rather than read:
+
+```bash
+./run.sh tab.age                  # oldest first, human readable
+./run.sh tab.age --json           # tabs with age_seconds / age_source
+./run.sh tab.list --with-age      # same annotation on a normal listing
+```
+
+Each tab gains `first_seen`, `age_seconds`, `age_human`, and `age_source`.
+
+**`age_source` is the field that matters.** `observed` means the tab appeared
+after the ledger existed, so its age is accurate to the gap between scans.
+`at_least` means the tab was already open when the ledger was first written, so
+its real age is unknown and only a lower bound is reported (rendered with a
+`>=` prefix). Treating a lower bound as exact is how a week-old tab gets called
+fresh. Calling either command updates the ledger, so ages sharpen over time and
+closed tabs are forgotten.
+
+Age is the first thing to check when a provider lane starts failing: a reviewer
+tab open for days carries conversation state, may be sitting on a rate-limit
+banner, and is the usual cause before anything in the transport is at fault.
+The ledger lives at `~/.surf/tab-first-seen.json` (`SURF_TAB_AGE_LEDGER`
+overrides). It is diagnostic, never a proof boundary — a ledger that cannot be
+written is reported, not fatal.
+
 ### Capability And Result Contracts
 
 Before diagnosing provider breakage after a Surf update, capture the versioned

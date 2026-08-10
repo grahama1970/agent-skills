@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/focus_state_available.json",
+  "description": "focus.state --json exposes activeTabId",
+  "detail": "active=837368175",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "focus_state_available",
+  "profile": "release",
+  "status": "pass"
+}

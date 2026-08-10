@@ -1,0 +1,39 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab",
+  "requested_tab_id": "837367456",
+  "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "controlled_tab_id": "837367456",
+  "submit_receipt_status": "prepared_prompt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+  "response_meta_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.json",
+  "response_receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md.receipt.json",
+  "submitted_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.submitted.md",
+  "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+  "raw_sentinel_present": false,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": false,
+  "final_transport_state": "submitted_only",
+  "proof_status": "delivery_not_proven",
+  "agent_diagnosis": "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner.",
+  "agent_action": "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt.",
+  "next_command": "surf webgpt.extract --tab-id 837367456 --output /home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md --raw-output /home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md --meta-output /home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.json --sentinel '<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>'",
+  "do_not_do": [
+    "do_not_claim_completion",
+    "do_not_retry_submit_until_timeout"
+  ],
+  "needs_attention": null,
+  "claim": {
+    "available": true,
+    "tab_id": "837367456",
+    "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+    "output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md",
+    "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+    "meta_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.json",
+    "wait": true,
+    "stable_polls": 3
+  }
+}

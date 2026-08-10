@@ -1,0 +1,106 @@
+{
+  "agent_action": "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt.",
+  "agent_diagnosis": "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner.",
+  "blocker": "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT",
+  "browser_access_blocked": false,
+  "chatgpt_rate_limit": {
+    "action": null,
+    "dismiss_attempted": false,
+    "dismissed": false,
+    "error": null,
+    "exhausted": null,
+    "retry_attempted": false,
+    "retry_attempts": null,
+    "wait_seconds": null
+  },
+  "chatgpt_ready_error": null,
+  "chatgpt_too_many_requests_detected": false,
+  "clean_chars": 0,
+  "clean_contains_sentinel": false,
+  "cloudflare_challenge_detected": false,
+  "controlled_tab_id": "837367456",
+  "controlled_tab_id_mismatch": false,
+  "conversation_max_length_detected": false,
+  "conversation_max_length_rollover": {
+    "action": null,
+    "attempted": false,
+    "error": null,
+    "from_tab_id": null,
+    "to_tab_id": null
+  },
+  "conversation_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "current_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "exit_code": 1,
+  "extract_fallback_meta": null,
+  "extract_fallback_raw": null,
+  "extract_fallback_reason": "submit_failed",
+  "extract_fallback_used": false,
+  "failure": "chatgpt_empty_response_after_submit",
+  "finished_at": "2026-08-06T15:03:18Z",
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/01_roundtrip_request.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md",
+  "proof_status": "delivery_not_proven",
+  "raw_chars": 0,
+  "raw_contains_sentinel": false,
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+  "raw_response_advisory": false,
+  "recommended_action": "retry_with_fresh_chatgpt_conversation",
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837367456",
+  "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "response_source": null,
+  "response_timed_out": null,
+  "roundtrip_preflight": null,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight_required": false,
+  "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+  "stable_response_without_sentinel": false,
+  "stable_stall_ms": null,
+  "started_at": "2026-08-06T15:00:48Z",
+  "status": "failed",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.vwxnIH.log",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.submitted.md",
+  "submitted_to_chatgpt": false,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.surf-doctor-request.json",
+  "tab_identity_preflight": {
+    "chatgpt_tabs_count": 24,
+    "checks": [
+      {
+        "detail": "837367456",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "expected_url matched tab 837367456",
+        "name": "expected_url_matches_tab",
+        "ok": true
+      },
+      {
+        "detail": "verified",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      }
+    ],
+    "error": null,
+    "expected_title": null,
+    "expected_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "ok": true,
+    "source": "tab-id",
+    "tab": {
+      "id": "837367456",
+      "title": "ChatGPT - Dream",
+      "url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0"
+    },
+    "tab_id": "837367456"
+  },
+  "tab_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "tab_was_created": false,
+  "timeout_error": null
+}

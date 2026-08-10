@@ -1,0 +1,207 @@
+{
+  "debug": {
+    "clean_chars": 0,
+    "focus_after": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/focus_after.json",
+    "focus_after_payload": {
+      "activeTabId": 837368207,
+      "activeTabUrl": "https://gemini.google.com/app/2df119e8d10518f9",
+      "focusedWindowId": 837368179,
+      "id": 9539
+    },
+    "focus_before": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/focus_before.json",
+    "focus_before_payload": {
+      "activeTabId": 837368175,
+      "activeTabUrl": "https://chatgpt.com/",
+      "focusedWindowId": 837368174,
+      "id": 8993
+    },
+    "meta": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.json",
+    "preflight": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/preflight.json",
+    "raw_chars": 0,
+    "raw_response": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+    "request": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/01_roundtrip_request.md",
+    "response": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md",
+    "stderr": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/webgpt-submit.stderr.log",
+    "stderr_tail": "Terminated\nError: Request timed out\nNotificationAssistedWaitRequested: false\nNotificationAssistedWaitCompletionProof: false\nNotificationAssistedWaitReason: disabled\nExtractFallback: false\nExtractFallbackReason: submit_failed\nExtractFallbackAttempts: 1\nExtractFallbackErrorLog: /tmp/surf-webgpt-submit-extract-stderr.agtEmP.log\n",
+    "submitted": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.submitted.md",
+    "tab_list": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/tab_list.json",
+    "tab_list_tail": " Pitchdeck - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401c79\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Python function review - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401c7c\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"HTML design comp for grahama.co - Claude - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401c7f\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Single-File HTML Design - Kimi - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401c82\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Design Competition HTML/CSS Comp - Google Gemini - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0a00000e\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"NoMachine Software Update\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401c89\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"ChatGPT - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401ca7\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401caa\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cad\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cb0\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cb3\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cb6\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cc2\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Monitor-opportunities agentic platform roundtable round 2 - Claude - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cc5\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Agentic Platform Architecture Decision - Google Gemini - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401cc8\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Grok - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401d3e\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"ChatGPT - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401d41\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Defining grahama.co's 2026 animation language - Claude - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401d44\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401d47\",\n        \"desktop_index\": 0,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"Google Gemini - Google Chrome\"\n      },\n      {\n        \"x11_window_id\": \"0x0c401d4c\",\n        \"desktop_index\": 1,\n        \"wm_class\": \"graham-MS-7C60\",\n        \"title\": \"ChatGPT - Google Chrome\"\n      }\n    ],\n    \"issues\": []\n  }\n}\n"
+  },
+  "diagnosis": {
+    "background_hidden_polls": null,
+    "background_poll_count": null,
+    "clean_contains_sentinel": false,
+    "controlled_tab_id": "837367456",
+    "document_hidden_at_completion": null,
+    "focus_changed": null,
+    "hidden_tab_stall": false,
+    "raw_contains_sentinel": false,
+    "requested_tab_id": "837367456",
+    "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "visibility_state_at_completion": null
+  },
+  "failures": [
+    "roundtrip_submit_failed",
+    "meta_status_failed",
+    "missing_sentinel"
+  ],
+  "meta": {
+    "agent_action": "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt.",
+    "agent_diagnosis": "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner.",
+    "blocker": "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT",
+    "browser_access_blocked": false,
+    "chatgpt_rate_limit": {
+      "action": null,
+      "dismiss_attempted": false,
+      "dismissed": false,
+      "error": null,
+      "exhausted": null,
+      "retry_attempted": false,
+      "retry_attempts": null,
+      "wait_seconds": null
+    },
+    "chatgpt_ready_error": null,
+    "chatgpt_too_many_requests_detected": false,
+    "clean_chars": 0,
+    "clean_contains_sentinel": false,
+    "cloudflare_challenge_detected": false,
+    "controlled_tab_id": "837367456",
+    "controlled_tab_id_mismatch": false,
+    "conversation_max_length_detected": false,
+    "conversation_max_length_rollover": {
+      "action": null,
+      "attempted": false,
+      "error": null,
+      "from_tab_id": null,
+      "to_tab_id": null
+    },
+    "conversation_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "current_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "exit_code": 1,
+    "extract_fallback_meta": null,
+    "extract_fallback_raw": null,
+    "extract_fallback_reason": "submit_failed",
+    "extract_fallback_used": false,
+    "failure": "chatgpt_empty_response_after_submit",
+    "finished_at": "2026-08-06T15:03:18Z",
+    "input": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/01_roundtrip_request.md",
+    "output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.md",
+    "proof_status": "delivery_not_proven",
+    "raw_chars": 0,
+    "raw_contains_sentinel": false,
+    "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.raw.md",
+    "raw_response_advisory": false,
+    "recommended_action": "retry_with_fresh_chatgpt_conversation",
+    "requested_model": null,
+    "requested_reasoning": "Pro",
+    "requested_tab_id": "837367456",
+    "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "response_source": null,
+    "response_timed_out": null,
+    "roundtrip_preflight": null,
+    "roundtrip_preflight_exit_code": 0,
+    "roundtrip_preflight_output_dir": null,
+    "roundtrip_preflight_required": false,
+    "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+    "stable_response_without_sentinel": false,
+    "stable_stall_ms": null,
+    "started_at": "2026-08-06T15:00:48Z",
+    "status": "failed",
+    "stderr_log": "/tmp/surf-webgpt-submit-stderr.vwxnIH.log",
+    "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.submitted.md",
+    "submitted_to_chatgpt": false,
+    "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab/02_roundtrip_response.meta.surf-doctor-request.json",
+    "tab_identity_preflight": {
+      "chatgpt_tabs_count": 24,
+      "checks": [
+        {
+          "detail": "837367456",
+          "name": "tab_id_valid",
+          "ok": true
+        },
+        {
+          "detail": "ok",
+          "name": "tab_open_chatgpt",
+          "ok": true
+        },
+        {
+          "detail": "expected_url matched tab 837367456",
+          "name": "expected_url_matches_tab",
+          "ok": true
+        },
+        {
+          "detail": "verified",
+          "name": "tab_identity_verified_or_allowed",
+          "ok": true
+        }
+      ],
+      "error": null,
+      "expected_title": null,
+      "expected_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+      "ok": true,
+      "source": "tab-id",
+      "tab": {
+        "id": "837367456",
+        "title": "ChatGPT - Dream",
+        "url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0"
+      },
+      "tab_id": "837367456"
+    },
+    "tab_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "tab_was_created": false,
+    "timeout_error": null
+  },
+  "output_dir": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/roundtrip-reviewer-tab",
+  "preflight": {
+    "active_tab_id": "837368175",
+    "checks": [
+      {
+        "detail": "ok",
+        "name": "surf_extension_socket",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "focus_state",
+        "ok": true
+      },
+      {
+        "detail": "837367456",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "expected_url matched tab 837367456",
+        "name": "expected_url_matches_tab",
+        "ok": true
+      },
+      {
+        "detail": "verified",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      },
+      {
+        "detail": "active_tab=837368175 controlled=837367456",
+        "name": "not_foreground_controlled",
+        "ok": true
+      }
+    ],
+    "failures": [],
+    "requested_tab_id": "837367456",
+    "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "status": "pass"
+  },
+  "preflight_exit_code": 0,
+  "schema": "surf.webgpt_roundtrip_preflight.v1",
+  "sentinel": "<<<WEBGPT_PREFLIGHT_DONE:20260806T150045Z:5ecdf55f>>>",
+  "status": "fail",
+  "submit_exit_code": 1,
+  "timeout_seconds": 90,
+  "transport_degraded": false,
+  "warnings": []
+}

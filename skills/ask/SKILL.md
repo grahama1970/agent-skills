@@ -290,6 +290,28 @@ Attachment delivery needs an extension build that handles
 `AI_UPLOAD_FILE_TO_TAB`; older extensions reject the upload and the lane reports
 `browser_submit_not_accepted` with that message.
 
+### How old is this tab?
+
+Stale reviewer tabs are the usual cause of a browser lane that used to work:
+conversation state accumulates, rate-limit banners persist, and bindings drift.
+Check age before blaming the transport.
+
+```bash
+cd skills/surf
+./run.sh tab.age                  # every tab, oldest first
+./run.sh tab.list --with-age      # ages on a normal listing
+```
+
+Read `age_source`, not just the number. `observed` is accurate; `at_least`
+(shown with a `>=` prefix) means the tab predates the ledger and its real age
+is unknown — Chrome exposes no creation time, so age is observed and
+remembered, never read from the browser. `$surf` owns the ledger and the
+contract; see its **Tab Age** section.
+
+For a lane that is failing, the useful sequence is age first, then
+`lane-diagnostics.json`, then the provider receipt — an old tab explains more
+failures than anything in the code path does.
+
 Browser providers do not share one payload contract. Before building or
 repairing a browser roundtable packet, apply this matrix:
 

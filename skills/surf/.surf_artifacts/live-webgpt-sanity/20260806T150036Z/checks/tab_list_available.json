@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/tab_list_available.json",
+  "description": "tab.list --json returns a tab array",
+  "detail": "exit=0",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "tab_list_available",
+  "profile": "release",
+  "status": "pass"
+}

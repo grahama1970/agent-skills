@@ -1,0 +1,44 @@
+{
+  "status": "pass",
+  "failures": [],
+  "requested_tab_id": "837367456",
+  "requested_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+  "active_tab_id": "837368175",
+  "checks": [
+    {
+      "name": "surf_extension_socket",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "name": "focus_state",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "name": "tab_id_valid",
+      "ok": true,
+      "detail": "837367456"
+    },
+    {
+      "name": "tab_open_chatgpt",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "name": "expected_url_matches_tab",
+      "ok": true,
+      "detail": "expected_url matched tab 837367456"
+    },
+    {
+      "name": "tab_identity_verified_or_allowed",
+      "ok": true,
+      "detail": "verified"
+    },
+    {
+      "name": "not_foreground_controlled",
+      "ok": true,
+      "detail": "active_tab=837368175 controlled=837367456"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/local_path_submit_blocked.json",
+  "description": "webgpt.submit --no-activate blocked on local-path prompt",
+  "detail": "exit=7 failure=prompt_path_preflight_failed",
+  "execution_status": "executed",
+  "expect_fail_closed": true,
+  "live_only": true,
+  "mocked": false,
+  "name": "local_path_submit_blocked",
+  "profile": "release",
+  "status": "pass"
+}

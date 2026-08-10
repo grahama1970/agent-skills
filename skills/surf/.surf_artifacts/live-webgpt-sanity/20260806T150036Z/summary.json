@@ -1,0 +1,159 @@
+{
+  "schema": "surf.live_webgpt_sanity.v1",
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z",
+  "profile": "release",
+  "reviewer_binding": {
+    "tab_id": "837367456",
+    "url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+    "expect_url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0"
+  },
+  "reviewer_binding_note": "fallback_background_tab=837367456",
+  "checks": [
+    {
+      "name": "extension_native_fresh",
+      "description": "extension.fresh reports status=fresh",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "status=fresh exit=0",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/extension_native_fresh.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "tab_list_available",
+      "description": "tab.list --json returns a tab array",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "exit=0",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/tab_list_available.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "focus_state_available",
+      "description": "focus.state --json exposes activeTabId",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "active=837368175",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/focus_state_available.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "reviewer_tab_not_foreground",
+      "description": "Reviewer ChatGPT tab is not the foreground tab (background-safe)",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "reviewer=837367456 active=837368175",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/reviewer_tab_not_foreground.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "local_path_prompt_preflight",
+      "description": "Bare local paths fail before browser submit",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "exit=7",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/local_path_prompt_preflight.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": true
+    },
+    {
+      "name": "preflight_fail_closed",
+      "description": "webgpt.preflight rejects fake tab id and wrong expect-url",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "fake_tab=5 wrong_url=5",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/preflight_fail_closed.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": true
+    },
+    {
+      "name": "local_path_submit_blocked",
+      "description": "webgpt.submit --no-activate blocked on local-path prompt",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "exit=7 failure=prompt_path_preflight_failed",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/local_path_submit_blocked.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": true
+    },
+    {
+      "name": "webgpt_tab_id_background_sanity",
+      "description": "CDP js+click on --tab-id without changing activeTabId",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "exit=0",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/webgpt_tab_id_background_sanity.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "webgpt_preflight_passes",
+      "description": "webgpt.preflight --no-activate passes for reviewer binding",
+      "profile": "release",
+      "status": "pass",
+      "execution_status": "executed",
+      "detail": "status=pass exit=0",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/webgpt_preflight_passes.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "webgpt_roundtrip_reviewer_tab",
+      "description": "ONE sentinel roundtrip on background reviewer tab (--no-activate)",
+      "profile": "release",
+      "status": "fail",
+      "execution_status": "executed",
+      "detail": "status=fail warnings=[] meta=failed exit=6",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/webgpt_roundtrip_reviewer_tab.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    },
+    {
+      "name": "roundtrip_transport_proof",
+      "description": "transport summary + recover on roundtrip artifact dir",
+      "profile": "release",
+      "status": "fail",
+      "execution_status": "executed",
+      "detail": "no successful roundtrip artifact dir",
+      "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/roundtrip_transport_proof.json",
+      "live_only": true,
+      "mocked": false,
+      "expect_fail_closed": false
+    }
+  ],
+  "totals": {
+    "selected": 11,
+    "passed": 9,
+    "failed": 2,
+    "skipped": 0,
+    "live_reliability_rate": 0.818
+  },
+  "policy": {
+    "all_webgpt_commands_use_no_activate": true,
+    "max_chatgpt_roundtrips_per_run": 1,
+    "roundtrip_interval_seconds": 120,
+    "fixture_contract_tests_included": false,
+    "verified_means_live_report": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/roundtrip_transport_proof.json",
+  "description": "transport summary + recover on roundtrip artifact dir",
+  "detail": "no successful roundtrip artifact dir",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "roundtrip_transport_proof",
+  "profile": "release",
+  "status": "fail"
+}

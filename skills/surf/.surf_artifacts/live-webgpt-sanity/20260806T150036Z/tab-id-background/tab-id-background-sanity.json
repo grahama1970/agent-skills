@@ -1,0 +1,16 @@
+{
+  "status": "pass",
+  "failure": null,
+  "controlled_tab_id": "837367456",
+  "active_tab_before": 837368175,
+  "active_tab_after": 837368175,
+  "focus_changed": false,
+  "js_ok": true,
+  "click_ok": true,
+  "js_sample": "\"{\\\"title\\\":\\\"ChatGPT - Dream\\\",\\\"url\\\":\\\"https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0\\\",\\\"host\\\":\\\"chatgpt.com\\\"}\"",
+  "log_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/tab-id-background/sanity.log",
+  "notes": [
+    "CDP js+click on --tab-id while activeTabId unchanged.",
+    "Full sentinel: surf webgpt.no-activate-sanity --tab-id ID"
+  ]
+}

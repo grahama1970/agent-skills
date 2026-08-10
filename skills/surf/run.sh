@@ -702,6 +702,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo ""
     echo "Tab Management (requires extension):"
     echo "  surf tab.list           List all browser tabs"
+    echo "  surf tab.age            How long each tab has been open (oldest first)"
     echo "  surf tab.new <url>      Open new tab"
     echo "  surf tab.activate <id>  Switch to tab"
     echo ""
@@ -757,8 +758,23 @@ fi
 LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
 
+if [[ "$1" == "tab.age" ]]; then
+    # Chrome exposes no tab creation time, so age comes from a first-seen
+    # ledger that this command maintains as a side effect of being called.
+    shift
+    _mode="report"
+    _age_args=()
+    for _arg in "$@"; do
+        [[ "$_arg" == "--json" ]] && { _mode="annotate-tabs"; continue; }
+        _age_args+=("$_arg")
+    done
+    "$0" tab.list --json | python3 "$SKILL_DIR/scripts/tab_age.py" "$_mode"
+    exit $?
+fi
+
 if [[ "$1" == "tab.list" ]]; then
     _with_kde=0
+    _with_age=0
     _want_json=0
     _args=()
     for _arg in "$@"; do
@@ -769,8 +785,16 @@ if [[ "$1" == "tab.list" ]]; then
         if [[ "$_arg" == "--json" ]]; then
             _want_json=1
         fi
+        if [[ "$_arg" == "--with-age" ]]; then
+            _with_age=1
+            continue
+        fi
         _args+=("$_arg")
     done
+    if [[ "$_with_age" == "1" ]]; then
+        "$0" tab.list --json | python3 "$SKILL_DIR/scripts/tab_age.py" annotate-tabs
+        exit $?
+    fi
     if [[ "$_with_kde" == "1" ]]; then
         if ! surf_cli_available; then
             recover_stale_surf_socket || true

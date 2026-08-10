@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/local_path_prompt_preflight.json",
+  "description": "Bare local paths fail before browser submit",
+  "detail": "exit=7",
+  "execution_status": "executed",
+  "expect_fail_closed": true,
+  "live_only": true,
+  "mocked": false,
+  "name": "local_path_prompt_preflight",
+  "profile": "release",
+  "status": "pass"
+}

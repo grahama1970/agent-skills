@@ -1,0 +1,12 @@
+{
+  "artifact": "/home/graham/workspace/experiments/agent-skills/skills/surf/.surf_artifacts/live-webgpt-sanity/20260806T150036Z/checks/webgpt_roundtrip_reviewer_tab.json",
+  "description": "ONE sentinel roundtrip on background reviewer tab (--no-activate)",
+  "detail": "status=fail warnings=[] meta=failed exit=6",
+  "execution_status": "executed",
+  "expect_fail_closed": false,
+  "live_only": true,
+  "mocked": false,
+  "name": "webgpt_roundtrip_reviewer_tab",
+  "profile": "release",
+  "status": "fail"
+}

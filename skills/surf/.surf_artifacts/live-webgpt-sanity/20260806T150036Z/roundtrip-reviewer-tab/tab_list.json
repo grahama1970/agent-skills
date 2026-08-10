@@ -1,0 +1,1220 @@
+{
+  "schema": "surf.tab_list_with_kde.v1",
+  "source": "local",
+  "tabs": [
+    {
+      "id": 837366955,
+      "title": "Inbox (12,323) - graham@grahama.co - GrahamCo Mail",
+      "url": "https://mail.google.com/mail/u/0/?service=mail&flowName=GlifWebSignIn&flowEntry=AccountChooser&ec=asw-gmail-globalnav-signin#inbox",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366744,
+      "title": "(981) Discord | #general | Codename: Practical AI",
+      "url": "https://discord.com/channels/1344341191893979290/1344341192518799442",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367029,
+      "title": "Battle Spectator",
+      "url": "http://127.0.0.1:3050/#battle/live?engine=pixi&battle=battle-004&liveBase=http%3A%2F%2F127.0.0.1%3A18791&controlToken=battle-test-interactions-token&pixiTest=1&reducedMotion=1&particles=0",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367661,
+      "title": "iCloud Keynote",
+      "url": "https://www.icloud.com/keynote/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366731,
+      "title": "Dream - Project Assessment and Next Steps",
+      "url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193/c/6a708b9c-09b8-83ea-976c-de339642a5a6",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367456,
+      "title": "ChatGPT - Dream",
+      "url": "https://chatgpt.com/c/6a720ed0-f220-83ea-9355-4aec6197c0d0",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366762,
+      "title": "Code Ingestion Contract Review",
+      "url": "https://chatgpt.com/c/6a70b89d-8aec-83ea-a5da-aca7848efaba",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366734,
+      "title": "Battle - Project State Analysis",
+      "url": "https://chatgpt.com/g/g-p-6a408ce3c7a081918022e0eb6673aae3/c/6a68b313-6e84-83ea-aabf-2da37a3e2fdd",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366747,
+      "title": "Monitor-Opportunities",
+      "url": "https://chatgpt.com/c/6a709059-3838-83ea-9539-602bb3697483",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366728,
+      "title": "in 2026 what are some of the best delightfuly site animations for startups...",
+      "url": "https://www.perplexity.ai/search/4bed15f3-9cc5-492b-9446-df9327684fa8",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366751,
+      "title": "grahama1970/sparta-public: Sparta Explorer \u2014 product overview. Space-cyber assurance workbench; trace a conclusion from framework guidance to program evidence and human review.",
+      "url": "https://github.com/grahama1970/sparta-public",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366756,
+      "title": "agent-skills/skills/persona-dream at main \u00b7 grahama1970/agent-skills",
+      "url": "https://github.com/grahama1970/agent-skills/tree/main/skills/persona-dream",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366847,
+      "title": "grahama1970/agent-skills: Shared skills for AI agents (Claude Code, Codex, Gemini)",
+      "url": "https://github.com/grahama1970/agent-skills",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367406,
+      "title": "Exploring Opportunities @ Egen",
+      "url": "https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ1zhVxnSWkFdx72711C6wqJkE0Zeb5Gz9eiuhrD9XEGSKE9XclL4pb7hOIcup_FFly2vWxkxwgF",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367508,
+      "title": "Grow | LinkedIn",
+      "url": "https://www.linkedin.com/mynetwork/grow/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367516,
+      "title": "Christopher H. | LinkedIn",
+      "url": "https://www.linkedin.com/in/christopher-l-hicks/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367652,
+      "title": "grahama1970/sparta-public: Sparta Explorer \u2014 product overview. Space-cyber assurance workbench; trace a conclusion from framework guidance to program evidence and human review.",
+      "url": "https://github.com/grahama1970/sparta-public",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367664,
+      "title": "Inmail 300-Char Review - Kimi",
+      "url": "https://www.kimi.com/chat/19fd21bf-ebe2-88d7-8000-095cf02e2720?chat_enter_method=home",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367683,
+      "title": "can you get me details on the AFRL Space Cybersummit",
+      "url": "https://www.perplexity.ai/search/26cad40e-4709-475e-ace6-420c8b62cefb",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367686,
+      "title": "SpartaAI breakthrough: faster LLM query processing - Claude",
+      "url": "https://claude.ai/chat/4d0a3b1c-7ba3-4db5-a9f4-a1a04984eaf6",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367751,
+      "title": "Sigil Logic",
+      "url": "https://sigillogic.com/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367754,
+      "title": "agent-skills/skills/persona-dream/README.md at main \u00b7 grahama1970/agent-skills",
+      "url": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367794,
+      "title": "Readme-to-pitchdeck post-implementation security review - Claude",
+      "url": "https://claude.ai/chat/b0b69b4b-962b-45c2-b555-d9552cbe45fa",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367795,
+      "title": "Google Gemini",
+      "url": "https://gemini.google.com/app",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367824,
+      "title": "Grahama Labs \u2014 Experimental Agentic Systems",
+      "url": "https://claude.ai/code/artifact/86ebfd61-47f0-4626-a0d0-4960bd29f81f?via=auto_preview",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367835,
+      "title": "New Tab",
+      "url": "chrome://newtab/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367865,
+      "title": "Your profile",
+      "url": "https://github.com/settings/profile",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367871,
+      "title": "Egen | Accelerate value with AI",
+      "url": "https://egen.ai/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367874,
+      "title": "Grahama Labs \u2014 Applied Research Engineering for Agentic Systems",
+      "url": "https://grahama.co/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367912,
+      "title": "Graham Anderson \u2014 agent systems that prove what they did",
+      "url": "http://127.0.0.1:8877/?v=path2",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367980,
+      "title": "Review DAG Preview Trust - Kimi",
+      "url": "https://www.kimi.com/chat/19fd778e-49f2-8faa-8000-095c6f0d7c38?chat_enter_method=home",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367983,
+      "title": "readme-to-pitchdeck",
+      "url": "http://localhost:3006/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367986,
+      "title": "Post-implementation Review",
+      "url": "https://chatgpt.com/c/6a73c5fe-5254-83ea-aec1-f05587dc653a",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367868,
+      "title": "readme-to-pitchdeck",
+      "url": "http://localhost:3006/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368159,
+      "title": "readme-to-pitchdeck",
+      "url": "http://localhost:3006/",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368162,
+      "title": "Graham Anderson \u2014 agent systems that prove what they did",
+      "url": "http://127.0.0.1:8877/#work",
+      "active": true,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368165,
+      "title": "Image Recreation Request",
+      "url": "https://chatgpt.com/c/6a749646-50d0-83ea-bdaa-233a6c6a935c",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368168,
+      "title": "grahama1970/sparta-public: Sparta Explorer \u2014 product overview. Space-cyber assurance workbench; trace a conclusion from framework guidance to program evidence and human review.",
+      "url": "https://github.com/grahama1970/sparta-public",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368171,
+      "title": "Image modification request",
+      "url": "https://chatgpt.com/c/6a749c0e-d574-83ea-b5e1-7c7c061b4973",
+      "active": false,
+      "windowId": 837366726,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40141e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367147,
+      "title": "Persona-Dream Project Advice",
+      "url": "https://chatgpt.com/c/6a71e566-e43c-83ea-b90e-56dc92bbf306",
+      "active": false,
+      "windowId": 837367146,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4017fc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367151,
+      "title": "Persona-dream: mechanism or discipline? - Claude",
+      "url": "https://claude.ai/chat/3d97f237-7019-4ee8-919d-991d7a913ae2",
+      "active": false,
+      "windowId": 837367146,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4017fc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367154,
+      "title": "Hard Recommendation for Persona-Dream - Kimi",
+      "url": "https://www.kimi.com/chat/19fcce67-09c2-8ea0-8000-095ca22c731c?chat_enter_method=home",
+      "active": false,
+      "windowId": 837367146,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4017fc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367155,
+      "title": "Persona-Dream: Evidence Discipline Over Dreaming - Google Gemini",
+      "url": "https://gemini.google.com/app/cae7fcd3c7981d60",
+      "active": false,
+      "windowId": 837367146,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4017fc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367357,
+      "title": "Battle #1199 Backend Outcome",
+      "url": "file:///tmp/battle-1199-backend-outcome-report.html",
+      "active": true,
+      "windowId": 837367146,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4017fc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367444,
+      "title": "Pong response",
+      "url": "https://chatgpt.com/c/6a7207dc-d6fc-83ea-b8b1-7c75c4e1f548",
+      "active": true,
+      "windowId": 837367443,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40186e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367475,
+      "title": "Pong response",
+      "url": "https://chatgpt.com/c/6a7207dc-d6fc-83ea-b8b1-7c75c4e1f548",
+      "active": true,
+      "windowId": 837367474,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c40186e",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367485,
+      "title": "Backend Evidence Review",
+      "url": "https://chatgpt.com/c/6a723de1-45d4-83ea-a0c3-db0d24ba099a",
+      "active": true,
+      "windowId": 837367484,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4018ad",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367499,
+      "title": "Battle V16 RelayForge Review",
+      "url": "https://chatgpt.com/c/6a723545-2814-83ea-ad27-fb0ef00b3f8e",
+      "active": true,
+      "windowId": 837367498,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4018bc",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367512,
+      "title": "Backend Claim Review",
+      "url": "https://chatgpt.com/c/6a723c74-6158-83ea-bba6-cf54d7ff58c9",
+      "active": true,
+      "windowId": 837367511,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c4018c8",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367574,
+      "title": "Memory Hardening Review",
+      "url": "https://chatgpt.com/c/6a72b37c-8e0c-83ea-9661-da461ed77256",
+      "active": true,
+      "windowId": 837367573,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401921",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367591,
+      "title": "Memory - WebGPT Memory Pipeline Review",
+      "url": "https://chatgpt.com/g/g-p-6a2421e493588191b3cdba22b035ed3d-memory/c/6a67924f-3b10-83ea-b68b-111c512285a1",
+      "active": true,
+      "windowId": 837367590,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401927",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367596,
+      "title": "Memory - WebGPT Memory Pipeline Review",
+      "url": "https://chatgpt.com/g/g-p-6a2421e493588191b3cdba22b035ed3d-memory/c/6a67924f-3b10-83ea-b68b-111c512285a1",
+      "active": true,
+      "windowId": 837367595,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401927",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367601,
+      "title": "Memory - WebGPT Memory Pipeline Review",
+      "url": "https://chatgpt.com/g/g-p-6a2421e493588191b3cdba22b035ed3d-memory/c/6a67924f-3b10-83ea-b68b-111c512285a1",
+      "active": true,
+      "windowId": 837367600,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401927",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367606,
+      "title": "ChatGPT - Memory",
+      "url": "https://chatgpt.com/g/g-p-6a2421e493588191b3cdba22b035ed3d-memory/c/6a730827-6530-83ea-86e9-da90455fbaff",
+      "active": true,
+      "windowId": 837367605,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401930",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837366723,
+      "title": "Review request README to Pitchdeck",
+      "url": "https://chatgpt.com/c/6a737a28-3178-83ea-8f74-08dc69b7a98a",
+      "active": true,
+      "windowId": 837367792,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ac2",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367961,
+      "title": "Python function review",
+      "url": "https://chatgpt.com/c/6a7487dd-2280-83ea-8cbc-a2c3177240e8",
+      "active": true,
+      "windowId": 837367960,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c79",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367963,
+      "title": "HTML design comp for grahama.co - Claude",
+      "url": "https://claude.ai/chat/94c9d94a-9ebd-45d8-a021-1a121d284f6b",
+      "active": true,
+      "windowId": 837367962,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c7c",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367971,
+      "title": "Single-File HTML Design - Kimi",
+      "url": "https://www.kimi.com/chat/19fd3f35-48c2-8515-8000-095c9010e219?chat_enter_method=home",
+      "active": true,
+      "windowId": 837367970,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c7f",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367973,
+      "title": "Design Competition HTML/CSS Comp - Google Gemini",
+      "url": "https://gemini.google.com/app/22fdfac37bc63293",
+      "active": true,
+      "windowId": 837367972,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c82",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837367992,
+      "title": "ChatGPT",
+      "url": "https://chatgpt.com/",
+      "active": true,
+      "windowId": 837367991,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c89",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368068,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368067,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368073,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368072,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368078,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368077,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368083,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368082,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368088,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368087,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368093,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368092,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368119,
+      "title": "Monitor-opportunities agentic platform roundtable round 2 - Claude",
+      "url": "https://claude.ai/chat/ca58603c-75ae-46f6-ab1d-17fb9d710ee1",
+      "active": true,
+      "windowId": 837368118,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401cc2",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368124,
+      "title": "Agentic Platform Architecture Decision - Google Gemini",
+      "url": "https://gemini.google.com/app/33b26eeb2dae1a5b",
+      "active": true,
+      "windowId": 837368123,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401cc5",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368126,
+      "title": "Grok",
+      "url": "https://grok.com/",
+      "active": true,
+      "windowId": 837368125,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401cc8",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368175,
+      "title": "ChatGPT",
+      "url": "https://chatgpt.com/",
+      "active": true,
+      "windowId": 837368174,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c89",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368180,
+      "title": "Defining grahama.co's 2026 animation language - Claude",
+      "url": "https://claude.ai/chat/47149ff7-9319-467f-b6bf-f60750b79f66",
+      "active": true,
+      "windowId": 837368179,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401d41",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368185,
+      "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work",
+      "url": "https://www.kimi.com/",
+      "active": true,
+      "windowId": 837368184,
+      "kde": {
+        "desktop_index": 1,
+        "x11_window_id": "0x0c401ca7",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368187,
+      "title": "Google Gemini",
+      "url": "https://gemini.google.com/app",
+      "active": true,
+      "windowId": 837368186,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401d47",
+        "window_match_confidence": "title"
+      }
+    },
+    {
+      "id": 837368195,
+      "title": "ChatGPT",
+      "url": "https://chatgpt.com/",
+      "active": true,
+      "windowId": 837368194,
+      "kde": {
+        "desktop_index": 0,
+        "x11_window_id": "0x0c401c89",
+        "window_match_confidence": "title"
+      }
+    }
+  ],
+  "kde": {
+    "schema": "surf.kde_spaces.v1",
+    "source": "local",
+    "helper_available": false,
+    "kde_available": true,
+    "windows_available": true,
+    "session": {
+      "xdg_session_type": "x11",
+      "kde_full_session": "true",
+      "display": ":0",
+      "wayland_display": ""
+    },
+    "current_desktop_index": 1,
+    "current_desktop_id": "df1f2602-8289-4c7b-b507-2e1fe412d6fd",
+    "desktop_count": 6,
+    "current_activity_id": "6605f4cc-a963-4c63-829b-2659855c2878",
+    "windows": [
+      {
+        "x11_window_id": "0x03400011",
+        "desktop_index": -1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Desktop @ QRect(0,0 3840x2160)  \u2014 Plasma"
+      },
+      {
+        "x11_window_id": "0x03400017",
+        "desktop_index": -1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Desktop @ QRect(3840,0 3840x2160)  \u2014 Plasma"
+      },
+      {
+        "x11_window_id": "0x06c00009",
+        "desktop_index": 2,
+        "wm_class": "graham-MS-7C60",
+        "title": "google.txt  \u2014 Kate"
+      },
+      {
+        "x11_window_id": "0x05600009",
+        "desktop_index": 4,
+        "wm_class": "graham-MS-7C60",
+        "title": "google.txt  \u2014 Kate"
+      },
+      {
+        "x11_window_id": "0x06600009",
+        "desktop_index": 3,
+        "wm_class": "graham-MS-7C60",
+        "title": "google.txt  \u2014 Kate"
+      },
+      {
+        "x11_window_id": "0x0800000a",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT Image Jul 6, 2026, 01_34_26 PM.png - 887x1774 - 72%  \u2014 Gwenview"
+      },
+      {
+        "x11_window_id": "0x0880000a",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT Image Jul 6, 2026, 01_34_26 PM.png - 887x1774 - 72%  \u2014 Gwenview"
+      },
+      {
+        "x11_window_id": "0x08e00009",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "f36b-sparta-positive-r08-requirements (2).json  \u2014 Kate"
+      },
+      {
+        "x11_window_id": "0x0aa0000a",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "nurgling_sprite_sheet.png - 948x1659 - 77%  \u2014 Gwenview"
+      },
+      {
+        "x11_window_id": "0x0b600009",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "google.txt  \u2014 Kate"
+      },
+      {
+        "x11_window_id": "0x06200008",
+        "desktop_index": 0,
+        "wm_class": "UI",
+        "title": "graham-MS-7C60 Stream Deck UI"
+      },
+      {
+        "x11_window_id": "0x03400029",
+        "desktop_index": -1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Plasma"
+      },
+      {
+        "x11_window_id": "0x00a00004",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "\u25cf scratch.md - sparta - Visual Studio Code"
+      },
+      {
+        "x11_window_id": "0x0c40141e",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x00a0003f",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Welcome - agent-skills-1199-codex - Visual Studio Code"
+      },
+      {
+        "x11_window_id": "0x0c4017fc",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Battle #1199 Backend Outcome - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c40186e",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Pong response - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401890",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Pong response - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x08600009",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Downloads \u2014 Dolphin"
+      },
+      {
+        "x11_window_id": "0x07000009",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Downloads \u2014 Dolphin"
+      },
+      {
+        "x11_window_id": "0x0c4018ad",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Backend Evidence Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c4018bc",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Battle V16 RelayForge Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c4018c8",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Backend Claim Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x06000007",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Bulk Rename - Rename Multiple Files"
+      },
+      {
+        "x11_window_id": "0x08a00011",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "All Applications - 2,276 items \u2014 Discover"
+      },
+      {
+        "x11_window_id": "0x0c401921",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Memory Hardening Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401927",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Memory - WebGPT Memory Pipeline Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c40192a",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Memory - WebGPT Memory Pipeline Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c40192d",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Memory - WebGPT Memory Pipeline Review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401930",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT - Memory - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401ac2",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Review request README to Pitchdeck - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401c79",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Python function review - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401c7c",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "HTML design comp for grahama.co - Claude - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401c7f",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Single-File HTML Design - Kimi - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401c82",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Design Competition HTML/CSS Comp - Google Gemini - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0a00000e",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "NoMachine Software Update"
+      },
+      {
+        "x11_window_id": "0x0c401c89",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401ca7",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401caa",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cad",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cb0",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cb3",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cb6",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cc2",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Monitor-opportunities agentic platform roundtable round 2 - Claude - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cc5",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Agentic Platform Architecture Decision - Google Gemini - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401cc8",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Grok - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401d3e",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401d41",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Defining grahama.co's 2026 animation language - Claude - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401d44",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Kimi AI with K3 | Built for Agentic Coding & Knowledge Work - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401d47",
+        "desktop_index": 0,
+        "wm_class": "graham-MS-7C60",
+        "title": "Google Gemini - Google Chrome"
+      },
+      {
+        "x11_window_id": "0x0c401d4c",
+        "desktop_index": 1,
+        "wm_class": "graham-MS-7C60",
+        "title": "ChatGPT - Google Chrome"
+      }
+    ],
+    "issues": []
+  }
+}
