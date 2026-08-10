@@ -1,0 +1,12 @@
+{
+  "schema": "monitor_website.visual_assets_check.v1",
+  "status": "PASS",
+  "registry": "site/visual-assets.yml",
+  "counts": {
+    "registered_assets": 31,
+    "public_visuals": 31,
+    "evidence_assets": 4,
+    "findings": 0
+  },
+  "findings": []
+}

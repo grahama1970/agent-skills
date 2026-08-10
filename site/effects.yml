@@ -1,0 +1,56 @@
+schema: grahama.effects.v1
+policy:
+  ambient_loops_allowed_on_homepage: false
+  decorative_fixed_layers_allowed_on_homepage: false
+  simulated_material_allowed: false
+  captured_values_may_animate: false
+registered_effects:
+  - id: focus-ring
+    trigger: keyboard focus
+    semantic_purpose: "Show the active control."
+    allowed_selectors: [":focus-visible"]
+    motion: static outline
+    reduced_motion_equivalent: identical
+  - id: hover-identification
+    trigger: pointer hover
+    semantic_purpose: "Identify actionable links and buttons."
+    allowed_selectors: [".btn:hover", ".nav a:hover", ".nav-icon:hover", "a.fig:hover", ".gen-link:hover", ".inspector-card"]
+    motion: finite state feedback
+    reduced_motion_equivalent: color, underline, or no transform
+  - id: graph-inspector
+    trigger: graph node hover or keyboard focus
+    semantic_purpose: "Expose node name, taxonomy, abstract, and status for every graph node."
+    allowed_selectors: [".inspector-card", "[data-qid^='constellation:node:']"]
+    motion: positioned static overlay
+    reduced_motion_equivalent: identical focus-triggered card
+  - id: disclosure-and-modal-state
+    trigger: user command
+    semantic_purpose: "Open keyboard shortcut modal, toast, lightbox, and explicit disclosures."
+    allowed_selectors: [".modal-overlay", ".shortcut-modal", ".toast", ".lightbox"]
+    allowed_keyframes: [frame-in, fade-in, zoom-in]
+    motion: finite opacity or position transition
+    reduced_motion_equivalent: instant state change
+  - id: evidence-viewer-feedback
+    trigger: user selection
+    semantic_purpose: "Indicate selected receipt, ledger, or proof-method item."
+    allowed_selectors: [".ticket-toggle", ".ledger-chip", ".stepper-controls > button"]
+    allowed_keyframes: [card-land]
+    motion: finite state feedback
+    reduced_motion_equivalent: static selected state
+  - id: proof-lineage-sequence
+    trigger: proof instrument ready state
+    semantic_purpose: "Show the bounded proof path from claim, through runner and receipt, back to judgment."
+    allowed_selectors: [".proof-bridge.is-ready", ".hero-grid.proof-ready"]
+    allowed_keyframes: [proof-bridge-wire, proof-draw, proof-fade, proof-evaluate, proof-judge-dot, proof-token]
+    motion: finite source-to-receipt trace
+    reduced_motion_equivalent: static proof graph with tokens hidden
+removed_homepage_effects:
+  - fixed .glow layer
+  - fixed .grain layer
+  - decorative .ruledbg grid on hero
+  - load-time .rise choreography
+  - animated UnusualPath SVG
+removed_public_effects:
+  - ledger cell pseudo-tooltip that expanded document scroll width
+  - ledger cell pop animation and hover scale
+  - ledger mosaic neighbor recoil

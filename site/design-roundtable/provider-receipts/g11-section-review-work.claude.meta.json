@@ -1,0 +1,44 @@
+{
+  "attach_file": "../../site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T010748Z/section-work-contact-sheet.png",
+  "attach_files": [
+    "../../site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T010748Z/section-work-contact-sheet.png"
+  ],
+  "attachment": null,
+  "clean_chars": 0,
+  "clean_contains_sentinel": false,
+  "content_script_recovery": [],
+  "controlled_tab_id": "837381709",
+  "current_url": "https://claude.ai/new",
+  "failure": "uploaded attachment 'section-work-contact-sheet.png' did not appear in Claude page text",
+  "finished_at": "2026-08-10T01:20:14Z",
+  "input": "../../site/design-roundtable/g11-section-review-work.request.md",
+  "model_preference": null,
+  "model_selection_note": null,
+  "model_selection_proven": false,
+  "no_activate": false,
+  "output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.claude.md",
+  "raw_chars": 389,
+  "raw_contains_sentinel": false,
+  "raw_output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.claude.raw.md",
+  "requested_model": null,
+  "requested_tab_id": "837381709",
+  "requested_url": null,
+  "sentinel": "<<<CLAUDE_DONE:20260810T011911Z:fba51fbf>>>",
+  "started_at": "2026-08-10T01:19:11Z",
+  "status": "failed",
+  "submitted_output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.claude.submitted.md",
+  "tab_identity_preflight": {
+    "accepted_url_transition": false,
+    "expected_tab_id": "837381709",
+    "expected_url": null,
+    "live_url": "https://claude.ai/new",
+    "ok": true,
+    "tab": {
+      "active": true,
+      "id": 837381709,
+      "title": "New chat - Claude",
+      "url": "https://claude.ai/new",
+      "windowId": 837381708
+    }
+  }
+}

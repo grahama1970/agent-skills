@@ -1,0 +1,27 @@
+{
+  "schema": "monitor_website.effects_check.v1",
+  "status": "PASS",
+  "effects": "site/effects.yml",
+  "css_files_scanned": [
+    "site/app/globals.css"
+  ],
+  "counts": {
+    "registered_keyframes": 10,
+    "declared_keyframes": 10,
+    "animation_uses": 19,
+    "findings": 0
+  },
+  "allowed_keyframes": [
+    "card-land",
+    "fade-in",
+    "frame-in",
+    "proof-bridge-wire",
+    "proof-draw",
+    "proof-evaluate",
+    "proof-fade",
+    "proof-judge-dot",
+    "proof-token",
+    "zoom-in"
+  ],
+  "findings": []
+}

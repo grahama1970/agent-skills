@@ -1,0 +1,21 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "prepared_prompt",
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "../../site/design-roundtable/g11-section-review-work.request.md",
+  "submitted_output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.webgpt.md.submitted.md",
+  "output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.webgpt.md",
+  "raw_output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.webgpt.raw.md",
+  "meta_output": "../../site/design-roundtable/provider-receipts/g11-section-review-work.webgpt.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260810T010915Z:6b45f7c1>>>",
+  "requested_tab_id": "837381735",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "attach_file": "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T010748Z/section-work-contact-sheet.png",
+  "attachment_paths": [
+    "/home/graham/workspace/experiments/agent-skills/site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T010748Z/section-work-contact-sheet.png"
+  ],
+  "receipt_at": "2026-08-10T01:09:17Z"
+}

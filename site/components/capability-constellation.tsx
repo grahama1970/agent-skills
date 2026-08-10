@@ -132,6 +132,9 @@ function LensMark({ x, y, lens, color }: { x: number; y: number; lens?: string; 
 const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
 // The ring the node settles onto — keeps the physics legible instead of a hairball.
 const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 234 : 392);
+// Node and Chromium can differ at the final decimal for trig-derived SVG values.
+// Round rendered coordinates so SSR markup and hydrated client props match.
+const coord = (n: number) => Number(n.toFixed(3));
 
 // Per-character width (px) of each node's label, used to reserve enough space in
 // the collision force that LABELS never overlap — not just the circles.
@@ -326,7 +329,7 @@ export function CapabilityConstellation() {
   return (
     <figure className="constellation" aria-label="How the practice connects">
       <figcaption className="constellation-cap">
-        One practice — technical and creative work, connected by real structure.
+        Public repo map — skill contracts, project routes, and evidence access.
         <span className="constellation-hint"> Drag a node.</span>
       </figcaption>
       <div className="constellation-field">
@@ -336,7 +339,7 @@ export function CapabilityConstellation() {
               .filter((n) => n.img)
               .map((n) => (
                 <clipPath id={`clip-${n.id}`} key={n.id}>
-                  <circle cx={n.x} cy={n.y} r={radiusOf(n.type)} />
+                  <circle cx={coord(n.x)} cy={coord(n.y)} r={radiusOf(n.type)} />
                 </clipPath>
               ))}
           </defs>
@@ -350,14 +353,15 @@ export function CapabilityConstellation() {
             return (
               <path
                 key={`${e.source.id}-${e.target.id}`}
-                d={`M ${s.x} ${s.y} Q ${mx} ${my} ${t.x} ${t.y}`}
+                d={`M ${coord(s.x)} ${coord(s.y)} Q ${coord(mx)} ${coord(my)} ${coord(t.x)} ${coord(t.y)}`}
                 className={`c-edge${on ? ' is-on' : ''}`}
               />
             );
           })}
 
           {simNodes.map((n) => {
-            const { x, y } = n;
+            const x = coord(n.x);
+            const y = coord(n.y);
             const on = connected(n.id);
             const glow = n.lens ? GLOW[n.lens] : '#a99787';
             const r = radiusOf(n.type);

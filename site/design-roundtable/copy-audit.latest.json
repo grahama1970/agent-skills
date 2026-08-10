@@ -1,0 +1,19 @@
+{
+  "schema": "monitor_website.copy_audit.v1",
+  "status": "PASS",
+  "sources": [
+    "content.json",
+    "research-map.json",
+    "private-abstracts.json",
+    "app/page.tsx"
+  ],
+  "strings_scanned": 371,
+  "anchors_checked": 3,
+  "violations": [],
+  "em_dash_cadence": {
+    "advisory": false,
+    "em_dashes": 41,
+    "strings_with_em_dash": 33,
+    "ratio": 0.089
+  }
+}

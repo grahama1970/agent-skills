@@ -40,11 +40,13 @@ taxonomy:
   - distinctiveness
   - validation
   - accessibility
+runtime_self_improvement: none
 disciplines:
   - engineering-standards
   - ui-design-engineering
   - content-creation
-runtime_self_improvement: none
+domains:
+  - marketing
 ---
 
 # Best Practices: Bespoke Digital Design
@@ -200,6 +202,30 @@ designer, or stakeholder says it feels special.
 
 ## Protocol
 
+### Live Collaboration Ledger
+
+For live site work, audits, amend loops, and disputed reviews, keep a compact
+phase ledger visible to the human. If the human cannot tell where the agent is,
+what is known, what is unknown, and what command comes next, the process is
+anti-collaborative and the gate is `NOT_READY`.
+
+Every status update and handoff must name:
+
+- active phase and gate;
+- current artifact path or source file;
+- last command run and concrete result;
+- facts established locally;
+- unknowns and `NOT_TESTED` items;
+- current blocker, if any;
+- next deterministic command;
+- stop condition for the current lane.
+
+Only one lane may be primary at a time. If implementation, screenshot capture,
+reviewer submission, and skill-contract repair all appear relevant, declare the
+primary lane and freeze the others until that lane has an artifact or an explicit
+blocker. Do not let a final proof packet, a design critique, a site patch, and a
+tool-debug session run as one blended task.
+
 ### Phase 0 — Goal and Provenance Lock
 
 1. State the user job, primary object, primary decision, and source of truth.
@@ -323,6 +349,17 @@ Render at minimum:
 
 Use real or claim-valid content, not lorem ipsum, for acceptance.
 
+The stress corpus must be reviewable by a web LLM or human without panning
+through a tall page strip. Do not use one full-page or whole-site screenshot as
+the evaluation unit. Full-page captures are navigation/debug artifacts only.
+Acceptance evidence must be split into section, component, or page-state
+screenshots, each cropped to the evaluated surface and recorded in a manifest
+with route, selector or section id, viewport, scroll state, fixture/state,
+dimensions, screenshot path, capture tool, and what the crop is meant to prove.
+If a section exceeds a practical review height, split it into ordered sub-crops.
+Raters receive those crops, or contact sheets assembled from those crops, never a
+single unreadable full-site image as primary evidence.
+
 ### Phase 9 — Run Adversarial Distinctiveness Tests
 
 #### A. Logo-Off Recognition
@@ -382,7 +419,8 @@ Required artifacts:
 - `visual-world-brief.yaml`;
 - three territory boards and selection record;
 - component and page inventory;
-- screenshot manifest with viewport, state, and content fixture;
+- section/page-state screenshot manifest with route, selector or section id,
+  viewport, state, content fixture, dimensions, crop paths, and capture tool;
 - accessibility and performance receipts;
 - blind-rater inputs and raw outputs;
 - `bespoke-design-receipt.json` validated against
@@ -438,6 +476,8 @@ Reject these shortcuts:
 - using image generation to fabricate evidence or cultural specificity;
 - hiding weak information architecture under decorative density;
 - approving desktop beauty while mobile becomes a stacked residue;
+- sending a whole website screenshot to a web LLM as the primary design-review
+  artifact; use section/page-state crops with a manifest instead;
 - claiming accessibility, performance, usability, originality, or shipped impact
   from screenshots alone;
 - replacing all standard controls with novel interactions that reduce clarity.
@@ -457,11 +497,11 @@ Every required gate uses one of `PASS`, `FAIL`, `NOT_TESTED`, or `BLOCKED`.
 | G5 Motif semantics | Every recurring motif has a meaning or job | Decorative residue |
 | G6 Composition | Grid, focal hierarchy, rhythm, and intentional ruptures | Repeated template sections |
 | G7 System depth | Identity survives pages, components, and states | Homepage-only identity |
-| G8 Responsive choreography | Layout is recomposed, not merely shrunk/stacked | Mobile residue |
+| G8 Responsive choreography | Layout is recomposed, not merely shrunk/stacked | Mobile residue; single full-page screenshot used as responsive proof |
 | G9 Accessibility | Required WCAG and interaction evidence passes | Prose-only claim |
 | G10 Performance | Pre-registered field/representative targets pass | Unmeasured heavy spectacle |
-| G11 Distinctiveness | Blind, swap, family, and leakage tests pass | Logo/color dependence |
-| G12 Implementation fidelity | Browser render matches approved grammar | Flat-mockup-only proof |
+| G11 Distinctiveness | Blind, swap, family, and leakage tests pass | Logo/color dependence; whole-site screenshot used as blind-rater input |
+| G12 Implementation fidelity | Browser render matches approved grammar | Flat-mockup-only proof; full-page-only screenshot proof |
 | G13 Editability | Human can change required content/primitives | Flattened critical UI |
 | G14 Receipt integrity | Schema and artifact hashes validate | Missing or mutable evidence |
 | G15 Craft integrity | Every imperfection is real (authored/scanned), never simulated | Faked hand-drawn marks, random jitter, or distress on machine-output/evidence surfaces |

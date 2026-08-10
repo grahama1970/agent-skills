@@ -118,6 +118,31 @@ export default function Home() {
                   </span>{' '}
                   what they did.
                 </h1>
+                <p className="hero-repo-model rise" style={{ ['--d' as string]: '.2s' }}>
+                  This site explains the work. The public{' '}
+                  <code>agent-skills</code> repository holds the source. Browse
+                  here, or open the repository directly and ask your agent to
+                  trace a question through the contracts, code, checks,
+                  receipts, and visible gaps.
+                </p>
+                <ol className="hero-trace-protocol rise" style={{ ['--d' as string]: '.24s' }} aria-label="Repository inspection path">
+                  <li>
+                    <span>Start</span>
+                    <code>skills/*/SKILL.md</code>
+                  </li>
+                  <li>
+                    <span>Check</span>
+                    <code>skills/monitor-website/run.sh</code>
+                  </li>
+                  <li>
+                    <span>Inspect</span>
+                    <code>site/design-roundtable/*</code>
+                  </li>
+                  <li>
+                    <span>Stop</span>
+                    <code>NOT_TESTED stays visible</code>
+                  </li>
+                </ol>
                 <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
                   An unusual{' '}
                   <a
@@ -144,21 +169,21 @@ export default function Home() {
                 <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
                   <a
                     className="btn"
-                    href="#search"
-                    data-qid="hero:action:search"
-                    data-qs-action="HERO_OPEN_SEARCH"
-                    title="Describe your problem — find a project that fits, free to try"
-                  >
-                    Describe your problem <span className="arrow">↓</span>
-                  </a>
-                  <a
-                    className="btn ghost"
                     href={REPO}
                     data-qid="hero:action:repo"
                     data-qs-action="HERO_OPEN_REPO"
-                    title="Open the agent-skills repository on GitHub"
+                    title="Open the public agent-skills repository on GitHub"
                   >
-                    Read the code
+                    Open the repository <span className="arrow">↗</span>
+                  </a>
+                  <a
+                    className="btn ghost"
+                    href="#search"
+                    data-qid="hero:action:agent-question"
+                    data-qs-action="HERO_OPEN_SEARCH"
+                    title="Use this front end to frame a question for your agent"
+                  >
+                    Ask your agent about the work →
                   </a>
                 </div>
               </div>
@@ -281,11 +306,11 @@ export default function Home() {
             <div className="work-head">
               <div>
                 <p className="kicker">
-                  <b>01</b> Work
+                  <b>Tau</b> Public proof dossiers
                 </p>
-                <h2 className="h2">Ten questions, answered in running code.</h2>
+                <h2 className="h2">Ten questions with code, checks, and gaps.</h2>
               </div>
-              <p className="count">01 — 10 · each one a research question</p>
+              <p className="count">repo-linked · each case states how far evidence goes</p>
             </div>
             <ResearchMap />
             <ProofLegend />
@@ -388,7 +413,7 @@ export default function Home() {
             <div className="work-head">
               <div>
                 <p className="kicker">
-                  <b>·</b> Across the corpus
+                  <b>Corpus</b> Declared disciplines
                 </p>
                 <h2 className="h2">What the work adds up to.</h2>
               </div>
@@ -411,7 +436,7 @@ export default function Home() {
             <div className="dream-head">
               <div className="a">
                 <p className="kicker">
-                  <b>02</b> persona-dream
+                  <b>Study</b> persona-dream
                 </p>
                 <h2 className="h2">Can a persona dream itself a personality?</h2>
               </div>
@@ -445,7 +470,7 @@ export default function Home() {
             <div className="ledger-grid">
               <div className="ledger-copy">
                 <p className="kicker">
-                  <b>03</b> The ledger
+                  <b>Ledger</b> agent-skills source map
                 </p>
                 <h2 className="h2">
                   Every contract, including the ones without checks.
@@ -478,7 +503,7 @@ export default function Home() {
             <div className="proofx-head">
               <div>
                 <p className="kicker">
-                  <b>04</b> How proof works
+                  <b>Tau</b> How proof works
                 </p>
                 <h2 className="h2">
                   One real run, from goal to receipt.
@@ -504,7 +529,7 @@ export default function Home() {
             <div className="receipts-grid">
               <div className="receipts-copy">
                 <p className="kicker">
-                  <b>05</b> Receipts
+                  <b>Receipts</b> Bounded evidence
                 </p>
                 <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
@@ -552,7 +577,7 @@ export default function Home() {
             <div className="about-grid">
               <div className="about-copy">
                 <p className="kicker">
-                  <b>06</b> About
+                  <b>Person</b> Accountability
                 </p>
                 <h2 className="h2">
                   An unusual path, on purpose.
@@ -599,7 +624,7 @@ export default function Home() {
             <div className="closer-inner">
               <div className="a">
                 <p className="kicker">
-                  <b>07</b> Next
+                  <b>Next</b> Evidence-first work
                 </p>
                 <p className="shelved">
                   Bring me the project you <em>shelved</em>.

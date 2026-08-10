@@ -26,4 +26,14 @@ if [[ "${1:-}" == "copy-audit" ]]; then
   exec python3 ../../site/scripts/copy_audit.py "$@"
 fi
 
+if [[ "${1:-}" == "visual-assets-check" ]]; then
+  shift
+  exec python3 scripts/visual_assets_check.py "$@"
+fi
+
+if [[ "${1:-}" == "effects-check" ]]; then
+  shift
+  exec python3 scripts/effects_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

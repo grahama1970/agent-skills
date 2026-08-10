@@ -1,0 +1,154 @@
+{
+  "schema": "monitor_website.responsive_geometry_check.v1",
+  "status": "PASS",
+  "generated_at": "2026-08-10T02:09:18Z",
+  "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+  "mocked": false,
+  "live": true,
+  "counts": {
+    "routes": 6,
+    "viewports": 5,
+    "checks": 30,
+    "failures": 0
+  },
+  "section_corpus_manifest": {
+    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
+    "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+    "schema": "grahama.responsive_section_corpus.v1",
+    "counts": {
+      "viewports": 5,
+      "sections": 10,
+      "screenshots": 50,
+      "failures": 0
+    },
+    "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review."
+  },
+  "section_contact_sheets": [
+    {
+      "section_id": "top",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-top-contact-sheet.png",
+      "sha256": "d64e5306ebdd8897b29d71bd484256c5c6c9d4a99507df314e6471d10c1afb2c",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "search",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-search-contact-sheet.png",
+      "sha256": "aa96928d916a683880a6b168df287232d43eef45d506af58da5dfdafbce7d41d",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "work",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-work-contact-sheet.png",
+      "sha256": "3f3a801d7cbc9ab4744ad6edf8ef70bdb7f1498f53c883876610c8ef3989ab39",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "competence",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-competence-contact-sheet.png",
+      "sha256": "8d64b11c0be4b52ae8b349d154ad634c3c5536d0cca15b8f34393a85b81eceeb",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "dream",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-dream-contact-sheet.png",
+      "sha256": "586798b9a15fd2b54f8e7cb081573785be20a8aba02b4ecbf91d01ce50a8e83f",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "ledger",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-ledger-contact-sheet.png",
+      "sha256": "309c456d3d45ffe7cdf8e1f2f6f0d3fe51a8173c1c72d083086b74961cff5f91",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "proof",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-proof-contact-sheet.png",
+      "sha256": "2446f09ec16d2117b2a45c65063fa7f6b1c9a7add19dc4f0067f1539607e3ab6",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "receipts",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-receipts-contact-sheet.png",
+      "sha256": "11c074f665839058a1b230697902274605f0c7f745bf2757bf258b808fa76db1",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "about",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-about-contact-sheet.png",
+      "sha256": "64740b36b2abe288f8699ff41b4eca818eed8a057077dfa3cf77c981cdd31b28",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "contact",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-contact-contact-sheet.png",
+      "sha256": "3c5b4f84d0038bd8e6ed7a739e121873735d0870f09f3f1a55b172d37075fee2",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    }
+  ],
+  "failures": [],
+  "does_not_prove": [
+    "Accessibility completion is outside this responsive screenshot receipt.",
+    "Performance metrics are outside this responsive screenshot receipt.",
+    "Blind distinctiveness is recorded separately in distinctiveness-blind.r1.json."
+  ]
+}

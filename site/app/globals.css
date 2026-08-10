@@ -265,37 +265,10 @@ section {
   fill: var(--ember, #d1703c);
   transition: filter 0.25s ease, opacity 0.25s ease;
 }
-/* Instant activation: brighten the c and pause the ambient loop on hover. */
+/* Instant activation: brighten the c on hover. */
 .wordmark:hover .brandmark-c {
-  animation: none;
   opacity: 1;
   filter: drop-shadow(0 0 3px rgba(209, 112, 60, 0.9));
-}
-/* The subscript c breathes slowly — a quiet runtime signal, not decoration.
-   Strictly restrained (~5s), and off entirely under reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .brandmark-c {
-    animation: c-breathe 5s ease-in-out infinite;
-  }
-  .c-mark-sub {
-    animation: c-glow 5s ease-in-out infinite;
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-}
-@keyframes c-breathe {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-@keyframes c-glow {
-  0%, 100% {
-    opacity: 0.9;
-    filter: drop-shadow(0 0 2px rgba(209, 112, 60, 0.5));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(209, 112, 60, 0.75));
-  }
 }
 .wordmark span {
   color: var(--brass);
@@ -413,10 +386,12 @@ section {
 }
 .hero-main > .eyebrow { order: 1; }
 .hero-main > h1 { order: 2; }
-.hero-main > .hero-outcomes { order: 3; }
-.hero-main > .hero-intake { order: 4; }
-.hero-main > .hero-actions { order: 5; }
-.hero-main > .hero-bio { order: 6; }
+.hero-main > .hero-repo-model { order: 3; }
+.hero-main > .hero-outcomes { order: 5; }
+.hero-main > .hero-intake { order: 6; }
+.hero-main > .hero-actions { order: 7; }
+.hero-main > .hero-trace-protocol { order: 4; }
+.hero-main > .hero-bio { order: 8; }
 /* Keyboard-shortcut helper is application chrome on touch; hide it there. */
 @media (pointer: coarse) {
   [data-qid='nav:action:shortcuts'] {
@@ -466,7 +441,7 @@ h1 .it {
   padding-inline: 0.02em;
 }
 h1 .it::after {
-  content: '';
+  content: none;
   position: absolute;
   left: 0;
   bottom: 0.11em;
@@ -474,25 +449,9 @@ h1 .it::after {
   width: 100%;
   background: linear-gradient(90deg, var(--ember), var(--brass));
   transform-origin: left center;
-  transform: scaleX(0);
-  animation: sweep var(--dur-reveal) var(--ease-entrance) 0.82s forwards;
+  transform: scaleX(1);
   border-radius: 2px;
   opacity: 0.85;
-}
-/* S4 compromise: the reader draws the underline by scrolling — reversible. */
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    h1 .it::after {
-      animation: sweep linear both;
-      animation-timeline: scroll();
-      animation-range: 0px 420px;
-    }
-  }
-}
-@keyframes sweep {
-  to {
-    transform: scaleX(1);
-  }
 }
 .hero-bio {
   margin-top: clamp(1.6rem, 3vw, 2.6rem);
@@ -500,6 +459,49 @@ h1 .it::after {
   color: var(--muted);
   font-size: clamp(1.02rem, 1.3vw, 1.2rem);
   line-height: 1.66;
+}
+.hero-repo-model {
+  margin-top: clamp(1rem, 1.8vw, 1.45rem);
+  max-width: 62ch;
+  color: var(--text);
+  font-size: clamp(1rem, 1.18vw, 1.14rem);
+  line-height: 1.58;
+}
+.hero-repo-model code {
+  font-family: var(--mono);
+  font-size: 0.95em;
+  color: var(--brass);
+}
+.hero-trace-protocol {
+  margin: clamp(0.9rem, 1.5vw, 1.2rem) 0 0;
+  padding: 0.72rem 0 0.72rem 0.9rem;
+  max-width: 44rem;
+  border-left: 2px solid rgba(226, 172, 98, 0.72);
+  background: linear-gradient(90deg, rgba(226, 172, 98, 0.075), transparent 58%);
+  list-style: none;
+  color: var(--muted);
+}
+.hero-trace-protocol li {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  min-height: 1.35rem;
+}
+.hero-trace-protocol span,
+.hero-trace-protocol code {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.hero-trace-protocol span {
+  color: var(--faint);
+  text-transform: uppercase;
+}
+.hero-trace-protocol code {
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 .hero-bio em {
   color: var(--text);
@@ -724,9 +726,7 @@ h1 .it::after {
   border-radius: 1px;
   background: var(--brass);
   opacity: 0.92;
-  transform: scale(0.86) translateY(2px);
-  animation: pop 0.5s var(--ease-entrance) forwards;
-  animation-delay: calc(var(--i) * 4.2ms + 0.35s);
+  transform: scale(1) translateY(0);
   transition:
     transform var(--dur-state) var(--ease-state),
     background var(--dur-state) var(--ease-state),
@@ -757,11 +757,6 @@ h1 .it::after {
 .cell.out:hover,
 .cell.out:focus-visible {
   box-shadow: inset 0 0 0 1px var(--ember);
-}
-@keyframes pop {
-  to {
-    transform: scale(1) translateY(0);
-  }
 }
 .legend {
   display: flex;
@@ -1578,25 +1573,11 @@ footer a:hover {
 
 /* --- load choreography ------------------------------------ */
 .rise {
-  opacity: 0;
-  transform: translateY(14px);
-  animation: rise 0.9s cubic-bezier(0.2, 0.75, 0.2, 1) forwards;
-  animation-delay: var(--d, 0s);
-}
-@keyframes rise {
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  opacity: 1;
+  transform: none;
 }
 .wipe {
-  clip-path: inset(0 100% 0 0);
-  animation: wipe 1.1s cubic-bezier(0.2, 0.75, 0.2, 1) 0.55s forwards;
-}
-@keyframes wipe {
-  to {
-    clip-path: inset(0 0 0 0);
-  }
+  clip-path: none;
 }
 
 /* --- keyboard shortcuts modal + toast (retained systems) --- */
@@ -1693,11 +1674,13 @@ footer a:hover {
   }
   .hero-main > .eyebrow { order: 1; }
   .hero-main > h1 { order: 2; }
-  .hero-main > .hero-outcomes { order: 3; }
-  .hero-main > .hero-intake { order: 4; }
-  .hero-main > .hero-actions { order: 5; }
+  .hero-main > .hero-repo-model { order: 3; }
+  .hero-main > .hero-outcomes { order: 4; }
+  .hero-main > .hero-intake { order: 5; }
+  .hero-main > .hero-actions { order: 6; }
+  .hero-main > .hero-trace-protocol { order: 4; }
   .hero-main > .hero-bio {
-    order: 6;
+    order: 8;
     margin-top: clamp(1.4rem, 4vw, 2.2rem);
   }
   .hero-side { grid-column: 1 / span 12; padding-top: 0; }
@@ -2361,45 +2344,6 @@ footer a:hover {
   color: var(--brass);
   margin: 0.35em 0 0;
   font-variant-numeric: tabular-nums;
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .ledger-mosaic {
-      view-timeline: --ledger block;
-    }
-    .ledger-mosaic .cell {
-      animation: accrete linear both;
-      animation-timeline: --ledger;
-      animation-range: cover calc(var(--t) * 34%) cover calc(16% + var(--t) * 34%);
-      animation-delay: 0s;
-    }
-    .ledger-grid {
-      timeline-scope: --ledger;
-    }
-    .ledger-count {
-      animation: count-weight linear both;
-      animation-timeline: --ledger;
-      animation-range: cover 0% cover 50%;
-    }
-  }
-}
-@keyframes accrete {
-  from {
-    opacity: 0;
-    transform: scale(0.86) translateY(2px);
-  }
-  to {
-    opacity: 0.92;
-    transform: scale(1) translateY(0);
-  }
-}
-@keyframes count-weight {
-  from {
-    font-weight: 300;
-  }
-  to {
-    font-weight: 700;
-  }
 }
 
 /* Clickable inventory rail: dashed receipt-links with micro-arrow. */
@@ -3363,8 +3307,7 @@ a:hover .c-plabel { fill: var(--brass); }
    The Proof Returns — hero lineage instrument + cross-column bridge.
    An unboxed instrument in the Inventory rail (no panel/blur/card) plus
    a DOM-measured wire that physically reaches the word "prove". The
-   proof sequence OWNS the .proof-origin underline; the generic .it sweep
-   is neutralized for that word.
+   headline emphasis stays typographic and static.
    ============================================================ */
 
 .hero-grid {
@@ -3417,15 +3360,12 @@ a:hover .c-plabel { fill: var(--brass); }
   fill: var(--brass);
 }
 
-/* The proof sequence now owns the underline on .proof-origin. */
+/* The headline keyword is static; the proof sequence lives in the instrument. */
 h1 .proof-origin::after {
   animation: none;
   animation-timeline: auto;
-  transform: scaleX(0);
+  transform: scaleX(1);
   background: var(--ember);
-}
-.hero-grid.proof-ready h1 .proof-origin::after {
-  animation: proof-origin-line 5.25s linear both;
 }
 
 /* Open instrument; no glass panel, blur, or rounded card. */
@@ -3703,25 +3643,6 @@ h1 .proof-origin::after {
     stroke-dashoffset: 0;
   }
 }
-@keyframes proof-origin-line {
-  0% {
-    transform: scaleX(0);
-    background: var(--ember);
-  }
-  26% {
-    transform: scaleX(1);
-    background: var(--ember);
-  }
-  93% {
-    transform: scaleX(1);
-    background: var(--ember);
-  }
-  100% {
-    transform: scaleX(1);
-    background: var(--brass);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .proof-bridge {
     display: none !important;

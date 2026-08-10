@@ -1,0 +1,99 @@
+{
+  "schema": "grahama.craft_integrity.v1",
+  "status": "PASS",
+  "generated_at": "2026-08-10T02:09:18Z",
+  "source_commit": "0593f0086900d637bb4eaec29e08ca78e99310c2",
+  "mocked": false,
+  "live": true,
+  "visual_assets_check": {
+    "command": "skills/monitor-website/run.sh visual-assets-check --json",
+    "status": "PASS",
+    "counts": {
+      "registered_assets": 31,
+      "public_visuals": 31,
+      "evidence_assets": 4,
+      "findings": 0
+    },
+    "receipt": "site/design-roundtable/visual-assets-check.latest.json"
+  },
+  "effects_check": {
+    "command": "skills/monitor-website/run.sh effects-check --json",
+    "status": "PASS",
+    "counts": {
+      "registered_keyframes": 10,
+      "declared_keyframes": 10,
+      "animation_uses": 19,
+      "findings": 0
+    },
+    "receipt": "site/design-roundtable/effects-check.latest.json"
+  },
+  "section_corpus_manifest": {
+    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/manifest.json",
+    "sha256": "caf003e4a4a117f87f60fc85268d7d65adf9731564825f9534d2410fd34993d4",
+    "schema": "grahama.responsive_section_corpus.v1",
+    "counts": {
+      "viewports": 5,
+      "sections": 10,
+      "screenshots": 50,
+      "failures": 0
+    },
+    "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review."
+  },
+  "rendered_screens": [
+    {
+      "id": "section-top-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-top-contact-sheet.png",
+      "sha256": "d64e5306ebdd8897b29d71bd484256c5c6c9d4a99507df314e6471d10c1afb2c"
+    },
+    {
+      "id": "section-search-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-search-contact-sheet.png",
+      "sha256": "aa96928d916a683880a6b168df287232d43eef45d506af58da5dfdafbce7d41d"
+    },
+    {
+      "id": "section-work-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-work-contact-sheet.png",
+      "sha256": "3f3a801d7cbc9ab4744ad6edf8ef70bdb7f1498f53c883876610c8ef3989ab39"
+    },
+    {
+      "id": "section-ledger-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-ledger-contact-sheet.png",
+      "sha256": "309c456d3d45ffe7cdf8e1f2f6f0d3fe51a8173c1c72d083086b74961cff5f91"
+    },
+    {
+      "id": "section-proof-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-proof-contact-sheet.png",
+      "sha256": "2446f09ec16d2117b2a45c65063fa7f6b1c9a7add19dc4f0067f1539607e3ab6"
+    },
+    {
+      "id": "section-receipts-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-receipts-contact-sheet.png",
+      "sha256": "11c074f665839058a1b230697902274605f0c7f745bf2757bf258b808fa76db1"
+    },
+    {
+      "id": "section-about-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-about-contact-sheet.png",
+      "sha256": "64740b36b2abe288f8699ff41b4eca818eed8a057077dfa3cf77c981cdd31b28"
+    },
+    {
+      "id": "section-contact-contact-sheet",
+      "type": "section_contact_sheet",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-contact-contact-sheet.png",
+      "sha256": "3c5b4f84d0038bd8e6ed7a739e121873735d0870f09f3f1a55b172d37075fee2"
+    }
+  ],
+  "prohibited_findings": [],
+  "does_not_prove": [
+    "blind distinctiveness",
+    "independent Impeccable finish review",
+    "WCAG keyboard/contrast completion",
+    "performance budgets"
+  ]
+}

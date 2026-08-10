@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """design-world-check (#1337): validate grahama.co's visual-world contract and
-scan for deterministically-checkable AI-template residue. Returns NOT_TESTED
-rather than PASS when rendered/blind evidence is absent — prose is not proof.
+scan for deterministically-checkable AI-template residue. Rendered/blind gates
+read receipt files when present and return NOT_TESTED only when evidence is
+absent — prose is not proof.
 """
 from __future__ import annotations
 import argparse, json, re, sys
@@ -9,6 +10,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 SITE = REPO / "site"
+DESIGN_ROUNDTABLE = SITE / "design-roundtable"
 
 
 def _load_yaml(p: Path):
@@ -52,6 +54,145 @@ def scan_mono_on_human_labels(css_files, allow: list[str]) -> list[dict]:
     return violations
 
 
+def _load_json(path: Path) -> tuple[dict | None, str | None]:
+    if not path.is_file():
+        return None, "missing"
+    try:
+        return json.loads(path.read_text()), None
+    except json.JSONDecodeError as exc:
+        return None, f"invalid_json: {exc}"
+
+
+def _artifact_exists(path_value: str) -> bool:
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = REPO / path
+    return path.is_file()
+
+
+def _receipt_gate(
+    *,
+    receipt_path: Path,
+    expected_schema: str,
+    needs: str,
+    evidence_fields: list[str],
+    required_artifacts: list[str] | None = None,
+) -> dict:
+    receipt, err = _load_json(receipt_path)
+    if err == "missing":
+        return {"status": "NOT_TESTED", "needs": needs, "receipt": str(receipt_path)}
+    if err:
+        return {"status": "FAIL", "receipt": str(receipt_path), "errors": [err]}
+
+    errors = []
+    if receipt.get("schema") != expected_schema:
+        errors.append(f"schema must be {expected_schema}")
+
+    status = receipt.get("status")
+    if status not in {"PASS", "FAIL", "NOT_TESTED", "BLOCKED"}:
+        errors.append("status must be one of PASS, FAIL, NOT_TESTED, BLOCKED")
+
+    missing_artifacts = []
+    for field in required_artifacts or []:
+        value = receipt
+        for part in field.split("."):
+            if not isinstance(value, dict):
+                value = None
+                break
+            value = value.get(part)
+        if not value or not _artifact_exists(str(value)):
+            missing_artifacts.append(field)
+
+    if missing_artifacts:
+        errors.append(f"missing referenced artifacts: {', '.join(missing_artifacts)}")
+
+    gate = {
+        "status": "FAIL" if errors else status,
+        "receipt": str(receipt_path),
+        "source_commit": receipt.get("source_commit"),
+    }
+    if errors:
+        gate["errors"] = errors
+    for field in evidence_fields:
+        if field in receipt:
+            gate[field] = receipt[field]
+    if missing_artifacts:
+        gate["missing_artifacts"] = missing_artifacts
+    return gate
+
+
+def _missing_paths(paths: list[str]) -> list[str]:
+    missing = []
+    for path in paths:
+        if not path or not _artifact_exists(path):
+            missing.append(path)
+    return missing
+
+
+def responsive_choreography_gate() -> dict:
+    return _receipt_gate(
+        receipt_path=DESIGN_ROUNDTABLE / "responsive-geometry.r1.json",
+        expected_schema="monitor_website.responsive_geometry_check.v1",
+        needs=(
+            "site/design-roundtable/responsive-geometry.r1.json with rendered "
+            "viewport checks and section_corpus_manifest.path"
+        ),
+        evidence_fields=["counts", "failures"],
+        required_artifacts=["section_corpus_manifest.path"],
+    )
+
+
+def distinctiveness_blind_gate() -> dict:
+    return _receipt_gate(
+        receipt_path=DESIGN_ROUNDTABLE / "distinctiveness-blind.r1.json",
+        expected_schema="grahama.distinctiveness_blind.v1",
+        needs="site/design-roundtable/distinctiveness-blind.r1.json with blind-rater outputs",
+        evidence_fields=[
+            "thresholds",
+            "aggregate",
+            "section_corpus_manifest",
+            "failure_signature",
+            "blocked_by_systemic_failure",
+            "excluded_transport_blockers",
+            "does_not_prove",
+        ],
+        required_artifacts=["contact_sheet.path", "section_corpus_manifest.path"],
+    )
+
+
+def craft_integrity_render_gate() -> dict:
+    gate = _receipt_gate(
+        receipt_path=DESIGN_ROUNDTABLE / "craft-integrity.r1.json",
+        expected_schema="grahama.craft_integrity.v1",
+        needs="site/design-roundtable/craft-integrity.r1.json with rendered screenshot hashes",
+        evidence_fields=[
+            "visual_assets_check",
+            "effects_check",
+            "section_corpus_manifest",
+            "rendered_screens",
+            "prohibited_findings",
+            "does_not_prove",
+        ],
+        required_artifacts=["section_corpus_manifest.path"],
+    )
+    receipt, err = _load_json(DESIGN_ROUNDTABLE / "craft-integrity.r1.json")
+    if err or not receipt:
+        return gate
+
+    missing = _missing_paths(
+        [
+            str(screen.get("path") or "")
+            for screen in receipt.get("rendered_screens", [])
+            if isinstance(screen, dict)
+        ]
+    )
+    if missing:
+        gate["status"] = "FAIL"
+        gate.setdefault("errors", []).append("missing rendered screenshot artifacts")
+        gate["missing_artifacts"] = missing
+    return gate
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--contract", default=str(SITE / "design-world.yml"))
@@ -78,10 +219,9 @@ def main(argv=None) -> int:
         "violations": viol,
         "css_files_scanned": [f.name for f in css_files],
     }
-    # Gates that require evidence this command cannot supply.
-    for g in ("responsive_choreography", "distinctiveness_blind", "craft_integrity_render"):
-        result["gates"][g] = {"status": "NOT_TESTED",
-                              "needs": "rendered screenshot corpus / blind-rater outputs (#1343)"}
+    result["gates"]["responsive_choreography"] = responsive_choreography_gate()
+    result["gates"]["distinctiveness_blind"] = distinctiveness_blind_gate()
+    result["gates"]["craft_integrity_render"] = craft_integrity_render_gate()
 
     statuses = [g["status"] for g in result["gates"].values()]
     if "FAIL" in statuses:

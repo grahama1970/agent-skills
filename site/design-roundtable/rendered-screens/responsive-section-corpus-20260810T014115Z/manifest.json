@@ -1,0 +1,3122 @@
+{
+  "schema": "grahama.responsive_section_corpus.v1",
+  "created_at": "2026-08-10T01:41:41.717791+00:00",
+  "url": "http://127.0.0.1:3003/",
+  "capture_tool": "surf-cdp Page.captureScreenshot with section scrollIntoView crops",
+  "mocked": false,
+  "live": true,
+  "viewports": [
+    {
+      "id": "phone-390",
+      "width": 390,
+      "height": 844,
+      "mobile": true
+    },
+    {
+      "id": "phone-430",
+      "width": 430,
+      "height": 932,
+      "mobile": true
+    },
+    {
+      "id": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "mobile": false
+    },
+    {
+      "id": "desktop-1366",
+      "width": 1366,
+      "height": 768,
+      "mobile": false
+    },
+    {
+      "id": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "mobile": false
+    }
+  ],
+  "sections": [
+    "top",
+    "search",
+    "work",
+    "competence",
+    "dream",
+    "ledger",
+    "proof",
+    "receipts",
+    "about",
+    "contact"
+  ],
+  "counts": {
+    "viewports": 5,
+    "sections": 10,
+    "screenshots": 50,
+    "failures": 0
+  },
+  "review_note": "Review units are section/page-state crops. Full-page screenshots are not primary evidence for this corpus. Section contact sheets preserve one section across viewport states for web-LLM and human review.",
+  "screenshots": [
+    {
+      "status": "PASS",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-00-top.png",
+      "sha256": "0fe5e0268c11a48e39d1f65df30c6948e5aaff2b30499af131e62310d46f0285",
+      "dimensions": {
+        "width": 390,
+        "height": 756
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 24.232,
+        "stddev": 32.437,
+        "bright_ratio": 0.06305
+      },
+      "page_state": {
+        "id": "top",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "top",
+          "selector": "#top",
+          "text": "ONE-PERSON PRACTICE / AGENT SYSTEMS, FORMAL METHODS, EVIDENCE I build agent systems that can prove what they did. This site explains the work. The public agent-skills repository holds the source. Browse here, or open the repository directly and ask your agent ",
+          "rect": {
+            "x": 0,
+            "y": 87.6388931274414,
+            "width": 390.5185241699219,
+            "height": 1617.4166259765625,
+            "bottom": 1705.055519104004
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 87.6388931274414,
+          "width": 390,
+          "height": 756.3611068725586,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-01-search.png",
+      "sha256": "5209f18f92cb61eb0e8c54793f51b5beb3167ca7ac3ce420bc14f83fbe44f432",
+      "dimensions": {
+        "width": 390,
+        "height": 560
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 21.424,
+        "stddev": 34.253,
+        "bright_ratio": 0.0658
+      },
+      "page_state": {
+        "id": "search",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 1610.6666259765625,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "search",
+          "selector": "#search",
+          "text": "Pick a repo question. The map returns the public skill, project route, proof boundary, and visible gap an agent can inspect. Search by problem, capability, or evidence question. The answer is a source trail, not a sales claim. What should your agent inspect? t",
+          "rect": {
+            "x": 0,
+            "y": 95.3888931274414,
+            "width": 390.5185241699219,
+            "height": 559.620361328125,
+            "bottom": 655.0092544555664
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.3888931274414,
+          "width": 390,
+          "height": 559.620361328125,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-02-work.png",
+      "sha256": "65affc59f4b18d0d059aa5502d7578a19f043f73c6e477a1535deee780816b46",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 21.008,
+        "stddev": 37.569,
+        "bright_ratio": 0.05839
+      },
+      "page_state": {
+        "id": "work",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 2170.073974609375,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "work",
+          "selector": "#work",
+          "text": "TAU PUBLIC PROOF DOSSIERS Ten questions with code, checks, and gaps. REPO-LINKED \u00b7 EACH CASE STATES HOW FAR EVIDENCE GOES Agentic pipelines & orchestration 49 SKILLS Reliable agent execution and orchestration \u2014 contracts, transport, and runtime truth. surf \u00b7 t",
+          "rect": {
+            "x": 0,
+            "y": 95.60185241699219,
+            "width": 390.5185241699219,
+            "height": 5654.1943359375,
+            "bottom": 5749.796188354492
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.60185241699219,
+          "width": 390,
+          "height": 748.3981475830078,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "competence",
+      "route": "/#competence",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-03-competence.png",
+      "sha256": "4e4b81f2f8f44e2a51dd227958bc41e2c8efb0bb8555ca1418f0d95c8c7cd20d",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.697,
+        "stddev": 32.852,
+        "bright_ratio": 0.04794
+      },
+      "page_state": {
+        "id": "competence",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 7825.18505859375,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "competence",
+          "selector": "#competence",
+          "text": "CORPUS DECLARED DISCIPLINES What the work adds up to. DISCIPLINES THE SKILLS DECLARE \u2014 COUNTS, NOT RATINGS Not a self-graded skills chart. Each row is a discipline the skills tag themselves with; the number is how many actually do, and the projects are where y",
+          "rect": {
+            "x": 0,
+            "y": 95.68518829345703,
+            "width": 390.5185241699219,
+            "height": 1982.4166259765625,
+            "bottom": 2078.1018142700195
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.68518829345703,
+          "width": 390,
+          "height": 748.314811706543,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "dream",
+      "route": "/#dream",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-04-dream.png",
+      "sha256": "c91cff6988694c352e1b478af34e630f48c50255bc93a9e21d2b64dcfcd4b1d4",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 28.243,
+        "stddev": 37.153,
+        "bright_ratio": 0.08566
+      },
+      "page_state": {
+        "id": "dream",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 9808.5927734375,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "dream",
+          "selector": "#dream",
+          "text": "STUDY PERSONA-DREAM Can a persona dream itself a personality? Not a movie generator: a preregistered study. The question: does letting a persistent voice persona dream about its experience actually help, beyond plainly remembering \u2014 and is it still itself afte",
+          "rect": {
+            "x": 0,
+            "y": 95.69444274902344,
+            "width": 390.5185241699219,
+            "height": 1061.6759033203125,
+            "bottom": 1157.370346069336
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.69444274902344,
+          "width": 390,
+          "height": 748.3055572509766,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-05-ledger.png",
+      "sha256": "f8c863408b82c244ed93bdd6797e0438d62b1f4fb902c1c382b9c2190f4774f4",
+      "dimensions": {
+        "width": 390,
+        "height": 749
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 18.505,
+        "stddev": 36.419,
+        "bright_ratio": 0.05633
+      },
+      "page_state": {
+        "id": "ledger",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 10870.5185546875,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "ledger",
+          "selector": "#ledger",
+          "text": "LEDGER AGENT-SKILLS SOURCE MAP Every contract, including the ones without checks. 344 One cell per skill contract \u2014 each links to its SKILL.md. Filled cells carry a sanity check; outlined cells are contract-only. The gaps stay visible on purpose \u2014 a practice b",
+          "rect": {
+            "x": 0,
+            "y": 95.44444274902344,
+            "width": 390.5185241699219,
+            "height": 1593.52783203125,
+            "bottom": 1688.9722747802734
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.44444274902344,
+          "width": 390,
+          "height": 748.5555572509766,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-06-proof.png",
+      "sha256": "bd3ff1ddc56b8dc58638f432378152dddaca4bd7ad9bc3efbe30e760c8f16aaa",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 25.795,
+        "stddev": 38.917,
+        "bright_ratio": 0.06997
+      },
+      "page_state": {
+        "id": "proof",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 12464.5927734375,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "proof",
+          "selector": "#proof",
+          "text": "TAU HOW PROOF WORKS One real run, from goal to receipt. Not a diagram of an idealised pipeline: the actual tau roundtable that designed this page, walked stage by stage. Each step resolves to a real immutable artifact you can hash-check, and each one says plai",
+          "rect": {
+            "x": 0,
+            "y": 95.89814758300781,
+            "width": 390.5185241699219,
+            "height": 2634.157470703125,
+            "bottom": 2730.055618286133
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.89814758300781,
+          "width": 390,
+          "height": 748.1018524169922,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-07-receipts.png",
+      "sha256": "fb17f26d4849a32a2f30646b9384a7da03c2910e4346182b3d279ba9e0330c8e",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 129.719,
+        "stddev": 105.742,
+        "bright_ratio": 0.54505
+      },
+      "page_state": {
+        "id": "receipts",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 15099.8515625,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "receipts",
+          "selector": "#receipts",
+          "text": "RECEIPTS BOUNDED EVIDENCE No claim ships without one. Three excerpts, printed as they came out of gen_artifacts.py: a node receipt from the roundtable run that designed this page, a captured audit, and the provenance of the numbers above. Missing sources stay ",
+          "rect": {
+            "x": 0,
+            "y": 95.79629516601562,
+            "width": 390.5185241699219,
+            "height": 1705.388916015625,
+            "bottom": 1801.1852111816406
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.79629516601562,
+          "width": 390,
+          "height": 748.2037048339844,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "about",
+      "route": "/#about",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-08-about.png",
+      "sha256": "ba92e67c8e90ca25fd60c2c383f9b4a7d322e206c5462d8cad53b71656635472",
+      "dimensions": {
+        "width": 390,
+        "height": 748
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 24.118,
+        "stddev": 34.437,
+        "bright_ratio": 0.05602
+      },
+      "page_state": {
+        "id": "about",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 16806.517578125,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "about",
+          "selector": "#about",
+          "text": "PERSON ACCOUNTABILITY An unusual path, on purpose. An unconventional path is an advantage on problems with no playbook. One person also means direct accountability \u2014 the person you meet is the person who investigates, architects, builds, and answers for the re",
+          "rect": {
+            "x": 0,
+            "y": 95.51851654052734,
+            "width": 390.5185241699219,
+            "height": 1237.898193359375,
+            "bottom": 1333.4167098999023
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.51851654052734,
+          "width": 390,
+          "height": 748.4814834594727,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "contact",
+      "route": "/#contact",
+      "viewport_id": "phone-390",
+      "viewport": {
+        "id": "phone-390",
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-09-contact.png",
+      "sha256": "e1779f29eddf55338f70c66ed01ea6ed18ba17d8612f4ed29f393584e4a7af4b",
+      "dimensions": {
+        "width": 390,
+        "height": 722
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 30.618,
+        "stddev": 47.99,
+        "bright_ratio": 0.1074
+      },
+      "page_state": {
+        "id": "contact",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 18044.4453125,
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "contact",
+          "selector": "#contact",
+          "text": "NEXT EVIDENCE-FIRST WORK Bring me the project you shelved. The one with no playbook \u2014 the one that stalled because it needed both halves of the job. Good fits: Stalled multi-agent orchestration \u2014 pipelines that demo well but fail silently or drift in productio",
+          "rect": {
+            "x": 0,
+            "y": 95.49073791503906,
+            "width": 390.5185241699219,
+            "height": 721.388916015625,
+            "bottom": 816.8796539306641
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.49073791503906,
+          "width": 390,
+          "height": 721.388916015625,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-00-top.png",
+      "sha256": "e0b2b332dc2d083f0b1317798c5a2e35bd90750ee14e1b960a4c3b43ac1e10d6",
+      "dimensions": {
+        "width": 430,
+        "height": 844
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 23.539,
+        "stddev": 30.935,
+        "bright_ratio": 0.05543
+      },
+      "page_state": {
+        "id": "top",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 0,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "top",
+          "selector": "#top",
+          "text": "ONE-PERSON PRACTICE / AGENT SYSTEMS, FORMAL METHODS, EVIDENCE I build agent systems that can prove what they did. This site explains the work. The public agent-skills repository holds the source. Browse here, or open the repository directly and ask your agent ",
+          "rect": {
+            "x": 0,
+            "y": 87.6388931274414,
+            "width": 430.22222900390625,
+            "height": 1541.49072265625,
+            "bottom": 1629.1296157836914
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 87.6388931274414,
+          "width": 430,
+          "height": 844.3611068725586,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-01-search.png",
+      "sha256": "ad6b8d2fbc4e851ccf441848396cadf08b67af57b38a43dfc1b727816b8e827a",
+      "dimensions": {
+        "width": 430,
+        "height": 560
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.642,
+        "stddev": 33.111,
+        "bright_ratio": 0.05989
+      },
+      "page_state": {
+        "id": "search",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 1534.22216796875,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "search",
+          "selector": "#search",
+          "text": "Pick a repo question. The map returns the public skill, project route, proof boundary, and visible gap an agent can inspect. Search by problem, capability, or evidence question. The answer is a source trail, not a sales claim. What should your agent inspect? t",
+          "rect": {
+            "x": 0,
+            "y": 95.90740966796875,
+            "width": 430.22222900390625,
+            "height": 559.620361328125,
+            "bottom": 655.5277709960938
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.90740966796875,
+          "width": 430,
+          "height": 559.620361328125,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-02-work.png",
+      "sha256": "d35f1aedd5d0d843dd4a40f47ff26b6705a958c413c44e797af1903bd85984c8",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 19.937,
+        "stddev": 35.535,
+        "bright_ratio": 0.05276
+      },
+      "page_state": {
+        "id": "work",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 2094.22216796875,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "work",
+          "selector": "#work",
+          "text": "TAU PUBLIC PROOF DOSSIERS Ten questions with code, checks, and gaps. REPO-LINKED \u00b7 EACH CASE STATES HOW FAR EVIDENCE GOES Agentic pipelines & orchestration 49 SKILLS Reliable agent execution and orchestration \u2014 contracts, transport, and runtime truth. surf \u00b7 t",
+          "rect": {
+            "x": 0,
+            "y": 95.52777862548828,
+            "width": 430.22222900390625,
+            "height": 5478.49072265625,
+            "bottom": 5574.018501281738
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.52777862548828,
+          "width": 430,
+          "height": 836.4722213745117,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "competence",
+      "route": "/#competence",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-03-competence.png",
+      "sha256": "6524ac9e4a7fbaa13d67797ec32c766e16edc3da912df009ff3db7fc2caf6922",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.237,
+        "stddev": 31.709,
+        "bright_ratio": 0.04376
+      },
+      "page_state": {
+        "id": "competence",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 7573.33349609375,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "competence",
+          "selector": "#competence",
+          "text": "CORPUS DECLARED DISCIPLINES What the work adds up to. DISCIPLINES THE SKILLS DECLARE \u2014 COUNTS, NOT RATINGS Not a self-graded skills chart. Each row is a discipline the skills tag themselves with; the number is how many actually do, and the projects are where y",
+          "rect": {
+            "x": 0,
+            "y": 95.90740966796875,
+            "width": 430.22222900390625,
+            "height": 1958.907470703125,
+            "bottom": 2054.8148803710938
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.90740966796875,
+          "width": 430,
+          "height": 836.0925903320312,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "dream",
+      "route": "/#dream",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-04-dream.png",
+      "sha256": "7433af92b425d7118f0be744257b951e6ff75692e3fe36c17ed24ba711361a07",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 25.519,
+        "stddev": 34.871,
+        "bright_ratio": 0.07345
+      },
+      "page_state": {
+        "id": "dream",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 9533.6298828125,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "dream",
+          "selector": "#dream",
+          "text": "STUDY PERSONA-DREAM Can a persona dream itself a personality? Not a movie generator: a preregistered study. The question: does letting a persistent voice persona dream about its experience actually help, beyond plainly remembering \u2014 and is it still itself afte",
+          "rect": {
+            "x": 0,
+            "y": 95.51851654052734,
+            "width": 430.22222900390625,
+            "height": 1031.4444580078125,
+            "bottom": 1126.9629745483398
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.51851654052734,
+          "width": 430,
+          "height": 836.4814834594727,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-05-ledger.png",
+      "sha256": "386cda07ff1a909e6823ef1a812e35adc1691d30b06deb331ba3f41eefbda62b",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 17.121,
+        "stddev": 33.601,
+        "bright_ratio": 0.0486
+      },
+      "page_state": {
+        "id": "ledger",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 10564.7412109375,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "ledger",
+          "selector": "#ledger",
+          "text": "LEDGER AGENT-SKILLS SOURCE MAP Every contract, including the ones without checks. 344 One cell per skill contract \u2014 each links to its SKILL.md. Filled cells carry a sanity check; outlined cells are contract-only. The gaps stay visible on purpose \u2014 a practice b",
+          "rect": {
+            "x": 0,
+            "y": 95.85185241699219,
+            "width": 430.22222900390625,
+            "height": 1620.3055419921875,
+            "bottom": 1716.1573944091797
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.85185241699219,
+          "width": 430,
+          "height": 836.1481475830078,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-06-proof.png",
+      "sha256": "834023ffccdca69617eee84dfca0bbdf856ce1b4ea570ab347e4431c38122aca",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 25.0,
+        "stddev": 37.243,
+        "bright_ratio": 0.06499
+      },
+      "page_state": {
+        "id": "proof",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 12186.07421875,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "proof",
+          "selector": "#proof",
+          "text": "TAU HOW PROOF WORKS One real run, from goal to receipt. Not a diagram of an idealised pipeline: the actual tau roundtable that designed this page, walked stage by stage. Each step resolves to a real immutable artifact you can hash-check, and each one says plai",
+          "rect": {
+            "x": 0,
+            "y": 95.8240737915039,
+            "width": 430.22222900390625,
+            "height": 2384.120361328125,
+            "bottom": 2479.944435119629
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.8240737915039,
+          "width": 430,
+          "height": 836.1759262084961,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-07-receipts.png",
+      "sha256": "a3f362006b104b92c195e284859de1dfcb612a7e33fe673b4f9b469f5a7eb6ac",
+      "dimensions": {
+        "width": 430,
+        "height": 836
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 132.798,
+        "stddev": 105.49,
+        "bright_ratio": 0.55813
+      },
+      "page_state": {
+        "id": "receipts",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 14571.2587890625,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "receipts",
+          "selector": "#receipts",
+          "text": "RECEIPTS BOUNDED EVIDENCE No claim ships without one. Three excerpts, printed as they came out of gen_artifacts.py: a node receipt from the roundtable run that designed this page, a captured audit, and the provenance of the numbers above. Missing sources stay ",
+          "rect": {
+            "x": 0,
+            "y": 95.75926208496094,
+            "width": 430.22222900390625,
+            "height": 1611.0926513671875,
+            "bottom": 1706.8519134521484
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.75926208496094,
+          "width": 430,
+          "height": 836.2407379150391,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "about",
+      "route": "/#about",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-08-about.png",
+      "sha256": "9cd66b24d331f25950bc02cc7e2b239da44ba05cc7b58ce15184f1cff7149238",
+      "dimensions": {
+        "width": 430,
+        "height": 837
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 23.369,
+        "stddev": 32.896,
+        "bright_ratio": 0.05057
+      },
+      "page_state": {
+        "id": "about",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 16183.7041015625,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "about",
+          "selector": "#about",
+          "text": "PERSON ACCOUNTABILITY An unusual path, on purpose. An unconventional path is an advantage on problems with no playbook. One person also means direct accountability \u2014 the person you meet is the person who investigates, architects, builds, and answers for the re",
+          "rect": {
+            "x": 0,
+            "y": 95.40740966796875,
+            "width": 430.22222900390625,
+            "height": 1225.2314453125,
+            "bottom": 1320.6388549804688
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.40740966796875,
+          "width": 430,
+          "height": 836.5925903320312,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "contact",
+      "route": "/#contact",
+      "viewport_id": "phone-430",
+      "viewport": {
+        "id": "phone-430",
+        "width": 430,
+        "height": 932,
+        "mobile": true
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-09-contact.png",
+      "sha256": "0ea88123063771df11445f745ee570255fd653ee426e5f3361cc5dd700d2f113",
+      "dimensions": {
+        "width": 430,
+        "height": 677
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 29.985,
+        "stddev": 47.118,
+        "bright_ratio": 0.10336
+      },
+      "page_state": {
+        "id": "contact",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 17408.591796875,
+        "viewport": {
+          "width": 430,
+          "height": 932,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "contact",
+          "selector": "#contact",
+          "text": "NEXT EVIDENCE-FIRST WORK Bring me the project you shelved. The one with no playbook \u2014 the one that stalled because it needed both halves of the job. Good fits: Stalled multi-agent orchestration \u2014 pipelines that demo well but fail silently or drift in productio",
+          "rect": {
+            "x": 0,
+            "y": 95.75,
+            "width": 430.22222900390625,
+            "height": 677.3148193359375,
+            "bottom": 773.0648193359375
+          }
+        },
+        "nav": {
+          "bottom": 87.6388931274414
+        },
+        "clip": {
+          "x": 0,
+          "y": 95.75,
+          "width": 430,
+          "height": 677.3148193359375,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-00-top.png",
+      "sha256": "6c99e5abd1ed74acff8f59057408833b3d9fb6bdc9872ebf5b5ee7ffdabb6bd2",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 21.382,
+        "stddev": 29.165,
+        "bright_ratio": 0.04154
+      },
+      "page_state": {
+        "id": "top",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 23.703702926635742,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "top",
+          "selector": "#top",
+          "text": "ONE-PERSON PRACTICE / AGENT SYSTEMS, FORMAL METHODS, EVIDENCE I build agent systems that can prove what they did. This site explains the work. The public agent-skills repository holds the source. Browse here, or open the repository directly and ask your agent ",
+          "rect": {
+            "x": 0,
+            "y": 66.74073791503906,
+            "width": 753.1851806640625,
+            "height": 1376.1851806640625,
+            "bottom": 1442.9259185791016
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.74073791503906,
+          "width": 753.1851806640625,
+          "height": 957.2592620849609,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-01-search.png",
+      "sha256": "9378351c7768d43299d884da6f6aec138a4ab1625e0c4f009b622959b73ec24a",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 17.761,
+        "stddev": 25.807,
+        "bright_ratio": 0.03564
+      },
+      "page_state": {
+        "id": "search",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 1400.888916015625,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "search",
+          "selector": "#search",
+          "text": "Pick a repo question. The map returns the public skill, project route, proof boundary, and visible gap an agent can inspect. Search by problem, capability, or evidence question. The answer is a source trail, not a sales claim. What should your agent inspect? t",
+          "rect": {
+            "x": 0,
+            "y": 66.74073791503906,
+            "width": 753.1851806640625,
+            "height": 1078.7869873046875,
+            "bottom": 1145.5277252197266
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.74073791503906,
+          "width": 753.1851806640625,
+          "height": 957.2592620849609,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-02-work.png",
+      "sha256": "10cff7a3eaf48b6748d6ab5035250d7880c3d271cc1e913a48ea77579b8dca8c",
+      "dimensions": {
+        "width": 753,
+        "height": 958
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 18.777,
+        "stddev": 30.114,
+        "bright_ratio": 0.0418
+      },
+      "page_state": {
+        "id": "work",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 2480,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "work",
+          "selector": "#work",
+          "text": "TAU PUBLIC PROOF DOSSIERS Ten questions with code, checks, and gaps. REPO-LINKED \u00b7 EACH CASE STATES HOW FAR EVIDENCE GOES Agentic pipelines & orchestration 49 SKILLS Reliable agent execution and orchestration \u2014 contracts, transport, and runtime truth. surf \u00b7 t",
+          "rect": {
+            "x": 0,
+            "y": 66.41666412353516,
+            "width": 753.1851806640625,
+            "height": 9277.138671875,
+            "bottom": 9343.555335998535
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.41666412353516,
+          "width": 753.1851806640625,
+          "height": 957.5833358764648,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "competence",
+      "route": "/#competence",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-03-competence.png",
+      "sha256": "ef37c019288798babd822eaa9453b26987f316ccf178cf53a8ee60b89dcf9fa7",
+      "dimensions": {
+        "width": 753,
+        "height": 958
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 18.679,
+        "stddev": 27.526,
+        "bright_ratio": 0.0324
+      },
+      "page_state": {
+        "id": "competence",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 11758.22265625,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "competence",
+          "selector": "#competence",
+          "text": "CORPUS DECLARED DISCIPLINES What the work adds up to. DISCIPLINES THE SKILLS DECLARE \u2014 COUNTS, NOT RATINGS Not a self-graded skills chart. Each row is a discipline the skills tag themselves with; the number is how many actually do, and the projects are where y",
+          "rect": {
+            "x": 0,
+            "y": 66.33333587646484,
+            "width": 753.1851806640625,
+            "height": 1433.27783203125,
+            "bottom": 1499.6111679077148
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.33333587646484,
+          "width": 753.1851806640625,
+          "height": 957.6666641235352,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "dream",
+      "route": "/#dream",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-04-dream.png",
+      "sha256": "20d0272c2094af4d48040f0ccf01f6783ce5cbf4c17ae8d87b84a04e3601a3ed",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.765,
+        "stddev": 30.315,
+        "bright_ratio": 0.05333
+      },
+      "page_state": {
+        "id": "dream",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 13192.2958984375,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "dream",
+          "selector": "#dream",
+          "text": "STUDY PERSONA-DREAM Can a persona dream itself a personality? Not a movie generator: a preregistered study. The question: does letting a persistent voice persona dream about its experience actually help, beyond plainly remembering \u2014 and is it still itself afte",
+          "rect": {
+            "x": 0,
+            "y": 66.53704071044922,
+            "width": 753.1851806640625,
+            "height": 1035.2222900390625,
+            "bottom": 1101.7593307495117
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.53704071044922,
+          "width": 753.1851806640625,
+          "height": 957.4629592895508,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-05-ledger.png",
+      "sha256": "8e5c0214ce75b285d0c77a8535a773d946ee8940afe515afa67fed59af9d64b9",
+      "dimensions": {
+        "width": 753,
+        "height": 958
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.935,
+        "stddev": 36.478,
+        "bright_ratio": 0.08915
+      },
+      "page_state": {
+        "id": "ledger",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 14227.5556640625,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "ledger",
+          "selector": "#ledger",
+          "text": "LEDGER AGENT-SKILLS SOURCE MAP Every contract, including the ones without checks. 344 One cell per skill contract \u2014 each links to its SKILL.md. Filled cells carry a sanity check; outlined cells are contract-only. The gaps stay visible on purpose \u2014 a practice b",
+          "rect": {
+            "x": 0,
+            "y": 66.5,
+            "width": 753.1851806640625,
+            "height": 3086.185302734375,
+            "bottom": 3152.685302734375
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.5,
+          "width": 753.1851806640625,
+          "height": 957.5,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-06-proof.png",
+      "sha256": "6bf9d7ab8a02c3981febe0a220a60629bc1b5d7376a383bea95266503dbdf050",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.469,
+        "stddev": 31.972,
+        "bright_ratio": 0.04595
+      },
+      "page_state": {
+        "id": "proof",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 17314.37109375,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "proof",
+          "selector": "#proof",
+          "text": "TAU HOW PROOF WORKS One real run, from goal to receipt. Not a diagram of an idealised pipeline: the actual tau roundtable that designed this page, walked stage by stage. Each step resolves to a real immutable artifact you can hash-check, and each one says plai",
+          "rect": {
+            "x": 0,
+            "y": 66.87036895751953,
+            "width": 753.1851806640625,
+            "height": 1916.9537353515625,
+            "bottom": 1983.824104309082
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.87036895751953,
+          "width": 753.1851806640625,
+          "height": 957.1296310424805,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-07-receipts.png",
+      "sha256": "977f4c988730c812375f926686a9735c49ab35f4c1863872bcfd326eb7c5d796",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 148.751,
+        "stddev": 103.224,
+        "bright_ratio": 0.62111
+      },
+      "page_state": {
+        "id": "receipts",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 19232.591796875,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "receipts",
+          "selector": "#receipts",
+          "text": "RECEIPTS BOUNDED EVIDENCE No claim ships without one. Three excerpts, printed as they came out of gen_artifacts.py: a node receipt from the roundtable run that designed this page, a captured audit, and the provenance of the numbers above. Missing sources stay ",
+          "rect": {
+            "x": 0,
+            "y": 66.60185241699219,
+            "width": 753.1851806640625,
+            "height": 1259.00927734375,
+            "bottom": 1325.6111297607422
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.60185241699219,
+          "width": 753.1851806640625,
+          "height": 957.3981475830078,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "about",
+      "route": "/#about",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-08-about.png",
+      "sha256": "cf89a8c6ac65df03de1d4108be9257a7f7845bad835c5ac840e6534eb84c9cad",
+      "dimensions": {
+        "width": 753,
+        "height": 957
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.633,
+        "stddev": 26.82,
+        "bright_ratio": 0.03173
+      },
+      "page_state": {
+        "id": "about",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 20492.4453125,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "about",
+          "selector": "#about",
+          "text": "PERSON ACCOUNTABILITY An unusual path, on purpose. An unconventional path is an advantage on problems with no playbook. One person also means direct accountability \u2014 the person you meet is the person who investigates, architects, builds, and answers for the re",
+          "rect": {
+            "x": 0,
+            "y": 66.75926208496094,
+            "width": 753.1851806640625,
+            "height": 1181.1666259765625,
+            "bottom": 1247.9258880615234
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.75926208496094,
+          "width": 753.1851806640625,
+          "height": 957.2407379150391,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "contact",
+      "route": "/#contact",
+      "viewport_id": "tablet-768",
+      "viewport": {
+        "id": "tablet-768",
+        "width": 768,
+        "height": 1024,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-09-contact.png",
+      "sha256": "18b9385a61d40017a495d925bc56e251668179f0a4d512eeed68d23b76898158",
+      "dimensions": {
+        "width": 753,
+        "height": 603
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 25.295,
+        "stddev": 41.541,
+        "bright_ratio": 0.07397
+      },
+      "page_state": {
+        "id": "contact",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 21674.07421875,
+        "viewport": {
+          "width": 768,
+          "height": 1024,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "contact",
+          "selector": "#contact",
+          "text": "NEXT EVIDENCE-FIRST WORK Bring me the project you shelved. The one with no playbook \u2014 the one that stalled because it needed both halves of the job. Good fits: Stalled multi-agent orchestration \u2014 pipelines that demo well but fail silently or drift in productio",
+          "rect": {
+            "x": 0,
+            "y": 66.29629516601562,
+            "width": 753.1851806640625,
+            "height": 602.2870483398438,
+            "bottom": 668.5833435058594
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.29629516601562,
+          "width": 753.1851806640625,
+          "height": 602.2870483398438,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-00-top.png",
+      "sha256": "aaa66b53b112405d9a02b5b70f955fcac3cda915ffb7b35119146ec1a41571b0",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 24.438,
+        "stddev": 38.318,
+        "bright_ratio": 0.06322
+      },
+      "page_state": {
+        "id": "top",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 23.703702926635742,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "top",
+          "selector": "#top",
+          "text": "ONE-PERSON PRACTICE / AGENT SYSTEMS, FORMAL METHODS, EVIDENCE I build agent systems that can prove what they did. This site explains the work. The public agent-skills repository holds the source. Browse here, or open the repository directly and ask your agent ",
+          "rect": {
+            "x": 0,
+            "y": 66.74073791503906,
+            "width": 1351.7037353515625,
+            "height": 1537.138916015625,
+            "bottom": 1603.879653930664
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.74073791503906,
+          "width": 1351.7037353515625,
+          "height": 701.2592620849609,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-01-search.png",
+      "sha256": "5e882b6811ebc04ac7d3e6a59a3045bda2d1944e0ecbd8410f22edd91632bbbc",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 14.419,
+        "stddev": 20.953,
+        "bright_ratio": 0.02145
+      },
+      "page_state": {
+        "id": "search",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 1562.0740966796875,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "search",
+          "selector": "#search",
+          "text": "Pick a repo question. The map returns the public skill, project route, proof boundary, and visible gap an agent can inspect. Search by problem, capability, or evidence question. The answer is a source trail, not a sales claim. What should your agent inspect? t",
+          "rect": {
+            "x": 0,
+            "y": 66.50926208496094,
+            "width": 1351.7037353515625,
+            "height": 1615.0833740234375,
+            "bottom": 1681.5926361083984
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.50926208496094,
+          "width": 1351.7037353515625,
+          "height": 701.4907379150391,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-02-work.png",
+      "sha256": "0b5657ec5ced105979963c5d73e364ea0d7d4dbe4109a30e961a9b17f0d9bb8d",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 17.369,
+        "stddev": 30.507,
+        "bright_ratio": 0.03283
+      },
+      "page_state": {
+        "id": "work",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 3176.888916015625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "work",
+          "selector": "#work",
+          "text": "TAU PUBLIC PROOF DOSSIERS Ten questions with code, checks, and gaps. REPO-LINKED \u00b7 EACH CASE STATES HOW FAR EVIDENCE GOES Agentic pipelines & orchestration 49 SKILLS Reliable agent execution and orchestration \u2014 contracts, transport, and runtime truth. surf \u00b7 t",
+          "rect": {
+            "x": 0,
+            "y": 66.77777862548828,
+            "width": 1351.7037353515625,
+            "height": 5503.88916015625,
+            "bottom": 5570.666938781738
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.77777862548828,
+          "width": 1351.7037353515625,
+          "height": 701.2222213745117,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "competence",
+      "route": "/#competence",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-03-competence.png",
+      "sha256": "6a88fc7fb4960e3540da6cd66d2a1f881eab002c8703e66586523bf8dbe90b1d",
+      "dimensions": {
+        "width": 1352,
+        "height": 702
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 16.905,
+        "stddev": 24.513,
+        "bright_ratio": 0.02237
+      },
+      "page_state": {
+        "id": "competence",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 8682.07421875,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "competence",
+          "selector": "#competence",
+          "text": "CORPUS DECLARED DISCIPLINES What the work adds up to. DISCIPLINES THE SKILLS DECLARE \u2014 COUNTS, NOT RATINGS Not a self-graded skills chart. Each row is a discipline the skills tag themselves with; the number is how many actually do, and the projects are where y",
+          "rect": {
+            "x": 0,
+            "y": 66.48148345947266,
+            "width": 1351.7037353515625,
+            "height": 1504.6666259765625,
+            "bottom": 1571.1481094360352
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.48148345947266,
+          "width": 1351.7037353515625,
+          "height": 701.5185165405273,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "dream",
+      "route": "/#dream",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-04-dream.png",
+      "sha256": "d654e4e890e9471b38bfbb7e1e48db1de8382ac57c9e9056116354d30ab34108",
+      "dimensions": {
+        "width": 1352,
+        "height": 702
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.644,
+        "stddev": 32.197,
+        "bright_ratio": 0.04678
+      },
+      "page_state": {
+        "id": "dream",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 10187.8515625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "dream",
+          "selector": "#dream",
+          "text": "STUDY PERSONA-DREAM Can a persona dream itself a personality? Not a movie generator: a preregistered study. The question: does letting a persistent voice persona dream about its experience actually help, beyond plainly remembering \u2014 and is it still itself afte",
+          "rect": {
+            "x": 0,
+            "y": 66.37036895751953,
+            "width": 1351.7037353515625,
+            "height": 1410.8333740234375,
+            "bottom": 1477.203742980957
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.37036895751953,
+          "width": 1351.7037353515625,
+          "height": 701.6296310424805,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-05-ledger.png",
+      "sha256": "2917b0126f149190c36f8f01868d7bcd9881ad2415733f9e6145d680316588c3",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 21.661,
+        "stddev": 37.02,
+        "bright_ratio": 0.08375
+      },
+      "page_state": {
+        "id": "ledger",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 11598.22265625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "ledger",
+          "selector": "#ledger",
+          "text": "LEDGER AGENT-SKILLS SOURCE MAP Every contract, including the ones without checks. 344 One cell per skill contract \u2014 each links to its SKILL.md. Filled cells carry a sanity check; outlined cells are contract-only. The gaps stay visible on purpose \u2014 a practice b",
+          "rect": {
+            "x": 0,
+            "y": 66.83333587646484,
+            "width": 1351.7037353515625,
+            "height": 1742.879638671875,
+            "bottom": 1809.7129745483398
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.83333587646484,
+          "width": 1351.7037353515625,
+          "height": 701.1666641235352,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-06-proof.png",
+      "sha256": "0e43289b4e5c784b1ec283accd9b17cadcd2e9bceebb6887e1fd356c558366f9",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.213,
+        "stddev": 28.665,
+        "bright_ratio": 0.03151
+      },
+      "page_state": {
+        "id": "proof",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 13342.22265625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "proof",
+          "selector": "#proof",
+          "text": "TAU HOW PROOF WORKS One real run, from goal to receipt. Not a diagram of an idealised pipeline: the actual tau roundtable that designed this page, walked stage by stage. Each step resolves to a real immutable artifact you can hash-check, and each one says plai",
+          "rect": {
+            "x": 0,
+            "y": 66.71296691894531,
+            "width": 1351.7037353515625,
+            "height": 1934.9630126953125,
+            "bottom": 2001.6759796142578
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.71296691894531,
+          "width": 1351.7037353515625,
+          "height": 701.2870330810547,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-07-receipts.png",
+      "sha256": "18678c5f9ce0ef7d58a9b0f64bd22dd2307e42899b3056ab1154b1920bad1bc9",
+      "dimensions": {
+        "width": 1352,
+        "height": 701
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 105.655,
+        "stddev": 104.908,
+        "bright_ratio": 0.42586
+      },
+      "page_state": {
+        "id": "receipts",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 15278.22265625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "receipts",
+          "selector": "#receipts",
+          "text": "RECEIPTS BOUNDED EVIDENCE No claim ships without one. Three excerpts, printed as they came out of gen_artifacts.py: a node receipt from the roundtable run that designed this page, a captured audit, and the provenance of the numbers above. Missing sources stay ",
+          "rect": {
+            "x": 0,
+            "y": 66.6759262084961,
+            "width": 1351.7037353515625,
+            "height": 897.1666870117188,
+            "bottom": 963.8426132202148
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.6759262084961,
+          "width": 1351.7037353515625,
+          "height": 701.3240737915039,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "about",
+      "route": "/#about",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-08-about.png",
+      "sha256": "f12d46f4560cea084cef7b3a091810f5bae80947327ede11dbbceda19dcaef05",
+      "dimensions": {
+        "width": 1352,
+        "height": 702
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.667,
+        "stddev": 29.15,
+        "bright_ratio": 0.03272
+      },
+      "page_state": {
+        "id": "about",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 16176.5927734375,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "about",
+          "selector": "#about",
+          "text": "PERSON ACCOUNTABILITY An unusual path, on purpose. An unconventional path is an advantage on problems with no playbook. One person also means direct accountability \u2014 the person you meet is the person who investigates, architects, builds, and answers for the re",
+          "rect": {
+            "x": 0,
+            "y": 66.47222137451172,
+            "width": 1351.7037353515625,
+            "height": 954.0185546875,
+            "bottom": 1020.4907760620117
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.47222137451172,
+          "width": 1351.7037353515625,
+          "height": 701.5277786254883,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "contact",
+      "route": "/#contact",
+      "viewport_id": "desktop-1366",
+      "viewport": {
+        "id": "desktop-1366",
+        "width": 1366,
+        "height": 768,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-09-contact.png",
+      "sha256": "25a27645c2715aa870ffd1d7bf9ceb18bbeee1f739a5c2168af81af6ba893127",
+      "dimensions": {
+        "width": 1352,
+        "height": 676
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.736,
+        "stddev": 39.172,
+        "bright_ratio": 0.05664
+      },
+      "page_state": {
+        "id": "contact",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 17130.666015625,
+        "viewport": {
+          "width": 1366,
+          "height": 768,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "contact",
+          "selector": "#contact",
+          "text": "NEXT EVIDENCE-FIRST WORK Bring me the project you shelved. The one with no playbook \u2014 the one that stalled because it needed both halves of the job. Good fits: Stalled multi-agent orchestration \u2014 pipelines that demo well but fail silently or drift in productio",
+          "rect": {
+            "x": 0,
+            "y": 66.41666412353516,
+            "width": 1351.7037353515625,
+            "height": 675.629638671875,
+            "bottom": 742.0463027954102
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.41666412353516,
+          "width": 1351.7037353515625,
+          "height": 675.629638671875,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "top",
+      "route": "/#top",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-00-top.png",
+      "sha256": "48dd7fe8a28ffe112d794a8f6f161b26c2e99210a89ce99403ebb646c9eb5a0a",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.613,
+        "stddev": 34.411,
+        "bright_ratio": 0.05383
+      },
+      "page_state": {
+        "id": "top",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 23.703702926635742,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "top",
+          "selector": "#top",
+          "text": "ONE-PERSON PRACTICE / AGENT SYSTEMS, FORMAL METHODS, EVIDENCE I build agent systems that can prove what they did. This site explains the work. The public agent-skills repository holds the source. Browse here, or open the repository directly and ask your agent ",
+          "rect": {
+            "x": 0,
+            "y": 66.74073791503906,
+            "width": 1425.1851806640625,
+            "height": 1591.638916015625,
+            "bottom": 1658.379653930664
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.74073791503906,
+          "width": 1425.1851806640625,
+          "height": 833.2592620849609,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "search",
+      "route": "/#search",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-01-search.png",
+      "sha256": "7e4cf040af0f1c6b3dae5424bda2f4a50cb701e962206ae9e80b85757491c815",
+      "dimensions": {
+        "width": 1425,
+        "height": 834
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 14.837,
+        "stddev": 20.952,
+        "bright_ratio": 0.02184
+      },
+      "page_state": {
+        "id": "search",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 1616.5926513671875,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "search",
+          "selector": "#search",
+          "text": "Pick a repo question. The map returns the public skill, project route, proof boundary, and visible gap an agent can inspect. Search by problem, capability, or evidence question. The answer is a source trail, not a sales claim. What should your agent inspect? t",
+          "rect": {
+            "x": 0,
+            "y": 66.49073791503906,
+            "width": 1425.1851806640625,
+            "height": 1617.9722900390625,
+            "bottom": 1684.4630279541016
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.49073791503906,
+          "width": 1425.1851806640625,
+          "height": 833.5092620849609,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "work",
+      "route": "/#work",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-02-work.png",
+      "sha256": "945c9a661a061a7c15c939bdaf91ff4e7b1284dec1d68651b3e008434b0e2cdf",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 17.552,
+        "stddev": 28.835,
+        "bright_ratio": 0.03179
+      },
+      "page_state": {
+        "id": "work",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 3234.370361328125,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "work",
+          "selector": "#work",
+          "text": "TAU PUBLIC PROOF DOSSIERS Ten questions with code, checks, and gaps. REPO-LINKED \u00b7 EACH CASE STATES HOW FAR EVIDENCE GOES Agentic pipelines & orchestration 49 SKILLS Reliable agent execution and orchestration \u2014 contracts, transport, and runtime truth. surf \u00b7 t",
+          "rect": {
+            "x": 0,
+            "y": 66.68518829345703,
+            "width": 1425.1851806640625,
+            "height": 5562.212890625,
+            "bottom": 5628.898078918457
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.68518829345703,
+          "width": 1425.1851806640625,
+          "height": 833.314811706543,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "competence",
+      "route": "/#competence",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-03-competence.png",
+      "sha256": "496df96f3ca15bd9e0dbd48b475e052f6d0e9574f1ed3c2f35f3b21184290060",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 16.748,
+        "stddev": 23.767,
+        "bright_ratio": 0.02128
+      },
+      "page_state": {
+        "id": "competence",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 8797.6298828125,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "competence",
+          "selector": "#competence",
+          "text": "CORPUS DECLARED DISCIPLINES What the work adds up to. DISCIPLINES THE SKILLS DECLARE \u2014 COUNTS, NOT RATINGS Not a self-graded skills chart. Each row is a discipline the skills tag themselves with; the number is how many actually do, and the projects are where y",
+          "rect": {
+            "x": 0,
+            "y": 66.6388931274414,
+            "width": 1425.1851806640625,
+            "height": 1517.888916015625,
+            "bottom": 1584.5278091430664
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.6388931274414,
+          "width": 1425.1851806640625,
+          "height": 833.3611068725586,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "dream",
+      "route": "/#dream",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-04-dream.png",
+      "sha256": "a53812687f813a3fcc105760e1d1ac949a846df4627c410d5eb87ecfc80e209e",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 19.473,
+        "stddev": 30.01,
+        "bright_ratio": 0.04234
+      },
+      "page_state": {
+        "id": "dream",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 10316.4443359375,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "dream",
+          "selector": "#dream",
+          "text": "STUDY PERSONA-DREAM Can a persona dream itself a personality? Not a movie generator: a preregistered study. The question: does letting a persistent voice persona dream about its experience actually help, beyond plainly remembering \u2014 and is it still itself afte",
+          "rect": {
+            "x": 0,
+            "y": 66.71296691894531,
+            "width": 1425.1851806640625,
+            "height": 1428.27783203125,
+            "bottom": 1494.9907989501953
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.71296691894531,
+          "width": 1425.1851806640625,
+          "height": 833.2870330810547,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "ledger",
+      "route": "/#ledger",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-05-ledger.png",
+      "sha256": "9e471e6dc5e12c9843b83a46d2bb8c1ac0cf517863daf2ec17e4ca48fe331bb4",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.764,
+        "stddev": 39.675,
+        "bright_ratio": 0.09274
+      },
+      "page_state": {
+        "id": "ledger",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 11744.5927734375,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "ledger",
+          "selector": "#ledger",
+          "text": "LEDGER AGENT-SKILLS SOURCE MAP Every contract, including the ones without checks. 344 One cell per skill contract \u2014 each links to its SKILL.md. Filled cells carry a sanity check; outlined cells are contract-only. The gaps stay visible on purpose \u2014 a practice b",
+          "rect": {
+            "x": 0,
+            "y": 66.84259033203125,
+            "width": 1425.1851806640625,
+            "height": 1761.4166259765625,
+            "bottom": 1828.2592163085938
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.84259033203125,
+          "width": 1425.1851806640625,
+          "height": 833.1574096679688,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "proof",
+      "route": "/#proof",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-06-proof.png",
+      "sha256": "1f9c89bf0b13f938c6667ea2e03ff17d99088ea856d39c9727897b1030550e74",
+      "dimensions": {
+        "width": 1425,
+        "height": 834
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 19.993,
+        "stddev": 27.501,
+        "bright_ratio": 0.02919
+      },
+      "page_state": {
+        "id": "proof",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 13507.5556640625,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "proof",
+          "selector": "#proof",
+          "text": "TAU HOW PROOF WORKS One real run, from goal to receipt. Not a diagram of an idealised pipeline: the actual tau roundtable that designed this page, walked stage by stage. Each step resolves to a real immutable artifact you can hash-check, and each one says plai",
+          "rect": {
+            "x": 0,
+            "y": 66.29629516601562,
+            "width": 1425.1851806640625,
+            "height": 1927.787109375,
+            "bottom": 1994.0834045410156
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.29629516601562,
+          "width": 1425.1851806640625,
+          "height": 833.7037048339844,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "receipts",
+      "route": "/#receipts",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-07-receipts.png",
+      "sha256": "a87ae7605401cb2818742b6f2f6053c97359957c33ecb0514a38e599b78a046a",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 91.605,
+        "stddev": 101.663,
+        "bright_ratio": 0.35865
+      },
+      "page_state": {
+        "id": "receipts",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 15435.8515625,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "receipts",
+          "selector": "#receipts",
+          "text": "RECEIPTS BOUNDED EVIDENCE No claim ships without one. Three excerpts, printed as they came out of gen_artifacts.py: a node receipt from the roundtable run that designed this page, a captured audit, and the provenance of the numbers above. Missing sources stay ",
+          "rect": {
+            "x": 0,
+            "y": 66.78704071044922,
+            "width": 1425.1851806640625,
+            "height": 910.388916015625,
+            "bottom": 977.1759567260742
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.78704071044922,
+          "width": 1425.1851806640625,
+          "height": 833.2129592895508,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "about",
+      "route": "/#about",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-08-about.png",
+      "sha256": "73e7f3d12bd73fcdc6dba6610aea33aaa28fc1c7bb9ac343e29e59042958cb1f",
+      "dimensions": {
+        "width": 1425,
+        "height": 833
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 20.118,
+        "stddev": 27.283,
+        "bright_ratio": 0.02886
+      },
+      "page_state": {
+        "id": "about",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 16347.2587890625,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "about",
+          "selector": "#about",
+          "text": "PERSON ACCOUNTABILITY An unusual path, on purpose. An unconventional path is an advantage on problems with no playbook. One person also means direct accountability \u2014 the person you meet is the person who investigates, architects, builds, and answers for the re",
+          "rect": {
+            "x": 0,
+            "y": 66.76851654052734,
+            "width": 1425.1851806640625,
+            "height": 973.2963256835938,
+            "bottom": 1040.064842224121
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.76851654052734,
+          "width": 1425.1851806640625,
+          "height": 833.2314834594727,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    },
+    {
+      "status": "PASS",
+      "id": "contact",
+      "route": "/#contact",
+      "viewport_id": "desktop-1440",
+      "viewport": {
+        "id": "desktop-1440",
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-09-contact.png",
+      "sha256": "b02f291aef0aa119f66f4d8094a099d46044a1e1477d4d7b5b5b49ac78014d0a",
+      "dimensions": {
+        "width": 1425,
+        "height": 689
+      },
+      "image_stats": {
+        "attempt": 1,
+        "mean": 22.079,
+        "stddev": 37.875,
+        "bright_ratio": 0.05231
+      },
+      "page_state": {
+        "id": "contact",
+        "url": "http://127.0.0.1:3003/",
+        "title": "Graham Anderson \u2014 agent systems that prove what they did",
+        "scrollY": 17320.888671875,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1.0000000074505806
+        },
+        "section": {
+          "id": "contact",
+          "selector": "#contact",
+          "text": "NEXT EVIDENCE-FIRST WORK Bring me the project you shelved. The one with no playbook \u2014 the one that stalled because it needed both halves of the job. Good fits: Stalled multi-agent orchestration \u2014 pipelines that demo well but fail silently or drift in productio",
+          "rect": {
+            "x": 0,
+            "y": 66.43518829345703,
+            "width": 1425.1851806640625,
+            "height": 688.120361328125,
+            "bottom": 754.555549621582
+          }
+        },
+        "nav": {
+          "bottom": 58.592594146728516
+        },
+        "clip": {
+          "x": 0,
+          "y": 66.43518829345703,
+          "width": 1425.1851806640625,
+          "height": 688.120361328125,
+          "scale": 1
+        }
+      },
+      "intended_proof": "Surf CDP section/page-state crop at a responsive viewport; not a full-page or whole-site screenshot."
+    }
+  ],
+  "failures": [],
+  "contact_sheet": {
+    "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/contact-sheet.png",
+    "sha256": "56b80650624269c972f27c00c9c72d9d8ae57cc3e0af8587585d9d0a4f65f1e3"
+  },
+  "viewport_contact_sheets": [
+    {
+      "viewport_id": "phone-390",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-390-contact-sheet.png",
+      "sha256": "b75ea47dd5961e09960ca0be5fcdc83c9643c71765453d512feb6b21fb71d654"
+    },
+    {
+      "viewport_id": "phone-430",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/phone-430-contact-sheet.png",
+      "sha256": "1d864e936ef98004582bd540c55bc8993cefb268616b22041de90274f2bd9712"
+    },
+    {
+      "viewport_id": "tablet-768",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/tablet-768-contact-sheet.png",
+      "sha256": "674bdaaa612c52f5233a37f0f7cf6e9929cff05aeeeaf50ae8324b0109c17cf3"
+    },
+    {
+      "viewport_id": "desktop-1366",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1366-contact-sheet.png",
+      "sha256": "5f94ba9fa16682ab43fabc59b84537be30431f7cfb34b445dbc145988c03094f"
+    },
+    {
+      "viewport_id": "desktop-1440",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/desktop-1440-contact-sheet.png",
+      "sha256": "50aa4a70894819af72e4a737b86f661524f10bf823f2c1455bc77e51f8bc806a"
+    }
+  ],
+  "section_contact_sheets": [
+    {
+      "section_id": "top",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-top-contact-sheet.png",
+      "sha256": "d64e5306ebdd8897b29d71bd484256c5c6c9d4a99507df314e6471d10c1afb2c",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "search",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-search-contact-sheet.png",
+      "sha256": "aa96928d916a683880a6b168df287232d43eef45d506af58da5dfdafbce7d41d",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "work",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-work-contact-sheet.png",
+      "sha256": "3f3a801d7cbc9ab4744ad6edf8ef70bdb7f1498f53c883876610c8ef3989ab39",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "competence",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-competence-contact-sheet.png",
+      "sha256": "8d64b11c0be4b52ae8b349d154ad634c3c5536d0cca15b8f34393a85b81eceeb",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "dream",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-dream-contact-sheet.png",
+      "sha256": "586798b9a15fd2b54f8e7cb081573785be20a8aba02b4ecbf91d01ce50a8e83f",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "ledger",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-ledger-contact-sheet.png",
+      "sha256": "309c456d3d45ffe7cdf8e1f2f6f0d3fe51a8173c1c72d083086b74961cff5f91",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "proof",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-proof-contact-sheet.png",
+      "sha256": "2446f09ec16d2117b2a45c65063fa7f6b1c9a7add19dc4f0067f1539607e3ab6",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "receipts",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-receipts-contact-sheet.png",
+      "sha256": "11c074f665839058a1b230697902274605f0c7f745bf2757bf258b808fa76db1",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "about",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-about-contact-sheet.png",
+      "sha256": "64740b36b2abe288f8699ff41b4eca818eed8a057077dfa3cf77c981cdd31b28",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    },
+    {
+      "section_id": "contact",
+      "path": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260810T014115Z/section-contact-contact-sheet.png",
+      "sha256": "3c5b4f84d0038bd8e6ed7a739e121873735d0870f09f3f1a55b172d37075fee2",
+      "viewports": [
+        "phone-390",
+        "phone-430",
+        "tablet-768",
+        "desktop-1366",
+        "desktop-1440"
+      ]
+    }
+  ],
+  "does_not_prove": [
+    "blind-rater distinctiveness",
+    "WCAG 2.2 AA completion",
+    "performance budgets",
+    "independent finish-loop review",
+    "full bespoke-design READY status"
+  ]
+}

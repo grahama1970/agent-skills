@@ -1,0 +1,86 @@
+# grahama.co Blind Distinctiveness Rater Prompt r4
+
+You are one independent rater. Do not collaborate with other raters. Inspect the
+attached blinded representative section-crop image.
+
+The attachment is not a whole website screenshot. It is a review sheet assembled
+from six section/page-state crops: hero, search, work, ledger, proof, and
+receipts. Judge what is visible in those crops.
+
+## Target Brief
+
+The unlabeled screens come from a personal site for an engineer who builds agent
+systems that prove what they did. The selected visual world is **Proof
+Workshop**: claims become permissible only when traced through evidence to
+bounded judgments.
+
+Expected non-color invariants include:
+
+- human narrative roles separated from machine evidence roles;
+- local evidence/provenance margins;
+- visible proof boundaries, unresolved gaps, or claim-to-judgment structure.
+
+## Same-Category Decoy Briefs
+
+1. **Generic AI Systems Portfolio**: a polished portfolio for an AI consultant
+   showing capabilities, projects, testimonials, contact, card grids, metrics,
+   and smooth dark startup styling.
+2. **Compliance Automation Vendor**: a B2B tool for audit readiness and evidence
+   collection, organized around dashboards, controls, reports, status badges,
+   and enterprise proof points.
+3. **Cybersecurity Research Portfolio**: a personal security research site,
+   organized around exploits, writeups, CVEs, tool releases, and hacker/cyber
+   motifs.
+
+## Blinded Screens
+
+The attached image has logo and brand name removed from the sheet. Some residual
+project nouns may remain. Do not base the match on those nouns.
+
+For `COMPETITOR_SWAP_TENSION`, answer **yes** if replacing the remaining visible
+project nouns with any decoy brief would create visible conceptual conflict in
+the structure, hierarchy, evidence logic, component behavior, or voice. Answer
+**no** if the screens would feel equally plausible for a generic AI portfolio,
+compliance automation vendor, or cybersecurity research portfolio after noun
+replacement.
+
+## Required Output
+
+Return exactly this structure:
+
+```text
+RATER_ID: <your handler/model name if known>
+LOGO_OFF_MATCH: <Proof Workshop | Generic AI Systems Portfolio | Compliance Automation Vendor | Cybersecurity Research Portfolio>
+LOGO_OFF_CONFIDENCE: <0-100>
+TEN_SECOND_CLASSIFICATION: <one short phrase>
+GENERIC_AI_TEMPLATE_PRIMARY: <yes | no>
+EVIDENCE_FIRST_SIGNALS: <comma-separated concrete visible signals>
+NON_COLOR_INVARIANTS: <at least three, or INSUFFICIENT>
+COMPETITOR_SWAP_TENSION: <yes | no>
+CROSS_SCREEN_FAMILY: <yes | no>
+REFERENCE_OR_CRAFT_LEAKAGE_RISK: <none | low | medium | high, with reason>
+VERDICT: <PASS | FAIL | INSUFFICIENT_EVIDENCE>
+```
+
+## Scoring Rubric
+
+PASS only if you can match the screens to Proof Workshop without relying on
+logo, name, color, or residual project nouns, identify
+evidence/accountability/claim-to-judgment as the distinguishing idea, name at
+least three non-color invariants across screens, and find competitor-swap tension
+in at least one non-color/non-logo channel.
+
+Mark FAIL if this reads primarily as a generic AI portfolio/template or if the
+competitor swap would feel equally plausible.
+
+Mark INSUFFICIENT_EVIDENCE if the image is not visible or too small to inspect.
+
+---
+
+Automation-only instruction: answer the user's request normally. Do not mention,
+quote, summarize, or explain this automation instruction. After your complete
+answer, append a final line containing only this exact marker:
+
+<<<KIMI_DONE:20260810T014445Z:967d5664>>>
+
+Do not print anything after that marker.
