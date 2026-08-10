@@ -1,0 +1,96 @@
+{
+  "schema": "grahama.g11_failure_handoff.v1",
+  "generated_at": "2026-08-10T00:24:00Z",
+  "status": "HUMAN_REVIEW_REQUIRED",
+  "formal_status": "FAIL_NOT_READY",
+  "stop_condition": "No further solo design/rater loops until the human decides whether to change the design, change the G11 gate/prompt, or pause for clean independent provider seats.",
+  "webgpt_advisory": {
+    "transport": "direct_surf_webgpt_submit",
+    "response": "site/design-roundtable/g11-failure-handoff-20260810T0024Z/webgpt-advisory.response.md",
+    "meta": "site/design-roundtable/g11-failure-handoff-20260810T0024Z/webgpt-advisory.meta.json",
+    "receipt": "site/design-roundtable/g11-failure-handoff-20260810T0024Z/webgpt-advisory.receipt.json",
+    "status": "completed",
+    "proof_status": "response_proven",
+    "submitted_to_chatgpt": true,
+    "chatgpt_too_many_requests_detected": false,
+    "verdict": "STOP_SOLO",
+    "does_not_prove": [
+      "G11 pass",
+      "formal bespoke-design readiness",
+      "a blind rater seat"
+    ]
+  },
+  "ask_tau_attempt": {
+    "requested_handler": "webgpt",
+    "actual_handler": "webgemini",
+    "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-use-webgpt-to-review-the-attache-852420d2eda4",
+    "provider_selection": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-use-webgpt-to-review-the-attache-852420d2eda4/browser-provider-selection.json",
+    "status": "DEGRADED",
+    "note": "Ask provider selection removed WebGPT because an older ChatGPT tab still showed a Too many requests modal, even though direct fresh WebGPT transport was proven afterward."
+  },
+  "formal_gate": {
+    "command": "skills/monitor-website/run.sh design-world-check --json",
+    "output": "site/design-roundtable/g11-failure-handoff-20260810T0024Z/design-world-check.json",
+    "exit_code_file": "site/design-roundtable/g11-failure-handoff-20260810T0024Z/design-world-check.exitcode",
+    "status": "FAIL",
+    "blocking_gate": "distinctiveness_blind",
+    "usable_raters": 4,
+    "competitor_swap_tension_yes": 1,
+    "required_competitor_swap_tension_yes": 4
+  },
+  "render_corpus": {
+    "manifest": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260809T213528Z/manifest.json",
+    "contact_sheet": "site/design-roundtable/rendered-screens/responsive-section-corpus-20260809T213528Z/contact-sheet.png",
+    "viewports": 5,
+    "sections": 10,
+    "screenshots": 50,
+    "failures": 0
+  },
+  "stored_rater_outputs": [
+    {
+      "rater_id": "rater-01-webgpt",
+      "path": "site/design-roundtable/rater-outputs/rater-01-webgpt.md",
+      "usable": true,
+      "competitor_swap_tension": false
+    },
+    {
+      "rater_id": "rater-02-webgrok",
+      "path": "site/design-roundtable/rater-outputs/rater-02-webgrok.md",
+      "usable": true,
+      "competitor_swap_tension": false,
+      "excluded_from_next_run": true,
+      "excluded_reason": "human_excluded_grok"
+    },
+    {
+      "rater_id": "rater-03-webgpt",
+      "path": "site/design-roundtable/rater-outputs/rater-03-webgpt.md",
+      "usable": true,
+      "competitor_swap_tension": true
+    },
+    {
+      "rater_id": "rater-04-webgrok",
+      "path": "site/design-roundtable/rater-outputs/rater-04-webgrok.md",
+      "usable": true,
+      "competitor_swap_tension": false,
+      "excluded_from_next_run": true,
+      "excluded_reason": "human_excluded_grok"
+    },
+    {
+      "rater_id": "rater-05-webgemini",
+      "usable": false,
+      "competitor_swap_tension": null,
+      "unusable_reason": "BROWSER_ATTACHMENT_UNAVAILABLE",
+      "ask_run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/grahama-g11-webgemini-rater-03-20260809T1828"
+    }
+  ],
+  "local_summary_artifacts": [
+    "local/HANDOFF.md",
+    "site/design-roundtable/g11-tension-rationales.r1.json"
+  ],
+  "do_not_do": [
+    "do not push this version to grahama.co",
+    "do not claim formal bespoke-design pass",
+    "do not count WebGPT advisory as a blind rater",
+    "do not run another broad solo redesign loop from this state"
+  ]
+}

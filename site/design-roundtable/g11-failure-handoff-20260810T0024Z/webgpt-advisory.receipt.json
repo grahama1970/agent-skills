@@ -1,0 +1,19 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/tmp/webgpt-monitor-website-inline-advisory-request.md",
+  "submitted_output": "/tmp/webgpt-monitor-website-inline-advisory.submitted.md",
+  "output": "/tmp/webgpt-monitor-website-inline-advisory.response.md",
+  "raw_output": "/tmp/webgpt-monitor-website-inline-advisory.raw.md",
+  "meta_output": "/tmp/webgpt-monitor-website-inline-advisory.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260810T002256Z:4da08c6c>>>",
+  "requested_tab_id": "837381732",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "attach_file": null,
+  "attachment_paths": [],
+  "receipt_at": "2026-08-10T00:23:02Z"
+}
