@@ -95,6 +95,23 @@ Use one of three explicit modes:
 - **AUDIT** — test an existing design for specificity, coherence, usability,
   accessibility, system depth, and template residue.
 
+## Evidence Tiers
+
+Do not run the formal certification path when the human only needs a design
+decision, release-risk read, or next repair slice. Choose the lightest tier that
+answers the current decision and state the tier in every report.
+
+| Tier | Use when | Evidence required | Legal conclusion |
+| --- | --- | --- | --- |
+| `directional` | Choosing or improving a concept | source claims, rendered crops, concrete critique | `promising`, `needs repair`, or `not established` |
+| `release-risk` | Deciding whether to keep, patch, or deploy a public candidate | current local render, focused checks, known gaps, highest-risk reviewer input | `credible with gaps`, `hold release`, or `ready for bounded deployment` |
+| `formal-certification` | The human asks for `READY`, a final gate, or adversarial proof | every required G0-G20 gate with current receipts | `READY` only when every gate is `PASS` |
+
+Default to `release-risk` for live website work. Escalate to
+`formal-certification` only when the human explicitly asks for formal READY,
+when a deployment policy requires it, or when the disputed claim is itself a
+formal gate. A `release-risk` pass is not a `formal-certification` pass.
+
 ## Required Inputs
 
 Before art direction, collect or mark missing:
@@ -207,111 +224,64 @@ designer, or stakeholder says it feels special.
 
 ## Protocol
 
-### Phase 0 — Goal and Provenance Lock
+### Live Collaboration Ledger
 
-1. State the user job, primary object, primary decision, and source of truth.
-2. Freeze the evidence bundle or record exact source versions.
-3. Separate facts, stakeholder preferences, designer hypotheses, and references.
-4. Define what must remain editable and what may be rasterized.
-5. Pre-register required gates and rater thresholds.
+For live site work, audits, amend loops, and disputed reviews, keep a compact
+phase ledger visible to the human. If the human cannot tell where the agent is,
+what is known, what is unknown, and what command comes next, the process is
+anti-collaborative and the gate is `NOT_READY`.
 
-Stop if the goal or authoritative content is unavailable.
+Every status update and handoff must name:
 
-### Phase 1 — Extract the Brand's Own Material
+- active evidence tier, phase, and gate;
+- primary lane;
+- current artifact path or source file;
+- last command run and concrete result;
+- facts established locally;
+- unknowns and `NOT_TESTED` items;
+- current blocker, if any;
+- next deterministic command;
+- stop condition for the current lane.
 
-Build the evidence ledger and identify:
+Only one lane may be primary at a time. If implementation, screenshot capture,
+reviewer submission, and skill-contract repair all appear relevant, declare the
+primary lane and freeze the others until that lane has an artifact or an explicit
+blocker. Do not let a final proof packet, a design critique, a site patch, and a
+tool-debug session run as one blended task.
 
-- repeated nouns, verbs, metaphors, and contrasts;
-- origin stories and credible cultural context;
-- audience language from interviews, support, sales, or research;
-- product mechanics that can become structural metaphors;
-- tensions competitors flatten or ignore;
-- claims that should remain visually quiet because they require careful reading.
+### Lean Default Loop
 
-Prefer first-party language and observed behavior over trend references.
+The normal loop is small and visible:
 
-### Phase 2 — Create Three Genuine Territories
+1. Name the current tier, lane, and stop condition.
+2. Capture or inspect section/component/page-state crops for the surface under
+   discussion.
+3. Ask one direct design question: what should change next, and why?
+4. Apply the smallest repair that improves the brand-derived world without
+   broad redesign.
+5. Re-render the same crop set and report what changed, what remains untested,
+   and whether escalation is needed.
 
-Produce three concept territories that differ in all of these dimensions:
+Do not create dashboards, broad orchestration, multi-tab browser campaigns, or
+full G0-G20 proof packets before this loop has answered the immediate decision.
+If the loop fails twice on the same blocker, preserve the two receipts and ask
+for a reviewer or human decision instead of expanding the machinery.
 
-- semantic premise;
-- emotional posture;
-- typographic voice;
-- composition model;
-- image or illustration logic;
-- primary motif;
-- interaction or motion behavior.
+### Phase Summary
 
-Three palettes applied to the same wireframe count as one territory.
+Use the full phase detail only when it helps the current tier:
+`references/workflow-phases.md`.
 
-For each territory, supply:
-
-- premise sentence;
-- evidence mappings;
-- a hero, an interior content section, and a transactional/dense section;
-- one mobile composition;
-- risks, exclusions, and implementation cost;
-- the reason this territory belongs to this brand rather than the designer.
-
-### Phase 3 — Select by Fit, Not Prettiness
-
-Use a must-pass matrix. A territory is inadmissible if it fails any of:
-
-- claim and audience fit;
-- content hierarchy;
-- semantic distinctiveness from competitors;
-- ability to scale beyond one composition;
-- accessibility feasibility;
-- responsive feasibility;
-- implementation/editability feasibility.
-
-After must-pass checks, the human may choose based on taste. Preserve the human's
-named decision and the rejected alternatives.
-
-### Phase 4 — Write the Grammar Before Expanding Screens
-
-Create the visual-world brief using `references/visual-world-brief.yaml`.
-Specify a small number of strong rules and explicit exclusions. Include a
-“controlled abundance map” that marks where visual richness is allowed and where
-reading or task completion must remain calm.
-
-### Phase 5 — Compose the Page as a Story
-
-For every page, write a beat sheet before polishing:
-
-1. orientation;
-2. tension or question;
-3. explanation;
-4. proof;
-5. consequence;
-6. next action.
-
-Vary the sequence when the user job requires it. Do not force every page into a
-hero / three cards / logo strip / CTA template.
-
-### Phase 6 — Build in the Browser Early
-
-Prototype the selected territory in the target rendering environment before
-high-fidelity approval. Test real type wrapping, real content density, interaction,
-scroll rhythm, image loading, and breakpoint behavior.
-
-A flat mockup may approve direction. It cannot prove responsive composition,
-focus behavior, motion, text reflow, or implementation fidelity.
-
-### Phase 7 — Systemize Without Genericizing
-
-For each component, record:
-
-- semantic purpose;
-- content constraints;
-- identity-bearing rules;
-- variants and states;
-- responsive transformation;
-- accessibility behavior;
-- examples where the component must not be used.
-
-Reject components that exist only because a generic design system normally has
-them. Add components when real content or user jobs require them.
+| Phase | Output | Stop condition |
+| --- | --- | --- |
+| 0 Goal/provenance | user job, primary object, source of truth | content or authority missing |
+| 1 Brand material | evidence ledger | visual idea lacks source evidence |
+| 2 Territories | three genuinely different directions | territories differ only by style |
+| 3 Selection | chosen direction and rejected alternatives | no human selection for implementation |
+| 4 Grammar | `visual-world-brief.yaml` | rules are vague or decorative |
+| 5 Page story | beat sheet per page | page falls back to template sequence |
+| 6 Browser build | rendered prototype | browser disproves the composition |
+| 7 System | component rules and states | identity exists only on homepage |
 
 ### Phase 8 — Render the Stress Corpus
 
@@ -330,71 +300,84 @@ Render at minimum:
 
 Use real or claim-valid content, not lorem ipsum, for acceptance.
 
+The stress corpus must be reviewable without panning through a tall page strip.
+Do not use one full-page or whole-site screenshot as the evaluation unit.
+Full-page captures are navigation/debug artifacts only. Acceptance evidence must
+be split into section, component, or page-state screenshots, each cropped to the
+evaluated surface and recorded in a manifest with route, selector or section id,
+viewport, scroll state, fixture/state, dimensions, screenshot path, capture tool,
+and what the crop is meant to prove. If a section exceeds a practical review
+height, split it into ordered sub-crops. Raters receive those crops, or compact
+contact sheets assembled from those crops, never a single unreadable full-site
+image as primary evidence.
+
 ### Phase 9 — Run Adversarial Distinctiveness Tests
 
-#### A. Logo-Off Recognition
+G11 is a composite gate, not a single vague reviewer verdict. Status reports and
+receipts must expose these child states separately:
 
-Remove brand name and logo. Fresh-context raters receive the target brief and at
-least three same-category decoy briefs. They match unlabeled screens to briefs and
-explain the evidence. Pre-register the threshold; default is at least 80% correct
-across five raters and three representative screens.
+- `corpus_current` — the section/component/page-state crop manifest exists,
+  hashes match, counts are nonzero, and failures are zero;
+- `section_crop_review_units` — the rater input uses reviewable crops or contact
+  sheets assembled from crops, not one whole-site image;
+- `fresh_rater_set_complete` — at least the pre-registered number of fresh,
+  usable rater records exists for the current corpus;
+- `raw_outputs_preserved` — every counted rater has raw and parsed outputs;
+- `aggregate_replay_ready` — aggregate counts can be reconciled from counted
+  rater records;
+- `thresholds_met` — logo-off, competitor-swap, cross-screen-family,
+  generic-template, and leakage thresholds pass.
 
-#### B. Competitor Swap
+If the crop corpus is current but fresh raters are absent, G11 is `NOT_TESTED`
+with next lane `rater_submission`. If the fresh rater set is complete and a
+threshold fails, G11 is `FAIL`, not `NOT_TESTED`. Transport acknowledgements,
+old browser tabs, previous-corpus rater results, and advisory reviewer responses
+must never be counted as G11 rater evidence.
 
-Replace the visible name, logo, and key nouns with a close competitor. If the
-composition, metaphors, and component behavior still feel equally plausible, the
-design is generic and fails.
+#### Default Reviewer Workflow
 
-#### C. Motif Semantics
+The default G11 path is simple and bounded:
 
-List every repeated decorative or structural motif. Each must have a documented
-meaning or job. Remove unsupported motifs.
+1. Render section, component, or page-state crops with a manifest.
+2. Assemble reviewable contact sheets from those crops.
+3. Submit the same crop packet to a small fresh rater set, preferably distributed
+   across WebClaude, WebGPT, WebKimi, and WebGemini when those lanes are
+   available.
+4. Ask each rater to answer the registered logo-off, competitor-swap,
+   cross-screen-family, template-residue, and leakage questions directly.
+5. Aggregate the raw answers into the G11 subgates.
 
-#### D. Cross-Screen Family
+Do not build a larger orchestration system, dashboard, or multi-hour browser
+campaign before this path has been attempted. A model that can see the section
+crops is expected to judge the section-level design questions directly; use the
+formal receipt to preserve that judgment, not to make the review process more
+complex than the design question.
 
-Review three dissimilar page types without logo or shared hero art. Raters must
-recognize one system through at least three non-color invariants.
+Browser tab budget is part of the gate UX. A normal G11 run should use no more
+than one controlled reviewer tab per backend plus one local site tab. Opening a
+new tab per rater, retry, or prompt variant is a process failure unless a prior
+tab is explicitly closed or documented as unusable. If three reviewer attempts in
+one provider family fail with the same transport, upload, context-length, or
+rate-limit signature, stop that provider family, preserve the three receipts, and
+continue with other providers or mark the remaining seats
+`blocked_by_systemic_failure`. Do not open parallel tabs to outrun the failure.
 
-#### E. Reference Leakage
-
-Compare against all inspiration references. Fail if the candidate reproduces a
-reference's distinctive combination of subject, layout, type treatment, palette,
-illustration, or copy rather than transforming underlying principles.
-
-#### F. Template Residue
-
-Identify structures that arrived from a starter kit or trend rather than the
-brief. Every retained generic pattern must earn its place through usability,
-content, or implementation need and must be integrated into the selected grammar.
+Run the registered G11 questions: logo-off recognition, competitor swap, motif
+semantics, cross-screen family, reference leakage, and template residue. The full
+formal threshold table lives in `references/formal-certification.md`.
 
 ### Phase 10 — Accessibility and Performance Gates
 
-Require at minimum:
-
-- WCAG 2.2 AA review, including visible and unobscured keyboard focus, target size,
-  contrast, semantics, text resize/reflow, and alternatives for non-text content;
-- keyboard completion of all actions;
-- a reduced-motion path that removes or replaces non-essential motion;
-- field or representative performance evidence for LCP, INP, and CLS;
-- no identity-critical information conveyed by color, animation, texture, or
-  position alone.
-
-Do not claim a reference site or candidate passes these gates without testing it.
+Run these only for `release-risk` or `formal-certification` tiers unless the
+human asks specifically about accessibility or performance. The detailed checklist
+lives in `references/workflow-phases.md`.
 
 ### Phase 11 — Emit the Proof Packet
 
-Required artifacts:
-
-- `evidence-ledger.yaml`;
-- `visual-world-brief.yaml`;
-- three territory boards and selection record;
-- component and page inventory;
-- screenshot manifest with viewport, state, and content fixture;
-- accessibility and performance receipts;
-- blind-rater inputs and raw outputs;
-- `bespoke-design-receipt.json` validated against
-  `schemas/bespoke-design-receipt.schema.json`;
-- exact source revision and implementation revision.
+Emit a proof packet only for `formal-certification` or when the human requests a
+durable receipt. Receipt evidence must be current to the implementation it
+claims; stale receipts make the affected gate `NOT_TESTED` or `FAIL`. Required
+artifact detail lives in `references/workflow-phases.md`.
 
 Run:
 
@@ -445,6 +428,8 @@ Reject these shortcuts:
 - using image generation to fabricate evidence or cultural specificity;
 - hiding weak information architecture under decorative density;
 - approving desktop beauty while mobile becomes a stacked residue;
+- sending a whole website screenshot to a web LLM as the primary design-review
+  artifact; use section/page-state crops with a manifest instead;
 - claiming accessibility, performance, usability, originality, or shipped impact
   from screenshots alone;
 - replacing all standard controls with novel interactions that reduce clarity.
@@ -452,113 +437,14 @@ Reject these shortcuts:
 ## Acceptance Gate
 
 Every required gate uses one of `PASS`, `FAIL`, `NOT_TESTED`, or `BLOCKED`.
-`READY` is legal only when every required gate is `PASS`.
+`READY` is legal only in `formal-certification` tier when every required gate is
+`PASS`. In `directional` and `release-risk` tiers, report a bounded decision and
+the missing formal gates; do not block useful repair work on evidence that is not
+needed for the current decision.
 
-| Gate | Must prove | Automatic failure |
-| --- | --- | --- |
-| G0 Provenance | Exact sources and revisions are recorded | Missing or invented claims |
-| G1 User and content fit | Real jobs and real content shape hierarchy | Lorem-ipsum approval |
-| G2 Territory separation | Three semantically distinct directions | Same wireframe with skins |
-| G3 Narrative premise | One evidence-backed premise governs the system | Mood adjectives only |
-| G4 Typographic system | Roles, hierarchy, wrapping, and fallbacks work | Display type harms reading |
-| G5 Motif semantics | Every recurring motif has a meaning or job | Decorative residue |
-| G6 Composition | Grid, focal hierarchy, rhythm, and intentional ruptures | Repeated template sections |
-| G7 System depth | Identity survives pages, components, and states | Homepage-only identity |
-| G8 Responsive choreography | Layout is recomposed, not merely shrunk/stacked | Mobile residue |
-| G9 Accessibility | Required WCAG and interaction evidence passes | Prose-only claim |
-| G10 Performance | Pre-registered field/representative targets pass | Unmeasured heavy spectacle |
-| G11 Distinctiveness | Blind, swap, family, and leakage tests pass | Logo/color dependence |
-| G12 Implementation fidelity | Browser render matches approved grammar | Flat-mockup-only proof |
-| G13 Editability | Human can change required content/primitives | Flattened critical UI |
-| G14 Receipt integrity | Schema and artifact hashes validate | Missing or mutable evidence |
-| G15 Craft integrity | Every imperfection is real (authored/scanned), never simulated | Faked hand-drawn marks, random jitter, or distress on machine-output/evidence surfaces |
-| G16 Type fidelity (impeccable) | Display face character (compression, width, weight, contrast, terminals) matches the world | A face of different character — however well the layout matches |
-| G17 Material fidelity (impeccable) | Element material matches the world it implies | Flat CSS/clean vector where painted/textured/dimensional/photographic material is implied; CSS bevels, embossing, faked stamped-metal/chalk — **imitation material is the single most reliable mark of machine-made design** |
-| G18 Amend-loop integrity | An ordered finish-review ran; the applier ≠ the reviewer | One agent both found and applied a fix; no finish-review report |
-| G19 World persistence | `DESIGN.md`/`PRODUCT.md` written so a re-run extends the world | A re-run restarts the world instead of extending it |
-| G20 Asset provenance | Every raster/vector carries source + method ∈ {authored, scanned, photographed, licensed, synthetic-as-product} + license | An asset with no provenance, or generated art standing in as evidence |
-
-**Precedence (impeccable):** an open G16/G17 or a missing-signature-element
-contradiction outranks every polish item. A finish-review that leads with a craft
-nit while a type/material contradiction is open is itself a `FAIL`. Re-run G9
-(accessibility) and G10 (performance) after asset production — real material is
-the standard regression path.
-
-**Distinctness gate (multi-project):** when two projects share an owner, unlabeled
-screens from both go to raters against both briefs; `FAIL` below threshold, or if
-the two share ≥3 of {display-face character, palette anchor+field, motif family,
-composition model, chrome pattern}. Freeze a hashed direction-contract before the
-amend loop and declare `protected_invariants` (premise, motif family, type
-character, composition model, the ≥3 component invariants); changing one without a
-recorded amendment citing evidence/product-truth/accessibility/implementation is
-an automatic `FAIL`. Distinctiveness is **monotonic**: re-run the logo-off and
-competitor-swap on the post-finish artifact — any drop in recognition or rise in
-swap-plausibility fails, regardless of craft scores.
-
-## Amendment: AI-Generated-Template Residue
-
-Surface tells (palette, mono, rounded boxes) are cheap and are NOT proof of
-bespoke; the load-bearing tells are structural (uniform chrome, identical card
-grids, one global type setting, mono-on-human-labels). Rank structural
-distinctiveness above decoration, and never ship *simulated* craft (gate G15).
-Full guidance: `references/ai-template-residue.md`.
-
-## From audit to amendment — the amend loop (composes with `$impeccable`)
-
-This skill defines the standard; **executing the fixes is an amend loop**, adopted
-from `$impeccable`. An audit that only reports gates is a broken design process —
-the gates must drive edits until they pass. The loop:
-
-```
-direction contract → build / render → finish-review (ordered material fixes)
-→ apply fixes → produce real assets → re-render → re-review → document
-```
-
-Roles (delegate to `$impeccable`'s agents; this skill supplies the gate rubric
-they review against):
-
-- **Finish review** (`impeccable-finish-reviewer`): fresh eyes on the rendered
-  artifact return an **ordered list of material fixes**. Fidelity, **type**, and
-  **material** outrank craft nits — a missing signature element or contradicted
-  material outranks every polish point. The reviewer does not edit.
-- **Apply** (`impeccable-manual-edit-applier`): the parent applies the fixes; the
-  reviewer never edits its own findings.
-- **Assets** (`impeccable-asset-producer`): real raster/vector assets are produced
-  from approved references — **never generated to fake authenticity or evidence**
-  (this is where concept-art-as-evidence gets replaced with real artifact
-  portraits). Keep synthetic imagery only where it genuinely *is* the product.
-- **Document** (`impeccable-documenter`): persist the built world (`DESIGN.md` /
-  `PRODUCT.md`) so a re-run extends the world instead of restarting it.
-
-Iterate the loop until every required gate is `PASS` (or `NOT_TESTED` with the
-missing evidence named). Do not hand-simulate a creator/reviewer loop: compile it
-as a `$tau` creator-reviewer DAG (creator applies fixes, reviewer returns
-`VERDICT: PASS/FAIL` against these gates) and let `$tau` run it with receipts.
-
-### Guard: opinionated world, not a polished template (bespoke-design owns this)
-
-`$impeccable` optimizes *finish* against a chosen world and approved comp — which
-means it can replace one templated design with another well-executed but generic
-one. **This skill owns the direction; impeccable owns the finish.** Before the
-amend loop runs, and at every re-review, bespoke-design's gates must hold that the
-world is **opinionated and brand-derived**, not a comp swapped in for polish:
-
-- **G2 / G11 competitor-swap is the guard.** If the brand name, nouns, and logo
-  could be swapped for a competitor and the composition still feels equally
-  plausible, the world is a template — reject it however impeccable the finish.
-- The direction must be **traceable to the brand's own evidence and premise**
-  (Phase 1 ledger), take a **specific point of view**, and make choices a generic
-  polish pass would not (e.g. grahama.co's *claim→evidence→bounded-judgment*
-  premise, monospace-as-machine-evidence, receipt/proof-boundary motif; SPARTA
-  Explorer's governed-evidence-thread premise). An adaptation is legitimate only
-  when it cites the evidence, product truth, or accessibility need that forced it.
-- Impeccable's finish must **sharpen** that opinion (real materials, type
-  fidelity, real assets), never sand it into house style. A re-review that makes
-  the page more generic fails G6/G11 even if craft scores rise.
-
-For grahama.co and SPARTA Explorer specifically: the goal is a distinct,
-opinionated world each — not two projects converging on the same polished
-dark-editorial template.
+Formal certification details live in `references/formal-certification.md`. Keep
+the main workflow lean; load that reference only when formal READY is actually
+the current tier.
 
 ## Review Output
 
@@ -607,5 +493,7 @@ Stop and report the blocker when:
 - `references/owltastic-design-dna.md` — detailed analysis and evidence basis.
 - `references/visual-world-brief.yaml` — fillable art-direction contract.
 - `references/acceptance-tests.md` — test procedures and receipt requirements.
+- `references/workflow-phases.md` — detailed phase checklists for non-lean runs.
+- `references/formal-certification.md` — full G0-G20 gate and amend-loop detail.
 - `schemas/bespoke-design-receipt.schema.json` — machine-readable receipt shape.
 - `fixtures/` — positive and negative validation fixtures.
