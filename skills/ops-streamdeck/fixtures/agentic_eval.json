@@ -59,6 +59,24 @@
           "\"command\""
         ]
       }
+    },
+    {
+      "name": "all-button-states-are-readable",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "audit-states"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"nonempty_states\"",
+          "\"states\"",
+          "\"ok\": true"
+        ]
+      }
     }
   ]
 }

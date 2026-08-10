@@ -49,6 +49,7 @@ COMMANDS:
     daemon          Daemon management commands
     button          Button operation commands
     status          Status query commands
+    audit-states    Non-mutating audit of all configured button states
     config          Configuration commands
     health-check    Verify services and button icons
     fix             Auto-fix button configuration (safe)
@@ -78,6 +79,9 @@ STATUS COMMANDS:
     status             Get overall daemon status
     status --json      Get status in JSON format
     status --buttons    Get button states
+
+AUDIT COMMANDS:
+    audit-states       Validate every configured page/button/state without executing commands
 
 CONFIG COMMANDS:
     config             Show current configuration
@@ -274,6 +278,136 @@ deck_id = list(cfg['state'].keys())[0]
 btn = cfg['state'][deck_id]['buttons']['0'].get('$button_id', {})
 print(json.dumps(btn, indent=2))
 "
+}
+
+audit_states() {
+    if [ ! -f "$STREAMDECK_CONFIG" ]; then
+        error "Config file not found: $STREAMDECK_CONFIG"
+        exit 1
+    fi
+
+    STREAMDECK_CONFIG="$STREAMDECK_CONFIG" python3 << 'AUDIT_STATES_EOF'
+import json
+import os
+import sys
+from pathlib import Path
+
+config_path = Path(os.environ["STREAMDECK_CONFIG"])
+with config_path.open() as f:
+    cfg = json.load(f)
+
+issues = []
+summary = {
+    "config": str(config_path),
+    "pages": 0,
+    "buttons": 0,
+    "states": 0,
+    "nonempty_states": 0,
+    "executable_states": 0,
+    "icon_states": 0,
+    "switch_states": 0,
+    "missing_icons": [],
+    "missing_switch_targets": [],
+    "invalid_types": [],
+}
+
+state_root = cfg.get("state")
+if not isinstance(state_root, dict) or not state_root:
+    issues.append({"path": "state", "issue": "missing_or_invalid_state_root"})
+else:
+    deck_id = next(iter(state_root))
+    deck_state = state_root.get(deck_id, {})
+    pages = deck_state.get("buttons", {})
+    if not isinstance(pages, dict):
+        issues.append({"path": f"state.{deck_id}.buttons", "issue": "missing_or_invalid_buttons"})
+        pages = {}
+
+    existing_pages = set(pages.keys())
+    summary["pages"] = len(existing_pages)
+
+    for page_id, buttons in sorted(pages.items(), key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else str(kv[0])):
+        if not isinstance(buttons, dict):
+            issues.append({"path": f"buttons.{page_id}", "issue": "page_buttons_not_object"})
+            continue
+
+        for button_id, button in sorted(buttons.items(), key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else str(kv[0])):
+            summary["buttons"] += 1
+            if not isinstance(button, dict):
+                issues.append({"path": f"buttons.{page_id}.{button_id}", "issue": "button_not_object"})
+                continue
+
+            states = button.get("states")
+            if not isinstance(states, dict):
+                issues.append({"path": f"buttons.{page_id}.{button_id}.states", "issue": "states_not_object"})
+                continue
+
+            active_state_id = str(button.get("state", 0))
+            if active_state_id not in states and "0" not in states:
+                issues.append({
+                    "path": f"buttons.{page_id}.{button_id}.state",
+                    "issue": "active_state_missing",
+                    "state": active_state_id,
+                })
+
+            for state_id, state in sorted(states.items(), key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else str(kv[0])):
+                summary["states"] += 1
+                path = f"buttons.{page_id}.{button_id}.states.{state_id}"
+                if not isinstance(state, dict):
+                    issues.append({"path": path, "issue": "state_not_object"})
+                    continue
+
+                text = state.get("text", "")
+                icon = state.get("icon", "")
+                command = state.get("command", "")
+                keys = state.get("keys", "")
+                write = state.get("write", "")
+                switch_page = state.get("switch_page", 0)
+
+                for field, value in {"text": text, "icon": icon, "command": command, "keys": keys, "write": write}.items():
+                    if value is not None and not isinstance(value, str):
+                        summary["invalid_types"].append({"path": f"{path}.{field}", "type": type(value).__name__})
+
+                nonempty = any(bool(v) for v in (text, icon, command, keys, write)) or bool(switch_page)
+                if not nonempty:
+                    continue
+
+                summary["nonempty_states"] += 1
+
+                if command:
+                    summary["executable_states"] += 1
+
+                if icon:
+                    summary["icon_states"] += 1
+                    icon_path = Path(os.path.expanduser(os.path.expandvars(icon)))
+                    if icon_path.is_absolute() and not icon_path.exists():
+                        summary["missing_icons"].append({"path": path, "icon": icon})
+
+                if switch_page not in ("", None, 0):
+                    summary["switch_states"] += 1
+                    if not isinstance(switch_page, int):
+                        summary["invalid_types"].append({"path": f"{path}.switch_page", "type": type(switch_page).__name__})
+                    else:
+                        target_page = str(switch_page - 1) if switch_page > 0 else str(switch_page)
+                        if target_page not in existing_pages:
+                            summary["missing_switch_targets"].append({
+                                "path": f"{path}.switch_page",
+                                "switch_page": switch_page,
+                                "target_page": target_page,
+                            })
+
+summary["issues"] = issues
+summary["warnings"] = {
+    "missing_switch_targets": len(summary["missing_switch_targets"])
+}
+summary["ok"] = not (
+    issues
+    or summary["missing_icons"]
+    or summary["invalid_types"]
+)
+
+print(json.dumps(summary, indent=2, sort_keys=True))
+sys.exit(0 if summary["ok"] else 1)
+AUDIT_STATES_EOF
 }
 
 # Status queries
@@ -666,6 +800,11 @@ case "$COMMAND" in
     # Status commands
     status)
         status_show "${2:-}"
+        ;;
+
+    # Non-mutating config audit
+    audit-states|audit)
+        audit_states
         ;;
     
     # Config commands

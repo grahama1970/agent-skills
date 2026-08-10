@@ -350,8 +350,14 @@ rules:
 ```
 
 The eval exercises a live local status path and a fail-closed malformed button
-request. It does not prove physical button rendering, USB hardware availability,
-light behavior, daemon API correctness, or safe persistent config mutation.
+request. It also runs `./run.sh audit-states`, which non-mutatingly enumerates
+every configured Stream Deck page/button/state and reports missing icon paths,
+invalid field types, and switch-page warnings from the live
+`~/.streamdeck_ui.json` state.
+
+This does not prove physical button rendering, USB hardware availability, light
+behavior, daemon API correctness, command semantics for every executable button,
+or safe persistent config mutation.
 
 ### Adding New Features
 
