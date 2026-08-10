@@ -40,11 +40,14 @@ const TRACE_FINAL = 'M 286 58 C 322 58, 340 26, 362 26';
  *  Draws on scroll-in. */
 export function UnusualPath() {
   const ref = useRef<SVGSVGElement>(null);
+  const [enhanced, setEnhanced] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const el = ref.current;
     if (!el) return;
+    setEnhanced(true);
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -61,7 +64,7 @@ export function UnusualPath() {
   return (
     <svg
       ref={ref}
-      className={`unusual-path-svg${visible ? ' is-visible' : ''}`}
+      className={`unusual-path-svg${enhanced ? ' is-enhanced' : ''}${visible ? ' is-visible' : ''}`}
       viewBox="0 0 400 128"
       fill="none"
       role="img"
@@ -70,7 +73,7 @@ export function UnusualPath() {
       <defs>
         {/* Left-to-right wipe that reveals the dotted final segment. */}
         <clipPath id="unusual-final-clip">
-          <rect className="final-clip" x="284" y="4" width="0" height="66" />
+          <rect className="final-clip" x="284" y="4" width="82" height="66" />
         </clipPath>
       </defs>
       {/* The conventional straight route — faint and dashed. */}

@@ -97,39 +97,37 @@ export default function Home() {
   return (
     <>
       <HomeJsonLd />
-      <div className="glow" aria-hidden="true" />
-      <div className="grain" aria-hidden="true" />
       <main className="page">
         <SiteNav />
         <DeferredKeyboardNav />
 
         {/* ===================== HERO ===================== */}
-        <section className="hero ruledbg" id="top">
+        <section className="hero" id="top">
           <div className="wrap">
             <div className="hero-grid">
               <div className="hero-main">
-                <p className="eyebrow rise" style={{ ['--d' as string]: '.05s' }}>
+                <p className="eyebrow">
                   <span className="dot" /> One-person practice{' '}
                   <span aria-hidden="true">/</span> agent systems, formal
                   methods, evidence
                 </p>
-                <h1 className="rise" style={{ ['--d' as string]: '.12s' }}>
+                <h1>
                   I build agent systems that can{' '}
                   <span className="it proof-origin" data-proof-origin>
                     prove
                   </span>{' '}
                   what they did.
                 </h1>
-                <p className="hero-repo-model rise" style={{ ['--d' as string]: '.2s' }}>
+                <p className="hero-repo-model">
                   This site explains the work. The public{' '}
                   <code>agent-skills</code> repository holds the source.
                 </p>
-                <p className="hero-repo-model hero-repo-model--follow rise" style={{ ['--d' as string]: '.2s' }}>
+                <p className="hero-repo-model hero-repo-model--follow">
                   Browse here, or open the repository directly and ask your
                   agent to trace a question through the contracts, code, checks,
                   receipts, and visible gaps.
                 </p>
-                <ol className="hero-trace-protocol rise" style={{ ['--d' as string]: '.24s' }} aria-label="Repository inspection path">
+                <ol className="hero-trace-protocol" aria-label="Repository inspection path">
                   <li>
                     <span>Start</span>
                     <code>skills/*/SKILL.md</code>
@@ -147,7 +145,7 @@ export default function Home() {
                     <code>NOT_TESTED stays visible</code>
                   </li>
                 </ol>
-                <p className="hero-bio rise" style={{ ['--d' as string]: '.28s' }}>
+                <p className="hero-bio">
                   An unusual{' '}
                   <a
                     href="/resume"
@@ -170,7 +168,7 @@ export default function Home() {
                   High-end creative and hard technical work, delivered by the
                   same person, shipped as working code, in public.
                 </p>
-                <div className="hero-actions rise" style={{ ['--d' as string]: '.4s' }}>
+                <div className="hero-actions">
                   <a
                     className="btn"
                     href={REPO}
@@ -192,8 +190,7 @@ export default function Home() {
                 </div>
               </div>
               <aside
-                className="hero-side rise"
-                style={{ ['--d' as string]: '.5s' }}
+                className="hero-side"
                 aria-label="Skill inventory"
               >
                 <div className="rail">
@@ -631,7 +628,7 @@ export default function Home() {
         </section>
 
         {/* ===================== CLOSER ===================== */}
-        <section className="closer ruledbg" id="contact">
+        <section className="closer" id="contact">
           <div className="wrap">
             <div className="closer-inner">
               <div className="a">

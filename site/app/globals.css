@@ -98,26 +98,6 @@ img {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- ambient warmth + grain ------------------------------- */
-.glow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(120% 78% at 12% -8%, rgba(210, 112, 60, 0.2), transparent 62%),
-    radial-gradient(90% 60% at 92% 4%, rgba(226, 172, 98, 0.11), transparent 60%),
-    radial-gradient(120% 100% at 50% 110%, rgba(147, 162, 137, 0.07), transparent 65%);
-}
-.grain {
-  position: fixed;
-  inset: -50%;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.42;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
-}
 .page {
   position: relative;
   z-index: 2;
@@ -127,10 +107,6 @@ img {
 .wrap {
   width: var(--wrap);
   margin-inline: auto;
-}
-.ruledbg {
-  background-image: linear-gradient(to right, var(--line-2) 0 1px, transparent 1px);
-  background-size: calc(100% / 12) 100%;
 }
 .rule {
   height: 1px;
@@ -218,7 +194,7 @@ section {
    few points within the warm family (kept subtle for cohesion / trust, per
    best-practices-bespoke-design G6): a faint temperature move section to
    section so the page reads hand-tuned rather than a uniform dark template.
-   All stay far above WCAG-AA against --text; grain/glow overlay unchanged. */
+   All stay far above WCAG-AA against --text. */
 .hero { background-color: #110d0b; }
 #search { background-color: #0d0b0a; }
 #work { background-color: #0c0e0b; }      /* a hair greener */
@@ -374,9 +350,6 @@ section {
   }
   .nav a {
     padding-block: 0.65rem;
-  }
-  .grain {
-    inset: 0;
   }
 }
 
@@ -772,14 +745,9 @@ h1 .it::after {
 }
 .cell:hover,
 .cell:focus-visible {
-  transform: scale(1.28);
   background: var(--ember);
   z-index: 2;
   position: relative;
-}
-/* Neighbor recoil (approx): non-hovered cells step back while one is up. */
-.mosaic:hover .cell:not(:hover) {
-  opacity: 0.8;
 }
 .cell.out:hover,
 .cell.out:focus-visible {
@@ -1735,11 +1703,6 @@ footer a:hover {
   }
 }
 
-/* --- load choreography ------------------------------------ */
-.rise {
-  opacity: 1;
-  transform: none;
-}
 .wipe {
   clip-path: none;
 }
@@ -1879,7 +1842,6 @@ footer a:hover {
     animation-delay: 0s !important;
     transition-duration: 0.001ms !important;
   }
-  .rise { opacity: 1; transform: none; }
   .wipe { clip-path: none; }
   html { scroll-behavior: auto; }
   .cell { transform: none; }
@@ -2085,35 +2047,6 @@ footer a:hover {
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-/* Cell hover popover: live-evidence micro-preview. */
-.cell::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 7px);
-  left: 50%;
-  translate: -50% 2px;
-  padding: 0.35rem 0.6rem;
-  background: var(--paper);
-  color: #1a1411;
-  font-family: var(--sans);
-  font-size: 0.66rem;
-  border-radius: 3px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.15s ease, translate 0.15s ease;
-  box-shadow: 0 6px 16px rgb(0 0 0 / 0.5);
-  z-index: 30;
-}
-.cell:hover::after,
-.cell:focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-  translate: -50% 0;
-  transition-delay: 70ms;
 }
 
 /* Ticket dual-view */
@@ -2401,7 +2334,7 @@ footer a:hover {
 }
 .path-line {
   stroke-dasharray: 1000; /* matches pathLength — draw always reaches the end */
-  stroke-dashoffset: 1000;
+  stroke-dashoffset: 0;
 }
 /* The trail draws in once, forward only. Backtracking belongs to the path shape,
    not to a self-erasing stroke endpoint. */
@@ -2410,7 +2343,7 @@ footer a:hover {
   100% { stroke-dashoffset: 0; }
 }
 .path-node {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.3s ease;
 }
 .path-node.is-final {
@@ -2422,11 +2355,24 @@ footer a:hover {
   stroke-dasharray: 0.5 6;
 }
 .final-clip {
-  width: 0;
+  transform: scaleX(1);
+  transform-box: fill-box;
+  transform-origin: left center;
 }
 .goal-ring {
   opacity: 0;
   stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.is-enhanced .path-line {
+  stroke-dashoffset: 1000;
+}
+.is-enhanced .path-node {
+  opacity: 0;
+}
+.is-enhanced .final-clip {
+  transform: scaleX(0);
 }
 .is-visible .path-line {
   stroke-dashoffset: 0;
@@ -2456,38 +2402,42 @@ footer a:hover {
   animation: final-hesi 1.6s linear 2s forwards;
 }
 @keyframes final-hesi {
-  0% { width: 0; }
-  28% { width: 20px; }
-  42% { width: 18px; }
-  56% { width: 25px; }
-  100% { width: 82px; }
+  0% { transform: scaleX(0); }
+  28% { transform: scaleX(0.24); }
+  42% { transform: scaleX(0.22); }
+  56% { transform: scaleX(0.3); }
+  100% { transform: scaleX(1); }
 }
 .is-visible .goal-ring {
   animation: goal-ring 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 3.35s both;
 }
 @keyframes goal-ring {
-  0% { r: 3.6; opacity: 0; stroke-width: 2; }
-  35% { r: 8.5; opacity: 0.9; stroke-width: 1.75; }
-  100% { r: 13; opacity: 0; stroke-width: 0.5; }
+  0% { opacity: 0; stroke-width: 2; transform: scale(1); }
+  35% { opacity: 0.9; stroke-width: 1.75; transform: scale(2.4); }
+  100% { opacity: 0; stroke-width: 0.5; transform: scale(3.6); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .path-line {
+  .path-line,
+  .is-visible .path-line {
     stroke-dashoffset: 0;
     transition: none;
     animation: none;
   }
-  .path-node {
+  .path-node,
+  .is-visible .path-node {
     opacity: 1;
     transition: none;
   }
   .is-visible .path-node.is-final {
     animation: none;
   }
-  .final-clip {
-    width: 82px;
+  .final-clip,
+  .is-visible .final-clip {
+    transform: scaleX(1);
     animation: none;
   }
-  .goal-ring {
+  .goal-ring,
+  .is-visible .goal-ring {
     animation: none;
     opacity: 0;
   }
@@ -3843,74 +3793,6 @@ h1 .proof-origin::after {
   display: none;
 }
 
-@keyframes proof-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes proof-fade {
-  to {
-    opacity: 1;
-  }
-}
-@keyframes proof-evaluate {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  28%,
-  62% {
-    opacity: 0.8;
-  }
-}
-@keyframes proof-judge-dot {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  35%,
-  70% {
-    opacity: 0.9;
-  }
-}
-@keyframes proof-token {
-  0% {
-    opacity: 0;
-    offset-distance: 0%;
-  }
-  10% {
-    opacity: 1;
-  }
-  86% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    offset-distance: 100%;
-  }
-}
-@keyframes proof-bridge-wire {
-  0%,
-  15% {
-    opacity: 0;
-    stroke-dashoffset: 1;
-  }
-  16% {
-    opacity: 0.72;
-  }
-  26% {
-    opacity: 0.5;
-    stroke-dashoffset: 0;
-  }
-  90% {
-    opacity: 0.22;
-    stroke-dashoffset: 0;
-  }
-  100% {
-    opacity: 0;
-    stroke-dashoffset: 0;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .proof-bridge {
     display: none !important;
@@ -4244,7 +4126,6 @@ h1 .proof-origin::after {
   .topbar,
   .cv-actions,
   .cv-foot,
-  .grain,
   .ambient {
     display: none !important;
   }
