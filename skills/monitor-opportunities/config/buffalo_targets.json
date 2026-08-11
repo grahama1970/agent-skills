@@ -1,0 +1,14 @@
+{
+  "schema": "monitor_opportunities.buffalo_targets.v1",
+  "note": "Buffalo/WNY target orgs where LOCAL PRESENCE + Graham's ITAR/federal/compliance/AI credibility make him unusually memorable. Mandate-first: these are candidate targets, but a role/engagement still needs real fit to rank (local boosts noticeability, never outranks fit). Each is BOTH a potential employer and a consulting-client signal. Sourced via brave-search 2026-08-11.",
+  "targets": [
+    {"org": "CUBRC (Calspan-University at Buffalo Research Center)", "why": "Defense/intel/AI research — direct fit for DARPA ARCOS/SPARTA background; local + cleared-adjacent = highly memorable", "fit": ["agentic-compliance", "verification", "defense", "applied-rd"], "as": "employer+consulting"},
+    {"org": "Moog Inc. (East Aurora)", "why": "Aerospace/defense — ties to ARCOS aerospace document work; AI for hardware/verification", "fit": ["verification", "document-extraction", "defense", "applied-rd"], "as": "employer+consulting"},
+    {"org": "University at Buffalo (CSE / AI Institute / BEP spinouts)", "why": "Major AI research hub; advisory/architecture for spinouts (e.g. QAS.AI, AI+health cluster); grant/commercialization work", "fit": ["agentic-pipelines", "document-extraction", "verification", "applied-rd"], "as": "consulting+employer"},
+    {"org": "43North portfolio (Seneca One)", "why": "Buffalo accelerator startups needing agentic/AI architecture — fractional/advisory sweet spot", "fit": ["agentic-pipelines", "llm-systems"], "as": "consulting"},
+    {"org": "M&T Bank", "why": "Largest WNY employer; heavy GRC/compliance — agentic-compliance + document extraction fit banking risk/ops", "fit": ["agentic-compliance", "document-extraction"], "as": "employer+consulting"},
+    {"org": "Roswell Park / QAS.AI", "why": "AI + health; document/verification and clinical-decision AI", "fit": ["document-extraction", "verification"], "as": "consulting"},
+    {"org": "ACV Auctions", "why": "Buffalo AI product company (computer vision / ML at scale)", "fit": ["agentic-pipelines", "llm-systems"], "as": "employer"}
+  ],
+  "outreach_frame": "I'm in Buffalo, I can meet in person, and I build inspectable agentic systems under real (ITAR/compliance/audit) constraints — DARPA ARCOS, SPARTA, pdf_oxide. grahama.co is the front door."
+}

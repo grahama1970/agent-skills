@@ -27,3 +27,19 @@ def test_rank_orders_by_response() -> None:
     ]
     ranked = rank_by_response(opps)
     assert ranked[0]["organization"] == "warm-trigger"  # response probability, not fit or volume
+
+
+def test_local_standout_boosts_only_with_fit() -> None:
+    strong = score_opportunity({"organization": "CUBRC", "fit": 0.85, "workplace_type": "WNY_ONSITE", "source": "discover-contacts"})
+    weak = score_opportunity({"organization": "Generic local shop", "fit": 0.2, "workplace_type": "WNY_ONSITE", "source": "indeed.com"})
+    assert strong["drivers"]["local"] == 1.0
+    assert any("Buffalo/WNY local" in r for r in strong["why_it_responds"])
+    # mandate-first: weak-fit local must NOT be lifted, and must be flagged
+    assert weak["response_score"] < strong["response_score"] * 0.4
+    assert any("local alone is not a reason" in r for r in weak["why_it_responds"])
+
+
+def test_local_fit_beats_remote_cold_at_equal_fit() -> None:
+    local = score_opportunity({"organization": "Moog", "fit": 0.8, "workplace_type": "WNY_ONSITE", "source": "dogpile"})
+    remote_cold = score_opportunity({"organization": "X", "fit": 0.8, "workplace_type": "REMOTE", "source": "ashbyhq.com"})
+    assert local["response_score"] > remote_cold["response_score"]
