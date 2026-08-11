@@ -1,0 +1,8 @@
+{
+  "candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "unit_ids": ["home-hero", "work-proof"],
+  "positive_classification": true,
+  "competitor_swap_tension": true,
+  "cross_screen_family": true,
+  "generic_ai_template_primary": false
+}

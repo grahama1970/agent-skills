@@ -1,0 +1,74 @@
+{
+  "schema_version": "bespoke-review-bundle.v1",
+  "candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "candidate_fingerprint_usage": "integrity_only",
+  "candidate_inputs": [
+    "source:commit:76632e9168a5de04b8787ebdadd5237d04d3ca5f",
+    "protocol:bespoke-review-bundle.v1",
+    "render:home-hero:daac0499daa2ec6166b524b6b9dd452f66032b4ea51b536d2e5d6f75b84bee02",
+    "render:work-proof:acaa53ab0915d63a432fabd84fad0ad6398aa3fb68d50bb7a548a417441c7cbd"
+  ],
+  "source_state": {
+    "commit": "76632e9168a5de04b8787ebdadd5237d04d3ca5f",
+    "state_digest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "dirty": false
+  },
+  "delivery": {
+    "mode": "url",
+    "review_index_url_redacted": "http://127.0.0.1:43117/__review/<redacted>/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/index/",
+    "review_url_hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "access_nonce_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "expires_at": "2026-08-11T14:40:00Z"
+  },
+  "public_safety": {
+    "classification": "public_safe",
+    "publish_allowed": false,
+    "noindex": true,
+    "sensitive_material": false
+  },
+  "blind_mode": {
+    "enabled": true,
+    "leakage_scan_status": "PASS",
+    "operator_provenance_path": "private/provenance-map.json"
+  },
+  "review_units": [
+    {
+      "unit_id": "home-hero",
+      "route": "/",
+      "selector": "#hero",
+      "viewport": "1440x900",
+      "page_state": "default",
+      "canonical_render": {
+        "path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/canonical-home.txt",
+        "sha256": "daac0499daa2ec6166b524b6b9dd452f66032b4ea51b536d2e5d6f75b84bee02"
+      },
+      "live_surface_url_hash_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "intended_proof": "Evaluate first-screen premise, hierarchy, and evidence grammar.",
+      "does_not_prove": [
+        "full accessibility completion",
+        "representative performance"
+      ]
+    },
+    {
+      "unit_id": "work-proof",
+      "route": "/#work-proof",
+      "selector": "#work-proof",
+      "viewport": "768x1024",
+      "page_state": "default",
+      "canonical_render": {
+        "path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/canonical-work.txt",
+        "sha256": "acaa53ab0915d63a432fabd84fad0ad6398aa3fb68d50bb7a548a417441c7cbd"
+      },
+      "live_surface_url_hash_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "intended_proof": "Evaluate whether proof units retain a shared visual family without brand labels.",
+      "does_not_prove": [
+        "full G11 rater threshold",
+        "final READY status"
+      ]
+    }
+  ],
+  "does_not_prove": [
+    "A URL bundle does not authenticate private or regulated material.",
+    "A review URL does not replace canonical screenshots or raw rater outputs."
+  ]
+}

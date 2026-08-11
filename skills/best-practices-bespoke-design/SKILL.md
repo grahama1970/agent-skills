@@ -346,33 +346,22 @@ must never be counted as G11 rater evidence.
 
 #### Default Reviewer Workflow
 
-Default review should be cheap, legible, and bounded. Do not spend more effort on reviewer transport than on the design surface being evaluated.
+Default review is URL-first, crop-backed, and transport-neutral. Use
+`references/review-url-transport.md`, `schemas/bespoke-review-bundle.schema.json`,
+and `schemas/bespoke-review-transport.schema.json`.
 
-1. Render section, component, or page-state crops with a manifest.
-2. Assemble reviewable contact sheets from those crops.
-3. Stay inside the `Call Budget`; use reviewer calls only for subjective
-   questions that local checks and crops cannot answer.
-4. For `formal-certification`, run the pre-registered G11 rater set and preserve
-   every raw/parsed response. This is the only tier that requires five fresh
-   usable raters.
-5. Ask each rater to answer the registered logo-off, competitor-swap,
-   cross-screen-family, template-residue, and leakage questions directly.
-6. Aggregate the raw answers into the G11 subgates.
+The order is: local deterministic checks; current section/page-state crops;
+hash-bound review bundle; verified immutable review URL; direct canonical
+artifact/attachment fallback only when URL inspection is unsupported. A URL
+preflight never counts as a rater. A counted rater must echo the expected
+candidate fingerprint and unit IDs, preserve raw output, and answer the
+registered G11 questions directly.
 
-Do not build a larger orchestration system, dashboard, or browser campaign before
-this path has been attempted. A model that can see the section crops is expected
-to judge the section-level design questions directly; use the formal receipt to
-preserve that judgment, not to make the review process more complex than the
-design question. WebGPT is optional, not a gate. A WebGPT rate limit, stale tab,
-or upload failure is not a site design failure.
-
-Browser tab budget is part of the gate UX. Use no more than one controlled
-reviewer tab per provider plus one local site tab. Opening a new tab per rater,
-retry, or prompt variant is a process failure unless a prior tab is explicitly
-closed or documented as unusable. If two focused attempts in one provider family
-fail, stop that family regardless of signature, preserve the receipts, and
-continue only within the `Call Budget`. Do not open parallel tabs to outrun the
-failure.
+For `directional` and `release-risk`, zero external reviewers is the default
+when local evidence answers the decision. For `formal-certification`, use one
+compact review index URL per rater seat and apply registered sequential stopping.
+Provider rate limits, stale tabs, upload failures, and login pages are
+`reviewer_transport`, not design findings.
 
 Run the registered G11 questions: logo-off recognition, competitor swap, motif
 semantics, cross-screen family, reference leakage, and template residue. The full
@@ -495,5 +484,8 @@ Stop and report the blocker when:
 - `references/acceptance-tests.md`
 - `references/workflow-phases.md`
 - `references/formal-certification.md`
+- `references/review-url-transport.md`
 - `schemas/bespoke-design-receipt.schema.json`
+- `schemas/bespoke-review-bundle.schema.json`
+- `schemas/bespoke-review-transport.schema.json`
 - `fixtures/`

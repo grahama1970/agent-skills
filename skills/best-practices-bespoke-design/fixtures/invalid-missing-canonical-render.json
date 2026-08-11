@@ -1,0 +1,36 @@
+{
+  "schema_version": "bespoke-review-bundle.v1",
+  "candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "candidate_fingerprint_usage": "integrity_only",
+  "candidate_inputs": ["source", "protocol", "render"],
+  "source_state": {
+    "commit": "76632e9168a5de04b8787ebdadd5237d04d3ca5f",
+    "state_digest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "delivery": {
+    "mode": "url",
+    "review_index_url_redacted": "http://127.0.0.1:43117/__review/<redacted>/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/index/",
+    "review_url_hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "access_nonce_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "public_safety": {
+    "classification": "public_safe",
+    "publish_allowed": false
+  },
+  "blind_mode": {
+    "enabled": false,
+    "leakage_scan_status": "NOT_TESTED"
+  },
+  "review_units": [
+    {
+      "unit_id": "home-hero",
+      "route": "/",
+      "selector": "#hero",
+      "viewport": "1440x900",
+      "page_state": "default",
+      "intended_proof": "This fixture must fail because the canonical render is absent.",
+      "does_not_prove": ["anything useful"]
+    }
+  ],
+  "does_not_prove": ["negative fixture"]
+}

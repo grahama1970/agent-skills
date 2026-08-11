@@ -102,6 +102,7 @@ Formal proof packets include:
 - three territory boards and selection record;
 - component and page inventory;
 - section/page-state screenshot manifest;
+- review bundle and transport receipts when external raters are used;
 - accessibility and performance receipts;
 - blind-rater inputs and raw outputs;
 - validated `bespoke-design-receipt.json`;

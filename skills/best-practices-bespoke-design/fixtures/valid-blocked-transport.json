@@ -1,0 +1,32 @@
+{
+  "schema_version": "bespoke-review-transport.v1",
+  "attempt_kind": "rater",
+  "provider": "webclaude",
+  "handler": "browser-oracle",
+  "delivery_mode": "url",
+  "expected_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "observed_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "expected_unit_ids": ["home-hero", "work-proof"],
+  "observed_unit_ids": [],
+  "transport": {
+    "status": "BLOCKED",
+    "blocked_reason": "provider login page prevented URL inspection before a rater seat was consumed"
+  },
+  "inspection": {
+    "status": "NOT_PROVEN",
+    "review_marker_seen": false,
+    "candidate_fingerprint_seen": false,
+    "unit_ids_seen": false,
+    "canonical_render_loaded": false
+  },
+  "rater": {
+    "status": "NOT_RUN",
+    "counted_as_rater": false
+  },
+  "access_token_redaction": {
+    "status": "PASS",
+    "redacted_url": "http://127.0.0.1:43117/__review/<redacted>/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/index/",
+    "review_url_hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "design_gate_status": "UNCHANGED"
+}

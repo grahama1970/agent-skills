@@ -51,6 +51,18 @@ Distinctiveness is monotonic: re-run logo-off and competitor-swap on the
 post-finish artifact. Any drop in recognition or rise in swap plausibility fails,
 regardless of craft scores.
 
+## G11 Transport Contract
+
+Formal blind review consumes immutable review evidence, not provider-specific
+upload behavior. Preferred delivery is one hash-bound review index URL per rater
+seat, backed by canonical section/page-state screenshots. Attachment delivery is
+a fallback only when it satisfies the same fingerprint, unit-id, canonical-render,
+raw-output, and redaction contract.
+
+Use `review-url-transport.md` for the provider-neutral schemas and state model.
+A preflight acknowledgement never counts as a rater. A transport failure reports
+`reviewer_transport: BLOCKED` and leaves the design outcome unchanged.
+
 ## AI-Generated Template Residue
 
 Surface tells such as palette, monospace, and rounded boxes are weak evidence.

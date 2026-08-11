@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:grahama:agent-skills:best-practices-bespoke-design:review-transport:v1",
+  "title": "Bespoke Design Reviewer Transport Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "attempt_kind",
+    "provider",
+    "handler",
+    "delivery_mode",
+    "expected_candidate_fingerprint",
+    "observed_candidate_fingerprint",
+    "expected_unit_ids",
+    "observed_unit_ids",
+    "transport",
+    "inspection",
+    "rater",
+    "access_token_redaction",
+    "design_gate_status"
+  ],
+  "properties": {
+    "schema_version": {"const": "bespoke-review-transport.v1"},
+    "attempt_kind": {"enum": ["preflight", "rater", "attachment_fallback"]},
+    "provider": {"type": "string", "minLength": 1},
+    "handler": {"type": "string", "minLength": 1},
+    "delivery_mode": {"enum": ["url", "attachment"]},
+    "expected_candidate_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "observed_candidate_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "expected_unit_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "observed_unit_ids": {
+      "type": "array",
+      "minItems": 0,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["PASS", "BLOCKED"]},
+        "blocked_reason": {"type": "string"}
+      }
+    },
+    "inspection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "review_marker_seen",
+        "candidate_fingerprint_seen",
+        "unit_ids_seen",
+        "canonical_render_loaded"
+      ],
+      "properties": {
+        "status": {"enum": ["PROVEN", "NOT_PROVEN"]},
+        "review_marker_seen": {"type": "boolean"},
+        "candidate_fingerprint_seen": {"type": "boolean"},
+        "unit_ids_seen": {"type": "boolean"},
+        "canonical_render_loaded": {"type": "boolean"}
+      }
+    },
+    "rater": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "counted_as_rater"],
+      "properties": {
+        "status": {"enum": ["USABLE", "UNUSABLE", "NOT_RUN"]},
+        "counted_as_rater": {"type": "boolean"},
+        "raw_output_path": {"type": "string"},
+        "raw_output_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "parsed_output_path": {"type": "string"},
+        "parsed_output_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "exclusion_reason": {"type": "string"}
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "access_token_redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "redacted_url", "review_url_hash_sha256"],
+      "properties": {
+        "status": {"const": "PASS"},
+        "redacted_url": {"type": "string"},
+        "review_url_hash_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "design_gate_status": {"enum": ["UNCHANGED", "PASS", "FAIL", "NOT_TESTED", "BLOCKED"]}
+  }
+}

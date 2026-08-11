@@ -1,0 +1,39 @@
+{
+  "schema_version": "bespoke-review-transport.v1",
+  "attempt_kind": "attachment_fallback",
+  "provider": "webgpt",
+  "handler": "browser-oracle",
+  "delivery_mode": "attachment",
+  "expected_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "observed_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "expected_unit_ids": ["home-hero", "work-proof"],
+  "observed_unit_ids": ["home-hero", "work-proof"],
+  "transport": {
+    "status": "PASS"
+  },
+  "inspection": {
+    "status": "PROVEN",
+    "review_marker_seen": true,
+    "candidate_fingerprint_seen": true,
+    "unit_ids_seen": true,
+    "canonical_render_loaded": true
+  },
+  "rater": {
+    "status": "USABLE",
+    "counted_as_rater": true,
+    "raw_output_path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/raw-output.txt",
+    "raw_output_sha256": "407c587f70d537fd94e28376262132d128099998302e4dfb9a327adf5ee860ce",
+    "parsed_output_path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/parsed-output.json",
+    "parsed_output_sha256": "c3161f379b88b714dd4ca4153acf9d1ffa2ed5edc8e1692f86e24dbc943aee36"
+  },
+  "prompt": {
+    "path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/prompt.txt",
+    "sha256": "c9820226e6571a46285aeabc568ad3af48c8bbf4408aa5929900360ec020a6ea"
+  },
+  "access_token_redaction": {
+    "status": "PASS",
+    "redacted_url": "attachment-only",
+    "review_url_hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "design_gate_status": "UNCHANGED"
+}

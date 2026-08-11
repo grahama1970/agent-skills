@@ -1,0 +1,2 @@
+candidate ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff units home-hero,work-proof
+This fixture says the design feels bound to the evidence-review premise.

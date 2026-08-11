@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:grahama:agent-skills:best-practices-bespoke-design:review-bundle:v1",
+  "title": "Bespoke Design Review Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "candidate_fingerprint",
+    "candidate_fingerprint_usage",
+    "candidate_inputs",
+    "source_state",
+    "delivery",
+    "public_safety",
+    "blind_mode",
+    "review_units",
+    "does_not_prove"
+  ],
+  "properties": {
+    "schema_version": {"const": "bespoke-review-bundle.v1"},
+    "candidate_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "candidate_fingerprint_usage": {"const": "integrity_only"},
+    "candidate_inputs": {
+      "type": "array",
+      "minItems": 3,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "source_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "state_digest_sha256"],
+      "properties": {
+        "commit": {"type": "string", "minLength": 7},
+        "state_digest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "dirty": {"type": "boolean"}
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"enum": ["url", "attachment"]},
+        "review_index_url_redacted": {"type": "string"},
+        "review_url_hash_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "access_nonce_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "attachment_manifest_path": {"type": "string"},
+        "attachment_manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "expires_at": {"type": "string"}
+      }
+    },
+    "public_safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "publish_allowed"],
+      "properties": {
+        "classification": {
+          "enum": ["public_safe", "private_client", "confidential", "regulated", "itar"]
+        },
+        "publish_allowed": {"type": "boolean"},
+        "noindex": {"type": "boolean"},
+        "sensitive_material": {"type": "boolean"}
+      }
+    },
+    "blind_mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "leakage_scan_status"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "leakage_scan_status": {"enum": ["PASS", "FAIL", "NOT_TESTED"]},
+        "operator_provenance_path": {"type": "string"}
+      }
+    },
+    "review_units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "route",
+          "selector",
+          "viewport",
+          "page_state",
+          "canonical_render",
+          "intended_proof",
+          "does_not_prove"
+        ],
+        "properties": {
+          "unit_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]*$"},
+          "route": {"type": "string", "minLength": 1},
+          "selector": {"type": "string", "minLength": 1},
+          "viewport": {"type": "string", "minLength": 1},
+          "page_state": {"type": "string", "minLength": 1},
+          "canonical_render": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            }
+          },
+          "live_surface_url_hash_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "intended_proof": {"type": "string", "minLength": 10},
+          "does_not_prove": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 4}
+          }
+        }
+      }
+    },
+    "does_not_prove": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 4}
+    }
+  }
+}

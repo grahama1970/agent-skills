@@ -1,0 +1,50 @@
+{
+  "schema_version": "bespoke-review-bundle.v1",
+  "candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "candidate_fingerprint_usage": "integrity_only",
+  "candidate_inputs": [
+    "source:commit:76632e9168a5de04b8787ebdadd5237d04d3ca5f",
+    "protocol:bespoke-review-bundle.v1",
+    "attachment:contact-sheet:894ed385930e824fa48c61fbf05ebf65b8b73835c246982ee532643b871ab0c9"
+  ],
+  "source_state": {
+    "commit": "76632e9168a5de04b8787ebdadd5237d04d3ca5f",
+    "state_digest_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "dirty": false
+  },
+  "delivery": {
+    "mode": "attachment",
+    "attachment_manifest_path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/contact-sheet.txt",
+    "attachment_manifest_sha256": "894ed385930e824fa48c61fbf05ebf65b8b73835c246982ee532643b871ab0c9"
+  },
+  "public_safety": {
+    "classification": "public_safe",
+    "publish_allowed": false,
+    "noindex": true,
+    "sensitive_material": false
+  },
+  "blind_mode": {
+    "enabled": false,
+    "leakage_scan_status": "NOT_TESTED"
+  },
+  "review_units": [
+    {
+      "unit_id": "home-hero",
+      "route": "/",
+      "selector": "#hero",
+      "viewport": "1440x900",
+      "page_state": "default",
+      "canonical_render": {
+        "path": "skills/best-practices-bespoke-design/fixtures/review-artifacts/canonical-home.txt",
+        "sha256": "daac0499daa2ec6166b524b6b9dd452f66032b4ea51b536d2e5d6f75b84bee02"
+      },
+      "intended_proof": "Attachment fallback preserves the same canonical review unit contract.",
+      "does_not_prove": [
+        "provider upload reliability"
+      ]
+    }
+  ],
+  "does_not_prove": [
+    "Attachment compatibility does not make attachments the preferred transport."
+  ]
+}

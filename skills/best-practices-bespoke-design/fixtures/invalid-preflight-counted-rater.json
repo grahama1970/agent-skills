@@ -1,0 +1,29 @@
+{
+  "schema_version": "bespoke-review-transport.v1",
+  "attempt_kind": "preflight",
+  "provider": "webgpt",
+  "handler": "browser-oracle",
+  "delivery_mode": "url",
+  "expected_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "observed_candidate_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "expected_unit_ids": ["home-hero", "work-proof"],
+  "observed_unit_ids": ["home-hero", "work-proof"],
+  "transport": {"status": "PASS"},
+  "inspection": {
+    "status": "PROVEN",
+    "review_marker_seen": true,
+    "candidate_fingerprint_seen": true,
+    "unit_ids_seen": true,
+    "canonical_render_loaded": true
+  },
+  "rater": {
+    "status": "USABLE",
+    "counted_as_rater": true
+  },
+  "access_token_redaction": {
+    "status": "PASS",
+    "redacted_url": "http://127.0.0.1:43117/__review/<redacted>/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/index/",
+    "review_url_hash_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "design_gate_status": "UNCHANGED"
+}
