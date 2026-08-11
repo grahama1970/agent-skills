@@ -727,6 +727,55 @@ def build_manifest_cmd(
         _abort(exc)
 
 
+@app.command(name="house-similarity")
+def house_similarity_cmd(
+    slides_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs to score.")],
+    threshold: Annotated[float, typer.Option(help="FAIL below this (calibrated: replica of a real page ~0.72, unrelated ~0.46).")] = 0.55,
+    glob: Annotated[str, typer.Option(help="Filename pattern.")] = "*.png",
+) -> None:
+    """Score each rendered slide against its nearest REAL house page (exit 1 on any FAIL)."""
+    import base64
+    import json as json_mod
+
+    import httpx
+
+    from .visual_sync import EMBED_URL, HTTP_TIMEOUT, QDRANT_URL
+
+    try:
+        rows = []
+        failed = 0
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            for image in sorted(slides_dir.glob(glob)):
+                encoded = base64.b64encode(image.read_bytes()).decode()
+                vector = client.post(EMBED_URL, json={"image": f"data:image/png;base64,{encoded}"})
+                vector.raise_for_status()
+                hits = client.post(
+                    f"{QDRANT_URL}/collections/pitchdeck_house_slides_v1/points/search",
+                    json={"vector": {"name": "image_mm", "vector": vector.json()["embedding"]},
+                          "limit": 1, "with_payload": ["deck", "slide_index", "title", "record_path"]})
+                hits.raise_for_status()
+                hit = hits.json()["result"][0]
+                score = hit["score"]
+                if score < threshold:
+                    failed += 1
+                rows.append({
+                    "slide": image.name, "score": round(score, 3),
+                    "verdict": "PASS" if score >= threshold else "FAIL",
+                    "nearest": f"{hit['payload']['deck']}#{hit['payload']['slide_index']}",
+                    "nearest_title": hit["payload"].get("title"),
+                    "diff_target": hit["payload"].get("record_path"),
+                })
+        typer.echo(json_mod.dumps({
+            "status": "PASS" if failed == 0 else "FAIL",
+            "threshold": threshold, "failed": failed, "slides": rows,
+        }, indent=1))
+        raise typer.Exit(0 if failed == 0 else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="outline")
 def outline_cmd(
     context: Annotated[Path, typer.Option(help="DECK_CONTEXT yaml/json (pitchdeck.deck_context.v1).")],

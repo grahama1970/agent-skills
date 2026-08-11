@@ -1,0 +1,121 @@
+# Pitchdeck Style Guide — measured, not asserted
+
+Every rule here is derived from Graham's real decks (263 slides across 5
+corpus files) or from the audits and replication probes of 2026-08-07..11.
+Anything not measured is labelled INFERENCE. When this guide disagrees with a
+fresh measurement, the measurement wins and this file gets corrected.
+
+## 1. The one rule that outranks the rest
+
+**Inherit, don't imitate.** Open Graham's own `.pptx` as the base
+(`--house-template`), strip its slides, add slides on his layouts. Band,
+photographic band texture, title typography, footer geometry, page number,
+theme fonts and colors then come from the template *by construction*.
+Measure-and-redraw was tried for many turns and was demonstrably lossy:
+band fill reproduced as `#065E7C` when the template's is `#076889`; a
+diagonal-hatch texture invented before the real photographic strip was found
+inside the layout; the bottom-left logo the blind judges named in every round
+was simply the template's own mark.
+
+## 2. Page anatomy (every content page; 100% of corpus slides)
+
+```
+┌────────────────────────────────────────────────────────────┐
+│ BAND  title, left, white, on petrol #076889 + photo strip │  h≈0.108–0.122
+├────────────────────────────────────────────────────────────┤
+│  ❯ chevron takeaway (underline for emphasis)               │
+│  ❯ chevron takeaway — 2–5 bullets, sub-bullets indented    │
+│                                                            │
+│  ILLUSTRATION ZONE — fills the canvas, not a floating band │
+│  large character/scene art, speech bubbles at body size    │
+│                                                            │
+├────────────────────────────────────────────────────────────┤
+│ logo/mark row (pictures)      disclaimer      page number  │  y>0.85
+└────────────────────────────────────────────────────────────┘
+```
+
+Measured invariants (all 263 slides): band present 100%, bottom-left mark
+100% (a **logo row of pictures**, not text), bottom-right footer text 100%,
+title 100%. Band fill `#076889` on 261/263.
+
+## 3. Type
+
+| Role | Measured | Source |
+|---|---|---|
+| Band title | 20/24/28 pt modes, left-aligned, Title Case (173/213 titles) | corpus runs |
+| Hero statement | 64 pt | reqml-12 |
+| Body/chevrons | 16–17.3 pt modes | corpus runs |
+| Captions/fine | 12 pt | corpus runs |
+| Titles | median **3 words**, p10–p90 2–6; 14% questions; 14% parentheticals | 213 real titles |
+
+Voice: short assertive headlines ("LLMs are Expensive", "Hand Extraction is
+Horrible (for humans)", "What's the point, again?"). Emphasis channel:
+**underline inside the bullet**, not bold walls.
+
+## 4. Color
+
+| Color | Use | Evidence |
+|---|---|---|
+| `#076889` | band fill | 261/263 bands |
+| `#065E7C` | primary ink accent (NOT the band) | most frequent text run color |
+| `#1D7694` | band texture tone / secondary | measured |
+| `#26558E` | program blue | run frequency |
+| `#6F8E30` | machine/green path | corpus diagrams |
+| `#D6A300` | gold accent (not D39500) | run frequency |
+| `#595959` | supporting prose gray | run frequency |
+
+## 5. Illustration (the honest gap)
+
+Graham's pages carry **drawn characters**: a green robot labelled "LLM" with
+question marks and sound waves, hard-hat workers, datalake clusters — large
+(principal art ≈15% of the slide), asymmetric, with dotted meander flows and
+speech bubbles carrying real Q→A text at body size.
+
+What the compiler has: 578 hash-pinned lucide line glyphs, scene compositions
+with weighted subjects and dotted flows. What no rule produces: the character
+art and its emotional register. INFERENCE: closing this fully requires either
+reusing Graham's own artwork (rights/registry gated, #1331) or new commissioned
+art — not more composition rules.
+
+Replication probe ("LLMs Hallucinate", 2026-08-11), deltas in order of
+visual leverage:
+1. Speech bubbles: bordered rounded-rects at body size are the visual centre.
+2. Glyph scale: principal art is LARGE.
+3. Character expressiveness (the unclosable part by rules).
+4. Chevron bullets with underline emphasis, not plain paragraphs.
+
+## 6. Density
+
+Corpus slides with a visual: median 19.5 words, p75 51, p90 99 (n=258).
+Graham's pages are FULL — whitespace is not the house style. Covers differ
+legitimately; a corpus median is descriptive, not normative (do not add a
+visual to satisfy a metric).
+
+## 7. The verification loop (how "looks like a Graham slide" is decided)
+
+1. Render each generated slide to PNG.
+2. Embed via the multimodal service — field is `image` with a **data URL**
+   (`image_b64` is silently ignored; this broke the index once already).
+3. Query `pitchdeck_house_slides_v1` (203 real pages, text_mm + image_mm) for
+   the nearest real page.
+4. **Gate:** calibrated on the replication probe — a faithful replica of a
+   real page scores ≈0.72 against its source; unrelated pages ≈0.46.
+   Threshold 0.55: below it, the slide FAILS and the nearest page's JSON
+   record (`outputs/house-slides/records/`) is the diff target to amend
+   against.
+5. Every real page is also recallable: `/memory` collection
+   `pitchdeck_house_slides` (203 docs, metadata + Qdrant point id).
+
+Current honest status (2026-08-11): the Sparta Explorer deck scores
+0.36–0.46 on all six slides — chrome inherits correctly, but density and
+illustration keep every slide below gate. The replica proved 0.72 is
+reachable when a page is composed the way Graham composes.
+
+## 8. Claims outrank style — always
+
+No style rule ever overrides the claim contract: every visible string must be
+an authorized transform of a ledger claim (or typed chrome), verified on the
+DELIVERED file by `verify-publish --document --build-manifest`. Symmetry may
+encode a truthful claim (parallel agents, repeated stages) — uniformity is
+advisory, never auto-"fixed". Wit that adds meaning requires a new ledger
+claim, not a rendering approval.
