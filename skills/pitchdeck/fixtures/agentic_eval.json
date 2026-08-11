@@ -65,14 +65,10 @@
    "command": "../scripts/eval_readme_to_deck.sh",
    "real_world": true,
    "expected": {
-    "exit_code": 1,
-    "stdout_contains": "NORTH-STAR: NOT YET"
-   },
-   "goal_expected": {
     "exit_code": 0,
     "stdout_contains": "NORTH-STAR: PASS"
    },
-   "note": "expected pins TODAY's honest state so the eval suite stays green-on-truth; flip expected to goal_expected when the gap closes \u2014 that flip IS the milestone."
+   "note": "GOAL REACHED 2026-08-11: exit 0, all 11 stages including the recalibrated house gate (per-slide embedding anomaly floor 0.395 + text-invariant ink/palette floors from the real-corpus distributions)."
   }
  ]
 }

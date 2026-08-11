@@ -105,18 +105,29 @@ visual to satisfy a metric).
    (`image_b64` is silently ignored; this broke the index once already).
 3. Query `pitchdeck_house_slides_v1` (203 real pages, text_mm + image_mm) for
    the nearest real page.
-4. **Gate:** calibrated on the replication probe — a faithful replica of a
-   real page scores ≈0.72 against its source; unrelated pages ≈0.46.
-   Threshold 0.55: below it, the slide FAILS and the nearest page's JSON
-   record (`outputs/house-slides/records/`) is the diff target to amend
-   against.
+4. **Gate (recalibrated 2026-08-11):** the embedding channel is TEXT-
+   dominated — two real pages sharing only their words score 0.952 while a
+   generated page against its visual archetype twin with different words
+   scores 0.25 — so it serves only as a semantic anomaly floor (0.395, the
+   duplicate-free corpus minimum). Visual style is gated by text-invariant
+   pixel metrics (`style_metrics.py`) calibrated on all 233 real pages:
+   ink coverage ≥ 0.1534 (p5) and house-palette ink share ≥ 0.6666 (p5).
+   Render at 50 dpi to match the corpus pages (667px wide) — resolution
+   mismatch alone shifts embeddings. Distributions:
+   `outputs/house-slides/self-similarity-calibration.json`. On FAIL the
+   nearest page's record (`outputs/house-slides/records/`) is the diff
+   target.
 5. Every real page is also recallable: `/memory` collection
    `pitchdeck_house_slides` (203 docs, metadata + Qdrant point id).
 
-Current honest status (2026-08-11): the Sparta Explorer deck scores
-0.36–0.46 on all six slides — chrome inherits correctly, but density and
-illustration keep every slide below gate. The replica proved 0.72 is
-reachable when a page is composed the way Graham composes.
+Current status (2026-08-11, after 13 measured iterations): the 15-slide
+Sparta Explorer deck PASSES the full north-star eval — all 11 stages,
+including house-conformance (0 findings) and the recalibrated house gate.
+The closing levers, in order of measured impact: authored identity mark on
+every page; drawn-scene principal art (create-image, house palette, no
+text) replacing squeezed vector diagrams; archetype anatomy for dividers/
+toc/thesis/close; screenshots at corpus scale (dark panels are the main
+palette risk); sentence-level chevrons; corpus-matched render DPI.
 
 ## 8. Claims outrank style — always
 

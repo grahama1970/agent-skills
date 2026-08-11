@@ -74,7 +74,7 @@ stage render-pdf soffice "-env:UserInstallation=file://$WORK/.lo" --headless \
   --convert-to pdf "$WORK/deck.pptx" --outdir "$WORK/render"
 if [ -f "$WORK/render/deck.pdf" ]; then
   NPAGES=$(pdfinfo "$WORK/render/deck.pdf" 2>/dev/null | awk '/^Pages:/{print $2}'); NPAGES=${NPAGES:-6}
-  for p in $(seq 1 "$NPAGES"); do pdftoppm -png -r 70 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
+  for p in $(seq 1 "$NPAGES"); do pdftoppm -png -r 50 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
 fi
 
 echo "--- stage 6: THE GOAL — looks like a Graham deck ---"

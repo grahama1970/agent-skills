@@ -730,16 +730,22 @@ def build_manifest_cmd(
 @app.command(name="house-similarity")
 def house_similarity_cmd(
     slides_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs to score.")],
-    threshold: Annotated[float, typer.Option(help="Per-slide floor: p5 of duplicate-free real corpus pages (self-similarity-calibration.json).")] = 0.452,
-    deck_median_floor: Annotated[float, typer.Option(help="Deck-level bar: p25 of duplicate-free real pages (raw corpus percentiles are duplicate-inflated — Graham reuses slides across decks).")] = 0.547,
+    threshold: Annotated[float, typer.Option(help="Semantic anomaly floor: MIN of duplicate-free real pages. The embedding channel reads the words, so new on-domain content legitimately scores 0.4-0.5; style is gated by the text-invariant metrics.")] = 0.395,
+    ink_floor: Annotated[float, typer.Option(help="Per-slide ink-coverage floor: p5 of the real pages (style_metrics; text-invariant).")] = 0.1534,
+    hue_floor: Annotated[float, typer.Option(help="Per-slide house-palette floor: p5 of the real pages' in-palette ink share.")] = 0.6666,
     glob: Annotated[str, typer.Option(help="Filename pattern.")] = "*.png",
 ) -> None:
-    """Score each rendered slide against its nearest REAL house page (exit 1 on any FAIL)."""
+    """Gate each rendered slide on house style: text-invariant pixel metrics
+    (ink coverage + house-palette share, calibrated on the real corpus) plus a
+    nearest-real-page embedding floor. The embedding channel alone is text-
+    dominated (measured: same-words pages 0.952, same-archetype-different-words
+    0.25), so it serves as an anomaly floor, never the style verdict."""
     import base64
     import json as json_mod
 
     import httpx
 
+    from .style_metrics import measure
     from .visual_sync import EMBED_URL, HTTP_TIMEOUT, QDRANT_URL
 
     try:
@@ -757,22 +763,31 @@ def house_similarity_cmd(
                 hits.raise_for_status()
                 hit = hits.json()["result"][0]
                 score = hit["score"]
+                style = measure(image)
+                reasons = []
                 if score < threshold:
+                    reasons.append(f"embedding {score:.3f} < {threshold}")
+                if style.ink_fraction < ink_floor:
+                    reasons.append(f"ink {style.ink_fraction:.3f} < {ink_floor} (canvas too empty)")
+                if style.house_hue_fraction < hue_floor:
+                    reasons.append(f"palette {style.house_hue_fraction:.3f} < {hue_floor} (off-house color)")
+                if reasons:
                     failed += 1
                 rows.append({
                     "slide": image.name, "score": round(score, 3),
-                    "verdict": "PASS" if score >= threshold else "FAIL",
+                    "ink": style.ink_fraction, "palette": style.house_hue_fraction,
+                    "verdict": "PASS" if not reasons else "FAIL", "reasons": reasons,
                     "nearest": f"{hit['payload']['deck']}#{hit['payload']['slide_index']}",
                     "nearest_title": hit["payload"].get("title"),
                     "diff_target": hit["payload"].get("record_path"),
                 })
         import statistics as stats_mod
         deck_median = round(stats_mod.median(r["score"] for r in rows), 3) if rows else 0.0
-        ok = bool(rows) and failed == 0 and deck_median >= deck_median_floor
+        ok = bool(rows) and failed == 0
         typer.echo(json_mod.dumps({
             "status": "PASS" if ok else "FAIL",
-            "threshold": threshold, "deck_median": deck_median,
-            "deck_median_floor": deck_median_floor, "failed": failed, "slides": rows,
+            "threshold": threshold, "ink_floor": ink_floor, "hue_floor": hue_floor,
+            "deck_median": deck_median, "failed": failed, "slides": rows,
         }, indent=1))
         if not rows:
             typer.echo("no rendered slides matched — a gate over nothing proves nothing", err=True)

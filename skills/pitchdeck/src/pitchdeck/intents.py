@@ -486,7 +486,7 @@ def _interstitial(order: int, slide_id: str, archetype: str, heading: str, *, ma
     ]
     if mark:
         elements.append(DocElement(id="divider-mark", kind=DocElementKind.IMAGE, role="badge",
-                                   bbox=Bbox(x=0.74, y=0.58, w=0.16, h=0.28),
+                                   bbox=Bbox(x=0.72, y=0.54, w=0.2, h=0.34),
                                    asset_id="sparta-helmet-mark-png"))
     return DocSlide(
         id=slide_id, order=order, layout_origin=SlideLayout.FREEFORM,
@@ -529,7 +529,7 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                    text=(asset.alt_text or asset.id).split(" showing")[0][:60],
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                   bbox=Bbox(x=0.3, y=0.16, w=0.66, h=0.48), asset_id=asset.id),
+                   bbox=Bbox(x=0.4, y=0.18, w=0.33, h=0.27), asset_id=asset.id),
         DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
                    bbox=Bbox(x=0.03, y=0.18, w=0.25, h=0.6),
                    text=f"> {_truncate_words(claim_text, 200)}",
@@ -553,9 +553,12 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                                    style=DocTextStyle(size_pt=12.0, color="#595959"),
                                    binding_paths=["footer"]))
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
+    elements.append(DocElement(id="proof-scene", kind=DocElementKind.IMAGE, role="visual",
+                               bbox=Bbox(x=0.02, y=0.5, w=0.4, h=0.38),
+                               asset_id="gen-valueprop-scene"))
     for t_index, sib in enumerate((siblings or [])[:2]):
         elements.append(DocElement(id=f"thumb-{t_index}", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.3 + t_index * 0.34, y=0.66, w=0.33, h=0.26),
+                                   bbox=Bbox(x=0.44 + t_index * 0.19, y=0.5, w=0.16, h=0.13),
                                    asset_id=sib.id))
     return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order, section="proof",
                     layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
@@ -584,10 +587,10 @@ def _claims_bullets_slide(slide_id: str, order: int, heading: str,
         for el in elements[1:]:
             el.bbox = Bbox(x=el.bbox.x, y=el.bbox.y, w=0.44, h=el.bbox.h)
         elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.51, y=0.24, w=0.46, h=0.64),
+                                   bbox=Bbox(x=0.6, y=0.2, w=0.3, h=0.26),
                                    asset_id=visual_asset_id))
         elements.append(DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.03, y=0.46, w=0.44, h=0.42),
+                                   bbox=Bbox(x=0.03, y=0.5, w=0.52, h=0.42),
                                    asset_id="gen-ask-scene" if "ask" in slide_id else "gen-valueprop-scene"))
     quals = [qualifiers[c.id] for c in picked if c.id in qualifiers]
     if quals:
@@ -706,9 +709,10 @@ def materialize_outline(
                           "section-divider", section_name))
         for module_name in module_names:
             if module_name == "proof" and surfaces_claim is not None and proof_assets:
-                for a_index, asset in enumerate(proof_assets):
-                    sibs = [a for a in proof_assets if a.id != asset.id]
-                    sibs = sibs[a_index % max(len(sibs), 1):] + sibs[:a_index % max(len(sibs), 1)]
+                primaries = proof_assets[:2]
+                rest = proof_assets[2:]
+                for a_index, asset in enumerate(primaries):
+                    sibs = rest[a_index * 2:a_index * 2 + 2] or [a for a in proof_assets if a.id != asset.id][:2]
                     add(_proof_slide_for_asset(order, asset, surfaces_claim.id,
                                                surfaces_claim.text, qualifiers, siblings=sibs))
                 continue
