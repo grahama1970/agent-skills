@@ -55,6 +55,18 @@ const ARCHIVED_FINGERPRINTS: FingerprintRecord[] = [
   {
     schema: 'grahama.public_fingerprint.v1',
     canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
+    sourceCommit: 'ba934fd36771dcd0c00fad390da8e01268daa83f',
+    sourceCommitShort: 'ba934fd36771',
+    candidateFingerprint: '39b868d93548b46ef3d5638eab4f8254b4699128cdbc67d605c4f143b0e4f50e',
+    generatedAt: '2026-08-11T18:10:00Z',
+    manifestSourceCommit: 'f0d83dc69b',
+    manifestSha256: null,
+    importantHashes: {},
+    reviewUnits: REVIEW_UNITS,
+  },
+  {
+    schema: 'grahama.public_fingerprint.v1',
+    canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
     sourceCommit: '3e02ea1840ea482f45b9297d2be929af6f7dd62e',
     sourceCommitShort: '3e02ea1840ea',
     candidateFingerprint: 'ead6aa31d8b92d4308182b30065c7fddb33379c2a6d7106496bf619a564538cc',
