@@ -184,6 +184,13 @@ recovery, 2-hop path verified live: `CWE-79 → SI-10 → 17 SV-* controls` via
 in `sparta_relationships` still need a relationships step to materialize the
 path for graph traversal.
 
+Provenance caveat (externally validated 2026-08-11): `mitre/heimdall_tools` is
+archived (last push 2022-02-05, superseded by SAF CLI) and the CSV maps to
+800-53 **Rev 4** — hence `nist_source = "mitre_heimdall_800-53r4"` on every
+enriched doc. Translate through NIST's Rev4→Rev5 change analysis before
+materializing production edges; NIST warns those relationships are not
+one-to-one.
+
 ### Edge Casing in sparta_relationships
 
 Framework labels on edges are case-exact matches of `sparta_controls`
