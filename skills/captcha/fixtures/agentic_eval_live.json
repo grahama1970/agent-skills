@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "skill": "captcha",
+  "trials": 3,
+  "proof_scope": "opt-in live E2E ReCAP CAPTCHA benchmark with nondeterministic browser and model behavior",
+  "claims": {
+    "proves": "when the required loopback target, loopback model endpoint, Surf browser transport, pinned ReCAP checkout, and ReCAP runtime are present, the captcha skill can execute and verify repeated authorized synthetic CAPTCHA benchmark runs with durable receipts",
+    "does_not_prove": "permission or capability to bypass third-party CAPTCHAs, behavior outside the pinned ReCAP commit, or production release readiness"
+  },
+  "cases": [
+    {
+      "name": "authorized-local-recap-live-e2e",
+      "type": "positive",
+      "real_world": true,
+      "command": ["../scripts/live_e2e_agentic_eval.sh"],
+      "timeout_seconds": 4200,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.run_receipt.v1",
+          "CAPABILITY_MEASURED",
+          "live_e2e_verified"
+        ]
+      }
+    },
+    {
+      "name": "live-public-target-still-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "../run.sh",
+        "authorization-preflight",
+        "--manifest",
+        "authorization-invalid-public.json",
+        "--action",
+        "evaluate",
+        "--json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["target_not_loopback", "BLOCKED"]
+      }
+    }
+  ]
+}

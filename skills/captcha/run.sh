@@ -18,6 +18,16 @@ if [[ "${1:-}" == "eval" ]]; then
   exec "$EVAL_RUN" run "${SCRIPT_DIR}/fixtures/agentic_eval.json" "$@"
 fi
 
+if [[ "${1:-}" == "eval-live" ]]; then
+  shift
+  EVAL_RUN="${SCRIPT_DIR}/../agentic-evals/run.sh"
+  if [[ ! -x "$EVAL_RUN" ]]; then
+    printf 'captcha: agentic-evals run.sh is missing or not executable: %s\n' "$EVAL_RUN" >&2
+    exit 2
+  fi
+  exec "$EVAL_RUN" run "${SCRIPT_DIR}/fixtures/agentic_eval_live.json" "$@"
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
   printf 'captcha: uv is required for isolated skill execution\n' >&2
   exit 2

@@ -31,6 +31,7 @@ done < <(find src/captcha_skill -maxdepth 1 -name '*.py' -type f | sort)
 
 ./run.sh schemas --check --json >"$TMP_DIR/schemas.json"
 ./run.sh status --json >"$TMP_DIR/status.json"
+./run.sh eval --output "$TMP_DIR/agentic-eval.json" >"$TMP_DIR/agentic-eval.stdout.json"
 ./run.sh authorization-preflight \
   --manifest fixtures/authorization-valid-local.json \
   --action plan \
@@ -62,12 +63,17 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 status = json.loads((root / "status.json").read_text())
+agentic_eval = json.loads((root / "agentic-eval.json").read_text())
 authorization = json.loads((root / "authorization.json").read_text())
 dag = json.loads((root / "ask-dag.json").read_text())
 invalid = json.loads((root / "invalid.stdout").read_text())
 
 if status["schema_version"] != "captcha.status.v1":
     raise SystemExit("status schema mismatch")
+if agentic_eval["readiness"] != "READY":
+    raise SystemExit("agentic eval readiness was not READY")
+if agentic_eval["case_count"] < 5:
+    raise SystemExit("agentic eval fixture lost behavioral coverage")
 if authorization["status"] != "PASS":
     raise SystemExit("authorization receipt did not pass")
 if dag["schema_version"] != "ask.dag.v1":

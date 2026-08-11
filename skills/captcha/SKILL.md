@@ -201,8 +201,22 @@ fallback that interprets missing output as success.
 ```bash
 ./sanity.sh
 ./run.sh eval
+CAPTCHA_LIVE_E2E=1 ./run.sh eval-live
 ```
 
-`sanity.sh` uses real CLI and filesystem boundaries, validates a positive local
-manifest, proves a public target is rejected, emits an Ask DAG, compiles Python,
-and runs unit/integration tests. It does not claim a live ReCAP model run.
+`./run.sh eval` runs the committed `$agentic-evals` v2 fixture with repeated
+trials, a real entrypoint case, public-target rejection, missing `--execute`
+rejection, missing-runtime truthfulness, and Ask DAG composition.
+
+`./run.sh eval-live` is opt-in because it performs live effects. It requires
+`CAPTCHA_LIVE_E2E=1` plus a running loopback ReCAP dynamic target, loopback
+OpenAI-compatible ReCAP model endpoint, Surf transport, pinned ReCAP checkout,
+and ReCAP Python runtime. It runs repeated live E2E trials through
+`scripts/live_e2e_agentic_eval.sh`, executes `evaluate --execute`, and verifies
+the emitted `captcha.run_receipt.v1`.
+
+`sanity.sh` uses real CLI and filesystem boundaries, validates the local
+multi-trial agentic eval fixture, validates a positive local manifest, proves a
+public target is rejected, emits an Ask DAG, compiles Python, and runs
+unit/integration tests. It does not claim a live ReCAP model run unless
+`eval-live` is run separately and passes.
