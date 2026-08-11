@@ -26,6 +26,8 @@ complies:
 disciplines:
   - engineering-standards
   - content-creation
+domains:
+  - marketing
 ---
 
 # Slide Design Best Practices
@@ -49,6 +51,15 @@ claims are LAW — nothing here overrides the pitchdeck compiler's gates.
    the SAME idea on every channel. Text-only slides get a reinforcement
    proposal; text and visual making different points is a failure.
    (`cybersummit-18`)
+
+## The archetype catalog
+
+`references/DESIGN_SLIDES.md` classifies ALL 263 corpus slides into ten
+archetypes (assertion+art 30%, section-divider 20%, bullets, art-rich,
+dense-reference, mixed Q&A, art-only, close, toc, cover) with measured
+geometry, exemplars, cross-archetype design laws, and the compiler mapping or
+gap for each. Pick the archetype before composing; the machine-readable
+assignment lives in outputs/house-slides/archetypes.json.
 
 ## Slide-level rules
 
