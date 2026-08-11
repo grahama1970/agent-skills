@@ -127,11 +127,16 @@ def extract_signatures(decks_dir: Path) -> list[LayoutSignature]:
 
 
 def _embed(client: httpx.Client, *, text: str | None = None, image: Path | None = None) -> list[float]:
-    # Service contract (embry-embedding-mm /embed): `text` plus optional
-    # `image_b64` — the same call visual_sync already makes.
-    payload: dict = {"text": text or ""}
+    # Service contract (embry-embedding-mm /embed, verified against its OpenAPI
+    # schema 2026-08-11): the field is `image` and it accepts a data URL. The
+    # previous `image_b64` field was UNKNOWN to the service and silently
+    # ignored, so every "image" vector was actually the text embedding — all
+    # 250 stored image vectors were identical.
+    payload: dict = {}
+    if text:
+        payload["text"] = text
     if image is not None:
-        payload["image_b64"] = base64.b64encode(image.read_bytes()).decode("ascii")
+        payload["image"] = "data:image/png;base64," + base64.b64encode(image.read_bytes()).decode("ascii")
     response = client.post(EMBED_URL, json=payload, timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     body = response.json()
@@ -143,11 +148,22 @@ def _embed(client: httpx.Client, *, text: str | None = None, image: Path | None 
     return vector
 
 
-def index_house_slides(decks_dir: Path, renders_dir: Path) -> dict:
-    """Index every real slide (image + title + signature) for retrieval."""
+def index_house_slides(decks_dir: Path, renders_dir: Path, *, memory: bool = True) -> dict:
+    """Index every real slide for retrieval AND recall.
+
+    Three artifacts per page: a JSON record (full text + layout signature) on
+    disk, a Qdrant point with REAL text and image vectors, and a /memory
+    document holding metadata plus the Qdrant point id (never vectors — the
+    established visual_sync pattern). Renders are matched through the
+    pdftotext-derived page mapping, because pdftoppm page numbers diverge from
+    pptx slide indexes whenever a deck contains hidden slides."""
     signatures = extract_signatures(decks_dir)
-    renders = {p.name: p for p in renders_dir.glob("*.png")}
+    mapping_path = renders_dir / "page-mapping.json"
+    page_map = json.loads(mapping_path.read_text()) if mapping_path.is_file() else {}
+    records_dir = renders_dir / "records"
+    records_dir.mkdir(exist_ok=True)
     points: list[dict] = []
+    memory_docs: list[dict] = []
     missing_renders: list[str] = []
     with httpx.Client(timeout=HTTP_TIMEOUT) as client:
         existing = client.get(f"{QDRANT_URL}/collections/{HOUSE_COLLECTION}")
@@ -160,33 +176,63 @@ def index_house_slides(decks_dir: Path, renders_dir: Path) -> dict:
                 }},
             ).raise_for_status()
         for signature in signatures:
-            candidates = [n for n in renders if n.startswith(signature.deck) and f"-{signature.slide_index:02d}" in n]
-            if not candidates:
-                candidates = [n for n in renders if n.startswith(signature.deck) and f"-{signature.slide_index}." in n]
-            if not candidates:
-                missing_renders.append(f"{signature.deck}#{signature.slide_index}")
+            page = page_map.get(f"{signature.deck}#{signature.slide_index}")
+            if page is None:
+                missing_renders.append(f"{signature.deck}#{signature.slide_index} (no page mapping)")
                 continue
-            image = renders[sorted(candidates)[0]]
+            image = renders_dir / f"{signature.deck}-{page:02d}.png"
+            if not image.is_file():
+                image = renders_dir / f"{signature.deck}-{page}.png"
+            if not image.is_file():
+                missing_renders.append(f"{signature.deck}#{signature.slide_index} (page {page} not rendered)")
+                continue
+            record = {
+                **signature.model_dump(by_alias=True, mode="json"),
+                "image_path": str(image),
+                "image_sha256": hashlib.sha256(image.read_bytes()).hexdigest(),
+                "pdf_page": page,
+                "all_text": [b.model_dump(mode="json") for b in signature.blocks if b.kind == "text"],
+            }
+            record_path = records_dir / f"{signature.deck}-{signature.slide_index:03d}.json"
+            record_path.write_text(json.dumps(record, indent=1), encoding="utf-8")
+            point_id = int(hashlib.sha256(f"{signature.deck}:{signature.slide_index}".encode()).hexdigest()[:12], 16)
             vectors = {"image_mm": _embed(client, image=image)}
             if signature.title:
                 vectors["text_mm"] = _embed(client, text=signature.title)
-            points.append({
-                "id": int(hashlib.sha256(f"{signature.deck}:{signature.slide_index}".encode()).hexdigest()[:12], 16),
-                "vector": vectors,
-                "payload": {
-                    **signature.model_dump(by_alias=True, mode="json"),
-                    "image_path": str(image),
-                },
+            points.append({"id": point_id, "vector": vectors,
+                           "payload": {**record, "record_path": str(record_path)}})
+            memory_docs.append({
+                "_key": f"house_slide_{point_id}",
+                "problem": f"House slide: {signature.deck} slide {signature.slide_index} ({signature.title or 'untitled'})",
+                "solution": (f"Layout record at {record_path}; render at {image}; "
+                             f"Qdrant point {point_id} in {HOUSE_COLLECTION} (text_mm + image_mm)."),
+                "deck": signature.deck, "slide_index": signature.slide_index,
+                "title": signature.title, "image_path": str(image),
+                "record_path": str(record_path),
+                "visual_qdrant_collection": HOUSE_COLLECTION,
+                "visual_qdrant_point_id": point_id,
+                "tags": ["pitchdeck", "house-slide", signature.deck],
             })
         for batch_start in range(0, len(points), 32):
             client.put(
                 f"{QDRANT_URL}/collections/{HOUSE_COLLECTION}/points",
                 json={"points": points[batch_start:batch_start + 32]},
             ).raise_for_status()
+    memory_synced = 0
+    if memory and memory_docs:
+        from .visual_sync import MEMORY_URL
+
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            response = client.post(f"{MEMORY_URL}/upsert",
+                                   json={"collection": "pitchdeck_house_slides", "documents": memory_docs})
+            response.raise_for_status()
+            memory_synced = len(memory_docs)
     return {
         "collection": HOUSE_COLLECTION,
         "indexed": len(points),
         "measured": len(signatures),
+        "memory_synced": memory_synced,
+        "records_dir": str(records_dir),
         "missing_renders": missing_renders,
     }
 
