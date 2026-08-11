@@ -58,6 +58,21 @@
     ]
    },
    "real_world": true
+  },
+  {
+   "id": "north-star-readme-to-graham-deck",
+   "description": "THE GOAL: the real sparta-public README compiles into a claim-bound deck that passes every gate INCLUDING looks-like-a-Graham-deck (house-similarity, calibrated 0.55). Expected to FAIL until the density/drawn-art gap closes \u2014 a goal eval that always passes is measuring something else. Current known failing stages: house-conformance (cover visual density, advisory-class) and house-similarity (6/6 slides at 0.36-0.46 vs gate 0.55; field diffs name picture_count 0 vs median 2 and content_area 0.15 vs 0.35).",
+   "command": "../scripts/eval_readme_to_deck.sh",
+   "real_world": true,
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": "NORTH-STAR: NOT YET"
+   },
+   "goal_expected": {
+    "exit_code": 0,
+    "stdout_contains": "NORTH-STAR: PASS"
+   },
+   "note": "expected pins TODAY's honest state so the eval suite stays green-on-truth; flip expected to goal_expected when the gap closes \u2014 that flip IS the milestone."
   }
  ]
 }

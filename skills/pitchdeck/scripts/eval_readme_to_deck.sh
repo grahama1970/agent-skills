@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# The NORTH-STAR eval: sparta-public README -> claim-bound deck -> every gate ->
+# looks-like-a-Graham-deck. One command, one honest per-stage report.
+#
+# This is the skill's actual goal, so the eval is allowed to FAIL — a goal eval
+# that always passes is measuring something else. Exit 0 only when every stage
+# including house-similarity passes. Current known state: the house gate fails
+# on density and drawn art (recorded in STYLE_GUIDE.md §7); this script is the
+# scoreboard for closing that gap, not a demo.
+set -uo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+export SPARTA_ROOT="${SPARTA_ROOT:-$HOME/workspace/experiments/sparta}"
+export SPARTA_PUBLIC_ROOT="${SPARTA_PUBLIC_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"
+
+WORK="${1:-$(mktemp -d /tmp/pitchdeck-e2e-XXXXXX)}"
+O=/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278
+HT=/mnt/storage12tb/skills/pitchdeck/sources/style-corpus/SpartaAI_CyberSummitv_v3.pptx
+BUNDLE=examples/sparta-explorer
+pass=0; fail=0
+stage() { # stage <name> <cmd...>
+  local name="$1"; shift
+  if "$@" >"$WORK/$name.log" 2>&1; then
+    echo "  PASS  $name"; pass=$((pass+1))
+  else
+    echo "  FAIL  $name  (log: $WORK/$name.log)"; fail=$((fail+1))
+  fi
+}
+
+echo "north-star eval: README -> deck -> Graham gate   (work: $WORK)"
+echo "--- stage 1: source is the real sparta-public README ---"
+stage readme-present test -s "$SPARTA_PUBLIC_ROOT/README.md"
+
+echo "--- stage 2: claim-bound compilation ---"
+stage materialize ./run.sh materialize-outline --outline "$O/approved_outline.json" \
+  --context /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c97e92ee-f998-42c3-8cea-10d08775cc68/scratchpad/deck_context.json \
+  --bundle-dir "$BUNDLE" --output "$WORK/deck.document.json"
+stage design-lint ./run.sh design-lint --document "$WORK/deck.document.json"
+
+echo "--- stage 3: emission on the house template ---"
+stage emit-pptx ./run.sh emit-document-pptx --document "$WORK/deck.document.json" \
+  --output "$WORK/deck.pptx" --asset-base "$BUNDLE" --house-template "$HT" \
+  --disclaimer-owner grahama.co --disclaimer-approved-by "graham (chat approval 2026-08-08)" --brandmark
+
+echo "--- stage 4: chain + publication verification ---"
+stage build-manifest ./run.sh build-manifest --bundle-dir "$BUNDLE" \
+  --document "$WORK/deck.document.json" --outline "$O/approved_outline.json" \
+  --pptx "$WORK/deck.pptx" --house-template "$HT" --output "$WORK/manifest.json"
+stage verify-publish ./run.sh verify-publish --pptx "$WORK/deck.pptx" \
+  --ledger "$BUNDLE/claim_ledger.yaml" \
+  --approvals /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c97e92ee-f998-42c3-8cea-10d08775cc68/scratchpad/publish-approvals-attested.json \
+  --document "$WORK/deck.document.json" \
+  --build-manifest "$WORK/manifest.json" --bundle-dir "$BUNDLE"
+stage house-conformance ./run.sh house-conformance --pptx "$WORK/deck.pptx"
+
+echo "--- stage 5: render ---"
+mkdir -p "$WORK/render"
+stage render-pdf soffice "-env:UserInstallation=file://$WORK/.lo" --headless \
+  --convert-to pdf "$WORK/deck.pptx" --outdir "$WORK/render"
+if [ -f "$WORK/render/deck.pdf" ]; then
+  for p in 1 2 3 4 5 6; do pdftoppm -png -r 70 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
+fi
+
+echo "--- stage 6: THE GOAL — looks like a Graham deck ---"
+stage house-similarity ./run.sh house-similarity --slides-dir "$WORK/render" --glob "s*.png"
+
+echo "---"
+echo "stages: $pass pass, $fail fail"
+if [ $fail -eq 0 ]; then echo "NORTH-STAR: PASS — the README compiles into a deck that passes the Graham gate"; exit 0; fi
+echo "NORTH-STAR: NOT YET — see failing stage logs; the gap is the scoreboard"
+exit 1
