@@ -1,0 +1,41 @@
+"""Employment vs consulting classification — the two actions must never cross."""
+from __future__ import annotations
+from monitor_opportunities.classify import classify_opportunity, EMPLOYMENT, CONSULTING
+
+
+def test_job_posting_is_employment_apply_plus_inmail() -> None:
+    c = classify_opportunity({"lane": "A", "organization": "Drata", "title": "Staff AI Engineer",
+                              "apply_url": "https://jobs.ashbyhq.com/drata/x"})
+    assert c["opportunity_type"] == EMPLOYMENT
+    assert c["action_plan"]["apply_on_site"]  # apply on their site
+    assert c["action_plan"]["inmail"]["target"]  # AND inmail to the right person
+
+
+def test_federal_solicitation_is_consulting_never_apply() -> None:
+    c = classify_opportunity({"lane": "B", "organization": "DARPA", "title": "Sources Sought: Autonomous Coding",
+                              "signal_type": "federal"})
+    assert c["opportunity_type"] == CONSULTING
+    assert c["action_plan"]["apply_on_site"] is None  # NEVER apply
+    assert "capability_statement" in c["action_plan"]["materials"]
+
+
+def test_commercial_signal_is_consulting() -> None:
+    c = classify_opportunity({"lane": "C", "organization": "University at Buffalo", "title": "Tech modernization signal",
+                              "signal_type": "commercial"})
+    assert c["opportunity_type"] == CONSULTING
+    assert c["action_plan"]["apply_on_site"] is None
+
+
+def test_invariant_consulting_never_has_apply_employment_always_inmail() -> None:
+    for opp in [
+        {"lane": "A", "apply_url": "https://boards.greenhouse.io/x/jobs/1"},
+        {"lane": "C", "signal_type": "commercial"},
+        {"lane": "B", "signal_type": "federal"},
+        {"apply_url": "https://linkedin.com/jobs/view/1"},
+    ]:
+        c = classify_opportunity(opp)
+        if c["opportunity_type"] == CONSULTING:
+            assert c["action_plan"]["apply_on_site"] is None  # never apply for consulting
+        else:
+            assert c["action_plan"]["apply_on_site"] is not None
+            assert c["action_plan"]["inmail"]  # employment always also inmails
