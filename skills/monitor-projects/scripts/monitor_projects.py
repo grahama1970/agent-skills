@@ -47,6 +47,50 @@ ROUNDTABLE_COLLECTION = "project_roundtables"
 SCHEMA = "monitor_projects.roundtable.v1"
 RESEARCH_CAP = 3
 NON_SKILL_DIRS = {"_shared", "__pycache__", ".system"}
+WATERMARK_PATH = Path(
+    os.environ.get(
+        "MONITOR_PROJECTS_WATERMARK",
+        str(Path.home() / ".local" / "state" / "monitor-projects" / "watermark.json"),
+    )
+)
+
+
+def read_watermark(repo_root: Path) -> str | None:
+    """Last commit SHA this repo was reviewed through, or None on first run."""
+    if not WATERMARK_PATH.is_file():
+        return None
+    try:
+        data = json.loads(WATERMARK_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.error("watermark unreadable ({}); falling back to time window", exc)
+        return None
+    sha = (data.get("repos") or {}).get(str(repo_root), {}).get("last_reviewed_sha")
+    if not sha:
+        return None
+    # A watermark naming a commit this checkout does not have is worse than
+    # none: `A..HEAD` would silently return nothing. Fail back to the window.
+    rc, _, _ = _run(["git", "cat-file", "-e", f"{sha}^{{commit}}"], timeout=30, cwd=repo_root)
+    if rc != 0:
+        logger.error("watermark {} not present in checkout; falling back to time window", sha[:9])
+        return None
+    return sha
+
+
+def write_watermark(repo_root: Path, sha: str, run_id: str) -> None:
+    """Advance the watermark. Only ever called after a successful live run."""
+    data: dict = {"schema": "monitor_projects.watermark.v1", "repos": {}}
+    if WATERMARK_PATH.is_file():
+        try:
+            data = json.loads(WATERMARK_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.error("watermark unreadable, recreating: {}", exc)
+    data.setdefault("repos", {})[str(repo_root)] = {
+        "last_reviewed_sha": sha,
+        "last_reviewed_at": datetime.now(UTC).isoformat(),
+        "run_id": run_id,
+    }
+    WATERMARK_PATH.parent.mkdir(parents=True, exist_ok=True)
+    WATERMARK_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,16 +144,30 @@ def _run(
     return proc.returncode, proc.stdout, proc.stderr
 
 
-def discover_amended(repo_root: Path, since_hours: int = 24) -> list[AmendedSkill]:
-    """Amended skills = skills/<name>/ paths touched by commits in the window."""
+def discover_amended(
+    repo_root: Path, since_hours: int = 24, use_watermark: bool = True
+) -> tuple[list[AmendedSkill], dict]:
+    """Amended skills = skills/<name>/ paths touched since the last review.
+
+    Selection prefers a commit watermark (`<last_reviewed>..HEAD`) over a wall
+    clock window, because a window cannot resume: if a night is missed, the
+    next run silently skips everything in the gap and its receipt still looks
+    complete. The window remains the first-run fallback only.
+
+    Fetches first — `git log` sees only what the checkout has, and this repo is
+    routinely behind origin, so an unfetched checkout would hide skills other
+    lanes already pushed.
+    """
+    _run(["git", "fetch", "-q", "origin"], timeout=180, cwd=repo_root)
+    watermark = read_watermark(repo_root) if use_watermark else None
+    if watermark:
+        rev_args = [f"{watermark}..HEAD"]
+        selection = {"mode": "watermark", "since_sha": watermark}
+    else:
+        rev_args = [f"--since={since_hours} hours ago"]
+        selection = {"mode": "time_window", "since_hours": since_hours}
     rc, out, err = _run(
-        [
-            "git",
-            "log",
-            f"--since={since_hours} hours ago",
-            "--name-only",
-            "--pretty=format:@@%h %s",
-        ],
+        ["git", "log", *rev_args, "--name-only", "--pretty=format:@@%h %s"],
         timeout=60,
         cwd=repo_root,
     )
@@ -133,12 +191,17 @@ def discover_amended(repo_root: Path, since_hours: int = 24) -> list[AmendedSkil
                 continue
             touched.setdefault(name, set()).add(current_commit)
             counts[name] = counts.get(name, 0) + 1
-    return sorted(
-        (
-            AmendedSkill(name=n, files_changed=counts[n], commits=tuple(sorted(touched[n])))
-            for n in touched
+    head = _run(["git", "rev-parse", "HEAD"], timeout=30, cwd=repo_root)[1].strip()
+    selection["head_sha"] = head
+    return (
+        sorted(
+            (
+                AmendedSkill(name=n, files_changed=counts[n], commits=tuple(sorted(touched[n])))
+                for n in touched
+            ),
+            key=lambda s: -s.files_changed,
         ),
-        key=lambda s: -s.files_changed,
+        selection,
     )
 
 
@@ -328,7 +391,8 @@ def run_roundtable(ctx: RunContext, packet_path: Path) -> dict:
     return result
 
 
-def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | None = None) -> dict:
+def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | None = None,
+               selection: dict | None = None) -> dict:
     """Deterministic synthesis skeleton with per-seat status and pointers.
 
     Attributed prose synthesis is done by the project agent reading the seat
@@ -362,6 +426,7 @@ def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | N
         "handlers": HANDLERS,
         "topology": "concurrent",
         "dry_run": ctx.dry_run,
+        "selection": selection or {},
         "ask_target": ask_result.get("target"),
         "ask_rc": ask_result.get("rc"),
         "ask_compiled": bool(ask),
@@ -419,9 +484,12 @@ def store_receipt(receipt: dict) -> bool:
 def discover(json_out: bool = typer.Option(True, "--json/--no-json"),
              since_hours: int = typer.Option(24, "--since-hours")) -> None:
     """List skills amended in the window. No side effects."""
-    amended = discover_amended(REPO_ROOT, since_hours)
-    payload = [{"name": s.name, "files_changed": s.files_changed, "commits": list(s.commits)}
-               for s in amended]
+    amended, selection = discover_amended(REPO_ROOT, since_hours)
+    payload = {
+        "selection": selection,
+        "skills": [{"name": s.name, "files_changed": s.files_changed, "commits": list(s.commits)}
+                   for s in amended],
+    }
     typer.echo(json.dumps(payload, indent=2) if json_out else "\n".join(s.name for s in amended))
 
 
@@ -433,17 +501,20 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
     run_dir = REPORTS_ROOT / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     ctx = RunContext(run_id=run_id, run_dir=run_dir, dry_run=dry_run)
-    ctx.amended = discover_amended(REPO_ROOT, since_hours)
+    ctx.amended, selection = discover_amended(REPO_ROOT, since_hours)
 
     if not ctx.amended:
         receipt = {
             "schema": SCHEMA, "run_id": run_id, "date": run_id.split("T")[0],
             "created_at": datetime.now(UTC).isoformat(), "skills_reviewed": [],
-            "status": "no_changes", "dry_run": dry_run,
+            "status": "no_changes", "dry_run": dry_run, "selection": selection,
         }
         (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
         if not dry_run:
             store_receipt(receipt)
+            # Nothing to review is a successful review of nothing: advance so the
+            # next run does not re-scan the same empty range.
+            write_watermark(REPO_ROOT, selection["head_sha"], run_id)
         typer.echo(json.dumps(receipt, indent=2))
         return
 
@@ -462,7 +533,7 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
     packet_path.write_text(packet, encoding="utf-8")
 
     ask_result = run_roundtable(ctx, packet_path)
-    receipt = synthesize(ctx, ask_result, state_receipts)
+    receipt = synthesize(ctx, ask_result, state_receipts, selection)
     (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
 
     if dry_run:
@@ -471,6 +542,13 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
 
     receipt["stored_verified"] = store_receipt(receipt)
     (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+    # The watermark advances ONLY when the review actually succeeded and was
+    # stored. A failed or partially-blocked run must re-scan the same range next
+    # time, or the skills it never reviewed are lost silently.
+    if receipt["status"] == "ok" and receipt["stored_verified"]:
+        write_watermark(REPO_ROOT, selection["head_sha"], run_id)
+        receipt["watermark_advanced_to"] = selection["head_sha"]
+
     typer.echo(json.dumps({k: v for k, v in receipt.items() if k != "seat_responses"}, indent=2))
     if receipt["status"] != "ok" or not receipt["stored_verified"]:
         raise typer.Exit(code=1)

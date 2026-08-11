@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix="monitor-projects-sanity-") as tmp:
     (repo / "README.md").write_text("x", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-qm", "non-skill change")
-    if mp.discover_amended(repo, since_hours=24):
+    if mp.discover_amended(repo, since_hours=24, use_watermark=False)[0]:
         failures.append("negative control: non-skill commit reported as amended skill")
 
     # Positive control: a skills/<name>/ change is discovered.
@@ -47,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix="monitor-projects-sanity-") as tmp:
     (skill / "SKILL.md").write_text("---\nname: demo-skill\ndescription: demo\n---\n", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-qm", "amend demo-skill")
-    amended = mp.discover_amended(repo, since_hours=24)
+    amended = mp.discover_amended(repo, since_hours=24, use_watermark=False)[0]
     if [s.name for s in amended] != ["demo-skill"]:
         failures.append(f"positive control: expected [demo-skill], got {[s.name for s in amended]}")
 
@@ -57,8 +57,36 @@ with tempfile.TemporaryDirectory(prefix="monitor-projects-sanity-") as tmp:
     (noise / "util.py").write_text("pass\n", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-qm", "amend _shared")
-    if any(s.name == "_shared" for s in mp.discover_amended(repo, since_hours=24)):
+    if any(s.name == "_shared" for s in mp.discover_amended(repo, since_hours=24, use_watermark=False)[0]):
         failures.append("noise control: _shared surfaced as a skill")
+
+    # watermark control: selecting from an earlier SHA must find the later commit,
+    # and a watermark at HEAD must find nothing (resumable, idempotent).
+    import subprocess as _sp
+    head = _sp.run(["git","rev-parse","HEAD"],cwd=repo,capture_output=True,text=True).stdout.strip()
+    first = _sp.run(["git","rev-list","--max-parents=0","HEAD"],cwd=repo,capture_output=True,text=True).stdout.strip()
+    wm = Path(tmp) / "wm.json"
+    orig_wm = mp.WATERMARK_PATH
+    try:
+        mp.WATERMARK_PATH = wm
+        wm.write_text(json.dumps({"repos": {str(repo): {"last_reviewed_sha": first}}}))
+        got, sel = mp.discover_amended(repo, use_watermark=True)
+        if sel.get("mode") != "watermark":
+            failures.append(f"watermark not used when present: {sel}")
+        if not any(s.name == "demo-skill" for s in got):
+            failures.append("watermark range missed a commit it should have caught")
+        wm.write_text(json.dumps({"repos": {str(repo): {"last_reviewed_sha": head}}}))
+        got2, _ = mp.discover_amended(repo, use_watermark=True)
+        if got2:
+            failures.append(f"watermark at HEAD should select nothing, got {[s.name for s in got2]}")
+        # a watermark naming an unknown commit must fall back, not silently select nothing
+        wm.write_text(json.dumps({"repos": {str(repo): {"last_reviewed_sha": "0"*40}}}))
+        _, sel3 = mp.discover_amended(repo, use_watermark=True)
+        if sel3.get("mode") != "time_window":
+            failures.append("unknown watermark did not fall back to the time window")
+    finally:
+        mp.WATERMARK_PATH = orig_wm
+
 
 # Packet shape + safety boundary: build a packet with stubbed context sources
 # (no live downstream calls, no /store, no --execute).
@@ -85,5 +113,5 @@ if "--execute" in flat_calls or "/store" in flat_calls:
 if failures:
     print(json.dumps({"status": "FAIL", "failures": failures}, indent=2))
     raise SystemExit(1)
-print(json.dumps({"status": "PASS", "gates": ["positive", "negative", "noise", "packet-shape", "safety"]}))
+print(json.dumps({"status": "PASS", "gates": ["positive", "negative", "noise", "packet-shape", "safety", "watermark-range", "watermark-idempotent", "watermark-unknown-fallback"]}))
 PY

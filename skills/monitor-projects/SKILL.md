@@ -56,9 +56,16 @@ roundtable, then store the result in `/memory` for later recall.
 
 ## Pipeline (one `nightly` run)
 
-1. **Discover** — `git log --since` over `skills/<name>/` paths in the
-   canonical checkout finds skills amended in the last 24h. No amendments →
-   store a `no_changes` receipt and exit 0.
+1. **Discover** — fetches, then selects skills whose `skills/<name>/` paths
+   were touched since the **last reviewed commit** (`<watermark>..HEAD`).
+   The watermark lives at `~/.local/state/monitor-projects/watermark.json`
+   (override with `MONITOR_PROJECTS_WATERMARK`) and advances **only after a
+   run that both succeeded and stored** — so a failed or missed night
+   re-scans the same range instead of losing it. `--since` is the first-run
+   fallback only; a wall-clock window cannot resume, and a missed night would
+   silently skip everything in the gap while its receipt still looked
+   complete. An unknown watermark falls back to the window rather than
+   selecting nothing. No amendments → `no_changes` receipt, exit 0.
 2. **Context** — build the shared packet from:
    - `/project-state report --json --cached` (project readiness evidence),
    - `/ops-workstation` quick health (host context),
@@ -134,14 +141,17 @@ receipts can be re-read in full.
 - Seat responses are **advisory reviewer evidence**, not local proof.
   Executable slices still require deterministic local verification by the
   project agent before closure.
-- `nightly --dry-run` proves discovery, context assembly, and packet shape.
+- `nightly --dry-run` proves discovery, context assembly, and packet shape,
+  and never advances the watermark (asserted by `sanity.sh`).
   It does not prove live browser transport; only an `--execute` run with
   validated receipts (`validate_live_browser_workflow.py`) proves that.
 
 ## Eval posture
 
 `sanity.sh` runs behavioral gates over committed fixtures: positive control
-(amended-skill discovery on a synthetic git repo), negative control (no
+(amended-skill discovery on a synthetic git repo), watermark controls (range
+selects the right commit, a watermark at HEAD selects nothing, an unknown
+watermark falls back), negative control (no
 amendments → `no_changes`), packet-shape assertion (every seat receives the
 identical packet; all five handlers present), and safety boundary (dry-run
 performs no `/store` and no `--execute`). Live roundtable transport is
