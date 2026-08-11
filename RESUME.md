@@ -17,15 +17,19 @@ Principal AI Engineer and AI Architect building verifiable agent systems, knowle
 
 My path runs through commercial composition, Webby-recognized interactive production, data science, defense research, formal methods, and agent systems. I am most useful when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
 
+## SELECTED IMPACT
+- DARPA ARCOS / ACERT — technical lead for knowledge-graph and LLM-assisted certification of mission-critical software, briefing prime-contractor teams and program collaborators while remaining hands-on with architecture and code.
+- Tau and agent-skills — built receipt-gated agent orchestration plus 340+ reusable agent capabilities and 90+ bounded worker roles, with deterministic checks on roughly 85% of the public capability set.
+- Regulated graph-memory and compliance systems — built private RAG/GraphRAG systems over NIST, CWE, MITRE ATT&CK, D3FEND, SPARTA, and requirements-to-proof corpora; public details stay bounded because much client work is export-controlled.
+
 ## EXPERIENCE
 
 ### Founder & Principal AI Engineer / Architect | grahamaco | Buffalo–Niagara Falls Area · Remote
 Feb 2025 - Present
-Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; every capability below was built or materially advanced in 2026. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970.
-- Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every handoff must produce a schema-valid receipt or validator result — no receipt, no action.
-- Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, layout and table extraction, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling for AI governance.
-- Authored agent-skills: 340+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 90+ bounded worker roles, ~85% gated by deterministic sanity checks. Covers prompt engineering, adversarial/blind testing with ground-truth fixtures, drift detection, and model fine-tuning and classifier training — public repo, private runtime.
-- Built an ArangoDB agent-memory platform (private, regulated): retrieval-augmented generation (RAG) and GraphRAG over vector databases and knowledge graphs — ~219K evidence-grounded QRA records across 7K+ security controls (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND), hybrid BM25 + vector recall over 2.2M chunks, ~94K Lean 4 theorems indexed for requirements-to-proof retrieval.
+Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970.
+- Built and maintained tau, agent-skills, scillm, extraction, evidence, and evaluation systems for agent work that must produce receipts, checks, and explicit limits instead of only plausible outputs.
+- Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added across Rust-core changes, Python pipeline/plugin work, layout/table extraction, PDF-cloning fixtures, extraction calibration, and NIST document-validation tooling.
+- Built private ArangoDB memory/compliance systems with hybrid BM25, vector, and graph recall over large evidence corpora; public claims are bounded to non-ITAR architecture, scale, and method.
 - Delivered scoped client engagements end to end under ITAR, including a React/TypeScript/D3 dataset explorer over a security-control knowledge graph — graph relationships, integrity and coverage checks, and quality gates feeding downstream ingest and evaluation.
 
 ### Lead Research Scientist, Agentic Formal Methods | grahamaco (independent practice) | Buffalo, NY
