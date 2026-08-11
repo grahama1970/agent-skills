@@ -1164,9 +1164,15 @@ def test_outline_to_materialized_document(tmp_path):
     for sl in doc.slides:
         if sl.section in arc and sl.intent is not None and sl.section not in first_per_section:
             first_per_section[sl.section] = sl.intent.recipe
-    # proof expands to intent-less evidence pages; its golden recipe no longer applies
-    assert [first_per_section.get(sec) for sec in arc if sec != "proof"] == [
-        r for sec, r in zip(arc, evolved) if sec != "proof"]
+    # proof expands to intent-less evidence pages; its golden recipe no longer
+    # applies. Slides that gained drawn-scene art evolved to the scene recipe
+    # (DESIGN_SLIDES archetype 1), superseding their diagram recipes.
+    scene_ok = {"assertion-chevrons-scene", "statement-thesis"}
+    for sec, golden_recipe in zip(arc, evolved):
+        if sec == "proof":
+            continue
+        actual = first_per_section.get(sec)
+        assert actual == golden_recipe or actual in scene_ok, (sec, actual, golden_recipe)
     # zero dropped claim ids vs golden contract
     golden_claims = {c for s in golden["slides"] for c in s["claim_ids"]}
     materialized_claims = {c for s in doc.slides for c in s.claim_ids}

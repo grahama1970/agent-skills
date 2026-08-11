@@ -295,6 +295,9 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
         run.font.bold = bool(style and style.bold)
         if style and style.color:
             run.font.color.rgb = _hex(style.color)
+        if style and style.align in {"center", "right"}:
+            from pptx.enum.text import PP_ALIGN as _PA
+            tf.paragraphs[0].alignment = _PA.CENTER if style.align == "center" else _PA.RIGHT
         return
     if kind is DocElementKind.IMAGE:
         spec = assets[element.asset_id]
@@ -592,7 +595,24 @@ def emit_document_pptx(
         if inherited_chrome:
             ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
             for _, element in ordered:
-                if element.role in {"title", "footer"} or (skip_title and element.role == "title"):
+                if element.role == "footer" or (
+                        element.role == "title" and element.bbox.y < 0.15):
+                    continue
+                if element.role == "title":
+                    # statement archetype: a mid-canvas title is DISPLAY text
+                    # (huge centered teal), in addition to the band title.
+                    display = slide.shapes.add_textbox(
+                        Inches(element.bbox.x * SLIDE_W_IN), Inches(element.bbox.y * SLIDE_H_IN),
+                        Inches(element.bbox.w * SLIDE_W_IN), Inches(element.bbox.h * SLIDE_H_IN))
+                    display.name = f"el:{element.id}"
+                    display.text_frame.word_wrap = True
+                    d_run = display.text_frame.paragraphs[0].add_run()
+                    d_run.text = element.text or ""
+                    d_run.font.size = Pt(44)
+                    d_run.font.bold = True
+                    d_run.font.color.rgb = _hex("#065E7C")
+                    from pptx.enum.text import PP_ALIGN as _PAL
+                    display.text_frame.paragraphs[0].alignment = _PAL.CENTER
                     continue
                 _emit_element(slide.shapes, element, root, palette=palette, scale=scale,
                               assets=assets, asset_base=asset_base, receipt=receipt)
@@ -633,7 +653,7 @@ def emit_document_pptx(
         page_run.font.color.rgb = _hex("#8a8a8a")
         ordered = sorted(enumerate(slide_doc.elements), key=lambda pair: (pair[1].z, pair[0]))
         for _, element in ordered:
-            if skip_title and element.role == "title":
+            if skip_title and element.role == "title" and element.bbox.y < 0.15:
                 continue
             _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})

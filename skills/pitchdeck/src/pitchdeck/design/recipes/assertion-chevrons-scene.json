@@ -1,0 +1,31 @@
+{
+ "schema": "pitchdeck.composition_recipe.v1",
+ "id": "assertion-chevrons-scene",
+ "version": 1,
+ "title_binding_required": true,
+ "numeric_requires_span": true,
+ "reveal_order_matches_narrative": true,
+ "pptx_editable_shapes_required": true,
+ "provenance": {
+  "origin": "DESIGN_SLIDES archetype 1 (assertion+art, n=78): chevron takeaways above one large drawn scene"
+ },
+ "required_roles": [
+  "title",
+  "chevrons",
+  "visual"
+ ],
+ "optional_roles": [
+  "caption",
+  "callout",
+  "footer"
+ ],
+ "allowed_kinds": [
+  "text",
+  "image"
+ ],
+ "max_words": 60,
+ "visual_weight_min_frac": 0.33,
+ "exemplar_ids": [
+  "cybersummit-18-multichannel"
+ ]
+}

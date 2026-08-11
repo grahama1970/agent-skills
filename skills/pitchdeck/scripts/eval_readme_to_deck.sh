@@ -14,6 +14,7 @@ export SPARTA_ROOT="${SPARTA_ROOT:-$HOME/workspace/experiments/sparta}"
 export SPARTA_PUBLIC_ROOT="${SPARTA_PUBLIC_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"
 
 WORK="${1:-$(mktemp -d /tmp/pitchdeck-e2e-XXXXXX)}"
+mkdir -p "$WORK"
 O=/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278
 HT=/mnt/storage12tb/skills/pitchdeck/sources/style-corpus/SpartaAI_CyberSummitv_v3.pptx
 BUNDLE=examples/sparta-explorer

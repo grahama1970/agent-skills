@@ -1,1964 +1,1965 @@
 {
- "$defs": {
-  "AssetKind": {
-   "enum": [
-    "screenshot",
-    "diagram",
-    "logo",
-    "illustration",
-    "photo",
-    "video",
-    "other"
-   ],
-   "title": "AssetKind",
-   "type": "string"
-  },
-  "AssetSpec": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
-    },
-    "kind": {
-     "$ref": "#/$defs/AssetKind"
-    },
-    "visibility": {
-     "$ref": "#/$defs/Visibility"
-    },
-    "local_path": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Local Path"
-    },
-    "source_url": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Source Url"
-    },
-    "required": {
-     "default": false,
-     "title": "Required",
-     "type": "boolean"
-    },
-    "alt_text": {
-     "minLength": 1,
-     "title": "Alt Text",
-     "type": "string"
-    },
-    "target_aspect": {
-     "default": "16:9",
-     "title": "Target Aspect",
-     "type": "string"
-    },
-    "status": {
-     "$ref": "#/$defs/AssetStatus",
-     "default": "planned"
-    },
-    "generation_brief": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Generation Brief"
-    },
-    "source_ref": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/SourceRef"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    }
-   },
-   "required": [
-    "id",
-    "kind",
-    "visibility",
-    "alt_text"
-   ],
-   "title": "AssetSpec",
-   "type": "object"
-  },
-  "AssetStatus": {
-   "enum": [
-    "present",
-    "missing",
-    "planned",
-    "stale",
-    "regenerate"
-   ],
-   "title": "AssetStatus",
-   "type": "string"
-  },
-  "AttachHint": {
-   "additionalProperties": false,
-   "description": "ADVISORY editing hint (2026-08-07 review): geometry stays authoritative;\nthe PPTX emitter writes stCxn/endCxn only for proven-safe combinations.",
-   "properties": {
-    "element_id": {
-     "minLength": 1,
-     "title": "Element Id",
-     "type": "string"
-    },
-    "connection_site": {
-     "maximum": 8,
-     "minimum": 0,
-     "title": "Connection Site",
-     "type": "integer"
-    }
-   },
-   "required": [
-    "element_id",
-    "connection_site"
-   ],
-   "title": "AttachHint",
-   "type": "object"
-  },
-  "BasicMark": {
-   "additionalProperties": false,
-   "properties": {
-    "type": {
-     "enum": [
-      "bold",
-      "italic",
-      "underline",
-      "code"
-     ],
-     "title": "Type",
-     "type": "string"
-    }
-   },
-   "required": [
-    "type"
-   ],
-   "title": "BasicMark",
-   "type": "object"
-  },
-  "Bbox": {
-   "additionalProperties": false,
-   "description": "Fractional geometry on the 16:9 canvas \u2014 x*1920/y*1080 in the browser,\nx*13.333in/y*7.5in in PPTX, so placement round-trips exactly.",
-   "properties": {
-    "x": {
-     "maximum": 1.0,
-     "minimum": 0.0,
-     "title": "X",
-     "type": "number"
-    },
-    "y": {
-     "maximum": 1.0,
-     "minimum": 0.0,
-     "title": "Y",
-     "type": "number"
-    },
-    "w": {
-     "exclusiveMinimum": 0.0,
-     "maximum": 1.0,
-     "title": "W",
-     "type": "number"
-    },
-    "h": {
-     "exclusiveMinimum": 0.0,
-     "maximum": 1.0,
-     "title": "H",
-     "type": "number"
-    }
-   },
-   "required": [
-    "x",
-    "y",
-    "w",
-    "h"
-   ],
-   "title": "Bbox",
-   "type": "object"
-  },
-  "BindingKind": {
-   "description": "Relation of a visible text string to the claim ledger (ContentIR core).\n\nSynthesized from the 2026-08-05 roundtable: webgpt's relation taxonomy,\nwebclaude's explicit non-claim/decorative lexicon + unbound-blocks-publish\ndefault, applied at whole-string granularity (runs stay derived artifacts).",
-   "enum": [
-    "claim_quote",
-    "claim_paraphrase",
-    "derived",
-    "qualifier",
-    "non_claim",
-    "decorative"
-   ],
-   "title": "BindingKind",
-   "type": "string"
-  },
-  "Claim": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
-    },
-    "text": {
-     "minLength": 1,
-     "title": "Text",
-     "type": "string"
-    },
-    "kind": {
-     "$ref": "#/$defs/ClaimKind",
-     "default": "candidate"
-    },
-    "visibility": {
-     "$ref": "#/$defs/Visibility"
-    },
-    "source_refs": {
-     "items": {
-      "$ref": "#/$defs/SourceRef"
-     },
-     "title": "Source Refs",
-     "type": "array"
-    },
-    "risk": {
-     "$ref": "#/$defs/ClaimRisk",
-     "default": "medium"
-    },
-    "status": {
-     "$ref": "#/$defs/ClaimStatus",
-     "default": "candidate"
-    },
-    "required_qualifier": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Required Qualifier"
-    },
-    "approval": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/ClaimApproval"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "evidence_spans": {
-     "items": {
-      "$ref": "#/$defs/EvidenceSpan"
-     },
-     "title": "Evidence Spans",
-     "type": "array"
-    },
-    "formula": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Formula"
-    },
-    "notes": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Notes"
-    }
-   },
-   "required": [
-    "id",
-    "text",
-    "visibility"
-   ],
-   "title": "Claim",
-   "type": "object"
-  },
-  "ClaimApproval": {
-   "additionalProperties": false,
-   "description": "Approval provenance (roundtable item 5): who, when, against what evidence.\n\nAn approved claim without provenance is a warning normally and an ERROR at\npublish; an expired approval returns the claim to unpublishable.",
-   "properties": {
-    "approved_by": {
-     "minLength": 1,
-     "title": "Approved By",
-     "type": "string"
-    },
-    "approved_at": {
-     "minLength": 4,
-     "title": "Approved At",
-     "type": "string"
-    },
-    "source_snapshot_sha256": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Source Snapshot Sha256"
-    },
-    "expires_at": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Expires At"
-    },
-    "fixture": {
-     "default": false,
-     "title": "Fixture",
-     "type": "boolean"
-    }
-   },
-   "required": [
-    "approved_by",
-    "approved_at"
-   ],
-   "title": "ClaimApproval",
-   "type": "object"
-  },
-  "ClaimKind": {
-   "enum": [
-    "thesis",
-    "product",
-    "proof",
-    "status",
-    "roadmap",
-    "ask",
-    "non_claim",
-    "candidate"
-   ],
-   "title": "ClaimKind",
-   "type": "string"
-  },
-  "ClaimRisk": {
-   "enum": [
-    "low",
-    "medium",
-    "high",
-    "mandatory_non_claim"
-   ],
-   "title": "ClaimRisk",
-   "type": "string"
-  },
-  "ClaimStatus": {
-   "enum": [
-    "candidate",
-    "approved",
-    "rejected"
-   ],
-   "title": "ClaimStatus",
-   "type": "string"
-  },
-  "ColorMark": {
-   "additionalProperties": false,
-   "properties": {
-    "type": {
-     "const": "color",
-     "default": "color",
-     "title": "Type",
-     "type": "string"
-    },
-    "role": {
-     "enum": [
-      "primary",
-      "secondary",
-      "canvas",
-      "ink",
-      "muted",
-      "highlight_warm",
-      "highlight_green",
-      "program",
-      "alert"
-     ],
-     "title": "Role",
-     "type": "string"
-    }
-   },
-   "required": [
-    "role"
-   ],
-   "title": "ColorMark",
-   "type": "object"
-  },
-  "ContentReveal": {
-   "description": "Browser-deck content entrance animation for body items.\n\n`step` is click-gated: in Present mode the advance key reveals the next\nbullet/card (a fragment) before it advances the slide \u2014 real-presentation\npacing. Honored by the workbench, presenter, and HTML export; PPTX stays\nanimation-free by design.",
-   "enum": [
-    "none",
-    "stagger_up",
-    "stagger_fade",
-    "step"
-   ],
-   "title": "ContentReveal",
-   "type": "string"
-  },
-  "DeckMeta": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
-    },
-    "title": {
-     "minLength": 1,
-     "title": "Title",
-     "type": "string"
-    },
-    "subtitle": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Subtitle"
-    },
-    "audience": {
-     "minLength": 1,
-     "title": "Audience",
-     "type": "string"
-    },
-    "visibility": {
-     "$ref": "#/$defs/Visibility"
-    },
-    "target_editor": {
-     "default": "google_slides",
-     "title": "Target Editor",
-     "type": "string"
-    },
-    "theme": {
-     "default": "dark_cyan_evidence",
-     "title": "Theme",
-     "type": "string"
-    },
-    "theme_tokens": {
-     "$ref": "#/$defs/ThemeTokens"
-    },
-    "source_policy": {
-     "$ref": "#/$defs/DeckSourcePolicy"
-    },
-    "author": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Author"
-    }
-   },
-   "required": [
-    "id",
-    "title",
-    "audience",
-    "visibility",
-    "source_policy"
-   ],
-   "title": "DeckMeta",
-   "type": "object"
-  },
-  "DeckSourcePolicy": {
-   "enum": [
-    "public_only",
-    "public_and_private"
-   ],
-   "title": "DeckSourcePolicy",
-   "type": "string"
-  },
-  "DiagramEdge": {
-   "additionalProperties": false,
-   "description": "Connectors are first-class and factual by default: a meaningful edge is a\nRELATIONSHIP claim \u2014 it needs bindings or an explicit decorative class.",
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
-    },
-    "source": {
-     "minLength": 1,
-     "title": "Source",
-     "type": "string"
-    },
-    "target": {
-     "minLength": 1,
-     "title": "Target",
-     "type": "string"
-    },
-    "route": {
-     "default": "straight",
-     "enum": [
-      "straight",
-      "curve",
-      "dotted-path"
-     ],
-     "title": "Route",
-     "type": "string"
-    },
-    "line_style": {
-     "default": "solid",
-     "enum": [
-      "solid",
-      "dashed",
-      "dotted"
-     ],
-     "title": "Line Style",
-     "type": "string"
-    },
-    "arrowhead": {
-     "default": true,
-     "title": "Arrowhead",
-     "type": "boolean"
-    },
-    "label": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Label"
-    },
-    "binding_paths": {
-     "items": {
+  "$defs": {
+    "AssetKind": {
+      "enum": [
+        "screenshot",
+        "diagram",
+        "logo",
+        "illustration",
+        "photo",
+        "video",
+        "other"
+      ],
+      "title": "AssetKind",
       "type": "string"
-     },
-     "title": "Binding Paths",
-     "type": "array"
     },
-    "decorative": {
-     "default": false,
-     "title": "Decorative",
-     "type": "boolean"
-    }
-   },
-   "required": [
-    "id",
-    "source",
-    "target"
-   ],
-   "title": "DiagramEdge",
-   "type": "object"
-  },
-  "DiagramGraph": {
-   "additionalProperties": false,
-   "description": "Normalized editable diagram: separate nodes, edges, labels, and groups \u2014\nemitters MUST render these as distinct shapes (never one raster).",
-   "properties": {
-    "recipe": {
-     "enum": [
-      "endpoint-bridge",
-      "pipeline",
-      "hub-spoke",
-      "layered-stack",
-      "loop",
-      "before-after",
-      "scene"
-     ],
-     "title": "Recipe",
-     "type": "string"
-    },
-    "nodes": {
-     "items": {
-      "$ref": "#/$defs/DiagramNode"
-     },
-     "minItems": 2,
-     "title": "Nodes",
-     "type": "array"
-    },
-    "edges": {
-     "items": {
-      "$ref": "#/$defs/DiagramEdge"
-     },
-     "title": "Edges",
-     "type": "array"
-    },
-    "groups": {
-     "additionalProperties": {
-      "items": {
-       "type": "string"
+    "AssetSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/AssetKind"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        },
+        "local_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Local Path"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "alt_text": {
+          "minLength": 1,
+          "title": "Alt Text",
+          "type": "string"
+        },
+        "target_aspect": {
+          "default": "16:9",
+          "title": "Target Aspect",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/AssetStatus",
+          "default": "planned"
+        },
+        "generation_brief": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generation Brief"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
       },
-      "type": "array"
-     },
-     "title": "Groups",
-     "type": "object"
-    }
-   },
-   "required": [
-    "recipe",
-    "nodes"
-   ],
-   "title": "DiagramGraph",
-   "type": "object"
-  },
-  "DiagramNode": {
-   "additionalProperties": false,
-   "description": "Editable diagram node: icon + label as separate parts, bbox in fractions\nof the OWNING element's bbox (diagrams reposition as one unit).",
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
+      "required": [
+        "id",
+        "kind",
+        "visibility",
+        "alt_text"
+      ],
+      "title": "AssetSpec",
+      "type": "object"
     },
-    "bbox": {
-     "$ref": "#/$defs/Bbox"
-    },
-    "icon": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "Icon-library id or sanitized inline SVG path d= data.",
-     "title": "Icon"
-    },
-    "label": {
-     "minLength": 1,
-     "title": "Label",
-     "type": "string"
-    },
-    "sublabel": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Sublabel"
-    },
-    "binding_paths": {
-     "items": {
+    "AssetStatus": {
+      "enum": [
+        "present",
+        "missing",
+        "planned",
+        "stale",
+        "regenerate"
+      ],
+      "title": "AssetStatus",
       "type": "string"
-     },
-     "title": "Binding Paths",
-     "type": "array"
     },
-    "decoration": {
-     "default": "ring",
-     "enum": [
-      "ring",
-      "principal",
-      "support",
-      "ground"
-     ],
-     "title": "Decoration",
-     "type": "string"
-    },
-    "scale": {
-     "default": 1.0,
-     "description": "Glyph weight within its scene.",
-     "exclusiveMinimum": 0.2,
-     "maximum": 2.5,
-     "title": "Scale",
-     "type": "number"
-    }
-   },
-   "required": [
-    "id",
-    "bbox",
-    "label"
-   ],
-   "title": "DiagramNode",
-   "type": "object"
-  },
-  "DocElement": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
-    },
-    "kind": {
-     "$ref": "#/$defs/DocElementKind"
-    },
-    "bbox": {
-     "$ref": "#/$defs/Bbox"
-    },
-    "z": {
-     "default": 0,
-     "title": "Z",
-     "type": "integer"
-    },
-    "role": {
-     "anyOf": [
-      {
-       "type": "string"
+    "AttachHint": {
+      "additionalProperties": false,
+      "description": "ADVISORY editing hint (2026-08-07 review): geometry stays authoritative;\nthe PPTX emitter writes stCxn/endCxn only for proven-safe combinations.",
+      "properties": {
+        "element_id": {
+          "minLength": 1,
+          "title": "Element Id",
+          "type": "string"
+        },
+        "connection_site": {
+          "maximum": 8,
+          "minimum": 0,
+          "title": "Connection Site",
+          "type": "integer"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "Semantic origin (title, message, body:0, visual, caption\u2026).",
-     "title": "Role"
+      "required": [
+        "element_id",
+        "connection_site"
+      ],
+      "title": "AttachHint",
+      "type": "object"
     },
-    "text": {
-     "anyOf": [
-      {
-       "type": "string"
+    "BasicMark": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "bold",
+            "italic",
+            "underline",
+            "code"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Text"
+      "required": [
+        "type"
+      ],
+      "title": "BasicMark",
+      "type": "object"
     },
-    "style": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/DocTextStyle"
+    "Bbox": {
+      "additionalProperties": false,
+      "description": "Fractional geometry on the 16:9 canvas \u2014 x*1920/y*1080 in the browser,\nx*13.333in/y*7.5in in PPTX, so placement round-trips exactly.",
+      "properties": {
+        "x": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        },
+        "w": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 1.0,
+          "title": "W",
+          "type": "number"
+        },
+        "h": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 1.0,
+          "title": "H",
+          "type": "number"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "title": "Bbox",
+      "type": "object"
     },
-    "asset_id": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Asset Id"
-    },
-    "svg": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "Inline SVG; validated by the svg_sanitize allowlist gate (#1268).",
-     "title": "Svg"
-    },
-    "figure": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/FigureSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "diagram": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/DiagramGraph"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "children": {
-     "anyOf": [
-      {
-       "items": {
-        "$ref": "#/$defs/DocElement"
-       },
-       "type": "array"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "group members; coordinates are fractions of the group's UNROTATED local frame",
-     "title": "Children"
-    },
-    "child_frame": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/Bbox"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "chOff/chExt as fractions of the group bbox; preserved so padded frames survive python-pptx extent recalculation"
-    },
-    "shape": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/ShapeSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "line": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/LineSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "icon": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/IconSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "rich_text": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/RichTextSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    },
-    "rotation_deg": {
-     "anyOf": [
-      {
-       "exclusiveMaximum": 360.0,
-       "minimum": 0.0,
-       "type": "number"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "clockwise, center-anchored; group/shape/image only",
-     "title": "Rotation Deg"
-    },
-    "binding_paths": {
-     "description": "TextBinding.path values this element renders.",
-     "items": {
+    "BindingKind": {
+      "description": "Relation of a visible text string to the claim ledger (ContentIR core).\n\nSynthesized from the 2026-08-05 roundtable: webgpt's relation taxonomy,\nwebclaude's explicit non-claim/decorative lexicon + unbound-blocks-publish\ndefault, applied at whole-string granularity (runs stay derived artifacts).",
+      "enum": [
+        "claim_quote",
+        "claim_paraphrase",
+        "derived",
+        "qualifier",
+        "non_claim",
+        "decorative"
+      ],
+      "title": "BindingKind",
       "type": "string"
-     },
-     "title": "Binding Paths",
-     "type": "array"
     },
-    "entrance": {
-     "$ref": "#/$defs/DocEntrance"
-    }
-   },
-   "required": [
-    "id",
-    "kind",
-    "bbox"
-   ],
-   "title": "DocElement",
-   "type": "object"
-  },
-  "DocElementKind": {
-   "enum": [
-    "text",
-    "image",
-    "svg",
-    "figure",
-    "diagram",
-    "group",
-    "shape",
-    "line",
-    "icon",
-    "rich_text"
-   ],
-   "title": "DocElementKind",
-   "type": "string"
-  },
-  "DocEntrance": {
-   "additionalProperties": false,
-   "description": "Rhetorical animation: reveal order follows the argument, never decoration.",
-   "properties": {
-    "effect": {
-     "default": "none",
-     "enum": [
-      "none",
-      "fade",
-      "rise",
-      "zoom"
-     ],
-     "title": "Effect",
-     "type": "string"
-    },
-    "delay_ms": {
-     "default": 0,
-     "maximum": 5000,
-     "minimum": 0,
-     "title": "Delay Ms",
-     "type": "integer"
-    },
-    "fragment_index": {
-     "anyOf": [
-      {
-       "minimum": 0,
-       "type": "integer"
+    "Claim": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ClaimKind",
+          "default": "candidate"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "risk": {
+          "$ref": "#/$defs/ClaimRisk",
+          "default": "medium"
+        },
+        "status": {
+          "$ref": "#/$defs/ClaimStatus",
+          "default": "candidate"
+        },
+        "required_qualifier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Qualifier"
+        },
+        "approval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClaimApproval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence_spans": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSpan"
+          },
+          "title": "Evidence Spans",
+          "type": "array"
+        },
+        "formula": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formula"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "description": "Click-gated build step; None reveals with the slide.",
-     "title": "Fragment Index"
-    }
-   },
-   "title": "DocEntrance",
-   "type": "object"
-  },
-  "DocSlide": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
+      "required": [
+        "id",
+        "text",
+        "visibility"
+      ],
+      "title": "Claim",
+      "type": "object"
     },
-    "order": {
-     "minimum": 1,
-     "title": "Order",
-     "type": "integer"
-    },
-    "section": {
-     "anyOf": [
-      {
-       "type": "string"
+    "ClaimApproval": {
+      "additionalProperties": false,
+      "description": "Approval provenance (roundtable item 5): who, when, against what evidence.\n\nAn approved claim without provenance is a warning normally and an ERROR at\npublish; an expired approval returns the claim to unpublishable.",
+      "properties": {
+        "approved_by": {
+          "minLength": 1,
+          "title": "Approved By",
+          "type": "string"
+        },
+        "approved_at": {
+          "minLength": 4,
+          "title": "Approved At",
+          "type": "string"
+        },
+        "source_snapshot_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Snapshot Sha256"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expires At"
+        },
+        "fixture": {
+          "default": false,
+          "title": "Fixture",
+          "type": "boolean"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Section"
+      "required": [
+        "approved_by",
+        "approved_at"
+      ],
+      "title": "ClaimApproval",
+      "type": "object"
     },
-    "layout_origin": {
-     "$ref": "#/$defs/SlideLayout"
-    },
-    "elements": {
-     "items": {
-      "$ref": "#/$defs/DocElement"
-     },
-     "minItems": 1,
-     "title": "Elements",
-     "type": "array"
-    },
-    "bindings": {
-     "items": {
-      "$ref": "#/$defs/TextBinding"
-     },
-     "title": "Bindings",
-     "type": "array"
-    },
-    "claim_ids": {
-     "items": {
+    "ClaimKind": {
+      "enum": [
+        "thesis",
+        "product",
+        "proof",
+        "status",
+        "roadmap",
+        "ask",
+        "non_claim",
+        "candidate"
+      ],
+      "title": "ClaimKind",
       "type": "string"
-     },
-     "title": "Claim Ids",
-     "type": "array"
     },
-    "transition": {
-     "$ref": "#/$defs/SlideTransition",
-     "default": "slide"
+    "ClaimRisk": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "mandatory_non_claim"
+      ],
+      "title": "ClaimRisk",
+      "type": "string"
     },
-    "transition_duration_ms": {
-     "default": 400,
-     "maximum": 1200,
-     "minimum": 200,
-     "title": "Transition Duration Ms",
-     "type": "integer"
+    "ClaimStatus": {
+      "enum": [
+        "candidate",
+        "approved",
+        "rejected"
+      ],
+      "title": "ClaimStatus",
+      "type": "string"
     },
-    "reveal": {
-     "$ref": "#/$defs/ContentReveal",
-     "default": "stagger_up"
-    },
-    "hidden": {
-     "default": false,
-     "title": "Hidden",
-     "type": "boolean"
-    },
-    "notes": {
-     "default": "",
-     "title": "Notes",
-     "type": "string"
-    },
-    "intent": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/SlideIntent"
+    "ColorMark": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "color",
+          "default": "color",
+          "title": "Type",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "primary",
+            "secondary",
+            "canvas",
+            "ink",
+            "muted",
+            "highlight_warm",
+            "highlight_green",
+            "program",
+            "alert"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    }
-   },
-   "required": [
-    "id",
-    "order",
-    "layout_origin",
-    "elements"
-   ],
-   "title": "DocSlide",
-   "type": "object"
-  },
-  "DocTextStyle": {
-   "additionalProperties": false,
-   "properties": {
-    "size_pt": {
-     "default": 20.0,
-     "maximum": 160.0,
-     "minimum": 8.0,
-     "title": "Size Pt",
-     "type": "number"
+      "required": [
+        "role"
+      ],
+      "title": "ColorMark",
+      "type": "object"
     },
-    "bold": {
-     "default": false,
-     "title": "Bold",
-     "type": "boolean"
+    "ContentReveal": {
+      "description": "Browser-deck content entrance animation for body items.\n\n`step` is click-gated: in Present mode the advance key reveals the next\nbullet/card (a fragment) before it advances the slide \u2014 real-presentation\npacing. Honored by the workbench, presenter, and HTML export; PPTX stays\nanimation-free by design.",
+      "enum": [
+        "none",
+        "stagger_up",
+        "stagger_fade",
+        "step"
+      ],
+      "title": "ContentReveal",
+      "type": "string"
     },
-    "color": {
-     "anyOf": [
-      {
-       "pattern": "^#[0-9a-fA-F]{6}$",
-       "type": "string"
+    "DeckMeta": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "subtitle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtitle"
+        },
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        },
+        "target_editor": {
+          "default": "google_slides",
+          "title": "Target Editor",
+          "type": "string"
+        },
+        "theme": {
+          "default": "dark_cyan_evidence",
+          "title": "Theme",
+          "type": "string"
+        },
+        "theme_tokens": {
+          "$ref": "#/$defs/ThemeTokens"
+        },
+        "source_policy": {
+          "$ref": "#/$defs/DeckSourcePolicy"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Color"
+      "required": [
+        "id",
+        "title",
+        "audience",
+        "visibility",
+        "source_policy"
+      ],
+      "title": "DeckMeta",
+      "type": "object"
     },
-    "align": {
-     "default": "left",
-     "enum": [
-      "left",
-      "center",
-      "right"
-     ],
-     "title": "Align",
-     "type": "string"
+    "DeckSourcePolicy": {
+      "enum": [
+        "public_only",
+        "public_and_private"
+      ],
+      "title": "DeckSourcePolicy",
+      "type": "string"
     },
-    "font": {
-     "anyOf": [
-      {
-       "type": "string"
+    "DiagramEdge": {
+      "additionalProperties": false,
+      "description": "Connectors are first-class and factual by default: a meaningful edge is a\nRELATIONSHIP claim \u2014 it needs bindings or an explicit decorative class.",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        },
+        "route": {
+          "default": "straight",
+          "enum": [
+            "straight",
+            "curve",
+            "dotted-path"
+          ],
+          "title": "Route",
+          "type": "string"
+        },
+        "line_style": {
+          "default": "solid",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ],
+          "title": "Line Style",
+          "type": "string"
+        },
+        "arrowhead": {
+          "default": true,
+          "title": "Arrowhead",
+          "type": "boolean"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "binding_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Binding Paths",
+          "type": "array"
+        },
+        "decorative": {
+          "default": false,
+          "title": "Decorative",
+          "type": "boolean"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Font"
-    }
-   },
-   "title": "DocTextStyle",
-   "type": "object"
-  },
-  "EvidenceSpan": {
-   "additionalProperties": false,
-   "description": "Verbatim source excerpt \u2014 the canonical unit the human approves.\n\nRoundtable 2026-08-06 (unanimous): deck prose is a RENDERING of a span,\nnever the canonical claim. Spans are deterministic extractions; no LLM\nrewriting between source and approval surface.",
-   "properties": {
-    "source_id": {
-     "minLength": 1,
-     "title": "Source Id",
-     "type": "string"
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "title": "DiagramEdge",
+      "type": "object"
     },
-    "text": {
-     "minLength": 1,
-     "title": "Text",
-     "type": "string"
-    },
-    "section": {
-     "anyOf": [
-      {
-       "type": "string"
+    "DiagramGraph": {
+      "additionalProperties": false,
+      "description": "Normalized editable diagram: separate nodes, edges, labels, and groups \u2014\nemitters MUST render these as distinct shapes (never one raster).",
+      "properties": {
+        "recipe": {
+          "enum": [
+            "endpoint-bridge",
+            "pipeline",
+            "hub-spoke",
+            "layered-stack",
+            "loop",
+            "before-after",
+            "scene"
+          ],
+          "title": "Recipe",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/DiagramNode"
+          },
+          "minItems": 2,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/DiagramEdge"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "groups": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Groups",
+          "type": "object"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Section"
-    }
-   },
-   "required": [
-    "source_id",
-    "text"
-   ],
-   "title": "EvidenceSpan",
-   "type": "object"
-  },
-  "FigureSpec": {
-   "additionalProperties": false,
-   "description": "Typed reference to a generated figure (#1251). Data-bearing figures must\ncarry claim bindings on the owning element; decorative ones must not.",
-   "properties": {
-    "engine": {
-     "enum": [
-      "d3",
-      "react-flow",
-      "pixi",
-      "mermaid",
-      "webgl"
-     ],
-     "title": "Engine",
-     "type": "string"
+      "required": [
+        "recipe",
+        "nodes"
+      ],
+      "title": "DiagramGraph",
+      "type": "object"
     },
-    "spec_ref": {
-     "description": "Path or id of the figure spec artifact.",
-     "minLength": 1,
-     "title": "Spec Ref",
-     "type": "string"
-    },
-    "decorative": {
-     "default": false,
-     "title": "Decorative",
-     "type": "boolean"
-    }
-   },
-   "required": [
-    "engine",
-    "spec_ref"
-   ],
-   "title": "FigureSpec",
-   "type": "object"
-  },
-  "IconSpec": {
-   "additionalProperties": false,
-   "description": "Library reference ONLY (no inline paths): resolves against the\nhash-pinned icon manifest; fallback is a target-profile branch that fails\nclosed when editable shapes are required.",
-   "properties": {
-    "library_id": {
-     "minLength": 1,
-     "title": "Library Id",
-     "type": "string"
-    },
-    "tint_role": {
-     "default": "primary",
-     "enum": [
-      "primary",
-      "secondary",
-      "canvas",
-      "ink",
-      "muted",
-      "highlight_warm",
-      "highlight_green",
-      "program",
-      "alert"
-     ],
-     "title": "Tint Role",
-     "type": "string"
-    }
-   },
-   "required": [
-    "library_id"
-   ],
-   "title": "IconSpec",
-   "type": "object"
-  },
-  "LineSpec": {
-   "additionalProperties": false,
-   "description": "Canonical endpoints in the parent frame; element bbox is DERIVED.",
-   "properties": {
-    "start": {
-     "$ref": "#/$defs/Point"
-    },
-    "end": {
-     "$ref": "#/$defs/Point"
-    },
-    "route": {
-     "default": "straight",
-     "enum": [
-      "straight",
-      "bent",
-      "curved"
-     ],
-     "title": "Route",
-     "type": "string"
-    },
-    "dash": {
-     "default": "solid",
-     "enum": [
-      "solid",
-      "dashed",
-      "dotted"
-     ],
-     "title": "Dash",
-     "type": "string"
-    },
-    "width_pt": {
-     "default": 2.0,
-     "exclusiveMinimum": 0,
-     "maximum": 24,
-     "title": "Width Pt",
-     "type": "number"
-    },
-    "arrow_start": {
-     "default": false,
-     "title": "Arrow Start",
-     "type": "boolean"
-    },
-    "arrow_end": {
-     "default": true,
-     "title": "Arrow End",
-     "type": "boolean"
-    },
-    "start_hint": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/AttachHint"
+    "DiagramNode": {
+      "additionalProperties": false,
+      "description": "Editable diagram node: icon + label as separate parts, bbox in fractions\nof the OWNING element's bbox (diagrams reposition as one unit).",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Bbox"
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Icon-library id or sanitized inline SVG path d= data.",
+          "title": "Icon"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "sublabel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sublabel"
+        },
+        "binding_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Binding Paths",
+          "type": "array"
+        },
+        "decoration": {
+          "default": "ring",
+          "enum": [
+            "ring",
+            "principal",
+            "support",
+            "ground"
+          ],
+          "title": "Decoration",
+          "type": "string"
+        },
+        "scale": {
+          "default": 1.0,
+          "description": "Glyph weight within its scene.",
+          "exclusiveMinimum": 0.2,
+          "maximum": 2.5,
+          "title": "Scale",
+          "type": "number"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
+      "required": [
+        "id",
+        "bbox",
+        "label"
+      ],
+      "title": "DiagramNode",
+      "type": "object"
     },
-    "end_hint": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/AttachHint"
+    "DocElement": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DocElementKind"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Bbox"
+        },
+        "z": {
+          "default": 0,
+          "title": "Z",
+          "type": "integer"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Semantic origin (title, message, body:0, visual, caption\u2026).",
+          "title": "Role"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DocTextStyle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "asset_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset Id"
+        },
+        "svg": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inline SVG; validated by the svg_sanitize allowlist gate (#1268).",
+          "title": "Svg"
+        },
+        "figure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FigureSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "diagram": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagramGraph"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "children": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DocElement"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "group members; coordinates are fractions of the group's UNROTATED local frame",
+          "title": "Children"
+        },
+        "child_frame": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bbox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "chOff/chExt as fractions of the group bbox; preserved so padded frames survive python-pptx extent recalculation"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShapeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "line": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "icon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IconSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rich_text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RichTextSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rotation_deg": {
+          "anyOf": [
+            {
+              "exclusiveMaximum": 360.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "clockwise, center-anchored; group/shape/image only",
+          "title": "Rotation Deg"
+        },
+        "binding_paths": {
+          "description": "TextBinding.path values this element renders.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Binding Paths",
+          "type": "array"
+        },
+        "entrance": {
+          "$ref": "#/$defs/DocEntrance"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    }
-   },
-   "required": [
-    "start",
-    "end"
-   ],
-   "title": "LineSpec",
-   "type": "object"
-  },
-  "LinkMark": {
-   "additionalProperties": false,
-   "properties": {
-    "type": {
-     "const": "link",
-     "default": "link",
-     "title": "Type",
-     "type": "string"
+      "required": [
+        "id",
+        "kind",
+        "bbox"
+      ],
+      "title": "DocElement",
+      "type": "object"
     },
-    "target_slide_id": {
-     "description": "Local slide link only; external URLs deferred.",
-     "minLength": 1,
-     "title": "Target Slide Id",
-     "type": "string"
-    }
-   },
-   "required": [
-    "target_slide_id"
-   ],
-   "title": "LinkMark",
-   "type": "object"
-  },
-  "Point": {
-   "additionalProperties": false,
-   "description": "A point in the PARENT element frame (fractions).",
-   "properties": {
-    "x": {
-     "maximum": 1.0,
-     "minimum": 0.0,
-     "title": "X",
-     "type": "number"
+    "DocElementKind": {
+      "enum": [
+        "text",
+        "image",
+        "svg",
+        "figure",
+        "diagram",
+        "group",
+        "shape",
+        "line",
+        "icon",
+        "rich_text"
+      ],
+      "title": "DocElementKind",
+      "type": "string"
     },
-    "y": {
-     "maximum": 1.0,
-     "minimum": 0.0,
-     "title": "Y",
-     "type": "number"
-    }
-   },
-   "required": [
-    "x",
-    "y"
-   ],
-   "title": "Point",
-   "type": "object"
-  },
-  "RichBlock": {
-   "additionalProperties": false,
-   "properties": {
-    "style_role": {
-     "$ref": "#/$defs/TextStyleRole",
-     "default": "body"
-    },
-    "align": {
-     "default": "left",
-     "enum": [
-      "left",
-      "center",
-      "right"
-     ],
-     "title": "Align",
-     "type": "string"
-    },
-    "bullet_level": {
-     "anyOf": [
-      {
-       "maximum": 3,
-       "minimum": 1,
-       "type": "integer"
+    "DocEntrance": {
+      "additionalProperties": false,
+      "description": "Rhetorical animation: reveal order follows the argument, never decoration.",
+      "properties": {
+        "effect": {
+          "default": "none",
+          "enum": [
+            "none",
+            "fade",
+            "rise",
+            "zoom"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "delay_ms": {
+          "default": 0,
+          "maximum": 5000,
+          "minimum": 0,
+          "title": "Delay Ms",
+          "type": "integer"
+        },
+        "fragment_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Click-gated build step; None reveals with the slide.",
+          "title": "Fragment Index"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Bullet Level"
+      "title": "DocEntrance",
+      "type": "object"
     },
-    "runs": {
-     "items": {
-      "$ref": "#/$defs/RichRun"
-     },
-     "minItems": 1,
-     "title": "Runs",
-     "type": "array"
-    }
-   },
-   "required": [
-    "runs"
-   ],
-   "title": "RichBlock",
-   "type": "object"
-  },
-  "RichRun": {
-   "additionalProperties": false,
-   "properties": {
-    "text": {
-     "minLength": 1,
-     "title": "Text",
-     "type": "string"
+    "DocSlide": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 1,
+          "title": "Order",
+          "type": "integer"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "layout_origin": {
+          "$ref": "#/$defs/SlideLayout"
+        },
+        "elements": {
+          "items": {
+            "$ref": "#/$defs/DocElement"
+          },
+          "minItems": 1,
+          "title": "Elements",
+          "type": "array"
+        },
+        "bindings": {
+          "items": {
+            "$ref": "#/$defs/TextBinding"
+          },
+          "title": "Bindings",
+          "type": "array"
+        },
+        "claim_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Claim Ids",
+          "type": "array"
+        },
+        "transition": {
+          "$ref": "#/$defs/SlideTransition",
+          "default": "slide"
+        },
+        "transition_duration_ms": {
+          "default": 400,
+          "maximum": 1200,
+          "minimum": 200,
+          "title": "Transition Duration Ms",
+          "type": "integer"
+        },
+        "reveal": {
+          "$ref": "#/$defs/ContentReveal",
+          "default": "stagger_up"
+        },
+        "hidden": {
+          "default": false,
+          "title": "Hidden",
+          "type": "boolean"
+        },
+        "notes": {
+          "default": "",
+          "title": "Notes",
+          "type": "string"
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlideIntent"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "order",
+        "layout_origin",
+        "elements"
+      ],
+      "title": "DocSlide",
+      "type": "object"
     },
-    "marks": {
-     "items": {
-      "anyOf": [
-       {
-        "$ref": "#/$defs/BasicMark"
-       },
-       {
-        "$ref": "#/$defs/ColorMark"
-       },
-       {
-        "$ref": "#/$defs/LinkMark"
-       }
-      ]
-     },
-     "title": "Marks",
-     "type": "array"
-    }
-   },
-   "required": [
-    "text"
-   ],
-   "title": "RichRun",
-   "type": "object"
-  },
-  "RichTextSpec": {
-   "additionalProperties": false,
-   "properties": {
-    "blocks": {
-     "items": {
-      "$ref": "#/$defs/RichBlock"
-     },
-     "minItems": 1,
-     "title": "Blocks",
-     "type": "array"
-    }
-   },
-   "required": [
-    "blocks"
-   ],
-   "title": "RichTextSpec",
-   "type": "object"
-  },
-  "ShapePreset": {
-   "enum": [
-    "rect",
-    "rounded_rect",
-    "ellipse",
-    "chevron",
-    "pill",
-    "triangle"
-   ],
-   "title": "ShapePreset",
-   "type": "string"
-  },
-  "ShapeSpec": {
-   "additionalProperties": false,
-   "description": "Closed preset geometry \u2014 native sp in PPTX, styled by design-system roles.",
-   "properties": {
-    "preset": {
-     "$ref": "#/$defs/ShapePreset"
+    "DocTextStyle": {
+      "additionalProperties": false,
+      "properties": {
+        "size_pt": {
+          "default": 20.0,
+          "maximum": 160.0,
+          "minimum": 8.0,
+          "title": "Size Pt",
+          "type": "number"
+        },
+        "bold": {
+          "default": false,
+          "title": "Bold",
+          "type": "boolean"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "align": {
+          "default": "left",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "title": "Align",
+          "type": "string"
+        },
+        "font": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font"
+        }
+      },
+      "title": "DocTextStyle",
+      "type": "object"
     },
-    "fill_role": {
-     "anyOf": [
-      {
-       "enum": [
+    "EvidenceSpan": {
+      "additionalProperties": false,
+      "description": "Verbatim source excerpt \u2014 the canonical unit the human approves.\n\nRoundtable 2026-08-06 (unanimous): deck prose is a RENDERING of a span,\nnever the canonical claim. Spans are deterministic extractions; no LLM\nrewriting between source and approval surface.",
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        }
+      },
+      "required": [
+        "source_id",
+        "text"
+      ],
+      "title": "EvidenceSpan",
+      "type": "object"
+    },
+    "FigureSpec": {
+      "additionalProperties": false,
+      "description": "Typed reference to a generated figure (#1251). Data-bearing figures must\ncarry claim bindings on the owning element; decorative ones must not.",
+      "properties": {
+        "engine": {
+          "enum": [
+            "d3",
+            "react-flow",
+            "pixi",
+            "mermaid",
+            "webgl"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "spec_ref": {
+          "description": "Path or id of the figure spec artifact.",
+          "minLength": 1,
+          "title": "Spec Ref",
+          "type": "string"
+        },
+        "decorative": {
+          "default": false,
+          "title": "Decorative",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "engine",
+        "spec_ref"
+      ],
+      "title": "FigureSpec",
+      "type": "object"
+    },
+    "IconSpec": {
+      "additionalProperties": false,
+      "description": "Library reference ONLY (no inline paths): resolves against the\nhash-pinned icon manifest; fallback is a target-profile branch that fails\nclosed when editable shapes are required.",
+      "properties": {
+        "library_id": {
+          "minLength": 1,
+          "title": "Library Id",
+          "type": "string"
+        },
+        "tint_role": {
+          "default": "primary",
+          "enum": [
+            "primary",
+            "secondary",
+            "canvas",
+            "ink",
+            "muted",
+            "highlight_warm",
+            "highlight_green",
+            "program",
+            "alert"
+          ],
+          "title": "Tint Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "library_id"
+      ],
+      "title": "IconSpec",
+      "type": "object"
+    },
+    "LineSpec": {
+      "additionalProperties": false,
+      "description": "Canonical endpoints in the parent frame; element bbox is DERIVED.",
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/Point"
+        },
+        "end": {
+          "$ref": "#/$defs/Point"
+        },
+        "route": {
+          "default": "straight",
+          "enum": [
+            "straight",
+            "bent",
+            "curved"
+          ],
+          "title": "Route",
+          "type": "string"
+        },
+        "dash": {
+          "default": "solid",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ],
+          "title": "Dash",
+          "type": "string"
+        },
+        "width_pt": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "maximum": 24,
+          "title": "Width Pt",
+          "type": "number"
+        },
+        "arrow_start": {
+          "default": false,
+          "title": "Arrow Start",
+          "type": "boolean"
+        },
+        "arrow_end": {
+          "default": true,
+          "title": "Arrow End",
+          "type": "boolean"
+        },
+        "start_hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttachHint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "end_hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttachHint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "LineSpec",
+      "type": "object"
+    },
+    "LinkMark": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "link",
+          "default": "link",
+          "title": "Type",
+          "type": "string"
+        },
+        "target_slide_id": {
+          "description": "Local slide link only; external URLs deferred.",
+          "minLength": 1,
+          "title": "Target Slide Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_slide_id"
+      ],
+      "title": "LinkMark",
+      "type": "object"
+    },
+    "Point": {
+      "additionalProperties": false,
+      "description": "A point in the PARENT element frame (fractions).",
+      "properties": {
+        "x": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "RichBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "style_role": {
+          "$ref": "#/$defs/TextStyleRole",
+          "default": "body"
+        },
+        "align": {
+          "default": "left",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "title": "Align",
+          "type": "string"
+        },
+        "bullet_level": {
+          "anyOf": [
+            {
+              "maximum": 3,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bullet Level"
+        },
+        "runs": {
+          "items": {
+            "$ref": "#/$defs/RichRun"
+          },
+          "minItems": 1,
+          "title": "Runs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "runs"
+      ],
+      "title": "RichBlock",
+      "type": "object"
+    },
+    "RichRun": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "marks": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BasicMark"
+              },
+              {
+                "$ref": "#/$defs/ColorMark"
+              },
+              {
+                "$ref": "#/$defs/LinkMark"
+              }
+            ]
+          },
+          "title": "Marks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "RichRun",
+      "type": "object"
+    },
+    "RichTextSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/RichBlock"
+          },
+          "minItems": 1,
+          "title": "Blocks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "blocks"
+      ],
+      "title": "RichTextSpec",
+      "type": "object"
+    },
+    "ShapePreset": {
+      "enum": [
+        "rect",
+        "rounded_rect",
+        "ellipse",
+        "chevron",
+        "pill",
+        "triangle"
+      ],
+      "title": "ShapePreset",
+      "type": "string"
+    },
+    "ShapeSpec": {
+      "additionalProperties": false,
+      "description": "Closed preset geometry \u2014 native sp in PPTX, styled by design-system roles.",
+      "properties": {
+        "preset": {
+          "$ref": "#/$defs/ShapePreset"
+        },
+        "fill_role": {
+          "anyOf": [
+            {
+              "enum": [
+                "primary",
+                "secondary",
+                "canvas",
+                "ink",
+                "muted",
+                "highlight_warm",
+                "highlight_green",
+                "program",
+                "alert"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Role"
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StrokeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "preset"
+      ],
+      "title": "ShapeSpec",
+      "type": "object"
+    },
+    "SlideIntent": {
+      "additionalProperties": false,
+      "description": "The design-representation layer the 2026-08-06 review named as missing:\nwhat the slide ARGUES and which house composition realizes it \u2014 sits between\nclaims and bounding boxes, generated pre-materialization, human-reviewable.",
+      "properties": {
+        "module": {
+          "description": "Narrative module instance, e.g. 'sparta.value-prop'.",
+          "minLength": 1,
+          "title": "Module",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "assertion": {
+          "description": "The takeaway the slide argues; must be the title element's text.",
+          "minLength": 1,
+          "title": "Assertion",
+          "type": "string"
+        },
+        "visual_thesis": {
+          "description": "What the visual channel shows, or 'none: <reason>'.",
+          "minLength": 1,
+          "title": "Visual Thesis",
+          "type": "string"
+        },
+        "recipe": {
+          "enum": [
+            "cover-brand",
+            "statement-thesis",
+            "assertion-chevrons-diagram",
+            "one-big-diagram",
+            "proof-screenshot-callout",
+            "roadmap-lanes",
+            "roadmap-gates",
+            "assertion-chevrons-scene"
+          ],
+          "title": "Recipe",
+          "type": "string"
+        },
+        "audience": {
+          "enum": [
+            "conference",
+            "sbir",
+            "program-review"
+          ],
+          "title": "Audience",
+          "type": "string"
+        },
+        "density_budget_words": {
+          "maximum": 150,
+          "minimum": 5,
+          "title": "Density Budget Words",
+          "type": "integer"
+        },
+        "reveal_order": {
+          "description": "Element ids in rhetorical build order.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Reveal Order",
+          "type": "array"
+        }
+      },
+      "required": [
+        "module",
+        "purpose",
+        "assertion",
+        "visual_thesis",
+        "recipe",
+        "audience",
+        "density_budget_words"
+      ],
+      "title": "SlideIntent",
+      "type": "object"
+    },
+    "SlideLayout": {
+      "enum": [
+        "cover",
+        "statement",
+        "split",
+        "screenshot",
+        "flow",
+        "three_cards",
+        "proof_cards",
+        "roadmap",
+        "collaboration",
+        "appendix",
+        "freeform"
+      ],
+      "title": "SlideLayout",
+      "type": "string"
+    },
+    "SlideTransition": {
+      "description": "Browser-deck slide transition; PPTX export intentionally ignores it.",
+      "enum": [
+        "none",
+        "fade",
+        "slide",
+        "slide_up",
+        "zoom",
+        "flip",
+        "wipe"
+      ],
+      "title": "SlideTransition",
+      "type": "string"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locator"
+        }
+      },
+      "required": [
+        "source_id"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "SourceRole": {
+      "enum": [
         "primary",
-        "secondary",
-        "canvas",
-        "ink",
-        "muted",
-        "highlight_warm",
-        "highlight_green",
-        "program",
-        "alert"
-       ],
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Fill Role"
-    },
-    "stroke": {
-     "anyOf": [
-      {
-       "$ref": "#/$defs/StrokeSpec"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null
-    }
-   },
-   "required": [
-    "preset"
-   ],
-   "title": "ShapeSpec",
-   "type": "object"
-  },
-  "SlideIntent": {
-   "additionalProperties": false,
-   "description": "The design-representation layer the 2026-08-06 review named as missing:\nwhat the slide ARGUES and which house composition realizes it \u2014 sits between\nclaims and bounding boxes, generated pre-materialization, human-reviewable.",
-   "properties": {
-    "module": {
-     "description": "Narrative module instance, e.g. 'sparta.value-prop'.",
-     "minLength": 1,
-     "title": "Module",
-     "type": "string"
-    },
-    "purpose": {
-     "minLength": 1,
-     "title": "Purpose",
-     "type": "string"
-    },
-    "assertion": {
-     "description": "The takeaway the slide argues; must be the title element's text.",
-     "minLength": 1,
-     "title": "Assertion",
-     "type": "string"
-    },
-    "visual_thesis": {
-     "description": "What the visual channel shows, or 'none: <reason>'.",
-     "minLength": 1,
-     "title": "Visual Thesis",
-     "type": "string"
-    },
-    "recipe": {
-     "enum": [
-      "cover-brand",
-      "statement-thesis",
-      "assertion-chevrons-diagram",
-      "one-big-diagram",
-      "proof-screenshot-callout",
-      "roadmap-lanes",
-      "roadmap-gates"
-     ],
-     "title": "Recipe",
-     "type": "string"
-    },
-    "audience": {
-     "enum": [
-      "conference",
-      "sbir",
-      "program-review"
-     ],
-     "title": "Audience",
-     "type": "string"
-    },
-    "density_budget_words": {
-     "maximum": 150,
-     "minimum": 5,
-     "title": "Density Budget Words",
-     "type": "integer"
-    },
-    "reveal_order": {
-     "description": "Element ids in rhetorical build order.",
-     "items": {
+        "supporting",
+        "evidence",
+        "design"
+      ],
+      "title": "SourceRole",
       "type": "string"
-     },
-     "title": "Reveal Order",
-     "type": "array"
-    }
-   },
-   "required": [
-    "module",
-    "purpose",
-    "assertion",
-    "visual_thesis",
-    "recipe",
-    "audience",
-    "density_budget_words"
-   ],
-   "title": "SlideIntent",
-   "type": "object"
-  },
-  "SlideLayout": {
-   "enum": [
-    "cover",
-    "statement",
-    "split",
-    "screenshot",
-    "flow",
-    "three_cards",
-    "proof_cards",
-    "roadmap",
-    "collaboration",
-    "appendix",
-    "freeform"
-   ],
-   "title": "SlideLayout",
-   "type": "string"
-  },
-  "SlideTransition": {
-   "description": "Browser-deck slide transition; PPTX export intentionally ignores it.",
-   "enum": [
-    "none",
-    "fade",
-    "slide",
-    "slide_up",
-    "zoom",
-    "flip",
-    "wipe"
-   ],
-   "title": "SlideTransition",
-   "type": "string"
-  },
-  "SourceRef": {
-   "additionalProperties": false,
-   "properties": {
-    "source_id": {
-     "minLength": 1,
-     "title": "Source Id",
-     "type": "string"
     },
-    "section": {
-     "anyOf": [
-      {
-       "type": "string"
+    "SourceSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        },
+        "role": {
+          "$ref": "#/$defs/SourceRole",
+          "default": "primary"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "repo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repo"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref"
+        },
+        "content_sha": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Sha"
+        },
+        "include_sections": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Include Sections",
+          "type": "array"
+        },
+        "exclude_sections": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exclude Sections",
+          "type": "array"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Section"
+      "required": [
+        "id",
+        "title",
+        "path",
+        "visibility"
+      ],
+      "title": "SourceSpec",
+      "type": "object"
     },
-    "locator": {
-     "anyOf": [
-      {
-       "type": "string"
+    "StrokeSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "primary",
+            "secondary",
+            "canvas",
+            "ink",
+            "muted",
+            "highlight_warm",
+            "highlight_green",
+            "program",
+            "alert"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "width_pt": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "maximum": 24,
+          "title": "Width Pt",
+          "type": "number"
+        },
+        "dash": {
+          "default": "solid",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ],
+          "title": "Dash",
+          "type": "string"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Locator"
-    }
-   },
-   "required": [
-    "source_id"
-   ],
-   "title": "SourceRef",
-   "type": "object"
-  },
-  "SourceRole": {
-   "enum": [
-    "primary",
-    "supporting",
-    "evidence",
-    "design"
-   ],
-   "title": "SourceRole",
-   "type": "string"
-  },
-  "SourceSpec": {
-   "additionalProperties": false,
-   "properties": {
-    "id": {
-     "minLength": 1,
-     "title": "Id",
-     "type": "string"
+      "required": [
+        "role"
+      ],
+      "title": "StrokeSpec",
+      "type": "object"
     },
-    "title": {
-     "minLength": 1,
-     "title": "Title",
-     "type": "string"
-    },
-    "path": {
-     "minLength": 1,
-     "title": "Path",
-     "type": "string"
-    },
-    "visibility": {
-     "$ref": "#/$defs/Visibility"
-    },
-    "role": {
-     "$ref": "#/$defs/SourceRole",
-     "default": "primary"
-    },
-    "required": {
-     "default": true,
-     "title": "Required",
-     "type": "boolean"
-    },
-    "repo": {
-     "anyOf": [
-      {
-       "type": "string"
+    "TextBinding": {
+      "additionalProperties": false,
+      "description": "Binds one addressable slide string to the ledger.\n\npath addresses a whole string: title | message | footer | body:<i> |\nelement:<id> | visual.items:<i> | visual.caption. Strings without a\nbinding are UNBOUND: a warning in normal builds, an error at publish.",
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/BindingKind"
+        },
+        "claim_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Claim Id"
+        },
+        "transform_class": {
+          "anyOf": [
+            {
+              "enum": [
+                "verbatim",
+                "truncation",
+                "inflection",
+                "aggregation",
+                "generalization"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transform Class"
+        }
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Repo"
+      "required": [
+        "path",
+        "kind"
+      ],
+      "title": "TextBinding",
+      "type": "object"
     },
-    "ref": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Ref"
-    },
-    "content_sha": {
-     "anyOf": [
-      {
-       "type": "string"
-      },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Content Sha"
-    },
-    "include_sections": {
-     "items": {
+    "TextStyleRole": {
+      "enum": [
+        "hero",
+        "statement_hero",
+        "section",
+        "title",
+        "lead",
+        "body",
+        "support",
+        "caption"
+      ],
+      "title": "TextStyleRole",
       "type": "string"
-     },
-     "title": "Include Sections",
-     "type": "array"
     },
-    "exclude_sections": {
-     "items": {
+    "ThemeTokens": {
+      "additionalProperties": false,
+      "description": "Typed design tokens applied identically by the browser and PPTX emitters.",
+      "properties": {
+        "accent": {
+          "default": "#22d3ee",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Accent",
+          "type": "string"
+        },
+        "heading_font": {
+          "default": "Arial",
+          "minLength": 1,
+          "title": "Heading Font",
+          "type": "string"
+        },
+        "body_font": {
+          "default": "Arial",
+          "minLength": 1,
+          "title": "Body Font",
+          "type": "string"
+        }
+      },
+      "title": "ThemeTokens",
+      "type": "object"
+    },
+    "Visibility": {
+      "enum": [
+        "public",
+        "private"
+      ],
+      "title": "Visibility",
       "type": "string"
-     },
-     "title": "Exclude Sections",
-     "type": "array"
     }
-   },
-   "required": [
-    "id",
-    "title",
-    "path",
-    "visibility"
-   ],
-   "title": "SourceSpec",
-   "type": "object"
   },
-  "StrokeSpec": {
-   "additionalProperties": false,
-   "properties": {
-    "role": {
-     "enum": [
-      "primary",
-      "secondary",
-      "canvas",
-      "ink",
-      "muted",
-      "highlight_warm",
-      "highlight_green",
-      "program",
-      "alert"
-     ],
-     "title": "Role",
-     "type": "string"
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "pitchdeck.deck_document.v1",
+      "default": "pitchdeck.deck_document.v1",
+      "title": "Schema",
+      "type": "string"
     },
-    "width_pt": {
-     "default": 2.0,
-     "exclusiveMinimum": 0,
-     "maximum": 24,
-     "title": "Width Pt",
-     "type": "number"
+    "deck": {
+      "$ref": "#/$defs/DeckMeta"
     },
-    "dash": {
-     "default": "solid",
-     "enum": [
-      "solid",
-      "dashed",
-      "dotted"
-     ],
-     "title": "Dash",
-     "type": "string"
-    }
-   },
-   "required": [
-    "role"
-   ],
-   "title": "StrokeSpec",
-   "type": "object"
-  },
-  "TextBinding": {
-   "additionalProperties": false,
-   "description": "Binds one addressable slide string to the ledger.\n\npath addresses a whole string: title | message | footer | body:<i> |\nelement:<id> | visual.items:<i> | visual.caption. Strings without a\nbinding are UNBOUND: a warning in normal builds, an error at publish.",
-   "properties": {
-    "path": {
-     "minLength": 1,
-     "title": "Path",
-     "type": "string"
-    },
-    "kind": {
-     "$ref": "#/$defs/BindingKind"
-    },
-    "claim_id": {
-     "anyOf": [
-      {
-       "type": "string"
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceSpec"
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Claim Id"
+      "title": "Sources",
+      "type": "array"
     },
-    "transform_class": {
-     "anyOf": [
-      {
-       "enum": [
-        "verbatim",
-        "truncation",
-        "inflection",
-        "aggregation",
-        "generalization"
-       ],
-       "type": "string"
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/Claim"
       },
-      {
-       "type": "null"
-      }
-     ],
-     "default": null,
-     "title": "Transform Class"
-    }
-   },
-   "required": [
-    "path",
-    "kind"
-   ],
-   "title": "TextBinding",
-   "type": "object"
-  },
-  "TextStyleRole": {
-   "enum": [
-    "hero",
-    "statement_hero",
-    "section",
-    "title",
-    "lead",
-    "body",
-    "support",
-    "caption"
-   ],
-   "title": "TextStyleRole",
-   "type": "string"
-  },
-  "ThemeTokens": {
-   "additionalProperties": false,
-   "description": "Typed design tokens applied identically by the browser and PPTX emitters.",
-   "properties": {
-    "accent": {
-     "default": "#22d3ee",
-     "pattern": "^#[0-9a-fA-F]{6}$",
-     "title": "Accent",
-     "type": "string"
+      "title": "Claims",
+      "type": "array"
     },
-    "heading_font": {
-     "default": "Arial",
-     "minLength": 1,
-     "title": "Heading Font",
-     "type": "string"
+    "assets": {
+      "items": {
+        "$ref": "#/$defs/AssetSpec"
+      },
+      "title": "Assets",
+      "type": "array"
     },
-    "body_font": {
-     "default": "Arial",
-     "minLength": 1,
-     "title": "Body Font",
-     "type": "string"
+    "slides": {
+      "items": {
+        "$ref": "#/$defs/DocSlide"
+      },
+      "minItems": 1,
+      "title": "Slides",
+      "type": "array"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "provenance": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Provenance",
+      "type": "object"
     }
-   },
-   "title": "ThemeTokens",
-   "type": "object"
   },
-  "Visibility": {
-   "enum": [
-    "public",
-    "private"
-   ],
-   "title": "Visibility",
-   "type": "string"
-  }
- },
- "additionalProperties": false,
- "properties": {
-  "schema": {
-   "const": "pitchdeck.deck_document.v1",
-   "default": "pitchdeck.deck_document.v1",
-   "title": "Schema",
-   "type": "string"
-  },
-  "deck": {
-   "$ref": "#/$defs/DeckMeta"
-  },
-  "sources": {
-   "items": {
-    "$ref": "#/$defs/SourceSpec"
-   },
-   "title": "Sources",
-   "type": "array"
-  },
-  "claims": {
-   "items": {
-    "$ref": "#/$defs/Claim"
-   },
-   "title": "Claims",
-   "type": "array"
-  },
-  "assets": {
-   "items": {
-    "$ref": "#/$defs/AssetSpec"
-   },
-   "title": "Assets",
-   "type": "array"
-  },
-  "slides": {
-   "items": {
-    "$ref": "#/$defs/DocSlide"
-   },
-   "minItems": 1,
-   "title": "Slides",
-   "type": "array"
-  },
-  "revision": {
-   "minimum": 0,
-   "title": "Revision",
-   "type": "integer"
-  },
-  "provenance": {
-   "additionalProperties": {
-    "type": "string"
-   },
-   "title": "Provenance",
-   "type": "object"
-  }
- },
- "required": [
-  "deck",
-  "sources",
-  "claims",
-  "assets",
-  "slides",
-  "revision"
- ],
- "title": "DeckDocument",
- "type": "object"
+  "required": [
+    "deck",
+    "sources",
+    "claims",
+    "assets",
+    "slides",
+    "revision"
+  ],
+  "title": "DeckDocument",
+  "type": "object"
 }

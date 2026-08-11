@@ -730,7 +730,8 @@ def build_manifest_cmd(
 @app.command(name="house-similarity")
 def house_similarity_cmd(
     slides_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs to score.")],
-    threshold: Annotated[float, typer.Option(help="FAIL below this (calibrated: replica of a real page ~0.72, unrelated ~0.46).")] = 0.55,
+    threshold: Annotated[float, typer.Option(help="Per-slide floor: p5 of duplicate-free real corpus pages (self-similarity-calibration.json).")] = 0.452,
+    deck_median_floor: Annotated[float, typer.Option(help="Deck-level bar: p25 of duplicate-free real pages (raw corpus percentiles are duplicate-inflated — Graham reuses slides across decks).")] = 0.547,
     glob: Annotated[str, typer.Option(help="Filename pattern.")] = "*.png",
 ) -> None:
     """Score each rendered slide against its nearest REAL house page (exit 1 on any FAIL)."""
@@ -765,11 +766,17 @@ def house_similarity_cmd(
                     "nearest_title": hit["payload"].get("title"),
                     "diff_target": hit["payload"].get("record_path"),
                 })
+        import statistics as stats_mod
+        deck_median = round(stats_mod.median(r["score"] for r in rows), 3) if rows else 0.0
+        ok = bool(rows) and failed == 0 and deck_median >= deck_median_floor
         typer.echo(json_mod.dumps({
-            "status": "PASS" if failed == 0 else "FAIL",
-            "threshold": threshold, "failed": failed, "slides": rows,
+            "status": "PASS" if ok else "FAIL",
+            "threshold": threshold, "deck_median": deck_median,
+            "deck_median_floor": deck_median_floor, "failed": failed, "slides": rows,
         }, indent=1))
-        raise typer.Exit(0 if failed == 0 else 1)
+        if not rows:
+            typer.echo("no rendered slides matched — a gate over nothing proves nothing", err=True)
+        raise typer.Exit(0 if ok else 1)
     except typer.Exit:
         raise
     except Exception as exc:
