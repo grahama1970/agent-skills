@@ -45,9 +45,15 @@ single LLM-call count. Full coverage means:
 3. Technique-related control-to-control QRAs exist only for pairs that pass
    `/create-evidence-case` evidence-case adjudication inside technique `T`; raw related
    control pairs are diagnostic candidates, not coverage obligations.
-4. Non-SPARTA native QRAs exist for configured source frameworks used by SPARTA
-   analysis: ATT&CK, CWE, NIST, CAPEC, D3FEND, ESA, NVD, and related imported
-   corpora.
+4. Non-SPARTA native QRAs exist for every source framework present in
+   `sparta_controls`, enumerated FROM the corpus rather than from a list written
+   here. A literal list in prose goes stale silently: this item previously named
+   seven frameworks (ATT&CK, CWE, NIST, CAPEC, D3FEND, ESA, NVD) while the
+   corpus held twenty, so `MITRE_ATLAS`, `CISA_KEV`, `NVD_CVE`, `EMB3D`, `ISO`
+   and `NASA` — 96.5% of all controls — were outside the coverage definition and
+   therefore unmonitored. Derive the framework set with a `COLLECT` over
+   `source_framework`; treat any framework absent from the monitor's own
+   reporting as a finding, not as out of scope.
 
 Health reporting must distinguish:
 
@@ -378,6 +384,37 @@ Health command coverage (`monitor-sparta health`):
 13b. QRA reasoning uniqueness
 14. Crosswalk edge coverage
 15. Crosswalk-chain schema discipline
+16. Framework label alignment (check 30)
+
+### Framework label invariants
+
+A framework is not ingested until it has BOTH nodes in `sparta_controls` and
+edges in `sparta_relationships`. Nodes alone are retrievable by semantic and
+BM25 search, which makes the gap invisible to every coverage count, while
+contributing nothing to multi-hop traversal — the one retrieval mode that
+requires anchored identifiers.
+
+`check_framework_name_normalization` groups by `UPPER(source_framework)` over
+`sparta_controls` alone, so it detects only pure case variants inside one
+collection. `check_framework_label_alignment` adds three invariants derived
+from the data, not from a maintained registry:
+
+| Invariant | Catches |
+|-----------|---------|
+| `dangling_edge_labels` | a framework named on an edge that no control carries, e.g. edges labelled `nist`/`sparta`/`ATT&CK` |
+| `case_collisions` | labels colliding under `UPPER()` across the union of BOTH collections |
+| `orphan_frameworks` | a framework with nodes but no edge on either side |
+
+Observed 2026-08-11: the normalization check returned ok while the corpus held
+`NVD_CVE` (367,886) beside `NVD` (4,830), `ESA_Shield` beside `ESA`, `attack`
+beside `ATT_CK_Enterprise`, and NIST's 121,957 edges labelled `nist` against
+nodes labelled `NIST`. The alignment check reports 6 dangling edge labels, 2
+case-colliding groups, and 15 frameworks with zero edges covering 378,696 of
+382,700 controls. NIST is not missing edges — its edges exist and join nothing
+because of the label split.
+
+The check reports and does not collapse populations. Choosing a canonical label
+rewrites data and stays review-gated under the read-only default below.
 
 ### QRA reasoning invariants
 
