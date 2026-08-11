@@ -785,7 +785,7 @@ def house_similarity_cmd(
         deck_median = round(stats_mod.median(r["score"] for r in rows), 3) if rows else 0.0
         ok = bool(rows) and failed == 0
         typer.echo(json_mod.dumps({
-            "status": "PASS" if ok else "FAIL",
+            "status": "HOUSE_NON_ANOMALOUS" if ok else "FAIL",  # anomaly filter, not a positive looks-like-Graham classifier
             "threshold": threshold, "ink_floor": ink_floor, "palette_floor": palette_floor,
             "deck_median": deck_median, "failed": failed, "slides": rows,
         }, indent=1))

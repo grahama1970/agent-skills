@@ -77,11 +77,11 @@ if [ -f "$WORK/render/deck.pdf" ]; then
   for p in $(seq 1 "$NPAGES"); do pdftoppm -png -r 50 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
 fi
 
-echo "--- stage 6: THE GOAL — looks like a Graham deck ---"
+echo "--- stage 6: house gate (HOUSE_NON_ANOMALOUS semantics) ---"
 stage house-similarity ./run.sh house-similarity --slides-dir "$WORK/render" --glob "s*.png"
 
 echo "---"
 echo "stages: $pass pass, $fail fail"
-if [ $fail -eq 0 ]; then echo "NORTH-STAR: PASS — the README compiles into a deck that passes the Graham gate"; exit 0; fi
+if [ $fail -eq 0 ]; then echo "NORTH-STAR: PASS — HOUSE_NON_ANOMALOUS: every gate cleared; this is an anomaly filter, NOT a validated looks-like-Graham classifier (webgpt review 2026-08-11, reports/webgpt-house-gate-review-2026-08-11.md)"; exit 0; fi
 echo "NORTH-STAR: NOT YET — see failing stage logs; the gap is the scoreboard"
 exit 1
