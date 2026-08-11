@@ -1,0 +1,22 @@
+"""Submission store: keyed per opportunity, deduped, no network in test."""
+from __future__ import annotations
+import monitor_opportunities.submission_store as ss
+
+
+def test_key_stable_per_opportunity() -> None:
+    k1 = ss._key("c1", "https://x/apply")
+    k2 = ss._key("c1", "https://x/apply")
+    k3 = ss._key("c1", "https://y/apply")
+    assert k1 == k2 and k1 != k3 and k1.startswith("sub-")
+
+
+def test_store_submission_shape(monkeypatch) -> None:
+    captured = {}
+    monkeypatch.setattr(ss, "_store", lambda d, memory_url=ss.MEMORY_URL: captured.update(d) or True)
+    r = ss.store_submission("c1", {"organization": "Drata", "title": "Staff AI Eng", "apply_url": "https://x/apply"},
+                            {"filled_ok": ["Name"], "remaining_for_human": ["AI tools"], "tab_id": "9"},
+                            screening_answers={"ai_tools": "..."}, resume="https://grahama.co/resume.pdf")
+    assert r["stored"] and captured["organization"] == "Drata"
+    assert captured["state"] == "prefilled_awaiting_human"
+    assert captured["submitted_by_agent"] is False
+    assert captured["resume"] == "https://grahama.co/resume.pdf"
