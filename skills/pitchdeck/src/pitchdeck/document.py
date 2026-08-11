@@ -267,6 +267,15 @@ class DiagramEdge(StrictModel):
 
     @model_validator(mode="after")
     def factual_or_decorative(self) -> "DiagramEdge":
+        # A decorative primitive must be structurally INCAPABLE of asserting.
+        # Previously `decorative=True` skipped the binding requirement while the
+        # emitter still rendered edge.label, so 'AI' or '42' reached the deck
+        # unbound and was then waved through by the old chrome heuristics.
+        if self.decorative and (self.label or "").strip():
+            raise ValueError(
+                f"edge '{self.id}': a decorative edge cannot carry a visible label "
+                f"({self.label[:32]!r}); label it and bind it, or drop the text"
+            )
         if not self.decorative and not self.binding_paths:
             raise ValueError(
                 f"edge '{self.id}': a non-decorative edge asserts a relationship and requires binding_paths"

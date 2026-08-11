@@ -677,7 +677,12 @@ def outline_cmd(
         if approve_by:
             from datetime import UTC, datetime
 
-            drafted = approve_outline(drafted, approved_by=approve_by, approved_at=datetime.now(UTC).isoformat())
+            # Bind the LEDGER the approval was given against. Without this the
+            # approval carries no ledger digest, so assert_approved() has nothing
+            # to compare and a later claim edit silently keeps the approval valid.
+            drafted = approve_outline(drafted, approved_by=approve_by,
+                                      approved_at=datetime.now(UTC).isoformat(),
+                                      ledger=ledger)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(drafted.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
         typer.echo(json_mod.dumps({

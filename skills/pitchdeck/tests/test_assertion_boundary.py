@@ -117,3 +117,56 @@ def test_unsupported_suffix_after_a_legitimate_prefix_is_refused(suffix):
     refusal = _authorize(_atom(legitimate + suffix))
     assert refusal is not None
     assert refusal.code == "TRANSFORM_NOT_SATISFIED"
+
+
+def test_decorative_edge_cannot_carry_a_label():
+    """A decorative primitive must be structurally incapable of asserting.
+
+    Previously decorative=True skipped the binding requirement while the emitter
+    still rendered edge.label, so 'AI' or '42' reached the deck unbound."""
+    from pydantic import ValidationError
+
+    from pitchdeck.document import DiagramEdge
+
+    with pytest.raises(ValidationError, match="cannot carry a visible label"):
+        DiagramEdge(id="d1", source="a", target="b", label="AI", decorative=True)
+
+
+def test_unlabelled_decorative_edge_is_still_allowed():
+    from pitchdeck.document import DiagramEdge
+
+    edge = DiagramEdge(id="d2", source="a", target="b", decorative=True)
+    assert edge.decorative and not (edge.label or "")
+
+
+def test_occurrence_key_scopes_authorization_to_one_element():
+    """The same words authorized as a title must not authorize a pasted copy."""
+    from pitchdeck.publish_verify import occurrence_key
+
+    title = occurrence_key("Relevant Material Does Not Establish Support", "title")
+    caption = occurrence_key("Relevant Material Does Not Establish Support", "evidence-caption")
+    assert title != caption
+
+
+def test_element_id_is_recovered_from_emitted_shape_names():
+    """Occurrence scoping depends on the emitter naming every object el:<id>."""
+    from pitchdeck.publish_verify import element_id_from_shape_name
+
+    assert element_id_from_shape_name("el:diagram:node:retrieval:label") == "diagram"
+    assert element_id_from_shape_name("el:chevron-0") == "chevron-0"
+    assert element_id_from_shape_name("Title 1") == ""
+
+
+def test_approval_binds_the_ledger_digest():
+    """Without the ledger digest, a later claim edit leaves the approval valid."""
+    from pathlib import Path
+
+    from pitchdeck.io import load_yaml
+    from pitchdeck.models import ClaimLedger
+    from pitchdeck.planning import ledger_digest
+
+    bundle = Path(__file__).parent.parent / "examples" / "sparta-explorer"
+    ledger = load_yaml(bundle / "claim_ledger.yaml", ClaimLedger)
+    edited = ledger.model_copy(deep=True)
+    edited.claims[0].text = edited.claims[0].text + " and therefore always establishes support"
+    assert ledger_digest(ledger) != ledger_digest(edited)
