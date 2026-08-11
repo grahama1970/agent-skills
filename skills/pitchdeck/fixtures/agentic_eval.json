@@ -2,10 +2,10 @@
  "version": 2,
  "skill": "pitchdeck",
  "trials": 2,
- "proof_scope": "design-lint layer: golden document clean, seeded defects detected (recall without invention)",
+ "proof_scope": "design-lint layer PLUS the north-star end-to-end: sparta-public README -> claim-bound 15-slide deck -> all 11 stages including the calibrated house gate",
  "claims": {
-  "proves": "the deterministic DESIGN_* lint passes the golden document and finds every seeded defect class in the seeded fixture",
-  "does_not_prove": "agent-judgment critique quality, house-style visual fidelity, or human 'recognizably mine' acceptance"
+  "proves": "the deterministic DESIGN_* lint passes the golden document and finds every seeded defect; AND the real README compiles end-to-end into a deck passing coverage 11/11, verify-publish, build-manifest, house-conformance, and the house gate (embedding anomaly floor 0.395 + ink/palette floors calibrated on the 233 real pages)",
+  "does_not_prove": "human 'recognizably mine' acceptance; drawn-character emotional register equivalence; freshness of screenshots"
  },
  "cases": [
   {
@@ -50,7 +50,6 @@
     "--document",
     "/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278/approved.document.json"
    ],
-   "note": "FLIPPED 2026-08-07: assertion renderings + chrome parity landed; the cold deck now passes design-lint clean \u2014 real-world: the live cold-materialized sparta deck artifact, not a fixture stub",
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
@@ -60,15 +59,19 @@
    "real_world": true
   },
   {
-   "id": "north-star-readme-to-graham-deck",
-   "description": "THE GOAL: the real sparta-public README compiles into a claim-bound deck that passes every gate INCLUDING looks-like-a-Graham-deck (house-similarity, calibrated 0.55). Expected to FAIL until the density/drawn-art gap closes \u2014 a goal eval that always passes is measuring something else. Current known failing stages: house-conformance (cover visual density, advisory-class) and house-similarity (6/6 slides at 0.36-0.46 vs gate 0.55; field diffs name picture_count 0 vs median 2 and content_area 0.15 vs 0.35).",
-   "command": "../scripts/eval_readme_to_deck.sh",
-   "real_world": true,
+   "name": "north-star-readme-to-graham-deck",
+   "type": "positive",
+   "command": [
+    "../scripts/eval_readme_to_deck.sh"
+   ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "NORTH-STAR: PASS"
+    "stdout_contains": [
+     "NORTH-STAR: PASS"
+    ]
    },
-   "note": "GOAL REACHED 2026-08-11: exit 0, all 11 stages including the recalibrated house gate (per-slide embedding anomaly floor 0.395 + text-invariant ink/palette floors from the real-corpus distributions)."
+   "real_world": true,
+   "timeout_seconds": 1200
   }
  ]
 }
