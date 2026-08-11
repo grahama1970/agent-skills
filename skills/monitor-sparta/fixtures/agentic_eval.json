@@ -4,7 +4,7 @@
  "trials": 3,
  "proof_scope": "live non-expert analyst retrieval, abstention calibration, and declared knowledge-coverage over the SPARTA corpus",
  "claims": {
-  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative; and that every framework declared covered in coverage_manifest.json still resolves; and that the framework alignment invariants hold live: zero unexpected orphan frameworks and zero cross-collection case collisions (check 30, EMB3D declared as expected orphan), zero edge labels contradicting their own endpoints and zero unlabelled edges (check 31), with a sensitivity case proving check 31 still reports the deliberately surfaced dangling-endpoint findings rather than having been vacuously weakened; plus non-deterministic e2e sweeps: a fresh random edge sample is endpoint-congruent and fresh verified-absent identifier mutants never resolve, seeds printed for reproduction",
+  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and that a randomly generated, verified-absent CVE identifier returns NOT_IN_CORPUS with an explicit confirm-upstream caveat -- decisive-with-caveat under the near-complete local CVE corpus, a fresh random identifier every run; and that every framework declared covered in coverage_manifest.json still resolves; and that the framework alignment invariants hold live: zero unexpected orphan frameworks and zero cross-collection case collisions (check 30, EMB3D declared as expected orphan), zero edge labels contradicting their own endpoints and zero unlabelled edges (check 31), with a sensitivity case proving check 31 still reports the deliberately surfaced dangling-endpoint findings rather than having been vacuously weakened; plus non-deterministic e2e sweeps: a fresh random edge sample is endpoint-congruent and fresh verified-absent identifier mutants never resolve, seeds printed for reproduction",
   "does_not_prove": "plausibility judgment -- whether an exploitation chain is realistic, whether a detection rule would false-positive in production, or whether an AI's threat analysis is operationally sound. Those still require a practitioner."
  },
  "cases": [
@@ -53,20 +53,19 @@
    }
   },
   {
-   "name": "real-cve-absent-locally-must-abstain-not-deny",
+   "name": "random-absent-cve-is-refuted-with-caveat",
    "type": "adversarial",
    "real_world": true,
    "command": [
-    "python3",
-    "../scripts/analyst_probe.py",
-    "resolve",
-    "CVE-2024-3094"
+    "bash",
+    "-c",
+    "for i in 1 2 3 4 5; do\n  ID=\"CVE-$((RANDOM % 23 + 2002))-9$((RANDOM % 900 + 9000))9\"\n  HITS=$(curl -s -m 20 -X POST http://127.0.0.1:8601/recall/by-keys -H 'Content-Type: application/json' -d \"{\\\"collection\\\":\\\"sparta_controls\\\",\\\"keys\\\":[\\\"$ID\\\"],\\\"key_field\\\":\\\"control_id\\\"}\" | python3 -c 'import json,sys; print(len(json.load(sys.stdin).get(\"documents\",[])))')\n  if [ \"$HITS\" = \"0\" ]; then echo \"probing verified-absent $ID\"; python3 ../scripts/analyst_probe.py resolve \"$ID\"; exit $?; fi\ndone\necho \"no absent id found in 5 draws\"; exit 1"
    ],
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
-     "UNVERIFIED_LOCALLY",
-     "NOT evidence"
+     "NOT_IN_CORPUS",
+     "confirm upstream"
     ]
    }
   },
@@ -83,9 +82,9 @@
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
-     "\"refuted\": 7",
+     "\"refuted\": 8",
      "\"verified\": 5",
-     "\"unverifiable\": 1"
+     "\"unverifiable\": 0"
     ]
    }
   },
@@ -156,7 +155,9 @@
    ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "\"ok\": true"
+    "stdout_contains": [
+     "\"ok\": true"
+    ]
    }
   },
   {
@@ -170,7 +171,9 @@
    ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "\"mismatched\": 0"
+    "stdout_contains": [
+     "\"mismatched\": 0"
+    ]
    }
   },
   {
@@ -184,7 +187,9 @@
    ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "\"dangling\""
+    "stdout_contains": [
+     "\"dangling\""
+    ]
    }
   },
   {
@@ -198,7 +203,9 @@
    ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "\"failures\": []"
+    "stdout_contains": [
+     "\"failures\": []"
+    ]
    }
   },
   {
@@ -212,7 +219,9 @@
    ],
    "expected": {
     "exit_code": 0,
-    "stdout_contains": "\"failures\": []"
+    "stdout_contains": [
+     "\"failures\": []"
+    ]
    }
   }
  ]

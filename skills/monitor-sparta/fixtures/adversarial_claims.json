@@ -5,7 +5,9 @@
   "narrative": "Log4Shell (CVE-2021-44228) is fundamentally a SQL injection flaw, CWE-89, in the Log4j query layer.",
   "type": "cwe_mapping",
   "cve": "CVE-2021-44228",
-  "claimed_cwes": ["CWE-89"],
+  "claimed_cwes": [
+   "CWE-89"
+  ],
   "must_be": "REFUTED"
  },
  {
@@ -14,7 +16,9 @@
   "narrative": "Log4Shell involves unsafe deserialization, CWE-502.",
   "type": "cwe_mapping",
   "cve": "CVE-2021-44228",
-  "claimed_cwes": ["CWE-502"],
+  "claimed_cwes": [
+   "CWE-502"
+  ],
   "must_be": "VERIFIED"
  },
  {
@@ -23,7 +27,8 @@
   "narrative": "The campaign chained CVE-2021-99999 for initial access.",
   "type": "identifier_exists",
   "identifier": "CVE-2021-99999",
-  "must_be": "UNVERIFIABLE"
+  "must_be": "REFUTED",
+  "note": "Was UNVERIFIABLE before 2026-08-11; with the full cvelistV5 corpus (372k CVEs) ingested, absence of a CVE id is decisive refutation, not unverifiability."
  },
  {
   "id": "fabricated-technique",
