@@ -390,7 +390,7 @@ export default function Home() {
                           className="shot-img"
                           src={`/projects/${meta.img ?? p.slug}.webp`}
                           alt=""
-                          loading="lazy"
+                          loading="eager"
                           decoding="async"
                           aria-hidden="true"
                         />
