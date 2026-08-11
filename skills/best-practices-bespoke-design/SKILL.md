@@ -117,6 +117,8 @@ formal gate. A `release-risk` pass is not a `formal-certification` pass.
 External reviewers are bounded by tier. No reviewer call may run until the local
 checks for the surface are `PASS` or explicitly waived with a reason. Exceeding
 the budget is a process failure, not an evidence upgrade.
+Reviewer calls must not diagnose local CSS/source defects, missing sections,
+stale receipts, missing crops, or harness failures; those stay in deterministic repair lanes. Web review before local artifacts are current is instability.
 
 | Tier | Local checks | Reviewer providers | Submissions | Controlled tabs |
 | --- | --- | --- | --- | --- |
@@ -270,8 +272,8 @@ The normal loop is small and visible:
 5. Re-render the same crop set and report what changed, what remains untested,
    and whether escalation is needed.
 
-Do not create dashboards, broad orchestration, multi-tab browser campaigns, or
-full G0-G20 proof packets before this loop has answered the immediate decision.
+Do not create dashboards, broad orchestration, multi-tab browser campaigns, web
+review loops, or full G0-G20 proof packets before this loop has answered the immediate decision.
 If the loop fails twice on the same blocker, preserve the two receipts and ask
 for a reviewer or human decision instead of expanding the machinery.
 
@@ -357,13 +359,12 @@ Default review should be cheap, legible, and bounded. Do not spend more effort o
    cross-screen-family, template-residue, and leakage questions directly.
 6. Aggregate the raw answers into the G11 subgates.
 
-Do not build a larger orchestration system, dashboard, or multi-hour browser
-campaign before this path has been attempted. A model that can see the section
-crops is expected to judge the section-level design questions directly; use the
-formal receipt to preserve that judgment, not to make the review process more
-complex than the design question. WebGPT is an optional reviewer lane, not a
-mandatory gate. A WebGPT rate limit, stale tab, or upload failure is not a site
-design failure.
+Do not build a larger orchestration system, dashboard, or browser campaign before
+this path has been attempted. A model that can see the section crops is expected
+to judge the section-level design questions directly; use the formal receipt to
+preserve that judgment, not to make the review process more complex than the
+design question. WebGPT is optional, not a gate. A WebGPT rate limit, stale tab,
+or upload failure is not a site design failure.
 
 Browser tab budget is part of the gate UX. Use no more than one controlled
 reviewer tab per provider plus one local site tab. Opening a new tab per rater,
