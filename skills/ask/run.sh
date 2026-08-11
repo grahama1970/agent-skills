@@ -371,6 +371,15 @@ EOF
 }
 
 case "${1:-help}" in
+    web)
+        if [ "${2:-}" = "gpt" ]; then
+            shift 2
+            run_tau_handler_shortcut "webgpt" "$@"
+        else
+            echo "Unknown /ask web handler '${2:-}'. Did you mean: webgpt?" >&2
+            exit 2
+        fi
+        ;;
     webgpt|webclaude|webkimi|webgemini|webgrok)
         handler="$1"
         shift

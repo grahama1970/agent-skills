@@ -85,9 +85,11 @@ manual summary, or an invented review for `$ask`.
 Run commands from this directory. Pi skill-command syntax such as
 `/skill:ask webgpt What is 2 + 2?` is a first-class shortcut: the leading
 browser handler (`webgpt`, `webclaude`, `webkimi`, `webgemini`, or `webgrok`)
-routes to a Tau `single-call` browser-handler DAG with `--execute --json`. This
-is only a compatibility shortcut for Pi users; it must not use the removed
-direct WebGPT oracle path.
+routes to a Tau `single-call` browser-handler DAG with `--execute --json`. Inline
+Pi skill references such as `$ask webgpt What is 2 + 2?` and the spaced natural
+language spelling `$ask web gpt What is 2 + 2?` must be treated the same way
+(`web gpt` normalizes to `webgpt`). This is only a compatibility shortcut for Pi
+users; it must not use the removed direct WebGPT oracle path.
 
 `./run.sh tau-dag "<request>"` maps to the Typer `tau-dag run` subcommand
 internally. `./run.sh team-plan "<request>" --team <preset>` renders a
