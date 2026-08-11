@@ -880,6 +880,12 @@ h1 .it::after {
   margin-top: clamp(2.4rem, 4vw, 4rem);
   min-width: 0;
 }
+.work-depth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: clamp(1.8rem, 3vw, 2.6rem);
+}
 .card {
   position: relative;
   display: flex;
@@ -995,6 +1001,24 @@ h1 .it::after {
 .c8 { grid-column: 1 / span 6; grid-row: 4; }
 .c9 { grid-column: 7 / span 6; grid-row: 4; margin-top: clamp(24px, 4vw, 64px); }
 .c10 { grid-column: 1 / span 12; grid-row: 5; margin-top: clamp(18px, 2.4vw, 40px); }
+.selected-cards .card {
+  grid-row: auto;
+  margin-top: 0;
+}
+.selected-cards .card:nth-child(1) { grid-column: 1 / span 4; }
+.selected-cards .card:nth-child(2) { grid-column: 5 / span 4; }
+.selected-cards .card:nth-child(3) { grid-column: 9 / span 4; }
+.selected-cards .c10 .shot {
+  aspect-ratio: 16/10;
+}
+.explore-projects {
+  padding-block: clamp(2.6rem, 5vw, 4.5rem);
+}
+.explore-cards .card {
+  grid-column: span 6;
+  grid-row: auto;
+  margin-top: 0;
+}
 .shot {
   position: relative;
   width: 100%;
@@ -4516,7 +4540,9 @@ th.cm-num {
   }
 }
 
-/* Counts, never ratings — the evidence behind the competency claims. */
+/* Counts, never ratings — the evidence behind the competency claims. Kept for
+   depth routes; /resume now links to that evidence instead of rendering the
+   table on the hiring lane. */
 .cv-evidence {
   border-collapse: collapse;
   margin: 0.6rem 0 0.5rem;
@@ -4563,6 +4589,21 @@ th.cm-num {
   .cv-evidence {
     display: none !important;
   }
+}
+
+.cv-evidence-link {
+  border-left: 2px solid rgba(226, 172, 98, 0.55);
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin-top: 0.85rem;
+  padding-left: 0.85rem;
+}
+
+.cv-evidence-link a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* Sits with the download buttons: names which version you are reading. */

@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "c6ef540f47",
+  "sourceCommit": "3a99b30857",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -165,7 +165,7 @@
       "label": "Compliance",
       "title": "Compliance, security & governance",
       "lens": "technical",
-      "skillCount": 58,
+      "skillCount": 59,
       "img": "sparta-explorer"
     },
     {
@@ -179,8 +179,8 @@
       "abstract": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "taxonomy": "Compliance, security & governance",
       "hasSanityCheck": false,
-      "visibility": "public-overview",
-      "evidenceAccess": "abstract",
+      "visibility": "public",
+      "evidenceAccess": "source",
       "img": "sparta-explorer"
     },
     {

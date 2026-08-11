@@ -1,6 +1,6 @@
 {
   "schema": "grahama.project_visibility.v1",
-  "sourceCommit": "c6ef540f47",
+  "sourceCommit": "3a99b30857",
   "projects": [
     {
       "slug": "persona-dream",
@@ -77,11 +77,10 @@
     {
       "slug": "sparta-explorer",
       "name": "sparta explorer",
-      "visibility": "public-overview",
-      "evidence_access": "abstract",
+      "visibility": "public",
+      "evidence_access": "source",
       "href": "https://github.com/grahama1970/sparta-public",
-      "abstract": null,
-      "note": "Public product overview; underlying system and evidence are private."
+      "abstract": null
     }
   ],
   "hidden": []

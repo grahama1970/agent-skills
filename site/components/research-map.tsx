@@ -35,10 +35,10 @@ export function ResearchMap() {
               <span key={s.slug}>
                 {i > 0 && <span aria-hidden="true"> · </span>}
                 <a
-                  href={`#project-${s.slug}`}
+                  href={`/explore#project-${s.slug}`}
                   data-qid={`researchmap:jump:${s.slug}`}
-                  data-qs-action="RESEARCHMAP_JUMP_PROJECT"
-                  title={`Jump to ${s.name} below`}
+                  data-qs-action="RESEARCHMAP_OPEN_EXPLORE"
+                  title={`Open the Explore route for ${s.name} and related systems`}
                 >
                   {s.name}
                 </a>

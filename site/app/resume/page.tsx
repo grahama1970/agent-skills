@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { SiteNav } from '@/components/site-nav';
 import resume from '@/resume.json';
-import competence from '@/competence.json';
 
 /**
  * /resume — the formal, skimmable resume.
@@ -226,33 +225,20 @@ export default function ResumePage() {
           <section key={s.title} className="cv-section">
             <h2>{s.title}</h2>
             <Blocks blocks={s.blocks} clusters={s.title === 'CORE COMPETENCIES'} />
-            {/* The evidence behind the competency claims, rendered only in the
-                deeper web version. Counts come from competence.json, generated
-                from the project-taxonomy registry at the deploy commit — the
-                same file the homepage matrix reads, so the two cannot disagree.
-                Counts, never self-assessed ratings. */}
             {s.title === 'DEEPER DETAIL' ? (
-              <table className="cv-evidence">
-                <caption>
-                  Skills declaring each discipline, generated from{' '}
-                  <code>project-taxonomy</code> at {competence.commit} ·{' '}
-                  {competence.totalSkills} skills mapped
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Discipline</th>
-                    <th scope="col">Skills</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {competence.disciplines.map((d) => (
-                    <tr key={d.id}>
-                      <th scope="row">{d.label}</th>
-                      <td className="machine">{d.skillCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <p className="cv-evidence-link">
+                The generated discipline census is technical-inspector material, not
+                resume reading.{' '}
+                <a
+                  href="/capabilities"
+                  data-qid="resume:link:technical-capability-evidence"
+                  data-qs-action="RESUME_OPEN_CAPABILITY_EVIDENCE"
+                  title="Inspect generated discipline and capability evidence"
+                >
+                  Inspect technical capability evidence
+                </a>
+                .
+              </p>
             ) : null}
           </section>
         ))}

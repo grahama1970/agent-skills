@@ -1,8 +1,8 @@
 {
-  "commit": "c6ef540f47",
-  "as_of": "2026-08-10",
+  "commit": "3a99b30857",
+  "as_of": "2026-08-11",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 346,
+  "totalSkills": 347,
   "disciplineCount": 18,
   "disciplines": [
     {
@@ -39,7 +39,7 @@
     {
       "id": "agentic-orchestration",
       "label": "Agentic orchestration",
-      "skillCount": 50,
+      "skillCount": 51,
       "lenses": [
         "technical"
       ],
@@ -90,7 +90,7 @@
     {
       "id": "compliance-security",
       "label": "Compliance security",
-      "skillCount": 40,
+      "skillCount": 41,
       "lenses": [
         "technical"
       ],
@@ -392,7 +392,7 @@
     {
       "id": "browser-automation",
       "label": "Browser automation",
-      "skillCount": 8,
+      "skillCount": 9,
       "lenses": [
         "technical"
       ],

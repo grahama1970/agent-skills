@@ -137,7 +137,7 @@
           "href": "https://github.com/grahama1970/sparta-public"
         }
       ],
-      "skillCount": 58
+      "skillCount": 59
     },
     {
       "id": "adaptive-lineage",
@@ -229,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "c6ef540f47"
+  "sourceCommit": "3a99b30857"
 }

@@ -6,17 +6,13 @@ import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
 import {
   DeferredCapabilitySearch,
-  DeferredDreamStepper,
   DeferredKeyboardNav,
   DeferredReceiptTicket,
 } from '@/components/home-deferred-surfaces';
 import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
-import { CompetenceMatrix } from '@/components/competence-matrix';
 import { TauCase } from '@/components/cases/tau-case';
-import { SpartaCase } from '@/components/cases/sparta-case';
-import { PersonaDreamCase } from '@/components/cases/persona-dream-case';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -25,9 +21,7 @@ import visibility from '@/project-visibility.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
-// Flagship systems — already emphasised by the desktop collage; on phones the
-// other projects compact to an index so the Work section isn't an endless scroll.
-const FLAGSHIPS = new Set(['tau', 'persona-dream', 'sparta-explorer']);
+const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'battle'] as const;
 
 const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
@@ -41,19 +35,6 @@ const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string;
   debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
   'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
 };
-
-const DREAM_PHASES = [
-  { f: 'research-loop', n: '00', c: 'the research loop — memory, dream, conversation', t: 'rgba(147,162,137,.42)', dims: '1672×941', src: 'persona-dream/assets/readme/research-loop' },
-  { f: 'phase01-idea-memory-residue', n: '01', c: 'idea · memory residue', t: 'rgba(209,112,60,.5)', dims: '1600×1891', src: 'persona-dream/assets/readme/phase01' },
-  { f: 'phase02-story-content-pane', n: '02', c: 'story', t: 'rgba(196,142,86,.45)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase02-content-pane' },
-  { f: 'phase03-crew-content-pane', n: '03', c: 'crew', t: 'rgba(147,162,137,.42)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase03-content-pane' },
-  { f: 'phase04-contact-sheets-content-pane', n: '04', c: 'contact sheets', t: 'rgba(226,172,98,.42)', dims: '1280×681', src: 'persona-dream/assets/readme/phase04-content-pane' },
-  { f: 'phase05-voices-content-pane', n: '05', c: 'voices', t: 'rgba(178,74,58,.42)', dims: '1280×952', src: 'persona-dream/assets/readme/phase05-content-pane' },
-  { f: 'phase06-script-content-pane', n: '06', c: 'script', t: 'rgba(160,120,150,.4)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase06-content-pane' },
-  { f: 'phase07-storyboard-content-pane', n: '07', c: 'storyboard', t: 'rgba(196,142,86,.42)', dims: '1270×1480', src: 'persona-dream/assets/readme/phase07-content-pane' },
-  { f: 'phase08-media-lock', n: '08', c: 'media lock', t: 'rgba(147,162,137,.4)', dims: '1600×1387', src: 'persona-dream/assets/readme/phase08' },
-  { f: 'phase09-video-provider-current', n: '09', c: 'video provider', t: 'rgba(209,112,60,.4)', dims: '1280×997', src: 'persona-dream/assets/readme/phase09' },
-];
 
 const TRACK = [
   { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
@@ -86,6 +67,14 @@ const skillFlags = new Map(
   (inventory.skills as { n: string; s: boolean }[]).map((s) => [s.n, s.s]),
 );
 
+type ContentProject = (typeof content.projects)[number];
+type VisibilityProject = {
+  slug: string;
+  visibility: string;
+  href: string | null;
+  evidence_access?: string;
+};
+
 export default function Home() {
   const { stats, commit, as_of } = inventory;
   const receiptArtifacts = Object.fromEntries(
@@ -95,9 +84,13 @@ export default function Home() {
     (a) => a.capture_status === 'captured',
   ).length;
   const projectBySlug = new Map(content.projects.map((p) => [p.slug, p]));
+  const visibilityBySlug = new Map(
+    (visibility.projects as VisibilityProject[]).map((v) => [v.slug, v]),
+  );
   const tauProject = projectBySlug.get('tau');
-  const spartaProject = projectBySlug.get('sparta-explorer');
-  const personaDreamProject = projectBySlug.get('persona-dream');
+  const supportingProjects = SUPPORTING_SLUGS
+    .map((slug) => projectBySlug.get(slug))
+    .filter((p): p is ContentProject => Boolean(p));
   return (
     <>
       <HomeJsonLd />
@@ -287,12 +280,12 @@ export default function Home() {
             own memory residue, checks it&apos;s still her, and writes it back to
             memory —{' '}
             <a
-              href="#dream"
+              href="/explore"
               data-qid="strip:link:dream-study"
               data-qs-action="STRIP_OPEN_DREAM_STUDY"
-              title="Jump to the persona-dream study (section 02)"
+              title="Open the Explore route for the persona-dream source and evidence state"
             >
-              the study is below
+              the source and evidence state are in Explore
             </a>
             .
           </p>
@@ -325,11 +318,11 @@ export default function Home() {
             <div className="work-head">
               <div>
                 <p className="kicker">
-                  <b>Tau</b> Public proof dossiers
+                  <b>Tau</b> Selected investigations
                 </p>
-                <h2 className="h2">Ten public dossiers with code, checks, and gaps.</h2>
+                <h2 className="h2">One dominant proof, three supporting systems.</h2>
               </div>
-              <p className="count">public artifact → proof boundary → visible gap</p>
+              <p className="count">preview here → full index one step deeper</p>
             </div>
             <ResearchMap />
             <ProofLegend />
@@ -357,19 +350,15 @@ export default function Home() {
             </div>
             <div className="flagship-cases" aria-label="Flagship proof compositions">
               {tauProject && <TauCase project={tauProject} />}
-              {spartaProject && <SpartaCase project={spartaProject} />}
-              {personaDreamProject && <PersonaDreamCase project={personaDreamProject} />}
             </div>
-            <div className="cards" aria-label="Additional public proof dossiers">
-              {content.projects.filter((p) => !FLAGSHIPS.has(p.slug)).map((p, i) => {
+            <div className="cards selected-cards" aria-label="Three supporting investigations">
+              {supportingProjects.map((p, i) => {
                 const meta = PROJECT_VISUALS[p.slug];
                 const external = !skillFlags.has(p.slug);
                 // Automatic public/private: a private project links to its
                 // curated public overview (never the private repo) and is
                 // marked evidence-private. Generated by gen_visibility.py.
-                const vis = (visibility.projects as { slug: string; visibility: string; href: string | null; evidence_access?: string }[]).find(
-                  (v) => v.slug === p.slug,
-                );
+                const vis = visibilityBySlug.get(p.slug);
                 const linkHref = vis?.href ?? p.href;
                 const evidencePrivate = !!vis && vis.visibility !== 'public';
                 const ghShort = linkHref
@@ -379,9 +368,7 @@ export default function Home() {
                 return (
                   <article
                     key={p.slug}
-                    className={`card ${meta.cls} ${
-                      FLAGSHIPS.has(p.slug) ? 'flagship' : 'secondary'
-                    }`}
+                    className={`card ${meta.cls} secondary`}
                     id={`project-${p.slug}`}
                   >
                     <a
@@ -456,65 +443,26 @@ export default function Home() {
                 );
               })}
             </div>
-          </div>
-        </section>
-
-        <hr className="rule" />
-
-        {/* ===================== COMPETENCE ===================== */}
-        <section id="competence">
-          <div className="wrap">
-            <div className="work-head">
-              <div>
-                <p className="kicker">
-                  <b>Corpus</b> Declared disciplines
-                </p>
-                <h2 className="h2">What the work adds up to.</h2>
-              </div>
-              <p className="count">disciplines the skills declare — counts, not ratings</p>
+            <div className="work-depth-actions" aria-label="Full work depth">
+              <a
+                className="btn ghost"
+                href="/explore"
+                data-qid="work:action:open-explore"
+                data-qs-action="WORK_OPEN_EXPLORE"
+                title="Open the full project explorer"
+              >
+                Open the full explorer <span className="arrow">→</span>
+              </a>
+              <a
+                className="btn ghost"
+                href="/capabilities"
+                data-qid="work:action:open-capabilities"
+                data-qs-action="WORK_OPEN_CAPABILITIES"
+                title="Inspect the generated discipline and capability evidence"
+              >
+                Inspect technical capability evidence <span className="arrow">→</span>
+              </a>
             </div>
-            <p className="cm-lede">
-              Not a self-graded skills chart. Each row is a discipline the skills tag themselves
-              with; the number is how many actually do, and the projects are where you can watch it
-              run. Thin rows stay thin on purpose.
-            </p>
-            <CompetenceMatrix />
-          </div>
-        </section>
-
-        <hr className="rule" />
-
-        {/* ===================== DREAM ===================== */}
-        <section className="dream" id="dream">
-          <div className="wrap">
-            <div className="dream-head">
-              <div className="a">
-                <p className="kicker">
-                  <b>Study</b> persona-dream
-                </p>
-                <h2 className="h2">Can a persona dream itself a personality?</h2>
-              </div>
-              <p className="b">
-                Not a movie generator: a preregistered study. The question:
-                does letting a persistent voice persona <em>dream</em> about
-                its experience actually help, beyond plainly remembering — and
-                is it still itself afterwards? The day&apos;s memories yield a
-                tension; the tension yields a dream; the dream returns as
-                typed, inspectable records — and its certified affect is
-                injected into the persona&apos;s live Chatterbox voice —
-                emotion tags, conversation tone — identity held stable. Four
-                sealed arms
-                (flat / memory-only / dream / shuffled-dream) decide whether
-                the dream earns its keep. &quot;No&quot; is a real answer.{' '}
-                <span className="lore">
-                  Embry, Kai, and Horus Lupercal are the resident personas —
-                  long-lived agent identities with durable memory and trained
-                  voices. Below: nine real pipeline surfaces from the live run
-                  of 2026-06-29, then a rendered dream frame.
-                </span>
-              </p>
-            </div>
-            <DeferredDreamStepper phases={DREAM_PHASES} />
           </div>
         </section>
 

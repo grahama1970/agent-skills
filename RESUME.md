@@ -13,13 +13,9 @@ U.S. citizen. Extensive experience delivering under export-controlled (ITAR) con
 This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
 
 ## ABOUT
-I build agentic pipelines that run in production, not prototypes. This is current work, not a past chapter: roughly 4,500 commits across tau and agent-skills in the last six months alone, through August 2026. What that buys: multi-agent orchestration with typed DAG contracts and state tracking, tool calling and Model Context Protocol (MCP), large language models (LLM) and generative AI, RAG and knowledge-graph retrieval, and the unglamorous half that keeps them alive — evaluation harnesses, regression gates, observability, and guardrails. I build the shared runtime other teams consume, and I operate it.
+Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for high-consequence environments. I have led DARPA research, delivered under ITAR constraints, and now run a one-person applied R&D practice across architecture, code, evaluation, interfaces, and technical briefing.
 
-Four years on the prime-contractor team of a major DARPA program: Principal Data Scientist and ACERT Technical Lead on ARCOS, delivering knowledge-graph and LLM reasoning for automated certification of mission-critical software. Presented agentic cybersecurity research to AFRL and received a "Hacker" challenge coin. Defense, aerospace, and compliance, where an answer has to be traceable to evidence.
-
-Uncommon path, and it is the point: commercial composer for Adidas and Pepsi, Webby-recognized Executive Producer on Sony's God of War, then data science, then four years on a DARPA prime team. Very few people have run both the creative and the verifiable-AI side. Self-contained with it: 15+ years hand-coding, today primarily agentic coding across many harnesses including my own (tau); I design and build my own interfaces — React/D3 graph explorers over knowledge-graph data, agent workspaces, and grahama.co itself — and present the work myself.
-
-Open to contract engagements and full-time Principal/Staff AI Engineer, AI Architect, Machine Learning Engineer, LLM Platform, and Security/Compliance AI roles.
+My path runs through commercial composition, Webby-recognized interactive production, data science, defense research, formal methods, and agent systems. I am most useful when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
 
 ## EXPERIENCE
 

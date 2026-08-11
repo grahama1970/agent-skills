@@ -221,13 +221,13 @@ export function CapabilitySearch() {
                     </a>
                   )}
                   <a
-                    href={scout.slug ? `#project-${scout.slug}` : '#work'}
+                    href={scout.slug ? `/explore#project-${scout.slug}` : '/explore'}
                     className="scout-act"
                     data-qid={`scout:project:${scout.slug}`}
                     data-qs-action="SCOUT_VIEW_PROJECT"
-                    title={`See ${scout.name} on this page`}
+                    title={`See ${scout.name} in the full project explorer`}
                   >
-                    View project
+                    View in Explore
                   </a>
                   <a
                     href="#search"
@@ -247,7 +247,7 @@ export function CapabilitySearch() {
               <a
                 href={
                   r.type === 'project' && r.slug
-                    ? `#project-${r.slug}`
+                    ? `/explore#project-${r.slug}`
                     : r.href ?? '#work'
                 }
                 data-qid={`search:hit:${r.id}`}

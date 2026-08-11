@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "c6ef540f47",
+  "sourceCommit": "3a99b30857",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 346
+    "skills": 347
   },
   "documents": [
     {
@@ -94,7 +94,7 @@
         "engineering-standards"
       ],
       "summary": "Evidence-grounded reasoning where a human, not the model, holds authority.",
-      "skillCount": 58
+      "skillCount": 59
     },
     {
       "id": "area:adaptive-lineage",
@@ -526,9 +526,9 @@
       "summary": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "body": "Comprehensive SPARTA dataset assessment driven by Brandon Bailey persona. Unified skill merging review-sparta (final assessment) and reality-check-sparta (iterative self-correction). Brandon can /dogpile for grey-area research and /ask colleagues for cross-persona consultation. sparta review Unified SPARTA quality assessment driven by the Brandon Bailey persona . Merges final production assessment with iterative self correction, and gives Brandon access to /dogpile for research and /ask for cross persona consultation. Brandon Bailey Persona \"I created SPARTA to give the space community a common language for discussing threats. When I find a gap, I don't just flag it — I research it through /dogpile and ask my colleagues what they think. A real review is collaborative, not a checklist.\" Brandon's Colleagues (via /ask consult) Colleague Expertise When Brandon Asks SOC Analyst Real world threat detection \"Is this attack vector realistic?\" Embry Formal verification \"Can we prove this control works?\" NIST Auditor Compliance frameworks \"Does this NIST mapping hold up?\" Red Team Lead Offensive security \"How would you exploit this gap?\" Brandon's Research (via /dogpile) When a QRA falls in a grey area (Tier 3), Brandon triggers /dogpile to: Search Brave for real world space security incidents Query Perplexity for synthesized analysis Pull ArXiv papers on space system vulnerabilities Check MITRE ATT&CK for technique validation Return structured citations (URL, title, excerpt, relevance) Commands Assessment (from review sparta) Self Correction (from reality check sparta) Monitoring Research & Consultation Reports Review Dimensions Dimension Weight What Brandon Checks QRA Quality 25% Verbatim grounding, citation accuracy, no hallucination Source Fidelity 20% Does DB exactly match SPARTA Data.xlsx? CWE Relevance 20% Are CWEs applicable to space/embedded systems? Cross Reference 15% MITRE ATT&CK, NIST 800 53, D3FEND accuracy Coverage 10% All 216 techniques, 91 countermeasures represented? Control Quality 10% Control to control comparisons meaningful? Dynamic Thresholds (Annealing Schedule) Brandon adjusts standards based on corpus size: Phase QRA Range Anchoring Fail Generic Fail Grounding Min Brandon Says Bootstrap 0 5K 50% 80% 0.50 \"Let's see what we're working with\" Early Growth 5K 15K 40% 70% 0.55 \"Time to raise the bar\" Mid Growth 15K 40K 35% 65% 0.60 \"No more excuses\" Late Growth 40K 80K 30% 60% 0.65 \"Tightening the screws\" Refinement 80K 100K 25% 55% 0.70 \"Time to be strict\" Gold Standard 100K+ 20% 50% 0.75 \"No compromises\" Three Tier Intelligence Tier Source How Brandon Uses It Tier 1 (Vetted) SPARTA QRAs, grounding = 0.75 Direct citati",
       "href": "https://github.com/grahama1970/sparta-public",
-      "visibility": "public-overview",
-      "evidenceAccess": "abstract",
-      "scoutState": "abstract-only",
+      "visibility": "public",
+      "evidenceAccess": "source",
+      "scoutState": "setup-required",
       "requirements": "Public overview only — the system and its evidence are private.",
       "boundary": "A public methodology overview; the implementation and evidence are under NDA."
     },
@@ -659,7 +659,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Use when the user asks to query project memory, ask an oracle, use supported browser-backed reviewers, run Tau roundtable/single-handler workflows, run persona/deep-review workflows, generate image prompts, check OS/project health through composed skills, or run an ask DAG. This skill is the executable /ask runtime; do not replace it with an informal subagent, plain web search, or hand-written review.",
-      "body": "ask Stop First If the user names $ask , /ask , an ask mode, oracle, deep review, parallel review, roundtable, argue, CAE gap review, or ask DAG, read this whole file before acting. Then use the real runtime entrypoint unless the user explicitly asks for a fallback or the runtime is unavailable and that fallback is reported. Do not substitute spawn agent , a plain model call, a plain web search, a manual summary, or an invented review for $ask . Runtime Entrypoint Run commands from this directory. ./run.sh tau dag \"<request \" maps to the Typer tau dag run subcommand internally. ./run.sh team plan \"<request \" team <preset renders a role based multi agent plan and frozen Tau DAG preview; execution requires explicit execute live (see README \"Team Orchestration\"). Every nontrivial run must preserve the runtime artifacts. The standard artifact set is: <ask id .request.json <ask id .status.json <ask id .events.jsonl mode specific outputs such as review.md , review.json , DAG manifests, or bro",
+      "body": "ask Stop First If the user names $ask , /ask , an ask mode, oracle, deep review, parallel review, roundtable, argue, CAE gap review, or ask DAG, read this whole file before acting. Then use the real runtime entrypoint unless the user explicitly asks for a fallback or the runtime is unavailable and that fallback is reported. Do not substitute spawn agent , a plain model call, a plain web search, a manual summary, or an invented review for $ask . Runtime Entrypoint Run commands from this directory. Pi skill command syntax such as /skill:ask webgpt What is 2 + 2? is a first class shortcut: the leading browser handler ( webgpt , webclaude , webkimi , webgemini , or webgrok ) routes to a Tau single call browser handler DAG with execute json . Inline Pi skill references such as $ask webgpt What is 2 + 2? and the spaced natural language spelling $ask web gpt What is 2 + 2? must be treated the same way ( web gpt normalizes to webgpt ). This is only a compatibility shortcut for Pi users; it mus",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ask/SKILL.md"
     },
     {
@@ -1131,6 +1131,16 @@
       "summary": "Persistent browser-oracle tab bindings and directory walk-up registry for WebGPT, Cursor Browser, Gemini, Kimi, and Claude. Binds tab id / viewId + URL once under ~/.pi; maps directories to project names via .ask/browser-oracles.yaml discovered like python-dotenv parent walk-up.",
       "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. browser oracle Small skill for where browser oracles point — not for running reviews. Use $ask webgpt (or $surf ) for the actual submit after resolve. Two stores Store Path In git? Tab id + URL ~/.pi/webgpt projects/<name .json No Directory → project name .ask/browser oracles.yaml Yes Agent workflow Do not pass webgpt tab id on every round when a project binding exists. Required lookup behavior when $browser oracle is mentioned When a human mentions $browser oracle , browser oracle , WebGPT binding, reviewer tab, tab id, desktop, or \"where should WebGPT look\", the agent must first resolve from the relevant project or skill directory before asking the human for tab/url/desktop again. Use this order: 1. If the task is inside a project repo, resolve from that repo root: ./run.sh resolve from /path/to/project backend webgpt json . 2. If the task is about a skill or subagent, resolve from that skill/subagent directory first: ./run",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/browser-oracle/SKILL.md"
+    },
+    {
+      "id": "skill:captcha",
+      "type": "skill",
+      "name": "captcha",
+      "category": "core",
+      "sanity": true,
+      "summary": "Authorization-gated CAPTCHA security evaluation using the pinned ReCAP agent, synthetic dynamic CAPTCHA challenges on loopback, Surf transport proof, and Ask DAG composition. Use when the user says \"evaluate CAPTCHA security\", \"benchmark ReCAP\", \"test a local CAPTCHA agent\", or \"measure CAPTCHA robustness\".",
+      "body": "captcha STOP. Read this entire skill before invoking a live command. captcha is a defensive research and evaluation skill , not a general CAPTCHA bypass utility. It measures a pinned ReCAP agent against ReCAP's synthetic dynamic provider on a literal loopback target. It refuses public hosts, Halligan/real provider modes, credentials, proxies, stealth, session reuse, and ordinary live site CAPTCHA solving. When an unrelated browser workflow encounters a CAPTCHA, stop for human handoff. Do not silently route it through this skill. Ownership boundaries Ask owns orchestration. Ask declares captcha in composes: and invokes it through an ask.dag.v1 skill.run node. captcha owns authorization, bounded execution, and receipts. No browser or model action occurs before a typed authorization PASS. Surf owns browser transport proof. Live runs require a validated surf.capabilities.v1 artifact plus an isolated exact URL navigation, challenge identity observation, screenshot, and created tab cleanup b",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/captcha/SKILL.md"
     },
     {
       "id": "skill:casting-agent",
@@ -2419,7 +2429,7 @@
       "category": "ingest",
       "sanity": false,
       "summary": "Thin wrapper around the SPARTA pipeline project (79K LOC Python). Runs pipeline steps, checks status, runs tests, launches Explorer UX. The real code lives at ~/workspace/experiments/sparta/src/sparta/pipeline/ — this skill is an interface, not a reimplementation.",
-      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. /ingest sparta Thin skill wrapper around the real SPARTA pipeline at ${HOME}/workspace/experiments/sparta/ . What This Skill Does Dispatches commands to the real pipeline. Does NOT contain pipeline logic. What the Real Pipeline Does 48 numbered Python steps (27K+ LOC) that: 1. Fetch SPARTA Data.xlsx + ATT&CK + CWE + D3FEND + NIST + ESA sources 2. Extract and normalize 2,147+ controls across 6 frameworks 3. Fetch ~10K URLs referenced by controls 4. Extract clean text from fetched HTML/PDF 5. Generate embeddings and knowledge anchors 6. Build relationship graph (deterministic + LLM verified edges) 7. Generate QRAs with T0/T1.5/T2 quality cascade 8. Calibrate confidence thresholds via active learning 9. Export tiered graph Data stored in DuckDB (358MB production DB) + ArangoDB (via SpartaDataBridge). DuckDB migration to ArangoDB complete for pipeline steps (commit f8c5be4d). DuckDB remains as read only data layer via SpartaDataB",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. /ingest sparta Thin skill wrapper around the real SPARTA pipeline at ${HOME}/workspace/experiments/sparta/ . What This Skill Does Dispatches commands to the real pipeline. Does NOT contain pipeline logic. What the Real Pipeline Does 40 numbered Python steps (00 18) that: 1. Fetch SPARTA Data.xlsx + ATT&CK + CWE + D3FEND + NIST + ESA sources 2. Extract and normalize 2,147+ controls across 6 frameworks 3. Fetch ~10K URLs referenced by controls 4. Extract clean text from fetched HTML/PDF 5. Generate embeddings and knowledge anchors 6. Build relationship graph (deterministic + LLM verified edges) 7. Generate QRAs with T0/T1.5/T2 quality cascade 8. Calibrate confidence thresholds via active learning 9. Export tiered graph Data stored in DuckDB (358MB production DB) + ArangoDB (via SpartaDataBridge). DuckDB migration to ArangoDB complete for pipeline steps (commit f8c5be4d). DuckDB remains as read only data layer via SpartaDataBrid",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-sparta/SKILL.md"
     },
     {
@@ -2769,7 +2779,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Nightly cron roundtable review of every skill amended during the day. Discovers amended skills from git history, builds an equal-context packet from /project-state, /ops-workstation, and /brave-search, convenes a five-seat browser roundtable (webgpt, webclaude, webkimi, webgrok, webgemini) through /ask tau-dag, and stores the attributed synthesis in /memory (ArangoDB `project_roundtables` + lessons with Qdrant semantic sync) so the human and project agent can recall and discuss it.",
-      "body": "Monitor Projects Nightly, on a scheduler cron, review the skills amended during the day — not the whole agent skills project (agent skills is a collection of skills; the unit of review is the skill directory) — via a five seat concurrent roundtable, then store the result in /memory for later recall. Pipeline (one nightly run) 1. Discover — git log since over skills/<name / paths in the canonical checkout finds skills amended in the last 24h. No amendments → store a no changes receipt and exit 0. 2. Context — build the shared packet from: /project state report json cached (project readiness evidence), /ops workstation quick health (host context), /brave search web for each amended skill's load bearing topic (capped, external evidence per /best practices roundtable ). 3. Roundtable — one /ask compile+execute, per /best practices roundtable (equal context, concurrent topology, no privileged seat): 4. Synthesize — per seat status (responded / blocked / stale tab / timed out), common ground",
+      "body": "Monitor Projects Nightly, on a scheduler cron, review the skills amended during the day — not the whole agent skills project (agent skills is a collection of skills; the unit of review is the skill directory) — via a five seat concurrent roundtable, then store the result in /memory for later recall. Pipeline (one nightly run) 1. Discover — fetches, then selects skills whose skills/<name / paths were touched since the last reviewed commit ( <watermark ..HEAD ). The watermark lives at ~/.local/state/monitor projects/watermark.json (override with MONITOR PROJECTS WATERMARK ) and advances only after a run that both succeeded and stored — so a failed or missed night re scans the same range instead of losing it. since is the first run fallback only; a wall clock window cannot resume, and a missed night would silently skip everything in the gap while its receipt still looked complete. An unknown watermark falls back to the window rather than selecting nothing. No amendments → no changes recei",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-projects/SKILL.md"
     },
     {
@@ -2809,7 +2819,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Continuous SPARTA quality monitor. Runs the 3-tier validation cascade alongside Stage 12 QRA generation — Tier 0 deterministic, Tier 1.5 trained GPT (via /assistant), Tier 2 Brandon (edge cases). Accumulates labels, auto-triggers /create-gpt training at 2000 labels, and tracks convergence.",
-      "body": "Monitor SPARTA Continuous quality monitor for the SPARTA QRA pipeline. Runs alongside Stage 12 and validates at configurable checkpoints (default: every 10K QRAs). Full Coverage Definition for SPARTA QRAs /monitor sparta must report SPARTA QRA coverage by semantic bucket, not as a single LLM call count. Full coverage means: 1. Canonical SPARTA QRAs exist for every in scope/actionable SPARTA technique, tactic, and countermeasure. 2. Technique context relationship QRAs exist for valid tactic→technique and technique→related control prompts. 3. Technique related control to control QRAs exist only for pairs that pass /create evidence case evidence case adjudication inside technique T ; raw related control pairs are diagnostic candidates, not coverage obligations. 4. Non SPARTA native QRAs exist for configured source frameworks used by SPARTA analysis: ATT&CK, CWE, NIST, CAPEC, D3FEND, ESA, NVD, and related imported corpora. Health reporting must distinguish: raw candidates : diagnostic univ",
+      "body": "Monitor SPARTA Continuous quality monitor for the SPARTA QRA pipeline. Runs alongside Stage 12 and validates at configurable checkpoints (default: every 10K QRAs). Full Coverage Definition for SPARTA QRAs /monitor sparta must report SPARTA QRA coverage by semantic bucket, not as a single LLM call count. Full coverage means: 1. Canonical SPARTA QRAs exist for every in scope/actionable SPARTA technique, tactic, and countermeasure. 2. Technique context relationship QRAs exist for valid tactic→technique and technique→related control prompts. 3. Technique related control to control QRAs exist only for pairs that pass /create evidence case evidence case adjudication inside technique T ; raw related control pairs are diagnostic candidates, not coverage obligations. 4. Non SPARTA native QRAs exist for every source framework present in sparta controls , enumerated FROM the corpus rather than from a list written here. A literal list in prose goes stale silently: this item previously named seven ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-sparta/SKILL.md"
     },
     {
