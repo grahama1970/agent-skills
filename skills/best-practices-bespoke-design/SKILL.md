@@ -338,31 +338,38 @@ must never be counted as G11 rater evidence.
 
 #### Default Reviewer Workflow
 
-The default G11 path is simple and bounded:
+Default review should be cheap, legible, and bounded. Do not spend more effort on reviewer transport than on the design surface being evaluated.
 
 1. Render section, component, or page-state crops with a manifest.
 2. Assemble reviewable contact sheets from those crops.
-3. Submit the same crop packet to a small fresh rater set, preferably distributed
-   across WebClaude, WebGPT, WebKimi, and WebGemini when those lanes are
-   available.
-4. Ask each rater to answer the registered logo-off, competitor-swap,
+3. For `directional` work, use local inspection first. Escalate to one external
+   reviewer only when the question is subjective and the crop packet is ready.
+4. For `release-risk` work, two separate reviewer providers are enough for a
+   normal subjective design check. Submit one compact packet to each provider;
+   do not open one tab per crop, prompt variant, or retry.
+5. For `formal-certification`, run the pre-registered G11 rater set and preserve
+   every raw/parsed response. This is the only tier that requires five fresh
+   usable raters.
+6. Ask each rater to answer the registered logo-off, competitor-swap,
    cross-screen-family, template-residue, and leakage questions directly.
-5. Aggregate the raw answers into the G11 subgates.
+7. Aggregate the raw answers into the G11 subgates.
 
 Do not build a larger orchestration system, dashboard, or multi-hour browser
 campaign before this path has been attempted. A model that can see the section
 crops is expected to judge the section-level design questions directly; use the
 formal receipt to preserve that judgment, not to make the review process more
-complex than the design question.
+complex than the design question. WebGPT is an optional reviewer lane, not a
+mandatory gate. A WebGPT rate limit, stale tab, or upload failure is not a site
+design failure.
 
-Browser tab budget is part of the gate UX. A normal G11 run should use no more
-than one controlled reviewer tab per backend plus one local site tab. Opening a
-new tab per rater, retry, or prompt variant is a process failure unless a prior
-tab is explicitly closed or documented as unusable. If three reviewer attempts in
-one provider family fail with the same transport, upload, context-length, or
-rate-limit signature, stop that provider family, preserve the three receipts, and
-continue with other providers or mark the remaining seats
-`blocked_by_systemic_failure`. Do not open parallel tabs to outrun the failure.
+Browser tab budget is part of the gate UX. Use no more than one controlled
+reviewer tab per provider plus one local site tab. Opening a new tab per rater,
+retry, or prompt variant is a process failure unless a prior tab is explicitly
+closed or documented as unusable. If two focused attempts in one provider family
+fail with the same transport, upload, context-length, or rate-limit signature,
+stop that provider family, preserve the receipts, and continue with the other
+provider or mark the remaining seats `blocked_by_systemic_failure`. Do not open
+parallel tabs to outrun the failure.
 
 Run the registered G11 questions: logo-off recognition, competitor swap, motif
 semantics, cross-screen family, reference leakage, and template residue. The full
