@@ -15,7 +15,15 @@ A deterministic, claim-bound compiler for converting product README material int
 The PPTX is designed for later human tuning in Google Slides, PowerPoint for the web,
 Keynote, or another presentation editor.
 
-## Current state (audited 2026-08-11)
+## Current state (updated 2026-08-11, post north-star PASS)
+
+**The NORTH-STAR eval PASSES**: `scripts/eval_readme_to_deck.sh` compiles the
+sparta-public README into a 15-slide claim-bound deck that clears all 11
+stages — coverage 11/11 public claims, verify-publish on the delivered file,
+build-manifest chain, house-conformance (0 findings), and the house gate
+(embedding anomaly floor + text-invariant ink/palette metrics calibrated on
+the 233 real corpus pages; see STYLE_GUIDE §7 for why the embedding channel
+alone cannot measure style). Fixture: `fixtures/agentic_eval.json`.
 
 Two adversarial audits returned **NOT_READY** as a *proving* compiler; the
 skill is a supervised authoring system whose gates are real but whose
