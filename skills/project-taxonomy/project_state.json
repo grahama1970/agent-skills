@@ -1,0 +1,177 @@
+{
+  "project": "project-taxonomy",
+  "project_root": "/home/graham/workspace/experiments/agent-skills/skills/project-taxonomy",
+  "project_profile": "generic",
+  "timestamp": "2026-08-11T14:32:49.955812+00:00",
+  "mode": "standard",
+  "phase_1_infrastructure": {
+    "daemons": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "daemons": {},
+      "up": 0,
+      "total": 0
+    },
+    "tests": {
+      "total": 0,
+      "collected": false,
+      "error": "tests dir missing",
+      "checked_paths": [
+        "/home/graham/workspace/experiments/agent-skills/skills/project-taxonomy/tests",
+        "/home/graham/workspace/experiments/agent-skills/skills/project-taxonomy/services/tests",
+        "/home/graham/workspace/experiments/agent-skills/skills/project-taxonomy/test"
+      ]
+    },
+    "cascade": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "registry": {
+        "validators": 0,
+        "classifiers": 0,
+        "regressors": 0,
+        "gpts": 0
+      },
+      "shadow": {
+        "total": 0,
+        "usable": 0
+      },
+      "training_data": {},
+      "classifiers_on_disk": [],
+      "tier_status": {
+        "tier_2_teacher": "NOT_APPLICABLE",
+        "tier_1_5_gpt": "NOT_APPLICABLE",
+        "tier_0_5_classifier": "NOT_APPLICABLE"
+      }
+    },
+    "daemon_cascade_wiring": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "wired": {}
+    },
+    "skills": {
+      "total": 379,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills",
+      "missing_skill_md": [
+        "__pycache__",
+        "audio-caption-service",
+        "best-practices-approach-bakeoff",
+        "best-practices-design-doc",
+        "best-practices-gemini-react-design-loop",
+        "best-practices-kling-scene",
+        "best-practices-open-design",
+        "best-practices-react-flow-dag",
+        "best-practices-react-flow-dag-chart",
+        "best-practices-script-writer"
+      ],
+      "missing_skill_md_count": 33,
+      "missing_sanity": [
+        "agents-registry",
+        "animation-vocabulary",
+        "apple-design",
+        "best-practices-agent",
+        "best-practices-chat",
+        "best-practices-chat-ux",
+        "best-practices-chatterbox-agent",
+        "best-practices-converse",
+        "best-practices-cots",
+        "best-practices-design"
+      ],
+      "missing_sanity_count": 54
+    },
+    "frontend": {
+      "exists": false
+    },
+    "deploy": {
+      "systemd_units": 0,
+      "containerfile": false,
+      "docker_compose": false
+    },
+    "components": {
+      "registered": 0,
+      "projects": {},
+      "note": "No component registry found"
+    }
+  },
+  "phase_2_memory": {
+    "available": true,
+    "recalls": [
+      {
+        "query": "project-taxonomy features architecture deployment",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "project-taxonomy competitive advantages unique capabilities",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "project-taxonomy known issues gaps missing features",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      }
+    ]
+  },
+  "phase_3_doc_drift": {
+    "docs_checked": 7,
+    "docs_found": 0,
+    "drift_items": [
+      {
+        "file": "README.md",
+        "issue": "MISSING",
+        "severity": "high"
+      }
+    ],
+    "drift_count": 1
+  },
+  "phase_4_best_practices": {
+    "findings": [],
+    "total_findings": 0,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "best_practice_skills_available": [
+      "best-practices-python",
+      "best-practices-react",
+      "best-practices-skills",
+      "best-practices-kde"
+    ]
+  },
+  "phase_5_research": {
+    "skipped": true,
+    "reason": "Use standard or --full mode"
+  },
+  "phase_6_gaps": {
+    "gaps": [
+      {
+        "category": "documentation",
+        "severity": "high",
+        "gap": "1 critical doc issues (missing files, stale references)",
+        "action": "Review and fix doc-code alignment",
+        "details": [
+          {
+            "file": "README.md",
+            "issue": "MISSING",
+            "severity": "high"
+          }
+        ]
+      },
+      {
+        "category": "skills",
+        "severity": "low",
+        "gap": "33 skill dirs without SKILL.md",
+        "action": "Run /skills-ci to audit and fix"
+      }
+    ],
+    "improvements": []
+  }
+}

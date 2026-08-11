@@ -172,6 +172,38 @@ def _context_block(label: str, args: list[str], timeout: int, cwd: Path | None =
     return f"### {label}\n{out.strip()[:max_chars]}\n"
 
 
+def sweep_project_states(ctx: RunContext) -> list[dict]:
+    """Every amended skill MUST have a stored project-state.
+
+    Runs `/project-state report --store` scoped to each amended skill so the
+    dated assessment artifact lands in the skill's own directory AND a snapshot
+    lands in the /memory `project_states` timeline. Without this there is no way
+    to assess a skill or detect its drift between nights.
+    """
+    receipts: list[dict] = []
+    for skill in ctx.amended:
+        root = SKILLS_ROOT / skill.name
+        rc, out, err = _run(
+            [str(SKILLS_ROOT / "project-state" / "run.sh"), "report", "--json", "--store"],
+            timeout=600,
+            env={"PROJECT_STATE_ROOT": str(root)},
+        )
+        entry: dict = {"skill": skill.name, "rc": rc}
+        if rc == 0 and '"stored"' in out:
+            # --store pretty-prints, so locate the object that encloses the key.
+            idx = out.rindex('"stored"')
+            brace = out.rfind("{", 0, idx)
+            try:
+                entry["stored"] = json.loads(out[brace:])["stored"]
+            except (ValueError, KeyError, json.JSONDecodeError) as exc:
+                entry["error"] = f"unparseable store receipt: {exc}"
+        else:
+            entry["error"] = (err or out).strip()[-300:]
+            logger.error("project-state --store failed for {}: {}", skill.name, entry["error"][:160])
+        receipts.append(entry)
+    return receipts
+
+
 def build_packet(ctx: RunContext) -> str:
     """One shared packet, identical for every seat (equal-context contract)."""
     date = ctx.run_id.split("T")[0]
@@ -296,7 +328,7 @@ def run_roundtable(ctx: RunContext, packet_path: Path) -> dict:
     return result
 
 
-def synthesize(ctx: RunContext, ask_result: dict) -> dict:
+def synthesize(ctx: RunContext, ask_result: dict, state_receipts: list[dict] | None = None) -> dict:
     """Deterministic synthesis skeleton with per-seat status and pointers.
 
     Attributed prose synthesis is done by the project agent reading the seat
@@ -334,6 +366,11 @@ def synthesize(ctx: RunContext, ask_result: dict) -> dict:
         "ask_rc": ask_result.get("rc"),
         "ask_compiled": bool(ask),
         "ask_run_dir": run_dir,
+        "project_state_sweep": {
+            "total": len(ctx.amended),
+            "stored": sum(1 for r in (state_receipts or []) if (r.get("stored") or {}).get("memory_stored")),
+            "receipts": state_receipts or [],
+        },
         "seat_status": seat_status,
         "seat_responses": seat_responses,
         "status": "ok" if ok else "NEEDS_ATTENTION",
@@ -411,12 +448,21 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
         return
 
     logger.info("amended skills: {}", [s.name for s in ctx.amended])
+
+    state_receipts = sweep_project_states(ctx)
+    (run_dir / "project_states.json").write_text(
+        json.dumps(state_receipts, indent=2), encoding="utf-8"
+    )
+    missing = [r["skill"] for r in state_receipts if not (r.get("stored") or {}).get("memory_stored")]
+    if missing:
+        logger.error("skills with no stored project-state: {}", missing)
+
     packet = build_packet(ctx)
     packet_path = run_dir / "packet.md"
     packet_path.write_text(packet, encoding="utf-8")
 
     ask_result = run_roundtable(ctx, packet_path)
-    receipt = synthesize(ctx, ask_result)
+    receipt = synthesize(ctx, ask_result, state_receipts)
     (run_dir / "receipt.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
 
     if dry_run:

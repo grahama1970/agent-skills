@@ -1,0 +1,184 @@
+{
+  "project": "monitor-opportunities",
+  "project_root": "/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities",
+  "project_profile": "generic",
+  "timestamp": "2026-08-11T14:38:03.274335+00:00",
+  "mode": "standard",
+  "phase_1_infrastructure": {
+    "daemons": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "daemons": {},
+      "up": 0,
+      "total": 0
+    },
+    "tests": {
+      "total": 182,
+      "collected": true,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests"
+    },
+    "cascade": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "registry": {
+        "validators": 0,
+        "classifiers": 0,
+        "regressors": 0,
+        "gpts": 0
+      },
+      "shadow": {
+        "total": 0,
+        "usable": 0
+      },
+      "training_data": {},
+      "classifiers_on_disk": [],
+      "tier_status": {
+        "tier_2_teacher": "NOT_APPLICABLE",
+        "tier_1_5_gpt": "NOT_APPLICABLE",
+        "tier_0_5_classifier": "NOT_APPLICABLE"
+      }
+    },
+    "daemon_cascade_wiring": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "wired": {}
+    },
+    "skills": {
+      "total": 379,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills",
+      "missing_skill_md": [
+        "__pycache__",
+        "audio-caption-service",
+        "best-practices-approach-bakeoff",
+        "best-practices-design-doc",
+        "best-practices-gemini-react-design-loop",
+        "best-practices-kling-scene",
+        "best-practices-open-design",
+        "best-practices-react-flow-dag",
+        "best-practices-react-flow-dag-chart",
+        "best-practices-script-writer"
+      ],
+      "missing_skill_md_count": 33,
+      "missing_sanity": [
+        "agents-registry",
+        "animation-vocabulary",
+        "apple-design",
+        "best-practices-agent",
+        "best-practices-chat",
+        "best-practices-chat-ux",
+        "best-practices-chatterbox-agent",
+        "best-practices-converse",
+        "best-practices-cots",
+        "best-practices-design"
+      ],
+      "missing_sanity_count": 54
+    },
+    "frontend": {
+      "exists": false
+    },
+    "deploy": {
+      "systemd_units": 0,
+      "containerfile": false,
+      "docker_compose": false
+    },
+    "components": {
+      "registered": 0,
+      "projects": {},
+      "note": "No component registry found"
+    }
+  },
+  "phase_2_memory": {
+    "available": true,
+    "recalls": [
+      {
+        "query": "monitor-opportunities features architecture deployment",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "monitor-opportunities competitive advantages unique capabilities",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "monitor-opportunities known issues gaps missing features",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      }
+    ]
+  },
+  "phase_3_doc_drift": {
+    "docs_checked": 7,
+    "docs_found": 2,
+    "drift_items": [
+      {
+        "file": "README.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "not yet live-proven: the per-opportunity `/tau` creator-reviewer evaluation loop,"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "Written but NOT yet live-proven (honest gaps):"
+      }
+    ],
+    "drift_count": 2
+  },
+  "phase_4_best_practices": {
+    "findings": [
+      {
+        "file": "tests/test_report_visibility.py",
+        "issue": "hardcoded_secret",
+        "severity": "critical"
+      }
+    ],
+    "total_findings": 1,
+    "by_severity": {
+      "critical": 1,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "best_practice_skills_available": [
+      "best-practices-python",
+      "best-practices-react",
+      "best-practices-skills",
+      "best-practices-kde"
+    ]
+  },
+  "phase_5_research": {
+    "skipped": true,
+    "reason": "Use standard or --full mode"
+  },
+  "phase_6_gaps": {
+    "gaps": [
+      {
+        "category": "security",
+        "severity": "critical",
+        "gap": "1 critical best-practice violations (possible hardcoded secrets)",
+        "action": "Run /security-scan and fix immediately"
+      },
+      {
+        "category": "documentation",
+        "severity": "low",
+        "gap": "2 aspirational/TODO items in docs",
+        "action": "Implement or remove aspirational claims"
+      },
+      {
+        "category": "skills",
+        "severity": "low",
+        "gap": "33 skill dirs without SKILL.md",
+        "action": "Run /skills-ci to audit and fix"
+      }
+    ],
+    "improvements": []
+  }
+}
