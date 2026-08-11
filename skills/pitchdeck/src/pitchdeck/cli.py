@@ -732,7 +732,7 @@ def house_similarity_cmd(
     slides_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs to score.")],
     threshold: Annotated[float, typer.Option(help="Semantic anomaly floor: MIN of duplicate-free real pages. The embedding channel reads the words, so new on-domain content legitimately scores 0.4-0.5; style is gated by the text-invariant metrics.")] = 0.395,
     ink_floor: Annotated[float, typer.Option(help="Per-slide ink-coverage floor: p5 of the real pages (style_metrics; text-invariant).")] = 0.1534,
-    hue_floor: Annotated[float, typer.Option(help="Per-slide house-palette floor: p5 of the real pages' in-palette ink share.")] = 0.6666,
+    palette_floor: Annotated[float, typer.Option(help="Per-slide floor on Bhattacharyya similarity to the corpus mean color histogram (the corpus defines the palette): p5 of the real pages.")] = 0.7631,
     glob: Annotated[str, typer.Option(help="Filename pattern.")] = "*.png",
 ) -> None:
     """Gate each rendered slide on house style: text-invariant pixel metrics
@@ -769,13 +769,13 @@ def house_similarity_cmd(
                     reasons.append(f"embedding {score:.3f} < {threshold}")
                 if style.ink_fraction < ink_floor:
                     reasons.append(f"ink {style.ink_fraction:.3f} < {ink_floor} (canvas too empty)")
-                if style.house_hue_fraction < hue_floor:
-                    reasons.append(f"palette {style.house_hue_fraction:.3f} < {hue_floor} (off-house color)")
+                if style.palette_similarity < palette_floor:
+                    reasons.append(f"palette {style.palette_similarity:.3f} < {palette_floor} (off-house color distribution)")
                 if reasons:
                     failed += 1
                 rows.append({
                     "slide": image.name, "score": round(score, 3),
-                    "ink": style.ink_fraction, "palette": style.house_hue_fraction,
+                    "ink": style.ink_fraction, "palette": style.palette_similarity,
                     "verdict": "PASS" if not reasons else "FAIL", "reasons": reasons,
                     "nearest": f"{hit['payload']['deck']}#{hit['payload']['slide_index']}",
                     "nearest_title": hit["payload"].get("title"),
@@ -786,7 +786,7 @@ def house_similarity_cmd(
         ok = bool(rows) and failed == 0
         typer.echo(json_mod.dumps({
             "status": "PASS" if ok else "FAIL",
-            "threshold": threshold, "ink_floor": ink_floor, "hue_floor": hue_floor,
+            "threshold": threshold, "ink_floor": ink_floor, "palette_floor": palette_floor,
             "deck_median": deck_median, "failed": failed, "slides": rows,
         }, indent=1))
         if not rows:
