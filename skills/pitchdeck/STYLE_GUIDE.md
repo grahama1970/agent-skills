@@ -111,7 +111,11 @@ visual to satisfy a metric).
    scores 0.25 — so it serves only as a semantic anomaly floor (0.395, the
    duplicate-free corpus minimum). Visual style is gated by text-invariant
    pixel metrics (`style_metrics.py`) calibrated on all 233 real pages:
-   ink coverage ≥ 0.1534 (p5) and house-palette ink share ≥ 0.6666 (p5).
+   ink coverage ≥ 0.1534 (p5) and palette similarity ≥ 0.7631 (p5) — the
+   Bhattacharyya coefficient between a page's ink-pixel color histogram and
+   the corpus MEAN histogram, so the corpus's own pixels define the house
+   palette (no hand-written hue rules). Controls: real page 0.92 PASS,
+   off-house art 0.47 FAIL.
    Render at 50 dpi to match the corpus pages (667px wide) — resolution
    mismatch alone shifts embeddings. Distributions:
    `outputs/house-slides/self-similarity-calibration.json`. On FAIL the
