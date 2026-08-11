@@ -282,6 +282,12 @@ def build_packet(ctx: RunContext) -> str:
         timeout=600,
         env={"PROJECT_STATE_ROOT": str(REPO_ROOT)},
     )
+    divergence_check = _context_block(
+        "divergence (per-skill local/origin stream split; two-sided = repairs blocked)",
+        [str(SKILLS_ROOT / "monitor-projects" / "run.sh"), "divergence"],
+        timeout=420,
+        max_chars=3000,
+    )
     discipline_check = _context_block(
         "project-taxonomy ci (disciplines + crosswalk drift + portfolio freshness/coverage)",
         [str(SKILLS_ROOT / "project-taxonomy" / "run.sh"), "ci"],
@@ -327,6 +333,7 @@ Target artifacts (amended skills, last 24h):
 
 Current evidence:
 {project_state}
+{divergence_check}
 {discipline_check}
 {workstation}
 External research (shared identically with every seat):
@@ -552,6 +559,110 @@ def nightly(dry_run: bool = typer.Option(False, "--dry-run"),
     typer.echo(json.dumps({k: v for k, v in receipt.items() if k != "seat_responses"}, indent=2))
     if receipt["status"] != "ok" or not receipt["stored_verified"]:
         raise typer.Exit(code=1)
+
+
+def compute_divergence(repo_root: Path) -> dict:
+    """Per-skill two-sided divergence report: the manual assessment, in code.
+
+    A skill is DIVERGED when commits touching it exist on BOTH sides of the
+    merge-base (local-only and origin-only) — the state that made watchdog
+    repairs impossible for skills/ask on 2026-08-11. Conflicts come from one
+    repo-wide `git merge-tree` (plumbing; never touches the working tree).
+    Dirty files are attributed with their age so an abandoned edit (days old)
+    reads differently from an active one (minutes old).
+    """
+    _run(["git", "fetch", "-q", "origin"], timeout=180, cwd=repo_root)
+    mb = _run(["git", "merge-base", "origin/main", "HEAD"], timeout=30, cwd=repo_root)[1].strip()
+    rc, mt_out, _ = _run(
+        ["git", "merge-tree", "--write-tree", "--name-only", "origin/main", "HEAD"],
+        timeout=300, cwd=repo_root,
+    )
+    conflict_files = [
+        ln.strip() for ln in mt_out.splitlines()[1:]
+        if ln.strip().startswith("skills/") and "/" in ln.strip()[7:]
+    ]
+
+    def commits(rev_range: str, skill: str) -> list[str]:
+        out = _run(["git", "log", "--format=%h %s", rev_range, "--", f"skills/{skill}"],
+                   timeout=60, cwd=repo_root)[1]
+        return [ln for ln in out.splitlines() if ln.strip()][:20]
+
+    now = datetime.now(UTC).timestamp()
+    skills_report = []
+    for d in sorted((repo_root / "skills").iterdir()):
+        if not d.is_dir() or not (d / "SKILL.md").is_file() or d.name.startswith((".", "_")):
+            continue
+        local = commits(f"{mb}..HEAD", d.name)
+        remote = commits(f"{mb}..origin/main", d.name)
+        if not local and not remote:
+            continue
+        dirty_out = _run(["git", "status", "--porcelain", "--", f"skills/{d.name}"],
+                         timeout=60, cwd=repo_root)[1]
+        dirty = [ln[3:] for ln in dirty_out.splitlines() if ln.strip()]
+        ages = []
+        for f in dirty:
+            fp = repo_root / f
+            if fp.is_file():
+                ages.append(round((now - fp.stat().st_mtime) / 3600, 1))
+        conflicts = [f for f in conflict_files if f.startswith(f"skills/{d.name}/")]
+        # Commit topology and content state are different facts: after a
+        # reconciliation lands on origin and the worktree adopts it, commits
+        # still sit on both sides until the local branch advances, but the
+        # skill needs no further merge work. Compare the WORKTREE to origin.
+        # Assessment artifacts churn by design (every --store rewrites them),
+        # lockfiles churn with any uv invocation, and dot-dirs hold lane run
+        # logs. None of them are merge work; comparing them makes a reconciled
+        # skill look permanently diverged.
+        wt_rc, _, _ = _run(
+            ["git", "diff", "--quiet", "origin/main", "--",
+             f"skills/{d.name}",
+             f":(exclude)skills/{d.name}/PROJECT_STATE.md",
+             f":(exclude)skills/{d.name}/project_state.json",
+             f":(exclude)skills/{d.name}/uv.lock",
+             f":(exclude)skills/{d.name}/.*"],
+            timeout=60, cwd=repo_root)
+        skills_report.append({
+            "worktree_matches_origin": wt_rc == 0,
+            "skill": d.name,
+            "local_only_commits": len(local),
+            "origin_only_commits": len(remote),
+            "two_sided": bool(local and remote),
+            "conflicted_files": conflicts,
+            "dirty_files": len(dirty),
+            "oldest_dirty_age_hours": max(ages) if ages else None,
+            "local_commit_heads": local[:3],
+            "origin_commit_heads": remote[:3],
+        })
+
+    diverged = [s["skill"] for s in skills_report if s["two_sided"] and not s["worktree_matches_origin"]]
+    resolved_awaiting_advance = [
+        s["skill"] for s in skills_report if s["two_sided"] and s["worktree_matches_origin"]
+    ]
+    behind_ahead = _run(["git", "rev-list", "--left-right", "--count", "origin/main...HEAD"],
+                        timeout=30, cwd=repo_root)[1].split()
+    return {
+        "schema": "monitor_projects.divergence.v1",
+        "generated_at": datetime.now(UTC).isoformat(),
+        "merge_base": mb,
+        "checkout_behind": int(behind_ahead[0]) if len(behind_ahead) == 2 else None,
+        "checkout_ahead": int(behind_ahead[1]) if len(behind_ahead) == 2 else None,
+        "diverged_skills": diverged,
+        "resolved_awaiting_branch_advance": resolved_awaiting_advance,
+        "status": "NEEDS_ATTENTION" if diverged else "CLEAN",
+        "skills": skills_report,
+    }
+
+
+@app.command()
+def divergence(json_out: bool = typer.Option(True, "--json/--no-json")) -> None:
+    """Report per-skill local/origin stream divergence. Exit 2 when any skill is two-sided."""
+    report = compute_divergence(REPO_ROOT)
+    out_dir = REPORTS_ROOT / "divergence"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "latest.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    typer.echo(json.dumps(report if json_out else report["diverged_skills"], indent=2))
+    if report["diverged_skills"]:
+        raise typer.Exit(code=2)
 
 
 @app.command()
