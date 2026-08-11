@@ -17,13 +17,15 @@ Keynote, or another presentation editor.
 
 ## Current state (updated 2026-08-11, post north-star PASS)
 
-**The NORTH-STAR eval PASSES**: `scripts/eval_readme_to_deck.sh` compiles the
+**The NORTH-STAR eval PASSES (HOUSE_NON_ANOMALOUS semantics)**: `scripts/eval_readme_to_deck.sh` compiles the
 sparta-public README into a 15-slide claim-bound deck that clears all 11
 stages — coverage 11/11 public claims, verify-publish on the delivered file,
 build-manifest chain, house-conformance (0 findings), and the house gate
 (embedding anomaly floor + text-invariant ink/palette metrics calibrated on
 the 233 real corpus pages; see STYLE_GUIDE §7 for why the embedding channel
-alone cannot measure style). Fixture: `fixtures/agentic_eval.json`.
+alone cannot measure style). Per the external review (STYLE_GUIDE §9), the
+gate certifies HOUSE_NON_ANOMALOUS — it is not yet a validated positive
+'looks like Graham' classifier. Fixture: `fixtures/agentic_eval.json`.
 
 Two adversarial audits returned **NOT_READY** as a *proving* compiler; the
 skill is a supervised authoring system whose gates are real but whose

@@ -141,3 +141,28 @@ DELIVERED file by `verify-publish --document --build-manifest`. Symmetry may
 encode a truthful claim (parallel agents, repeated stages) — uniformity is
 advisory, never auto-"fixed". Wit that adds meaning requires a new ledger
 claim, not a rendering approval.
+
+
+## 9. Gate semantics after external review (webgpt, 2026-08-11)
+
+The full blunt review is `reports/webgpt-house-gate-review-2026-08-11.md`.
+Verdict accepted: the current gate is **HOUSE_NON_ANOMALOUS** (an anomaly
+filter: structural conformance + ink/palette floors + semantic anomaly floor),
+NOT a validated looks-like-Graham classifier. Confirmed defects to fix before
+any positive claim:
+1. Threshold selection was post-hoc against the candidate deck (test-set
+   leakage); thresholds must be frozen before the target deck is scored.
+2. Ink/palette metrics are spatially blind (a bbox shuffle passes unchanged).
+3. The corpus mean histogram is duplicate-contaminated (one vote per
+   duplicate CLUSTER is required, and per-archetype distributions).
+4. The style gate is not bound to the render (a swapped PNG directory or a
+   one-page render can pass; needs render-receipt + page-count + hash binding).
+5. Controls were too easy; matched adversarial negatives (bbox-shuffle,
+   palette-matched card grid, typography swap, two-tiny-visuals,
+   art-register swap) are the real test — at least one must be shown to
+   false-PASS v2 before a redesign is trusted.
+The review's seven executable slices (frozen content-addressed calibration,
+adversarial negatives, archetype-conditioned structural distance, duplicate-
+robust deck bar via leave-one-deck-out, text-masked vision channel ablation,
+artifact/cold eval split, blinded holdout for the phrase itself) are the
+roadmap to a HOUSE_POSITIVE_MATCH verdict.
