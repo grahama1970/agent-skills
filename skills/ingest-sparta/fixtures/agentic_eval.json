@@ -4,7 +4,7 @@
  "trials": 3,
  "proof_scope": "pipeline dispatch truth: documented module paths import, alignment-audit steps exist, and the corpus registry the SKILL.md documents is reachable live",
  "claims": {
-  "proves": "that the documented sparta.pipeline.NN_name module path actually loads (step 18 --list), that the alignment-audit steps 15/17/18 exist and respond to --help, and adversarially that the retired sparta.pipeline.steps.* path fails with No module named rather than silently succeeding; and end-to-end that step 17 resolves the live ATLAS STIX bundle against the live corpus in dry-run",
+  "proves": "that the documented sparta.pipeline.NN_name module path actually loads (step 18 --list), that the alignment-audit steps 15/17/18 exist and respond to --help, and adversarially that the retired sparta.pipeline.steps.* path fails with No module named rather than silently succeeding; and end-to-end that step 17 resolves the live ATLAS STIX bundle against the live corpus in dry-run; and adversarially with a fresh random name every run that a fabricated corpus is rejected with the unknown-corpus error and exit 2, never dispatched",
   "does_not_prove": "pipeline output quality or corpus content; those belong to monitor-sparta"
  },
  "cases": [
@@ -88,6 +88,22 @@
     "exit_code": 0,
     "stdout_contains": [
      "Done!"
+    ]
+   }
+  },
+  {
+   "name": "random-fabricated-corpus-is-rejected-e2e",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/sparta && N=\"corpus_${RANDOM}${RANDOM}\" && echo \"attempting fabricated corpus $N\" && uv run python src/sparta/pipeline/18_ingest_security_corpora.py \"$N\" 2>&1; test $? -eq 2"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "Unknown corpus"
     ]
    }
   }
