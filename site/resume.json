@@ -130,6 +130,34 @@
    ]
   },
   {
+   "title": "SELECTED IMPACT",
+   "blocks": [
+    {
+     "kind": "ul",
+     "items": [
+      [
+       {
+        "t": "text",
+        "v": "DARPA ARCOS / ACERT — technical lead for knowledge-graph and LLM-assisted certification of mission-critical software, briefing prime-contractor teams and program collaborators while remaining hands-on with architecture and code."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Tau and agent-skills — built receipt-gated agent orchestration plus 340+ reusable agent capabilities and 90+ bounded worker roles, with deterministic checks on roughly 85% of the public capability set."
+       }
+      ],
+      [
+       {
+        "t": "text",
+        "v": "Regulated graph-memory and compliance systems — built private RAG/GraphRAG systems over NIST, CWE, MITRE ATT&CK, D3FEND, SPARTA, and requirements-to-proof corpora; public details stay bounded because much client work is export-controlled."
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
    "title": "EXPERIENCE",
    "blocks": [
     {
@@ -147,7 +175,7 @@
        "inline": [
         {
          "t": "text",
-         "v": "Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; every capability below was built or materially advanced in 2026. Client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970."
+         "v": "Independent AI engineering practice taking short, scoped engagements for aerospace primes, federally funded laboratories, and defense contractors. Agentic-pipeline work is active daily; client work is export-controlled (ITAR) and names are withheld; publicly releasable engineering is at github.com/grahama1970."
         }
        ]
       },
@@ -157,25 +185,19 @@
         [
          {
           "t": "text",
-          "v": "Built tau, a receipt-gated multi-agent orchestration harness: goals compile to typed DAG contracts; every handoff must produce a schema-valid receipt or validator result — no receipt, no action."
+          "v": "Built and maintained tau, agent-skills, scillm, extraction, evidence, and evaluation systems for agent work that must produce receipts, checks, and explicit limits instead of only plausible outputs."
          }
         ],
         [
          {
           "t": "text",
-          "v": "Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added — Rust-core changes, full Python pipeline/plugin system, layout and table extraction, PDF-cloning fixture generation, extraction calibration, and NIST document-validation tooling for AI governance."
+          "v": "Develop a heavily diverged fork of pdf_oxide (origin: yfedoseev/pdf_oxide, MIT/Apache-2.0; independent since Mar 2026): 430 commits, ~137K lines added across Rust-core changes, Python pipeline/plugin work, layout/table extraction, PDF-cloning fixtures, extraction calibration, and NIST document-validation tooling."
          }
         ],
         [
          {
           "t": "text",
-          "v": "Authored agent-skills: 340+ reusable agent capabilities (compliance evidence mapping, document AI, LLM evaluation, retrieval) and 90+ bounded worker roles, ~85% gated by deterministic sanity checks. Covers prompt engineering, adversarial/blind testing with ground-truth fixtures, drift detection, and model fine-tuning and classifier training — public repo, private runtime."
-         }
-        ],
-        [
-         {
-          "t": "text",
-          "v": "Built an ArangoDB agent-memory platform (private, regulated): retrieval-augmented generation (RAG) and GraphRAG over vector databases and knowledge graphs — ~219K evidence-grounded QRA records across 7K+ security controls (NIST 800-53/171, CWE, MITRE ATT&CK, D3FEND), hybrid BM25 + vector recall over 2.2M chunks, ~94K Lean 4 theorems indexed for requirements-to-proof retrieval."
+          "v": "Built private ArangoDB memory/compliance systems with hybrid BM25, vector, and graph recall over large evidence corpora; public claims are bounded to non-ITAR architecture, scale, and method."
          }
         ],
         [
@@ -523,10 +545,10 @@
    ]
   }
  ],
- "sourceCommit": "3a99b30857",
+ "sourceCommit": "863e466219",
  "asOf": "2026-08-11",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "1a316195e34a4a66f06d8626723ff8a320bf019d4e088db84bec2ce35fb9bacd",
+ "sourceSha256": "6215fd41bf9ebe0cd22dc55b0f03cc65808e48604499f581103bfd449ac3bfe7",
  "downloads": {
   "pdf": "/resume.pdf",
   "markdown": "/resume.md"
@@ -657,6 +679,6 @@
    }
   ]
  },
- "pdfSha256": "b9ae3db74f92d0ee7830f5336041f33da9edf6f547cdf8b656c19d9929b3fc4a",
- "pdfBytes": 160098
+ "pdfSha256": "11e028b0da037d4abae9192cf0873cba203d54b8f98ac8b5581e01c68ae1f456",
+ "pdfBytes": 72550
 }

@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-10T17:57:12.083364+00:00",
-  "cwd": "/home/graham/workspace/experiments/agent-skills-grahama-release-20260810T1749Z",
-  "root": "/home/graham/workspace/experiments/agent-skills-grahama-release-20260810T1749Z",
-  "output_root": "/tmp/codex-ui-verification/agent-skills-grahama-release-20260810T1749Z",
-  "url": "http://127.0.0.1:3005/#project-battle",
-  "name": "grahama-release-export-target-highlight-3005",
+  "verified_at": "2026-08-11T19:26:04.916362+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-worktrees/opportunity-funnels-20260811",
+  "root": "/home/graham/workspace/experiments/agent-skills-worktrees/opportunity-funnels-20260811",
+  "output_root": "/tmp/codex-ui-verification/opportunity-funnels-20260811",
+  "url": "http://127.0.0.1:43118/resume.html",
+  "name": "grahama-resume-selected-impact-local-final",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills-grahama-release-20260810T1749Z/grahama-release-export-target-highlight-3005/20260810T175702Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills-grahama-release-20260810T1749Z/grahama-release-export-target-highlight-3005/20260810T175702Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/opportunity-funnels-20260811/grahama-resume-selected-impact-local-final/20260811T192558Z.png",
+  "read_json": "/tmp/codex-ui-verification/opportunity-funnels-20260811/grahama-resume-selected-impact-local-final/20260811T192558Z.read.json"
 }
