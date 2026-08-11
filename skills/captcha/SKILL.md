@@ -211,9 +211,13 @@ rejection, missing-runtime truthfulness, and Ask DAG composition.
 `./run.sh eval-live` is opt-in because it performs live effects. It requires
 `CAPTCHA_LIVE_E2E=1` plus a running loopback ReCAP dynamic target, loopback
 OpenAI-compatible ReCAP model endpoint, Surf transport, pinned ReCAP checkout,
-and ReCAP Python runtime. It runs repeated live E2E trials through
-`scripts/live_e2e_agentic_eval.sh`, executes `evaluate --execute`, and verifies
-the emitted `captcha.run_receipt.v1`.
+and ReCAP Python runtime. It runs a nondeterministic live campaign through
+`scripts/live_e2e_agentic_eval.sh`: each inner round generates a fresh
+authorization manifest with a random seed and sampled CAPTCHA type, executes
+`evaluate --execute`, verifies the emitted `captcha.run_receipt.v1`, and emits a
+`captcha.nondeterministic_live_agentic_eval.v1` summary. Tune campaign size with
+`CAPTCHA_LIVE_NONDETERMINISTIC_ROUNDS`; the default is three live inner rounds
+per `$agentic-evals` trial.
 
 `sanity.sh` uses real CLI and filesystem boundaries, validates the local
 multi-trial agentic eval fixture, validates a positive local manifest, proves a

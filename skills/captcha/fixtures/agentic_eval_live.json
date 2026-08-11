@@ -2,14 +2,14 @@
   "version": 2,
   "skill": "captcha",
   "trials": 3,
-  "proof_scope": "opt-in live E2E ReCAP CAPTCHA benchmark with nondeterministic browser and model behavior",
+  "proof_scope": "opt-in nondeterministic live E2E ReCAP CAPTCHA benchmark campaign",
   "claims": {
-    "proves": "when the required loopback target, loopback model endpoint, Surf browser transport, pinned ReCAP checkout, and ReCAP runtime are present, the captcha skill can execute and verify repeated authorized synthetic CAPTCHA benchmark runs with durable receipts",
+    "proves": "when the required loopback target, loopback model endpoint, Surf browser transport, pinned ReCAP checkout, and ReCAP runtime are present, the captcha skill can execute and verify repeated authorized synthetic CAPTCHA benchmark runs with randomized seeds and CAPTCHA types",
     "does_not_prove": "permission or capability to bypass third-party CAPTCHAs, behavior outside the pinned ReCAP commit, or production release readiness"
   },
   "cases": [
     {
-      "name": "authorized-local-recap-live-e2e",
+      "name": "authorized-local-recap-nondeterministic-live-e2e",
       "type": "positive",
       "real_world": true,
       "command": ["../scripts/live_e2e_agentic_eval.sh"],
@@ -17,9 +17,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "captcha.nondeterministic_live_agentic_eval.v1",
           "captcha.run_receipt.v1",
           "CAPABILITY_MEASURED",
-          "live_e2e_verified"
+          "nondeterministic_live_e2e_verified"
         ]
       }
     },
