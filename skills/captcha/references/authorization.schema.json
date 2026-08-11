@@ -1,0 +1,242 @@
+{
+  "$defs": {
+    "Acknowledgements": {
+      "additionalProperties": false,
+      "properties": {
+        "defensive_or_research_use": {
+          "title": "Defensive Or Research Use",
+          "type": "boolean"
+        },
+        "local_synthetic_only": {
+          "title": "Local Synthetic Only",
+          "type": "boolean"
+        },
+        "no_third_party_bypass": {
+          "title": "No Third Party Bypass",
+          "type": "boolean"
+        },
+        "owns_or_controls_target": {
+          "title": "Owns Or Controls Target",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "owns_or_controls_target",
+        "local_synthetic_only",
+        "no_third_party_bypass",
+        "defensive_or_research_use"
+      ],
+      "title": "Acknowledgements",
+      "type": "object"
+    },
+    "CaptchaType": {
+      "enum": [
+        "text",
+        "compact_text",
+        "icon_selection",
+        "icon_match",
+        "slider",
+        "image_grid",
+        "paged"
+      ],
+      "title": "CaptchaType",
+      "type": "string"
+    },
+    "EvaluationAction": {
+      "enum": [
+        "status",
+        "plan",
+        "evaluate",
+        "verify",
+        "ask-dag"
+      ],
+      "title": "EvaluationAction",
+      "type": "string"
+    },
+    "ModelFamily": {
+      "enum": [
+        "qwen3"
+      ],
+      "title": "ModelFamily",
+      "type": "string"
+    },
+    "TestMode": {
+      "enum": [
+        "once",
+        "custom"
+      ],
+      "title": "TestMode",
+      "type": "string"
+    }
+  },
+  "$id": "captcha.target_authorization.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Authorization required before planning or executing a ReCAP run.",
+  "properties": {
+    "acknowledgements": {
+      "$ref": "#/$defs/Acknowledgements"
+    },
+    "allowed_actions": {
+      "items": {
+        "$ref": "#/$defs/EvaluationAction"
+      },
+      "minItems": 1,
+      "title": "Allowed Actions",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowed_captcha_types": {
+      "items": {
+        "$ref": "#/$defs/CaptchaType"
+      },
+      "minItems": 1,
+      "title": "Allowed Captcha Types",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "authorization_id": {
+      "maxLength": 80,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.-]+$",
+      "title": "Authorization Id",
+      "type": "string"
+    },
+    "captcha_name": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CaptchaType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "max_calls": {
+      "default": 4,
+      "maximum": 8,
+      "minimum": 1,
+      "title": "Max Calls",
+      "type": "integer"
+    },
+    "max_tasks": {
+      "default": 7,
+      "maximum": 50,
+      "minimum": 1,
+      "title": "Max Tasks",
+      "type": "integer"
+    },
+    "model_base_url": {
+      "format": "uri",
+      "minLength": 1,
+      "title": "Model Base Url",
+      "type": "string"
+    },
+    "model_family": {
+      "$ref": "#/$defs/ModelFamily",
+      "default": "qwen3"
+    },
+    "model_id": {
+      "default": "ReCAP-Agent/ReCAP-8B",
+      "enum": [
+        "ReCAP-Agent/ReCAP-8B",
+        "ReCAP-Agent/ReCAP-32B"
+      ],
+      "title": "Model Id",
+      "type": "string"
+    },
+    "operator": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Operator",
+      "type": "string"
+    },
+    "project": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Project",
+      "type": "string"
+    },
+    "provider": {
+      "const": "dynamic",
+      "default": "dynamic",
+      "title": "Provider",
+      "type": "string"
+    },
+    "purpose": {
+      "maxLength": 1000,
+      "minLength": 10,
+      "title": "Purpose",
+      "type": "string"
+    },
+    "recap_commit": {
+      "const": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+      "default": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+      "title": "Recap Commit",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "captcha.target_authorization.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "default": 42,
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "target_url": {
+      "format": "uri",
+      "minLength": 1,
+      "title": "Target Url",
+      "type": "string"
+    },
+    "test_mode": {
+      "$ref": "#/$defs/TestMode",
+      "default": "once"
+    },
+    "test_size": {
+      "default": 1,
+      "maximum": 50,
+      "minimum": 1,
+      "title": "Test Size",
+      "type": "integer"
+    },
+    "timeout_seconds": {
+      "default": 1800,
+      "maximum": 3600,
+      "minimum": 30,
+      "title": "Timeout Seconds",
+      "type": "integer"
+    },
+    "workers": {
+      "default": 1,
+      "maximum": 2,
+      "minimum": 1,
+      "title": "Workers",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "authorization_id",
+    "project",
+    "operator",
+    "purpose",
+    "target_url",
+    "model_base_url",
+    "allowed_actions",
+    "expires_at",
+    "acknowledgements"
+  ],
+  "title": "AuthorizationManifest",
+  "type": "object"
+}

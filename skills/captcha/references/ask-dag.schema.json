@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "AskDagNode": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_failure": {
+          "const": false,
+          "default": false,
+          "title": "Allow Failure",
+          "type": "boolean"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 0,
+          "title": "Depends On",
+          "type": "array"
+        },
+        "id": {
+          "const": "captcha_evaluate",
+          "default": "captcha_evaluate",
+          "title": "Id",
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/$defs/AskDagNodeInput"
+        },
+        "max_attempts": {
+          "const": 1,
+          "default": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "type": {
+          "const": "skill.run",
+          "default": "skill.run",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "input"
+      ],
+      "title": "AskDagNode",
+      "type": "object"
+    },
+    "AskDagNodeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "skill": {
+          "const": "captcha",
+          "default": "captcha",
+          "title": "Skill",
+          "type": "string"
+        },
+        "timeout": {
+          "maximum": 7200,
+          "minimum": 30,
+          "title": "Timeout",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "args",
+        "timeout"
+      ],
+      "title": "AskDagNodeInput",
+      "type": "object"
+    }
+  },
+  "$id": "ask.dag.v1.captcha-profile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "graph_id": {
+      "title": "Graph Id",
+      "type": "string"
+    },
+    "max_concurrency": {
+      "const": 1,
+      "default": 1,
+      "title": "Max Concurrency",
+      "type": "integer"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/AskDagNode"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "ask.dag.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_graph_version": {
+      "const": "",
+      "default": "",
+      "title": "Source Graph Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "description",
+    "graph_id",
+    "nodes"
+  ],
+  "title": "AskDag",
+  "type": "object"
+}

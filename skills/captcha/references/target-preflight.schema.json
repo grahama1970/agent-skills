@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.target_preflight.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "body_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Body Sha256",
+      "type": "string"
+    },
+    "challenge_marker_present": {
+      "title": "Challenge Marker Present",
+      "type": "boolean"
+    },
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "content_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Content Type"
+    },
+    "schema_version": {
+      "const": "captcha.target_preflight.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/SeamValidation"
+    },
+    "status": {
+      "const": "PASS",
+      "default": "PASS",
+      "title": "Status",
+      "type": "string"
+    },
+    "status_code": {
+      "maximum": 599,
+      "minimum": 100,
+      "title": "Status Code",
+      "type": "integer"
+    },
+    "url": {
+      "title": "Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "checked_at",
+    "url",
+    "status_code",
+    "content_type",
+    "body_sha256",
+    "challenge_marker_present",
+    "seam_validation"
+  ],
+  "title": "TargetProof",
+  "type": "object"
+}

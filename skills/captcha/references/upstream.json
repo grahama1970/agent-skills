@@ -1,0 +1,16 @@
+{
+  "schema_version": "captcha.upstream_binding.v1",
+  "repository": "https://github.com/ASTRAL-Group/ReCAP-Agent",
+  "commit": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+  "provider": "dynamic",
+  "model_family": "qwen3",
+  "required_paths": [
+    "captcha_eval_framework/main.py",
+    "captcha_eval_framework/providers/dynamic_provider.py",
+    "dynamic_captchas/app.py"
+  ],
+  "excluded_providers": [
+    "halligan"
+  ],
+  "update_policy": "manual_review_and_pin_change_only"
+}

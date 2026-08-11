@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.model_endpoint_preflight.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "advertised_model_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Advertised Model Ids",
+      "type": "array"
+    },
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "exact_model_match": {
+      "const": true,
+      "default": true,
+      "title": "Exact Model Match",
+      "type": "boolean"
+    },
+    "requested_model_id": {
+      "title": "Requested Model Id",
+      "type": "string"
+    },
+    "response_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Response Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "captcha.model_endpoint_preflight.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/SeamValidation"
+    },
+    "status": {
+      "const": "PASS",
+      "default": "PASS",
+      "title": "Status",
+      "type": "string"
+    },
+    "url": {
+      "title": "Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "checked_at",
+    "url",
+    "requested_model_id",
+    "advertised_model_ids",
+    "response_sha256",
+    "seam_validation"
+  ],
+  "title": "ModelEndpointProof",
+  "type": "object"
+}

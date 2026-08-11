@@ -1,0 +1,92 @@
+{
+  "$defs": {
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.surf_target_preflight.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Surf-created browser proof for the exact local synthetic target.",
+  "properties": {
+    "challenge_id_present": {
+      "const": true,
+      "default": true,
+      "title": "Challenge Id Present",
+      "type": "boolean"
+    },
+    "challenge_url": {
+      "title": "Challenge Url",
+      "type": "string"
+    },
+    "checked_at": {
+      "format": "date-time",
+      "title": "Checked At",
+      "type": "string"
+    },
+    "final_url": {
+      "title": "Final Url",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "captcha.surf_target_preflight.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "screenshot_path": {
+      "const": "surf-target-preflight.png",
+      "default": "surf-target-preflight.png",
+      "title": "Screenshot Path",
+      "type": "string"
+    },
+    "screenshot_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Screenshot Sha256",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/SeamValidation"
+    },
+    "status": {
+      "const": "PASS",
+      "default": "PASS",
+      "title": "Status",
+      "type": "string"
+    },
+    "tab_id": {
+      "exclusiveMinimum": 0,
+      "title": "Tab Id",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "checked_at",
+    "challenge_url",
+    "final_url",
+    "tab_id",
+    "screenshot_sha256",
+    "seam_validation"
+  ],
+  "title": "SurfTargetProof",
+  "type": "object"
+}

@@ -1,0 +1,82 @@
+{
+  "$defs": {
+    "RunStatus": {
+      "enum": [
+        "PASS",
+        "BLOCKED",
+        "NEEDS_ATTENTION",
+        "NOT_ESTABLISHED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "$id": "captcha.run_status.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "failure_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Code"
+    },
+    "phase": {
+      "title": "Phase",
+      "type": "string"
+    },
+    "receipt_path": {
+      "anyOf": [
+        {
+          "const": "captcha.run-receipt.json",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Path"
+    },
+    "receipt_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Sha256"
+    },
+    "schema_version": {
+      "const": "captcha.run_status.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "updated_at",
+    "phase"
+  ],
+  "title": "RunStatusArtifact",
+  "type": "object"
+}

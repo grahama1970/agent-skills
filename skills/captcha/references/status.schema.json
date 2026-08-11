@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "RunStatus": {
+      "enum": [
+        "PASS",
+        "BLOCKED",
+        "NEEDS_ATTENTION",
+        "NOT_ESTABLISHED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "$id": "captcha.status.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "ask_declares_captcha": {
+      "title": "Ask Declares Captcha",
+      "type": "boolean"
+    },
+    "ask_runtime_present": {
+      "title": "Ask Runtime Present",
+      "type": "boolean"
+    },
+    "ask_skill_present": {
+      "title": "Ask Skill Present",
+      "type": "boolean"
+    },
+    "blockers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blockers",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "model_api_key_present": {
+      "title": "Model Api Key Present",
+      "type": "boolean"
+    },
+    "next_actions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Next Actions",
+      "type": "array"
+    },
+    "recap_checkout_present": {
+      "title": "Recap Checkout Present",
+      "type": "boolean"
+    },
+    "recap_commit_matches": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recap Commit Matches"
+    },
+    "recap_repository_matches": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recap Repository Matches"
+    },
+    "recap_runtime_present": {
+      "title": "Recap Runtime Present",
+      "type": "boolean"
+    },
+    "recap_source_clean": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recap Source Clean"
+    },
+    "schema_version": {
+      "const": "captcha.status.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_root": {
+      "title": "Skill Root",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "storage_root_present": {
+      "title": "Storage Root Present",
+      "type": "boolean"
+    },
+    "surf_run_present": {
+      "title": "Surf Run Present",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "skill_root",
+    "ask_skill_present",
+    "ask_declares_captcha",
+    "ask_runtime_present",
+    "surf_run_present",
+    "recap_checkout_present",
+    "recap_repository_matches",
+    "recap_commit_matches",
+    "recap_source_clean",
+    "recap_runtime_present",
+    "model_api_key_present",
+    "storage_root_present",
+    "blockers",
+    "next_actions",
+    "limitations"
+  ],
+  "title": "StatusReport",
+  "type": "object"
+}

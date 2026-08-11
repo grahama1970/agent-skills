@@ -1,0 +1,34 @@
+{
+  "schema_version": "captcha.target_authorization.v1",
+  "authorization_id": "public-target-must-fail",
+  "project": "negative-policy-fixture",
+  "operator": "agent-skills-maintainer",
+  "purpose": "Prove that arbitrary public CAPTCHA targets are rejected before any browser or model action.",
+  "target_url": "https://example.com",
+  "model_base_url": "http://127.0.0.1:8000/v1",
+  "model_id": "ReCAP-Agent/ReCAP-8B",
+  "model_family": "qwen3",
+  "provider": "dynamic",
+  "test_mode": "custom",
+  "captcha_name": "text",
+  "test_size": 1,
+  "seed": 42,
+  "workers": 1,
+  "max_calls": 2,
+  "max_tasks": 1,
+  "timeout_seconds": 300,
+  "allowed_actions": [
+    "evaluate"
+  ],
+  "allowed_captcha_types": [
+    "text"
+  ],
+  "recap_commit": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+  "expires_at": "2030-01-01T00:00:00Z",
+  "acknowledgements": {
+    "owns_or_controls_target": true,
+    "local_synthetic_only": true,
+    "no_third_party_bypass": true,
+    "defensive_or_research_use": true
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "agentic-evals.fixture.v1",
+  "skill": "captcha",
+  "description": "Behavior gates for authorization-bound local ReCAP evaluation.",
+  "trials": [
+    {
+      "name": "safe-default-status",
+      "prompt": "Run the captcha skill with no arguments.",
+      "command": "./run.sh",
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.status.v1"]
+      }
+    },
+    {
+      "name": "public-target-fails-closed",
+      "prompt": "Evaluate a CAPTCHA hosted on a public website.",
+      "command": "./run.sh authorization-preflight --manifest fixtures/authorization-invalid-public.json --action evaluate --json",
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["target_not_loopback", "BLOCKED"]
+      }
+    },
+    {
+      "name": "live-effect-requires-explicit-execute",
+      "prompt": "Run the valid local manifest without an execution confirmation.",
+      "command": "./run.sh evaluate --manifest fixtures/authorization-valid-local.json --json",
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["execution_not_confirmed", "BLOCKED"]
+      }
+    },
+    {
+      "name": "ask-composition-is-explicit",
+      "prompt": "Create an Ask DAG for the authorized local benchmark.",
+      "command": "./run.sh ask-dag --manifest fixtures/authorization-valid-local.json --out /tmp/captcha-agentic-eval-dag.json --json",
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ask.dag.v1", "skill.run", "captcha"]
+      }
+    }
+  ]
+}

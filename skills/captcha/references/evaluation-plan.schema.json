@@ -1,0 +1,370 @@
+{
+  "$defs": {
+    "ArtifactContract": {
+      "additionalProperties": false,
+      "properties": {
+        "generated_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Generated Files",
+          "type": "array"
+        },
+        "heavy_artifacts_policy": {
+          "title": "Heavy Artifacts Policy",
+          "type": "string"
+        },
+        "required_files": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Files",
+          "type": "array"
+        }
+      },
+      "required": [
+        "required_files",
+        "generated_files",
+        "heavy_artifacts_policy"
+      ],
+      "title": "ArtifactContract",
+      "type": "object"
+    },
+    "AuthorizationReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/EvaluationAction"
+        },
+        "authorization_id": {
+          "title": "Authorization Id",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "manifest_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "model_base_url": {
+          "title": "Model Base Url",
+          "type": "string"
+        },
+        "policy_version": {
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "provider": {
+          "const": "dynamic",
+          "default": "dynamic",
+          "title": "Provider",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "captcha.authorization_receipt.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "seam_validation": {
+          "$ref": "#/$defs/SeamValidation"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        },
+        "target_url": {
+          "title": "Target Url",
+          "type": "string"
+        },
+        "validated_at": {
+          "format": "date-time",
+          "title": "Validated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "authorization_id",
+        "action",
+        "validated_at",
+        "expires_at",
+        "manifest_sha256",
+        "target_url",
+        "model_base_url",
+        "policy_version",
+        "limitations",
+        "seam_validation"
+      ],
+      "title": "AuthorizationReceipt",
+      "type": "object"
+    },
+    "EvaluationAction": {
+      "enum": [
+        "status",
+        "plan",
+        "evaluate",
+        "verify",
+        "ask-dag"
+      ],
+      "title": "EvaluationAction",
+      "type": "string"
+    },
+    "ExecutionSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Argv",
+          "type": "array"
+        },
+        "cwd": {
+          "title": "Cwd",
+          "type": "string"
+        },
+        "environment_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Environment Keys",
+          "type": "array"
+        },
+        "output_root": {
+          "title": "Output Root",
+          "type": "string"
+        },
+        "secret_environment_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Secret Environment Keys",
+          "type": "array"
+        },
+        "shell": {
+          "const": false,
+          "default": false,
+          "title": "Shell",
+          "type": "boolean"
+        },
+        "timeout_seconds": {
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "argv",
+        "cwd",
+        "timeout_seconds",
+        "output_root",
+        "environment_keys",
+        "secret_environment_keys"
+      ],
+      "title": "ExecutionSpec",
+      "type": "object"
+    },
+    "RecapBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "checkout_root": {
+          "title": "Checkout Root",
+          "type": "string"
+        },
+        "commit": {
+          "const": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+          "default": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
+          "title": "Commit",
+          "type": "string"
+        },
+        "framework_main": {
+          "title": "Framework Main",
+          "type": "string"
+        },
+        "model_family": {
+          "const": "qwen3",
+          "default": "qwen3",
+          "title": "Model Family",
+          "type": "string"
+        },
+        "provider": {
+          "const": "dynamic",
+          "default": "dynamic",
+          "title": "Provider",
+          "type": "string"
+        },
+        "repository": {
+          "const": "https://github.com/ASTRAL-Group/ReCAP-Agent",
+          "default": "https://github.com/ASTRAL-Group/ReCAP-Agent",
+          "title": "Repository",
+          "type": "string"
+        },
+        "runtime_python": {
+          "title": "Runtime Python",
+          "type": "string"
+        }
+      },
+      "required": [
+        "checkout_root",
+        "framework_main",
+        "runtime_python"
+      ],
+      "title": "RecapBinding",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "PASS",
+        "BLOCKED",
+        "NEEDS_ATTENTION",
+        "NOT_ESTABLISHED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    },
+    "SurfBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Command",
+          "type": "array"
+        },
+        "expected_schema": {
+          "const": "surf.capabilities.v1",
+          "default": "surf.capabilities.v1",
+          "title": "Expected Schema",
+          "type": "string"
+        },
+        "required": {
+          "const": true,
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "role": {
+          "const": "browser_transport_and_target_identity_proof",
+          "default": "browser_transport_and_target_identity_proof",
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "SurfBinding",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.evaluation_plan.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_contract": {
+      "$ref": "#/$defs/ArtifactContract"
+    },
+    "authorization": {
+      "$ref": "#/$defs/AuthorizationReceipt"
+    },
+    "blockers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blockers",
+      "type": "array"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "execution": {
+      "$ref": "#/$defs/ExecutionSpec"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "readiness": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "recap": {
+      "$ref": "#/$defs/RecapBinding"
+    },
+    "schema_version": {
+      "const": "captcha.evaluation_plan.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SeamValidation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "surf": {
+      "$ref": "#/$defs/SurfBinding"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "created_at",
+    "readiness",
+    "blockers",
+    "authorization",
+    "recap",
+    "surf",
+    "execution",
+    "artifact_contract",
+    "plan_sha256"
+  ],
+  "title": "EvaluationPlan",
+  "type": "object"
+}

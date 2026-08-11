@@ -1,0 +1,45 @@
+{
+  "overall_stats": {
+    "total_captchas": 2,
+    "total_solved": 1,
+    "overall_success_rate": 50.0,
+    "average_solve_steps": 2.0
+  },
+  "by_type": {
+    "text": {
+      "individual_results": [true, false],
+      "solved_count": 1,
+      "total_count": 2,
+      "success_rate": 50.0,
+      "average_solve_steps": 2.0
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "dynamic_text_attempt1",
+      "provider_name": "dynamic",
+      "requested_type": "text",
+      "resolved_type": "text",
+      "sample_id": null,
+      "attempt": 1,
+      "solved": true,
+      "calls_made": 2,
+      "finished_flag": false,
+      "solve_step": 2,
+      "error": null
+    },
+    {
+      "task_id": "dynamic_text_attempt2",
+      "provider_name": "dynamic",
+      "requested_type": "text",
+      "resolved_type": "text",
+      "sample_id": null,
+      "attempt": 2,
+      "solved": false,
+      "calls_made": 4,
+      "finished_flag": true,
+      "solve_step": null,
+      "error": null
+    }
+  ]
+}

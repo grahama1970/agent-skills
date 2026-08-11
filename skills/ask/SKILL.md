@@ -21,6 +21,7 @@ triggers:
   - Tau DAG
   - compete
   - bakeoff
+  - captcha security evaluation
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
@@ -34,6 +35,7 @@ composes:
   - memory
   - scillm
   - surf
+  - captcha
   - subagent-runner
   - browser-oracle
   - create-report
@@ -850,6 +852,7 @@ Use the narrowest mode that matches the user request.
 | CAE gap review | documented CAE gap mode | Include current claim, evidence, gaps, and acceptance gate. |
 | Tau DAG front door | `./run.sh tau-dag "<request>" --repo <repo> --target <target> --solver-model <model> --reviewer-model <model> --criterion <c> --json` | Emits strict `tau.dag_contract.v1` first; uses `$interview` packet when incomplete; add `--execute` to delegate to Tau. |
 | Ask/scillm-style DAG file | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Use only when the user provides an existing ask/scillm-style DAG file; preserve DAG manifest, node outputs, and fail-closed events. |
+| Authorized local CAPTCHA evaluation | Generate `ask.dag.v1` with `../captcha/run.sh ask-dag ...`, then use `./run.sh ask "<request>" --dag-file <graph.json> --json` | Ask owns orchestration; `$captcha` owns authorization and receipts; `$surf` supplies browser-transport proof; ReCAP `dynamic` loopback only. |
 | Image generation | documented image mode | Preserve prompt, provider response, output path, and review artifact. |
 | OS/project health | `./run.sh os ... --json`, `./run.sh doctor ... --json` | Report degraded dependencies, not green-by-absence. |
 | Status/config | `./run.sh status ... --json`, `./run.sh config doctor ... --json` | Use for artifact inspection and readiness preflight. |

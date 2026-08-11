@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "SurfContracts": {
+      "additionalProperties": true,
+      "properties": {
+        "capabilities_schema": {
+          "const": "surf.capabilities.v1",
+          "title": "Capabilities Schema",
+          "type": "string"
+        },
+        "immutable_submit_schema": {
+          "const": "surf.immutable_submit.v1",
+          "title": "Immutable Submit Schema",
+          "type": "string"
+        },
+        "provider_result_schema": {
+          "const": "surf.provider_result.v1",
+          "title": "Provider Result Schema",
+          "type": "string"
+        },
+        "vendor_update_gate": {
+          "const": "surf.vendor_update_gate.v1",
+          "title": "Vendor Update Gate",
+          "type": "string"
+        }
+      },
+      "required": [
+        "capabilities_schema",
+        "provider_result_schema",
+        "immutable_submit_schema",
+        "vendor_update_gate"
+      ],
+      "title": "SurfContracts",
+      "type": "object"
+    },
+    "SurfEngine": {
+      "additionalProperties": true,
+      "properties": {
+        "content_identity_matches": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Identity Matches"
+        },
+        "dist_fresh": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dist Fresh"
+        },
+        "dist_present": {
+          "title": "Dist Present",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "vendored_surf_cli",
+          "title": "Kind",
+          "type": "string"
+        },
+        "lock_present": {
+          "title": "Lock Present",
+          "type": "boolean"
+        },
+        "package_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Package Version"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "package_version",
+        "path",
+        "dist_present",
+        "lock_present"
+      ],
+      "title": "SurfEngine",
+      "type": "object"
+    },
+    "SurfSkillIdentity": {
+      "additionalProperties": true,
+      "properties": {
+        "contract_references": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Contract References",
+          "type": "array"
+        },
+        "name": {
+          "const": "surf",
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "skill_md_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Skill Md Sha256"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "skill_md_sha256",
+        "contract_references"
+      ],
+      "title": "SurfSkillIdentity",
+      "type": "object"
+    },
+    "SurfTransport": {
+      "additionalProperties": true,
+      "properties": {
+        "cdp_fallback": {
+          "title": "Cdp Fallback",
+          "type": "boolean"
+        },
+        "extension_socket_path": {
+          "title": "Extension Socket Path",
+          "type": "string"
+        },
+        "extension_socket_present": {
+          "title": "Extension Socket Present",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "extension_socket_path",
+        "extension_socket_present",
+        "cdp_fallback"
+      ],
+      "title": "SurfTransport",
+      "type": "object"
+    }
+  },
+  "$id": "surf.capabilities.v1.captcha-subset",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Typed subset of Surf's versioned capabilities contract.",
+  "properties": {
+    "contracts": {
+      "$ref": "#/$defs/SurfContracts"
+    },
+    "engine": {
+      "$ref": "#/$defs/SurfEngine"
+    },
+    "providers": {
+      "additionalProperties": true,
+      "title": "Providers",
+      "type": "object"
+    },
+    "schema": {
+      "const": "surf.capabilities.v1",
+      "title": "Schema",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill": {
+      "$ref": "#/$defs/SurfSkillIdentity"
+    },
+    "transport": {
+      "$ref": "#/$defs/SurfTransport"
+    }
+  },
+  "required": [
+    "schema",
+    "schema_version",
+    "skill",
+    "engine",
+    "transport",
+    "providers",
+    "contracts"
+  ],
+  "title": "SurfCapabilities",
+  "type": "object"
+}

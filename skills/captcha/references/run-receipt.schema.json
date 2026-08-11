@@ -1,0 +1,217 @@
+{
+  "$defs": {
+    "BoundedJudgment": {
+      "enum": [
+        "CAPABILITY_MEASURED",
+        "NOT_MEASURED"
+      ],
+      "title": "BoundedJudgment",
+      "type": "string"
+    },
+    "RunStatus": {
+      "enum": [
+        "PASS",
+        "BLOCKED",
+        "NEEDS_ATTENTION",
+        "NOT_ESTABLISHED"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.run_receipt.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authorization_receipt_path": {
+      "const": "authorization-receipt.json",
+      "title": "Authorization Receipt Path",
+      "type": "string"
+    },
+    "bounded_judgment": {
+      "$ref": "#/$defs/BoundedJudgment"
+    },
+    "claims": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "evidence_sha256": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Evidence Sha256",
+      "type": "object"
+    },
+    "exit_code": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Exit Code"
+    },
+    "failure_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Code"
+    },
+    "failure_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Message"
+    },
+    "finished_at": {
+      "format": "date-time",
+      "title": "Finished At",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "model_endpoint_preflight_path": {
+      "const": "model-endpoint-preflight.json",
+      "title": "Model Endpoint Preflight Path",
+      "type": "string"
+    },
+    "plan_path": {
+      "const": "plan.json",
+      "title": "Plan Path",
+      "type": "string"
+    },
+    "recap_summary_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Recap Summary Path"
+    },
+    "run_id": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "captcha.run_receipt.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SeamValidation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "stderr_path": {
+      "const": "recap.stderr.log",
+      "title": "Stderr Path",
+      "type": "string"
+    },
+    "stdout_path": {
+      "const": "recap.stdout.log",
+      "title": "Stdout Path",
+      "type": "string"
+    },
+    "surf_capabilities_path": {
+      "const": "surf-capabilities.json",
+      "title": "Surf Capabilities Path",
+      "type": "string"
+    },
+    "surf_target_preflight_path": {
+      "const": "surf-target-preflight.json",
+      "title": "Surf Target Preflight Path",
+      "type": "string"
+    },
+    "target_preflight_path": {
+      "const": "target-preflight.json",
+      "title": "Target Preflight Path",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "started_at",
+    "finished_at",
+    "authorization_receipt_path",
+    "plan_path",
+    "surf_capabilities_path",
+    "surf_target_preflight_path",
+    "target_preflight_path",
+    "model_endpoint_preflight_path",
+    "recap_summary_path",
+    "stdout_path",
+    "stderr_path",
+    "exit_code",
+    "bounded_judgment",
+    "claims",
+    "limitations",
+    "evidence_sha256"
+  ],
+  "title": "RunReceipt",
+  "type": "object"
+}
