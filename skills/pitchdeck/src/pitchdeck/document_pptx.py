@@ -372,6 +372,25 @@ def _emit_diagram(container, element: DocElement, frame: Frame, *, palette: dict
             )
         if scene and not node.label.strip():
             continue  # a bare supporting glyph carries no label box
+        if scene and len(node.label.split()) >= 3:
+            # speech-bubble treatment (replication probe, 'LLMs Hallucinate'):
+            # bordered rounded rect, body-size text — the bubble IS the content
+            bw, bh = nw * 1.5, nh * 0.42
+            bubble = group.shapes.add_shape(
+                MSO_SHAPE.ROUNDED_RECTANGLE,
+                Inches(nx + nw / 2 - bw / 2), Inches(ny + nh * 1.02),
+                Inches(bw), Inches(bh))
+            bubble.fill.solid(); bubble.fill.fore_color.rgb = _hex("#FFFFFF")
+            bubble.line.color.rgb = accent; bubble.line.width = Pt(1.5)
+            bubble.shadow.inherit = False
+            bubble.name = f"el:{element.id}:node:{node.id}:bubble"
+            btf = bubble.text_frame; btf.word_wrap = True
+            brun = btf.paragraphs[0].add_run(); brun.text = node.label
+            brun.font.size = Pt(14); brun.font.color.rgb = _hex("#292929")
+            from pptx.enum.text import PP_ALIGN as _A2
+            btf.paragraphs[0].alignment = _A2.CENTER
+            receipt["slides"] and None
+            continue
         label = group.shapes.add_textbox(Inches(nx - nw * 0.25), Inches(ny + nh * (1.06 if scene else (0.62 if unboxed else 0.52))), Inches(nw * 1.5), Inches(nh * (0.5 if scene else (0.38 if unboxed else 0.44))))
         label.name = f"el:{element.id}:node:{node.id}:label"
         tf = label.text_frame
