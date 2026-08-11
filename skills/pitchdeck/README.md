@@ -15,6 +15,36 @@ A deterministic, claim-bound compiler for converting product README material int
 The PPTX is designed for later human tuning in Google Slides, PowerPoint for the web,
 Keynote, or another presentation editor.
 
+## Current state (audited 2026-08-11)
+
+Two adversarial audits returned **NOT_READY** as a *proving* compiler; the
+skill is a supervised authoring system whose gates are real but whose
+end-to-end assertion authorization is still closing (#1371/#1372). What is
+verified live today:
+
+- claim compiler with per-string provenance: every visible string, diagram
+  node/edge labels and sublabels included, carries its own binding; the
+  publication verifier consumes compiler-emitted AssertionAtoms and refuses a
+  claim-inverting forgery, an unattested generalization, a copy-paste into
+  another role, and a document that drifted from the build manifest;
+- template-as-base emission (`--house-template`): the author's own .pptx
+  supplies band, photographic texture, fonts, footer and logos by inheritance;
+  disclaimer retargeting fails closed on stale owner markers;
+- a content-addressed **build manifest** joining sources, ledger, outline,
+  document, template, icon library, compiler state and the delivered file;
+- **house-similarity**: each rendered slide is scored against the nearest of
+  203 indexed REAL pages (Qdrant text+image vectors; `/memory` collection
+  `pitchdeck_house_slides`) with a calibrated 0.55 gate and a field-level
+  diff. The current Sparta Explorer deck FAILS this gate 6/6 (0.36-0.46):
+  chrome inherits correctly, density and drawn art do not — recorded, not
+  hidden.
+
+PPTX is the only publication candidate; PDF and the React deck are previews.
+
+Design references: `STYLE_GUIDE.md` (measured house rules) and
+`../best-practices-slide-design/references/DESIGN_SLIDES.md` (all 263 corpus
+slides classified into ten archetypes with per-archetype compiler mappings).
+
 ## Why this is not a one-click marketing generator
 
 README files mix product position, architecture, current status, proof, caveats, setup,
