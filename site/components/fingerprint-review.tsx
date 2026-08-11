@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { getFingerprintRecord } from '@/lib/fingerprint';
+import { getFingerprintRecord, getFingerprintRecordForId } from '@/lib/fingerprint';
 
 type Props = {
   requestedId?: string;
 };
 
 export function FingerprintReview({ requestedId }: Props) {
-  const record = getFingerprintRecord();
+  const currentRecord = getFingerprintRecord();
+  const record = getFingerprintRecordForId(requestedId);
   const acceptedIds = new Set([
     record.candidateFingerprint,
     record.candidateFingerprint.slice(0, 16),
@@ -15,6 +16,7 @@ export function FingerprintReview({ requestedId }: Props) {
     undefined,
   ]);
   const idMatches = acceptedIds.has(requestedId);
+  const isCurrent = record.candidateFingerprint === currentRecord.candidateFingerprint;
 
   return (
     <main className="fingerprint-page">
@@ -31,8 +33,14 @@ export function FingerprintReview({ requestedId }: Props) {
       </section>
 
       <section className="fingerprint-panel" aria-labelledby="fingerprint-current">
-        <h2 id="fingerprint-current">Current Candidate</h2>
+        <h2 id="fingerprint-current">{isCurrent ? 'Current Candidate' : 'Archived Candidate'}</h2>
         <dl className="fingerprint-facts">
+          <div>
+            <dt>candidate_state</dt>
+            <dd>
+              <code>{isCurrent ? 'CURRENT' : 'ARCHIVED'}</code>
+            </dd>
+          </div>
           <div>
             <dt>canary</dt>
             <dd>
@@ -93,7 +101,9 @@ export function FingerprintReview({ requestedId }: Props) {
         <p>
           A valid review must quote the canary, the candidate fingerprint, and at
           least three exact review unit IDs from this page. If those values are
-          absent, the review is stale or did not inspect this route.
+          absent, the review is stale or did not inspect this route. Archived
+          candidates preserve the fingerprint identity; the review-unit links
+          still open the currently deployed public routes.
         </p>
         <pre className="fingerprint-prompt">{`REVIEW_CANARY: ${record.canary}
 candidate_fingerprint: ${record.candidateFingerprint}

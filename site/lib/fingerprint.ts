@@ -51,6 +51,57 @@ export type FingerprintRecord = {
   reviewUnits: readonly ReviewUnit[];
 };
 
+const ARCHIVED_FINGERPRINTS: FingerprintRecord[] = [
+  {
+    schema: 'grahama.public_fingerprint.v1',
+    canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
+    sourceCommit: '12826f5defe0cf81e91310242ee0e7efc29f7076',
+    sourceCommitShort: '12826f5defe',
+    candidateFingerprint: '5e9c2de825cae0d46659b77f584e7e5194d80fa0815311f69af837f377ce5d00',
+    generatedAt: '2026-08-11T17:59:33Z',
+    manifestSourceCommit: '12826f5defe0cf81e91310242ee0e7efc29f7076',
+    manifestSha256: null,
+    importantHashes: {},
+    reviewUnits: REVIEW_UNITS,
+  },
+  {
+    schema: 'grahama.public_fingerprint.v1',
+    canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
+    sourceCommit: 'bc27beac7d5dda504beef9d07dce448f91796956',
+    sourceCommitShort: 'bc27beac7d5d',
+    candidateFingerprint: '09e861bf69d2cfc7faaf2b220c342a7a2e92f9eb8e6b8e7d9c3981c86d16ce31',
+    generatedAt: '2026-08-11T17:37:19Z',
+    manifestSourceCommit: 'bc27beac7d5dda504beef9d07dce448f91796956',
+    manifestSha256: null,
+    importantHashes: {},
+    reviewUnits: REVIEW_UNITS,
+  },
+  {
+    schema: 'grahama.public_fingerprint.v1',
+    canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
+    sourceCommit: '7ba43e387d734b2a4f007e580bd18dd7d7b3c705',
+    sourceCommitShort: '7ba43e387d73',
+    candidateFingerprint: 'd7c890171e51e4803d618df23aa7ffb63657466a710cf7834ea027823dff8aee',
+    generatedAt: '2026-08-11T17:29:48Z',
+    manifestSourceCommit: '7ba43e387d734b2a4f007e580bd18dd7d7b3c705',
+    manifestSha256: null,
+    importantHashes: {},
+    reviewUnits: REVIEW_UNITS,
+  },
+  {
+    schema: 'grahama.public_fingerprint.v1',
+    canary: 'GRAHAMA_PUBLIC_FINGERPRINT_REVIEW_V1',
+    sourceCommit: '4d6e08ef83261b30afe8eb0c97d589a0d48450f5',
+    sourceCommitShort: '4d6e08ef8326',
+    candidateFingerprint: '9f605939891fd19e40e2a2d6e36ef0cbacf1ef1b6ec507236f78219d88c43298',
+    generatedAt: '2026-08-11T17:18:20Z',
+    manifestSourceCommit: '4d6e08ef83261b30afe8eb0c97d589a0d48450f5',
+    manifestSha256: null,
+    importantHashes: {},
+    reviewUnits: REVIEW_UNITS,
+  },
+];
+
 function sitePath(...parts: string[]) {
   return path.join(process.cwd(), ...parts);
 }
@@ -133,11 +184,35 @@ export function getFingerprintRecord(): FingerprintRecord {
 }
 
 export function getFingerprintIds() {
-  const record = getFingerprintRecord();
-  return [
+  return getFingerprintRecords().flatMap((record) => [
     record.candidateFingerprint,
     record.candidateFingerprint.slice(0, 16),
     record.sourceCommit,
     record.sourceCommitShort,
-  ];
+  ]);
+}
+
+export function getFingerprintRecords() {
+  const records = [getFingerprintRecord(), ...ARCHIVED_FINGERPRINTS];
+  const seen = new Set<string>();
+  return records.filter((record) => {
+    const key = `${record.sourceCommit}:${record.candidateFingerprint}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function getFingerprintRecordForId(requestedId?: string) {
+  if (!requestedId) return getFingerprintRecord();
+  return (
+    getFingerprintRecords().find((record) =>
+      [
+        record.candidateFingerprint,
+        record.candidateFingerprint.slice(0, 16),
+        record.sourceCommit,
+        record.sourceCommitShort,
+      ].includes(requestedId),
+    ) ?? getFingerprintRecord()
+  );
 }
