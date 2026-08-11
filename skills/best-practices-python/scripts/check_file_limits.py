@@ -1,7 +1,8 @@
-"""check_file_limits - scripts.
+"""Check Python source files for the repo line-count policy.
 
-Purpose: Auto-generated module docstring. Review for accuracy.
-Inputs/Outputs/Failures: See functions below.
+Inputs: the current working tree, scanned recursively for ``*.py`` files.
+Outputs: a human-readable pass/fail summary on stdout.
+Failure modes: returns 2 when any non-generated Python file exceeds 800 lines.
 """
 
 from __future__ import annotations
@@ -11,9 +12,11 @@ from pathlib import Path
 
 MAX_LINES = 800
 
+
 def count_lines(p: Path) -> int:
     # Count physical lines (simple, deterministic)
     return len(p.read_text(encoding="utf-8", errors="replace").splitlines())
+
 
 def main() -> int:
     root = Path.cwd()
@@ -34,6 +37,7 @@ def main() -> int:
 
     print(f"OK: no .py files exceed {MAX_LINES} lines")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -2,10 +2,10 @@
 """Analyze pyproject.toml files across the workspace to find common Python packages.
 
 Usage:
-    uv run python analyze_packages.py                    # Table output
-    uv run python analyze_packages.py --json             # JSON output
-    uv run python analyze_packages.py --min-count 5      # Minimum project count
-    uv run python analyze_packages.py --category ML/AI   # Filter by category
+    uv run --project . python analyze_packages.py                    # Table output
+    uv run --project . python analyze_packages.py --json             # JSON output
+    uv run --project . python analyze_packages.py --min-count 5      # Minimum project count
+    uv run --project . python analyze_packages.py --category ML/AI   # Filter by category
 """
 from __future__ import annotations
 

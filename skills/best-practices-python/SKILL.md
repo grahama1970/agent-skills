@@ -31,6 +31,16 @@ provides:
 composes:
   - task-monitor
   - agentic-evals
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-security
+taxonomy:
+  - python
+  - engineering-standards
+  - security
+  - developer-tooling
+runtime_self_improvement: none
 disciplines:
   - engineering-standards
   - developer-tooling
@@ -541,7 +551,7 @@ When creating or modifying a Python skill with a `pyproject.toml`:
 
 ```bash
 # After any pyproject.toml change:
-cd /path/to/skill && uv sync && uv run python -c "import <every_module>"
+cd /path/to/skill && uv sync && uv run --project . python -c "import <every_module>"
 ```
 
 ### Why this matters

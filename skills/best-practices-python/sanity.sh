@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/best-practices-python-sanity-venv}"
+export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/best-practices-python-pycache}"
+PY=(uv run --project "$SCRIPT_DIR" python)
 echo "=== [best-practices-python] Sanity Check ==="
 
 # Check 1: Required files exist
@@ -20,7 +23,10 @@ if [[ ! -d "$SCRIPT_DIR/scripts" ]]; then
     echo "FAIL: missing scripts/ directory"
     FAIL=1
 fi
-[[ $FAIL -eq 0 ]] && echo "PASS"
+if [[ $FAIL -ne 0 ]]; then
+    exit 1
+fi
+echo "PASS"
 
 # Check 2: Rules directory has content
 echo -n "Check 2 - Rules files: "
@@ -36,7 +42,7 @@ echo -n "Check 3 - Python syntax: "
 PY_FAIL=0
 for py in "$SCRIPT_DIR"/scripts/*.py; do
     if [[ -f "$py" ]]; then
-        if ! python3 -m py_compile "$py" 2>/dev/null; then
+        if ! "${PY[@]}" -m py_compile "$py" 2>/dev/null; then
             echo "FAIL: syntax error in $(basename "$py")"
             PY_FAIL=1
         fi
@@ -44,16 +50,16 @@ for py in "$SCRIPT_DIR"/scripts/*.py; do
 done
 [[ $PY_FAIL -eq 0 ]] && echo "PASS"
 
-# Check 4: Python imports (stdlib only, no external deps)
-echo -n "Check 4 - Python imports: "
-python3 -c "
+# Check 4: Python runtime imports
+echo -n "Check 4 - Python runtime imports: "
+"${PY[@]}" -c "
 from pathlib import Path
 import sys
 " 2>/dev/null && echo "PASS" || { echo "FAIL"; exit 1; }
 
 # Check 5: Smoke test - check_file_limits.py runs
 echo -n "Check 5 - check_file_limits smoke test: "
-if python3 "$SCRIPT_DIR/scripts/check_file_limits.py" >/dev/null 2>&1; then
+if "${PY[@]}" "$SCRIPT_DIR/scripts/check_file_limits.py" >/dev/null 2>&1; then
     echo "PASS"
 else
     echo "WARN: check_file_limits.py returned non-zero (may have found large files)"
@@ -61,7 +67,7 @@ fi
 
 # Check 6: compile_agents.py runs
 echo -n "Check 6 - compile_agents smoke test: "
-if python3 "$SCRIPT_DIR/scripts/compile_agents.py" >/dev/null 2>&1; then
+if "${PY[@]}" "$SCRIPT_DIR/scripts/compile_agents.py" >/dev/null 2>&1; then
     echo "PASS"
 else
     echo "WARN: compile_agents.py failed (may need specific working directory)"

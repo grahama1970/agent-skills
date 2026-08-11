@@ -1,7 +1,8 @@
-"""compile_agents - scripts.
+"""Compile Python rule references into the skill-level AGENTS.md file.
 
-Purpose: Auto-generated module docstring. Review for accuracy.
-Inputs/Outputs/Failures: See functions below.
+Inputs: ``rules/_sections.md`` plus matching rule markdown files.
+Outputs: ``AGENTS.md`` in the skill root.
+Failure modes: raises normal file IO errors when required rule files are missing.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RULES_DIR = ROOT / "rules"
 OUT = ROOT / "AGENTS.md"
+
 
 def read_section_prefixes() -> list[str]:
     txt = (RULES_DIR / "_sections.md").read_text(encoding="utf-8")
@@ -22,6 +24,7 @@ def read_section_prefixes() -> list[str]:
         if "(" in line and ")" in line:
             prefixes.append(line.split("(", 1)[1].split(")", 1)[0].strip())
     return prefixes
+
 
 def compile_agents() -> None:
     prefixes = read_section_prefixes()
@@ -49,6 +52,7 @@ def compile_agents() -> None:
             parts.append(path.read_text(encoding="utf-8").strip() + "\n")
 
     OUT.write_text("\n".join(parts).rstrip() + "\n", encoding="utf-8")
+
 
 if __name__ == "__main__":
     compile_agents()
