@@ -41,6 +41,13 @@ if [[ "${1:-}" == "copy-audit" ]]; then
   exec python3 ../../site/scripts/copy_audit.py "$@"
 fi
 
+# `review-site` freezes section/page-state crops into immutable review bundles
+# and serves nonce-gated loopback capability URLs for external design review.
+if [[ "${1:-}" == "review-site" ]]; then
+  shift
+  exec python3 scripts/review_site.py "$@"
+fi
+
 # `visual-assets-check` validates site/visual-assets.yml against public image
 # files and rejects generated media used as evidence, missing provenance,
 # digest drift, private assets, and simulated craft.

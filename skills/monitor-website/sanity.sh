@@ -10,3 +10,4 @@ echo "monitor-website sanity: OK (README parsed, no drift, no live probes)"
 # #1298 voice canary + #1337 design-world contract
 python3 "$SCRIPT_DIR/../../site/scripts/copy_audit.py" >/dev/null
 "$SCRIPT_DIR/run.sh" design-world-check --json >/dev/null || true
+python3 -m py_compile "$SCRIPT_DIR/scripts/review_site.py"

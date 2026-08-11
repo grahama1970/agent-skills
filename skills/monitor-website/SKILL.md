@@ -64,6 +64,12 @@ reads `site/content.json`. This skill keeps them honest.
 # Copy (questions/blurbs/sections) is NEVER touched by refresh.
 ./run.sh refresh
 ./run.sh refresh --commit --push
+
+# Freeze section/page-state review units and serve a loopback capability URL.
+./run.sh review-site prepare --url http://127.0.0.1:3003/ --out /tmp/grahama-review --json
+./run.sh review-site verify --run-dir /tmp/grahama-review --json
+./run.sh review-site serve --run-dir /tmp/grahama-review --bind 127.0.0.1 --port 43117 --json
+./run.sh review-site stop --run-dir /tmp/grahama-review --json
 ```
 
 A disabled-by-default nightly service is registered at
@@ -81,6 +87,11 @@ ship disabled; enable only when the scheduler environment is ready).
 - **Proof:** audit JSON reports each drift item; after an applied change lands
   on main, the receipt is a green `site-deploy` run plus a curl read-back of
   the changed values on https://grahama.co.
+- **Review URLs:** `review-site` separates deterministic
+  `candidate_fingerprint` integrity from runtime-only `access_nonce` routing.
+  It consumes the section-corpus manifest, copies canonical renders into the
+  review bundle, serves loopback-only by default, and never treats the opaque
+  URL as authentication for private, regulated, or ITAR material.
 
 ## What audit checks
 
