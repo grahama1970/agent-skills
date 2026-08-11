@@ -66,6 +66,23 @@ accessibility behavior, and examples where the component must not be used.
 Reject components that exist only because a generic design system normally has
 them. Add components when real content or user jobs require them.
 
+## Project Lane Bindings
+
+Every project using this skill should bind one deterministic render-repair lane
+and one formal certification lane. The render lane answers "is the current
+browser/source surface coherent enough to keep repairing?" The certification
+lane answers "may this claim READY?"
+
+For grahama.co:
+
+- render repair:
+  `skills/monitor-website/run.sh design-render-check --json`
+- formal certification:
+  `skills/monitor-website/run.sh design-certify --json`
+
+Missing blind-rater output means certification remains `NOT_TESTED`; it is not a
+broken section crop and should not trigger visual redesign by itself.
+
 ## Phase 10 — Accessibility and Performance Gates
 
 Require WCAG 2.2 AA review, visible and unobscured keyboard focus, target size,

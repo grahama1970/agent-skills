@@ -112,6 +112,18 @@ Default to `release-risk` for live website work. Escalate to
 when a deployment policy requires it, or when the disputed claim is itself a
 formal gate. A `release-risk` pass is not a `formal-certification` pass.
 
+## Call Budget
+
+External reviewers are bounded by tier. No reviewer call may run until the local
+checks for the surface are `PASS` or explicitly waived with a reason. Exceeding
+the budget is a process failure, not an evidence upgrade.
+
+| Tier | Local checks | Reviewer providers | Submissions | Controlled tabs |
+| --- | --- | --- | --- | --- |
+| `directional` | required | 0-1 | one compact packet | reviewer + site |
+| `release-risk` | required | 0-2 | one compact packet per provider | one per provider + site |
+| `formal-certification` | required | pre-registered G11 set | one per rater seat | one per provider + site |
+
 ## Required Inputs
 
 Before art direction, collect or mark missing:
@@ -233,15 +245,11 @@ anti-collaborative and the gate is `NOT_READY`.
 
 Every status update and handoff must name:
 
-- active evidence tier, phase, and gate;
-- primary lane;
-- current artifact path or source file;
-- last command run and concrete result;
-- facts established locally;
-- unknowns and `NOT_TESTED` items;
-- current blocker, if any;
-- next deterministic command;
-- stop condition for the current lane.
+`tier=<tier> lane=<lane> gate=<gate>:<status> artifact=<path> next=<command>`
+
+Expand with facts, unknowns, blocker, and stop condition on handoff, blocker,
+tier change, or human status request. Do not make every normal update a nine-field
+report if the compact stamp answers where the work is.
 
 Only one lane may be primary at a time. If implementation, screenshot capture,
 reviewer submission, and skill-contract repair all appear relevant, declare the
@@ -267,11 +275,9 @@ full G0-G20 proof packets before this loop has answered the immediate decision.
 If the loop fails twice on the same blocker, preserve the two receipts and ask
 for a reviewer or human decision instead of expanding the machinery.
 
-For grahama.co, use explicit monitor lanes:
-`skills/monitor-website/run.sh design-render-check --json` for deterministic
-local render repair, and `skills/monitor-website/run.sh design-certify --json`
-only for formal READY. Missing blind-rater output is not a broken section crop;
-it means certification remains `NOT_TESTED`.
+Bind one deterministic local render command and one certification command per
+project. Missing blind-rater output means certification is `NOT_TESTED`, not a
+broken crop. Project lane examples live in `references/workflow-phases.md`.
 
 ### Phase Summary
 
@@ -342,17 +348,14 @@ Default review should be cheap, legible, and bounded. Do not spend more effort o
 
 1. Render section, component, or page-state crops with a manifest.
 2. Assemble reviewable contact sheets from those crops.
-3. For `directional` work, use local inspection first. Escalate to one external
-   reviewer only when the question is subjective and the crop packet is ready.
-4. For `release-risk` work, two separate reviewer providers are enough for a
-   normal subjective design check. Submit one compact packet to each provider;
-   do not open one tab per crop, prompt variant, or retry.
-5. For `formal-certification`, run the pre-registered G11 rater set and preserve
+3. Stay inside the `Call Budget`; use reviewer calls only for subjective
+   questions that local checks and crops cannot answer.
+4. For `formal-certification`, run the pre-registered G11 rater set and preserve
    every raw/parsed response. This is the only tier that requires five fresh
    usable raters.
-6. Ask each rater to answer the registered logo-off, competitor-swap,
+5. Ask each rater to answer the registered logo-off, competitor-swap,
    cross-screen-family, template-residue, and leakage questions directly.
-7. Aggregate the raw answers into the G11 subgates.
+6. Aggregate the raw answers into the G11 subgates.
 
 Do not build a larger orchestration system, dashboard, or multi-hour browser
 campaign before this path has been attempted. A model that can see the section
@@ -366,10 +369,9 @@ Browser tab budget is part of the gate UX. Use no more than one controlled
 reviewer tab per provider plus one local site tab. Opening a new tab per rater,
 retry, or prompt variant is a process failure unless a prior tab is explicitly
 closed or documented as unusable. If two focused attempts in one provider family
-fail with the same transport, upload, context-length, or rate-limit signature,
-stop that provider family, preserve the receipts, and continue with the other
-provider or mark the remaining seats `blocked_by_systemic_failure`. Do not open
-parallel tabs to outrun the failure.
+fail, stop that family regardless of signature, preserve the receipts, and
+continue only within the `Call Budget`. Do not open parallel tabs to outrun the
+failure.
 
 Run the registered G11 questions: logo-off recognition, competitor swap, motif
 semantics, cross-screen family, reference leakage, and template residue. The full
@@ -396,26 +398,9 @@ python scripts/validate_receipt.py path/to/bespoke-design-receipt.json
 
 ## Owltastic-Derived Principles, Not Owltastic Motifs
 
-1. **Make identity verbal and visual at once.** The strongest concept joins copy,
-   imagery, and composition rather than adding decoration after the headline.
-2. **Treat personality as a design input.** Explore contrasting personalities when
-   the client cannot yet articulate one.
-3. **Use typography as character and structure.** Display type creates posture;
-   reading and utility type preserve usability.
-4. **Let one meaningful motif recur at several scales.** It may shape backgrounds,
-   crops, diagrams, components, and transitions without becoming wallpaper.
-5. **Balance abundance with quiet reading lanes.** Rich edges, frames, collage, or
-   illustration can coexist with calm text and task zones.
-6. **Put discipline underneath play.** Grids, hierarchy, and reusable systems make
-   expressive work legible and scalable.
-7. **Give each subject a different world.** Range is evidence that the process is
-   client-led rather than a single signature skin.
-8. **Carry identity into components.** Cards, forms, quotes, navigation, and states
-   should express the grammar, not merely inherit brand colors.
-9. **Use code as a design instrument.** Browser prototypes expose false assumptions
-   about wrapping, rhythm, responsiveness, and interaction.
-10. **Keep the human voice.** Personal, precise language and a visible point of view
-    can make a polished site feel inhabited rather than manufactured.
+The source lesson is method, not motif: make the subject's own premise govern
+words, type, imagery, composition, components, and responsive behavior. Detailed
+evidence and transferable principles live in `references/owltastic-design-dna.md`.
 
 ## Misuse Guard
 
@@ -451,6 +436,20 @@ needed for the current decision.
 Formal certification details live in `references/formal-certification.md`. Keep
 the main workflow lean; load that reference only when formal READY is actually
 the current tier.
+
+### Failure Classification
+
+- `site_defect` — rendered source violates the visual-world contract; affected
+  design gate is `FAIL`.
+- `evidence_gap` — crops, receipts, raters, or hashes are missing/stale; affected
+  gate is `NOT_TESTED`.
+- `reviewer_transport` — rate limit, stale tab, upload, or context failure;
+  reviewer lane is `BLOCKED`, design gate status is unchanged.
+- `harness_defect` — validator, manifest, runner, or schema error; tooling lane
+  is `BLOCKED`, design gate status is unchanged.
+
+A transport or harness failure never becomes a design finding and never changes a
+design gate in either direction.
 
 ## Review Output
 
