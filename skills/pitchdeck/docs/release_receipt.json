@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "e34a1e25864f232179a6cb1f0bfc103d56318fc7",
- "source_tree_sha256": "94f1c5fed33d622f3699a4b3866e54976277102e3f231fd812ce52e9a2275d09",
+ "commit": "a68e268ef63d8238526477a8571479c11725b959",
+ "source_tree_sha256": "c798d50d8d80282d7aeba95a4246d59ba2e635e7fd71a1b48559635690b5a5cf",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -10,6 +10,7 @@
   "asset-clear",
   "bindings-migrate",
   "build",
+  "build-manifest",
   "claim-decide",
   "compile-document",
   "compile-voice-profile",
@@ -47,13 +48,14 @@
   "version",
   "visual-sync"
  ],
- "command_count": 43,
+ "command_count": 44,
  "schema_inventory": [
   {
    "declared_schemas": [
     "pitchdeck.assertion_atom.v1",
     "pitchdeck.asset_manifest.v1",
     "pitchdeck.brandmark_receipt.v1",
+    "pitchdeck.build_manifest.v1",
     "pitchdeck.build_receipt.v1",
     "pitchdeck.claim_ledger.v1",
     "pitchdeck.composition_recipe.v1",
@@ -111,7 +113,7 @@
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
   "exit_code": 0,
-  "summary": "35 passed, 0 xfail"
+  "summary": "44 passed, 0 xfail"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

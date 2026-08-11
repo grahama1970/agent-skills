@@ -337,12 +337,28 @@ def verify_publish(
     template_contract: TemplateContract | None = None,
     document=None,
     require_document: bool = True,
+    manifest=None,
+    manifest_sources: dict | None = None,
+    repo_root: Path | None = None,
 ) -> PublishReceipt:
     """Re-prove the delivered artifact, not the manifest that produced it."""
     from pptx import Presentation
 
     digest = hashlib.sha256(pptx_path.read_bytes()).hexdigest()
     findings: list[PublishFinding] = []
+    # The build manifest joins the chain: the document handed to this verifier
+    # must be the document the manifest recorded, the pptx must be the one it
+    # emitted, and every other input must be byte-identical. This closes the
+    # stale-document-revision hole in #1371 — a revised document now fails
+    # INPUT_DRIFT before its atoms are even consulted.
+    if manifest is not None and manifest_sources and repo_root is not None:
+        from .build_manifest import verify_manifest
+
+        for drift in verify_manifest(manifest, repo_root=repo_root, sources=manifest_sources,
+                                     delivered_pptx=pptx_path, allow_dirty=True):
+            findings.append(PublishFinding(
+                code="UNREADABLE" if drift.code == "INPUT_MISSING" else "TEMPLATE_DRIFT",
+                where="build-manifest", detail=f"{drift.code}: {drift.detail}"))
     visible = extract_visible_strings(pptx_path)
     atom_index: dict[str, AssertionAtom] | None = None
     authorized_keys: set[str] = set()
