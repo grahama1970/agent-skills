@@ -57,6 +57,8 @@ metadata:
   short-description: Claim-bound README-to-PPTX compiler
 disciplines:
   - content-creation
+domains:
+  - marketing
 ---
 
 # README to Pitch Deck
@@ -284,17 +286,28 @@ Verified: 6 slides / 26 elements / 8 assets projected with zero gaps; scene
 illustrations reach the React payload on the architecture and roadmap slides;
 PDF renders from the templated PPTX (sha256 recorded in its receipt).
 
-## Readiness (adversarially audited, 2026-08-08)
+## Readiness (adversarially audited, 2026-08-08 and 2026-08-11)
 
-An external adversarial audit of this skill returned **NOT_READY**, and the
-finding is recorded here rather than softened. Archived at
-`outputs/state-review-2026-08-08.md`.
+Two external adversarial audits returned **NOT_READY**. Recorded here rather
+than softened. Archived at `outputs/state-review-2026-08-08.md` and
+`outputs/review-2026-08-11.md`.
 
-The blocking reason was categorical: a diagram carried one element-level
-binding, so a label could reach a slide without string-level claim proof. That
-is now fixed (#1328) — every emitted string, diagram labels included, carries its
-own binding, and `verify-publish` consumes compiler-emitted AssertionAtoms rather
-than a hand-maintained approvals list.
+**The publication gate is currently bypassable and the skill must not be treated
+as a proving compiler.** Verified live on 2026-08-11: changing a diagram edge
+label in the approved document to "Relevance always establishes support" — the
+inverse of its claim — while preserving its `claim_id` and `binding_paths`, then
+emitting and running `verify-publish`, returns PASS with zero findings. A
+compiler-emitted AssertionAtom is an assertion BY the compiler; it is not
+evidence that the assertion was legally derived. Tracked in #1371.
+
+The first audit's blocking reason was narrower: a diagram carried one
+element-level binding, so a label could reach a slide without string-level claim
+proof. That
+is fixed (#1328): labelled nodes require binding paths, the materializer upgrades
+coarse element paths, and `verify-publish` consumes compiler-emitted
+AssertionAtoms rather than a hand-maintained approvals list. The BROADER
+guarantee — that each atom was legally derived and approved for that exact
+occurrence — is NOT closed (#1371, #1372).
 
 What the audit corrected in how this skill reports itself:
 
@@ -364,7 +377,7 @@ carry a header band, bottom-left mark, bottom-right footer text, and a title;
 ./run.sh find-layout --query "closing slide: what must happen before deployment"
 ```
 
-`house-conformance` is a negative-control gate: it must pass the author's own
+`house-conformance` is validated against POSITIVE controls only: it passes the author's own
 decks, and it caught two of its own definition errors that way (chrome
 inherited from the slide layout, and a bottom-left mark that is a logo row
 rather than text).
