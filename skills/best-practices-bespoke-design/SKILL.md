@@ -382,6 +382,17 @@ Default review is URL-first, crop-backed, and transport-neutral. Use
 `references/review-url-transport.md`, `schemas/bespoke-review-bundle.schema.json`,
 and `schemas/bespoke-review-transport.schema.json`.
 
+Reviewer seats should be submitted through `$ask`/Tau handler runs, not through
+hand-managed browser tabs. Browser-backed handlers, API/model handlers, and live
+agent handlers are peer transports when they receive the same candidate-bound
+review bundle and return Ask/Tau receipts. Prefer non-web model or agent seats
+when they can inspect the actual section crops/contact sheets through supported
+image or attachment input; text-only seats may review copy, hierarchy, prompts,
+and receipt logic, but they do not count as visual G11 raters unless the visual
+evidence they judged is preserved in their run artifact. Web handlers remain
+useful independent seats, but they are not special and should not force a
+multi-tab manual campaign.
+
 The order is: local deterministic checks; current section/page-state crops;
 hash-bound review bundle; verified immutable review URL; direct canonical
 artifact/attachment fallback only when URL inspection is unsupported. A URL
