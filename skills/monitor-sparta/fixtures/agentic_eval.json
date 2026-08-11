@@ -4,7 +4,7 @@
  "trials": 3,
  "proof_scope": "live non-expert analyst retrieval, abstention calibration, and declared knowledge-coverage over the SPARTA corpus",
  "claims": {
-  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative; and that every framework declared covered in coverage_manifest.json still resolves; and that the framework alignment invariants hold live: zero unexpected orphan frameworks and zero cross-collection case collisions (check 30, EMB3D declared as expected orphan), zero edge labels contradicting their own endpoints and zero unlabelled edges (check 31), with a sensitivity case proving check 31 still reports the deliberately surfaced dangling-endpoint findings rather than having been vacuously weakened",
+  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative; and that every framework declared covered in coverage_manifest.json still resolves; and that the framework alignment invariants hold live: zero unexpected orphan frameworks and zero cross-collection case collisions (check 30, EMB3D declared as expected orphan), zero edge labels contradicting their own endpoints and zero unlabelled edges (check 31), with a sensitivity case proving check 31 still reports the deliberately surfaced dangling-endpoint findings rather than having been vacuously weakened; plus non-deterministic e2e sweeps: a fresh random edge sample is endpoint-congruent and fresh verified-absent identifier mutants never resolve, seeds printed for reproduction",
   "does_not_prove": "plausibility judgment -- whether an exploitation chain is realistic, whether a detection rule would false-positive in production, or whether an AI's threat analysis is operationally sound. Those still require a practitioner."
  },
  "cases": [
@@ -185,6 +185,34 @@
    "expected": {
     "exit_code": 0,
     "stdout_contains": "\"dangling\""
+   }
+  },
+  {
+   "name": "random-sampled-edges-congruent-e2e",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "uv run python scripts/adversarial_alignment_probe.py edges --samples 20"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": "\"failures\": []"
+   }
+  },
+  {
+   "name": "mutated-identifiers-never-resolve-e2e",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "uv run python scripts/adversarial_alignment_probe.py mutate --samples 8"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": "\"failures\": []"
    }
   }
  ]

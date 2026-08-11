@@ -4,7 +4,7 @@
  "trials": 3,
  "proof_scope": "pipeline dispatch truth: documented module paths import, alignment-audit steps exist, and the corpus registry the SKILL.md documents is reachable live",
  "claims": {
-  "proves": "that the documented sparta.pipeline.NN_name module path actually loads (step 18 --list), that the alignment-audit steps 15/17/18 exist and respond to --help, and adversarially that the retired sparta.pipeline.steps.* path fails with No module named rather than silently succeeding",
+  "proves": "that the documented sparta.pipeline.NN_name module path actually loads (step 18 --list), that the alignment-audit steps 15/17/18 exist and respond to --help, and adversarially that the retired sparta.pipeline.steps.* path fails with No module named rather than silently succeeding; and end-to-end that step 17 resolves the live ATLAS STIX bundle against the live corpus in dry-run",
   "does_not_prove": "pipeline output quality or corpus content; those belong to monitor-sparta"
  },
  "cases": [
@@ -71,6 +71,20 @@
    ],
    "expected": {
     "exit_code": 1
+   }
+  },
+  {
+   "name": "step17-atlas-dry-run-live-e2e",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.17_crosswalk_edges --family atlas --dry-run"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": "Done!"
    }
   }
  ]
