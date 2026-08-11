@@ -29,5 +29,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: 'https://grahama.co/fingerprint',
+      changeFrequency: 'weekly',
+      priority: 0.1,
+    },
   ];
 }

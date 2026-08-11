@@ -4579,3 +4579,138 @@ th.cm-num {
     margin-left: 0;
   }
 }
+
+/* ---- Public fingerprint route: compact reviewer canary, not marketing ---- */
+.fingerprint-page {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: clamp(2rem, 6vw, 5rem);
+}
+
+.fingerprint-hero,
+.fingerprint-panel {
+  margin: 0 auto;
+  max-width: 980px;
+}
+
+.fingerprint-hero {
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.fingerprint-hero h1 {
+  font-family: var(--display);
+  font-size: clamp(3.2rem, 8vw, 7rem);
+  font-weight: 650;
+  line-height: 0.93;
+  margin: 1.4rem 0 1rem;
+  max-width: 10ch;
+}
+
+.fingerprint-hero p:last-child {
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.55;
+  max-width: 42rem;
+}
+
+.fingerprint-panel {
+  border-top: 1px solid var(--line);
+  padding: clamp(1.4rem, 4vw, 2.4rem) 0;
+}
+
+.fingerprint-panel h2 {
+  color: var(--brass);
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
+.fingerprint-panel > p {
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 46rem;
+}
+
+.fingerprint-facts {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.fingerprint-facts div {
+  display: grid;
+  gap: 0.35rem 1.5rem;
+  grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+}
+
+.fingerprint-facts dt {
+  color: var(--faint);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fingerprint-facts dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.fingerprint-facts code,
+.fingerprint-prompt {
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.fingerprint-units {
+  display: grid;
+  gap: 0.8rem;
+  list-style: none;
+  margin: 1.2rem 0 0;
+  padding: 0;
+}
+
+.fingerprint-units li {
+  align-items: start;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 1rem;
+}
+
+.fingerprint-units h3 {
+  font-size: 1.1rem;
+  margin: 0.25rem 0;
+}
+
+.fingerprint-units p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fingerprint-units a {
+  color: var(--brass);
+  text-decoration: none;
+}
+
+.fingerprint-prompt {
+  background: color-mix(in srgb, var(--panel) 74%, transparent);
+  border-left: 2px solid var(--brass);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  margin: 1rem 0 0;
+  overflow-x: auto;
+  padding: 1rem;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .fingerprint-facts div,
+  .fingerprint-units li {
+    grid-template-columns: 1fr;
+  }
+}
