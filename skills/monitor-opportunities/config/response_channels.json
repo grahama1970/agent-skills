@@ -1,0 +1,20 @@
+{
+  "schema": "monitor_opportunities.response_channels.v1",
+  "note": "Discovery channels ordered by RESPONSE PROBABILITY, not volume (brave-search evidence 2026-08-11: senior AI architects are found via passive outreach on GitHub/arXiv/HuggingFace + communities, not job boards; consulting clients come from expert networks + community reputation, not cold apply). competition 0=none (inbound) .. 1=firehose (cold ATS). The response ranker rewards low competition, warm path, and fresh triggers; cold ATS is coverage-only.",
+  "channels": [
+    {"id": "inbound-github", "type": "be_found", "competition": 0.05, "skill": "github-search", "role": "sourcers/clients find you via your repos (pdf_oxide, extractor); also surfaces companies doing your exact work"},
+    {"id": "inbound-arxiv", "type": "be_found", "competition": 0.05, "skill": "arxiv", "role": "authors/labs in your domains = highest-fit leads + reachable people"},
+    {"id": "inbound-linkedin-open-to-consulting", "type": "be_found", "competition": 0.1, "skill": "surf", "role": "LinkedIn 'Open to Consulting & Contract Work' + anchor case-study posts -> recruiters/clients source you passively"},
+    {"id": "expert-network", "type": "routed_demand", "competition": 0.15, "skill": null, "role": "pre-vetted networks (ExpertsHub.ai, Leland) route qualified client flow WITHOUT cold outreach", "targets": ["expertshub.ai", "joinleland.com"]},
+    {"id": "community-reputation", "type": "reputation", "competition": 0.2, "skill": "social-bridge", "role": "domain AI Slack/Discord: visible expertise -> inbound + warm intros"},
+    {"id": "niche-board", "type": "low_competition_board", "competition": 0.35, "skill": "brave-search", "role": "Skima AI, Wellfound, Dice AI-architect roles: far lower competition than LinkedIn/Indeed", "targets": ["skima.ai", "wellfound.com", "dice.com"]},
+    {"id": "warm-path", "type": "signal", "competition": 0.0, "skill": "discover-contacts", "role": "who in your network connects to the target company -> referral not cold form"},
+    {"id": "warm-path-email", "type": "signal", "competition": 0.0, "skill": "mailbox-mining", "role": "your existing warm network + referral paths + reply outcomes from email"},
+    {"id": "trigger", "type": "signal", "competition": 0.0, "skill": "dogpile", "role": "funding/award/contract-win/hiring-surge = budget + urgency = replies"},
+    {"id": "trigger-monitor", "type": "signal", "competition": 0.0, "skill": "monitor-contacts", "role": "always-on: job changes + company news alerts"},
+    {"id": "federal", "type": "consulting_signal", "competition": 0.25, "skill": "ops-sam-gov", "role": "SAM.gov/DARPA solicitations for the consulting track"},
+    {"id": "mass-board-linkedin", "type": "coverage", "competition": 0.8, "skill": "surf", "role": "LinkedIn Jobs / Easy Apply — coverage net + the warm-intro graph"},
+    {"id": "mass-board-indeed", "type": "coverage", "competition": 0.9, "skill": "surf", "role": "Indeed — broad coverage, lowest signal"},
+    {"id": "cold-ats", "type": "enrichment_only", "competition": 0.95, "skill": null, "role": "Ashby/Greenhouse boards — JD + form intelligence ONLY; cold-apply is near-zero priority", "targets": ["ashbyhq.com", "greenhouse.io"]}
+  ]
+}
