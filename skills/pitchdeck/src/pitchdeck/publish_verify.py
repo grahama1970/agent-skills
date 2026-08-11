@@ -284,8 +284,14 @@ def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprova
         # pasted into an edge label.
         if occurrence_key(stripped, element_id) in (authorized_keys or set()):
             return True
-        if element_id and key in (authorized_keys or set()):
-            return False  # authorized text, wrong occurrence
+        if element_id:
+            if key in (authorized_keys or set()):
+                return False  # authorized text, wrong occurrence
+        elif key in (authorized_keys or set()):
+            # layout placeholders keep the template's own shape names ("Title 1"),
+            # so no element id is recoverable; the bare key is the best available
+            # match for text the emitter routed through an inherited placeholder
+            return True
     if len(stripped) <= _CHROME_MAX_CHARS or stripped.isdigit():
         return True
     # A diagram node renders its label and sublabel into a single text frame, so

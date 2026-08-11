@@ -31,11 +31,25 @@ echo "north-star eval: README -> deck -> Graham gate   (work: $WORK)"
 echo "--- stage 1: source is the real sparta-public README ---"
 stage readme-present test -s "$SPARTA_PUBLIC_ROOT/README.md"
 
-echo "--- stage 2: claim-bound compilation ---"
+echo "--- stage 2: claim-bound compilation (target: 15-20 slides) ---"
 stage materialize ./run.sh materialize-outline --outline "$O/approved_outline.json" \
   --context /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c97e92ee-f998-42c3-8cea-10d08775cc68/scratchpad/deck_context.json \
   --bundle-dir "$BUNDLE" --output "$WORK/deck.document.json"
 stage design-lint ./run.sh design-lint --document "$WORK/deck.document.json"
+stage slide-count python3 -c "
+import json,sys
+n=len([s for s in json.load(open('$WORK/deck.document.json'))['slides'] if not s.get('hidden')])
+print(f'slides: {n} (target 15-20)')
+sys.exit(0 if 15 <= n <= 20 else 1)"
+stage coverage python3 -c "
+import json,sys
+d=json.load(open('$WORK/deck.document.json'))
+bound={b['claim_id'] for s in d['slides'] for b in s.get('bindings',[]) if b.get('claim_id')}
+import yaml
+claims=[c['id'] for c in yaml.safe_load(open('examples/sparta-explorer/claim_ledger.yaml'))['claims'] if c['id'].startswith('sparta-public')]
+missing=[c for c in claims if c not in bound]
+print(f'public claims represented: {len(claims)-len(missing)}/{len(claims)}; missing: {missing}')
+sys.exit(0 if len(missing) <= 2 else 1)"
 
 echo "--- stage 3: emission on the house template ---"
 stage emit-pptx ./run.sh emit-document-pptx --document "$WORK/deck.document.json" \
@@ -58,7 +72,8 @@ mkdir -p "$WORK/render"
 stage render-pdf soffice "-env:UserInstallation=file://$WORK/.lo" --headless \
   --convert-to pdf "$WORK/deck.pptx" --outdir "$WORK/render"
 if [ -f "$WORK/render/deck.pdf" ]; then
-  for p in 1 2 3 4 5 6; do pdftoppm -png -r 70 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
+  NPAGES=$(pdfinfo "$WORK/render/deck.pdf" 2>/dev/null | awk '/^Pages:/{print $2}'); NPAGES=${NPAGES:-6}
+  for p in $(seq 1 "$NPAGES"); do pdftoppm -png -r 70 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
 fi
 
 echo "--- stage 6: THE GOAL — looks like a Graham deck ---"

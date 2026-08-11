@@ -464,6 +464,120 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
     )
 
 
+def _interstitial(order: int, slide_id: str, archetype: str, heading: str, *, mark: bool = True) -> DocSlide:
+    """TOC / section-divider / close slides per the DESIGN_SLIDES catalog.
+
+    section-divider is Graham's second most common archetype (n=53): a huge
+    centred teal title mid-canvas with the product mark lower-right, band still
+    titled. These carry NO claims — their text is structural chrome (module
+    names, 'Open Discussion'), bound as non_claim."""
+    elements = [
+        DocElement(id="title", kind=DocElementKind.TEXT, role="title",
+                   bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08), text=heading,
+                   style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
+        DocElement(id="divider-heading", kind=DocElementKind.TEXT, role="message",
+                   bbox=Bbox(x=0.08, y=0.36, w=0.84, h=0.2), text=heading,
+                   style=DocTextStyle(size_pt=48.0, bold=True, align="center", color="#065E7C"),
+                   binding_paths=["message"]),
+    ]
+    if mark:
+        elements.append(DocElement(id="divider-mark", kind=DocElementKind.ICON, role="badge",
+                                   bbox=Bbox(x=0.78, y=0.62, w=0.14, h=0.22),
+                                   icon=IconSpec(library_id="compass", tint_role="primary")))
+    return DocSlide(
+        id=slide_id, order=order, layout_origin=SlideLayout.FREEFORM,
+        elements=elements,
+        bindings=[TextBinding(path="title", kind=BindingKind.NON_CLAIM),
+                  TextBinding(path="message", kind=BindingKind.NON_CLAIM)],
+        notes=f"{archetype} interstitial (DESIGN_SLIDES archetype)")
+
+
+def _toc_slide(order: int, section_names: list[str]) -> DocSlide:
+    lines = "\n".join(f"{i}.  {name}" for i, name in enumerate(section_names, 1))
+    return DocSlide(
+        id="m-toc", order=order, layout_origin=SlideLayout.FREEFORM,
+        elements=[
+            DocElement(id="title", kind=DocElementKind.TEXT, role="title",
+                       bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08), text="Table of Contents",
+                       style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
+            DocElement(id="toc-list", kind=DocElementKind.TEXT, role="message",
+                       bbox=Bbox(x=0.08, y=0.2, w=0.5, h=0.6), text=lines,
+                       style=DocTextStyle(size_pt=20.0), binding_paths=["message"]),
+        ],
+        bindings=[TextBinding(path="title", kind=BindingKind.NON_CLAIM),
+                  TextBinding(path="message", kind=BindingKind.NON_CLAIM)],
+        notes="toc archetype")
+
+
+def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
+                           qualifiers: dict) -> DocSlide:
+    """One proof slide PER real screenshot (mixed Q&A/proof archetype): the
+    working surfaces each get their own evidence page instead of one crowded
+    slide. Caption = the asset's own alt text (chrome); the takeaway binds to
+    the working-surfaces claim."""
+    kind, transform = _classify_label(asset.alt_text or "", claim_text)
+    elements = [
+        DocElement(id="title", kind=DocElementKind.TEXT, role="title",
+                   bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08),
+                   text=(asset.alt_text or asset.id).split(" showing")[0][:60],
+                   style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
+        DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
+                   bbox=Bbox(x=0.3, y=0.16, w=0.66, h=0.66), asset_id=asset.id),
+        DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
+                   bbox=Bbox(x=0.03, y=0.18, w=0.25, h=0.6),
+                   text=f"> {_truncate_words(claim_text, 200)}",
+                   style=_CHEVRON_STYLE, binding_paths=["element:callout"]),
+        DocElement(id="visual-caption", kind=DocElementKind.TEXT, role="caption",
+                   bbox=Bbox(x=0.3, y=0.83, w=0.66, h=0.05),
+                   text=(asset.alt_text or "")[:120], style=_CAPTION_STYLE,
+                   binding_paths=["element:visual-caption"]),
+    ]
+    bindings = [
+        TextBinding(path="title", kind=BindingKind.NON_CLAIM),
+        TextBinding(path="element:callout", kind=BindingKind.CLAIM_QUOTE,
+                    claim_id=claim_id, transform_class="truncation"),
+        TextBinding(path="element:visual-caption", kind=BindingKind.NON_CLAIM),
+    ]
+    qualifier = qualifiers.get(claim_id)
+    if qualifier:
+        elements.append(DocElement(id="qualifier", kind=DocElementKind.TEXT, role="footer",
+                                   bbox=Bbox(x=0.06, y=0.845, w=0.88, h=0.075),
+                                   text=_truncate_words(qualifier, 260),
+                                   style=DocTextStyle(size_pt=12.0, color="#595959"),
+                                   binding_paths=["footer"]))
+        bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
+    return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order,
+                    layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
+                    claim_ids=[claim_id], notes="proof archetype (one surface per page)")
+
+
+def _claims_bullets_slide(slide_id: str, order: int, heading: str,
+                          picked: list, qualifiers: dict) -> DocSlide:
+    """bullets archetype: chevron takeaways, each the claim's own words."""
+    elements = [DocElement(id="title", kind=DocElementKind.TEXT, role="title",
+                           bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08), text=heading,
+                           style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"])]
+    bindings = [TextBinding(path="title", kind=BindingKind.NON_CLAIM)]
+    for index, claim in enumerate(picked):
+        el_id = f"chevron-{index}"
+        elements.append(DocElement(id=el_id, kind=DocElementKind.TEXT, role="chevrons",
+                                   bbox=Bbox(x=0.06, y=0.17 + index * 0.14, w=0.88, h=0.13),
+                                   text=f"> {_truncate_words(claim.text, 220)}",
+                                   style=_CHEVRON_STYLE, binding_paths=[f"element:{el_id}"]))
+        bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
+                                    claim_id=claim.id, transform_class="truncation"))
+    quals = [qualifiers[c.id] for c in picked if c.id in qualifiers]
+    if quals:
+        elements.append(DocElement(id="qualifier", kind=DocElementKind.TEXT, role="footer",
+                                   bbox=Bbox(x=0.06, y=0.845, w=0.88, h=0.075),
+                                   text=_truncate_words(" · ".join(dict.fromkeys(quals)), 260),
+                                   style=DocTextStyle(size_pt=12.0, color="#595959"),
+                                   binding_paths=["footer"]))
+        bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=picked[0].id))
+    return DocSlide(id=slide_id, order=order, layout_origin=SlideLayout.FREEFORM,
+                    elements=elements, bindings=bindings,
+                    claim_ids=[c.id for c in picked], notes="bullets archetype (claim coverage)")
+
 def materialize_outline(
     outline: NarrativeOutline,
     context: DeckContext,
@@ -486,12 +600,62 @@ def materialize_outline(
     tagline = context.objective.split("—")[-1].strip() if "—" in context.objective else context.primary_ask
     qualifiers = {c.id: c.required_qualifier for c in ledger.claims if getattr(c, "required_qualifier", None)}
     claim_text_map = {c.id: c.text for c in ledger.claims}
-    slides = [
-        _materialize_slide(module, order, recipes, title, tagline,
-                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers, claim_text_map=claim_text_map,
-                           context_ask=context.desired_action)
-        for order, module in enumerate(active, start=1)
-    ]
+    # Graham-shaped arc (DESIGN_SLIDES archetypes): cover, toc, thesis,
+    # dividers per section, module slides, one proof page PER screenshot,
+    # roadmap, close. Interstitials are structural chrome; everything else
+    # stays claim-bound.
+    sections = [("The Problem", ["problem_solution"]),
+                ("How It Works", ["architecture", "value_prop"]),
+                ("Proof", ["proof"]),
+                ("Where This Goes", ["roadmap"])]
+    by_name = {m.module: m for m in active}
+    slides: list[DocSlide] = []
+    order = 1
+
+    def add(slide):  # noqa: ANN001
+        nonlocal order
+        slides.append(slide); order += 1
+
+    if "cover" in by_name:
+        add(_materialize_slide(by_name["cover"], order, recipes, title, tagline,
+                               use_candidate_renderings=use_candidate_renderings,
+                               qualifiers=qualifiers, claim_text_map=claim_text_map,
+                               context_ask=context.desired_action))
+    add(_toc_slide(order, [name for name, _ in sections]))
+    if "thesis" in by_name:
+        add(_materialize_slide(by_name["thesis"], order, recipes, title, tagline,
+                               use_candidate_renderings=use_candidate_renderings,
+                               qualifiers=qualifiers, claim_text_map=claim_text_map,
+                               context_ask=context.desired_action))
+    proof_assets = [a for a in assets.assets if getattr(a, "kind", "") == "screenshot"]
+    surfaces_claim = next((c for c in ledger.claims if "working-surfaces" in c.id), None)
+    claims_by_id_local = {c.id: c for c in ledger.claims}
+    extra_content = {
+        "How It Works": ("m-ask", "What You Can Ask",
+                          ["sparta-public-three-questions", "sparta-public-f36-demo"]),
+        "Where This Goes": ("m-partners", "Where It Runs, Who It Is For",
+                            ["sparta-public-embry-foundation", "sparta-public-collaboration-stage"]),
+    }
+    for section_name, module_names in sections:
+        add(_interstitial(order, f"m-div-{section_name.lower().replace(' ', '-')}",
+                          "section-divider", section_name))
+        for module_name in module_names:
+            if module_name == "proof" and surfaces_claim is not None and proof_assets:
+                for asset in proof_assets:
+                    add(_proof_slide_for_asset(order, asset, surfaces_claim.id,
+                                               surfaces_claim.text, qualifiers))
+                continue
+            if module_name in by_name:
+                add(_materialize_slide(by_name[module_name], order, recipes, title, tagline,
+                                       use_candidate_renderings=use_candidate_renderings,
+                                       qualifiers=qualifiers, claim_text_map=claim_text_map,
+                                       context_ask=context.desired_action))
+        if section_name in extra_content:
+            sid, heading, wanted = extra_content[section_name]
+            picked = [claims_by_id_local[c] for c in wanted if c in claims_by_id_local]
+            if picked:
+                add(_claims_bullets_slide(sid, order, heading, picked, qualifiers))
+    add(_interstitial(order, "m-close", "close", "Open Discussion", mark=True))
     return DeckDocument(
         deck=DeckMeta(
             id=f"outline-{outline.context_sha256[:8]}",
