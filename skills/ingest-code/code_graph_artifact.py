@@ -11,6 +11,7 @@ from typing import Any
 
 from code_edge_record import CodeEdgeRecord
 from code_symbol_record import CodeSymbolRecord
+from debug_affordance import build_debug_invocation_candidates
 
 SCHEMA_VERSION = "ingest-code.code_graph_bundle.v1"
 ARTIFACT_FILENAMES = (
@@ -255,6 +256,15 @@ def _symbol_records(
             "end_line": symbol.end_line,
             "signature": symbol.signature,
             "content_hash": symbol.effective_content_hash,
+            "source_docstring": document.get("source_docstring", ""),
+            "source_docstring_status": document.get("source_docstring_status", ""),
+            "documentation_need": document.get("documentation_need", ""),
+            "documentation_need_reasons": document.get("documentation_need_reasons", []),
+            "summary_evidence": document.get("summary_evidence", {}),
+            "derived_summary": document.get("derived_summary"),
+            "semantic_input_schema": document.get("semantic_input_schema", ""),
+            "retrieval_text_sha256": document.get("retrieval_text_sha256", ""),
+            "purpose_source": document.get("purpose_source", ""),
             "memory_document": document,
         })
     return sorted(records, key=lambda item: (item["path"], item["qualified_name"], item["start_line"]))
@@ -775,6 +785,14 @@ def write_code_graph_bundle(
         symbols=symbols,
         files=files,
     )
+    debug_invocation_records = build_debug_invocation_candidates(
+        root=root,
+        repo=repo,
+        branch=branch,
+        commit=commit,
+        symbols=symbols,
+        files=files,
+    )
 
     counts = {
         "files": len(file_records),
@@ -789,6 +807,19 @@ def write_code_graph_bundle(
         "edges_candidate": sum(1 for item in edge_records if item["resolution_status"] == "candidate"),
         "edges_resolved": sum(1 for item in edge_records if item["resolution_status"] == "resolved"),
         "edges_unresolved": sum(1 for item in edge_records if item["resolution_status"] == "unresolved"),
+        "debug_invocation_candidates": len(debug_invocation_records),
+        "debug_invocation_runnable_static": sum(
+            1 for item in debug_invocation_records if item["status"] == "candidate_static"
+        ),
+        "debug_invocation_needs_fixture": sum(
+            1 for item in debug_invocation_records if item["status"] == "needs_fixture"
+        ),
+        "debug_invocation_unsafe_direct": sum(
+            1 for item in debug_invocation_records if item["status"] == "unsafe_direct"
+        ),
+        "debug_invocation_attach_runtime": sum(
+            1 for item in debug_invocation_records if item["status"] == "attach_runtime"
+        ),
         "diagnostics": len(diagnostics),
     }
     coverage = {
@@ -815,7 +846,7 @@ def write_code_graph_bundle(
         "files.jsonl": _jsonl_bytes(file_records),
         "symbols.jsonl": _jsonl_bytes(symbol_records),
         "edges.jsonl": _jsonl_bytes(edge_records),
-        "debug_invocations.jsonl": b"",
+        "debug_invocations.jsonl": _jsonl_bytes(debug_invocation_records),
         "diagnostics.jsonl": _jsonl_bytes(diagnostics),
         "coverage.json": _json_bytes(coverage),
     }

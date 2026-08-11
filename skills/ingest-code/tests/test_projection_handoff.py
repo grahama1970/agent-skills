@@ -19,7 +19,6 @@ for module_name in [
     "code_edge_record",
     "code_graph_artifact",
     "code_memory_client",
-    "incremental_index",
     "incremental_state",
     "ingest_code",
 ]:

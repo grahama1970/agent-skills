@@ -311,9 +311,13 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         # whole (drop-not-clip; corpus voice is short assertions, and a
         # trailing ellipsis is the strongest machine tell).
         pool = module.candidate_assertions[1:] or module.candidate_assertions[:1]
-        # Corpus content slides carry 3-5 chevron takeaways ABOVE the
-        # illustration; each is included only if it fits whole (drop-not-clip).
-        extra = [t for t in pool if len(t) <= 150][:4] or [pool[0]]
+        # Corpus content slides carry 3-5 SHORT chevron lines. A full claim
+        # sentence is often two clauses; sentence-level splits are still
+        # word-boundary excerpts (truncation transform).
+        sentences = [seg.strip().rstrip(".") for t_text in pool
+                     for seg in t_text.split(". ") if len(seg.strip()) >= 25]
+        extra = ([s for s in sentences if len(s) <= 150][:5]
+                 or [t for t in pool if len(t) <= 150][:4] or [pool[0]])
         for index, text in enumerate(extra):
             el_id = f"chevron-{index}"
             elements.append(DocElement(
@@ -481,9 +485,9 @@ def _interstitial(order: int, slide_id: str, archetype: str, heading: str, *, ma
                    binding_paths=["message"]),
     ]
     if mark:
-        elements.append(DocElement(id="divider-mark", kind=DocElementKind.ICON, role="badge",
-                                   bbox=Bbox(x=0.78, y=0.62, w=0.14, h=0.22),
-                                   icon=IconSpec(library_id="compass", tint_role="primary")))
+        elements.append(DocElement(id="divider-mark", kind=DocElementKind.IMAGE, role="badge",
+                                   bbox=Bbox(x=0.74, y=0.58, w=0.16, h=0.28),
+                                   asset_id="sparta-helmet-mark-png"))
     return DocSlide(
         id=slide_id, order=order, layout_origin=SlideLayout.FREEFORM,
         elements=elements,
@@ -503,6 +507,9 @@ def _toc_slide(order: int, section_names: list[str]) -> DocSlide:
             DocElement(id="toc-list", kind=DocElementKind.TEXT, role="message",
                        bbox=Bbox(x=0.08, y=0.2, w=0.5, h=0.6), text=lines,
                        style=DocTextStyle(size_pt=20.0), binding_paths=["message"]),
+            DocElement(id="toc-mark", kind=DocElementKind.IMAGE, role="badge",
+                       bbox=Bbox(x=0.64, y=0.28, w=0.24, h=0.42),
+                       asset_id="sparta-helmet-mark-png"),
         ],
         bindings=[TextBinding(path="title", kind=BindingKind.NON_CLAIM),
                   TextBinding(path="message", kind=BindingKind.NON_CLAIM)],
@@ -510,7 +517,7 @@ def _toc_slide(order: int, section_names: list[str]) -> DocSlide:
 
 
 def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
-                           qualifiers: dict) -> DocSlide:
+                           qualifiers: dict, siblings: list | None = None) -> DocSlide:
     """One proof slide PER real screenshot (mixed Q&A/proof archetype): the
     working surfaces each get their own evidence page instead of one crowded
     slide. Caption = the asset's own alt text (chrome); the takeaway binds to
@@ -522,7 +529,7 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                    text=(asset.alt_text or asset.id).split(" showing")[0][:60],
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                   bbox=Bbox(x=0.3, y=0.16, w=0.66, h=0.66), asset_id=asset.id),
+                   bbox=Bbox(x=0.3, y=0.16, w=0.66, h=0.48), asset_id=asset.id),
         DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
                    bbox=Bbox(x=0.03, y=0.18, w=0.25, h=0.6),
                    text=f"> {_truncate_words(claim_text, 200)}",
@@ -546,13 +553,18 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                                    style=DocTextStyle(size_pt=12.0, color="#595959"),
                                    binding_paths=["footer"]))
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
+    for t_index, sib in enumerate((siblings or [])[:2]):
+        elements.append(DocElement(id=f"thumb-{t_index}", kind=DocElementKind.IMAGE, role="visual",
+                                   bbox=Bbox(x=0.3 + t_index * 0.34, y=0.66, w=0.33, h=0.26),
+                                   asset_id=sib.id))
     return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order, section="proof",
                     layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
                     claim_ids=[claim_id], notes="proof archetype (one surface per page)")
 
 
 def _claims_bullets_slide(slide_id: str, order: int, heading: str,
-                          picked: list, qualifiers: dict) -> DocSlide:
+                          picked: list, qualifiers: dict,
+                          visual_asset_id: str | None = None) -> DocSlide:
     """bullets archetype: chevron takeaways, each the claim's own words."""
     elements = [DocElement(id="title", kind=DocElementKind.TEXT, role="title",
                            bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08), text=heading,
@@ -566,6 +578,17 @@ def _claims_bullets_slide(slide_id: str, order: int, heading: str,
                                    style=_CHEVRON_STYLE, binding_paths=[f"element:{el_id}"]))
         bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
                                     claim_id=claim.id, transform_class="truncation"))
+    if visual_asset_id:
+        # bullets archetype: chevrons left, one large supporting visual right,
+        # drawn scene art filling the lower-left (DESIGN_SLIDES law 1)
+        for el in elements[1:]:
+            el.bbox = Bbox(x=el.bbox.x, y=el.bbox.y, w=0.44, h=el.bbox.h)
+        elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
+                                   bbox=Bbox(x=0.51, y=0.24, w=0.46, h=0.64),
+                                   asset_id=visual_asset_id))
+        elements.append(DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
+                                   bbox=Bbox(x=0.03, y=0.46, w=0.44, h=0.42),
+                                   asset_id="gen-ask-scene" if "ask" in slide_id else "gen-valueprop-scene"))
     quals = [qualifiers[c.id] for c in picked if c.id in qualifiers]
     if quals:
         elements.append(DocElement(id="qualifier", kind=DocElementKind.TEXT, role="footer",
@@ -612,8 +635,48 @@ def materialize_outline(
     slides: list[DocSlide] = []
     order = 1
 
+    scene_art = {"m-problem-solution": "gen-problem-scene",
+                 "m-value-prop": "gen-valueprop-scene", "m-roadmap": "gen-roadmap-scene",
+                 "m-architecture": "gen-architecture-scene"}
+
     def add(slide):  # noqa: ANN001
         nonlocal order
+        # Principal drawn-scene art (DESIGN_SLIDES law 1: the illustration zone
+        # is FULL): squeeze any vector diagram right, scene art takes the left.
+        if slide.id == "m-thesis":
+            slide = slide.model_copy(update={
+                "elements": [e for e in slide.elements if e.id != "metaphor"] + [DocElement(
+                    id="thesis-mark", kind=DocElementKind.IMAGE, role="badge",
+                    bbox=Bbox(x=0.74, y=0.56, w=0.16, h=0.28),
+                    asset_id="sparta-helmet-mark-png")]})
+        if slide.order == 1 and not any(
+                e.kind is DocElementKind.IMAGE and e.id == "cover-mark" for e in slide.elements):
+            slide.elements = slide.elements + [DocElement(
+                id="cover-mark", kind=DocElementKind.IMAGE, role="badge",
+                bbox=Bbox(x=0.66, y=0.3, w=0.26, h=0.44), asset_id="sparta-helmet-mark-png")]
+        art = scene_art.get(slide.id)
+        if art and not any(e.kind is DocElementKind.IMAGE and e.role == "visual" for e in slide.elements):
+            # The drawn scene IS the illustration; a squeezed vector diagram
+            # beside it renders as clutter. Scene takes the full zone (law 1).
+            # One model_copy: per-field assignment re-validates against the OLD
+            # recipe and refuses the transitional state.
+            new_elements = [e for e in slide.elements if e.kind is not DocElementKind.DIAGRAM] + [
+                DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
+                           bbox=Bbox(x=0.02, y=0.42, w=0.96, h=0.5), asset_id=art)]
+            has_chevrons = any(e.role == "chevrons" for e in new_elements)
+            slide = slide.model_copy(update={
+                "elements": new_elements,
+                "bindings": [b for b in slide.bindings if b.path != "element:diagram"],
+                "intent": slide.intent.model_copy(update={
+                    "recipe": "assertion-chevrons-scene" if has_chevrons else "statement-thesis",
+                    "reveal_order": [r for r in slide.intent.reveal_order if r != "diagram"],
+                }) if slide.intent is not None else None})
+        # Every corpus page carries an authored bottom-left identity mark (a
+        # logo row of pictures, 262/263 slides) — stamp it on every slide.
+        if not any(e.kind is DocElementKind.IMAGE and e.id == "house-mark" for e in slide.elements):
+            slide.elements = slide.elements + [DocElement(
+                id="house-mark", kind=DocElementKind.IMAGE, role="badge",
+                bbox=Bbox(x=0.02, y=0.875, w=0.05, h=0.09), asset_id="sparta-helmet-mark-png")]
         slides.append(slide); order += 1
 
     if "cover" in by_name:
@@ -632,18 +695,22 @@ def materialize_outline(
     claims_by_id_local = {c.id: c for c in ledger.claims}
     extra_content = {
         "How It Works": ("m-ask", "What You Can Ask",
-                          ["sparta-public-three-questions", "sparta-public-f36-demo"]),
+                          ["sparta-public-three-questions", "sparta-public-f36-demo"],
+                          "sparta-chat-console"),
         "Where This Goes": ("m-partners", "Where It Runs, Who It Is For",
-                            ["sparta-public-embry-foundation", "sparta-public-collaboration-stage"]),
+                            ["sparta-public-embry-foundation", "sparta-public-collaboration-stage"],
+                            "sparta-global-posture"),
     }
     for section_name, module_names in sections:
         add(_interstitial(order, f"m-div-{section_name.lower().replace(' ', '-')}",
                           "section-divider", section_name))
         for module_name in module_names:
             if module_name == "proof" and surfaces_claim is not None and proof_assets:
-                for asset in proof_assets:
+                for a_index, asset in enumerate(proof_assets):
+                    sibs = [a for a in proof_assets if a.id != asset.id]
+                    sibs = sibs[a_index % max(len(sibs), 1):] + sibs[:a_index % max(len(sibs), 1)]
                     add(_proof_slide_for_asset(order, asset, surfaces_claim.id,
-                                               surfaces_claim.text, qualifiers))
+                                               surfaces_claim.text, qualifiers, siblings=sibs))
                 continue
             if module_name in by_name:
                 add(_materialize_slide(by_name[module_name], order, recipes, title, tagline,
@@ -651,10 +718,11 @@ def materialize_outline(
                                        qualifiers=qualifiers, claim_text_map=claim_text_map,
                                        context_ask=context.desired_action))
         if section_name in extra_content:
-            sid, heading, wanted = extra_content[section_name]
+            sid, heading, wanted, visual = extra_content[section_name]
             picked = [claims_by_id_local[c] for c in wanted if c in claims_by_id_local]
             if picked:
-                add(_claims_bullets_slide(sid, order, heading, picked, qualifiers))
+                add(_claims_bullets_slide(sid, order, heading, picked, qualifiers,
+                                          visual_asset_id=visual))
     add(_interstitial(order, "m-close", "close", "Open Discussion", mark=True))
     return DeckDocument(
         deck=DeckMeta(

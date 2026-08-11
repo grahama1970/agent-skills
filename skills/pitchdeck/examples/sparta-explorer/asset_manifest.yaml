@@ -1,6 +1,83 @@
 schema: pitchdeck.asset_manifest.v1
 project_name: Sparta Explorer
 assets:
+  - id: gen-problem-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-problem-scene.png
+    required: false
+    alt_text: "Drawn scene: robot analyst amid scattered space-cyber documents and warning marks"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: gen-architecture-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-architecture-scene.png
+    required: false
+    alt_text: "Drawn scene: documents flowing along a dotted path into one organized evidence thread"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: gen-valueprop-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-valueprop-scene.png
+    required: false
+    alt_text: "Drawn scene: analyst and robot reviewing one organized evidence board together"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: gen-thesis-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-thesis-scene.png
+    required: false
+    alt_text: "Drawn scene: a single golden thread connecting scattered document pages"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: gen-roadmap-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-roadmap-scene.png
+    required: false
+    alt_text: "Drawn scene: milestone road toward an orbiting satellite"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: gen-ask-scene
+    kind: illustration
+    visibility: public
+    local_path: assets/gen-ask-scene.png
+    required: false
+    alt_text: "Drawn scene: a person asking a robot librarian a question before an archive wall"
+    target_aspect: "16:9"
+    status: present
+    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: sparta-helmet-mark-png
+    kind: logo
+    visibility: public
+    local_path: assets/sparta-helmet-mark.png
+    required: false
+    alt_text: Sparta Explorer cyan helmet mark (raster fallback)
+    target_aspect: "1:1"
+    status: present
+    generation_brief: Rasterized from sparta-front-helmet-cyan.svg at 1024x1024 (rsvg-convert, 2026-08-11).
+    source_ref:
+      source_id: sparta-public-readme
   - id: sparta-helmet-mark
     kind: logo
     visibility: public

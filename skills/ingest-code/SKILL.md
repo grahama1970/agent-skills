@@ -40,6 +40,7 @@ Codebase ingestion into `/memory`:
 2. **Phase 2 — CWE Scanning**: `/taxonomy` extracts security-relevant patterns (bridge tags + CWE mappings) per file.
 3. **Phase 3 — Relationship Edges**: Python import analysis stores resolved code dependency edges in `/memory`; the local code-graph bundle also records typed import/call/inheritance occurrences, including inactive unresolved and ambiguous candidates for audit.
 4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits a complete code-graph bundle and applies it through Memory/GMO's governed `/code/projection/apply` lifecycle endpoint.
+5. **Static Debugger Affordances**: Code-graph bundles emit `debugger.invocation_candidate.v1` rows in `debug_invocations.jsonl`. These are candidate routes only; `$debugger` must prove a candidate at runtime before Memory can promote it.
 
 Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured files, symbols, and edges are canonicalized by Memory/GMO's complete projection lifecycle, not by independent per-symbol batches. `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to ArangoDB or Qdrant directly.
 
@@ -62,6 +63,14 @@ cd .pi/skills/ingest-code
 
 # Nightly rescan (only files modified in last day)
 ./run.sh rescan --since 1d -c /path/to/codebase --treesitter
+
+# Read-only target freshness check before using Memory code snippets for repair
+./run.sh ensure-current \
+  --repo /path/to/codebase \
+  --branch main \
+  --commit "$COMMIT_SHA" \
+  --path src/example.py \
+  --json
 ```
 
 ## Commands
@@ -100,6 +109,46 @@ Options:
   --scope            Memory scope
 ```
 
+### `ensure-current` — Target-Scoped Projection Freshness Preflight
+
+```bash
+./run.sh ensure-current [OPTIONS]
+
+Options:
+  --repo             Repository worktree to check (required)
+  --branch           Expected branch/ref name (default: current branch)
+  --commit           Expected commit SHA (default: current HEAD)
+  --path             Repository-relative target path; repeatable
+  --scope            Memory/GMO projection scope (default: "code")
+  --json             Emit `ingest-code.code_projection_freshness.v1`
+  --refresh          Explicitly refresh through `scan --treesitter --code-index`
+  --canonical-branch Branch allowed to activate canonical projection (default: "main")
+  --max-target-files Bound directory expansion (default: 200)
+```
+
+`ensure-current` is the pre-repair gate for stateless workers. It resolves the
+repository root, branch, commit, and target paths; rejects absolute paths,
+`..`, and repository escapes; reads active code-search/code-node/code-coverage
+state through the supported Memory/GMO code-navigation boundary; then compares
+current source hashes with indexed source hashes for the requested targets.
+
+The result status is one of:
+
+| Status | Meaning |
+|--------|---------|
+| `CURRENT` | Active Memory/GMO source hashes match current target files and coverage allows modification guidance. |
+| `SOURCE_CURRENT_INDEX_INCOMPLETE` | Source bytes match, but coverage is incomplete, so exhaustive callers/callees/impact absence claims are blocked. |
+| `STALE` | Current source differs from the active projection; stored snippets are not modification authority. |
+| `UNINDEXED` | No applicable active projection record matched the target. |
+| `BLOCKED` | Identity, containment, service, receipt, or validation failed closed. |
+
+Default `ensure-current` is read-only. It must not parse files, create
+embeddings, apply projections, or fall back to legacy per-symbol writes. With
+`--refresh`, it may run the existing complete-bundle scan only when the checkout
+is clean, on the configured canonical branch, and bound to the requested
+commit. Feature/repair worktrees are refused so unreviewed code cannot replace
+the canonical main projection.
+
 ## What Gets Extracted
 
 ### Phase 1: Functional Knowledge (Python AST)
@@ -136,6 +185,25 @@ Each record includes:
 | `start_line`, `end_line`, `code`, `content_hash` | Cited source retrieval and deterministic updates |
 | `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for memory's sparse/hybrid retrieval |
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
+
+Documentation metadata is provenance-safe:
+
+| Field | Purpose |
+|-------|---------|
+| `source_docstring` / `docstring` | Exact authored source docstring text, preserved for compatibility |
+| `source_docstring_status` | `present`, `missing`, `generated_file`, or `not_applicable` for v1 extraction |
+| `documentation_need` | Deterministic triage: `required`, `recommended`, `optional`, or `exempt` |
+| `documentation_need_reasons` | Source-derived reasons such as `public_api`, `external_io`, `security`, `mutation`, or `trivial_helper` |
+| `summary_evidence` | Canonical source-fact packet and hash for optional generated summaries |
+| `derived_summary` | Current unreviewed generated summary only when bound to the current `symbol_version_id`, source hash, and evidence hash |
+| `retrieval_text`, `retrieval_text_sha256`, `purpose_source` | Canonical semantic text and hash used by Memory retrieval |
+
+Generated or model-written summaries are never copied into `docstring` or
+`source_docstring`, and `/ingest-code` never rewrites source files to add
+docstrings. Authored docstrings are preferred in retrieval text. A derived
+summary may appear only as `derived_summary.status="derived_unreviewed"` and
+only while its source/evidence hashes match the current symbol version; stale
+or malformed summaries fail closed to `null`.
 
 Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
 
@@ -293,6 +361,33 @@ by default. The legacy per-symbol Memory upsert path remains only under
 `--compat-symbol-upsert` and emits a visible warning because it is not
 complete-projection lifecycle authority.
 
+### CocoIndex Incremental Evaluation
+
+`skills/ingest-code/evals/cocoindex-incremental/run.sh --offline-fixtures`
+compares the native file-component cache against a pinned noncanonical
+CocoIndex scheduler adapter. CocoIndex is eval-only and must not become Memory
+state, a retrieval authority, or a production dependency from benchmark claims
+alone.
+
+The eval pins `cocoindex==1.0.19`, verifies the installed package checksum,
+copies fixtures into an isolated artifact directory, blocks outbound network
+connections during fixture execution, and emits:
+
+```text
+execution-receipt.json
+native-results.json
+cocoindex-results.json
+bundle-comparison.json
+invalidations.json
+recovery-results.json
+decision.md
+```
+
+The adapter may use CocoIndex memoized functions as disposable scheduling/cache
+evidence, but both arms must emit the existing backend-neutral code-graph bundle
+shape. The command fails closed if either arm does not run, if normalized bundle
+digests diverge, if fixtures are modified, or if backend effects are observed.
+
 ## Local Agent Artifacts
 
 `/ingest-code` also leaves local artifacts for project agents that cannot or
@@ -307,7 +402,7 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/files.jsonl` | Root-relative file records with stable file IDs, language, parse/skip/ignored/failed status, source hash, and reason |
 | `artifacts/ingest-code/code-graph/symbols.jsonl` | Symbol records with `symbol_id`, `symbol_version_id`, `legacy_key`, source range, content hash, and Memory-compatible document shape |
 | `artifacts/ingest-code/code-graph/edges.jsonl` | Deterministic typed `DEFINES`/`IMPORTS`/`CALLS`/`INHERITS` occurrence edges with resolution status, active traversal gate, source spans, confidence, and provenance |
-| `artifacts/ingest-code/code-graph/debug_invocations.jsonl` | Reserved v1 debug invocation candidates; currently empty unless a future extractor produces static debugger recipes |
+| `artifacts/ingest-code/code-graph/debug_invocations.jsonl` | Static debugger invocation candidates bound to current symbol/source version, with pytest/CLI/HTTP/worker/direct/factory hints plus side-effect and fixture limitations |
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
@@ -315,6 +410,32 @@ should not query `/memory` during a task:
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
+
+## Static Debugger Invocation Candidates
+
+`debug_invocations.jsonl` is a handoff artifact for `$debugger`, not proof that
+an invocation works. Each row is bound to repository, branch, commit,
+`symbol_id`, `symbol_version_id`, source path/range, content hash, and
+`ingest-code.debug_affordance.v1`.
+
+Supported v1 invocation kinds are `pytest`, `cli`, `http`, `attach_runtime`,
+`direct`, and `factory_method`.
+
+Status values remain static and conservative:
+
+- `candidate_static`: a static candidate that still needs debugger proof.
+- `needs_fixture`: required arguments, async/generator/context-manager behavior,
+  HTTP/app context, overload declarations, classes, or ordinary instance methods
+  need a fixture or adapter.
+- `unsafe_direct`: static evidence found filesystem, database, network, mutation,
+  or destructive indicators, so no direct command is emitted.
+- `attach_runtime`: a worker/runtime attach point is visible, but a live runtime
+  harness is required.
+
+`ingest-code` does not execute candidates, create launch configurations, or
+mark anything `verified_*`. Runtime promotion belongs to `$debugger` and Memory.
+Changing `debug_affordance.py` invalidates incremental file-component reuse via
+the `debug_invocation_candidates` transform fingerprint.
 
 ## Related Skills
 

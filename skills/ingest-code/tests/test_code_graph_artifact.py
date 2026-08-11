@@ -142,6 +142,7 @@ def test_code_graph_bundle_is_deterministic_and_self_describing(tmp_path: Path) 
     assert coverage["fail_closed"] is True
     assert coverage["counts"]["files_failed"] == 1
     assert coverage["counts"]["files_ignored"] == 1
+    assert coverage["counts"]["debug_invocation_candidates"] >= 1
 
     symbols = _jsonl(bundle / "symbols.jsonl")
     assert symbols[0]["symbol_id"] == _symbol(repo).symbol_id
@@ -153,6 +154,10 @@ def test_code_graph_bundle_is_deterministic_and_self_describing(tmp_path: Path) 
     assert edges[0]["status"] == "resolved"
     assert edges[0]["from_path"] == "pkg/consumer.py"
     assert edges[0]["to_path"] == "pkg/good.py"
+
+    debug_invocations = _jsonl(bundle / "debug_invocations.jsonl")
+    assert debug_invocations[0]["schema"] == "debugger.invocation_candidate.v1"
+    assert debug_invocations[0]["symbol_id"] == _symbol(repo).symbol_id
 
 
 def test_scan_dry_run_emits_code_graph_without_memory_upsert(monkeypatch, tmp_path: Path) -> None:

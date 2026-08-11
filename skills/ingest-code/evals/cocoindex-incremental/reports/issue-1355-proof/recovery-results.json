@@ -1,0 +1,14 @@
+{
+  "cache_corruption": {
+    "cocoindex": {},
+    "native": {}
+  },
+  "interrupted_run_recovery": {
+    "cocoindex": {},
+    "native": {}
+  },
+  "prior_incomplete_bundle": {
+    "cocoindex": {},
+    "native": {}
+  }
+}

@@ -293,7 +293,7 @@ class CodeMemoryClient:
                 errors.append(
                     f"HTTP {response.status_code}: {detail}" if detail else f"HTTP {response.status_code}"
                 )
-        return MemoryWriteResult(stored=removed, errors=errors)
+        return MemoryWriteResult(stored=removed, attempted=len(symbol_ids), errors=errors)
 
     def store_legacy_code_symbol(
         self,
