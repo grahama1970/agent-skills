@@ -546,7 +546,7 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                                    style=DocTextStyle(size_pt=12.0, color="#595959"),
                                    binding_paths=["footer"]))
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
-    return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order,
+    return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order, section="proof",
                     layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
                     claim_ids=[claim_id], notes="proof archetype (one surface per page)")
 

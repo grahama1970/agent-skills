@@ -1150,21 +1150,32 @@ def test_outline_to_materialized_document(tmp_path):
     approved = approve_outline(outline, approved_by="test", approved_at="2026-08-07T00:00:00Z")
     doc = materialize_outline(approved, context, ledger, sources, assets)
 
-    # approved order + all six house recipes; golden recipe set reproduced
-    assert [s.section for s in doc.slides] == arc
+    # The materializer now assembles the full Graham-shaped arc (toc, section
+    # dividers, per-screenshot proof pages, coverage slides, close) around the
+    # module slides, so the modules are an ordered SUBSEQUENCE, not the whole.
+    module_sections = [s.section for s in doc.slides if s.section in arc]
+    deduped = [sec for i, sec in enumerate(module_sections) if i == 0 or sec != module_sections[i - 1]]
+    assert deduped == arc  # proof expands to one slide per screenshot
     golden_recipes = [s["intent"]["recipe"] for s in golden["slides"]]
     # roadmap-gates (visual review 2026-08-07) supersedes roadmap-lanes for
     # NEW materializations; the golden document keeps lanes (bytes unchanged).
     evolved = [r if r != "roadmap-lanes" else "roadmap-gates" for r in golden_recipes]
-    assert [s.intent.recipe for s in doc.slides] == evolved
+    first_per_section = {}
+    for sl in doc.slides:
+        if sl.section in arc and sl.intent is not None and sl.section not in first_per_section:
+            first_per_section[sl.section] = sl.intent.recipe
+    # proof expands to intent-less evidence pages; its golden recipe no longer applies
+    assert [first_per_section.get(sec) for sec in arc if sec != "proof"] == [
+        r for sec, r in zip(arc, evolved) if sec != "proof"]
     # zero dropped claim ids vs golden contract
     golden_claims = {c for s in golden["slides"] for c in s["claim_ids"]}
     materialized_claims = {c for s in doc.slides for c in s.claim_ids}
     assert golden_claims <= materialized_claims
-    # assertion headlines are bound claim texts, never labels
+    # assertion headlines on MODULE slides are bound claim texts, never labels
     ledger_texts = {c.text for c in ledger.claims}
-    for slide in doc.slides[1:]:
-        assert slide.intent.assertion in ledger_texts
+    for slide in doc.slides:
+        if slide.section in arc[1:] and slide.intent is not None:
+            assert slide.intent.assertion in ledger_texts
     # determinism
     assert doc.model_dump_json(by_alias=True) == materialize_outline(approved, context, ledger, sources, assets).model_dump_json(by_alias=True)
 
