@@ -70,3 +70,10 @@ def test_empty_mandates_falls_back_not_empty() -> None:
     assert queries  # never silently empty
     for q in queries:
         assert "keywords=" in q["url"]
+
+
+def test_easy_apply_filter() -> None:
+    p = _params(build_linkedin_search_url("AI architect", ["remote"], easy_apply=True))
+    assert p["f_AL"] == ["true"]
+    p2 = _params(build_linkedin_search_url("AI architect", ["remote"]))
+    assert "f_AL" not in p2

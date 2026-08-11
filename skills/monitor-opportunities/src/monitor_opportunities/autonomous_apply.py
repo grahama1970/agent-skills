@@ -49,6 +49,9 @@ _FIELD_MAP: tuple[tuple[str, str], ...] = (
     (r"relocat", "screening.willing_to_relocate"),
 )
 _UNRESOLVED_MARKERS = ("PLACEHOLDER", "GENERATED")
+# PII that is filled ONLY when the field is required — minimize exposure on
+# optional fields (Graham 2026-08-11: only add phone where it's required).
+_REQUIRED_ONLY_PATHS = frozenset({"identity.phone"})
 
 
 def _load_bank(path: Path = ANSWER_BANK) -> dict[str, Any]:
@@ -75,6 +78,9 @@ def resolve_field(field: dict[str, Any], bank: dict[str, Any], resume_path: str 
                 "value": resume_path, "source": "tailored_resume", "required": required}
     for pattern, dotted in _FIELD_MAP:
         if re.search(pattern, low):
+            # PII-minimization: skip required-only fields (phone) when optional.
+            if dotted in _REQUIRED_ONLY_PATHS and not required:
+                return {"name": name, "disposition": "omit", "value": None, "source": dotted, "required": required}
             val = _dotted(bank, dotted)
             if isinstance(val, str) and val and not any(m in val for m in _UNRESOLVED_MARKERS):
                 return {"name": name, "disposition": "auto_fill", "value": val, "source": dotted, "required": required}
@@ -88,6 +94,7 @@ def resolve_application(form: dict[str, Any], resume_path: str | None, bank: dic
     resolved = [resolve_field(f, bank, resume_path) for f in form.get("fields", [])]
     auto = [r for r in resolved if r["disposition"] == "auto_fill"]
     queued = [r for r in resolved if r["disposition"] == "queue"]
+    omitted = [r for r in resolved if r["disposition"] == "omit"]  # intentionally skipped PII (optional)
     required_queued = [r for r in queued if r["required"]]
     total = len(resolved) or 1
     return {
@@ -95,6 +102,7 @@ def resolve_application(form: dict[str, Any], resume_path: str | None, bank: dic
         "site": form.get("site"),
         "auto_fillable": len(auto),
         "queued": len(queued),
+        "omitted_optional_pii": [r["name"] for r in omitted],
         "required_queued": [r["name"] for r in required_queued],
         "coverage": round(len(auto) / total, 2),
         "auto_submittable": len(required_queued) == 0,
