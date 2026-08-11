@@ -163,13 +163,25 @@ def _gate_scene(nodes):
         return None  # fall back to the row rather than emit a broken scene
 
 
-def _bind_and_return(graph, claim_id: str, bindings: list):
+def _bind_and_return(graph, claim_id: str, bindings: list, claim_texts: dict | None = None):
     """Bind every label, then hand the graph back for placement."""
-    _bind_diagram_labels(graph, claim_id, bindings)
+    _bind_diagram_labels(graph, claim_id, bindings, claim_texts)
     return graph
 
 
-def _bind_diagram_labels(graph, claim_id: str, bindings: list) -> None:
+def _classify_label(text: str, claim_text: str):
+    """Truncation only when the text really IS an excerpt; otherwise generalization."""
+    import re as _re
+
+    probe = " ".join((text or "").split()).strip().rstrip(".")
+    if probe and claim_text:
+        pattern = r"(?<![A-Za-z0-9])" + _re.escape(probe) + r"(?![A-Za-z0-9])"
+        if _re.search(pattern, claim_text, flags=_re.IGNORECASE):
+            return BindingKind.CLAIM_QUOTE, "truncation"
+    return BindingKind.CLAIM_PARAPHRASE, "generalization"
+
+
+def _bind_diagram_labels(graph, claim_id: str, bindings: list, claim_texts: dict | None = None) -> None:
     """Declare a TextBinding for EVERY labelled node and edge (#1328).
 
     A diagram used to carry one element-level binding, which let a label such as
@@ -177,6 +189,7 @@ def _bind_diagram_labels(graph, claim_id: str, bindings: list) -> None:
     Each label now names its own path and gets a matching binding carrying the
     source claim and transform class, so verify-publish can prove the string
     from the ledger instead of an approvals file enumerating it by hand."""
+    claim_texts = claim_texts or {}
     declared = {b.path for b in bindings}
     for node in graph.nodes:
         if not node.label.strip():
@@ -188,11 +201,22 @@ def _bind_diagram_labels(graph, claim_id: str, bindings: list) -> None:
         # write, so stripping the coarse path before adding the specific one
         # would momentarily leave a labelled node unbound and trip its guard.
         kept = [q for q in node.binding_paths if not q.startswith("element:")]
-        node.binding_paths = kept + ([f"{node.id}:label"] if f"{node.id}:label" not in kept else [])
+        wanted = [f"{node.id}:label"]
+        if (node.sublabel or "").strip():
+            # a sublabel renders as its own visible paragraph, so it needs its
+            # own provenance — a label's binding must not authorize it (#1371)
+            wanted.append(f"{node.id}:sublabel")
+        node.binding_paths = kept + [w for w in wanted if w not in kept]
         for path in node.binding_paths:
             if path not in declared:
-                bindings.append(TextBinding(path=path, kind=BindingKind.CLAIM_QUOTE,
-                                            claim_id=claim_id, transform_class="truncation"))
+                # Classify honestly instead of stamping 'truncation' on everything:
+                # a label that is not a word-boundary excerpt of its claim is a
+                # generalization, which no machine can verify and which therefore
+                # requires human attestation downstream (#1371).
+                source = node.sublabel if path.endswith(":sublabel") else node.label
+                kind, transform = _classify_label(source or "", claim_texts.get(claim_id, ""))
+                bindings.append(TextBinding(path=path, kind=kind, claim_id=claim_id,
+                                            transform_class=transform))
                 declared.add(path)
     for edge in graph.edges:
         if edge.decorative or not (edge.label or "").strip():
@@ -201,8 +225,9 @@ def _bind_diagram_labels(graph, claim_id: str, bindings: list) -> None:
         edge.binding_paths = kept + ([f"{edge.id}:label"] if f"{edge.id}:label" not in kept else [])
         for path in edge.binding_paths:
             if path not in declared:
-                bindings.append(TextBinding(path=path, kind=BindingKind.CLAIM_PARAPHRASE,
-                                            claim_id=claim_id, transform_class="generalization"))
+                kind, transform = _classify_label(edge.label or "", claim_texts.get(claim_id, ""))
+                bindings.append(TextBinding(path=path, kind=kind, claim_id=claim_id,
+                                            transform_class=transform))
                 declared.add(path)
 
 
@@ -220,7 +245,8 @@ def _fill_diagram_canvas(graph):
     return filled
 
 
-def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None, context_ask: str | None = None) -> DocSlide:
+def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: str, tagline: str | None = None, *, use_candidate_renderings: bool = False, qualifiers: dict[str, str] | None = None, context_ask: str | None = None, claim_text_map: dict | None = None) -> DocSlide:
+    claim_text_map = claim_text_map or {}
     recipe = _resolve_recipe(module, recipes)
     assertion, claim_id, transform = _assertion_for(module, deck_title, use_candidate_renderings=use_candidate_renderings)
     if assertion.strip().lower().rstrip(".?!") in _LABEL_HEADLINES:
@@ -299,8 +325,9 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
             ))
             source_claim = (module.candidate_claim_ids[0] if recipe.id == "roadmap-lanes"
                             else module.candidate_claim_ids[min(index + 1, len(module.candidate_claim_ids) - 1)])
-            bindings.append(TextBinding(path=f"element:{el_id}", kind=BindingKind.CLAIM_QUOTE,
-                                        claim_id=source_claim, transform_class="truncation"))
+            _k, _t = _classify_label(text, claim_text_map.get(source_claim, ""))
+            bindings.append(TextBinding(path=f"element:{el_id}", kind=_k,
+                                        claim_id=source_claim, transform_class=_t))
             reveal.append(el_id)
 
     if recipe.id == "roadmap-gates":
@@ -329,7 +356,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
             bbox=Bbox(x=0.05, y=_after_chevrons(reveal, 0.30), w=0.9, h=0.90 - _after_chevrons(reveal, 0.30)),
             diagram=_bind_and_return(_gate_scene(nodes) or _fill_diagram_canvas(
                 DiagramGraph(recipe="pipeline", nodes=nodes, edges=edges)),
-                module.candidate_claim_ids[0], bindings),
+                module.candidate_claim_ids[0], bindings, claim_text_map),
             binding_paths=["element:diagram"],
             entrance=DocEntrance(effect="fade"),
         ))
@@ -354,7 +381,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
                 node_prefix="scene",
                 binding_paths=["element:diagram"],
             )
-        graph = _bind_and_return(_fill_diagram_canvas(graph), claim_id or claim_ids[0], bindings)
+        graph = _bind_and_return(_fill_diagram_canvas(graph), claim_id or claim_ids[0], bindings, claim_text_map)
         elements.append(DocElement(
             id="diagram", kind=DocElementKind.DIAGRAM, role="diagram",
             bbox=Bbox(x=0.06, y=_after_chevrons(reveal, 0.24), w=0.88, h=0.90 - _after_chevrons(reveal, 0.24)),
@@ -378,13 +405,19 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
     if "callout" in {r.value for r in recipe.required_roles}:
         # ONE complete complementary takeaway (title already carries the primary
         # claim; visual-review rule: complete text, never clipped; budget-safe).
-        callout_source = module.candidate_assertions[1:2] or module.candidate_assertions[:1]
+        callout_index = 1 if len(module.candidate_assertions) > 1 else 0
+        callout_source = module.candidate_assertions[callout_index:callout_index + 1]
+        # cite the claim this text came from, not claim_ids[0]: the assertion at
+        # index N derives from the claim at index N (#1371 caught the mismatch)
+        callout_claim = module.candidate_claim_ids[
+            min(callout_index, len(module.candidate_claim_ids) - 1)]
         callout_lines = "\n\n".join(f"> {_truncate_words(t, 200)}" for t in callout_source)
         elements.append(DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
                                    bbox=Bbox(x=0.05, y=0.20, w=0.29, h=0.62), text=callout_lines,
                                    style=_CHEVRON_STYLE, binding_paths=["element:callout"]))
-        bindings.append(TextBinding(path="element:callout", kind=BindingKind.CLAIM_QUOTE,
-                                    claim_id=claim_ids[0], transform_class="truncation"))
+        _k, _t = _classify_label(callout_lines, claim_text_map.get(callout_claim, ""))
+        bindings.append(TextBinding(path="element:callout", kind=_k,
+                                    claim_id=callout_claim, transform_class=_t))
 
     badge = _MODULE_BADGES.get(module.module)
     if badge:
@@ -452,9 +485,10 @@ def materialize_outline(
     title = _deck_title(context)
     tagline = context.objective.split("—")[-1].strip() if "—" in context.objective else context.primary_ask
     qualifiers = {c.id: c.required_qualifier for c in ledger.claims if getattr(c, "required_qualifier", None)}
+    claim_text_map = {c.id: c.text for c in ledger.claims}
     slides = [
         _materialize_slide(module, order, recipes, title, tagline,
-                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers,
+                           use_candidate_renderings=use_candidate_renderings, qualifiers=qualifiers, claim_text_map=claim_text_map,
                            context_ask=context.desired_action)
         for order, module in enumerate(active, start=1)
     ]
