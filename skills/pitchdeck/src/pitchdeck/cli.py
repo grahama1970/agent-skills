@@ -565,6 +565,8 @@ def verify_publish_cmd(
     approvals: Annotated[Path | None, typer.Option(help="pitchdeck.publish_approvals.v1 JSON: approved renderings, chrome text, disclaimer, stale-owner markers.")] = None,
     template_contract: Annotated[Path | None, typer.Option(help="pitchdeck.template_contract.v1 JSON to check the deck still derives from the approved template.")] = None,
     document: Annotated[Path | None, typer.Option(help="The approved deck.document.json: supplies compiler-emitted assertion atoms so provenance is never hand-enumerated.")] = None,
+    build_manifest_path: Annotated[Path | None, typer.Option("--build-manifest", help="Build manifest: the document/pptx must be the exact artifacts the chain recorded.")] = None,
+    bundle_dir: Annotated[Path | None, typer.Option(help="Bundle dir (required with --build-manifest to re-digest inputs).")] = None,
     out: Annotated[Path | None, typer.Option(help="Write the publish receipt here.")] = None,
 ) -> None:
     """Re-prove the DELIVERED pptx: every visible string claim-bound (exit 1 on findings)."""
@@ -586,6 +588,23 @@ def verify_publish_cmd(
             from .document import DeckDocument
 
             doc_model = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
+        manifest_model = None
+        manifest_sources = None
+        if build_manifest_path is not None:
+            from .build_manifest import BuildManifest
+
+            manifest_model = BuildManifest.model_validate(json_mod.loads(build_manifest_path.read_text(encoding="utf-8")))
+            base = bundle_dir or ledger.parent
+            manifest_sources = {
+                "claim_ledger": base / "claim_ledger.yaml",
+                "source_manifest": base / "source_manifest.yaml",
+                "asset_manifest": base / "asset_manifest.yaml",
+                "canonical_document": document,
+            }
+            recorded = {i.role: i.path for i in manifest_model.inputs}
+            for role in ("approved_outline", "template", "icon_library"):
+                if recorded.get(role):
+                    manifest_sources[role] = Path(recorded[role])
         receipt = verify_publish(
             pptx,
             claim_texts=load_claim_texts(ledger),
@@ -593,6 +612,9 @@ def verify_publish_cmd(
             approvals=approval_model,
             template_contract=contract_model,
             document=doc_model,
+            manifest=manifest_model,
+            manifest_sources=manifest_sources,
+            repo_root=_skill_root().parents[1],
         )
         payload = receipt.model_dump(by_alias=True, mode="json")
         if out:
@@ -646,6 +668,61 @@ def emit_document_ui_cmd(
             "gaps": payload["validation_gaps"],
             "output": str(output_dir / "deck.data.json"),
         }, indent=1))
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="build-manifest")
+def build_manifest_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Bundle with claim_ledger/source_manifest/asset_manifest.")],
+    document: Annotated[Path, typer.Option(help="The canonical deck.document.json this build emitted.")],
+    outline: Annotated[Path, typer.Option(help="The APPROVED narrative outline.")],
+    output: Annotated[Path, typer.Option(help="Where to write the build manifest.")],
+    pptx: Annotated[Path | None, typer.Option(help="Delivered pptx to bind into the chain.")] = None,
+    house_template: Annotated[Path | None, typer.Option(help="House template the deck inherits from.")] = None,
+    verify: Annotated[bool, typer.Option("--verify", help="Re-compute every digest and fail on drift.")] = False,
+    allow_dirty: Annotated[bool, typer.Option("--allow-dirty", help="Permit an uncommitted compiler tree.")] = False,
+) -> None:
+    """Bind every input digest to the delivered artifact (#1332)."""
+    import json as json_mod
+
+    from .build_manifest import BuildManifest, build_manifest, verify_manifest
+
+    try:
+        repo_root = _skill_root().parents[1]
+        sources = {
+            "claim_ledger": bundle_dir / "claim_ledger.yaml",
+            "source_manifest": bundle_dir / "source_manifest.yaml",
+            "asset_manifest": bundle_dir / "asset_manifest.yaml",
+            "approved_outline": outline,
+            "canonical_document": document,
+            "icon_library": _skill_root() / "src" / "pitchdeck" / "design" / "icons" / "manifest.json",
+        }
+        if house_template is not None:
+            sources["template"] = house_template
+        if verify:
+            existing = BuildManifest.model_validate(json_mod.loads(output.read_text(encoding="utf-8")))
+            findings = verify_manifest(existing, repo_root=repo_root, sources=sources,
+                                       delivered_pptx=pptx, allow_dirty=allow_dirty)
+            typer.echo(json_mod.dumps({
+                "status": "PASS" if not findings else "DRIFT",
+                "chain_digest": existing.content_digest(),
+                "findings": [f.model_dump(mode="json") for f in findings],
+            }, indent=1))
+            raise typer.Exit(0 if not findings else 1)
+        manifest = build_manifest(repo_root=repo_root, sources=sources, delivered_pptx=pptx,
+                                  renderers={"libreoffice": shutil.which("soffice") or "absent"})
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json_mod.dumps(manifest.model_dump(by_alias=True, mode="json"), indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({
+            "status": "PASS",
+            "chain_digest": manifest.content_digest(),
+            "inputs": len(manifest.inputs),
+            "reproducible": manifest.compiler.reproducible,
+            "output": str(output),
+        }, indent=1))
+    except typer.Exit:
+        raise
     except Exception as exc:
         _abort(exc)
 
