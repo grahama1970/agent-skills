@@ -78,8 +78,11 @@ ls src/sparta/pipeline/[0-9]*.py
 ```
 
 **Module path is `sparta.pipeline.NN_name`, NOT `sparta.pipeline.steps.NN_name`.**
-`src/sparta/pipeline/steps/` exists but holds only `__pycache__` — zero `.py`
-files. Any `sparta.pipeline.steps.*` invocation fails with `No module named`.
+The old `steps/` subdirectory generation (56 files, e.g. `01d_map_cwe_nist`,
+steps 48-61) lives only on branch `feature/nrs-standardization` at `e1cba40`;
+on main its directory held nothing but stale bytecode and was removed
+2026-08-11. Any `sparta.pipeline.steps.*` invocation fails with `No module
+named`.
 
 ## Pipeline Steps (real, in src/sparta/pipeline/)
 
@@ -147,13 +150,13 @@ of an existing framework.
 
 ## Crosswalk Paths (CWE → SPARTA)
 
-Three paths connect CWE weaknesses to SPARTA countermeasures:
+Edge counts verified against the live corpus 2026-08-11:
 
-| Path | Hops | Data Source | Edges |
-|------|------|-------------|-------|
-| CWE → SPARTA (direct) | 1 | SPARTA v3.1 `cwe_class_ids` | 2,825+ |
-| CWE → NIST → SPARTA | 2 | Heimdall `nist_control_ids` + `tor_threats` | 289+ per NIST |
-| CWE → CAPEC → ATT&CK → SPARTA | 4 | MITRE curated fields | sparse |
+| Path | Hops | Data Source | Edges (live) |
+|------|------|-------------|--------------|
+| CWE → SPARTA (direct) | 1 | SPARTA v3.1 `cwe_class_ids` | 2,825 |
+| NIST → SPARTA | 1 | numbered pipeline | 121,957 |
+| CAPEC → CWE | 1 | MITRE curated fields | 1,212 |
 
 ### Direct Path (SPARTA v3.1)
 
@@ -161,36 +164,35 @@ Step 08 extracts `cwe_class_ids` from SPARTA Techniques and creates CWE→SPARTA
 
 ```bash
 # Run Step 08 to create/update CWE→SPARTA edges
-python -m sparta.pipeline.steps.08_relationships --run-id <run-id>
+uv run python -m sparta.pipeline.08_relationships --run-id <run-id>
 ```
 
-### NIST 2-hop Path (Heimdall)
+### CWE → NIST 2-hop Path (Heimdall): NOT ON MAIN
 
-Step 01d populates `nist_control_ids` on CWE controls from MITRE Heimdall CSV.
+Earlier revisions documented a `01d_map_cwe_nist` step populating
+`nist_control_ids` on CWE controls from the MITRE Heimdall CSV. That step lives
+only on branch `feature/nrs-standardization` (last commit `e1cba40`,
+2026-04-10) and was not carried into the current 37-step pipeline. Verified
+2026-08-11 on main: no Heimdall code, no `nist_control_ids` field on CWE
+controls, and zero CWE→NIST edges in `sparta_relationships`. Recover the step
+from that branch before documenting or depending on the 2-hop path.
 
-```bash
-# Run CWE→NIST mapping step
-python -m sparta.pipeline.steps.01d_map_cwe_nist --run-id <run-id>
-python -m sparta.pipeline.steps.01d_map_cwe_nist --download  # Fetch fresh CSV
-```
+### Edge Casing in sparta_relationships
 
-### Edge Casing in sparta_relationships (CRITICAL)
+Framework labels on edges are case-exact matches of `sparta_controls`
+labels since the 2026-08-11 `relationship_framework_label` repair
+(243,914 edges relabelled `nist`→`NIST`, `sparta`→`SPARTA`; zero lowercase
+labels remain).
 
 | Edge Type | source_framework | target_framework |
 |-----------|-----------------|------------------|
-| CWE→SPARTA | `"CWE"` | `"SPARTA"` (uppercase) |
-| NIST→SPARTA | `"nist"` | `"sparta"` (lowercase) |
+| CWE→SPARTA | `"CWE"` | `"SPARTA"` |
+| NIST→SPARTA | `"NIST"` | `"SPARTA"` |
 | CAPEC→CWE | `"CAPEC"` | `"CWE"` |
 
-**When querying for SPARTA targets, check BOTH cases:**
-
-```python
-for tf_case in ["sparta", "SPARTA"]:
-    resp = client.post("/list", json={
-        "collection": "sparta_relationships",
-        "filters": {"source_control_id": control_id, "target_framework": tf_case}
-    })
-```
+Write new edges with the exact `sparta_controls` label. monitor-sparta
+check 30 (`framework_label_alignment`) flags any edge whose framework label
+matches no control population.
 
 ## Explorer UX
 
