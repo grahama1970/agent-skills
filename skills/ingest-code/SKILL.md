@@ -63,6 +63,14 @@ cd .pi/skills/ingest-code
 
 # Nightly rescan (only files modified in last day)
 ./run.sh rescan --since 1d -c /path/to/codebase --treesitter
+
+# Read-only target freshness check before using Memory code snippets for repair
+./run.sh ensure-current \
+  --repo /path/to/codebase \
+  --branch main \
+  --commit "$COMMIT_SHA" \
+  --path src/example.py \
+  --json
 ```
 
 ## Commands
@@ -100,6 +108,46 @@ Options:
   --no-code-index    Disable structured code projection application
   --scope            Memory scope
 ```
+
+### `ensure-current` — Target-Scoped Projection Freshness Preflight
+
+```bash
+./run.sh ensure-current [OPTIONS]
+
+Options:
+  --repo             Repository worktree to check (required)
+  --branch           Expected branch/ref name (default: current branch)
+  --commit           Expected commit SHA (default: current HEAD)
+  --path             Repository-relative target path; repeatable
+  --scope            Memory/GMO projection scope (default: "code")
+  --json             Emit `ingest-code.code_projection_freshness.v1`
+  --refresh          Explicitly refresh through `scan --treesitter --code-index`
+  --canonical-branch Branch allowed to activate canonical projection (default: "main")
+  --max-target-files Bound directory expansion (default: 200)
+```
+
+`ensure-current` is the pre-repair gate for stateless workers. It resolves the
+repository root, branch, commit, and target paths; rejects absolute paths,
+`..`, and repository escapes; reads active code-search/code-node/code-coverage
+state through the supported Memory/GMO code-navigation boundary; then compares
+current source hashes with indexed source hashes for the requested targets.
+
+The result status is one of:
+
+| Status | Meaning |
+|--------|---------|
+| `CURRENT` | Active Memory/GMO source hashes match current target files and coverage allows modification guidance. |
+| `SOURCE_CURRENT_INDEX_INCOMPLETE` | Source bytes match, but coverage is incomplete, so exhaustive callers/callees/impact absence claims are blocked. |
+| `STALE` | Current source differs from the active projection; stored snippets are not modification authority. |
+| `UNINDEXED` | No applicable active projection record matched the target. |
+| `BLOCKED` | Identity, containment, service, receipt, or validation failed closed. |
+
+Default `ensure-current` is read-only. It must not parse files, create
+embeddings, apply projections, or fall back to legacy per-symbol writes. With
+`--refresh`, it may run the existing complete-bundle scan only when the checkout
+is clean, on the configured canonical branch, and bound to the requested
+commit. Feature/repair worktrees are refused so unreviewed code cannot replace
+the canonical main projection.
 
 ## What Gets Extracted
 

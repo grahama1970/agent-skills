@@ -33,6 +33,7 @@ import httpx
 from dotenv import load_dotenv
 
 from code_memory_client import CodeMemoryClient, code_graph_bundle_digest
+from code_freshness_preflight import refresh_allowed, run_preflight
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
 from incremental_state import FileComponentState, build_transform_fingerprints
@@ -1579,6 +1580,80 @@ def extract_knowledge(filepath: Path) -> list[dict]:
 
 
 cli = typer.Typer(help="Ingest codebases into /memory for knowledge extraction and CWE scanning.")
+
+
+@cli.command("ensure-current")
+def ensure_current(
+    repo: Path = typer.Option(..., "--repo", help="Repository worktree to check."),
+    branch: str = typer.Option("", "--branch", help="Expected branch/ref name. Defaults to current branch."),
+    commit: str = typer.Option("", "--commit", help="Expected commit SHA. Defaults to current HEAD."),
+    target_paths: list[str] = typer.Option([], "--path", help="Repository-relative target path. Repeatable."),
+    scope: str = typer.Option("code", "--scope", help="Memory/GMO projection scope."),
+    json_output: bool = typer.Option(True, "--json/--no-json", help="Emit machine-readable JSON."),
+    refresh: bool = typer.Option(False, "--refresh", help="Refresh canonical projection when policy allows it."),
+    canonical_branch: str = typer.Option("main", "--canonical-branch", help="Branch allowed to activate canonical projection."),
+    max_target_files: int = typer.Option(200, "--max-target-files", min=1, max=1000),
+):
+    """Check whether Memory/GMO's active code projection is fresh for target paths."""
+    repo = repo.expanduser().resolve()
+    requested_branch = branch or _current_branch(repo)
+    requested_commit = commit or _current_commit(repo)
+    receipt = run_preflight(
+        repo=repo,
+        branch=requested_branch,
+        commit=requested_commit,
+        targets=target_paths,
+        scope=scope,
+        max_target_files=max_target_files,
+    )
+
+    if refresh and receipt.get("status") in {"STALE", "UNINDEXED", "SOURCE_CURRENT_INDEX_INCOMPLETE"}:
+        allowed, errors = refresh_allowed(
+            repo=repo,
+            branch=requested_branch,
+            commit=requested_commit,
+            canonical_branch=canonical_branch,
+        )
+        if not allowed:
+            receipt["status"] = "BLOCKED"
+            receipt["modification_ready"] = False
+            receipt["absence_claims_allowed"] = False
+            receipt.setdefault("errors", []).extend(errors)
+            receipt.setdefault("unresolved_limitations", []).append(
+                "canonical projection refresh refused by checkout policy"
+            )
+        else:
+            scan(
+                path=repo,
+                glob=[],
+                cwe_only=False,
+                validate=False,
+                treesitter=True,
+                code_index=True,
+                compat_symbol_upsert=False,
+                dry_run=False,
+                scope=scope,
+                batch_size=50,
+            )
+            receipt = run_preflight(
+                repo=repo,
+                branch=requested_branch,
+                commit=requested_commit,
+                targets=target_paths,
+                scope=scope,
+                max_target_files=max_target_files,
+            )
+            receipt["refresh_attempted"] = True
+
+    if json_output:
+        print(json.dumps(receipt, indent=2, sort_keys=True), flush=True)
+    else:
+        print(f"{receipt.get('status')}: {', '.join(receipt.get('target_paths') or [])}", flush=True)
+        for error in receipt.get("errors") or []:
+            print(f"  error: {error}", file=sys.stderr, flush=True)
+
+    if receipt.get("status") == "BLOCKED":
+        raise typer.Exit(2)
 
 
 @cli.command()
