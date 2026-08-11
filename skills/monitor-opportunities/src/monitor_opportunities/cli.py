@@ -660,7 +660,14 @@ def nightly(
             packet["ats_form_path"] = form_receipt.get("form_path")
             packet["ats_form_field_count"] = form_receipt.get("field_count")
             packet["ats_form_human_required"] = form_receipt.get("human_required_fields")
-            ats_summary.append({"candidate_id": packet.get("candidate_id"), "status": form_receipt.get("status"), "fields": form_receipt.get("field_count")})
+            # Persist the learned apply form to /memory per opportunity (digest-bound;
+            # real forms only, not LinkedIn-view stubs). Fail-soft.
+            from .ats_store import store_learned_form
+
+            learned = store_learned_form(str(packet.get("candidate_id") or ""), form_receipt)
+            packet["ats_form_memory_key"] = learned.get("key")
+            packet["ats_form_stored"] = learned.get("stored")
+            ats_summary.append({"candidate_id": packet.get("candidate_id"), "status": form_receipt.get("status"), "fields": form_receipt.get("field_count"), "memory_stored": learned.get("stored")})
         apply_prep_path.write_text(json.dumps(packets, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     steps["ats_form_capture"] = {"captured": len(ats_summary), "top_k": ats_capture_top_k, "results": ats_summary}
 
