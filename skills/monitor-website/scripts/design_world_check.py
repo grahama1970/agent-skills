@@ -5,12 +5,13 @@ read receipt files when present and return NOT_TESTED only when evidence is
 absent — prose is not proof.
 """
 from __future__ import annotations
-import argparse, hashlib, json, re, sys
+import argparse, hashlib, json, os, re, subprocess, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 SITE = REPO / "site"
 DESIGN_ROUNDTABLE = SITE / "design-roundtable"
+EXPECTED_SOURCE_COMMIT: str | None = None
 
 
 def _load_yaml(p: Path):
@@ -61,6 +62,51 @@ def _load_json(path: Path) -> tuple[dict | None, str | None]:
         return json.loads(path.read_text()), None
     except json.JSONDecodeError as exc:
         return None, f"invalid_json: {exc}"
+
+
+def _active_source_commit() -> str | None:
+    env_value = os.environ.get("MONITOR_WEBSITE_EXPECTED_SOURCE_COMMIT")
+    if env_value:
+        return env_value.strip()
+    try:
+        head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        if head:
+            return head
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    manifest = SITE / "build-manifest.json"
+    if not manifest.is_file():
+        return None
+    data, err = _load_json(manifest)
+    if err or not data:
+        return None
+    value = data.get("source_commit")
+    return str(value).strip() if value else None
+
+
+def _same_git_commit(a: object, b: object) -> bool:
+    left = str(a or "").strip()
+    right = str(b or "").strip()
+    if not left or not right:
+        return False
+    if len(left) < 7 or len(right) < 7:
+        return left == right
+    return left.startswith(right) or right.startswith(left)
+
+
+def _receipt_source_commit(receipt: dict) -> str | None:
+    value = receipt.get("source_commit")
+    if value:
+        return str(value)
+    project = receipt.get("project")
+    if isinstance(project, dict) and project.get("source_revision"):
+        return str(project["source_revision"])
+    return None
 
 
 def _resolve_artifact(path_value: str) -> Path:
@@ -131,6 +177,16 @@ def _receipt_gate(
     if status not in {"PASS", "FAIL", "NOT_TESTED", "BLOCKED"}:
         errors.append("status must be one of PASS, FAIL, NOT_TESTED, BLOCKED")
 
+    active_commit = EXPECTED_SOURCE_COMMIT
+    receipt_commit = _receipt_source_commit(receipt)
+    if active_commit:
+        if not receipt_commit:
+            errors.append("receipt missing source_commit for active candidate binding")
+        elif not _same_git_commit(receipt_commit, active_commit):
+            errors.append(
+                f"receipt source_commit {receipt_commit} does not match active candidate {active_commit}"
+            )
+
     missing_artifacts = []
     hash_mismatches = []
     for field in required_artifacts or []:
@@ -152,8 +208,10 @@ def _receipt_gate(
     gate = {
         "status": "FAIL" if errors else status,
         "receipt": str(receipt_path),
-        "source_commit": receipt.get("source_commit"),
+        "source_commit": receipt_commit,
     }
+    if active_commit:
+        gate["active_source_commit"] = active_commit
     if "source_state" in receipt:
         gate["source_state"] = receipt["source_state"]
     if errors:
@@ -564,15 +622,27 @@ def craft_integrity_render_gate() -> dict:
 
 
 def main(argv=None) -> int:
+    global EXPECTED_SOURCE_COMMIT
     ap = argparse.ArgumentParser()
     ap.add_argument("--contract", default=str(SITE / "design-world.yml"))
     ap.add_argument("--css-dir", default=str(SITE / "app"))
+    ap.add_argument(
+        "--expected-source-commit",
+        default=None,
+        help=(
+            "candidate commit receipts must match; defaults to "
+            "MONITOR_WEBSITE_EXPECTED_SOURCE_COMMIT, then git HEAD, then site/build-manifest.json"
+        ),
+    )
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
+    EXPECTED_SOURCE_COMMIT = a.expected_source_commit or _active_source_commit()
 
     contract_path = Path(a.contract)
     result = {"schema": "monitor_website.design_world_check.v1",
               "contract": str(contract_path), "gates": {}}
+    if EXPECTED_SOURCE_COMMIT:
+        result["active_source_commit"] = EXPECTED_SOURCE_COMMIT
     if not contract_path.is_file():
         result["gates"]["contract"] = {"status": "FAIL", "errors": ["contract file missing"]}
         result["status"] = "FAIL"

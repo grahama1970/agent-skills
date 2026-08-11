@@ -202,6 +202,38 @@ designer, or stakeholder says it feels special.
 
 ## Protocol
 
+### Reliability Guard — Candidate Binding and Two Verdicts
+
+Do not collapse practical site judgment and formal proof status into one word.
+Every run must report two separate verdicts when both are relevant:
+
+- `release_design_verdict` — whether the rendered site is coherent, useful, and
+  appropriate for the stated audience based on the current review bundle.
+- `formal_bespoke_ready` — whether every required G0-G20 gate has current,
+  hash-bound evidence and therefore may legally report `READY`.
+
+A site may be acceptable for public use while `formal_bespoke_ready` is
+`NOT_READY`. That is not a design contradiction; it means the formal packet is
+incomplete. Conversely, a historical `READY` receipt is not current proof.
+
+Every receipt, crop corpus, contact sheet, rater output, accessibility result,
+performance result, and finish-review packet must be bound to the active
+candidate by source revision or candidate fingerprint. If the active candidate
+changes, older receipts become historical evidence only. They may inform the
+next slice, but they must not count toward current `formal_bespoke_ready`.
+
+Candidate freshness is fail-closed:
+
+- matching candidate + passing evidence → gate may `PASS`;
+- matching candidate + absent evidence → gate is `NOT_TESTED`;
+- matching candidate + disproving evidence → gate is `FAIL`;
+- stale or mismatched candidate evidence → gate is `FAIL` for the current run
+  unless explicitly archived outside the active proof packet.
+
+This guard exists to prevent brittle false-green behavior: a checker must not
+say the current implementation passes because an older commit produced valid
+screenshots or reviewer outputs.
+
 ### Live Collaboration Ledger
 
 For live site work, audits, amend loops, and disputed reviews, keep a compact

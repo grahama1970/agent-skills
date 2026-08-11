@@ -84,6 +84,7 @@ def write_distinctiveness_fixture(tmp_path: Path, aggregate: dict, raters: list[
     receipt = {
         "schema": "grahama.distinctiveness_blind.v1",
         "status": "NOT_TESTED",
+        "source_commit": "abcdef1234567890",
         "thresholds": {
             "min_raters": 5,
             "min_positive_classification": 4,
@@ -125,6 +126,7 @@ def test_completed_g11_rater_set_below_competitor_swap_threshold_fails(tmp_path,
     )
     monkeypatch.setattr(module, "REPO", tmp_path)
     monkeypatch.setattr(module, "DESIGN_ROUNDTABLE", roundtable)
+    monkeypatch.setattr(module, "EXPECTED_SOURCE_COMMIT", "abcdef1234567890")
 
     gate = module.distinctiveness_blind_gate()
 
@@ -151,6 +153,7 @@ def test_g11_with_current_corpus_but_missing_fresh_raters_stays_not_tested(tmp_p
     )
     monkeypatch.setattr(module, "REPO", tmp_path)
     monkeypatch.setattr(module, "DESIGN_ROUNDTABLE", roundtable)
+    monkeypatch.setattr(module, "EXPECTED_SOURCE_COMMIT", "abcdef1234567890")
 
     gate = module.distinctiveness_blind_gate()
 
@@ -163,3 +166,30 @@ def test_g11_with_current_corpus_but_missing_fresh_raters_stays_not_tested(tmp_p
     assert gate["subgates"]["fresh_rater_set_complete"]["status"] == "NOT_TESTED"
     assert gate["subgates"]["fresh_rater_set_complete"]["usable"] == 0
     assert gate["subgates"]["fresh_rater_set_complete"]["required"] == 5
+
+
+def test_g11_receipt_fails_when_source_commit_mismatches_active_candidate(tmp_path, monkeypatch):
+    module = load_module()
+    raters = [{"usable": True, "rater_id": f"rater-{i}"} for i in range(1, 6)]
+    roundtable = write_distinctiveness_fixture(
+        tmp_path,
+        aggregate={
+            "usable": 5,
+            "positive_classification": 5,
+            "competitor_swap_tension": 5,
+            "cross_screen_family": 5,
+            "generic_ai_template_primary": 0,
+        },
+        raters=raters,
+    )
+    monkeypatch.setattr(module, "REPO", tmp_path)
+    monkeypatch.setattr(module, "DESIGN_ROUNDTABLE", roundtable)
+    monkeypatch.setattr(module, "EXPECTED_SOURCE_COMMIT", "1234567890abcdef")
+
+    gate = module.distinctiveness_blind_gate()
+
+    assert gate["status"] == "FAIL"
+    assert gate["active_source_commit"] == "1234567890abcdef"
+    assert any(
+        "does not match active candidate" in error for error in gate.get("errors", [])
+    )
