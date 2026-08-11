@@ -191,6 +191,25 @@ def apply_sync() -> dict:
     return {"changed": changed, "stats": readme["stats"], "projects": len(merged)}
 
 
+def sync_content_stats_to_inventory() -> bool:
+    """Keep generated homepage counts coherent with the generated inventory.
+
+    This does not edit project prose or membership. It only updates the
+    source-backed numeric stats that the site renders beside the inventory.
+    """
+    content = json.loads(CONTENT.read_text(encoding="utf-8"))
+    inventory = json.loads((REPO / "site/inventory.json").read_text(encoding="utf-8"))
+    stats = inventory.get("stats")
+    if content.get("stats") == stats:
+        return False
+    content["stats"] = stats
+    CONTENT.write_text(
+        json.dumps(content, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return True
+
+
 def refresh(commit: bool, push: bool) -> dict:
     """Regenerate the site's generated surfaces from current repo state,
     prove the build, and optionally commit. Copy (questions/blurbs) is
@@ -198,6 +217,7 @@ def refresh(commit: bool, push: bool) -> dict:
     before = {}
     for f in (
         "site/inventory.json",
+        "site/content.json",
         "site/artifacts.json",
         "site/generated/battle-lineage.json",
         "site/research-map.json",
@@ -213,8 +233,12 @@ def refresh(commit: bool, push: bool) -> dict:
     # Dependency order: catalog reads inventory/visibility/research-map; graph
     # reads visibility/research-map. Upstream first so nothing consumes a stale
     # dependency (webgpt trust review).
+    proc = subprocess.run(["python3", str(REPO / "site/scripts/gen_inventory.py")], capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SystemExit(f"site/scripts/gen_inventory.py failed: {proc.stderr[-300:]}")
+    sync_content_stats_to_inventory()
+
     for script in (
-        "site/scripts/gen_inventory.py",
         "site/scripts/gen_visibility.py",
         "site/scripts/gen_research_map.py",
         "site/scripts/gen_competence.py",
