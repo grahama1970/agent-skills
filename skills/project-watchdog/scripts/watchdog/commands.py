@@ -162,7 +162,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
 
 #: State keys a tick owns. Everything else in the document belongs to the
 #: operator and must survive a tick that started before they changed it.
-_TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts",
+_TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts", "repair_dispatch_attempts",
                           "completion_attested_at")
 
 
@@ -390,12 +390,29 @@ def _tick_locked(
             continue
 
         busy = registry.busy_targets(in_flight)
+        # Same shape as the closure-audit cooldown: a repair blocked on an
+        # unready worktree is skipped for a while so the rest of the backlog
+        # gets tried, instead of one dirty target pinning the lane forever.
+        now_ts = time.time()
+        dispatch_attempts = state.setdefault("repair_dispatch_attempts", {})
+        candidate_repo = registry.project_repo(candidate)
+        cooling_repairs = set()
+        for key, last in list(dispatch_attempts.items()):
+            key_repo, _, num = key.rpartition("#")
+            if key_repo != candidate_repo:
+                continue
+            if now_ts - float(last or 0) < config.REPAIR_DISPATCH_RETRY_COOLDOWN_SECONDS:
+                cooling_repairs.add(int(num))
+            else:
+                dispatch_attempts.pop(key, None)  # expired: eligible again
         try:
             found = list_routable_issues(
                 run_id,
                 candidate,
                 busy,
-                skip_issue_numbers={int(e["issue_number"]) for e in reclaimed},
+                skip_issue_numbers=(
+                    {int(e["issue_number"]) for e in reclaimed} | cooling_repairs
+                ),
             )
         except (RuntimeError, ValueError) as exc:
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
@@ -513,10 +530,19 @@ def _tick_locked(
     streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
+    receipt["repair_dispatch_cooling"] = sorted(cooling_repairs)
+    repo_for_state = registry.project_repo(project)
     for issue in issues[:max_tickets]:
-        receipt["handled_issues"].append(
-            handle_issue(run_id, receipt_dir, project, issue, apply=apply)
-        )
+        handled = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
+        receipt["handled_issues"].append(handled)
+        if apply:
+            key = f"{repo_for_state}#{issue['number']}"
+            if handled.get("blocked_reason") == "worktree_unready":
+                state.setdefault("repair_dispatch_attempts", {})[key] = time.time()
+                _persist_tick_state(state)
+            elif handled.get("ok"):
+                if state.get("repair_dispatch_attempts", {}).pop(key, None) is not None:
+                    _persist_tick_state(state)
     receipt["handled_count"] = len(receipt["handled_issues"])
     receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"])
     receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"

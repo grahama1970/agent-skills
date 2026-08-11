@@ -387,3 +387,11 @@ CLOSURE_AUDIT_MAX_REOPENS = int(os.environ.get("PROJECT_WATCHDOG_CLOSURE_MAX_REO
 #: receipt. Without this, escalation would reintroduce one receipt directory per
 #: minute — the exact disk churn the retention policy removed.
 NOOP_RENOTIFY_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS", 86_400)
+
+# A repair blocked on an unready worktree must not be retried every tick.
+# Observed 2026-08-11: issue #1361's targets included 3 dirty tracked files in
+# the shared checkout, and the lane retried it every minute while tickets with
+# settled targets never got tried. Dirt clears on human/lane action, not fast.
+REPAIR_DISPATCH_RETRY_COOLDOWN_SECONDS = _env_seconds(
+    "PROJECT_WATCHDOG_REPAIR_RETRY_COOLDOWN_SECONDS", 1_800
+)
