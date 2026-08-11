@@ -1317,10 +1317,19 @@ def _provision_browser_lifecycle(
             "--lock-timeout",
             str(lock_timeout_seconds),
         ]
+        # Snapshot before creating: wmctrl output order is not creation order,
+        # so the diff is the only reliable way to identify the window we made.
+        pre_windows = _chrome_window_snapshot(browser_oracle_run)
         window = _lifecycle_command(
             window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
         )
         commands.append(window)
+        if window["returncode"] == 0:
+            # Land seat windows on the reviewer desktop instead of scattering
+            # them across whichever desktop the human is working on.
+            placement = _place_seat_window(browser_oracle_run, pre_windows)
+            if placement:
+                commands.append(placement)
         if window["returncode"] != 0:
             # Provisioning can fail transiently while the host settles a
             # previous run's teardown; one bounded retry before failing closed.
@@ -1695,6 +1704,57 @@ def _reap_stale_ask_windows(surf_run: Path, *, timeout_seconds: int = 60) -> dic
     # outstanding obligations, and a failed close on a closed window is done.
     _deregister_ask_windows(reaped)
     return receipt
+
+
+# Desktop 2 by default: Ask's browser seats are reviewer windows, not windows
+# the human asked for, so they belong on the reviewer desktop rather than on
+# top of whatever is being worked on. ASK_REVIEWER_DESKTOP overrides; empty
+# disables placement entirely.
+DEFAULT_REVIEWER_DESKTOP = "1"  # wmctrl index 1 == Desktop 2
+
+
+def _reviewer_desktop() -> str:
+    return os.environ.get("ASK_REVIEWER_DESKTOP", DEFAULT_REVIEWER_DESKTOP)
+
+
+def _chrome_window_snapshot(browser_oracle_run: Path) -> list[str]:
+    """Chrome windows before Ask creates one; empty list on any failure."""
+    if not _reviewer_desktop():
+        return []
+    try:
+        completed = subprocess.run(
+            [str(browser_oracle_run), "window-snapshot", "--json"],
+            capture_output=True, text=True, timeout=30, check=False,
+            cwd=str(Path(browser_oracle_run).parent),
+        )
+        if completed.returncode != 0:
+            return []
+        payload = json.loads(completed.stdout)
+        windows = payload.get("windows")
+        return [str(w) for w in windows] if isinstance(windows, list) else []
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return []
+
+
+def _place_seat_window(browser_oracle_run: Path, before: list[str]) -> dict[str, Any] | None:
+    """Move the seat window to the reviewer desktop.
+
+    Placement is cosmetic: it must never fail a run, so every error path
+    returns a recorded command entry rather than raising.
+    """
+    desktop = _reviewer_desktop()
+    if not desktop:
+        return None
+    return _lifecycle_command(
+        [
+            str(browser_oracle_run), "place-window",
+            "--before", ",".join(before),
+            "--desktop", desktop,
+            "--json",
+        ],
+        cwd=Path(browser_oracle_run).parent,
+        timeout_seconds=60,
+    )
 
 
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
