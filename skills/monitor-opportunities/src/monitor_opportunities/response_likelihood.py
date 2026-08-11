@@ -21,11 +21,15 @@ from typing import Any
 
 CHANNELS = Path(__file__).resolve().parents[2] / "config" / "response_channels.json"
 
-# Weights: warm path and trigger dominate; low competition matters; fit gates all.
+# Weights: warm path and trigger dominate; low competition + local standout matter;
+# fit gates ALL (score = fit * drivers), so a generic local role with weak fit stays
+# low — local boosts noticeability only AFTER mandate fit is real (mandate-first).
 BASE = 0.15
 W_WARM = 0.45
 W_TRIGGER = 0.30
 W_LOWCOMP = 0.20
+W_LOCAL = 0.25
+_WNY_WORKPLACES = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
 
 
 def _channel_competition(source: str, channels: dict[str, Any]) -> float:
@@ -66,12 +70,17 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
     if competition is None:
         competition = _channel_competition(str(opp.get("source") or ""), channels)
     low_comp = 1.0 - float(competition)
+    # Local standout: a DARPA/AI-caliber architect is rare in WNY, so Buffalo
+    # on-site/hybrid roles get noticed. Fit still gates it (mandate-first).
+    local = 1.0 if (opp.get("local_standout") or str(opp.get("workplace_type") or "") in _WNY_WORKPLACES) else 0.0
 
-    raw = BASE + W_WARM * warm + W_TRIGGER * trigger + W_LOWCOMP * low_comp
+    raw = BASE + W_WARM * warm + W_TRIGGER * trigger + W_LOWCOMP * low_comp + W_LOCAL * local
     score = round(fit * raw, 4)
 
-    has_driver = warm >= 0.5 or trigger >= 0.5 or low_comp >= 0.6
+    has_driver = warm >= 0.5 or trigger >= 0.5 or low_comp >= 0.6 or local >= 1.0
     reasons: list[str] = []
+    if local >= 1.0:
+        reasons.append("Buffalo/WNY local: a DARPA/AI-caliber architect is rare here — you get noticed, and you can meet in person")
     if warm >= 0.5:
         reasons.append("warm path: a network connection can refer you in (referral >> cold form)")
     if trigger >= 0.5:
@@ -80,6 +89,8 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
         reasons.append("low-competition channel (niche board / inbound / expert network), not the applicant pile")
     if fit >= 0.6:
         reasons.append("strong JD mandate-fit for your lane")
+    if fit < 0.6 and local >= 1.0:
+        reasons.append("BUT weak mandate fit — local alone is not a reason to apply (mandate-first)")
     if not has_driver:
         # Fit alone does not earn a reply — flag the cold path honestly.
         reasons.append("cold application, low reply odds (fit alone doesn't get a response)")
@@ -88,7 +99,7 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
         "organization": opp.get("organization"),
         "title": opp.get("title"),
         "response_score": score,
-        "drivers": {"fit": fit, "warm_path": warm, "trigger": trigger, "low_competition": round(low_comp, 2)},
+        "drivers": {"fit": fit, "warm_path": warm, "trigger": trigger, "low_competition": round(low_comp, 2), "local": local},
         "why_it_responds": reasons,
     }
 
