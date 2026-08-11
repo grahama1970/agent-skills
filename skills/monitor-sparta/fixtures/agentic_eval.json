@@ -194,7 +194,7 @@
    "command": [
     "bash",
     "-c",
-    "uv run python scripts/adversarial_alignment_probe.py edges --samples 20"
+    "cd /home/graham/workspace/experiments/sparta && uv run python scripts/adversarial_alignment_probe.py edges --samples 20"
    ],
    "expected": {
     "exit_code": 0,
@@ -208,7 +208,7 @@
    "command": [
     "bash",
     "-c",
-    "uv run python scripts/adversarial_alignment_probe.py mutate --samples 8"
+    "cd /home/graham/workspace/experiments/sparta && uv run python scripts/adversarial_alignment_probe.py mutate --samples 8"
    ],
    "expected": {
     "exit_code": 0,
