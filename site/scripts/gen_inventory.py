@@ -73,6 +73,14 @@ def main() -> None:
     }
     out = REPO / "site" / "inventory.json"
     out.write_text(json.dumps(inventory, separators=(",", ":")) + "\n", encoding="utf-8")
+    content_path = REPO / "site" / "content.json"
+    content = json.loads(content_path.read_text(encoding="utf-8"))
+    if content.get("stats") != inventory["stats"]:
+        content["stats"] = inventory["stats"]
+        content_path.write_text(
+            json.dumps(content, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps(inventory["stats"]), commit, as_of)
 
 
