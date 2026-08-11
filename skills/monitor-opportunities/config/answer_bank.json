@@ -6,12 +6,13 @@
     "first_name": "Graham",
     "last_name": "Anderson",
     "email": "graham@grahama.co",
-    "phone": "310-402-3980",
+    "phone": "716-309-3383",
     "website": "https://grahama.co",
     "linkedin": "https://www.linkedin.com/in/grahamaco",
     "location": "Buffalo, NY",
     "current_company": "grahama.co (independent AI architect / consultant)",
-    "current_job_title": "Principal AI Architect"
+    "current_job_title": "Principal AI Architect",
+    "phone_note": "Google Voice job-search line (isolates PII; forwards to Graham). Fill only where required."
   },
   "work_authorization": {
     "authorized_us": "Yes",
