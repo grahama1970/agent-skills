@@ -49,3 +49,22 @@ def test_not_auto_submittable_when_required_field_queued() -> None:
     r = resolve_application(form, "/r.pdf", BANK)
     assert r["auto_submittable"] is False
     assert "Salary expectation" in r["required_queued"]
+
+
+def test_phone_only_filled_when_required() -> None:
+    bank = {"identity": {"phone": "555-1234"}}
+    req = resolve_field({"name": "Phone", "field_type": "text", "required": True}, bank, None)
+    opt = resolve_field({"name": "Phone Number", "field_type": "text", "required": False}, bank, None)
+    assert req["disposition"] == "auto_fill" and req["value"] == "555-1234"
+    assert opt["disposition"] == "omit" and opt["value"] is None  # PII minimization
+
+
+def test_optional_phone_does_not_block_or_queue() -> None:
+    form = {"provider": "ashby", "site": "x", "fields": [
+        {"name": "Email", "field_type": "text", "required": True},
+        {"name": "Phone", "field_type": "text", "required": False},
+    ]}
+    r = resolve_application(form, "/r.pdf", {"identity": {"email": "g@x.co", "phone": "555"}})
+    assert "Phone" in r["omitted_optional_pii"]
+    assert "Phone" not in r["queue"]  # not the human's problem either — just omitted
+    assert r["auto_submittable"] is True

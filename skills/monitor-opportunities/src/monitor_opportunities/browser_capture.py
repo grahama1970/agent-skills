@@ -149,12 +149,15 @@ def build_linkedin_search_url(
     posted_within: str = _LINKEDIN_POSTED_WEEK,
     location: str | None = None,
     sort_by: str = "DD",
+    easy_apply: bool = False,
 ) -> str:
     """Build a LinkedIn advanced job-search URL (pure; no browser).
 
     Maps candidate preferences to LinkedIn's own filter params so the platform
     does the filtering server-side. `work_types` are keys of _LINKEDIN_WORK_TYPE;
     unknown keys are ignored. sort_by DD=most recent, R=most relevant.
+    easy_apply=True adds LinkedIn's Easy Apply filter (f_AL) — the fast lane that
+    pairs with direct outreach.
     """
     params: list[tuple[str, str]] = [("keywords", keywords)]
     wt = [_LINKEDIN_WORK_TYPE[w] for w in work_types if w in _LINKEDIN_WORK_TYPE]
@@ -165,6 +168,8 @@ def build_linkedin_search_url(
         params.append(("f_E", ",".join(exp)))
     if posted_within:
         params.append(("f_TPR", posted_within))
+    if easy_apply:
+        params.append(("f_AL", "true"))
     if location:
         params.append(("location", location))
     if sort_by:
