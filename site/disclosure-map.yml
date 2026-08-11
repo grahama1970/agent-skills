@@ -1,0 +1,307 @@
+schema: grahama.disclosure_map.v1
+version: 1
+approved_by: Graham Anderson
+approved_at: "2026-08-11"
+principle:
+  default: enough to understand and act without project knowledge
+  preview: one bounded example plus one explicit inspection destination
+  depth: complete explanatory route for a project, method, inventory, or engagement
+  raw: immutable source, receipt, generated artifact, or repository path
+tiers:
+  - default
+  - preview
+  - depth
+  - raw
+visitor_jobs:
+  - buyer
+  - hiring-manager
+  - technical-inspector
+  - contract-inspector
+initial_html:
+  required_text:
+    - I build agent systems that can
+    - Describe the problem
+  required_qids:
+    - contact:action:email
+route_policy:
+  max_nested_in_place_disclosures: 1
+  javascript_only_depth_allowed: false
+  hover_only_depth_allowed: false
+  raw_targets_may_be_external: true
+homepage_depth_exclusions:
+  - surface_id: complete_contract_ledger
+    tokens:
+      - DeferredSkillMosaic
+      - SkillMosaic
+    reason: Full contract ledger belongs on /ledger; the homepage may keep only a compact preview.
+  - surface_id: complete_proof_method
+    tokens:
+      - ProofExplainer
+    reason: Full proof walkthrough belongs on /how-proof-works; the homepage may keep only a compact preview.
+  - surface_id: complete_explorer_graph
+    tokens:
+      - DeferredCapabilityConstellation
+      - CapabilityConstellation
+    reason: Full graph explorer belongs on /explore; the homepage may keep only a compact preview.
+surfaces:
+  - surface_id: hero_proposition
+    route: /
+    fragment: top
+    source: site/app/page.tsx
+    tier: default
+    visitor_job: buyer
+    visible_claim: Graham builds agent systems that can prove what they did.
+    evidence_access: preview
+    proof_boundary: The hero is a commercial proposition; proof is provided by linked source, receipts, and depth routes.
+    initial_html: required
+    lazy_load: false
+    explicit_user_intent_required: false
+    keyboard_equivalent: tab to primary actions
+    no_javascript_equivalent: server-rendered hero text and links
+    mobile_equivalent: same text and actions in one column
+    human_approved_version: 1
+
+  - surface_id: source_repository_preview
+    route: /
+    fragment: top
+    source: site/app/page.tsx
+    tier: preview
+    visitor_job: technical-inspector
+    source_ids:
+      - agent-skills
+    visible_claim: The public agent-skills repository holds the source.
+    evidence_access: public-source
+    proof_boundary: The repository is source evidence, not a standalone verdict that every claim is true.
+    inspect_target: /how-proof-works
+    raw_target: https://github.com/grahama1970/agent-skills
+    initial_html: required
+    lazy_load: false
+    explicit_user_intent_required: false
+    keyboard_equivalent: tab to repository and proof links
+    no_javascript_equivalent: direct anchors and GitHub URL
+    mobile_equivalent: same copy and links in the hero
+    human_approved_version: 1
+
+  - surface_id: capability_search_preview
+    route: /
+    fragment: search
+    source: site/app/page.tsx
+    component: site/components/capability-search.tsx
+    tier: preview
+    visitor_job: buyer
+    visible_claim: Visitors can search the practice by problem before reading the full inventory.
+    evidence_access: public-overview
+    proof_boundary: Search results are orientation aids and do not prove fit for a private engagement.
+    inspect_target: /explore
+    raw_target: site/content.json
+    initial_html: optional
+    lazy_load: true
+    explicit_user_intent_required: false
+    keyboard_equivalent: focus the search input
+    no_javascript_equivalent: /explore remains directly reloadable
+    mobile_equivalent: search-first vertical layout
+    human_approved_version: 1
+
+  - surface_id: work_preview
+    route: /
+    fragment: work
+    source: site/app/page.tsx
+    tier: preview
+    visitor_job: buyer
+    visible_claim: Selected public proof dossiers show code, checks, and gaps.
+    evidence_access: mixed-public-private
+    proof_boundary: Project cards summarize evidence access; private projects do not borrow credibility from public repositories.
+    inspect_target: /capabilities
+    raw_target: site/content.json
+    initial_html: optional
+    lazy_load: false
+    explicit_user_intent_required: false
+    keyboard_equivalent: tab through project links
+    no_javascript_equivalent: server-rendered project links
+    mobile_equivalent: readable project sequence
+    human_approved_version: 1
+
+  - surface_id: competence_preview
+    route: /
+    fragment: competence
+    source: site/app/page.tsx
+    component: site/components/competence-matrix.tsx
+    tier: preview
+    visitor_job: buyer
+    visible_claim: Declared disciplines show what the work adds up to.
+    evidence_access: generated-source
+    proof_boundary: Discipline counts are source declarations, not proficiency ratings.
+    inspect_target: /capabilities
+    raw_target: site/competence.json
+    initial_html: optional
+    lazy_load: false
+    explicit_user_intent_required: true
+    keyboard_equivalent: section links and project links
+    no_javascript_equivalent: server-rendered section summary
+    mobile_equivalent: compact discipline rows
+    human_approved_version: 1
+
+  - surface_id: ledger_preview
+    route: /
+    fragment: ledger
+    source: site/app/page.tsx
+    tier: preview
+    visitor_job: contract-inspector
+    visible_claim: The skill inventory includes checked and contract-only entries.
+    evidence_access: generated-source
+    proof_boundary: Inventory counts prove generated source state only; they do not prove semantic quality or production readiness.
+    inspect_target: /ledger
+    raw_target: site/inventory.json
+    initial_html: optional
+    lazy_load: true
+    explicit_user_intent_required: true
+    keyboard_equivalent: link to /ledger
+    no_javascript_equivalent: /ledger directly reloads
+    mobile_equivalent: compact inventory preview plus depth route
+    human_approved_version: 1
+
+  - surface_id: proof_preview
+    route: /
+    fragment: proof
+    source: site/app/page.tsx
+    tier: preview
+    visitor_job: technical-inspector
+    visible_claim: A proof run resolves from goal to receipt and says what it does not prove.
+    evidence_access: receipt-excerpt
+    proof_boundary: A receipt proves only the bounded command or artifact it records.
+    inspect_target: /how-proof-works
+    raw_target: site/artifacts.json
+    initial_html: optional
+    lazy_load: false
+    explicit_user_intent_required: true
+    keyboard_equivalent: link to /how-proof-works
+    no_javascript_equivalent: /how-proof-works directly reloads
+    mobile_equivalent: compact proof preview plus depth route
+    human_approved_version: 1
+
+  - surface_id: dream_preview
+    route: /
+    fragment: dream
+    source: site/app/page.tsx
+    component: site/components/dream-stepper.tsx
+    tier: preview
+    visitor_job: technical-inspector
+    visible_claim: persona-dream is a preregistered study surface, not a movie generator.
+    evidence_access: generated-and-study-source
+    proof_boundary: Dream imagery demonstrates the persona-dream pipeline surface, not technical correctness of unrelated systems.
+    inspect_target: /capabilities
+    raw_target: site/artifacts.json
+    initial_html: optional
+    lazy_load: true
+    explicit_user_intent_required: true
+    keyboard_equivalent: stepper controls and route links
+    no_javascript_equivalent: server-rendered study summary remains readable
+    mobile_equivalent: ordered study surfaces
+    human_approved_version: 1
+
+  - surface_id: receipts_preview
+    route: /
+    fragment: receipts
+    source: site/app/page.tsx
+    tier: preview
+    visitor_job: technical-inspector
+    visible_claim: Selected receipts preserve proof boundaries.
+    evidence_access: receipt-excerpt
+    proof_boundary: Receipt excerpts are current only for the source commit and artifact hashes they cite.
+    inspect_target: /how-proof-works
+    raw_target: site/artifacts.json
+    initial_html: optional
+    lazy_load: true
+    explicit_user_intent_required: true
+    keyboard_equivalent: tab through receipt toggles and depth link
+    no_javascript_equivalent: receipt route remains directly reloadable
+    mobile_equivalent: stacked receipt previews
+    human_approved_version: 1
+
+  - surface_id: person_accountability
+    route: /
+    fragment: about
+    source: site/app/page.tsx
+    tier: default
+    visitor_job: hiring-manager
+    visible_claim: The person a visitor meets is the person who investigates, architects, builds, and answers for the result.
+    evidence_access: resume-and-public-source
+    proof_boundary: The career summary is substantiated by résumé links, not by project receipts.
+    inspect_target: /resume
+    raw_target: RESUME.md
+    initial_html: optional
+    lazy_load: false
+    explicit_user_intent_required: false
+    keyboard_equivalent: link to /resume
+    no_javascript_equivalent: server-rendered résumé link
+    mobile_equivalent: same text and résumé route
+    human_approved_version: 1
+
+  - surface_id: engagement_action
+    route: /
+    fragment: contact
+    source: site/app/page.tsx
+    tier: default
+    visitor_job: buyer
+    visible_claim: A visitor can describe a hard-to-staff agent, compliance, or multimodal R&D problem.
+    evidence_access: none
+    proof_boundary: Contact copy is an invitation, not evidence of fit.
+    initial_html: required
+    lazy_load: false
+    explicit_user_intent_required: false
+    keyboard_equivalent: email link
+    no_javascript_equivalent: mailto link
+    mobile_equivalent: same contact action
+    human_approved_version: 1
+
+  - surface_id: ledger_depth
+    route: /ledger
+    source: site/app/ledger/page.tsx
+    component: site/components/skill-mosaic.tsx
+    tier: depth
+    visitor_job: contract-inspector
+    visible_claim: The full skill inventory can be inspected directly.
+    evidence_access: generated-source
+    proof_boundary: The ledger proves registered source state and sanity-check presence only.
+    raw_target: site/inventory.json
+    initial_html: direct-route
+    lazy_load: false
+    explicit_user_intent_required: true
+    keyboard_equivalent: direct URL and nav link
+    no_javascript_equivalent: server-rendered route shell and source links
+    mobile_equivalent: touch-readable list/grid
+    human_approved_version: 1
+
+  - surface_id: proof_depth
+    route: /how-proof-works
+    source: site/app/how-proof-works/page.tsx
+    tier: depth
+    visitor_job: technical-inspector
+    visible_claim: The proof method can be read as a complete route.
+    evidence_access: receipt-detail
+    proof_boundary: Each receipt carries its own does-not-prove boundary.
+    raw_target: site/artifacts.json
+    initial_html: direct-route
+    lazy_load: false
+    explicit_user_intent_required: true
+    keyboard_equivalent: direct URL and nav link
+    no_javascript_equivalent: server-rendered route shell
+    mobile_equivalent: stacked proof route
+    human_approved_version: 1
+
+  - surface_id: explore_depth
+    route: /explore
+    source: site/app/explore/page.tsx
+    tier: depth
+    visitor_job: buyer
+    visible_claim: The project/practice explorer can be reached directly.
+    evidence_access: public-overview
+    proof_boundary: Explorer matches are orientation evidence only.
+    raw_target: site/research-map.json
+    initial_html: direct-route
+    lazy_load: false
+    explicit_user_intent_required: true
+    keyboard_equivalent: direct URL and search input
+    no_javascript_equivalent: route remains reloadable
+    mobile_equivalent: search-first vertical layout
+    human_approved_version: 1

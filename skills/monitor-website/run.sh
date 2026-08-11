@@ -88,4 +88,12 @@ if [[ "${1:-}" == "responsive-geometry-check" ]]; then
   exec node ../skills/monitor-website/scripts/responsive_geometry_check.mjs "$@"
 fi
 
+# `disclosure-check` enforces the homepage/default-depth/raw progressive
+# disclosure map so deep technical material remains reachable without returning
+# to the default homepage path.
+if [[ "${1:-}" == "disclosure-check" ]]; then
+  shift
+  exec python3 scripts/disclosure_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

@@ -380,7 +380,6 @@ section {
 .hero-main > .hero-outcomes { order: 3; }
 .hero-main > .hero-actions { order: 4; }
 .hero-main > .hero-repo-model { order: 5; }
-.hero-main > .hero-trace-protocol { order: 6; }
 .hero-main > .hero-intake { order: 6; }
 .hero-main > .hero-bio { order: 8; }
 /* Keyboard-shortcut helper is application chrome on touch; hide it there. */
@@ -511,6 +510,19 @@ h1 .it::after {
 .hero-trace-protocol code {
   color: var(--text);
   overflow-wrap: anywhere;
+}
+.inspection-protocol {
+  margin-bottom: clamp(2rem, 4vw, 3.2rem);
+}
+.depth-preview-link {
+  margin-top: 1rem;
+  color: var(--faint);
+  font-size: 0.95rem;
+}
+.depth-preview-link a {
+  color: var(--brass);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .hero-bio em {
   color: var(--text);
@@ -728,6 +740,12 @@ h1 .it::after {
 }
 .ledger-mosaic {
   grid-column: 6 / span 7;
+}
+.ledger-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: end;
 }
 .mosaic {
   display: grid;
@@ -1964,7 +1982,6 @@ footer a:hover {
   .hero-main > .hero-actions { order: 4; }
   .hero-main > .hero-repo-model { order: 5; }
   .hero-main > .hero-intake { order: 5; }
-  .hero-main > .hero-trace-protocol { order: 6; }
   .hero-main > .hero-bio {
     order: 8;
     margin-top: clamp(1.4rem, 4vw, 2.2rem);
@@ -1973,6 +1990,10 @@ footer a:hover {
   .figs { grid-template-columns: repeat(3, 1fr); }
   .fig { grid-template-columns: 1fr; border-bottom: 0; gap: 0.25rem; }
   .ledger-copy, .ledger-mosaic { grid-column: 1 / span 12; }
+  .ledger-preview {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
   .dream-head .a, .dream-head .b { grid-column: 1 / span 12; }
   .receipts-copy, .tickets { grid-column: 1 / span 12; }
   .about-copy, .track { grid-column: 1 / span 12; }

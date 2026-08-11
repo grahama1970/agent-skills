@@ -4,15 +4,12 @@ import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
 import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
-import { ProofExplainer } from '@/components/proof-explainer';
 import {
-  DeferredCapabilityConstellation,
   DeferredCapabilitySearch,
   DeferredDreamStepper,
   DeferredKeyboardNav,
   DeferredReceiptTicket,
-  DeferredSkillMosaic,
-} from '@/components/deferred-surfaces';
+} from '@/components/home-deferred-surfaces';
 import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
@@ -114,7 +111,7 @@ export default function Home() {
             <div className="hero-grid">
               <div className="hero-main">
                 <p className="eyebrow">
-                  <span className="dot" /> One-person practice{' '}
+                  <span className="dot" /> One-person applied R&amp;D practice{' '}
                   <span aria-hidden="true">/</span> agent systems, formal
                   methods, evidence
                 </p>
@@ -139,32 +136,13 @@ export default function Home() {
                 </p>
                 <p className="hero-outcomes">
                   I take on hard-to-staff agent, compliance, and multimodal R&amp;D
-                  and deliver working systems whose behavior, evidence, and limits
-                  your team can inspect.
+                  and deliver working source, deterministic checks, runbooks,
+                  receipts, and explicit limits your team can inspect and own.
                 </p>
                 <p className="hero-repo-model hero-repo-model--follow">
-                  Browse here, or open the repository directly and ask your
-                  agent to trace a question through the contracts, code, checks,
-                  receipts, and visible gaps.
+                  Browse here first, then inspect the source when you want the
+                  contracts, code, checks, receipts, and visible gaps.
                 </p>
-                <ol className="hero-trace-protocol" aria-label="Repository inspection path">
-                  <li>
-                    <span>Start</span>
-                    <code>skills/*/SKILL.md</code>
-                  </li>
-                  <li>
-                    <span>Check</span>
-                    <code>skills/monitor-website/run.sh</code>
-                  </li>
-                  <li>
-                    <span>Inspect</span>
-                    <code>site/design-roundtable/*</code>
-                  </li>
-                  <li>
-                    <span>Stop</span>
-                    <code>NOT_TESTED stays visible</code>
-                  </li>
-                </ol>
                 <p className="hero-bio">
                   An unusual{' '}
                   <a
@@ -200,21 +178,21 @@ export default function Home() {
                   </a>
                   <a
                     className="btn ghost"
+                    href="/how-proof-works"
+                    data-qid="hero:action:proof-route"
+                    data-qs-action="HERO_OPEN_PROOF_ROUTE"
+                    title="Read how claims connect to source, checks, receipts, and gaps"
+                  >
+                    See how proof works →
+                  </a>
+                  <a
+                    className="btn ghost"
                     href={REPO}
                     data-qid="hero:action:repo"
                     data-qs-action="HERO_OPEN_REPO"
                     title="Open the public agent-skills repository on GitHub"
                   >
                     Open the repository <span className="arrow">↗</span>
-                  </a>
-                  <a
-                    className="btn ghost"
-                    href="#search"
-                    data-qid="hero:action:agent-question"
-                    data-qs-action="HERO_OPEN_SEARCH"
-                    title="Use this front end to frame a question for your agent"
-                  >
-                    Ask your agent about the work →
                   </a>
                 </div>
               </div>
@@ -237,10 +215,10 @@ export default function Home() {
                     </a>
                     <a
                       className="fig"
-                      href="#ledger"
+                      href="/ledger"
                       data-qid="rail:link:sanity"
                       data-qs-action="RAIL_GOTO_LEDGER"
-                      title="See the coverage ledger, gaps included"
+                      title="Inspect the full coverage ledger, gaps included"
                     >
                       <span className="n">
                         {stats.sanity}
@@ -326,7 +304,18 @@ export default function Home() {
         <section id="search" className="search-band">
           <div className="wrap">
             <DeferredCapabilitySearch />
-            <DeferredCapabilityConstellation />
+            <p className="depth-preview-link">
+              Public repo map, project fit, and evidence access continue on{' '}
+              <a
+                href="/explore"
+                data-qid="search:link:explore-depth"
+                data-qs-action="SEARCH_OPEN_EXPLORE"
+                title="Open the Explore route for the full repo map and evidence access"
+              >
+                the Explore route
+              </a>
+              .
+            </p>
           </div>
         </section>
 
@@ -532,31 +521,30 @@ export default function Home() {
         {/* ===================== LEDGER ===================== */}
         <section id="ledger">
           <div className="wrap">
-            <div className="ledger-grid">
-              <div className="ledger-copy">
+            <div className="ledger-preview">
+              <div>
                 <p className="kicker">
                   <b>Ledger</b> agent-skills source map
                 </p>
                 <h2 className="h2">
-                  Every contract, including the ones without checks.
+                  {stats.skills} public contracts; {stats.sanity} with sanity checks.
                 </h2>
-                <p className="ledger-count" aria-hidden="true">
-                  {stats.skills}
-                </p>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
-                  One cell per skill contract — each links to its SKILL.md.
-                  Filled cells carry a sanity check; outlined cells are
-                  contract-only. The gaps stay visible on purpose — a practice
-                  built on receipts doesn&apos;t get to hide its holes.
+                  The full inventory is still public, including contract-only
+                  entries and visible gaps. It now lives where a technical
+                  inspector expects it: on a direct, reloadable route.
                 </p>
               </div>
-              <DeferredSkillMosaic />
+              <a
+                className="btn"
+                href="/ledger"
+                data-qid="ledger:action:inspect-all"
+                data-qs-action="LEDGER_OPEN_DEPTH"
+                title="Inspect every public skill contract and gap"
+              >
+                Inspect all contracts <span className="arrow">→</span>
+              </a>
             </div>
-            <p className="ledger-close">
-              All of it points back to the line at the top: a system that can
-              prove what it did is one you can trust with a job that actually
-              matters — where a quiet failure would cost something.
-            </p>
           </div>
         </section>
 
@@ -565,7 +553,7 @@ export default function Home() {
         {/* ===================== HOW PROOF WORKS ===================== */}
         <section id="proof">
           <div className="wrap">
-            <div className="proofx-head">
+            <div className="proofx-head proofx-head--preview">
               <div>
                 <p className="kicker">
                   <b>Tau</b> How proof works
@@ -582,7 +570,15 @@ export default function Home() {
                 what it does <em>not</em> prove.
               </p>
             </div>
-            <ProofExplainer />
+            <a
+              className="btn"
+              href="/how-proof-works"
+              data-qid="proof:action:open-depth"
+              data-qs-action="PROOF_OPEN_DEPTH"
+              title="Open the full proof route"
+            >
+              Open the proof route <span className="arrow">→</span>
+            </a>
           </div>
         </section>
 
