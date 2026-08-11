@@ -14,5 +14,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    {
+      url: 'https://grahama.co/explore',
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: 'https://grahama.co/ledger',
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: 'https://grahama.co/how-proof-works',
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
   ];
 }

@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-10T17:47:15.438213+00:00",
+  "verified_at": "2026-08-11T16:39:34.048068+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
-  "url": "http://127.0.0.1:3003/#project-battle",
-  "name": "grahama-target-highlight-repeat-3003",
+  "url": "http://127.0.0.1:3003/",
+  "name": "grahama-progressive-disclosure-1377-scoped",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-target-highlight-repeat-3003/20260810T174706Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-target-highlight-repeat-3003/20260810T174706Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-progressive-disclosure-1377-scoped/20260811T163924Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-progressive-disclosure-1377-scoped/20260811T163924Z.read.json"
 }

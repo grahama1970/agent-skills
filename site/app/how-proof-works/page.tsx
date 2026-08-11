@@ -33,6 +33,30 @@ export default function HowProofWorksPage() {
       </section>
       <section>
         <div className="wrap">
+          <div className="inspection-protocol">
+            <p className="kicker">
+              <b>Inspect</b> Repository path
+            </p>
+            <h2 className="h2">Ask an agent to trace the work through source.</h2>
+            <ol className="hero-trace-protocol" aria-label="Repository inspection path">
+              <li>
+                <span>Start</span>
+                <code>skills/*/SKILL.md</code>
+              </li>
+              <li>
+                <span>Check</span>
+                <code>skills/monitor-website/run.sh</code>
+              </li>
+              <li>
+                <span>Inspect</span>
+                <code>site/design-roundtable/*</code>
+              </li>
+              <li>
+                <span>Stop</span>
+                <code>NOT_TESTED stays visible</code>
+              </li>
+            </ol>
+          </div>
           <ProofExplainer />
         </div>
       </section>

@@ -36,4 +36,9 @@ if [[ "${1:-}" == "effects-check" ]]; then
   exec python3 scripts/effects_check.py "$@"
 fi
 
+if [[ "${1:-}" == "disclosure-check" ]]; then
+  shift
+  exec python3 scripts/disclosure_check.py "$@"
+fi
+
 exec python3 scripts/monitor_website.py "$@"

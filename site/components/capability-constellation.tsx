@@ -465,6 +465,7 @@ export function CapabilityConstellation() {
                 data-qid={`constellation:jump:${n.slug}`}
                 data-qs-action="CONSTELLATION_JUMP"
                 aria-label={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
+                title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 onClick={(e) => {
                   if (moved.current) e.preventDefault(); // was a drag, not a click
                 }}
