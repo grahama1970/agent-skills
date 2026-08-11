@@ -52,7 +52,15 @@ def _deck(tmp_path: Path, *, title: str = "Relevant Material Does Not Establish 
 
 
 def _verify(path: Path, **kwargs):
-    return verify_publish(path, claim_texts=CLAIMS, approvals=APPROVALS, **kwargs)
+    """These fixtures are hand-built PPTX files with no canonical document.
+
+    verify_publish now REQUIRES the approved document at the publication
+    boundary (#1371), so these tests exercise the ledger-only checks —
+    stale markers, flattening, geometry, template drift — via
+    require_document=False. The document-required path has its own coverage in
+    tests/test_assertion_boundary.py."""
+    return verify_publish(path, claim_texts=CLAIMS, approvals=APPROVALS,
+                          require_document=False, **kwargs)
 
 
 def test_compliant_deck_passes():

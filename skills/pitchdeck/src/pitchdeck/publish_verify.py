@@ -107,6 +107,8 @@ class AssertionAtom(StrictModel):
     claim_id: str | None = None
     transform_class: str | None = None
     binding_kind: str | None = None
+    slide_id: str = ""
+    element_id: str = ""
 
 
 def atoms_from_document(document) -> list[AssertionAtom]:
@@ -126,6 +128,7 @@ def atoms_from_document(document) -> list[AssertionAtom]:
                 claim_id=getattr(binding, "claim_id", None),
                 transform_class=getattr(binding, "transform_class", None),
                 binding_kind=getattr(getattr(binding, "kind", None), "value", None),
+                slide_id=slide.id, element_id=element.id,
             ))
 
         for element in iter_tree(slide.elements):
@@ -135,13 +138,86 @@ def atoms_from_document(document) -> list[AssertionAtom]:
                 continue
             for node in element.diagram.nodes:
                 record(node.label, f"{element.id}:{node.id}:label", "diagram-node-label",
-                       list(node.binding_paths))
+                       [p for p in node.binding_paths if p.endswith(":label")])
                 record(node.sublabel or "", f"{element.id}:{node.id}:sublabel",
-                       "diagram-node-sublabel", list(node.binding_paths))
+                       "diagram-node-sublabel",
+                       [p for p in node.binding_paths if p.endswith(":sublabel")])
             for edge in element.diagram.edges:
                 record(edge.label or "", f"{element.id}:{edge.id}:label",
                        "diagram-edge-label", list(edge.binding_paths))
     return atoms
+
+
+# Transforms a machine can verify from the claim text alone. Aggregation and
+# generalization cannot be reconstructed mechanically ("Retrieval" is a legal
+# generalization of a claim about search and embeddings but not an excerpt of
+# it), so they require an exact named human approval instead.
+MECHANICAL_TRANSFORMS = {"verbatim", "truncation", "inflection"}
+ATTESTED_TRANSFORMS = {"aggregation", "generalization"}
+# Chrome is a TYPED ROLE, not a string-length heuristic. Only these roles may
+# carry text that asserts nothing about the product; everything else needs a
+# claim. This replaces the "<=3 chars or all digits is chrome" escape hatch.
+CHROME_ROLES = {"footer", "caption", "message", "page-number", "wordmark", "disclaimer", "badge"}
+
+
+class AtomRefusal(StrictModel):
+    code: Literal[
+        "CLAIM_NOT_IN_LEDGER",
+        "TRANSFORM_NOT_SATISFIED",
+        "UNATTESTED_TRANSFORM",
+        "UNKNOWN_TRANSFORM_CLASS",
+    ]
+    detail: str
+
+
+def authorize_atom(
+    atom: AssertionAtom,
+    *,
+    claims_by_id: dict[str, str],
+    approved_texts: set[str],
+) -> AtomRefusal | None:
+    """Is this atom evidence of legal derivation, or merely an assertion by the compiler?
+
+    A truthy claim_id is NOT sufficient — that was the reproduced bypass: changing
+    a label to the inverse of its claim while keeping claim_id and binding_paths
+    passed the gate. Authorization now requires the claim to exist in the bound
+    ledger AND the text to satisfy its declared transform (mechanically where
+    that is possible, by exact human attestation where it is not)."""
+    # the cover title is the deck's own name (a wordmark), not a claim about it
+    if atom.slide_id.endswith("cover") and atom.role == "title":
+        return None
+    if atom.binding_kind == "non_claim" or atom.role in CHROME_ROLES:
+        return None  # typed chrome: asserts nothing, so no claim is required
+    if not atom.claim_id:
+        return AtomRefusal(code="CLAIM_NOT_IN_LEDGER", detail=f"atom '{atom.canonical_id}' carries no claim id")
+    claim_text = claims_by_id.get(atom.claim_id)
+    if claim_text is None:
+        return AtomRefusal(
+            code="CLAIM_NOT_IN_LEDGER",
+            detail=f"atom '{atom.canonical_id}' cites claim '{atom.claim_id}', absent from the bound ledger",
+        )
+    transform = (atom.transform_class or "").lower()
+    probe = " ".join(atom.text.split()).lstrip("❯>•- ").rstrip("…").strip()
+    if transform in MECHANICAL_TRANSFORMS:
+        if not _word_boundary_excerpt(probe, claim_text):
+            return AtomRefusal(
+                code="TRANSFORM_NOT_SATISFIED",
+                detail=(f"atom '{atom.canonical_id}' declares {transform} but "
+                        f"{probe[:48]!r} is not a word-boundary excerpt of claim '{atom.claim_id}'"),
+            )
+        return None
+    if transform in ATTESTED_TRANSFORMS:
+        if " ".join(probe.split()).casefold() not in approved_texts:
+            return AtomRefusal(
+                code="UNATTESTED_TRANSFORM",
+                detail=(f"atom '{atom.canonical_id}' declares {transform}, which no machine can verify; "
+                        f"it requires an exact named human approval and has none"),
+            )
+        return None
+    return AtomRefusal(
+        code="UNKNOWN_TRANSFORM_CLASS",
+        detail=f"atom '{atom.canonical_id}' declares unknown transform class {atom.transform_class!r}",
+    )
 
 
 def _walk_shapes(shapes, prefix: str):
@@ -180,13 +256,16 @@ def _word_boundary_excerpt(needle: str, haystack: str) -> bool:
 
 
 def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprovals,
-                    atom_index: dict[str, AssertionAtom] | None = None) -> bool:
+                    atom_index: dict[str, AssertionAtom] | None = None,
+                    authorized_keys: set[str] | None = None) -> bool:
     """A visible string is licensed by a compiler ATOM, an approval, a claim excerpt, or chrome."""
     stripped = text.strip()
     if atom_index is not None:
         key = " ".join(stripped.split()).casefold().lstrip("❯>•- ")
-        atom = atom_index.get(key)
-        if atom is not None and atom.claim_id:
+        # Membership is not authorization: the atom must have passed
+        # authorize_atom() during verify_publish, which is what the
+        # authorized_keys set records.
+        if key in (authorized_keys or set()):
             return True
     if len(stripped) <= _CHROME_MAX_CHARS or stripped.isdigit():
         return True
@@ -194,7 +273,7 @@ def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprova
     # a multi-line string is several assertions; each line must stand on its own.
     lines = [ln.strip() for ln in stripped.splitlines() if ln.strip()]
     if len(lines) > 1:
-        return all(_is_claim_bound(line, claim_texts, approvals, atom_index) for line in lines)
+        return all(_is_claim_bound(line, claim_texts, approvals, atom_index, authorized_keys) for line in lines)
     normalised = " ".join(stripped.split())
     for allowed in (*approvals.approved_renderings, *approvals.non_claim_text):
         if normalised.casefold() == " ".join(allowed.split()).casefold():
@@ -205,8 +284,6 @@ def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprova
     probe = normalised.lstrip("❯>•- ").rstrip("…")
     for claim in claim_texts:
         if _word_boundary_excerpt(probe, claim):
-            return True
-        if " ".join(claim.split()).casefold().startswith(probe.casefold()[:60]) and len(probe) > 20:
             return True
     return False
 
@@ -236,9 +313,11 @@ def verify_publish(
     pptx_path: Path,
     *,
     claim_texts: list[str],
+    claims_by_id: dict[str, str] | None = None,
     approvals: PublishApprovals,
     template_contract: TemplateContract | None = None,
     document=None,
+    require_document: bool = True,
 ) -> PublishReceipt:
     """Re-prove the delivered artifact, not the manifest that produced it."""
     from pptx import Presentation
@@ -247,14 +326,30 @@ def verify_publish(
     findings: list[PublishFinding] = []
     visible = extract_visible_strings(pptx_path)
     atom_index: dict[str, AssertionAtom] | None = None
-    if document is not None:
-        atom_index = {
-            " ".join(a.text.split()).casefold().lstrip("❯>•- "): a
-            for a in atoms_from_document(document)
-        }
+    authorized_keys: set[str] = set()
+    if document is None and require_document:
+        findings.append(PublishFinding(
+            code="UNREADABLE", where="inputs",
+            detail=("the approved document is required: without it the verifier falls back to ledger "
+                    "excerpts and unscoped string allowlists, which is not a publication proof")))
+    elif document is not None:
+        resolved_claims = claims_by_id or {}
+        atoms = atoms_from_document(document)
+        approved_texts = {" ".join(t.split()).casefold() for t in approvals.approved_renderings}
+        atom_index = {}
+        for atom in atoms:
+            key = " ".join(atom.text.split()).casefold().lstrip("❯>•- ")
+            atom_index[key] = atom
+            refusal = authorize_atom(atom, claims_by_id=resolved_claims, approved_texts=approved_texts)
+            if refusal is None:
+                authorized_keys.add(key)
+            else:
+                findings.append(PublishFinding(
+                    code="UNCLAIMED_TEXT", where=atom.canonical_id,
+                    detail=f"{refusal.code}: {refusal.detail}"))
 
     for where, text in visible:
-        if not _is_claim_bound(text, claim_texts, approvals, atom_index):
+        if not _is_claim_bound(text, claim_texts, approvals, atom_index, authorized_keys):
             findings.append(PublishFinding(
                 code="UNCLAIMED_TEXT", where=where,
                 detail=f"visible text is not a legal transform of any claim: {text[:70]!r}"))
@@ -330,6 +425,23 @@ def verify_publish(
             "Exact pixel parity between the HTML renderer and a PowerPoint or LibreOffice render.",
         ],
     )
+
+
+def load_claims_by_id(ledger_path: Path) -> dict[str, str]:
+    """Claim id -> text, so an atom's cited claim can be resolved and checked."""
+    raw = ledger_path.read_text(encoding="utf-8")
+    if ledger_path.suffix in {".yaml", ".yml"}:
+        import yaml
+
+        data = yaml.safe_load(raw)
+    else:
+        data = json.loads(raw)
+    claims = data.get("claims", data) if isinstance(data, dict) else data
+    resolved = {c["id"]: str(c.get("text") or c.get("claim") or "")
+                for c in claims if isinstance(c, dict) and c.get("id")}
+    if not resolved:
+        raise ValueError(f"no identified claims found in {ledger_path}")
+    return resolved
 
 
 def load_claim_texts(ledger_path: Path) -> list[str]:

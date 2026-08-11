@@ -570,7 +570,7 @@ def verify_publish_cmd(
     """Re-prove the DELIVERED pptx: every visible string claim-bound (exit 1 on findings)."""
     import json as json_mod
 
-    from .publish_verify import PublishApprovals, TemplateContract, load_claim_texts, verify_publish
+    from .publish_verify import PublishApprovals, TemplateContract, load_claim_texts, load_claims_by_id, verify_publish
 
     try:
         approval_model = (
@@ -589,6 +589,7 @@ def verify_publish_cmd(
         receipt = verify_publish(
             pptx,
             claim_texts=load_claim_texts(ledger),
+            claims_by_id=load_claims_by_id(ledger),
             approvals=approval_model,
             template_contract=contract_model,
             document=doc_model,
