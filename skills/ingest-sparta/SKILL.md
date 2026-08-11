@@ -167,15 +167,22 @@ Step 08 extracts `cwe_class_ids` from SPARTA Techniques and creates CWE→SPARTA
 uv run python -m sparta.pipeline.08_relationships --run-id <run-id>
 ```
 
-### CWE → NIST 2-hop Path (Heimdall): NOT ON MAIN
+### CWE → NIST 2-hop Path (Heimdall): Step 15
 
-Earlier revisions documented a `01d_map_cwe_nist` step populating
-`nist_control_ids` on CWE controls from the MITRE Heimdall CSV. That step lives
-only on branch `feature/nrs-standardization` (last commit `e1cba40`,
-2026-04-10) and was not carried into the current 37-step pipeline. Verified
-2026-08-11 on main: no Heimdall code, no `nist_control_ids` field on CWE
-controls, and zero CWE→NIST edges in `sparta_relationships`. Recover the step
-from that branch before documenting or depending on the 2-hop path.
+The July pipeline rewrite dropped the old `steps/01d_map_cwe_nist` module; it
+was recovered onto main 2026-08-11 as `15_map_cwe_nist` (commit `0864539`).
+
+```bash
+uv run python -m sparta.pipeline.15_map_cwe_nist --download --dry-run  # preview
+uv run python -m sparta.pipeline.15_map_cwe_nist                       # apply
+```
+
+Populates `nist_control_ids` + `nist_source` on CWE controls from the MITRE
+Heimdall CSV (144 curated mappings; 138 CWEs present in the corpus enriched on
+recovery, 2-hop path verified live: `CWE-79 → SI-10 → 17 SV-* controls` via
+`tor_threats`). Note this writes a FIELD, not edges — CWE→NIST edge documents
+in `sparta_relationships` still need a relationships step to materialize the
+path for graph traversal.
 
 ### Edge Casing in sparta_relationships
 
