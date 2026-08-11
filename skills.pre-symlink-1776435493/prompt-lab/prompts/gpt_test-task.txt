@@ -1,3 +1,0 @@
-# prompt-lab-hash: sha256:a4375607653de9ab62a3a2ba6dda6416c60f109dec076dc8921c3de57472f053
-# prompt-lab-eval: 2026-03-17T22:04:08.912900+00:00 score=0.0 model=pre-existing-unsealed
-You are a JSON validator. Given an input JSON object, output a validation result as JSON.

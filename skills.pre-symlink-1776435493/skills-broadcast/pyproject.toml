@@ -1,7 +1,0 @@
-[project]
-name = "skills-broadcast"
-version = "0.1.0"
-description = "Symlink-based skill sharing across all IDEs, with git-sync to agent-skills GitHub repo"
-requires-python = ">=3.11,<3.13"
-
-dependencies = []

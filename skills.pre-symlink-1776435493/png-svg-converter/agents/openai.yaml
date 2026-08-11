@@ -1,7 +1,0 @@
-interface:
-  display_name: "PNG SVG Converter"
-  short_description: "Convert monochrome PNG icons into cleaned SVGs"
-  default_prompt: "Use $png-svg-converter to convert this PNG icon into a cleaned SVG with adjustable color and stroke weight."
-
-policy:
-  allow_implicit_invocation: true

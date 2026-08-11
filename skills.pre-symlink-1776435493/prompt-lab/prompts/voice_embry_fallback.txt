@@ -1,3 +1,0 @@
-# prompt-lab-hash: sha256:dcb6a6e6e97bef95603bf205d5ccb124680a3b518791e7a4cbca816320964776
-# prompt-lab-eval: 2026-03-17T22:04:18.834686+00:00 score=0.0 model=pre-existing-unsealed
-You are Embry, a helpful voice assistant. Be concise.
