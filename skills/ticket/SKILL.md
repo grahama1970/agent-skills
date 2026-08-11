@@ -111,6 +111,7 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `bug`, `feature`, `optimization`, `maintenance`, `question`, `triage` | Build and optionally create one compliant GitHub issue. |
 | `fleet FILE` | Split a list of requested changes into one ticket preview per item; `--apply` files them. |
 | `lookup` | Search, next, or show issues through the guarded helper. |
+| `memory-plan ISSUE --repo OWNER/REPO --json` | Compile deterministic `ticket.memory_concepts.v1` and `ticket.memory_query_plan.v1` without running Memory retrieval. |
 | `lease`, `comment`, `block`, `unblock`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
 | `verify ISSUE --cmd CMD` | Run deterministic local commands and write a proof file. |
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
@@ -159,6 +160,57 @@ All three are optional and repeatable, and available on `bug`, `feature`,
 leaves the body byte-identical to before. They are mirrored into the
 `ticket-skill` marker block for machine reads, and `--depends-on` renders
 `blocked-by: owner/repo#N`.
+
+Agent-routable tickets may also carry compact Memory planning anchors:
+
+```bash
+skills/ticket/run.sh feature "Add deterministic context compiler" \
+  --target skills/ticket \
+  --limitation "Workers invent Memory query text independently" \
+  --capability "Emit deterministic concepts and a versioned Memory query plan" \
+  --workflow "Worker previews memory-plan before repair" \
+  --acceptance "Plan has concepts, recipe digest, selectors, and plan digest" \
+  --proof "skills/ticket/run.sh memory-plan 1362 --repo grahama1970/agent-skills --json; read back plan_sha256" \
+  --route backend_python_or_skill_runtime \
+  --memory-recipe ticket-repair-context-v1 \
+  --memory-symbol DiagramNode \
+  --memory-identifier binding_paths \
+  --memory-anchor "ticket context compiler"
+```
+
+These fields are explicit anchors only. `$ticket` must not use an LLM to invent
+symbols, paths, skills, commands, invariants, or proof clauses. A model may
+suggest concepts in a separate advisory workflow, but the canonical marker is
+what the filer supplied.
+
+## Memory query planning
+
+`memory-plan` is a preview-only compiler:
+
+```bash
+skills/ticket/run.sh memory-plan 1362 --repo grahama1970/agent-skills --json
+skills/ticket/run.sh memory-plan --body-file draft.md --repo grahama1970/agent-skills --json
+```
+
+It reads the live issue body when an issue number is supplied, parses the
+`ticket-skill` marker and structured sections, resolves the centrally versioned
+recipe registry at `skills/ticket/references/memory-query-recipes.yaml`, and
+emits:
+
+- `ticket.memory_concepts.v1`
+- `ticket.memory_query_plan.v1`
+- `issue_body_sha256`
+- `recipe_digest`
+- `concepts_sha256`
+- `plan_sha256`
+- effective required/conditional/exploratory steps
+- skipped steps with deterministic reasons
+- diagnostic commands for humans
+
+It must never execute Memory retrieval, mutate GitHub, paste raw AQL/Qdrant
+logic into the ticket, or expand the ticket's target paths/proof/non-goals. If a
+ticket is malformed, human-first, unsafe, missing required fields, or uses a
+recipe incompatible with its route, the command fails closed.
 
 Only the VARIABLE context belongs here. Universal execution policy — read
 project knowledge, lease one issue, fail closed, retain proof — lives in

@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 
 import typer
 from loguru import logger
+from ticket_memory_plan import memory_plan_command
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -42,6 +43,7 @@ VALID_ROUTES = {
 app = typer.Typer(help="GitHub ticket filing and lifecycle CLI.")
 ci_app = typer.Typer(help="GitHub Actions helpers for ticket verification.")
 app.add_typer(ci_app, name="ci")
+app.command("memory-plan")(memory_plan_command)
 
 
 @dataclass(frozen=True)
@@ -379,6 +381,10 @@ def _body(
     context_files: list[str] | None = None,
     required_skills: list[str] | None = None,
     depends_on: list[str] | None = None,
+    memory_recipe: str = "",
+    memory_symbols: list[str] | None = None,
+    memory_identifiers: list[str] | None = None,
+    memory_anchors: list[str] | None = None,
 ) -> str:
     lines = [
         _section("Type", ticket_type),
@@ -441,6 +447,10 @@ def _body(
         + (f"context_files: {','.join(context_files)}\n" if context_files else "")
         + (f"required_skills: {','.join(required_skills)}\n" if required_skills else "")
         + (f"depends_on: {','.join(depends_on)}\n" if depends_on else "")
+        + (f"memory_recipe: {memory_recipe}\n" if memory_recipe else "")
+        + (f"memory_symbols: {','.join(memory_symbols)}\n" if memory_symbols else "")
+        + (f"memory_identifiers: {','.join(memory_identifiers)}\n" if memory_identifiers else "")
+        + (f"memory_anchors: {','.join(memory_anchors)}\n" if memory_anchors else "")
         + "-->\n"
     )
     lines.append(
@@ -466,6 +476,10 @@ def _draft(
     context_files: list[str] | None = None,
     required_skills: list[str] | None = None,
     depends_on: list[str] | None = None,
+    memory_recipe: str = "",
+    memory_symbols: list[str] | None = None,
+    memory_identifiers: list[str] | None = None,
+    memory_anchors: list[str] | None = None,
     lane: str = "",
 ) -> TicketDraft:
     _validate_common(ticket_type, target, proof, route)
@@ -482,6 +496,10 @@ def _draft(
         context_files=context_files,
         required_skills=required_skills,
         depends_on=depends_on,
+        memory_recipe=memory_recipe,
+        memory_symbols=memory_symbols,
+        memory_identifiers=memory_identifiers,
+        memory_anchors=memory_anchors,
     )
     return TicketDraft(
         ticket_type=ticket_type,
@@ -595,6 +613,10 @@ def bug(
     depends_on: list[str] = typer.Option(
         [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
     ),
+    memory_recipe: str = typer.Option("", "--memory-recipe", help="Versioned Memory query recipe id."),
+    memory_symbol: list[str] = typer.Option([], "--memory-symbol", help="Exact symbol anchor. Repeatable."),
+    memory_identifier: list[str] = typer.Option([], "--memory-identifier", help="Exact identifier anchor. Repeatable."),
+    memory_anchor: list[str] = typer.Option([], "--memory-anchor", help="Exact Memory search anchor. Repeatable."),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -620,6 +642,10 @@ def bug(
         context_files=list(context_file),
         required_skills=list(required_skill),
         depends_on=list(depends_on),
+        memory_recipe=memory_recipe,
+        memory_symbols=list(memory_symbol),
+        memory_identifiers=list(memory_identifier),
+        memory_anchors=list(memory_anchor),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -647,6 +673,10 @@ def feature(
     depends_on: list[str] = typer.Option(
         [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
     ),
+    memory_recipe: str = typer.Option("", "--memory-recipe", help="Versioned Memory query recipe id."),
+    memory_symbol: list[str] = typer.Option([], "--memory-symbol", help="Exact symbol anchor. Repeatable."),
+    memory_identifier: list[str] = typer.Option([], "--memory-identifier", help="Exact identifier anchor. Repeatable."),
+    memory_anchor: list[str] = typer.Option([], "--memory-anchor", help="Exact Memory search anchor. Repeatable."),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -673,6 +703,10 @@ def feature(
         context_files=list(context_file),
         required_skills=list(required_skill),
         depends_on=list(depends_on),
+        memory_recipe=memory_recipe,
+        memory_symbols=list(memory_symbol),
+        memory_identifiers=list(memory_identifier),
+        memory_anchors=list(memory_anchor),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -699,6 +733,10 @@ def optimization(
     depends_on: list[str] = typer.Option(
         [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
     ),
+    memory_recipe: str = typer.Option("", "--memory-recipe", help="Versioned Memory query recipe id."),
+    memory_symbol: list[str] = typer.Option([], "--memory-symbol", help="Exact symbol anchor. Repeatable."),
+    memory_identifier: list[str] = typer.Option([], "--memory-identifier", help="Exact identifier anchor. Repeatable."),
+    memory_anchor: list[str] = typer.Option([], "--memory-anchor", help="Exact Memory search anchor. Repeatable."),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
 ) -> None:
@@ -722,6 +760,10 @@ def optimization(
         context_files=list(context_file),
         required_skills=list(required_skill),
         depends_on=list(depends_on),
+        memory_recipe=memory_recipe,
+        memory_symbols=list(memory_symbol),
+        memory_identifiers=list(memory_identifier),
+        memory_anchors=list(memory_anchor),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 
@@ -748,6 +790,10 @@ def maintenance(
     depends_on: list[str] = typer.Option(
         [], "--depends-on", help="owner/repo#N this ticket is blocked by. Repeatable."
     ),
+    memory_recipe: str = typer.Option("", "--memory-recipe", help="Versioned Memory query recipe id."),
+    memory_symbol: list[str] = typer.Option([], "--memory-symbol", help="Exact symbol anchor. Repeatable."),
+    memory_identifier: list[str] = typer.Option([], "--memory-identifier", help="Exact identifier anchor. Repeatable."),
+    memory_anchor: list[str] = typer.Option([], "--memory-anchor", help="Exact Memory search anchor. Repeatable."),
     repo: Optional[str] = typer.Option(None, "--repo", "-R"),
     apply: bool = typer.Option(False, "--apply"),
     as_json: bool = typer.Option(False, "--json"),
@@ -773,6 +819,10 @@ def maintenance(
         context_files=list(context_file),
         required_skills=list(required_skill),
         depends_on=list(depends_on),
+        memory_recipe=memory_recipe,
+        memory_symbols=list(memory_symbol),
+        memory_identifiers=list(memory_identifier),
+        memory_anchors=list(memory_anchor),
     )
     _create_or_preview(draft, repo=repo, apply=apply, as_json=as_json)
 

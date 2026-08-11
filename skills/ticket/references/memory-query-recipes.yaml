@@ -1,0 +1,183 @@
+schema: ticket.memory_query_recipes.v1
+recipes:
+  ticket-repair-context-v1:
+    description: >
+      Compile the Memory search intents needed by a stateless repair agent while
+      preserving the GitHub ticket as the immutable work contract.
+    route_compatibility:
+      - backend_python_or_skill_runtime
+      - frontend_code
+      - rust_or_binary
+      - ops_or_scheduler
+      - documentation_or_report
+      - security_or_compliance
+    steps:
+      - id: exact-ticket-history
+        class: required
+        purpose: Exact repository ticket and stable goal identity.
+        memory_product: ticket_history
+        selector_inputs:
+          - repository
+          - issue_ref
+          - goal_identity
+        prerequisites: []
+        run_condition: repository and issue_ref are present
+        budget:
+          max_results: 8
+          max_depth: 1
+        required_evidence_fields:
+          - issue_ref
+          - source_ref
+          - updated_at
+        healthy_no_match: degraded_ticket_history_missing
+        stops_dispatch: true
+      - id: current-project-decisions
+        class: required
+        purpose: Approved active project-memory topics relevant to target and invariants.
+        memory_product: project_memory_current_decisions
+        selector_inputs:
+          - repository
+          - target
+          - target_paths
+          - invariants
+          - non_goals
+        prerequisites: []
+        run_condition: target is present
+        budget:
+          max_results: 8
+          max_depth: 1
+        required_evidence_fields:
+          - source_ref
+          - decision_status
+          - observed_at
+        healthy_no_match: ready_no_project_decision_match
+        stops_dispatch: false
+      - id: current-target-state
+        class: required
+        purpose: Current temporal blockers, receipts, migrations, and readiness for the target.
+        memory_product: project_state_current_target
+        selector_inputs:
+          - repository
+          - target
+          - current_state
+          - proof_contract
+          - artifact_names
+        prerequisites: []
+        run_condition: target is present
+        budget:
+          max_results: 8
+          max_depth: 1
+        required_evidence_fields:
+          - source_ref
+          - status
+          - observed_at
+        healthy_no_match: degraded_current_state_missing
+        stops_dispatch: false
+      - id: target-code-entry
+        class: required
+        purpose: Exact current code entry and freshness when the route changes code.
+        memory_product: code_entry_freshness
+        selector_inputs:
+          - repository
+          - target_paths
+          - symbols
+          - identifiers
+          - route
+        prerequisites: []
+        run_condition: route is a code route
+        budget:
+          max_results: 12
+          max_depth: 1
+        required_evidence_fields:
+          - path
+          - commit
+          - symbol
+          - observed_at
+        healthy_no_match: blocked_code_entry_missing_for_code_route
+        stops_dispatch: true
+      - id: related-prior-fixes
+        class: conditional
+        purpose: Procedural analogues and proven skill/tool chains.
+        memory_product: procedural_prior_fixes
+        selector_inputs:
+          - ticket_type
+          - route
+          - target
+          - current_state
+          - requested_outcome
+          - required_skills
+        prerequisites:
+          - exact-ticket-history
+        run_condition: current_state or requested_outcome is present
+        budget:
+          max_results: 8
+          max_depth: 1
+        required_evidence_fields:
+          - source_ref
+          - proof_ref
+          - skill_chain
+        healthy_no_match: ready_no_prior_fix_match
+        stops_dispatch: false
+      - id: bounded-impact
+        class: conditional
+        purpose: Callers, callees, and impact seeded from an exact selected symbol.
+        memory_product: code_impact_slice
+        selector_inputs:
+          - repository
+          - target_paths
+          - symbols
+        prerequisites:
+          - target-code-entry
+        run_condition: at least one exact symbol is present
+        budget:
+          max_results: 16
+          max_depth: 2
+        required_evidence_fields:
+          - path
+          - symbol
+          - relationship
+        healthy_no_match: ready_no_bounded_impact_match
+        stops_dispatch: false
+      - id: proof-history
+        class: conditional
+        purpose: Prior proof commands, receipts, and environment requirements.
+        memory_product: proof_history
+        selector_inputs:
+          - repository
+          - proof_contract
+          - commands
+          - artifact_names
+        prerequisites:
+          - exact-ticket-history
+        run_condition: proof_contract is present
+        budget:
+          max_results: 8
+          max_depth: 1
+        required_evidence_fields:
+          - command
+          - receipt_ref
+          - environment
+        healthy_no_match: ready_no_proof_history_match
+        stops_dispatch: false
+      - id: cross-repo-analogy
+        class: exploratory
+        purpose: Related-repository prior art after local searches are insufficient.
+        memory_product: cross_repo_prior_art
+        selector_inputs:
+          - target
+          - route
+          - required_skills
+          - anchors
+        prerequisites:
+          - exact-ticket-history
+          - related-prior-fixes
+        run_condition: local required and conditional searches are insufficient
+        budget:
+          max_results: 6
+          max_depth: 1
+        required_evidence_fields:
+          - repository
+          - source_ref
+          - proof_ref
+        healthy_no_match: ready_no_cross_repo_analogy_match
+        stops_dispatch: false

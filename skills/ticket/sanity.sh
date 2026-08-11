@@ -16,6 +16,8 @@ for path in \
   "$SCRIPT_DIR/run.sh" \
   "$SCRIPT_DIR/pyproject.toml" \
   "$SCRIPT_DIR/scripts/ticket_cli.py" \
+  "$SCRIPT_DIR/scripts/ticket_memory_plan.py" \
+  "$SCRIPT_DIR/references/memory-query-recipes.yaml" \
   "$SCRIPT_DIR/references/ticket_body_templates.yml"; do
   [[ -f "$path" ]] || { echo "FAIL missing $path"; exit 1; }
 done
@@ -23,6 +25,7 @@ echo "PASS"
 
 echo -n "Check 2 - Python compile/import: "
 uv run --project "$SCRIPT_DIR" python -m py_compile "$SCRIPT_DIR/scripts/ticket_cli.py"
+uv run --project "$SCRIPT_DIR" python -m py_compile "$SCRIPT_DIR/scripts/ticket_memory_plan.py"
 echo "PASS"
 
 echo -n "Check 3 - best-practices-skills validator: "
@@ -303,6 +306,96 @@ run_type optimization --friction f --improvement i --measurable-target t --proof
 run_type maintenance  --invariant i --cleanup c --scoped-files f --proof "$PROOF"
 run_type question     --question q --answer-format prose --source-scope src --proof "$PROOF"
 run_type triage       --clues c --missing-data m
+echo "PASS"
+
+echo -n "Check 25 - memory-plan compiles deterministic concepts and recipes: "
+cat > "$TMPDIR/memory-plan-issue.md" <<'EOF'
+## Type
+
+feature
+
+## Target
+
+skills/ticket
+
+## Target paths
+
+- skills/ticket/SKILL.md
+- skills/ticket/scripts/ticket_cli.py
+
+## Current state
+
+Workers invent Memory query text independently.
+
+## Requested outcome
+
+Emit deterministic Memory concepts and a versioned query plan.
+
+## Required proof
+
+Run `skills/ticket/run.sh memory-plan 1362 --repo grahama1970/agent-skills --json` and read back `proof-summary.json`.
+
+## Route
+
+backend_python_or_skill_runtime
+
+## Requested repair agent
+
+agent-skill-maintainer
+
+## Non-goals
+
+No Memory retrieval execution.
+
+<!-- ticket-skill
+type: feature
+target: skills/ticket
+route: backend_python_or_skill_runtime
+agent: agent-skill-maintainer
+context_files: skills/ticket/SKILL.md
+required_skills: ticket,memory
+depends_on: grahama1970/graph-memory-operator#112
+memory_recipe: ticket-repair-context-v1
+memory_symbols: DiagramNode
+memory_identifiers: binding_paths
+memory_anchors: ticket context compiler
+-->
+EOF
+"$SCRIPT_DIR/run.sh" memory-plan --body-file "$TMPDIR/memory-plan-issue.md" \
+  --repo grahama1970/agent-skills --json > "$TMPDIR/memory-plan-a.json"
+"$SCRIPT_DIR/run.sh" memory-plan --body-file "$TMPDIR/memory-plan-issue.md" \
+  --repo grahama1970/agent-skills --json > "$TMPDIR/memory-plan-b.json"
+cmp "$TMPDIR/memory-plan-a.json" "$TMPDIR/memory-plan-b.json"
+grep -q '"schema": "ticket.memory_query_plan.v1"' "$TMPDIR/memory-plan-a.json"
+grep -q '"schema": "ticket.memory_concepts.v1"' "$TMPDIR/memory-plan-a.json"
+grep -q '"id": "target-code-entry"' "$TMPDIR/memory-plan-a.json"
+grep -q '"id": "bounded-impact"' "$TMPDIR/memory-plan-a.json"
+grep -q '"memory_retrieval_executed": false' "$TMPDIR/memory-plan-a.json"
+grep -q '"github_mutation": false' "$TMPDIR/memory-plan-a.json"
+echo "PASS"
+
+echo -n "Check 26 - memory-plan fails closed for human-first recipe misuse: "
+sed 's/type: feature/type: question/' "$TMPDIR/memory-plan-issue.md" > "$TMPDIR/memory-plan-question.md"
+if "$SCRIPT_DIR/run.sh" memory-plan --body-file "$TMPDIR/memory-plan-question.md" \
+  --repo grahama1970/agent-skills --json >/dev/null 2>&1; then
+  echo "FAIL human-first plan compiled"
+  exit 1
+fi
+echo "PASS"
+
+echo -n "Check 27 - memory marker options render compact fields: "
+OUT="$("$SCRIPT_DIR/run.sh" feature "memory marker probe" \
+  --target skills/ticket --limitation l --capability c --workflow w --acceptance a \
+  --proof "./run.sh sanity-live.sh --allow-live; read back receipt.json" \
+  --route backend_python_or_skill_runtime \
+  --memory-recipe ticket-repair-context-v1 \
+  --memory-symbol DiagramNode \
+  --memory-identifier binding_paths \
+  --memory-anchor "ticket context compiler" 2>&1)"
+grep -q 'memory_recipe: ticket-repair-context-v1' <<<"$OUT" || { echo "FAIL missing memory_recipe"; exit 1; }
+grep -q 'memory_symbols: DiagramNode' <<<"$OUT" || { echo "FAIL missing memory_symbols"; exit 1; }
+grep -q 'memory_identifiers: binding_paths' <<<"$OUT" || { echo "FAIL missing memory_identifiers"; exit 1; }
+grep -q 'memory_anchors: ticket context compiler' <<<"$OUT" || { echo "FAIL missing memory_anchors"; exit 1; }
 echo "PASS"
 
 echo ""
