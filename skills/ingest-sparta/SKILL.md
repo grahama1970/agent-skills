@@ -44,7 +44,7 @@ Dispatches commands to the real pipeline. Does NOT contain pipeline logic.
 
 ## What the Real Pipeline Does
 
-37 numbered Python steps that:
+40 numbered Python steps (00-18) that:
 1. Fetch SPARTA-Data.xlsx + ATT&CK + CWE + D3FEND + NIST + ESA sources
 2. Extract and normalize 2,147+ controls across 6 frameworks
 3. Fetch ~10K URLs referenced by controls
@@ -86,9 +86,9 @@ named`.
 
 ## Pipeline Steps (real, in src/sparta/pipeline/)
 
-Verified against the filesystem 2026-08-11. Highest step number is 16; there are
-no steps 17+. Earlier revisions of this file listed steps 01b/01c/01d/01e,
-05d, 11b, 12b/12c, 13b, 14-25, 48-55 and 60-61, none of which exist.
+Verified against the filesystem 2026-08-11 (40 files, 00-18). Earlier revisions
+of this file listed steps 01b/01c/01d/01e, 05d, 11b, 12b/12c, 13b, 14-25,
+48-55 and 60-61, none of which exist on main.
 
 | Step | Module | What It Does |
 |------|--------|-------------|
@@ -107,46 +107,58 @@ no steps 17+. Earlier revisions of this file listed steps 01b/01c/01d/01e,
 | 12 | `12_qra` | QRA generation with quality cascade |
 | 13 | `13_persist_arango` | Persist to ArangoDB |
 | 14 | `14_embed_chunks` | Generate embeddings |
+| 15 | `15_map_cwe_nist` | CWE→NIST via MITRE Heimdall (recovered 2026-08-11; Rev4 caveat below) |
 | 16 | `16_qra_audit` | QRA quality audit |
+| 17 | `17_crosswalk_edges` | Deterministic crosswalk edges: ATLAS mitigates, CVE→CWE |
+| 18 | `18_ingest_security_corpora` | Dispatch to external ingests: atlas, kev, nvd, qa, refresh |
 
 Step-number prefixes are not unique: `06b`, `06c`, `07`, `07c` and `09a` each
 name two different modules. Always invoke the full module name.
 
 ## Framework Registry (what is actually in sparta_controls)
 
-The pipeline above does not produce the whole corpus. Verified 2026-08-11:
-382,700 controls across 20 `source_framework` values, of which the numbered
-steps account for a minority.
+Verified live 2026-08-11 after the framework alignment audit (active =
+`deprecated != true`). Every active framework except EMB3D participates in
+crosswalk edges; 419,304 total relationships.
 
-| source_framework | Controls | Loaded by |
-|------------------|---------:|-----------|
-| `NVD_CVE` | 367,886 | `scripts/ingest_nvd_cvelist.py` (outside the numbered pipeline) |
-| `NVD` | 4,830 | outside the numbered pipeline |
-| `NIST` | 1,905 | numbered pipeline |
-| `CISA_KEV` | 1,616 | `scripts/backfill_kev_corpus.py` (outside the numbered pipeline) |
-| `ATT_CK_Enterprise` | 1,273 | numbered pipeline |
-| `SPARTA` | 1,110 | numbered pipeline |
-| `CWE` | 973 | numbered pipeline |
-| `CAPEC` | 615 | numbered pipeline |
-| `attack` | 524 | ambiguous alias of ATT&CK; domain unrecorded |
-| `retired_probe` | 500 | test residue, not a framework |
-| `D3FEND` | 424 | numbered pipeline |
-| `ATT_CK_Mobile` | 225 | numbered pipeline |
-| `MITRE_ATLAS` | 205 | `scripts/ingest_atlas.py` (outside the numbered pipeline) |
-| `EMB3D` | 170 | outside the numbered pipeline |
-| `ESA` / `ESA_Shield` | 137 / 137 | duplicate populations under two labels |
-| `ATT_CK_ICS` | 131 | numbered pipeline |
-| `ISO` | 23 | outside the numbered pipeline |
-| `NASA` | 14 | outside the numbered pipeline |
+| source_framework | Active controls | Loaded by | Edges |
+|------------------|---------------:|-----------|-------|
+| `NVD_CVE` | 372,716 | step 18 → `scripts/ingest_nvd_cvelist.py` | 154,604 CVE→CWE (step 17) |
+| `NIST` | 1,896 | numbered pipeline | 121,957 →SPARTA |
+| `ATT_CK_Enterprise` | 1,644 | numbered pipeline + domain relabel | yes |
+| `CISA_KEV` | 1,616 | step 18 → `scripts/backfill_kev_corpus.py` | 597 CVE→CWE (step 17) |
+| `SPARTA` | 1,110 | numbered pipeline | yes |
+| `CWE` | 944 | numbered pipeline | yes |
+| `CAPEC` | 615 | numbered pipeline | yes |
+| `D3FEND` | 424 | numbered pipeline | yes |
+| `ATT_CK_Mobile` | 316 | numbered pipeline + domain relabel | yes |
+| `MITRE_ATLAS` | 205 | step 18 → `scripts/ingest_atlas.py` | 246 mitigates (step 17) |
+| `EMB3D` | 170 | outside pipeline | none — mitigations only; threat nodes not yet ingested, so no edges are derivable (legitimate orphan) |
+| `ATT_CK_ICS` | 167 | numbered pipeline + domain relabel | yes |
+| `ESA` | 137 | numbered pipeline | 652 |
+| `ISO` | 23 | outside pipeline | yes |
+| `NASA` | 14 | outside pipeline | yes |
+
+Retired labels (records survive with `deprecated: true` and provenance, never
+deleted): `NVD` (4,830 merged into `NVD_CVE` after identity analysis proved
+the same CVE record family), `ESA_Shield` (137 duplicates of ESA with
+`duplicate_of_control_id` pointers), `attack` (524 legacy techniques
+relabelled to their MITRE domain via STIX bundles; 12 quarantined —
+corrupt pipe-delimited ids and retired technique ids — deprecated),
+`retired_probe` (500 `nvdtest__` test residue).
 
 Adding a framework means TWO writes, not one: nodes into `sparta_controls` and
-edges into `sparta_relationships`. Nodes alone are reachable by semantic and
-BM25 search but join no crosswalk chain, which is the failure mode
-`monitor-sparta` check 30 (Framework Label Alignment) exists to catch. As of
-2026-08-11 it reports 15 frameworks with zero edges covering 378,696 controls.
+edges into `sparta_relationships` (step 17 for deterministic families). Nodes
+alone are reachable by semantic and BM25 search but join no crosswalk chain.
+`monitor-sparta` check 30 (Framework Label Alignment) catches orphan
+frameworks and label drift; check 31 (Framework Label Congruence) catches edge
+labels that contradict their own endpoints.
 
 Use the exact label already present. Do not introduce a case or format variant
-of an existing framework.
+of an existing framework. Known surfaced findings, deliberately not repaired:
+the `F36_SUPPLY_CHAIN` / `F36_THREAT_PROFILE` / `F36_SPARTA_EXPLORER`
+edge-only namespaces and 4,436 dangling endpoint references (F36/TA ids with
+no control documents).
 
 ## Crosswalk Paths (CWE → SPARTA)
 
