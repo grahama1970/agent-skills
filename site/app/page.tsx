@@ -17,6 +17,9 @@ import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { CompetenceMatrix } from '@/components/competence-matrix';
+import { TauCase } from '@/components/cases/tau-case';
+import { SpartaCase } from '@/components/cases/sparta-case';
+import { PersonaDreamCase } from '@/components/cases/persona-dream-case';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -29,7 +32,7 @@ const REPO = 'https://github.com/grahama1970/agent-skills';
 // other projects compact to an index so the Work section isn't an endless scroll.
 const FLAGSHIPS = new Set(['tau', 'persona-dream', 'sparta-explorer']);
 
-const CARD_META: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
+const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
@@ -94,6 +97,10 @@ export default function Home() {
   const capturedReceiptCount = (artifacts.artifacts as ReceiptArtifact[]).filter(
     (a) => a.capture_status === 'captured',
   ).length;
+  const projectBySlug = new Map(content.projects.map((p) => [p.slug, p]));
+  const tauProject = projectBySlug.get('tau');
+  const spartaProject = projectBySlug.get('sparta-explorer');
+  const personaDreamProject = projectBySlug.get('persona-dream');
   return (
     <>
       <HomeJsonLd />
@@ -359,9 +366,14 @@ export default function Home() {
                 </div>
               </dl>
             </div>
-            <div className="cards">
-              {content.projects.map((p, i) => {
-                const meta = CARD_META[p.slug];
+            <div className="flagship-cases" aria-label="Flagship proof compositions">
+              {tauProject && <TauCase project={tauProject} />}
+              {spartaProject && <SpartaCase project={spartaProject} />}
+              {personaDreamProject && <PersonaDreamCase project={personaDreamProject} />}
+            </div>
+            <div className="cards" aria-label="Additional public proof dossiers">
+              {content.projects.filter((p) => !FLAGSHIPS.has(p.slug)).map((p, i) => {
+                const meta = PROJECT_VISUALS[p.slug];
                 const external = !skillFlags.has(p.slug);
                 // Automatic public/private: a private project links to its
                 // curated public overview (never the private repo) and is
