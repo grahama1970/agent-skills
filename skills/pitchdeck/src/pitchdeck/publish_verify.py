@@ -255,25 +255,44 @@ def _word_boundary_excerpt(needle: str, haystack: str) -> bool:
     return re.search(pattern, haystack, flags=re.IGNORECASE) is not None
 
 
+def occurrence_key(text: str, element_id: str) -> str:
+    """Authorization key: the string AND where it is allowed to appear."""
+    return f"{' '.join(text.split()).casefold().lstrip('❯>•- ')}@{element_id}"
+
+
+def element_id_from_shape_name(name: str) -> str:
+    """Recover the canonical element id from an emitted shape name.
+
+    The PPTX emitter names every object `el:<element-id>[:part]`, which is what
+    makes occurrence-scoped authorization possible at the delivered artifact."""
+    if not name.startswith("el:"):
+        return ""
+    return name[3:].split(":")[0]
+
+
 def _is_claim_bound(text: str, claim_texts: list[str], approvals: PublishApprovals,
                     atom_index: dict[str, AssertionAtom] | None = None,
-                    authorized_keys: set[str] | None = None) -> bool:
+                    authorized_keys: set[str] | None = None,
+                    element_id: str = "") -> bool:
     """A visible string is licensed by a compiler ATOM, an approval, a claim excerpt, or chrome."""
     stripped = text.strip()
     if atom_index is not None:
         key = " ".join(stripped.split()).casefold().lstrip("❯>•- ")
-        # Membership is not authorization: the atom must have passed
-        # authorize_atom() during verify_publish, which is what the
-        # authorized_keys set records.
-        if key in (authorized_keys or set()):
+        # Membership is not authorization on two counts: the atom must have
+        # passed authorize_atom(), AND the delivered occurrence must be the one
+        # that was authorized. A title's approval cannot license the same words
+        # pasted into an edge label.
+        if occurrence_key(stripped, element_id) in (authorized_keys or set()):
             return True
+        if element_id and key in (authorized_keys or set()):
+            return False  # authorized text, wrong occurrence
     if len(stripped) <= _CHROME_MAX_CHARS or stripped.isdigit():
         return True
     # A diagram node renders its label and sublabel into a single text frame, so
     # a multi-line string is several assertions; each line must stand on its own.
     lines = [ln.strip() for ln in stripped.splitlines() if ln.strip()]
     if len(lines) > 1:
-        return all(_is_claim_bound(line, claim_texts, approvals, atom_index, authorized_keys) for line in lines)
+        return all(_is_claim_bound(line, claim_texts, approvals, atom_index, authorized_keys, element_id) for line in lines)
     normalised = " ".join(stripped.split())
     for allowed in (*approvals.approved_renderings, *approvals.non_claim_text):
         if normalised.casefold() == " ".join(allowed.split()).casefold():
@@ -343,13 +362,19 @@ def verify_publish(
             refusal = authorize_atom(atom, claims_by_id=resolved_claims, approved_texts=approved_texts)
             if refusal is None:
                 authorized_keys.add(key)
+                authorized_keys.add(occurrence_key(atom.text, atom.element_id))
             else:
                 findings.append(PublishFinding(
                     code="UNCLAIMED_TEXT", where=atom.canonical_id,
                     detail=f"{refusal.code}: {refusal.detail}"))
 
     for where, text in visible:
-        if not _is_claim_bound(text, claim_texts, approvals, atom_index, authorized_keys):
+        # location is "slide[N]/<id>:<name>[/<id>:<name>...]"; the OWNING shape is
+        # the last segment, and its name follows the shape id
+        last = where.rsplit("/", 1)[-1]
+        shape_name = last.split(":", 1)[1] if ":" in last else ""
+        occurrence = element_id_from_shape_name(shape_name)
+        if not _is_claim_bound(text, claim_texts, approvals, atom_index, authorized_keys, occurrence):
             findings.append(PublishFinding(
                 code="UNCLAIMED_TEXT", where=where,
                 detail=f"visible text is not a legal transform of any claim: {text[:70]!r}"))
