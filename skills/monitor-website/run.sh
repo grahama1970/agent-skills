@@ -48,6 +48,14 @@ if [[ "${1:-}" == "review-site" ]]; then
   exec python3 scripts/review_site.py "$@"
 fi
 
+# `design-review` verifies URL-first G11 reviewer transport receipts. It does
+# not count a rater seat until raw provider output echoes the fingerprint/unit
+# canaries.
+if [[ "${1:-}" == "design-review" ]]; then
+  shift
+  exec python3 scripts/design_review.py "$@"
+fi
+
 # `visual-assets-check` validates site/visual-assets.yml against public image
 # files and rejects generated media used as evidence, missing provenance,
 # digest drift, private assets, and simulated craft.

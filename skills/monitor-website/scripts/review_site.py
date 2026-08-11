@@ -212,7 +212,7 @@ def write_templates(out_dir: Path, manifest: dict[str, Any]) -> None:
   </section>
   <section>
     <h2>Canonical Render</h2>
-    <img src="__ACCESS_BASE__/artifacts/{quote(unit["canonical_render"]["path"])}" alt="canonical render for {html.escape(unit["unit_id"])}">
+    <img src="__ACCESS_BASE__/{quote(unit["canonical_render"]["path"])}" alt="canonical render for {html.escape(unit["unit_id"])}">
   </section>
 </div>
 """
@@ -460,7 +460,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
             )
             return
         if len(parts) >= 5 and parts[3] == "artifacts":
-            rel_path = "/".join(parts[4:])
+            rel_path = "/".join(parts[3:])
             candidate = (srv.run_dir / rel_path).resolve()
             if srv.run_dir.resolve() not in candidate.parents or not candidate.is_file():
                 self.send_text(HTTPStatus.NOT_FOUND, "artifact not found")

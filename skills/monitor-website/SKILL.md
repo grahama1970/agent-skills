@@ -70,6 +70,11 @@ reads `site/content.json`. This skill keeps them honest.
 ./run.sh review-site verify --run-dir /tmp/grahama-review --json
 ./run.sh review-site serve --run-dir /tmp/grahama-review --bind 127.0.0.1 --port 43117 --json
 ./run.sh review-site stop --run-dir /tmp/grahama-review --json
+
+# Verify URL-first G11 reviewer transport without consuming a rater seat.
+./run.sh design-review preflight --provider webgpt --review-url '<capability-url>' --expected-fingerprint '<sha256>' --json
+./run.sh design-review submit --provider webgpt --review-url '<capability-url>' --expected-fingerprint '<sha256>' --prompt prompt.md --out /tmp/rater --json
+./run.sh design-review verify --rater-dir /tmp/rater --json
 ```
 
 A disabled-by-default nightly service is registered at
@@ -92,6 +97,11 @@ ship disabled; enable only when the scheduler environment is ready).
   It consumes the section-corpus manifest, copies canonical renders into the
   review bundle, serves loopback-only by default, and never treats the opaque
   URL as authentication for private, regulated, or ITAR material.
+- **Reviewer receipts:** `design-review` keeps transport, inspection, and rater
+  states separate. A preflight can prove URL/fingerprint/unit/canonical-image
+  access, but it never consumes a rater seat. A rater is usable only when raw
+  provider output is preserved and echoes the expected fingerprint, unit ids,
+  and review canary.
 
 ## What audit checks
 
