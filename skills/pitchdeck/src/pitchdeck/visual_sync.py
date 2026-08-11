@@ -84,8 +84,10 @@ def sync_deck_visuals(
             doc_text = f"{bundle.title} slide {position}: {title}\n{description}"
             text_resp = client.post(EMBED_URL, json={"text": doc_text})
             text_resp.raise_for_status()
+            # field is `image` with a data URL; the old `image_b64` field was
+            # unknown to the service and silently ignored (text-only vectors)
             image_b64 = base64.b64encode(image.read_bytes()).decode("ascii")
-            image_resp = client.post(EMBED_URL, json={"text": doc_text, "image_b64": image_b64})
+            image_resp = client.post(EMBED_URL, json={"text": doc_text, "image": f"data:image/png;base64,{image_b64}"})
             image_resp.raise_for_status()
             text_vec = text_resp.json()["embedding"]
             image_vec = image_resp.json()["embedding"]
