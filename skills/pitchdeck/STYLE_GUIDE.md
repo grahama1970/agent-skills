@@ -17,6 +17,13 @@ diagonal-hatch texture invented before the real photographic strip was found
 inside the layout; the bottom-left logo the blind judges named in every round
 was simply the template's own mark.
 
+## 1b. Archetypes
+
+The complete per-slide design assessment (all 263 pages classified into ten
+archetypes with measured geometry, exemplars, and compiler mappings) lives in
+`../best-practices-slide-design/references/DESIGN_SLIDES.md`. Select the
+archetype before composing a slide.
+
 ## 2. Page anatomy (every content page; 100% of corpus slides)
 
 ```
