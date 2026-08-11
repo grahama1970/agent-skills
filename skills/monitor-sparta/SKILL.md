@@ -385,6 +385,7 @@ Health command coverage (`monitor-sparta health`):
 14. Crosswalk edge coverage
 15. Crosswalk-chain schema discipline
 16. Framework label alignment (check 30)
+17. Framework label congruence (check 31)
 
 ### Framework label invariants
 
@@ -415,6 +416,22 @@ because of the label split.
 
 The check reports and does not collapse populations. Choosing a canonical label
 rewrites data and stays review-gated under the read-only default below.
+
+`check_framework_label_congruence` (check 31) covers the drift class alignment
+cannot see: labels are compared against each edge's OWN endpoints, joined via
+the unique `control_id` index, not against populations. An edge labelled NIST
+passes alignment as long as NIST controls exist somewhere — even when its own
+source control is SPARTA. Each edge side is classified `match` / `mismatch` /
+`unlabelled` / `dangling`. The 2026-08-11 baseline found 840 contradicting
+labels and 135,350 edges (51% of the graph) with no labels at all — the
+unlabelled pool concealed most of the graph's real connectivity (93k
+SPARTA→NIST, 15k →D3FEND, 16k →CWE). After the review-gated repairs, both
+mismatch and unlabelled are 0; dangling endpoints (F36_* namespaces and
+removed controls) remain surfaced as findings. Authority order for repairs,
+per the 2026-08-11 external validation: endpoint identity outranks the stored
+edge label; upstream identifiers (STIX bundles for ATT&CK domains) outrank
+both. Node relabels that cannot be resolved deterministically are quarantined
+with `attack_domain_unresolved`, never guessed.
 
 ### QRA reasoning invariants
 
