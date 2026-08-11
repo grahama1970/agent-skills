@@ -1,6 +1,6 @@
 {
   "schema": "monitor_opportunities.answer_bank.v1",
-  "note": "Graham's standing, TRUTHFUL answers for autonomous application filling. Authorized once; reused across applications. Identity + EEO are seeded from candidate_profile.json. Screening answers grow: a novel question is queued for one human answer, then added here so it auto-fills next time. NEVER fabricate — a field with no truthful answer here is queued, not guessed.",
+  "note": "Graham's standing, TRUTHFUL answers for autonomous application filling. Authorized once; reused across applications. Identity + EEO are seeded from candidate_profile.json. Screening answers grow: a novel question is queued for one human answer, then added here so it auto-fills next time. NEVER fabricate \u2014 a field with no truthful answer here is queued, not guessed.",
   "identity": {
     "name": "Graham Anderson",
     "first_name": "Graham",
@@ -27,11 +27,16 @@
   },
   "screening": {
     "how_did_you_hear": "LinkedIn",
-    "salary_expectation": "PLACEHOLDER — Graham to fill (e.g. '$220k-$260k, flexible')",
-    "years_experience": "PLACEHOLDER — Graham to fill",
-    "what_ai_tools_do_you_use": "PLACEHOLDER — Graham to fill (his real answer, one time)",
-    "why_this_company": "GENERATED_PER_OPPORTUNITY — audience-adaptive from approved claims (not a canned string)",
-    "notice_period": "PLACEHOLDER — Graham to fill",
-    "willing_to_relocate": "No — remote or Buffalo/WNY only"
+    "salary_expectation": "PLACEHOLDER \u2014 Graham to fill (e.g. '$220k-$260k, flexible')",
+    "years_experience": "PLACEHOLDER \u2014 Graham to fill",
+    "what_ai_tools_do_you_use": "PLACEHOLDER \u2014 Graham to fill (his real answer, one time)",
+    "why_this_company": "GENERATED_PER_OPPORTUNITY \u2014 audience-adaptive from approved claims (not a canned string)",
+    "notice_period": "PLACEHOLDER \u2014 Graham to fill",
+    "willing_to_relocate": "No \u2014 remote or Buffalo/WNY only"
+  },
+  "resume": {
+    "canonical_url": "https://grahama.co/resume.pdf",
+    "local_path": "skills/monitor-opportunities/local/resume/grahama-resume.pdf",
+    "note": "Upload the canonical grahama.co resume PDF, not a local docx."
   }
 }
