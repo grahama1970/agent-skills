@@ -148,6 +148,31 @@ def test_linkedin_packet_creation_performs_no_platform_call(tmp_path: Path) -> N
     assert Path(receipt["handoff_ref"]).exists()
 
 
+def test_employment_outreach_uses_resume_funnel() -> None:
+    packet = build_outreach_packet(
+        opportunity={**_opportunity(), "lane": "A", "opportunity_type": "employment_posting"},
+        channel="GMAIL",
+        claim_snapshot=_claims(),
+    )
+    assert packet["funnel"] == "employment"
+    assert packet["funnel_url"] == "https://grahama.co/resume"
+    assert "https://grahama.co/resume" in packet["body"]
+
+
+def test_consulting_outreach_uses_practice_funnel() -> None:
+    opportunity = {
+        **_opportunity(),
+        "lane": "C",
+        "opportunity_type": "commercial_signal",
+        "prospect_class": "commercial_signal",
+    }
+    packet = build_outreach_packet(opportunity=opportunity, channel="LINKEDIN", claim_snapshot=_claims())
+    assert packet["funnel"] == "consulting"
+    assert packet["funnel_url"] == "https://grahama.co"
+    assert "https://grahama.co/resume" not in packet["body"]
+    assert "https://grahama.co" in packet["body"]
+
+
 def test_missing_or_failed_roundtable_blocks_readiness() -> None:
     missing = build_outreach_packet(opportunity=_opportunity(), channel="GMAIL", claim_snapshot=_claims())
     assert missing["roundtable_status"] == "NOT_RUN"

@@ -1,6 +1,6 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-08
+Updated: 2026-08-11
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
 
@@ -25,7 +25,11 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
    `grahama1970/opportunities`, deduped by `content_hash`, lifecycle via labels; dual
    queues `track:employment` and `track:consulting` (prospect queue = federal
    solicitations + commercial signals, mandate-filtered).
-6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
+6. **Funnel routing** — Lane A employment packets point to `https://grahama.co/resume`
+   so recruiters and hiring executives get the calm résumé lane. Lane B federal/defense
+   and Lane C commercial signals point to `https://grahama.co` so clients and technical
+   decision-makers see the principal R&D practice front door.
+7. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
 
 Written but NOT yet live-proven (honest gaps):
 - Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
@@ -98,6 +102,10 @@ correct for every capability not explicitly reported as implemented by `status`.
     `human_required`.
 11. Empty nights are valid. Volume is audit data, not a success objective.
 12. Feed failure, no matches, and not searched are distinct evidence states.
+13. Public-surface routing is part of the opportunity product: consulting/client signals
+    use `grahama.co`; employment roles use `grahama.co/resume`. The résumé page should
+    stay Alex-comparable in scanability and calmness, while the homepage remains the
+    consulting/principal R&D funnel.
 
 ## Focused implementation sequence
 

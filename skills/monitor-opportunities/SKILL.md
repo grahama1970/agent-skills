@@ -134,14 +134,17 @@ does not require equal output or filler opportunities.
 
 - **A — employment** (`employment_posting`): WNY hybrid/onsite preferred, credible
   remote acceptable. **Buffalo is a hard constraint. Relocation-required roles are
-  rejected before ranking.**
+  rejected before ranking. Public funnel: `https://grahama.co/resume`.
 - **B — federal/defense** (`federal_notice`): SAM.gov Sources Sought/RFI and bounded,
-  source-backed subcontract signals.
+  source-backed subcontract signals. Public funnel: `https://grahama.co`.
 - **C — commercial contract** (`commercial_signal`) for grahamaco: document extraction,
   agent pipelines, agentic integration, and applied R&D. Usually there is no apply
-  button; find and source the need before proposing work.
+  button; find and source the need before proposing work. Public funnel:
+  `https://grahama.co`.
 
 Federal notices and commercial signals are not forced into an employment-posting schema.
+The two public surfaces are intentionally separate: `grahama.co` is the consulting /
+principal R&D front door, while `grahama.co/resume` is the calm employment lane.
 
 ## Discovery: research first, never board enumeration
 

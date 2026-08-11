@@ -10,5 +10,5 @@
     {"org": "Roswell Park / QAS.AI", "why": "AI + health; document/verification and clinical-decision AI", "fit": ["document-extraction", "verification"], "as": "consulting"},
     {"org": "ACV Auctions", "why": "Buffalo AI product company (computer vision / ML at scale)", "fit": ["agentic-pipelines", "llm-systems"], "as": "employer"}
   ],
-  "outreach_frame": "I'm in Buffalo, I can meet in person, and I build inspectable agentic systems under real (ITAR/compliance/audit) constraints — DARPA ARCOS, SPARTA, pdf_oxide. grahama.co is the front door."
+  "outreach_frame": "I'm in Buffalo, I can meet in person, and I build inspectable agentic systems under real (ITAR/compliance/audit) constraints — DARPA ARCOS, SPARTA, pdf_oxide. Use grahama.co for consulting/principal R&D prospects and grahama.co/resume for employment conversations."
 }

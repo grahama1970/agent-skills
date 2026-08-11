@@ -18,12 +18,16 @@ auto-sending anything.** The human transmits every application and every outreac
 4. **Tracks** every opportunity as an issue in the **private** repo
    `grahama1970/opportunities`, deduped and lifecycle-labeled, in two queues:
    `track:employment` and `track:consulting` (federal solicitations + commercial signals).
-5. **Delivers** the morning report to `/memory` + a Buzz summary you can chat with.
+5. **Routes** the public surface: employment packets point to `https://grahama.co/resume`;
+   consulting, federal, and commercial-signal packets point to `https://grahama.co`.
+6. **Delivers** the morning report to `/memory` + a Buzz summary you can chat with.
 
 ## Guarantees (by design, enforced in code)
 
 - **No auto-submit, no auto-send.** Applications are human-authorized; outreach drafts go
   to `/memory` and you transmit them.
+- **Two public funnels stay separate.** Consulting/client signals use `grahama.co`;
+  employment roles use `grahama.co/resume`.
 - **Dead API → website fallback**, always (enforced + tested).
 - **No fabricated claims** — resumes use only approved-claim wordings (test-enforced).
 - **Private** — job-search data never touches the public repo.
