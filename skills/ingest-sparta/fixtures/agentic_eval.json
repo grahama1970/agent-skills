@@ -1,24 +1,77 @@
 {
-  "version": 2,
-  "skill": "ingest-sparta",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "ingest-sparta",
+ "trials": 3,
+ "proof_scope": "pipeline dispatch truth: documented module paths import, alignment-audit steps exist, and the corpus registry the SKILL.md documents is reachable live",
+ "claims": {
+  "proves": "that the documented sparta.pipeline.NN_name module path actually loads (step 18 --list), that the alignment-audit steps 15/17/18 exist and respond to --help, and adversarially that the retired sparta.pipeline.steps.* path fails with No module named rather than silently succeeding",
+  "does_not_prove": "pipeline output quality or corpus content; those belong to monitor-sparta"
+ },
+ "cases": [
+  {
+   "name": "run-help",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../run.sh",
+    "--help"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
   },
-  "cases": [
-    {
-      "name": "run-help",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../run.sh",
-        "--help"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "name": "step18-lists-external-ingests",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "uv run python -m sparta.pipeline.18_ingest_security_corpora --list"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": "ingest_nvd_cvelist.py"
+   }
+  },
+  {
+   "name": "step15-heimdall-help",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.15_map_cwe_nist --help"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "step17-crosswalk-help",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.17_crosswalk_edges --help"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  },
+  {
+   "name": "retired-steps-path-fails-loud",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.steps.01d_map_cwe_nist --help"
+   ],
+   "expected": {
+    "exit_code": 1
+   }
+  }
+ ]
 }

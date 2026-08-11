@@ -110,7 +110,7 @@ of this file listed steps 01b/01c/01d/01e, 05d, 11b, 12b/12c, 13b, 14-25,
 | 15 | `15_map_cwe_nist` | CWE→NIST via MITRE Heimdall (recovered 2026-08-11; Rev4 caveat below) |
 | 16 | `16_qra_audit` | QRA quality audit |
 | 17 | `17_crosswalk_edges` | Deterministic crosswalk edges: ATLAS mitigates, CVE→CWE |
-| 18 | `18_ingest_security_corpora` | Dispatch to external ingests: atlas, kev, nvd, qa, refresh |
+| 18 | `18_ingest_security_corpora` | Dispatch to external ingests: atlas, kev, nvd, qa, refresh, epss, owasp_llm |
 
 Step-number prefixes are not unique: `06b`, `06c`, `07`, `07c` and `09a` each
 name two different modules. Always invoke the full module name.
@@ -138,6 +138,7 @@ crosswalk edges; 419,304 total relationships.
 | `ESA` | 137 | numbered pipeline | 652 |
 | `ISO` | 23 | outside pipeline | yes |
 | `NASA` | 14 | outside pipeline | yes |
+| `OWASP_LLM` | 10 | step 18 → `scripts/ingest_owasp_llm.py` | 27 references_weakness_context → ATLAS/CAPEC/CWE |
 
 Retired labels (records survive with `deprecated: true` and provenance, never
 deleted): `NVD` (4,830 merged into `NVD_CVE` after identity analysis proved
@@ -157,8 +158,13 @@ labels that contradict their own endpoints.
 Use the exact label already present. Do not introduce a case or format variant
 of an existing framework. Known surfaced findings, deliberately not repaired:
 the `F36_SUPPLY_CHAIN` / `F36_THREAT_PROFILE` / `F36_SPARTA_EXPLORER`
-edge-only namespaces and 4,436 dangling endpoint references (F36/TA ids with
-no control documents).
+edge-only namespaces and the dangling endpoint references (F36/TA ids with no
+control documents).
+
+CVE records additionally carry EPSS enrichment FIELDS (`epss_score`,
+`epss_percentile`, `epss_model_version`, `epss_date`; 356,485 records =
+95.2% of CVEs, refreshed via step 18 `epss`). EPSS rows are attributes of
+existing CVEs, never nodes.
 
 ## Crosswalk Paths (CWE → SPARTA)
 
