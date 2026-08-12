@@ -189,6 +189,15 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             "posting_text": evidence_text[:4000],
             "fit_score": float(record.get("fit_score") or (0.93 if top_candidate else 0.72)),
         }
+        # Premium capture signals (LinkedIn computes these server-side): an
+        # under-10-applicants posting is a low-competition channel; a "connection
+        # works here" is a live warm path. Optional passthrough — the response
+        # ranker reads row-level competition/warm_path directly.
+        if record.get("under_10_applicants"):
+            payload["competition"] = 0.1
+        if record.get("warm_path"):
+            payload["warm_path"] = float(record["warm_path"])
+            payload["warm_path_via"] = str(record.get("warm_path_via") or "LinkedIn: connection works here")
         payload["candidate_id"] = _candidate_id("candidate:a:linkedin", payload)
         candidates.append(payload)
     return receipt, candidates
