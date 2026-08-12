@@ -16,6 +16,7 @@ virtual display (Xvfb) — headed to avoid bot detection, virtual so no window p
 
 from __future__ import annotations
 
+import contextlib
 import json
 import subprocess
 from pathlib import Path
@@ -882,7 +883,9 @@ def capture_linkedin_premium(
     # f_JIYN=true = jobs at companies where Graham has connections (every result
     # is a warm path by construction).
     lanes = [("under-10-applicants", "f_EA=true", False),
-             ("in-your-network", "f_JIYN=true", True)]
+             ("in-your-network", "f_JIYN=true", True),
+             # First-mover slot: posted <24h AND still under 10 applicants.
+             ("fresh-24h-under10", "f_TPR=r86400&f_EA=true", False)]
     plan = [(q, lane) for q in queries for lane in lanes]
     try:
         ensure_browser(surf_run)
@@ -965,6 +968,160 @@ def capture_linkedin_premium(
             except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
                 logger.warning("could not close premium capture tab {}: {}", tab_id, exc)
     (out_dir / "linkedin-premium-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def _page_text(surf_run: Path, tab_id: str, limit: int = 20000) -> str:
+    """Read-only innerText snapshot of the current page (bounded)."""
+    raw = _surf(
+        surf_run, "js", "--tab-id", tab_id,
+        f"(function(){{return JSON.stringify(document.body.innerText.slice(0,{limit}));}})()",
+        timeout=30,
+    )
+    return json.loads(json.loads(raw))
+
+
+def capture_linkedin_job_insights(
+    job_urls: list[str],
+    surf_run: Path = SURF_RUN_DEFAULT,
+) -> dict[str, dict[str, Any]]:
+    """Premium per-job insights for a BOUNDED set of jobs (the digest top).
+
+    Visits each LinkedIn job page read-only and parses the Premium competitive
+    insights from the page text: applicant-rank percentile ('top N% of
+    applicants'), applicant count, and salary range when shown. Returns
+    {url: {applicant_rank_pct, applicants, salary, insights_text}}. Fail-soft:
+    a page that won't load or shows no insights simply yields {}.
+    """
+    import re as _re
+
+    out: dict[str, dict[str, Any]] = {}
+    li_urls = [u for u in job_urls if u and "linkedin.com/jobs" in u][:8]
+    if not li_urls:
+        return out
+    tab_id = ""
+    try:
+        ensure_browser(surf_run)
+        created = _surf(surf_run, "tab.new", li_urls[0], "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            return out
+        for ui, url in enumerate(li_urls):
+            try:
+                if ui > 0:
+                    _surf(surf_run, "js", "--tab-id", tab_id,
+                          f"(function(){{location.href={json.dumps(url)}; return 'NAV';}})()",
+                          timeout=20)
+                _surf(surf_run, "wait", "7")
+                text = _page_text(surf_run, tab_id)
+            except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
+                logger.warning("job insights skipped for {}: {}", url[:60], exc)
+                continue
+            info: dict[str, Any] = {}
+            rank = _re.search(r"top (\d+)% of (?:\d+ )?applicants|in the top (\d+)%", text, _re.I)
+            if rank:
+                info["applicant_rank_pct"] = int(rank.group(1) or rank.group(2))
+            count = _re.search(r"(\d+)\s+(?:people clicked apply|applicants?)\b", text, _re.I)
+            if count:
+                info["applicants"] = int(count.group(1))
+            salary = _re.search(
+                r"(\$[\d,.]+(?:K)?(?:/yr)?\s*[-–]\s*\$[\d,.]+(?:K)?(?:/yr)?|\$[\d,.]+K?/yr)", text
+            )
+            if salary:
+                info["salary"] = salary.group(1)
+            if info:
+                out[url] = info
+    finally:
+        if tab_id:
+            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+    return out
+
+
+_WHO_VIEWED_URL = "https://www.linkedin.com/analytics/profile-views/"
+
+
+def capture_linkedin_who_viewed(
+    out_dir: Path,
+    surf_run: Path = SURF_RUN_DEFAULT,
+) -> dict[str, Any]:
+    """Read-only capture of Premium 'Who viewed your profile' — INBOUND leads.
+
+    People who viewed the profile already showed interest: the warmest possible
+    top-of-funnel for both employment and consulting. Parses viewer name /
+    headline / when from the analytics page text; 'X at ORG' headlines yield the
+    org for the warm-paths overlay. Honest EMPTY when the page yields nothing.
+    """
+    import re as _re
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "linkedin_who_viewed",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+    }
+    tab_id = ""
+    viewers: list[dict[str, Any]] = []
+    try:
+        ensure_browser(surf_run)
+        created = _surf(surf_run, "tab.new", _WHO_VIEWED_URL, "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        _surf(surf_run, "wait", "8")
+        text = _page_text(surf_run, tab_id, 30000)
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        # Observed block shape (live 2026-08-12): name / '• 2nd|3rd' degree /
+        # headline / 'Viewed Nh ago'. Anchor on the Viewed line, walk back.
+        _junk = _re.compile(
+            r"viewed|profile|premium|upgrade|search appearance|view all|pending|"
+            r"graham anderson|^•|^\d+$", _re.I,
+        )
+        seen_names: set[str] = set()
+        for i, ln in enumerate(lines):
+            m = _re.match(
+                r"Viewed\s+(\d+[hdwm]o?\s+ago|\d+ (?:hour|day|week|month)s? ago)", ln, _re.I
+            )
+            if not m or i < 3:
+                continue
+            headline = lines[i - 1]
+            degree = lines[i - 2]
+            name = lines[i - 3]
+            if not degree.startswith("•"):  # some blocks omit the degree bullet
+                headline, name = lines[i - 1], lines[i - 2]
+            if _junk.search(name) or not (2 < len(name) < 60) or name in seen_names:
+                continue
+            seen_names.add(name)
+            org = None
+            om = _re.search(r"\bat @?([A-Z][\w&.' -]{2,40}?)(?:\s*[|,•]|$)", headline)
+            if om:
+                org = om.group(1).strip().rstrip(".,")
+            viewers.append({"name": name, "headline": headline[:120], "org": org,
+                            "when": m.group(1)})
+            if len(viewers) >= 20:
+                break
+        receipt["status"] = "OK" if viewers else "EMPTY"
+        receipt["viewers_captured"] = len(viewers)
+    except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
+        logger.warning("who-viewed capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+    finally:
+        if tab_id:
+            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+    evidence_path = out_dir / "linkedin-who-viewed.json"
+    evidence_path.write_text(
+        json.dumps({"schema_version": "monitor_opportunities.who_viewed.v1",
+                    "observed_at": utc_now(), "viewers": viewers}, indent=1),
+        encoding="utf-8",
+    )
+    receipt["evidence_path"] = str(evidence_path)
+    (out_dir / "linkedin-who-viewed-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return receipt

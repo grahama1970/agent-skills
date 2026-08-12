@@ -757,7 +757,56 @@ def nightly(
             warm_paths = json.loads(warm_paths_cfg.read_text(encoding="utf-8")).get("by_org", {})
         except (OSError, ValueError):
             warm_paths = {}
+        # Premium inbound: who viewed the profile already showed interest — the
+        # warmest signal for BOTH employment and consulting. Their orgs join the
+        # warm-paths overlay; the viewers themselves are researched (dogpile/
+        # brave) and surfaced in the digest. Best-effort.
+        inbound_viewers: list[dict[str, object]] = []
+        try:
+            from .browser_capture import capture_linkedin_who_viewed
+            from .prospect_research import research_prospects
+
+            wv_receipt = capture_linkedin_who_viewed(capture_dir)
+            steps["who_viewed"] = {"status": wv_receipt.get("status"),
+                                   "viewers": wv_receipt.get("viewers_captured")}
+            if wv_receipt.get("evidence_path"):
+                viewers = json.loads(
+                    Path(wv_receipt["evidence_path"]).read_text(encoding="utf-8")
+                ).get("viewers", [])
+                for v in viewers:
+                    org = str(v.get("org") or "").strip()
+                    if org and org.lower() not in {k.lower() for k in warm_paths}:
+                        warm_paths[org] = {"warm_path": 0.7,
+                                           "via": f"viewed your profile ({v.get('name')})"}
+                inbound_viewers = research_prospects(viewers, limit=5)
+        except Exception as exc:  # noqa: BLE001 - inbound enrichment must never fail the run
+            logger.warning("who-viewed enrichment skipped: {}", exc)
         digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
+        if inbound_viewers:
+            digest["inbound_interest"] = inbound_viewers[:10]
+        # Premium per-job competitive insights for the digest top (bounded):
+        # applicant-rank percentile ('top N%'), applicant count, salary.
+        try:
+            from .browser_capture import capture_linkedin_job_insights
+
+            top_urls: list[str] = []
+            by_id = {r.get("candidate_id"): r for r in shortlist_rows}
+            for e in digest.get("top", []):
+                row = by_id.get(e.get("candidate_id")) or {}
+                url = str(row.get("posting_url") or "")
+                if "linkedin.com/jobs" in url:
+                    top_urls.append(url)
+                    e["_posting_url"] = url
+            insights = capture_linkedin_job_insights(top_urls) if top_urls else {}
+            enriched_n = 0
+            for e in digest.get("top", []):
+                info = insights.get(e.pop("_posting_url", ""))
+                if info:
+                    e["premium_insights"] = info
+                    enriched_n += 1
+            steps["job_insights"] = {"jobs_checked": len(top_urls), "enriched": enriched_n}
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("job insights enrichment skipped: {}", exc)
         # Fail-closed: a shortlist with rows that yields an empty digest is a real
         # defect (the headline deliverable), not something to warn past.
         if shortlist_rows and not digest.get("top"):
