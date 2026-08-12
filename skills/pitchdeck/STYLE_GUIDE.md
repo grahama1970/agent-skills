@@ -181,5 +181,15 @@ the base prompt; `--figure` routes to /create-figure for charts) into
 `outputs/asset-alternates/<id>/` with a receipt. Adopt one with
 `--select <candidate.png>` — the asset file is replaced in place and the
 #1384 digest chain forces the next build-manifest/eval run to see the change.
-Backend note: `google` is nano banana (gemini-2.5-flash-image); if the key is
-unavailable, `flux` (HF) is the working fallback.
+Backends, in order of preference:
+- `claude-svg` (default): Claude authors the scene as SVG — palette-exact by
+  construction, deterministic to rasterize, and the .svg source stays beside
+  the .png so a human can EDIT the art instead of regenerating. Uses the
+  Claude Code subscription (no API key).
+- `flux` (HF token): raster diffusion fallback, verified working.
+- `google` (nano banana / gemini-2.5-flash-image): richest character art;
+  requires a valid GEMINI_API_KEY (the previous key was revoked as leaked,
+  2026-08-12).
+- GPT: no funded API key on this workstation (OAuth-only policy); the GPT
+  route is the webgpt browser lane (submit an image request to the bound
+  ChatGPT tab, fetch with `surf webgpt.download --match`), used manually.

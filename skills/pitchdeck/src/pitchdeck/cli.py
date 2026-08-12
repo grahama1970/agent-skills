@@ -922,7 +922,7 @@ def asset_alternates_cmd(
     count: Annotated[int, typer.Option("-n", "--count", help="How many alternates.")] = 4,
     prompt: Annotated[str | None, typer.Option(help="Extra guidance appended to the asset's generation brief.")] = None,
     example: Annotated[list[Path], typer.Option(help="Example image(s) whose look to describe into the prompt (their alt text / brief is quoted; backends here are text-to-image).")] = [],
-    backend: Annotated[str, typer.Option(help="create-image backend: google (nano banana / gemini-2.5-flash-image), flux, fal, ollama, auto.")] = "google",
+    backend: Annotated[str, typer.Option(help="Art backend: claude-svg (Claude authors an SVG scene — on-palette by construction, editable source kept beside the PNG), flux (HF), google (nano banana; needs a valid GEMINI_API_KEY), fal, ollama.")] = "claude-svg",
     select: Annotated[Path | None, typer.Option(help="Adopt this previously generated candidate into the bundle (replaces the asset file; the build-manifest digest chain records the change).")] = None,
     figure: Annotated[str | None, typer.Option(help="Instead of AI art, route to /create-figure with this spec, e.g. 'workflow:Ask,Retrieve,Answer' or 'force-graph:<json>'.")] = None,
 ) -> None:
@@ -970,6 +970,25 @@ def asset_alternates_cmd(
         results = []
         for index in range(count):
             out = out_dir / f"{stamp}-alt{index + 1}.png"
+            if backend == "claude-svg" and not figure:
+                svg_path = out.with_suffix(".svg")
+                ask = ("Output ONLY an SVG document (no markdown fences, no commentary). "
+                       f"A 1280x720 flat hand-drawn-style vector illustration: {full} "
+                       f"Variation {index + 1}: explore a different composition. "
+                       "Root element must be <svg xmlns=... width=1280 height=720>.")
+                proc = subprocess.run(["claude", "-p", ask], capture_output=True, text=True,
+                                      timeout=600)
+                text = proc.stdout
+                start, end = text.find("<svg"), text.rfind("</svg>")
+                if start >= 0 and end > start:
+                    svg_path.write_text(text[start:end + 6])
+                    subprocess.run(["rsvg-convert", "-w", "1280", "-h", "720",
+                                    str(svg_path), "-o", str(out)],
+                                   capture_output=True, timeout=120)
+                results.append({"file": str(out), "svg": str(svg_path) if svg_path.exists() else None,
+                                "ok": out.is_file(),
+                                "error": None if out.is_file() else (proc.stderr or text)[-200:]})
+                continue
             if figure:
                 kind, _, spec = figure.partition(":")
                 cmd = [str(Path.home() / ".claude/skills/create-figure/run.sh"), kind,
