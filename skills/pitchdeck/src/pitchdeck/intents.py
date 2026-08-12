@@ -587,9 +587,7 @@ def _claims_bullets_slide(slide_id: str, order: int, heading: str,
         elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
                                    bbox=Bbox(x=0.5, y=0.18, w=0.46, h=0.5),
                                    asset_id=visual_asset_id))
-        elements.append(DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.05, y=0.62, w=0.34, h=0.28),
-                                   asset_id="gen-ask-scene" if "ask" in slide_id else "gen-valueprop-scene"))
+
     quals = [qualifiers[c.id] for c in picked if c.id in qualifiers]
     if quals:
         elements.append(DocElement(id="qualifier", kind=DocElementKind.TEXT, role="footer",
@@ -637,8 +635,8 @@ def materialize_outline(
     order = 1
 
     available_assets = {a.id for a in assets.assets}
-    _required_art = {"gen-problem-scene", "gen-architecture-scene", "gen-valueprop-scene",
-                     "gen-roadmap-scene", "gen-ask-scene", "sparta-helmet-mark-png"}
+    _required_art = {"crop-evidence-gates", "sparta-response-flow",
+                     "sparta-embry-os-foundation", "sparta-helmet-mark-png"}
     _missing_art = sorted(_required_art - available_assets)
     if _missing_art:
         # #1384: a cold bundle without approved art must stop honestly — never
@@ -646,9 +644,9 @@ def materialize_outline(
         raise ValueError(f"NEEDS_APPROVED_ART: the house arc requires approved art assets "
                          f"absent from this bundle: {_missing_art}. Approve art via the asset "
                          f"registry or run the artifact-mode eval on a bundle that carries it.")
-    scene_art = {"m-problem-solution": "gen-problem-scene",
-                 "m-value-prop": "gen-valueprop-scene", "m-roadmap": "gen-roadmap-scene",
-                 "m-architecture": "gen-architecture-scene"}
+    scene_art = {"m-problem-solution": "crop-evidence-gates",  # the NOT_READY gates panel IS the problem story
+                 "m-value-prop": "sparta-embry-os-foundation",
+                 "m-architecture": "sparta-response-flow"}
 
     def add(slide):  # noqa: ANN001
         nonlocal order
@@ -673,7 +671,7 @@ def materialize_outline(
             # recipe and refuses the transitional state.
             new_elements = [e for e in slide.elements if e.kind is not DocElementKind.DIAGRAM] + [
                 DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
-                           bbox=Bbox(x=0.25, y=0.45, w=0.5, h=0.42), asset_id=art)]
+                           bbox=Bbox(x=0.14, y=0.4, w=0.72, h=0.5), asset_id=art)]
             has_chevrons = any(e.role == "chevrons" for e in new_elements)
             slide = slide.model_copy(update={
                 "elements": new_elements,
