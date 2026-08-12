@@ -36,3 +36,24 @@ uv run python scripts/build_house_gate_adversaries.py \
   --render-receipt /tmp/pd-adversaries/<mutant>/render-receipt.json \
   --pptx /tmp/pd-adversaries/<mutant>.pptx
 ```
+
+
+## Update — same day, after #1381 landed
+
+`house-structure` (archetype-conditioned role-region + typography + visual-
+substance contracts on the delivered pptx, roles resolved via el:<id> from the
+canonical document) now runs as its own eval stage. Re-benchmark:
+
+| Mutant | house-structure |
+|---|---|
+| layout-mirror | **FINDINGS 28** (chevrons right-anchored, marks displaced, divider heading off-center) |
+| typography-swap | **FINDINGS 15** (sizes outside per-role house ranges, >12pt intra-role spread) |
+| two-tiny-visuals | **FINDINGS 7** (visual AREA floors per archetype — count without area is not substance) |
+| bbox-shuffle | **FINDINGS 15** |
+| honest deck | **PASS 0** |
+
+Every seeded mutant is rejected while the honest deck stays clean — #1380's
+second acceptance criterion is met for the current mutant set. Sparse
+archetypes (divider/toc/close) carry no area floor, so they are not pressured
+toward filler art. Remaining mutants (palette-matched card grid, art-register
+swap, arc-shuffle) still to build; deck-level bar is #1382.
