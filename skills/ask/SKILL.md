@@ -21,6 +21,7 @@ triggers:
   - Tau DAG
   - compete
   - bakeoff
+  - captcha security evaluation
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
@@ -34,6 +35,7 @@ composes:
   - memory
   - scillm
   - surf
+  - captcha
   - subagent-runner
   - browser-oracle
   - create-report
@@ -128,7 +130,7 @@ standing:
 | --- | --- | --- |
 | **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
 | **Model call** — API/model handler | `gpt-5.5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
-| **Web model** — browser-backed reviewer | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
+| **Web model** — browser-backed reviewer (chat tab, NOT the agentic model; see the `webclaude` warning below) | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
 
 A project agent should not care which side is browser, model, or live session
 beyond naming the target.
@@ -574,6 +576,17 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `webgemini`, and `webgrok`. Aliases normalize as `gpt -> webgpt`,
   `claude -> webclaude`, `kimi -> webkimi`, `gemini -> webgemini`, and
   `grok -> webgrok`.
+- **WARNING — `webclaude` IS NOT Claude** (operator, 2026-08-12). `webclaude`
+  is a claude.ai CHAT TAB: no tools, no filesystem or repo access, no effort
+  control, a different system prompt and context regime. It is a browser
+  REVIEW seat only. For agentic Claude — the model that reads bundles,
+  follows repo contracts, and emits artifacts — the intended lane is a
+  SciLLM model handler (`claude-fable-low|med|high`) executed inside the Tau
+  DAG, tracked in agent-skills#1386. Until that lands, the bare `claude`
+  alias silently substitutes the weaker chat seat: do NOT use `claude` as a
+  handler name expecting agentic Claude, and note that direct `claude -p`
+  subprocess calls are reported as degraded — they are not a substitute
+  either.
 - **Supported local/API handlers**: explicit non-browser handler labels are
   routed by Tau according to their transport. SciLLM-compatible model labels,
   such as `gpt-5.5-high`, emit Tau-owned `scillm.chat` adapter nodes.
@@ -850,6 +863,7 @@ Use the narrowest mode that matches the user request.
 | CAE gap review | documented CAE gap mode | Include current claim, evidence, gaps, and acceptance gate. |
 | Tau DAG front door | `./run.sh tau-dag "<request>" --repo <repo> --target <target> --solver-model <model> --reviewer-model <model> --criterion <c> --json` | Emits strict `tau.dag_contract.v1` first; uses `$interview` packet when incomplete; add `--execute` to delegate to Tau. |
 | Ask/scillm-style DAG file | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Use only when the user provides an existing ask/scillm-style DAG file; preserve DAG manifest, node outputs, and fail-closed events. |
+| Authorized local CAPTCHA evaluation | Generate `ask.dag.v1` with `../captcha/run.sh ask-dag ...`, then use `./run.sh ask "<request>" --dag-file <graph.json> --json` | Ask owns orchestration; `$captcha` owns authorization and receipts; `$surf` supplies browser-transport proof; ReCAP `dynamic` loopback only. |
 | Image generation | documented image mode | Preserve prompt, provider response, output path, and review artifact. |
 | OS/project health | `./run.sh os ... --json`, `./run.sh doctor ... --json` | Report degraded dependencies, not green-by-absence. |
 | Status/config | `./run.sh status ... --json`, `./run.sh config doctor ... --json` | Use for artifact inspection and readiness preflight. |
