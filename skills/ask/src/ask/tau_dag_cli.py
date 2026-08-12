@@ -272,7 +272,13 @@ def run(
     _emit_dag_chart(bundle, execute=execute)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
-    if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
+    if bundle.get("status") != "NEEDS_INTERVIEW" and execute and not _has_browser_handlers(input_payload):
+        # Pure model-lane DAGs (scillm/subagent handlers only) must NEVER touch
+        # the browser: probing availability opened webclaude tabs on every
+        # claude-fable-low run (operator bug report, tab 837386031, 2026-08-12).
+        browser_availability = _skipped_browser_availability("no_browser_handlers")
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
+    elif bundle.get("status") != "NEEDS_INTERVIEW" and execute:
         browser_availability = _probe_browser_provider_availability(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
@@ -559,7 +565,13 @@ def compete(
     bundle = compile_tau_dag_bundle(input_payload)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
-    if bundle.get("status") != "NEEDS_INTERVIEW" and execute:
+    if bundle.get("status") != "NEEDS_INTERVIEW" and execute and not _has_browser_handlers(input_payload):
+        # Pure model-lane DAGs (scillm/subagent handlers only) must NEVER touch
+        # the browser: probing availability opened webclaude tabs on every
+        # claude-fable-low run (operator bug report, tab 837386031, 2026-08-12).
+        browser_availability = _skipped_browser_availability("no_browser_handlers")
+        _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
+    elif bundle.get("status") != "NEEDS_INTERVIEW" and execute:
         browser_availability = _probe_browser_provider_availability(
             input_payload,
             run_dir=Path(str(bundle["run_dir"])),
@@ -726,6 +738,14 @@ def _skipped_browser_provider_selection() -> dict[str, Any]:
         "live": False,
         "reason": "not_checked",
     }
+
+
+def _has_browser_handlers(input_payload) -> bool:
+    """True only when some seat is a browser provider (web*)."""
+    from .tau_dag import ROUNDTABLE_HANDLERS
+
+    browser = {h for h in ROUNDTABLE_HANDLERS if h.startswith("web")}
+    return any(h in browser for h in getattr(input_payload, "handlers", ()) or ())
 
 
 def _probe_browser_provider_availability(
