@@ -80,9 +80,18 @@ def _load_corpus_histogram() -> list[float]:
     return hist
 
 
-def measure(image_path: Path, corpus_hist: list[float] | None = None) -> StyleMetrics:
+def bhattacharyya(a: list[float], b: list[float]) -> float:
+    return sum(math.sqrt(x * y) for x, y in zip(a, b))
+
+
+def measure(image_path: Path, corpus_hist=None) -> StyleMetrics:
+    """corpus_hist: a single reference histogram OR a list of per-cluster
+    histograms — a page matches its NEAREST cluster (a global mean averaged
+    across archetypes describes no actual archetype; review finding 3)."""
     hist, ink = _histogram(Path(image_path))
     reference = corpus_hist if corpus_hist is not None else _load_corpus_histogram()
-    # Bhattacharyya coefficient: 1.0 = identical distributions
-    similarity = sum(math.sqrt(h * r) for h, r in zip(hist, reference))
+    if reference and isinstance(reference[0], list):
+        similarity = max(bhattacharyya(hist, r) for r in reference)
+    else:
+        similarity = bhattacharyya(hist, reference)
     return StyleMetrics(ink_fraction=round(ink, 4), palette_similarity=round(similarity, 4))

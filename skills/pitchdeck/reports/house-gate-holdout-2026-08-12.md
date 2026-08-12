@@ -59,3 +59,33 @@ MEASURED: closing it requires a learned vision channel over the artwork
 - #1383 is now justified by measurement: the art-register false pass is the
   concrete hole a text-masked vision channel must close, and the holdout
   provides its frozen promotion benchmark.
+
+
+## Runs 2-6 — measurement-bug fixes, decision trail, and the met bar
+
+Each run's failure was diagnosed to a measurement defect, fixed with its
+rationale recorded in the calibration provenance, and re-run. The trail:
+
+| Run | Change | Result (house pass / off-house false pass) |
+|---|---|---|
+| 1 | — | 0/5, 1 |
+| 2 | conformance scans the slide MASTER (ACERT's mark lives there; 18 false flags) + calibration re-rendered through LibreOffice (provenance) | 0/5, 1 |
+| 3 | floors re-based from cluster-representatives to PAGES (the judged unit) | 1/5, 0 |
+| 4 | pixel floors moved to corpus MINIMA (anomaly semantics, matching the embedding floor — every stricter percentile either false-rejected real sparse pages or false-passed register swaps) | 1/5→4/5*, 1 |
+| 5 | separate frozen conformance allowance (worst real deck, 7.5%) | 4/5, 1 |
+| 6 | embedding floor 0.395→0.39 (render-provenance jitter ±0.005, measured on ReqML p49 = 0.39496) | **5/5, 1 — BAR MET** |
+
+The one remaining false pass is art-register-swap — the documented open hole
+that only #1383's vision channel can close (every pixel-floor setting strict
+enough to catch it also rejected real pages; runs 3-4 proved this is
+structural, not tunable).
+
+## Integrity note — this is now DEVELOPMENT data
+
+Because runs 1-6 fixed the gate using this holdout, its blind is spent. The
+bar being met here licenses NOTHING publicly. Before HOUSE_POSITIVE_MATCH or
+any 'looks like Graham' string may print: a CONFIRMATORY run with the
+now-frozen artifacts (calibration digest recorded in run 6's results) on
+fresh material — new mutant seeds, ideally a second generated deck — with no
+further changes permitted between scoring and reporting. If that run meets
+the bar, the phrase unlocks; if not, back to work.

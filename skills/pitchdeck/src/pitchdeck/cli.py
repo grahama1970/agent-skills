@@ -786,7 +786,7 @@ def house_similarity_cmd(
         threshold = cal.thresholds.embedding_anomaly_floor
         ink_floor = cal.thresholds.ink_floor
         palette_floor = cal.thresholds.palette_floor
-        corpus_hist = cal.corpus_palette_histogram
+        corpus_hist = cal.cluster_histograms or cal.corpus_palette_histogram
         binding_findings = []
         if render_receipt is not None:
             expected_pages = None
