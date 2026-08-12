@@ -877,17 +877,24 @@ def capture_linkedin_premium(
     tab_id = ""
     rows: list[dict[str, Any]] = []
     queries_run: list[str] = []
+    # Two Premium filter lanes per query (LinkedIn URL params, brave-search
+    # verified 2026-08-12): f_EA=true = Under 10 applicants (low competition);
+    # f_JIYN=true = jobs at companies where Graham has connections (every result
+    # is a warm path by construction).
+    lanes = [("under-10-applicants", "f_EA=true", False),
+             ("in-your-network", "f_JIYN=true", True)]
+    plan = [(q, lane) for q in queries for lane in lanes]
     try:
         ensure_browser(surf_run)
-        first_url = queries[0]["url"] + "&f_EA=true"
+        first_url = plan[0][0]["url"] + "&" + plan[0][1][1]
         created = _surf(surf_run, "tab.new", first_url, "--json")
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        for qi, query in enumerate(queries):
+        for pi, (query, (lane_label, lane_param, lane_warm)) in enumerate(plan):
             try:
-                if qi > 0:
-                    url = query["url"] + "&f_EA=true"
+                if pi > 0:
+                    url = query["url"] + "&" + lane_param
                     _surf(surf_run, "js", "--tab-id", tab_id,
                           f"(function(){{location.href={json.dumps(url)}; return 'NAV';}})()",
                           timeout=20)
@@ -895,16 +902,22 @@ def capture_linkedin_premium(
                 raw = _surf(surf_run, "js", "--tab-id", tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
                 for r in json.loads(json.loads(raw)):
                     if r.get("title"):
-                        r["matched_query"] = query["label"] + " | under-10-applicants"
+                        r["matched_query"] = query["label"] + " | " + lane_label
+                        if lane_warm:
+                            r["warm"] = True  # network presence is the filter itself
                         rows.append(r)
-                queries_run.append(query["label"])
+                label = query["label"] + " | " + lane_label
+                queries_run.append(label)
             except (BrowserCaptureError, ValueError, json.JSONDecodeError,
                     subprocess.TimeoutExpired) as exc:
                 logger.warning("premium query {!r} skipped: {}", query["label"], exc)
         seen: dict[str, dict[str, Any]] = {}
         for r in rows:
             key = r["title"] + "|" + (r.get("company") or "")
-            if key not in seen:
+            if key in seen:  # same job from both lanes -> union the signals
+                seen[key]["warm"] = bool(seen[key].get("warm") or r.get("warm"))
+                seen[key]["early"] = bool(seen[key].get("early") or r.get("early"))
+            else:
                 seen[key] = r
         opps = [
             {
