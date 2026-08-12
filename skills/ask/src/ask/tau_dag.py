@@ -2498,6 +2498,11 @@ def _write_command_spec(
         command.extend(["--requested-reasoning-effort", str(model_policy["requested_reasoning_effort"])])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
+    # Caller attachments reach MODEL seats too (#1391): scillm chat accepts
+    # multimodal image content; silently dropping --attach-file made every
+    # "image check" seat judge blind.
+    for attachment in getattr(input, "attachments", ()) or ():
+        command.extend(["--attach-file", str(attachment)])
     payload = {
         "command": command,
         "cwd": str(run_dir),
@@ -2581,6 +2586,11 @@ def _write_roundtable_command_spec(
         if lock_timeout_s:
             command.extend(["--browser-lock-timeout", str(lock_timeout_s)])
         # Local evidence a browser seat must actually see (agent-skills#1062).
+        for attachment in getattr(input, "attachments", ()):
+            command.extend(["--attach-file", str(attachment)])
+    else:
+        # MODEL seats see attachments too (#1391): the worker delivers images
+        # as multimodal scillm content; dropping them made vision seats blind.
         for attachment in getattr(input, "attachments", ()):
             command.extend(["--attach-file", str(attachment)])
     provider_hint = str(handler_policy.get("provider_hint") or "")

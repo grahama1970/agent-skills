@@ -6064,9 +6064,26 @@ def _run_scillm_handler(
             model = canonical_handler[: -(len(effort) + 1)]
             reasoning_effort = "high" if effort == "xhigh" else effort
             break
+    # multimodal: attached images are SHOWN to the model (#1391) — a vision
+    # check seat must never judge blind. Non-image attachments are inlined.
+    attach_files = [str(item) for item in (getattr(args, "attach_files", None) or [])]
+    image_parts = []
+    for attachment in attach_files:
+        path = Path(attachment)
+        if not path.is_file():
+            raise RuntimeError(f"scillm attachment missing: {attachment}")
+        suffix = path.suffix.lower()
+        if suffix in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+            import base64 as _b64
+            mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg"}.get(suffix[1:], f"image/{suffix[1:]}")
+            image_parts.append({"type": "image_url", "image_url": {
+                "url": f"data:{mime};base64,{_b64.b64encode(path.read_bytes()).decode()}"}})
+        else:
+            prompt += f"\n\n--- ATTACHED FILE {path.name} ---\n" + path.read_text(encoding="utf-8", errors="replace")[:20000]
+    content = ([{"type": "text", "text": prompt}] + image_parts) if image_parts else prompt
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "user", "content": content}],
     }
     # Anthropic rejects `temperature` on current Claude models
     # ("`temperature` is deprecated for this model", observed live on
