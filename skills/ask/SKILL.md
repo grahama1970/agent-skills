@@ -130,7 +130,7 @@ standing:
 | --- | --- | --- |
 | **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
 | **Model call** — API/model handler | `gpt-5.5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
-| **Web model** — browser-backed reviewer | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
+| **Web model** — browser-backed reviewer (chat tab, NOT the agentic model; see the `webclaude` warning below) | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
 
 A project agent should not care which side is browser, model, or live session
 beyond naming the target.
@@ -576,6 +576,17 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `webgemini`, and `webgrok`. Aliases normalize as `gpt -> webgpt`,
   `claude -> webclaude`, `kimi -> webkimi`, `gemini -> webgemini`, and
   `grok -> webgrok`.
+- **WARNING — `webclaude` IS NOT Claude** (operator, 2026-08-12). `webclaude`
+  is a claude.ai CHAT TAB: no tools, no filesystem or repo access, no effort
+  control, a different system prompt and context regime. It is a browser
+  REVIEW seat only. For agentic Claude — the model that reads bundles,
+  follows repo contracts, and emits artifacts — the intended lane is a
+  SciLLM model handler (`claude-fable-low|med|high`) executed inside the Tau
+  DAG, tracked in agent-skills#1386. Until that lands, the bare `claude`
+  alias silently substitutes the weaker chat seat: do NOT use `claude` as a
+  handler name expecting agentic Claude, and note that direct `claude -p`
+  subprocess calls are reported as degraded — they are not a substitute
+  either.
 - **Supported local/API handlers**: explicit non-browser handler labels are
   routed by Tau according to their transport. SciLLM-compatible model labels,
   such as `gpt-5.5-high`, emit Tau-owned `scillm.chat` adapter nodes.
