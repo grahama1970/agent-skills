@@ -179,7 +179,12 @@ source for text.** READMEs usually already contain well-thought-through,
 high-end imagery (Sparta's response-flow diagram, the Embry OS header, the
 product screenshots). Slide visuals must be those images — used directly,
 cropped (Pillow), or derived — and any genuinely NEW image must be generated
-FROM them as reference (image-to-image), never from a free-text prompt.
+FROM them as reference (image-to-image), never from a free-text prompt. **NO EXCEPTIONS (operator): the reference
+image itself is passed to the generator** — `asset-alternates` refuses to
+generate without one, backends that cannot accept an image input (flux) are
+refused for new images, and with a reference present no text style-suffix is
+allowed to compete with it (google/fal receive the image bytes; claude-svg
+Reads the file first).
 Prompt-only generation gave the deck a cartoon voice the product does not
 have: fabrication in the visual channel, parallel to a fabricated claim in
 text. The 2026-08-12 failure: six prompt-generated clipart scenes shipped
