@@ -86,9 +86,32 @@ def client_research_receipt(skill_dir: Path) -> dict[str, Any]:
     brave = skill_dir.parents[0] / "brave-search" / "run.sh"
     receipt["request_summary"] = f"brave-search client-services research: {len(queries)} queries"
     hits = 0
+
+    def _search(q: str) -> subprocess.CompletedProcess[str]:
+        """Free key first; paid-key fallback on quota 429 (authorized 2026-08-12)."""
+        import os
+
+        proc = subprocess.run(
+            [str(brave), "web", q, "--count", "5"],
+            capture_output=True, text=True, timeout=60,
+        )
+        paid = os.environ.get("BRAVE_API_KEY_PAID")
+        failed = proc.returncode != 0 or not proc.stdout.strip()
+        quota = (
+            "429" in proc.stderr or "QUOTA" in proc.stderr.upper()
+            or "not found in env" in proc.stderr
+        )
+        if failed and paid and quota:
+            proc = subprocess.run(
+                [str(brave), "web", q, "--count", "5"],
+                capture_output=True, text=True, timeout=60,
+                env=dict(os.environ, BRAVE_API_KEY=paid),
+            )
+        return proc
+
     try:
         for q in queries:
-            proc = subprocess.run([str(brave), "web", q, "--count", "5"], capture_output=True, text=True, timeout=60)
+            proc = _search(q)
             if proc.returncode == 0 and proc.stdout.strip():
                 try:
                     hits += len(json.loads(proc.stdout).get("results", []))
