@@ -4,8 +4,8 @@
  "trials": 2,
  "proof_scope": "design-lint layer PLUS the north-star end-to-end: sparta-public README -> claim-bound 15-slide deck -> all 11 stages including the calibrated house gate",
  "claims": {
-  "proves": "the deterministic DESIGN_* lint passes the golden document and finds every seeded defect; AND the real README compiles end-to-end into a deck passing coverage 11/11, verify-publish, build-manifest, house-conformance, and the house gate (embedding anomaly floor 0.395 + ink/palette floors calibrated on the 233 real pages)",
-  "does_not_prove": "human 'recognizably mine' acceptance; drawn-character emotional register equivalence; freshness of screenshots"
+  "proves": "the deterministic DESIGN_* lint passes the golden document and finds every seeded defect; AND 'README + approved outline + approved art assets -> deck' compiles end-to-end passing coverage 11/11, verify-publish, build-manifest (assets in the digest chain), house-conformance, house-structure, and the bound house gate (frozen calibration.v1)",
+  "does_not_prove": "cold autonomous authoring from an unseen README (a bundle without approved art refuses with NEEDS_APPROVED_ART); human 'recognizably mine' acceptance; drawn-character register equivalence; screenshot freshness"
  },
  "cases": [
   {
