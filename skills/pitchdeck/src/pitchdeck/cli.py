@@ -1011,16 +1011,35 @@ def asset_alternates_cmd(
         for index in range(count):
             out = out_dir / f"{stamp}-alt{index + 1}.png"
             if backend == "claude-svg" and not figure:
+                # The Claude lane is /ask -> Tau DAG -> scillm claude-fable-low
+                # (#1387): receipted, full-strength, never `claude -p` (degraded)
+                # and never webclaude (a chat tab is not Claude).
                 svg_path = out.with_suffix(".svg")
-                ask = (f"First use the Read tool to LOOK at the reference image at {ref} — match its "
-                       "palette, register, and subject treatment; your SVG must read as a sibling of it. "
-                       "Then output ONLY an SVG document (no markdown fences, no commentary). "
+                ask = (f"The attached reference image defines the visual identity — match its palette, "
+                       "register, and subject treatment; your SVG must read as a sibling of it. "
+                       "Output ONLY an SVG document (no markdown fences, no commentary). "
                        f"A 1280x720 vector illustration derived from that reference: {full} "
                        f"Variation {index + 1}: explore a different composition. "
                        "Root element must be <svg xmlns=... width=1280 height=720>.")
-                proc = subprocess.run(["claude", "-p", "--effort", "low", ask],
-                                      capture_output=True, text=True, timeout=600)
-                text = proc.stdout
+                ask_root = _skill_root().parent / "ask"
+                proc = subprocess.run(
+                    [str(ask_root / "run.sh"), "tau-dag", ask,
+                     "--repo", "local/agent-skills", "--target", f"asset-alt-{asset_id}-{stamp}-{index}",
+                     "--immutable-goal", f"one SVG alternate for asset {asset_id}",
+                     "--handler", "claude-fable-low",
+                     "--attach-file", str(ref),
+                     "--execute", "--json"],
+                    capture_output=True, text=True, timeout=1800)
+                text = ""
+                import re as re_mod
+                match = re_mod.search(r'"run_dir":\s*"([^"]+)"', proc.stdout or "")
+                if match:
+                    response = (Path(match.group(1)) / "node-artifacts"
+                                / "handler-claude-fable-low" / "response.md")
+                    if response.is_file():
+                        text = response.read_text(encoding="utf-8")
+                if not text:
+                    text = proc.stdout
                 start, end = text.find("<svg"), text.rfind("</svg>")
                 if start >= 0 and end > start:
                     svg_path.write_text(text[start:end + 6])
