@@ -43,6 +43,12 @@ def mandate_hits(text: str, collection: str = VOCABULARY_COLLECTION) -> list[str
         return None
     if proc.returncode != 0 or not proc.stdout.strip():
         return None
+    # A run that loaded an empty vocabulary (ArangoDB contention/outage) reports
+    # success with zero entities for EVERY text. That is "unavailable", not
+    # "irrelevant" — returning [] here silently drops relevant items (observed as
+    # flaky test failures 2026-08-12: 'Loaded 0 entities' under concurrent load).
+    if "Loaded 0 entities" in (proc.stderr or ""):
+        return None
     # The skill logs to stderr and prints one JSON object to stdout.
     start = proc.stdout.find("{")
     if start < 0:
