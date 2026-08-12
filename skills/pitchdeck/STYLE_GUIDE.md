@@ -165,4 +165,8 @@ The review's seven executable slices (frozen content-addressed calibration,
 adversarial negatives, archetype-conditioned structural distance, duplicate-
 robust deck bar via leave-one-deck-out, text-masked vision channel ablation,
 artifact/cold eval split, blinded holdout for the phrase itself) are the
-roadmap to a HOUSE_POSITIVE_MATCH verdict.
+roadmap to a HOUSE_POSITIVE_MATCH verdict — tracked as issues #1379
+(frozen calibration binding), #1380 (adversarial negatives), #1381
+(archetype-conditioned structure), #1382 (leave-one-deck-out deck bar),
+#1383 (text-masked vision ablation), #1384 (artifact/cold eval split),
+#1385 (blinded holdout for the phrase itself).
