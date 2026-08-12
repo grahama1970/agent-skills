@@ -1,764 +1,782 @@
 {
-  "schema": "monitor_opportunities.target_registry.v1",
-  "reviewed_at": "2026-08-04T00:00:00Z",
-  "policy": {
-    "admission": "primary_source_required",
-    "aggregators": "hint_only",
-    "forbidden": [
-      "linkedin_automation",
-      "broad_board_enumeration",
-      "aggregator_text_only_admission"
-    ]
-  },
-  "source_locators": [
-    {
-      "admission_policy": "hint_only_primary_required",
-      "lane": "A",
-      "limit": 1,
-      "name": "Hidden Jobs",
-      "provider": "hiddenjobs.dev",
-      "url": "https://hiddenjobs.dev/"
-    },
-    {
-      "admission_policy": "hint_only_primary_required",
-      "lane": "A",
-      "limit": 1,
-      "name": "Indeed indexed ATS guidance",
-      "provider": "indeed",
-      "url": "https://www.indeed.com/hire/resources/howtohub/optimize-jobs-from-your-career-site-or-ats-on-indeed"
-    },
-    {
-      "admission_policy": "hint_only_primary_required",
-      "lane": "A",
-      "limit": 1,
-      "name": "Agentic compliance hiring signals",
-      "provider": "duckduckgo",
-      "url": "https://html.duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring",
-      "mandate_ref": "mandate:agentic-compliance"
-    }
-  ],
-  "employment": [
-    {
-      "default_fit_score": 0.44,
-      "limit": 20,
-      "name": "Discord",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/discord/jobs?content=true",
-      "provider": "greenhouse",
-      "registry_entry_id": "employment:discord:greenhouse",
-      "slug": "discord"
-    },
-    {
-      "default_fit_score": 0.7,
-      "limit": 10,
-      "name": "Hyperproof",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/hyperproof/jobs?content=true",
-      "provider": "greenhouse",
-      "registry_entry_id": "employment:hyperproof",
-      "need_keywords": [
-        "compliance",
-        "AI",
-        "agent",
-        "automation",
-        "engineer",
-        "architect",
-        "GRC"
-      ],
-      "mandate_ref": "mandate:agentic-compliance",
-      "slug": "hyperproof"
-    },
-    {
-      "default_fit_score": 0.78,
-      "limit": 10,
-      "name": "Reducto",
-      "slug": "reducto",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/reducto",
-      "registry_entry_id": "employment:reducto",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "document",
-        "extraction",
-        "AI",
-        "ML",
-        "parsing",
-        "research"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.75,
-      "limit": 10,
-      "name": "Unstructured",
-      "slug": "unstructured",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/unstructured",
-      "registry_entry_id": "employment:unstructured",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "document",
-        "extraction",
-        "AI",
-        "ML",
-        "parsing",
-        "research"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.8,
-      "limit": 10,
-      "name": "Datalab (marker)",
-      "slug": "datalab",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/datalab",
-      "registry_entry_id": "employment:datalab",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "document",
-        "extraction",
-        "AI",
-        "ML",
-        "parsing",
-        "research"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Extend",
-      "slug": "extend",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/extend",
-      "registry_entry_id": "employment:extend",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Nanonets",
-      "slug": "nanonets",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/nanonets",
-      "registry_entry_id": "employment:nanonets",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Docugami",
-      "slug": "docugami",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/docugami/jobs?content=true",
-      "registry_entry_id": "employment:docugami",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Instabase",
-      "slug": "instabase",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/instabase/jobs?content=true",
-      "registry_entry_id": "employment:instabase",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.68,
-      "limit": 10,
-      "name": "Snorkel AI",
-      "slug": "snorkelai",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/snorkelai/jobs?content=true",
-      "registry_entry_id": "employment:snorkelai",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.7,
-      "limit": 10,
-      "name": "Sierra",
-      "slug": "sierra",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/sierra",
-      "registry_entry_id": "employment:sierra",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.68,
-      "limit": 10,
-      "name": "Harvey",
-      "slug": "harvey",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/harvey",
-      "registry_entry_id": "employment:harvey",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.66,
-      "limit": 10,
-      "name": "Cursor",
-      "slug": "cursor",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/cursor",
-      "registry_entry_id": "employment:cursor",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.7,
-      "limit": 10,
-      "name": "Cognition",
-      "slug": "cognition",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/cognition",
-      "registry_entry_id": "employment:cognition",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.66,
-      "limit": 10,
-      "name": "Perplexity",
-      "slug": "perplexity",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/perplexity",
-      "registry_entry_id": "employment:perplexity",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.66,
-      "limit": 10,
-      "name": "Writer",
-      "slug": "writer",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/writer",
-      "registry_entry_id": "employment:writer",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.6,
-      "limit": 10,
-      "name": "ElevenLabs",
-      "slug": "elevenlabs",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/elevenlabs",
-      "registry_entry_id": "employment:elevenlabs",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.7,
-      "limit": 10,
-      "name": "LangChain",
-      "slug": "langchain",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/langchain",
-      "registry_entry_id": "employment:langchain",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "LlamaIndex",
-      "slug": "llamaindex",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/llamaindex",
-      "registry_entry_id": "employment:llamaindex",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:document-extraction"
-    },
-    {
-      "default_fit_score": 0.66,
-      "limit": 10,
-      "name": "Decagon",
-      "slug": "decagon",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/decagon",
-      "registry_entry_id": "employment:decagon",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.68,
-      "limit": 10,
-      "name": "Dust",
-      "slug": "dust",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/dust",
-      "registry_entry_id": "employment:dust",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.64,
-      "limit": 10,
-      "name": "Pinecone",
-      "slug": "pinecone",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/pinecone",
-      "registry_entry_id": "employment:pinecone",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.64,
-      "limit": 10,
-      "name": "Weaviate",
-      "slug": "weaviate",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/weaviate",
-      "registry_entry_id": "employment:weaviate",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.74,
-      "limit": 10,
-      "name": "Vanta",
-      "slug": "vanta",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/vanta",
-      "registry_entry_id": "employment:vanta",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Drata",
-      "slug": "drata",
-      "provider": "ashby",
-      "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/drata",
-      "registry_entry_id": "employment:drata",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.72,
-      "limit": 10,
-      "name": "Secureframe",
-      "slug": "secureframe",
-      "provider": "lever",
-      "primary_source_url": "https://api.lever.co/v0/postings/secureframe?mode=json",
-      "registry_entry_id": "employment:secureframe",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.68,
-      "limit": 10,
-      "name": "Thoropass",
-      "slug": "thoropass",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/thoropass/jobs?content=true",
-      "registry_entry_id": "employment:thoropass",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.64,
-      "limit": 10,
-      "name": "OneTrust",
-      "slug": "onetrust",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/onetrust/jobs?content=true",
-      "registry_entry_id": "employment:onetrust",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    },
-    {
-      "default_fit_score": 0.62,
-      "limit": 10,
-      "name": "Abnormal Security",
-      "slug": "abnormalsecurity",
-      "provider": "greenhouse",
-      "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/abnormalsecurity/jobs?content=true",
-      "registry_entry_id": "employment:abnormalsecurity",
-      "need_keywords": [
-        "engineer",
-        "architect",
-        "AI",
-        "ML",
-        "staff",
-        "principal",
-        "document",
-        "extraction",
-        "compliance",
-        "agentic",
-        "lead"
-      ],
-      "mandate_ref": "mandate:agentic-compliance"
-    }
-  ],
-  "federal": [
-    {
-      "default_fit_score": 0.62,
-      "limit": 3,
-      "name": "DARPA R&D Opportunities",
-      "need_keywords": [
-        "artificial intelligence",
-        "AI",
-        "software",
-        "cyber",
-        "data"
-      ],
-      "need_title": "DARPA primary-source R&D opportunity signal",
-      "provider": "darpa",
-      "registry_entry_id": "federal:darpa:opportunities",
-      "url": "https://www.darpa.mil/work-with-us/opportunities"
-    },
-    {
-      "name": "SAM.gov Opportunities",
-      "provider": "sam.gov",
-      "registry_entry_id": "federal:sam:opportunities",
-      "url": "https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D=artificial%20intelligence&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=artificial%20intelligence"
-    }
-  ],
-  "commercial": [
-    {
-      "default_fit_score": 0.65,
-      "name": "University at Buffalo UBIT",
-      "need_keywords": [
-        "data",
-        "security",
-        "software"
-      ],
-      "need_title": "Technology modernization signal",
-      "registry_entry_id": "commercial:ub:ubit",
-      "url": "https://www.buffalo.edu/ubit.html"
-    }
-  ],
-  "mandates": [
-    {
-      "mandate_id": "mandate:agentic-compliance",
-      "declared_by": "Graham 2026-08-05",
-      "statement": "Any company showing interest in agentic compliance is in-scope, given grahama1970/sparta (Sparta Explorer: evidence-grounded space-cyber compliance investigation without giving the model approval authority).",
-      "flagship_project": "https://github.com/grahama1970/sparta",
-      "need_keywords": [
-        "compliance",
-        "GRC",
-        "audit",
-        "evidence",
-        "assurance",
-        "CMMC",
-        "NIST",
-        "agentic",
-        "AI agents",
-        "LLM",
-        "automation",
-        "controls"
-      ]
-    },
-    {
-      "mandate_id": "mandate:document-extraction",
-      "declared_by": "Graham 2026-08-05",
-      "statement": "Companies doing document extraction / document AI / extraction-for-compliance are in-scope, given grahama1970/pdf_oxide (evidence-preserving extraction) and grahama1970/extractor (advanced multi-format document processing, enhanced marker-pdf fork).",
-      "flagship_projects": [
-        "https://github.com/grahama1970/pdf_oxide",
-        "https://github.com/grahama1970/extractor"
-      ],
-      "need_keywords": [
-        "document extraction",
-        "document AI",
-        "OCR",
-        "parsing",
-        "PDF",
-        "unstructured data",
-        "ingestion",
-        "document processing",
-        "layout",
-        "evidence",
-        "provenance"
-      ]
-    }
+ "schema": "monitor_opportunities.target_registry.v1",
+ "reviewed_at": "2026-08-04T00:00:00Z",
+ "policy": {
+  "admission": "primary_source_required",
+  "aggregators": "hint_only",
+  "forbidden": [
+   "linkedin_automation",
+   "broad_board_enumeration",
+   "aggregator_text_only_admission"
   ]
+ },
+ "source_locators": [
+  {
+   "admission_policy": "hint_only_primary_required",
+   "lane": "A",
+   "limit": 1,
+   "name": "Hidden Jobs",
+   "provider": "hiddenjobs.dev",
+   "url": "https://hiddenjobs.dev/"
+  },
+  {
+   "admission_policy": "hint_only_primary_required",
+   "lane": "A",
+   "limit": 1,
+   "name": "Indeed indexed ATS guidance",
+   "provider": "indeed",
+   "url": "https://www.indeed.com/hire/resources/howtohub/optimize-jobs-from-your-career-site-or-ats-on-indeed"
+  },
+  {
+   "admission_policy": "hint_only_primary_required",
+   "lane": "A",
+   "limit": 1,
+   "name": "Agentic compliance hiring signals",
+   "provider": "duckduckgo",
+   "url": "https://html.duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring",
+   "mandate_ref": "mandate:agentic-compliance"
+  }
+ ],
+ "employment": [
+  {
+   "default_fit_score": 0.44,
+   "limit": 20,
+   "name": "Discord",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/discord/jobs?content=true",
+   "provider": "greenhouse",
+   "registry_entry_id": "employment:discord:greenhouse",
+   "slug": "discord"
+  },
+  {
+   "default_fit_score": 0.7,
+   "limit": 10,
+   "name": "Hyperproof",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/hyperproof/jobs?content=true",
+   "provider": "greenhouse",
+   "registry_entry_id": "employment:hyperproof",
+   "need_keywords": [
+    "compliance",
+    "AI",
+    "agent",
+    "automation",
+    "engineer",
+    "architect",
+    "GRC"
+   ],
+   "mandate_ref": "mandate:agentic-compliance",
+   "slug": "hyperproof"
+  },
+  {
+   "default_fit_score": 0.78,
+   "limit": 10,
+   "name": "Reducto",
+   "slug": "reducto",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/reducto",
+   "registry_entry_id": "employment:reducto",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "document",
+    "extraction",
+    "AI",
+    "ML",
+    "parsing",
+    "research"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.75,
+   "limit": 10,
+   "name": "Unstructured",
+   "slug": "unstructured",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/unstructured",
+   "registry_entry_id": "employment:unstructured",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "document",
+    "extraction",
+    "AI",
+    "ML",
+    "parsing",
+    "research"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.8,
+   "limit": 10,
+   "name": "Datalab (marker)",
+   "slug": "datalab",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/datalab",
+   "registry_entry_id": "employment:datalab",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "document",
+    "extraction",
+    "AI",
+    "ML",
+    "parsing",
+    "research"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Extend",
+   "slug": "extend",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/extend",
+   "registry_entry_id": "employment:extend",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Nanonets",
+   "slug": "nanonets",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/nanonets",
+   "registry_entry_id": "employment:nanonets",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Docugami",
+   "slug": "docugami",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/docugami/jobs?content=true",
+   "registry_entry_id": "employment:docugami",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Instabase",
+   "slug": "instabase",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/instabase/jobs?content=true",
+   "registry_entry_id": "employment:instabase",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.68,
+   "limit": 10,
+   "name": "Snorkel AI",
+   "slug": "snorkelai",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/snorkelai/jobs?content=true",
+   "registry_entry_id": "employment:snorkelai",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.7,
+   "limit": 10,
+   "name": "Sierra",
+   "slug": "sierra",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/sierra",
+   "registry_entry_id": "employment:sierra",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.68,
+   "limit": 10,
+   "name": "Harvey",
+   "slug": "harvey",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/harvey",
+   "registry_entry_id": "employment:harvey",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.66,
+   "limit": 10,
+   "name": "Cursor",
+   "slug": "cursor",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/cursor",
+   "registry_entry_id": "employment:cursor",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.7,
+   "limit": 10,
+   "name": "Cognition",
+   "slug": "cognition",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/cognition",
+   "registry_entry_id": "employment:cognition",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.66,
+   "limit": 10,
+   "name": "Perplexity",
+   "slug": "perplexity",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/perplexity",
+   "registry_entry_id": "employment:perplexity",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.66,
+   "limit": 10,
+   "name": "Writer",
+   "slug": "writer",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/writer",
+   "registry_entry_id": "employment:writer",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.6,
+   "limit": 10,
+   "name": "ElevenLabs",
+   "slug": "elevenlabs",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/elevenlabs",
+   "registry_entry_id": "employment:elevenlabs",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.7,
+   "limit": 10,
+   "name": "LangChain",
+   "slug": "langchain",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/langchain",
+   "registry_entry_id": "employment:langchain",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "LlamaIndex",
+   "slug": "llamaindex",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/llamaindex",
+   "registry_entry_id": "employment:llamaindex",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:document-extraction"
+  },
+  {
+   "default_fit_score": 0.66,
+   "limit": 10,
+   "name": "Decagon",
+   "slug": "decagon",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/decagon",
+   "registry_entry_id": "employment:decagon",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.68,
+   "limit": 10,
+   "name": "Dust",
+   "slug": "dust",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/dust",
+   "registry_entry_id": "employment:dust",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.64,
+   "limit": 10,
+   "name": "Pinecone",
+   "slug": "pinecone",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/pinecone",
+   "registry_entry_id": "employment:pinecone",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.64,
+   "limit": 10,
+   "name": "Weaviate",
+   "slug": "weaviate",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/weaviate",
+   "registry_entry_id": "employment:weaviate",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.74,
+   "limit": 10,
+   "name": "Vanta",
+   "slug": "vanta",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/vanta",
+   "registry_entry_id": "employment:vanta",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Drata",
+   "slug": "drata",
+   "provider": "ashby",
+   "primary_source_url": "https://api.ashbyhq.com/posting-api/job-board/drata",
+   "registry_entry_id": "employment:drata",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.72,
+   "limit": 10,
+   "name": "Secureframe",
+   "slug": "secureframe",
+   "provider": "lever",
+   "primary_source_url": "https://api.lever.co/v0/postings/secureframe?mode=json",
+   "registry_entry_id": "employment:secureframe",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.68,
+   "limit": 10,
+   "name": "Thoropass",
+   "slug": "thoropass",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/thoropass/jobs?content=true",
+   "registry_entry_id": "employment:thoropass",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.64,
+   "limit": 10,
+   "name": "OneTrust",
+   "slug": "onetrust",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/onetrust/jobs?content=true",
+   "registry_entry_id": "employment:onetrust",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "default_fit_score": 0.62,
+   "limit": 10,
+   "name": "Abnormal Security",
+   "slug": "abnormalsecurity",
+   "provider": "greenhouse",
+   "primary_source_url": "https://boards-api.greenhouse.io/v1/boards/abnormalsecurity/jobs?content=true",
+   "registry_entry_id": "employment:abnormalsecurity",
+   "need_keywords": [
+    "engineer",
+    "architect",
+    "AI",
+    "ML",
+    "staff",
+    "principal",
+    "document",
+    "extraction",
+    "compliance",
+    "agentic",
+    "lead"
+   ],
+   "mandate_ref": "mandate:agentic-compliance"
+  },
+  {
+   "name": "Built In (remote AI search)",
+   "provider": "builtin",
+   "registry_entry_id": "employment:builtin:remote-ai",
+   "url": "https://builtin.com/jobs/remote?search=AI+architect",
+   "location_display": "Remote",
+   "limit": 25,
+   "default_fit_score": 0.5
+  },
+  {
+   "name": "Built In (remote ML/agents search)",
+   "provider": "builtin",
+   "registry_entry_id": "employment:builtin:remote-ml",
+   "url": "https://builtin.com/jobs/remote?search=machine+learning+engineer+LLM",
+   "location_display": "Remote",
+   "limit": 25,
+   "default_fit_score": 0.5
+  }
+ ],
+ "federal": [
+  {
+   "default_fit_score": 0.62,
+   "limit": 3,
+   "name": "DARPA R&D Opportunities",
+   "need_keywords": [
+    "artificial intelligence",
+    "AI",
+    "software",
+    "cyber",
+    "data"
+   ],
+   "need_title": "DARPA primary-source R&D opportunity signal",
+   "provider": "darpa",
+   "registry_entry_id": "federal:darpa:opportunities",
+   "url": "https://www.darpa.mil/work-with-us/opportunities"
+  },
+  {
+   "name": "SAM.gov Opportunities",
+   "provider": "sam.gov",
+   "registry_entry_id": "federal:sam:opportunities",
+   "url": "https://sam.gov/search/?index=opp&page=1&sort=-modifiedDate&sfm%5Bstatus%5D%5Bis_active%5D=true&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D=artificial%20intelligence&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=artificial%20intelligence"
+  }
+ ],
+ "commercial": [
+  {
+   "default_fit_score": 0.65,
+   "name": "University at Buffalo UBIT",
+   "need_keywords": [
+    "data",
+    "security",
+    "software"
+   ],
+   "need_title": "Technology modernization signal",
+   "registry_entry_id": "commercial:ub:ubit",
+   "url": "https://www.buffalo.edu/ubit.html"
+  }
+ ],
+ "mandates": [
+  {
+   "mandate_id": "mandate:agentic-compliance",
+   "declared_by": "Graham 2026-08-05",
+   "statement": "Any company showing interest in agentic compliance is in-scope, given grahama1970/sparta (Sparta Explorer: evidence-grounded space-cyber compliance investigation without giving the model approval authority).",
+   "flagship_project": "https://github.com/grahama1970/sparta",
+   "need_keywords": [
+    "compliance",
+    "GRC",
+    "audit",
+    "evidence",
+    "assurance",
+    "CMMC",
+    "NIST",
+    "agentic",
+    "AI agents",
+    "LLM",
+    "automation",
+    "controls"
+   ]
+  },
+  {
+   "mandate_id": "mandate:document-extraction",
+   "declared_by": "Graham 2026-08-05",
+   "statement": "Companies doing document extraction / document AI / extraction-for-compliance are in-scope, given grahama1970/pdf_oxide (evidence-preserving extraction) and grahama1970/extractor (advanced multi-format document processing, enhanced marker-pdf fork).",
+   "flagship_projects": [
+    "https://github.com/grahama1970/pdf_oxide",
+    "https://github.com/grahama1970/extractor"
+   ],
+   "need_keywords": [
+    "document extraction",
+    "document AI",
+    "OCR",
+    "parsing",
+    "PDF",
+    "unstructured data",
+    "ingestion",
+    "document processing",
+    "layout",
+    "evidence",
+    "provenance"
+   ]
+  }
+ ]
 }
