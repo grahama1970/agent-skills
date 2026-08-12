@@ -1976,16 +1976,16 @@
      "id": "scene-art",
      "kind": "image",
      "bbox": {
-      "x": 0.25,
-      "y": 0.45,
-      "w": 0.5,
-      "h": 0.42
+      "x": 0.14,
+      "y": 0.4,
+      "w": 0.72,
+      "h": 0.5
      },
      "z": 0,
      "role": "visual",
      "text": null,
      "style": null,
-     "asset_id": "gen-problem-scene",
+     "asset_id": "crop-evidence-gates",
      "svg": null,
      "figure": null,
      "diagram": null,
@@ -2445,16 +2445,16 @@
      "id": "scene-art",
      "kind": "image",
      "bbox": {
-      "x": 0.25,
-      "y": 0.45,
-      "w": 0.5,
-      "h": 0.42
+      "x": 0.14,
+      "y": 0.4,
+      "w": 0.72,
+      "h": 0.5
      },
      "z": 0,
      "role": "visual",
      "text": null,
      "style": null,
-     "asset_id": "gen-architecture-scene",
+     "asset_id": "sparta-response-flow",
      "svg": null,
      "figure": null,
      "diagram": null,
@@ -2703,37 +2703,6 @@
      "text": null,
      "style": null,
      "asset_id": "sparta-chat-console",
-     "svg": null,
-     "figure": null,
-     "diagram": null,
-     "children": null,
-     "child_frame": null,
-     "shape": null,
-     "line": null,
-     "icon": null,
-     "rich_text": null,
-     "rotation_deg": null,
-     "binding_paths": [],
-     "entrance": {
-      "effect": "none",
-      "delay_ms": 0,
-      "fragment_index": null
-     }
-    },
-    {
-     "id": "scene-art",
-     "kind": "image",
-     "bbox": {
-      "x": 0.05,
-      "y": 0.62,
-      "w": 0.34,
-      "h": 0.28
-     },
-     "z": 0,
-     "role": "visual",
-     "text": null,
-     "style": null,
-     "asset_id": "gen-ask-scene",
      "svg": null,
      "figure": null,
      "diagram": null,
@@ -3883,6 +3852,147 @@
      }
     },
     {
+     "id": "diagram",
+     "kind": "diagram",
+     "bbox": {
+      "x": 0.05,
+      "y": 0.312,
+      "w": 0.9,
+      "h": 0.5880000000000001
+     },
+     "z": 0,
+     "role": "diagram",
+     "text": null,
+     "style": null,
+     "asset_id": null,
+     "svg": null,
+     "figure": null,
+     "diagram": {
+      "recipe": "scene",
+      "nodes": [
+       {
+        "id": "gate-0",
+        "bbox": {
+         "x": 0.0,
+         "y": 0.509,
+         "w": 0.222,
+         "h": 0.222
+        },
+        "icon": "shield-check",
+        "label": "Independent corpus review",
+        "sublabel": null,
+        "binding_paths": [
+         "gate-0:label"
+        ],
+        "decoration": "support",
+        "scale": 0.74
+       },
+       {
+        "id": "gate-1",
+        "bbox": {
+         "x": 0.192,
+         "y": 0.262,
+         "w": 0.276,
+         "h": 0.276
+        },
+        "icon": "shield-check",
+        "label": "response-route convergence",
+        "sublabel": null,
+        "binding_paths": [
+         "gate-1:label"
+        ],
+        "decoration": "support",
+        "scale": 0.92
+       },
+       {
+        "id": "gate-2",
+        "bbox": {
+         "x": 0.453,
+         "y": 0.543,
+         "w": 0.234,
+         "h": 0.234
+        },
+        "icon": "shield-check",
+        "label": "QRA reasoning",
+        "sublabel": null,
+        "binding_paths": [
+         "gate-2:label"
+        ],
+        "decoration": "support",
+        "scale": 0.78
+       },
+       {
+        "id": "gate-3",
+        "bbox": {
+         "x": 0.592,
+         "y": 0.136,
+         "w": 0.408,
+         "h": 0.408
+        },
+        "icon": "flag",
+        "label": "deployment remain explicit closure gates",
+        "sublabel": null,
+        "binding_paths": [
+         "gate-3:label"
+        ],
+        "decoration": "principal",
+        "scale": 1.36
+       }
+      ],
+      "edges": [
+       {
+        "id": "gate-flow-0",
+        "source": "gate-0",
+        "target": "gate-3",
+        "route": "dotted-path",
+        "line_style": "dotted",
+        "arrowhead": true,
+        "label": null,
+        "binding_paths": [],
+        "decorative": true
+       },
+       {
+        "id": "gate-flow-1",
+        "source": "gate-1",
+        "target": "gate-3",
+        "route": "dotted-path",
+        "line_style": "dotted",
+        "arrowhead": true,
+        "label": null,
+        "binding_paths": [],
+        "decorative": true
+       },
+       {
+        "id": "gate-flow-2",
+        "source": "gate-2",
+        "target": "gate-3",
+        "route": "dotted-path",
+        "line_style": "dotted",
+        "arrowhead": true,
+        "label": null,
+        "binding_paths": [],
+        "decorative": true
+       }
+      ],
+      "groups": {}
+     },
+     "children": null,
+     "child_frame": null,
+     "shape": null,
+     "line": null,
+     "icon": null,
+     "rich_text": null,
+     "rotation_deg": null,
+     "binding_paths": [
+      "element:diagram"
+     ],
+     "entrance": {
+      "effect": "fade",
+      "delay_ms": 0,
+      "fragment_index": null
+     }
+    },
+    {
      "id": "metaphor-badge",
      "kind": "icon",
      "bbox": {
@@ -3907,37 +4017,6 @@
       "library_id": "flag",
       "tint_role": "canvas"
      },
-     "rich_text": null,
-     "rotation_deg": null,
-     "binding_paths": [],
-     "entrance": {
-      "effect": "none",
-      "delay_ms": 0,
-      "fragment_index": null
-     }
-    },
-    {
-     "id": "scene-art",
-     "kind": "image",
-     "bbox": {
-      "x": 0.25,
-      "y": 0.45,
-      "w": 0.5,
-      "h": 0.42
-     },
-     "z": 0,
-     "role": "visual",
-     "text": null,
-     "style": null,
-     "asset_id": "gen-roadmap-scene",
-     "svg": null,
-     "figure": null,
-     "diagram": null,
-     "children": null,
-     "child_frame": null,
-     "shape": null,
-     "line": null,
-     "icon": null,
      "rich_text": null,
      "rotation_deg": null,
      "binding_paths": [],
@@ -4015,6 +4094,12 @@
      "kind": "claim_quote",
      "claim_id": "sparta-public-open-gates",
      "transform_class": "truncation"
+    },
+    {
+     "path": "element:diagram",
+     "kind": "claim_quote",
+     "claim_id": "sparta-public-open-gates",
+     "transform_class": "truncation"
     }
    ],
    "claim_ids": [
@@ -4030,7 +4115,7 @@
     "purpose": "Argue the roadmap from bound evidence",
     "assertion": "Independent corpus review and response-route convergence remain closure gates",
     "visual_thesis": "gate illustration from claim fragments",
-    "recipe": "assertion-chevrons-scene",
+    "recipe": "roadmap-gates",
     "audience": "conference",
     "density_budget_words": 70,
     "reveal_order": [
@@ -4175,37 +4260,6 @@
      "text": null,
      "style": null,
      "asset_id": "sparta-global-posture",
-     "svg": null,
-     "figure": null,
-     "diagram": null,
-     "children": null,
-     "child_frame": null,
-     "shape": null,
-     "line": null,
-     "icon": null,
-     "rich_text": null,
-     "rotation_deg": null,
-     "binding_paths": [],
-     "entrance": {
-      "effect": "none",
-      "delay_ms": 0,
-      "fragment_index": null
-     }
-    },
-    {
-     "id": "scene-art",
-     "kind": "image",
-     "bbox": {
-      "x": 0.05,
-      "y": 0.62,
-      "w": 0.34,
-      "h": 0.28
-     },
-     "z": 0,
-     "role": "visual",
-     "text": null,
-     "style": null,
-     "asset_id": "gen-valueprop-scene",
      "svg": null,
      "figure": null,
      "diagram": null,

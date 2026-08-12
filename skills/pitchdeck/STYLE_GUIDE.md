@@ -172,6 +172,20 @@ roadmap to a HOUSE_POSITIVE_MATCH verdict — tracked as issues #1379
 #1385 (blinded holdout for the phrase itself).
 
 
+## 9b. THE IMAGERY RULE (operator, 2026-08-12 — outranks §10's backends)
+
+**The README is the design source for imagery exactly as it is the claim
+source for text.** READMEs usually already contain well-thought-through,
+high-end imagery (Sparta's response-flow diagram, the Embry OS header, the
+product screenshots). Slide visuals must be those images — used directly,
+cropped (Pillow), or derived — and any genuinely NEW image must be generated
+FROM them as reference (image-to-image), never from a free-text prompt.
+Prompt-only generation gave the deck a cartoon voice the product does not
+have: fabrication in the visual channel, parallel to a fabricated claim in
+text. The 2026-08-12 failure: six prompt-generated clipart scenes shipped
+while sparta-explorer-response-flow.webp — the product's actual visual
+identity — sat registered and unused.
+
 ## 10. Asset alternates (regenerate art with taste, not by hand)
 
 `./run.sh asset-alternates --bundle-dir <bundle> --asset-id <id> -n 4

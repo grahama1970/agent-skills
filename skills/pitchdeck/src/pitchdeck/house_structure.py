@@ -81,6 +81,10 @@ def _role_map(slide_doc: dict) -> dict[str, str]:
     return {el["id"]: el.get("role", "") for el in slide_doc.get("elements", [])}
 
 
+def _kind_map(slide_doc: dict) -> dict[str, str]:
+    return {el["id"]: el.get("kind", "") for el in slide_doc.get("elements", [])}
+
+
 def check_structure(pptx_path: Path, document_path: Path) -> list[StructureFinding]:
     from pptx import Presentation
 
@@ -98,6 +102,7 @@ def check_structure(pptx_path: Path, document_path: Path) -> list[StructureFindi
                 detail=f"slide '{slide_doc.get('id')}' declares no recognizable archetype"))
             continue
         roles = _role_map(slide_doc)
+        kinds = _kind_map(slide_doc)
         visual_area = 0.0
         for shape in slide.shapes:
             name = shape.name or ""
@@ -138,7 +143,9 @@ def check_structure(pptx_path: Path, document_path: Path) -> list[StructureFindi
                 findings.append(StructureFinding(code="ROLE_REGION_VIOLATION", slide=index,
                     archetype=archetype,
                     detail=f"visual '{element_id}' at y={y:.2f} overlaps the band region"))
-            if role == "visual":
+            if role == "visual" or kinds.get(element_id) == "diagram":
+                # a drawn vector diagram IS visual substance (DESIGN_SLIDES:
+                # the corpus's own diagrams count as the illustration zone)
                 visual_area += max(w, 0) * max(h, 0)
 
             # --- typography contracts (what the ransom-note mutant breaks) ---
