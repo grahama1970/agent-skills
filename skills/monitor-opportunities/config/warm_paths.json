@@ -1,0 +1,5 @@
+{
+  "schema": "monitor_opportunities.warm_paths.v1",
+  "note": "Warm connection paths per org (mutual / 2nd-degree connections from Graham's network) that turn a cold InMail into a warm intro. Populated by /discover-contacts against his LinkedIn network — empty until that runs, so warm_path stays 0 (honest, not faked). Each entry: {\"warm_path\": 0..1, \"via\": \"who/how\"}. Matched by case-insensitive org substring.",
+  "by_org": {}
+}

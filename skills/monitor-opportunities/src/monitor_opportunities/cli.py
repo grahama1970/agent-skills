@@ -705,7 +705,24 @@ def nightly(
     digest: dict[str, object] = {}
     if shortlist_path.exists():
         try:
-            digest = build_digest(json.loads(shortlist_path.read_text(encoding="utf-8")))
+            shortlist_rows = json.loads(shortlist_path.read_text(encoding="utf-8"))
+            # Trigger signal: bounded brave-search over distinct orgs (fail-soft to 0).
+            from .trigger_signals import triggers_for_orgs
+
+            try:
+                triggers = triggers_for_orgs([str(r.get("organization") or "") for r in shortlist_rows])
+            except Exception as exc:  # noqa: BLE001 - trigger enrichment must never fail the run
+                logger.warning("trigger enrichment skipped: {}", exc)
+                triggers = {}
+            # Warm-path config (populated by discover-contacts; empty -> 0, honest).
+            warm_paths_cfg = skill_dir / "config" / "warm_paths.json"
+            try:
+                warm_paths = json.loads(
+                    warm_paths_cfg.read_text(encoding="utf-8")
+                ).get("by_org", {})
+            except (OSError, ValueError):
+                warm_paths = {}
+            digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
             (out / "morning-digest.json").write_text(json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             # mirror to /memory (recallable once the morning_opportunities view is registered)
             try:
