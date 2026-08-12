@@ -55,13 +55,43 @@ def _fit_of(opp: dict[str, Any]) -> float:
         return 0.0
 
 
-def build_digest(shortlist: list[dict[str, Any]], top_n: int = 8) -> dict[str, Any]:
-    """Rank the shortlist by response probability and attach type/action/decision-maker."""
+def _org_signal(org: str, lookup: dict[str, Any], key: str) -> float:
+    """Case-insensitive org-substring lookup of a 0..1 signal (trigger/warm_path)."""
+    low = (org or "").lower()
+    for k, v in (lookup or {}).items():
+        if k.lower() in low or low in k.lower():
+            val = v.get(key) if isinstance(v, dict) else v
+            try:
+                return float(val or 0.0)
+            except (TypeError, ValueError):
+                return 0.0
+    return 0.0
+
+
+def build_digest(
+    shortlist: list[dict[str, Any]],
+    top_n: int = 8,
+    triggers: dict[str, Any] | None = None,
+    warm_paths: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Rank the shortlist by response probability and attach type/action/decision-maker.
+
+    triggers/warm_paths: optional {org: {trigger|warm_path: 0..1, evidence}} lookups
+    computed upstream (the nightly passes live trigger signals + the warm-paths
+    config). Default empty => those signals are 0 (honest, not faked).
+    """
     dms = _load_dms()
     entries: list[dict[str, Any]] = []
     for opp in shortlist:
+        org = str(opp.get("organization") or "")
         signals = dict(opp)
-        signals["fit"] = _fit_of(opp)  # warm_path / trigger stay 0 until wired
+        signals["fit"] = _fit_of(opp)
+        signals["trigger"] = (
+            _org_signal(org, triggers or {}, "trigger") or float(opp.get("trigger") or 0.0)
+        )
+        signals["warm_path"] = (
+            _org_signal(org, warm_paths or {}, "warm_path") or float(opp.get("warm_path") or 0.0)
+        )
         scored = score_opportunity(signals)
         classified = classify_opportunity(opp)
         dm = _decision_maker_for(str(opp.get("organization") or ""), dms)
@@ -85,6 +115,10 @@ def build_digest(shortlist: list[dict[str, Any]], top_n: int = 8) -> dict[str, A
             "employment": sum(1 for e in entries if e["opportunity_type"] == "employment"),
             "consulting": sum(1 for e in entries if e["opportunity_type"] == "consulting"),
         },
-        "signals_wired": {"fit": True, "low_competition": True, "local": True, "warm_path": False, "trigger": False},
+        "signals_wired": {
+            "fit": True, "low_competition": True, "local": True,
+            "trigger": bool(triggers),
+            "warm_path": bool(warm_paths),
+        },
         "top": top,
     }
