@@ -55,6 +55,7 @@ class TranscriptPublisher:
         self._client = httpx.Client(
             base_url=backend_url.rstrip("/"),
             timeout=httpx.Timeout(connect=2.0, read=5.0, write=5.0, pool=2.0),
+            trust_env=False,
         )
         self._source = source
         self._speaker = speaker
@@ -287,7 +288,7 @@ def _start_backend_session(backend_url: str, consent_confirmed: bool) -> None:
     """Start one backend session before any audio channel publishes turns."""
 
     timeout = httpx.Timeout(connect=2.0, read=5.0, write=5.0, pool=2.0)
-    with httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout) as client:
+    with _backend_client(backend_url, timeout=timeout) as client:
         response = client.post(
             "/api/session/start",
             json={"consent_confirmed": consent_confirmed},
@@ -300,7 +301,7 @@ def _read_backend_session_status(backend_url: str) -> str | None:
 
     timeout = httpx.Timeout(connect=1.0, read=2.0, write=1.0, pool=1.0)
     try:
-        with httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout) as client:
+        with _backend_client(backend_url, timeout=timeout) as client:
             response = client.get("/api/state")
             response.raise_for_status()
             payload = response.json()
@@ -313,6 +314,12 @@ def _read_backend_session_status(backend_url: str) -> str | None:
         return None
     status = session.get("status")
     return status if isinstance(status, str) else None
+
+
+def _backend_client(backend_url: str, *, timeout: httpx.Timeout) -> httpx.Client:
+    """Create a loopback API client isolated from host proxy and CA env vars."""
+
+    return httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout, trust_env=False)
 
 
 def _load_recorder() -> Any:
