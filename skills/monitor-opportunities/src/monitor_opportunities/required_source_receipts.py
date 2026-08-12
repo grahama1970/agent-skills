@@ -8,6 +8,7 @@ receipts. Failure modes: brave-search unavailable -> FEED_DOWN receipt.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -16,6 +17,37 @@ from typing import Any
 from loguru import logger
 
 from .receipts import base_receipt, finalize_receipt
+
+# Bounded fallback vocabulary used ONLY when the mandate extractor is unavailable,
+# so lane B is not silently dropped when extract-entities is down. Not the primary
+# relevance path (that is relevance.mandate_hits against the vocabulary corpus).
+_AI_FALLBACK_TERMS = (
+    "artificial intelligence", " ai ", " ai/", "machine learning", " ml ",
+    "autonom", "data science", "large language", " llm", "computer vision",
+    "natural language", "algorithm", "predictive", "automat",
+)
+
+
+def _sam_relevance(title: str) -> tuple[bool, float, list[str]]:
+    """Is a SAM notice on-mandate, and its fit_score. (relevant, fit_score, hits).
+
+    SAM's keyword search is loose ("ALL words"), so it returns many off-mandate
+    notices (renovations, vent replacements). We keep only AI/ML-relevant ones and
+    scale fit by hit count. Primary signal is the mandate vocabulary; a small
+    keyword allowlist is the fallback when the extractor is unavailable.
+    """
+    from .relevance import mandate_hits
+
+    hits = mandate_hits(title)
+    if hits is None:  # extractor unavailable -> bounded keyword fallback
+        low = f" {title.lower()} "
+        kw = [t for t in _AI_FALLBACK_TERMS if t in low]
+        if not kw:
+            return False, 0.0, []
+        return True, min(0.85, 0.5 + 0.08 * len(kw)), kw
+    if not hits:
+        return False, 0.0, []
+    return True, min(0.85, 0.55 + 0.08 * len(hits)), hits
 
 def linkedin_required_receipt(evidence_supplied: bool) -> dict[str, Any]:
     """Honest receipt for the mandatory LinkedIn top-applicant source.
@@ -92,7 +124,46 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
         return finalize_receipt(receipt), []
     opps = data.get("opportunities", [])
     receipt["response_status"] = 200
-    receipt["result_status"] = "MATCHES" if opps else "NO_MATCHES"
     receipt["parser_result"] = "PARSED"
+    # Emit one candidate per RELEVANT SAM notice (was dropped entirely before, so
+    # lane B produced 0 candidates even on a successful capture). Off-mandate
+    # notices are filtered here because lane B is not title-filtered downstream.
+    candidates: list[dict[str, Any]] = []
+    receipt_id = receipt["receipt_id"]
+    for opp in opps[:40]:
+        title = str(opp.get("title") or "").strip()
+        url = opp.get("url") or opp.get("href")
+        if not title or not url:
+            continue
+        relevant, fit, hits = _sam_relevance(title)
+        if not relevant:
+            continue
+        opp_id = str(opp.get("opp_id") or hashlib.sha256(str(url).encode()).hexdigest()[:16])
+        candidates.append({
+            "lane": "B",
+            "source_receipt_id": receipt_id,
+            "source_provider": "sam.gov_website",
+            "source_class": "sam.gov_website",
+            "source_identity": url,
+            "organization": "Federal (SAM.gov)",
+            "title": title,
+            "location_display": "Federal notice; delivery model not applicable",
+            "workplace_type": "NOT_APPLICABLE",
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": url,
+            "apply_url": None,
+            "primary_evidence_url": url,
+            "published_at": None,
+            "updated_at": None,
+            "content_hash": hashlib.sha256(f"sam:{opp_id}".encode()).hexdigest(),
+            "posting_text": f"SAM.gov notice. Mandate hits: {', '.join(hits)}",
+            "fit_score": fit,
+            "candidate_id": f"candidate:b:sam:{opp_id}",
+        })
+    receipt["result_status"] = "MATCHES" if candidates else "NO_MATCHES"
     receipt["evidence_refs"].append(f"sam_website_capture:{len(opps)}")
-    return finalize_receipt(receipt), []
+    receipt["limitations"].append(
+        f"{len(opps)} notices captured; {len(candidates)} on-mandate after relevance gate"
+    )
+    return finalize_receipt(receipt), candidates
