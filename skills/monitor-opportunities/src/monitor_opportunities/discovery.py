@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
+import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -427,6 +427,96 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     return receipt, candidates
 
 
+def _builtin_candidates(
+    client: httpx.Client, target: dict[str, Any]
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Built In job-board search (builtin.com) via its schema.org JSON-LD.
+
+    Server-rendered and keyless: each search page embeds an ItemList of
+    ListItem{name, url, description} in an ld+json script (the '+' is
+    HTML-encoded as &#x2B; in the type attribute). Organization comes from the
+    /company/<slug> link adjacent to each job link in the DOM. Niche-board tier:
+    lower applicant volume than LinkedIn, so it scores better on competition.
+    """
+    receipt = _base_receipt("A", "builtin", target["name"], "job_board")
+    url = target["url"]
+    _add_registry_evidence(receipt, target, url)
+    receipt["request_summary"] = f"GET {url} with no credentials; JSON-LD ItemList parse"
+    try:
+        response = client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        response.raise_for_status()
+        html = body.decode("utf-8", errors="replace")
+    except (httpx.HTTPError, ValueError) as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    # ld+json blocks; the type attribute encodes '+' as &#x2B; on builtin.com.
+    items: list[dict[str, Any]] = []
+    for block in re.findall(
+        r'<script type="application/ld(?:\+|&#x2B;)json">\s*(\{.*?\})\s*</script>', html, re.S
+    ):
+        try:
+            data = json.loads(block)
+        except ValueError:
+            continue
+        graphs = data.get("@graph", [data])
+        for node in graphs:
+            if isinstance(node, dict) and node.get("@type") == "ItemList":
+                items = [i for i in node.get("itemListElement", []) if isinstance(i, dict)]
+                break
+        if items:
+            break
+
+    receipt["result_status"] = "MATCHES" if items else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    default_location = str(target.get("location_display") or "Remote")
+    candidates: list[dict[str, Any]] = []
+    for item in items[: _registry_limit(target, 25)]:
+        title = str(item.get("name") or "").strip()
+        job_url = str(item.get("url") or "").strip()
+        if not title or "/job/" not in job_url:
+            continue
+        # Organization: nearest /company/<slug> link before this job link in the DOM.
+        org = target["name"]
+        pos = html.find(job_url.split("builtin.com")[-1], 12000)  # skip the JSON-LD copy
+        if pos > 0:
+            slugs = re.findall(r"/company/([a-z0-9-]+)", html[max(0, pos - 2500):pos])
+            if slugs:
+                org = slugs[-1].replace("-", " ").title()
+        payload = {
+            "lane": "A",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "builtin",
+            "source_class": "job_board",
+            "source_identity": url,
+            "organization": org,
+            "title": title,
+            "location_display": default_location,
+            "workplace_type": _workplace_type(default_location),
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": job_url,
+            "apply_url": job_url,
+            "primary_evidence_url": job_url,
+            "published_at": None,
+            "updated_at": None,
+            "content_hash": sha256_bytes(job_url.encode("utf-8")),
+            "posting_text": str(item.get("description") or "")[:4000],
+            "fit_score": target.get("default_fit_score", 0.5),
+        }
+        payload["candidate_id"] = _candidate_id("candidate:a", payload)
+        candidates.append(payload)
+    return receipt, candidates
+
+
 def _lever_posting_text(job: dict[str, Any]) -> str:
     parts = [str(job.get("description") or "")]
     for list_key in ("lists", "additional"):
@@ -690,6 +780,8 @@ def _employment_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
         return _lever_candidates(client, target)
     if provider == "ashby":
         return _ashby_candidates(client, target)
+    if provider == "builtin":
+        return _builtin_candidates(client, target)
     receipt = _base_receipt("A", str(provider or "unknown"), target.get("name", "Unknown"), "employer_ats")
     _add_registry_evidence(receipt, target, target.get("primary_source_url"))
     receipt["result_status"] = "INVALID_REQUEST"
