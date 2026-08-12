@@ -977,8 +977,8 @@ def asset_alternates_cmd(
                        f"A 1280x720 flat hand-drawn-style vector illustration: {full} "
                        f"Variation {index + 1}: explore a different composition. "
                        "Root element must be <svg xmlns=... width=1280 height=720>.")
-                proc = subprocess.run(["claude", "-p", ask], capture_output=True, text=True,
-                                      timeout=600)
+                proc = subprocess.run(["claude", "-p", "--effort", "low", ask],
+                                      capture_output=True, text=True, timeout=600)
                 text = proc.stdout
                 start, end = text.find("<svg"), text.rfind("</svg>")
                 if start >= 0 and end > start:

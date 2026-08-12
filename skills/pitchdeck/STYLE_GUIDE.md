@@ -184,8 +184,12 @@ the base prompt; `--figure` routes to /create-figure for charts) into
 Backends, all live-verified 2026-08-12:
 - `claude-svg` (default): Claude authors the scene as SVG — palette-exact by
   construction, deterministic to rasterize, and the .svg source stays beside
-  the .png so a human can EDIT the art instead of regenerating. Subscription,
-  no API key.
+  the .png so a human can EDIT the art instead of regenerating. Runs
+  `claude -p --effort low` (subscription; low effort is deliberate — SVG
+  authoring needs no deep reasoning). NOTE: /ask has no agentic claude
+  handler yet — its bare `claude` alias launches webclaude (#1386); once
+  `claude-cli` lands there, this backend swaps to `ask claude-cli` so the
+  calls carry Tau receipts.
 - `fal --model fal-ai/nano-banana`: nano banana via FAL (FAL_API_KEY from
   ~/.zshrc, injected as FAL_KEY). Richest raster character art. CAUTION: it
   sometimes embeds words despite the no-text prompt — inspect candidates
