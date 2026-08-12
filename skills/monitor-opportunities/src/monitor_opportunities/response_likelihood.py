@@ -36,7 +36,7 @@ def _channel_competition(source: str, channels: dict[str, Any]) -> float:
     """Competition (0=inbound/none .. 1=cold ATS firehose) for a source; default mid."""
     src = (source or "").lower()
     for ch in channels.get("channels", []):
-        for t in ch.get("targets", []):
+        for t in ch.get("targets") or []:
             if t in src:
                 return float(ch["competition"])
         skill = ch.get("skill") or ""
@@ -50,6 +50,20 @@ def _load_channels() -> dict[str, Any]:
         return json.loads(CHANNELS.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {"channels": []}
+
+
+def _source_of(opp: dict[str, Any]) -> str:
+    """The discovery-source string for competition lookup.
+
+    Shortlist rows do not carry a bare `source` key; they carry source_provider /
+    source_class / source_identity. Falling through to those keeps low_competition
+    a live signal instead of collapsing every row to the default 0.6.
+    """
+    for key in ("source", "source_provider", "source_class", "source_identity"):
+        val = opp.get(key)
+        if val:
+            return str(val)
+    return ""
 
 
 def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -68,7 +82,7 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
     trigger = float(opp.get("trigger") or 0.0)
     competition = opp.get("competition")
     if competition is None:
-        competition = _channel_competition(str(opp.get("source") or ""), channels)
+        competition = _channel_competition(_source_of(opp), channels)
     low_comp = 1.0 - float(competition)
     # Local standout: a DARPA/AI-caliber architect is rare in WNY, so Buffalo
     # on-site/hybrid roles get noticed. Fit still gates it (mandate-first).

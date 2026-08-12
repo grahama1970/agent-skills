@@ -67,3 +67,68 @@ def triggers_for_orgs(orgs: list[str], limit: int = 12) -> dict[str, dict[str, o
     for org in list(dict.fromkeys(o for o in orgs if o))[:limit]:
         out[org] = company_trigger(org)
     return out
+
+
+def triggers_for_shortlist(
+    rows: list[dict[str, object]],
+    min_fit: float = 0.6,
+    limit: int = 12,
+) -> tuple[dict[str, dict[str, object]], dict[str, object]]:
+    """Fit-gated, receipted trigger pass over a shortlist.
+
+    Spends the bounded brave-search budget only on orgs whose best role clears
+    `min_fit` (a trigger on a role we would not pursue is wasted). Returns the
+    org->signal lookup plus a receipt recording, per org, whether it was searched,
+    its score, evidence, and — when skipped — why. This makes the trigger signal
+    inspectable instead of an invisible 0 (last run: trigger fired but no artifact
+    proved what it found).
+
+    Note: we intentionally do NOT skip by org type. The trigger regex matches
+    contracts/awards/grants, which hospitals, universities, and gov contractors
+    (e.g. Roswell Park, CUBRC) legitimately win — dropping them would lose real
+    budget+urgency signal. Fit is the honest gate.
+    """
+    best_fit: dict[str, float] = {}
+    for r in rows:
+        org = str(r.get("organization") or "").strip()
+        if not org:
+            continue
+        try:
+            fit = float(r.get("fit_score") or r.get("fit") or 0.0)
+        except (TypeError, ValueError):
+            fit = 0.0
+        best_fit[org] = max(best_fit.get(org, 0.0), fit)
+
+    lookup: dict[str, dict[str, object]] = {}
+    records: list[dict[str, object]] = []
+    # Highest-fit orgs first so the budget lands on the best candidates.
+    ranked = sorted(best_fit.items(), key=lambda kv: -kv[1])
+    searched = 0
+    for org, fit in ranked:
+        if fit < min_fit:
+            records.append({"org": org, "searched": False, "skip_reason": "below_min_fit",
+                            "fit": round(fit, 3), "trigger": 0.0, "evidence": None})
+            continue
+        if searched >= limit:
+            records.append({"org": org, "searched": False, "skip_reason": "over_budget",
+                            "fit": round(fit, 3), "trigger": 0.0, "evidence": None})
+            continue
+        sig = company_trigger(org)
+        searched += 1
+        lookup[org] = sig
+        records.append({"org": org, "searched": True, "fit": round(fit, 3),
+                        "trigger": sig.get("trigger"), "evidence": sig.get("evidence")})
+
+    receipt = {
+        "schema": "monitor_opportunities.trigger_receipt.v1",
+        "min_fit": min_fit,
+        "limit": limit,
+        "orgs_considered": len(best_fit),
+        "orgs_searched": searched,
+        "orgs_with_signal": sum(
+            1 for r in records if r.get("searched") and (r.get("trigger") or 0.0) > 0.0
+        ),
+        "brave_search_available": BRAVE_SEARCH.exists(),
+        "records": records,
+    }
+    return lookup, receipt

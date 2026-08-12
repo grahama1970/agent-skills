@@ -68,17 +68,40 @@ def _org_signal(org: str, lookup: dict[str, Any], key: str) -> float:
     return 0.0
 
 
+def _cap_per_org(
+    entries: list[dict[str, Any]], top_n: int, max_per_org: int
+) -> list[dict[str, Any]]:
+    """Take the top-N, but at most `max_per_org` roles from any single org.
+
+    Prevents one company with many open roles from flooding the digest (last run:
+    4 of 8 were the same org). Entries must be pre-sorted best-first.
+    """
+    seen: dict[str, int] = {}
+    top: list[dict[str, Any]] = []
+    for e in entries:
+        org = str(e.get("organization") or "").lower()
+        if seen.get(org, 0) >= max_per_org:
+            continue
+        seen[org] = seen.get(org, 0) + 1
+        top.append(e)
+        if len(top) >= top_n:
+            break
+    return top
+
+
 def build_digest(
     shortlist: list[dict[str, Any]],
     top_n: int = 8,
     triggers: dict[str, Any] | None = None,
     warm_paths: dict[str, Any] | None = None,
+    max_per_org: int = 2,
 ) -> dict[str, Any]:
     """Rank the shortlist by response probability and attach type/action/decision-maker.
 
     triggers/warm_paths: optional {org: {trigger|warm_path: 0..1, evidence}} lookups
     computed upstream (the nightly passes live trigger signals + the warm-paths
     config). Default empty => those signals are 0 (honest, not faked).
+    max_per_org: cap on how many roles from one org may appear in the top (diversity).
     """
     dms = _load_dms()
     entries: list[dict[str, Any]] = []
@@ -95,6 +118,7 @@ def build_digest(
         scored = score_opportunity(signals)
         classified = classify_opportunity(opp)
         dm = _decision_maker_for(str(opp.get("organization") or ""), dms)
+        trig_ev = (triggers or {}).get(org) if isinstance((triggers or {}).get(org), dict) else None
         entries.append({
             "organization": opp.get("organization"),
             "title": opp.get("title"),
@@ -104,10 +128,12 @@ def build_digest(
             "response_score": scored["response_score"],
             "response_tier": _tier(scored["response_score"]),
             "why_it_responds": scored["why_it_responds"],
+            "drivers": scored["drivers"],
+            "trigger_evidence": (trig_ev or {}).get("evidence"),
             "inmail_target": dm,
         })
     entries.sort(key=lambda e: -e["response_score"])
-    top = entries[:top_n]
+    top = _cap_per_org(entries, top_n, max_per_org)
     return {
         "schema": "monitor_opportunities.morning_digest.v1",
         "counts": {
