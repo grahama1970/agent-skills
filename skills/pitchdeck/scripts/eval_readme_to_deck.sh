@@ -75,10 +75,27 @@ stage render-pdf soffice "-env:UserInstallation=file://$WORK/.lo" --headless \
 if [ -f "$WORK/render/deck.pdf" ]; then
   NPAGES=$(pdfinfo "$WORK/render/deck.pdf" 2>/dev/null | awk '/^Pages:/{print $2}'); NPAGES=${NPAGES:-6}
   for p in $(seq 1 "$NPAGES"); do pdftoppm -png -r 50 -f $p -l $p "$WORK/render/deck.pdf" "$WORK/render/s$p" >/dev/null 2>&1; done
+  python3 - "$WORK" <<'PYEOF'
+import hashlib, json, sys
+from pathlib import Path
+work = Path(sys.argv[1])
+sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+receipt = {
+    "schema": "pitchdeck.render_receipt.v1",
+    "pptx_sha256": sha(work / "deck.pptx"),
+    "pdf_sha256": sha(work / "render" / "deck.pdf"),
+    "dpi": 50,
+    "pages": [{"file": p.name, "sha256": sha(p)} for p in sorted((work / "render").glob("s*.png"))],
+}
+(work / "render-receipt.json").write_text(json.dumps(receipt, indent=1))
+PYEOF
 fi
 
 echo "--- stage 6: house gate (HOUSE_NON_ANOMALOUS semantics) ---"
-stage house-similarity ./run.sh house-similarity --slides-dir "$WORK/render" --glob "s*.png"
+stage house-similarity ./run.sh house-similarity --slides-dir "$WORK/render" --glob "s*.png" \
+  --calibration fixtures/house-gate/calibration.v1.json \
+  --render-receipt "$WORK/render-receipt.json" --pptx "$WORK/deck.pptx" \
+  --document "$WORK/deck.document.json"
 
 echo "---"
 echo "stages: $pass pass, $fail fail"
