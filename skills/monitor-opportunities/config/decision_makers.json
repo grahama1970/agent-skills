@@ -1,0 +1,13 @@
+{
+  "schema": "monitor_opportunities.decision_makers.v1",
+  "note": "Named InMail targets per org (brave-search 2026-08-11). Verify before sending; Graham transmits every InMail. Matched by case-insensitive org substring.",
+  "by_org": {
+    "drata": {"name": "Lior Solomon", "role": "VP of Engineering, AI & Data", "linkedin": "linkedin.com/in/liorsolomon", "angle": "agentic-compliance is Drata's product and your lane (SPARTA/ARCOS) — you build inspectable, audit-defensible AI"},
+    "unstructured": {"name": "Brian S. Raymond (Founder/CEO) or Christopher Maddock (Head of Product & Eng)", "role": "Founder/CEO; Head of Product & Eng", "linkedin": "linkedin.com/in/ctmaddock", "angle": "document extraction is your flagship (pdf_oxide/extractor) — you've built what they sell"},
+    "moog": {"name": "George Small", "role": "Chief Technology Officer (Buffalo)", "linkedin": "", "angle": "aerospace/defense ties to your DARPA ARCOS work + verification; local: 'I'm in Buffalo, I can meet'"},
+    "university at buffalo": {"name": "Siwei Lyu (verify)", "role": "Director, Institute for AI & Data Science", "linkedin": "", "angle": "advisory/architecture for AI research + BEP spinouts (QAS.AI); local"},
+    "vanta": {"name": "NEEDS DISCOVERY", "role": "current VP Eng / GRC-eng lead (Matt Spitz departed)", "linkedin": "", "angle": "GRC + agentic-compliance fit"},
+    "cubrc": {"name": "NEEDS DISCOVERY", "role": "AI/data-science research lead", "linkedin": "", "angle": "direct DARPA/SPARTA fit + local + cleared-adjacent = most memorable"},
+    "m&t": {"name": "NEEDS DISCOVERY", "role": "Head of AI / Model Risk / GRC-tech", "linkedin": "", "angle": "agentic-compliance + doc extraction fits banking risk/ops"}
+  }
+}

@@ -695,6 +695,28 @@ def nightly(
                 logger.warning("tracker skipped for {}: {}", opp.get("candidate_id"), exc)
     steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo}
 
+    # Morning digest: rank the shortlist by RESPONSE PROBABILITY, classify each as
+    # employment vs consulting with the correct action, attach known decision-makers.
+    # This is the human-facing morning product. Fail-soft.
+    import urllib.request as _digest_urlreq
+
+    from .morning_digest import build_digest
+
+    digest: dict[str, object] = {}
+    if shortlist_path.exists():
+        try:
+            digest = build_digest(json.loads(shortlist_path.read_text(encoding="utf-8")))
+            (out / "morning-digest.json").write_text(json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            # mirror to /memory (recallable once the morning_opportunities view is registered)
+            try:
+                body = json.dumps({"document": {"_key": f"digest-{out.name}", **digest}, "collection": "morning_opportunities"}).encode()
+                _digest_urlreq.urlopen(_digest_urlreq.Request(f"{memory_url}/store", data=body, headers={"Content-Type": "application/json"}), timeout=20)
+            except OSError as exc:
+                logger.warning("digest memory store skipped: {}", exc)
+        except (ValueError, OSError) as exc:
+            logger.warning("morning digest skipped: {}", exc)
+    steps["digest"] = {"top": len(digest.get("top", [])), "counts": digest.get("counts", {})}
+
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a
     # restartable dependency).
