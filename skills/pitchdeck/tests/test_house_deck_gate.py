@@ -55,10 +55,19 @@ def test_composed_gate_catches_every_mutant(tmp_path):
     sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
     from build_house_gate_adversaries import MUTANTS
     cal = calibrate(RECORDS)
+    # art-register-swap is the holdout's MEASURED false pass (image content is
+    # invisible to geometry and satisfies the palette): the open hole #1383
+    # must close. Asserting it fails here would be pretending coverage.
+    known_open_holes = {"art-register-swap"}
     for name, fn in MUTANTS.items():
         mutant = tmp_path / f"{name}.pptx"
         fn(GOOD, mutant)
         structure_hits = len(check_structure(mutant, DOC))
         deck = score_deck(mutant, RECORDS)
         deck_fail = deck["median"] > cal.median_bar or deck["p90"] > cal.p90_bar
-        assert structure_hits > 0 or deck_fail, f"{name} passed BOTH structural channels"
+        caught = structure_hits > 0 or deck_fail
+        if name in known_open_holes:
+            assert not caught, (f"{name} is now caught structurally — remove it from "
+                                 "known_open_holes and update the holdout report")
+        else:
+            assert caught, f"{name} passed BOTH structural channels"

@@ -1,0 +1,280 @@
+{
+ "house": [
+  {
+   "deck": "real:ACERT_Darpa_PI_Meeting_FtWorth",
+   "slides": 71,
+   "allowance": 4,
+   "pixel_embed_failed_slides": 10,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 19,
+   "conformance_ok": false,
+   "deck_gate": {
+    "median": 0.0,
+    "bar": 0.1945,
+    "p90": 0.0928,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": null,
+   "structure_ok": null,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "real:Rack_Assurance_Ecosystem_RAES_v1",
+   "slides": 9,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 2,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.0,
+    "bar": 0.1945,
+    "p90": 0.0,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": null,
+   "structure_ok": null,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "real:ReqML_GE_Presentation",
+   "slides": 63,
+   "allowance": 4,
+   "pixel_embed_failed_slides": 15,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 5,
+   "conformance_ok": false,
+   "deck_gate": {
+    "median": 0.0,
+    "bar": 0.1945,
+    "p90": 0.045,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": null,
+   "structure_ok": null,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "real:SpartaAI_CyberSummitv_v3",
+   "slides": 59,
+   "allowance": 3,
+   "pixel_embed_failed_slides": 5,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 18,
+   "conformance_ok": false,
+   "deck_gate": {
+    "median": 0.0,
+    "bar": 0.1945,
+    "p90": 0.1187,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": null,
+   "structure_ok": null,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "real:SpartaAI_SBIR",
+   "slides": 48,
+   "allowance": 3,
+   "pixel_embed_failed_slides": 9,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 11,
+   "conformance_ok": false,
+   "deck_gate": {
+    "median": 0.0,
+    "bar": 0.1945,
+    "p90": 0.0216,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": null,
+   "structure_ok": null,
+   "verdict": "OFF-HOUSE"
+  }
+ ],
+ "off_house": [
+  {
+   "deck": "mutant:arc-shuffle",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 0,
+   "pixel_ok": true,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1171,
+    "bar": 0.1945,
+    "p90": 0.1544,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 4,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:art-register-swap",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 0,
+   "pixel_ok": true,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1171,
+    "bar": 0.1945,
+    "p90": 0.1544,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 0,
+   "structure_ok": true,
+   "verdict": "HOUSE"
+  },
+  {
+   "deck": "mutant:bbox-shuffle",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 9,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1357,
+    "bar": 0.1945,
+    "p90": 0.1912,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 15,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:card-grid",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 0,
+   "pixel_ok": true,
+   "conformance_flagged_slides": 15,
+   "conformance_ok": false,
+   "deck_gate": {
+    "median": 0.1609,
+    "bar": 0.1945,
+    "p90": 0.1677,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 7,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:layout-mirror",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 1,
+   "pixel_ok": true,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1114,
+    "bar": 0.1945,
+    "p90": 0.1667,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 28,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:text-dump-divider",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 0,
+   "pixel_ok": true,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1171,
+    "bar": 0.1945,
+    "p90": 0.1544,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 5,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:two-tiny-visuals",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 15,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1035,
+    "bar": 0.1945,
+    "p90": 0.1576,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 7,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  },
+  {
+   "deck": "mutant:typography-swap",
+   "slides": 15,
+   "allowance": 1,
+   "pixel_embed_failed_slides": 2,
+   "pixel_ok": false,
+   "conformance_flagged_slides": 0,
+   "conformance_ok": true,
+   "deck_gate": {
+    "median": 0.1171,
+    "bar": 0.1945,
+    "p90": 0.1544,
+    "p90_bar": 0.3332
+   },
+   "deck_gate_ok": true,
+   "structure_findings": 15,
+   "structure_ok": false,
+   "verdict": "OFF-HOUSE"
+  }
+ ],
+ "development_target": {
+  "deck": "generated:sparta-explorer",
+  "slides": 15,
+  "allowance": 1,
+  "pixel_embed_failed_slides": 0,
+  "pixel_ok": true,
+  "conformance_flagged_slides": 0,
+  "conformance_ok": true,
+  "deck_gate": {
+   "median": 0.1171,
+   "bar": 0.1945,
+   "p90": 0.1544,
+   "p90_bar": 0.3332
+  },
+  "deck_gate_ok": true,
+  "structure_findings": 0,
+  "structure_ok": true,
+  "verdict": "HOUSE"
+ },
+ "confusion": {
+  "house_decks": 5,
+  "house_pass": 0,
+  "off_house_decks": 8,
+  "off_house_false_pass": 1,
+  "bar": "all real decks pass; at most 1 off-house deck passes",
+  "bar_met": false
+ }
+}
