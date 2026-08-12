@@ -704,35 +704,124 @@ def nightly(
 
     digest: dict[str, object] = {}
     if shortlist_path.exists():
-        try:
-            shortlist_rows = json.loads(shortlist_path.read_text(encoding="utf-8"))
-            # Trigger signal: bounded brave-search over distinct orgs (fail-soft to 0).
-            from .trigger_signals import triggers_for_orgs
+        shortlist_rows = json.loads(shortlist_path.read_text(encoding="utf-8"))
+        # Trigger signal: fit-gated, receipted brave-search pass (fail-soft to {}).
+        from .trigger_signals import triggers_for_shortlist
 
+        try:
+            triggers, trigger_receipt = triggers_for_shortlist(shortlist_rows)
+        except Exception as exc:  # noqa: BLE001 - trigger enrichment must never fail the run
+            logger.warning("trigger enrichment skipped: {}", exc)
+            triggers = {}
+            trigger_receipt = {
+                "schema": "monitor_opportunities.trigger_receipt.v1",
+                "error": str(exc), "records": [],
+            }
+        (out / "trigger-receipt.json").write_text(
+            json.dumps(trigger_receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        # Warm-path config (populated by discover-contacts; empty -> 0, honest).
+        warm_paths_cfg = skill_dir / "config" / "warm_paths.json"
+        try:
+            warm_paths = json.loads(warm_paths_cfg.read_text(encoding="utf-8")).get("by_org", {})
+        except (OSError, ValueError):
+            warm_paths = {}
+        digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
+        # Fail-closed: a shortlist with rows that yields an empty digest is a real
+        # defect (the headline deliverable), not something to warn past.
+        if shortlist_rows and not digest.get("top"):
+            _fail(ContractError(
+                "NIGHTLY_DIGEST_EMPTY",
+                f"{len(shortlist_rows)} shortlisted rows produced 0 digest entries",
+            ))
+        (out / "morning-digest.json").write_text(
+            json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        # mirror to /memory (recallable once the morning_opportunities view is registered)
+        try:
+            body = json.dumps({
+                "document": {"_key": f"digest-{out.name}", **digest},
+                "collection": "morning_opportunities",
+            }).encode()
+            _digest_urlreq.urlopen(
+                _digest_urlreq.Request(
+                    f"{memory_url}/store", data=body,
+                    headers={"Content-Type": "application/json"},
+                ),
+                timeout=20,
+            )
+        except OSError as exc:
+            logger.warning("digest memory store skipped: {}", exc)
+    # DIGEST is a first-class, validated phase: it must have produced a non-empty
+    # top when there was a shortlist, and its artifact must exist on disk.
+    digest_artifact = out / "morning-digest.json"
+    digest_ok = bool(digest.get("top")) and digest_artifact.exists()
+    steps["digest"] = {
+        "phase": "DIGEST_COMPLETE",
+        "top": len(digest.get("top", [])),
+        "counts": digest.get("counts", {}),
+        "signals_wired": digest.get("signals_wired", {}),
+        "artifact": str(digest_artifact) if digest_artifact.exists() else None,
+        "trigger_receipt": (
+            str(out / "trigger-receipt.json")
+            if (out / "trigger-receipt.json").exists() else None
+        ),
+        "seam_validation": {
+            "kind": "morning_digest.v1",
+            "status": "PASS" if digest_ok else "SKIPPED_NO_SHORTLIST",
+        },
+    }
+
+    # Lane health: the run reports each lane MATCHES even when a lane's live sources
+    # all failed (last run: federal lane B = SAM.gov API 404 + DARPA landing-page-as-1).
+    # Flag DEGRADED honestly so the federal/client queues can't masquerade as healthy.
+    # result_status alone lies: a lane can read MATCHES while producing ~nothing
+    # (DARPA parsed a landing page as 1 opp; SAM website captured 0 rows). So a
+    # lane is THIN when it yields fewer than MIN_LANE_CANDIDATES real candidates,
+    # even if no source hard-failed. THIN_LANE_MIN is env-overridable.
+    _DEGRADED = {"FEED_DOWN", "ERROR", "NO_MATCHES"}
+    try:
+        thin_min = max(1, int(_os.environ.get("MONITOR_THIN_LANE_MIN", "3")))
+    except ValueError:
+        thin_min = 3
+    observed_by_lane: dict[str, int] = {}
+    summaries_path = out / "discovery" / "lane-summaries.json"
+    if summaries_path.exists():
+        try:
+            for s in json.loads(summaries_path.read_text(encoding="utf-8")):
+                observed_by_lane[str(s.get("lane"))] = int(s.get("candidates_observed") or 0)
+        except (ValueError, OSError):
+            observed_by_lane = {}
+    lane_health: dict[str, object] = {}
+    receipts_path = out / "discovery" / "source-receipts.jsonl"
+    if receipts_path.exists():
+        by_lane: dict[str, list[dict[str, object]]] = {}
+        for line in receipts_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
             try:
-                triggers = triggers_for_orgs([str(r.get("organization") or "") for r in shortlist_rows])
-            except Exception as exc:  # noqa: BLE001 - trigger enrichment must never fail the run
-                logger.warning("trigger enrichment skipped: {}", exc)
-                triggers = {}
-            # Warm-path config (populated by discover-contacts; empty -> 0, honest).
-            warm_paths_cfg = skill_dir / "config" / "warm_paths.json"
-            try:
-                warm_paths = json.loads(
-                    warm_paths_cfg.read_text(encoding="utf-8")
-                ).get("by_org", {})
-            except (OSError, ValueError):
-                warm_paths = {}
-            digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
-            (out / "morning-digest.json").write_text(json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            # mirror to /memory (recallable once the morning_opportunities view is registered)
-            try:
-                body = json.dumps({"document": {"_key": f"digest-{out.name}", **digest}, "collection": "morning_opportunities"}).encode()
-                _digest_urlreq.urlopen(_digest_urlreq.Request(f"{memory_url}/store", data=body, headers={"Content-Type": "application/json"}), timeout=20)
-            except OSError as exc:
-                logger.warning("digest memory store skipped: {}", exc)
-        except (ValueError, OSError) as exc:
-            logger.warning("morning digest skipped: {}", exc)
-    steps["digest"] = {"top": len(digest.get("top", [])), "counts": digest.get("counts", {})}
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            by_lane.setdefault(str(rec.get("lane") or "?"), []).append(rec)
+        for lane, recs in sorted(by_lane.items()):
+            healthy = [r for r in recs if str(r.get("result_status")) not in _DEGRADED]
+            degraded = [
+                {"provider": r.get("provider"), "result_status": r.get("result_status"),
+                 "response_status": r.get("response_status")}
+                for r in recs if str(r.get("result_status")) in _DEGRADED
+            ]
+            observed = observed_by_lane.get(lane, 0)
+            if not healthy:
+                status = "DEGRADED" if degraded else "EMPTY"
+            elif observed < thin_min:
+                status = "THIN"  # sources 'ok' but near-zero real candidates
+            else:
+                status = "HEALTHY"
+            lane_health[lane] = {"status": status, "sources": len(recs),
+                                 "healthy_sources": len(healthy),
+                                 "candidates_observed": observed, "degraded": degraded}
+    steps["lane_health"] = lane_health
 
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a
