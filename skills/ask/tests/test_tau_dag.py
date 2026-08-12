@@ -4604,3 +4604,27 @@ def test_multi_attachment_handlers_are_not_blocked(tmp_path: Path) -> None:
     bundle = compile_tau_dag_bundle(request)
 
     assert bundle["status"] == "READY"
+
+
+def test_claude_handler_is_agentic_scillm_not_webclaude():
+    """#1387: 'claude' means the agentic model on the scillm Claude Code OAuth
+    lane; webclaude (a claude.ai chat tab) is reachable only by explicit name."""
+    from ask.tau_dag import _normalize_handler, resolve_scillm_model_route
+
+    assert _normalize_handler("claude") == "claude-fable-5"
+    assert _normalize_handler("claude fable") == "claude-fable-5"
+    assert _normalize_handler("webclaude") == "webclaude"
+
+    route = resolve_scillm_model_route(_normalize_handler("claude"))
+    assert route.provider == "anthropic"
+    assert route.auth == "scillm_claude_code_credentials"
+
+    low = resolve_scillm_model_route("claude-fable-low")
+    assert low.model == "claude-fable-5"
+    assert low.reasoning_effort == "low"
+    xhigh = resolve_scillm_model_route("claude-fable-xhigh")
+    assert xhigh.reasoning_effort == "high"
+    assert xhigh.requested_reasoning_effort == "xhigh"
+    assert xhigh.reasoning_downgrade_reason
+    sonnet = resolve_scillm_model_route("claude-sonnet-4-6")
+    assert sonnet.model == "claude-sonnet-4-6" and sonnet.provider == "anthropic"

@@ -171,7 +171,11 @@ _HANDLER_ALIASES = {
     "chatgpt": "webgpt",
     "gpt": "webgpt",
     "kimi": "webkimi",
-    "claude": "webclaude",
+    # "claude" means the AGENTIC model on the scillm Claude Code OAuth lane —
+    # webclaude is a claude.ai chat tab (no tools, no repo, no effort control)
+    # and is reachable only by its explicit name (operator, 2026-08-12; #1387).
+    "claude": "claude-fable-5",
+    "claudefable": "claude-fable-5",
     "gemini": "webgemini",
     "grok": "webgrok",
     "deepseek": "webdeepseek",
@@ -3021,11 +3025,26 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
             ),
         )
     if lower.startswith("claude"):
+        # effort-suffix selectors (claude-fable-low|medium|high|xhigh) split
+        # into base model + reasoning effort, same grammar as gpt-5.5-high
+        base, requested_effort = lower, None
+        for effort in ("xhigh", "high", "medium", "med", "low"):
+            if lower.endswith(f"-{effort}"):
+                base = lower[: -(len(effort) + 1)]
+                requested_effort = "medium" if effort == "med" else effort
+                break
+        dispatched = "high" if requested_effort == "xhigh" else requested_effort
         return ScillmModelRoute(
             requested_model=requested,
-            model=_CLAUDE_SCILLM_ALIASES.get(lower, requested),
+            model=_CLAUDE_SCILLM_ALIASES.get(base, base),
             provider="anthropic",
             auth="scillm_claude_code_credentials",
+            reasoning_effort=dispatched,
+            requested_reasoning_effort=requested_effort,
+            reasoning_downgrade_reason=(
+                "SciLLM accepts none/low/medium/high; xhigh dispatched as high."
+                if requested_effort == "xhigh" else None
+            ),
         )
     # Generic effort-suffix selectors (gpt-5.5-high, gpt-5.5-medium, ...):
     # the deployed router has routes for base model names, not suffixed
