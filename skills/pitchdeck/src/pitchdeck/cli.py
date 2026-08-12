@@ -951,6 +951,7 @@ def asset_alternates_cmd(
     select: Annotated[Path | None, typer.Option(help="Adopt this previously generated candidate into the bundle (replaces the asset file; the build-manifest digest chain records the change).")] = None,
     figure: Annotated[str | None, typer.Option(help="Instead of AI art, route to /create-figure with this spec, e.g. 'workflow:Ask,Retrieve,Answer' or 'force-graph:<json>'.")] = None,
     model: Annotated[str | None, typer.Option(help="Model override for the backend (e.g. fal-ai/nano-banana for --backend fal).")] = None,
+    reference: Annotated[Path | None, typer.Option(help="Reference image SHOWN to the generator (image-to-image). Defaults to the asset's current file. NO EXCEPTIONS (operator rule 2026-08-12): raster generation without a reference is refused.")] = None,
 ) -> None:
     """Generate N alternates for a bundle image asset (nano banana / gemini,
     flux) or a /create-figure chart, then adopt one with --select. Every
@@ -986,9 +987,22 @@ def asset_alternates_cmd(
 
         out_dir = Path("/mnt/storage12tb/skills/pitchdeck/outputs/asset-alternates") / asset_id
         out_dir.mkdir(parents=True, exist_ok=True)
-        house = ("Flat hand-drawn vector illustration on a pure white background, palette limited to "
-                 "petrol teal #076889, muted blue #26558E, olive green #6F8E30, gold #D6A300 and gray, "
-                 "expressive cartoon character style, wide 16:9 composition, absolutely no text or letters")
+        if select is None and figure is None:
+            ref = reference if reference is not None else (target if target.is_file() else None)
+            if ref is None or not Path(ref).is_file():
+                raise ValueError("NO REFERENCE IMAGE: every generation must be shown its design-source "
+                                 "reference (the README figure or the asset's current file). Pass --reference.")
+            if backend == "claude-svg":
+                pass  # reference is injected into the claude prompt below
+            elif backend not in {"google", "fal"}:
+                raise ValueError(f"backend '{backend}' cannot consume a reference image; use google, fal, or claude-svg")
+        else:
+            ref = None
+        # With a reference image the reference IS the style authority — a
+        # text style-suffix would fight it (observed: cartoon drift, 2026-08-12).
+        house = ("Match the attached reference image's visual style, palette, glow treatment, and "
+                 "subject register EXACTLY — the output must read as a sibling panel of the reference. "
+                 "Wide 16:9 composition, no text or letters.")
         base = str(asset.get("generation_brief") or asset.get("alt_text") or asset_id)
         example_notes = " ".join(f"In the spirit of: {e.stem.replace('-', ' ')}." for e in example)
         full = f"{asset.get('alt_text', '')}. {prompt or base}. {example_notes} {house}"
@@ -998,8 +1012,10 @@ def asset_alternates_cmd(
             out = out_dir / f"{stamp}-alt{index + 1}.png"
             if backend == "claude-svg" and not figure:
                 svg_path = out.with_suffix(".svg")
-                ask = ("Output ONLY an SVG document (no markdown fences, no commentary). "
-                       f"A 1280x720 flat hand-drawn-style vector illustration: {full} "
+                ask = (f"First use the Read tool to LOOK at the reference image at {ref} — match its "
+                       "palette, register, and subject treatment; your SVG must read as a sibling of it. "
+                       "Then output ONLY an SVG document (no markdown fences, no commentary). "
+                       f"A 1280x720 vector illustration derived from that reference: {full} "
                        f"Variation {index + 1}: explore a different composition. "
                        "Root element must be <svg xmlns=... width=1280 height=720>.")
                 proc = subprocess.run(["claude", "-p", "--effort", "low", ask],
@@ -1024,7 +1040,8 @@ def asset_alternates_cmd(
                 cmd = ["uv", "run", "--script",
                        str(Path.home() / ".claude/skills/create-image/generate.py"), "generate",
                        f"{full} Variation {index + 1}: explore a different composition.",
-                       "--output", str(out), "--size", "1280x720", "--backend", backend]
+                       "--output", str(out), "--size", "1280x720", "--backend", backend,
+                       "--reference", str(ref)]
                 if model:
                     cmd += ["--model", model]
             env = dict(os.environ)
@@ -1045,7 +1062,8 @@ def asset_alternates_cmd(
             results.append({"file": str(out), "ok": out.is_file(),
                             "error": None if out.is_file() else proc.stdout[-200:] + proc.stderr[-200:]})
         receipt = {"schema": "pitchdeck.asset_alternates.v1", "asset": asset_id,
-                   "prompt": full, "backend": backend, "candidates": results,
+                   "prompt": full, "backend": backend, "reference": str(ref) if ref else None,
+                   "candidates": results,
                    "adopt_with": f"./run.sh asset-alternates --bundle-dir {bundle_dir} --asset-id {asset_id} --select <candidate.png>"}
         (out_dir / f"{stamp}-receipt.json").write_text(json_mod.dumps(receipt, indent=1))
         typer.echo(json_mod.dumps(receipt, indent=1))
