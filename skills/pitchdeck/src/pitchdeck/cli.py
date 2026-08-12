@@ -915,6 +915,87 @@ def house_deck_gate_cmd(
         _abort(exc)
 
 
+@app.command(name="asset-alternates")
+def asset_alternates_cmd(
+    bundle_dir: Annotated[Path, typer.Option(help="Bundle containing asset_manifest.yaml.")],
+    asset_id: Annotated[str, typer.Option(help="Asset to generate alternates for.")],
+    count: Annotated[int, typer.Option("-n", "--count", help="How many alternates.")] = 4,
+    prompt: Annotated[str | None, typer.Option(help="Extra guidance appended to the asset's generation brief.")] = None,
+    example: Annotated[list[Path], typer.Option(help="Example image(s) whose look to describe into the prompt (their alt text / brief is quoted; backends here are text-to-image).")] = [],
+    backend: Annotated[str, typer.Option(help="create-image backend: google (nano banana / gemini-2.5-flash-image), flux, fal, ollama, auto.")] = "google",
+    select: Annotated[Path | None, typer.Option(help="Adopt this previously generated candidate into the bundle (replaces the asset file; the build-manifest digest chain records the change).")] = None,
+    figure: Annotated[str | None, typer.Option(help="Instead of AI art, route to /create-figure with this spec, e.g. 'workflow:Ask,Retrieve,Answer' or 'force-graph:<json>'.")] = None,
+) -> None:
+    """Generate N alternates for a bundle image asset (nano banana / gemini,
+    flux) or a /create-figure chart, then adopt one with --select. Every
+    candidate lands in outputs/asset-alternates/<asset-id>/ with a receipt;
+    adoption rewrites the asset file so the digest chain (#1384) sees it."""
+    import datetime as dt
+    import json as json_mod
+    import os
+    import subprocess
+
+    import yaml as yaml_mod
+
+    try:
+        manifest_path = bundle_dir / "asset_manifest.yaml"
+        payload = yaml_mod.safe_load(manifest_path.read_text())
+        asset = next((a for a in payload.get("assets", []) if a.get("id") == asset_id), None)
+        if asset is None:
+            raise ValueError(f"asset '{asset_id}' not found in {manifest_path}")
+        local = os.path.expandvars(str(asset.get("local_path")))
+        target = Path(local) if Path(local).is_absolute() else bundle_dir / local
+
+        if select is not None:
+            if not select.is_file():
+                raise ValueError(f"candidate not found: {select}")
+            target.write_bytes(select.read_bytes())
+            asset["generation_brief"] = (str(asset.get("generation_brief", "")).split(" [adopted")[0]
+                + f" [adopted alternate {select.name} on {dt.date.today().isoformat()}]")
+            manifest_path.write_text(yaml_mod.safe_dump(payload, sort_keys=False))
+            typer.echo(json_mod.dumps({"status": "ADOPTED", "asset": asset_id,
+                                       "file": str(target),
+                                       "note": "re-run build-manifest + the eval; the digest chain records this change"}))
+            raise typer.Exit(0)
+
+        out_dir = Path("/mnt/storage12tb/skills/pitchdeck/outputs/asset-alternates") / asset_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        house = ("Flat hand-drawn vector illustration on a pure white background, palette limited to "
+                 "petrol teal #076889, muted blue #26558E, olive green #6F8E30, gold #D6A300 and gray, "
+                 "expressive cartoon character style, wide 16:9 composition, absolutely no text or letters")
+        base = str(asset.get("generation_brief") or asset.get("alt_text") or asset_id)
+        example_notes = " ".join(f"In the spirit of: {e.stem.replace('-', ' ')}." for e in example)
+        full = f"{asset.get('alt_text', '')}. {prompt or base}. {example_notes} {house}"
+        stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%S")
+        results = []
+        for index in range(count):
+            out = out_dir / f"{stamp}-alt{index + 1}.png"
+            if figure:
+                kind, _, spec = figure.partition(":")
+                cmd = [str(Path.home() / ".claude/skills/create-figure/run.sh"), kind,
+                       "--stages" if kind == "workflow" else "--data", spec,
+                       "--output", str(out), "--format", "png"]
+            else:
+                cmd = ["uv", "run", "--script",
+                       str(Path.home() / ".claude/skills/create-image/generate.py"), "generate",
+                       f"{full} Variation {index + 1}: explore a different composition.",
+                       "--output", str(out), "--size", "1280x720", "--backend", backend]
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300,
+                                  cwd=str(Path.home() / ".claude/skills/create-image"))
+            results.append({"file": str(out), "ok": out.is_file(),
+                            "error": None if out.is_file() else proc.stdout[-200:] + proc.stderr[-200:]})
+        receipt = {"schema": "pitchdeck.asset_alternates.v1", "asset": asset_id,
+                   "prompt": full, "backend": backend, "candidates": results,
+                   "adopt_with": f"./run.sh asset-alternates --bundle-dir {bundle_dir} --asset-id {asset_id} --select <candidate.png>"}
+        (out_dir / f"{stamp}-receipt.json").write_text(json_mod.dumps(receipt, indent=1))
+        typer.echo(json_mod.dumps(receipt, indent=1))
+        raise typer.Exit(0 if all(r["ok"] for r in results) else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="calibrate-house-gate")
 def calibrate_house_gate_cmd(
     output: Annotated[Path, typer.Option(help="Where to write house_gate_calibration.v1 JSON.")] = Path("fixtures/house-gate/calibration.v1.json"),

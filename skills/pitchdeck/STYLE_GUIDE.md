@@ -170,3 +170,16 @@ roadmap to a HOUSE_POSITIVE_MATCH verdict — tracked as issues #1379
 (archetype-conditioned structure), #1382 (leave-one-deck-out deck bar),
 #1383 (text-masked vision ablation), #1384 (artifact/cold eval split),
 #1385 (blinded holdout for the phrase itself).
+
+
+## 10. Asset alternates (regenerate art with taste, not by hand)
+
+`./run.sh asset-alternates --bundle-dir <bundle> --asset-id <id> -n 4
+[--prompt "extra guidance"] [--backend google|flux|fal] [--figure workflow:A,B,C]`
+generates N candidates (house palette + the asset's own generation_brief as
+the base prompt; `--figure` routes to /create-figure for charts) into
+`outputs/asset-alternates/<id>/` with a receipt. Adopt one with
+`--select <candidate.png>` — the asset file is replaced in place and the
+#1384 digest chain forces the next build-manifest/eval run to see the change.
+Backend note: `google` is nano banana (gemini-2.5-flash-image); if the key is
+unavailable, `flux` (HF) is the working fallback.
