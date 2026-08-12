@@ -367,14 +367,94 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
     return receipt
 
 
-def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
-    """Read-only capture of SAM.gov active AI opportunities from the website.
+# SAM.gov's own frontend search service (discovered 2026-08-12 by watching the
+# SPA's network calls). Keyless and cookieless; requires Accept: application/hal+json
+# (plain application/json gets 406). Works where api.sam.gov + api_key 404s.
+_SAM_SGS_URL = "https://sam.gov/api/prod/sgs/v1/search/"
 
-    Writes federal evidence JSON consumable by run --federal-evidence. Returns a
-    capture receipt. Honest failure: if surf/Chrome is unavailable, no evidence
-    file is written and the receipt records status FAILED.
+
+def _capture_sam_via_sgs(out_dir: Path, receipt: dict[str, Any]) -> dict[str, Any] | None:
+    """Try the sgs HTTP endpoint; return the receipt on success, None to fall back."""
+    import httpx
+
+    params = {
+        "random": "1", "index": "opp", "page": "0", "mode": "search",
+        "sort": "-modifiedDate", "size": "40", "responseType": "json",
+        "q": "artificial intelligence", "qMode": "ALL", "is_active": "true",
+    }
+    headers = {
+        "Accept": "application/hal+json, application/json",
+        "User-Agent": "Mozilla/5.0",
+        "Referer": "https://sam.gov/search/",
+    }
+    try:
+        timeout = httpx.Timeout(connect=5.0, read=45.0, write=10.0, pool=5.0)
+        with httpx.Client(timeout=timeout) as client:
+            resp = client.get(_SAM_SGS_URL, params=params, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.warning("SAM sgs endpoint failed ({}); falling back to browser capture", exc)
+        return None
+    results = (data.get("_embedded") or {}).get("results") or []
+    opps = [
+        {
+            "title": str(r.get("title") or "").strip(),
+            "url": f"https://sam.gov/opp/{r.get('_id')}/view",
+            "opp_id": r.get("_id"),
+            "solicitation_number": r.get("solicitationNumber"),
+            "published_at": r.get("publishDate"),
+            "updated_at": r.get("modifiedDate"),
+            "response_deadline": r.get("responseDateActual") or r.get("responseDate"),
+            "source": "sam.gov_website",
+        }
+        for r in results
+        if r.get("_id") and str(r.get("title") or "").strip()
+    ]
+    if not opps:
+        logger.warning("SAM sgs endpoint returned 0 rows; falling back to browser capture")
+        return None
+    evidence = {
+        "schema_version": "monitor_opportunities.federal_capture.v1",
+        "source": "sam_sgs_search_service",
+        "capture_method": "httpx_read_only_sgs",
+        "observed_at": utc_now(),
+        "sam_url": _SAM_SGS_URL,
+        "result_count": len(opps),
+        "total_available": (data.get("page") or {}).get("totalElements"),
+        "opportunities": opps,
+    }
+    evidence_path = out_dir / "sam-website-evidence.json"
+    evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+    receipt["status"] = "OK"
+    receipt["capture_method"] = "sgs_http"
+    receipt["evidence_path"] = str(evidence_path)
+    receipt["opportunities_captured"] = len(opps)
+    (out_dir / "sam-capture-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read-only capture of SAM.gov active AI opportunities.
+
+    Primary: SAM's own sgs search service over plain HTTP (keyless; the documented
+    api.sam.gov + api_key path 404s from this host, and sgs is what sam.gov's
+    frontend itself calls). Fallback: surf browser capture of the rendered search.
+    Writes federal evidence JSON consumable by run --federal-evidence. Honest
+    failure: if both paths fail, no evidence file is written, status FAILED.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
+    sgs_receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "sam.gov_website",
+        "captured_at": utc_now(),
+        "external_effects": False,
+    }
+    done = _capture_sam_via_sgs(out_dir, sgs_receipt)
+    if done is not None:
+        return done
     receipt: dict[str, Any] = {
         "schema": "monitor_opportunities.browser_capture_receipt.v1",
         "source": "sam.gov_website",
