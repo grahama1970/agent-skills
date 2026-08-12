@@ -781,9 +781,35 @@ def nightly(
                 inbound_viewers = research_prospects(viewers, limit=5)
         except Exception as exc:  # noqa: BLE001 - inbound enrichment must never fail the run
             logger.warning("who-viewed enrichment skipped: {}", exc)
+        # Actively-hiring contacts in the network (param discovered live): warm
+        # hiring leads for BOTH tracks, each with the mutual-connection referral
+        # path. Their orgs join warm-paths; top contacts are researched.
+        hiring_contacts: list[dict[str, object]] = []
+        try:
+            from .browser_capture import capture_linkedin_actively_hiring
+
+            ah_receipt = capture_linkedin_actively_hiring(capture_dir)
+            steps["actively_hiring"] = {"status": ah_receipt.get("status"),
+                                        "contacts": ah_receipt.get("contacts_captured")}
+            if ah_receipt.get("evidence_path"):
+                contacts = json.loads(
+                    Path(ah_receipt["evidence_path"]).read_text(encoding="utf-8")
+                ).get("contacts", [])
+                for c in contacts:
+                    org = str(c.get("org") or "").strip()
+                    if org and org.lower() not in {k.lower() for k in warm_paths}:
+                        via = f"{c.get('name')} is hiring; mutuals: {c.get('mutuals') or 'n/a'}"
+                        warm_paths[org] = {"warm_path": 0.8, "via": via}
+                from .prospect_research import research_prospects as _rp
+
+                hiring_contacts = _rp(contacts, limit=5)
+        except Exception as exc:  # noqa: BLE001 - enrichment must never fail the run
+            logger.warning("actively-hiring enrichment skipped: {}", exc)
         digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
         if inbound_viewers:
             digest["inbound_interest"] = inbound_viewers[:10]
+        if hiring_contacts:
+            digest["warm_hiring_contacts"] = hiring_contacts[:10]
         # Premium per-job competitive insights for the digest top (bounded):
         # applicant-rank percentile ('top N%'), applicant count, salary.
         try:

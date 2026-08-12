@@ -1104,6 +1104,31 @@ def capture_linkedin_who_viewed(
                             "when": m.group(1)})
             if len(viewers) >= 20:
                 break
+        receipt["extract_strategy"] = "text_blocks"
+        if not viewers:
+            # SELF-HEAL: the text-block heuristic is layout-sensitive. Before
+            # reporting EMPTY, retry with the anchor-based strategy (profile
+            # links + card climb), which survives most layout reshuffles.
+            try:
+                alt = json.loads(json.loads(
+                    _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
+                ))
+                for c in alt:
+                    viewers.append({"name": c.get("name"), "headline": c.get("current") or "",
+                                    "org": c.get("org"), "when": None})
+                if viewers:
+                    receipt["extract_strategy"] = "anchor_fallback"
+                    logger.warning("who-viewed text-block parser found 0; anchor fallback recovered {}", len(viewers))
+            except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired):
+                pass
+        if not viewers:
+            # Both strategies dry: that is a maintainer signal, not just an EMPTY.
+            receipt["needs_attention"] = {
+                "reason": "who_viewed_parsers_both_empty",
+                "hint": "LinkedIn likely reshaped the profile-views page; "
+                        "re-derive the block shape from a live screenshot "
+                        "(see capture_linkedin_who_viewed).",
+            }
         receipt["status"] = "OK" if viewers else "EMPTY"
         receipt["viewers_captured"] = len(viewers)
     except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
@@ -1122,6 +1147,94 @@ def capture_linkedin_who_viewed(
     )
     receipt["evidence_path"] = str(evidence_path)
     (out_dir / "linkedin-who-viewed-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+# People search: actively-hiring 1st/2nd-degree connections (param discovered
+# live 2026-08-12 by clicking the filter: activelyHiringForJobTitles=["-100"]
+# means 'any job title'). Every result is a warm hiring contact by construction.
+_ACTIVELY_HIRING_URL = (
+    "https://www.linkedin.com/search/results/people/"
+    "?keywords={kw}&network=%5B%22F%22%2C%22S%22%5D"
+    "&activelyHiringForJobTitles=%5B%22-100%22%5D"
+)
+
+_PEOPLE_EXTRACT_JS = (
+    "(function(){var out=[],seen={};"
+    "var as=[].slice.call(document.querySelectorAll('main a[href*=\"/in/\"]'));"
+    "for(var i=0;i<as.length;i++){var a=as[i];var prof=a.href.split('?')[0];"
+    "var name=(a.innerText||'').trim().split(String.fromCharCode(10))[0];"
+    "if(!name||name.length<3||name.length>50||seen[prof])continue;"
+    "var card=a,best=null;"
+    "for(var d=0;d<10&&card;d++){card=card.parentElement;if(!card)break;"
+    "var t=card.innerText||'';"
+    "if(/Current:|mutual connection/.test(t)&&t.length<700){best=card;}"
+    "if(t.length>=700)break;}"
+    "if(!best)continue;var txt=best.innerText;"
+    "var first=(txt.split(String.fromCharCode(10))[0]||'').trim();"
+    "if(first.indexOf(name)!==0)continue;seen[prof]=1;"
+    "var cur=(txt.match(/Current: ([^\\n]+)/)||[])[1]||'';"
+    "var deg=(txt.match(/\\u2022 (1st|2nd|3rd)/)||[])[1]||'';"
+    "var mut=(txt.match(/([\\w ,.&]+(?:& \\d+ other)? mutual connections?)/)||[])[1]||null;"
+    "var org=(cur.match(/\\bat (.+)$/)||[])[1]||null;"
+    "out.push({name:name,degree:deg,current:cur.slice(0,90),org:org,"
+    "mutuals:mut?mut.slice(0,70):null,profile:prof});}"
+    "return JSON.stringify(out.slice(0,15));})()"
+)
+
+
+def capture_linkedin_actively_hiring(
+    out_dir: Path,
+    surf_run: Path = SURF_RUN_DEFAULT,
+    keywords: str = "AI%20engineering",
+) -> dict[str, Any]:
+    """Actively-hiring people in the 1st/2nd-degree network — warm hiring leads.
+
+    Read-only people search with LinkedIn's actively-hiring filter. Each contact
+    comes with the mutual connections that form the referral path. Serves BOTH
+    tracks: employment (a hiring manager you can be introduced to) and
+    consulting (a leader with budget and urgency, warm by network).
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "linkedin_actively_hiring",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+    }
+    tab_id = ""
+    contacts: list[dict[str, Any]] = []
+    try:
+        ensure_browser(surf_run)
+        created = _surf(surf_run, "tab.new", _ACTIVELY_HIRING_URL.format(kw=keywords), "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        _surf(surf_run, "wait", "8")
+        contacts = json.loads(json.loads(
+            _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
+        ))
+        receipt["status"] = "OK" if contacts else "EMPTY"
+        receipt["contacts_captured"] = len(contacts)
+    except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
+        logger.warning("actively-hiring capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+    finally:
+        if tab_id:
+            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+    evidence_path = out_dir / "linkedin-actively-hiring.json"
+    evidence_path.write_text(
+        json.dumps({"schema_version": "monitor_opportunities.actively_hiring.v1",
+                    "observed_at": utc_now(), "contacts": contacts}, indent=1),
+        encoding="utf-8",
+    )
+    receipt["evidence_path"] = str(evidence_path)
+    (out_dir / "linkedin-actively-hiring-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return receipt
