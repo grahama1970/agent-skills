@@ -1,0 +1,239 @@
+{
+  "project": "pitchdeck",
+  "project_root": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck",
+  "project_profile": "generic",
+  "timestamp": "2026-08-12T06:30:02.723738+00:00",
+  "mode": "standard",
+  "phase_1_infrastructure": {
+    "daemons": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "daemons": {},
+      "up": 0,
+      "total": 0
+    },
+    "tests": {
+      "total": 0,
+      "collected": true,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/pitchdeck/tests",
+      "error": null
+    },
+    "cascade": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "registry": {
+        "validators": 0,
+        "classifiers": 0,
+        "regressors": 0,
+        "gpts": 0
+      },
+      "shadow": {
+        "total": 0,
+        "usable": 0
+      },
+      "training_data": {},
+      "classifiers_on_disk": [],
+      "tier_status": {
+        "tier_2_teacher": "NOT_APPLICABLE",
+        "tier_1_5_gpt": "NOT_APPLICABLE",
+        "tier_0_5_classifier": "NOT_APPLICABLE"
+      }
+    },
+    "daemon_cascade_wiring": {
+      "applicable": false,
+      "reason": "target root is not an Embry-style project",
+      "wired": {}
+    },
+    "skills": {
+      "total": 384,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills",
+      "missing_skill_md": [
+        "__pycache__",
+        "audio-caption-service",
+        "best-practices-approach-bakeoff",
+        "best-practices-design-doc",
+        "best-practices-gemini-react-design-loop",
+        "best-practices-kling-scene",
+        "best-practices-open-design",
+        "best-practices-react-flow-dag",
+        "best-practices-react-flow-dag-chart",
+        "best-practices-script-writer"
+      ],
+      "missing_skill_md_count": 33,
+      "missing_sanity": [
+        "agents-registry",
+        "animation-vocabulary",
+        "apple-design",
+        "best-practices-agent",
+        "best-practices-chat",
+        "best-practices-chat-ux",
+        "best-practices-chatterbox-agent",
+        "best-practices-converse",
+        "best-practices-cots",
+        "best-practices-design"
+      ],
+      "missing_sanity_count": 58
+    },
+    "frontend": {
+      "exists": false
+    },
+    "deploy": {
+      "systemd_units": 0,
+      "containerfile": false,
+      "docker_compose": false
+    },
+    "components": {
+      "registered": 0,
+      "projects": {},
+      "note": "No component registry found"
+    }
+  },
+  "phase_2_memory": {
+    "available": true,
+    "recalls": [
+      {
+        "query": "pitchdeck features architecture deployment",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "pitchdeck competitive advantages unique capabilities",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      },
+      {
+        "query": "pitchdeck known issues gaps missing features",
+        "found": false,
+        "confidence": 0.0,
+        "count": 0,
+        "top_items": []
+      }
+    ]
+  },
+  "phase_3_doc_drift": {
+    "docs_checked": 7,
+    "docs_found": 3,
+    "drift_items": [
+      {
+        "file": "README.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "gate certifies HOUSE_NON_ANOMALOUS \u2014 it is not yet a validated positive"
+      },
+      {
+        "file": "README.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "The compiler proves every visible string survives into the emitted artifacts (post-emit whole-string scan), but it does "
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "planned",
+        "severity": "low",
+        "line": "- CURRENT_GATE (adopted): pinned cold-planned six-slide Sparta conference mini-arc (cover/value-prop/problem/architectur"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "future",
+        "severity": "low",
+        "line": "## Future promotion gates"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "future",
+        "severity": "low",
+        "line": "future authoring surface; Marp stays one-way (P2-14)."
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "Playwright PDF export not yet built."
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "- Video is not yet indexed (no video assets exist in any deck manifest today);"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "not_yet",
+        "severity": "low",
+        "line": "Accepted backlog (architectural; NOT yet implemented \u2014 the RETHINK core):"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "stale_reference",
+        "severity": "medium",
+        "line": "References `skills/ux-lab/ui/ChatWell.tsx` but file not found"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "stale_reference",
+        "severity": "medium",
+        "line": "References `index.ts` but file not found"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "stale_reference",
+        "severity": "medium",
+        "line": "References `ChatWell.tsx` but file not found"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "stale_reference",
+        "severity": "medium",
+        "line": "References `slide_edit.py` but file not found"
+      },
+      {
+        "file": "docs/PROJECT_KNOWLEDGE.md",
+        "issue": "stale_reference",
+        "severity": "medium",
+        "line": "References `Inspector.tsx` but file not found"
+      }
+    ],
+    "drift_count": 13
+  },
+  "phase_4_best_practices": {
+    "findings": [],
+    "total_findings": 0,
+    "by_severity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "best_practice_skills_available": [
+      "best-practices-python",
+      "best-practices-react",
+      "best-practices-skills",
+      "best-practices-kde"
+    ]
+  },
+  "phase_5_research": {
+    "skipped": true,
+    "reason": "Use standard or --full mode"
+  },
+  "phase_6_gaps": {
+    "gaps": [
+      {
+        "category": "documentation",
+        "severity": "low",
+        "gap": "5 aspirational/TODO items in docs",
+        "action": "Implement or remove aspirational claims"
+      },
+      {
+        "category": "skills",
+        "severity": "low",
+        "gap": "33 skill dirs without SKILL.md",
+        "action": "Run /skills-ci to audit and fix"
+      }
+    ],
+    "improvements": []
+  }
+}

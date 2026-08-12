@@ -1,0 +1,107 @@
+"""#1379: the house gate must refuse a render it cannot prove is THE render.
+
+Each test mutates one link the way the drift actually happens — a swapped PNG,
+a dropped page, a mismatched DPI, a hand-edited calibration — and asserts the
+typed refusal."""
+
+import json
+from pathlib import Path
+
+import pytest
+
+from pitchdeck.house_gate_calibration import (
+    CorpusPage,
+    HouseGateCalibration,
+    RenderProfile,
+    Thresholds,
+    verify_render_receipt,
+)
+
+
+def _calibration() -> HouseGateCalibration:
+    return HouseGateCalibration(
+        pages=[CorpusPage(file="X-1.png", deck="X", sha256="0" * 64, dhash_hex="0" * 16,
+                          duplicate_cluster=0, ink_fraction=0.2, palette_similarity=0.9)],
+        populations={"rendered_pages": 1, "indexed_records": 1, "catalogued_slides": 1,
+                     "reconciliation": "test"},
+        duplicate_cluster_count=1,
+        corpus_palette_histogram=[1.0] + [0.0] * 215,
+        distributions={},
+        thresholds=Thresholds(embedding_anomaly_floor=0.395, ink_floor=0.16,
+                              palette_floor=0.59, provenance="test"),
+        render_profile=RenderProfile(renderer="test"),
+    )
+
+
+def _receipt(tmp_path: Path, pptx: Path) -> dict:
+    import hashlib
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+    return {"schema": "pitchdeck.render_receipt.v1", "pptx_sha256": sha(pptx), "dpi": 50,
+            "pages": [{"file": p.name, "sha256": sha(p)}
+                      for p in sorted(tmp_path.glob("s*.png"))]}
+
+
+@pytest.fixture()
+def bound(tmp_path):
+    pptx = tmp_path / "deck.pptx"
+    pptx.write_bytes(b"PPTX-V1")
+    for i in (1, 2):
+        (tmp_path / f"s{i}.png").write_bytes(b"PNG-%d" % i)
+    return tmp_path, pptx, _receipt(tmp_path, pptx)
+
+
+def test_clean_binding_passes(bound):
+    tmp, pptx, receipt = bound
+    assert verify_render_receipt(receipt, renders_dir=tmp, pptx_path=pptx,
+                                 expected_pages=2, calibration=_calibration()) == []
+
+
+def test_swapped_png_is_render_hash_mismatch(bound):
+    tmp, pptx, receipt = bound
+    (tmp / "s1.png").write_bytes(b"A-REAL-CORPUS-PAGE-PASTED-IN")
+    codes = {f.code for f in verify_render_receipt(receipt, renders_dir=tmp, pptx_path=pptx,
+                                                   expected_pages=2, calibration=_calibration())}
+    assert "RENDER_HASH_MISMATCH" in codes
+
+
+def test_dropped_page_is_page_count_mismatch(bound):
+    tmp, pptx, receipt = bound
+    receipt["pages"] = receipt["pages"][:1]
+    codes = {f.code for f in verify_render_receipt(receipt, renders_dir=tmp, pptx_path=pptx,
+                                                   expected_pages=2, calibration=_calibration())}
+    assert "PAGE_COUNT_MISMATCH" in codes
+    assert "UNRECEIPTED_RENDER" in codes  # the orphan PNG is named, not ignored
+
+
+def test_wrong_dpi_is_profile_mismatch(bound):
+    tmp, pptx, receipt = bound
+    receipt["dpi"] = 70
+    codes = {f.code for f in verify_render_receipt(receipt, renders_dir=tmp, pptx_path=pptx,
+                                                   expected_pages=2, calibration=_calibration())}
+    assert "RENDER_PROFILE_MISMATCH" in codes
+
+
+def test_swapped_pptx_is_hash_mismatch(bound):
+    tmp, pptx, receipt = bound
+    pptx.write_bytes(b"A-DIFFERENT-DELIVERED-FILE")
+    codes = {f.code for f in verify_render_receipt(receipt, renders_dir=tmp, pptx_path=pptx,
+                                                   expected_pages=2, calibration=_calibration())}
+    assert "PPTX_HASH_MISMATCH" in codes
+
+
+def test_hand_edited_calibration_fails_digest():
+    cal = _calibration()
+    digest = cal.content_digest()
+    edited = cal.model_copy(deep=True)
+    edited.thresholds.ink_floor = 0.01  # someone "adjusts" a threshold in the JSON
+    assert edited.content_digest() != digest
+
+
+def test_committed_artifact_digest_verifies():
+    path = Path(__file__).parent.parent / "fixtures" / "house-gate" / "calibration.v1.json"
+    payload = json.loads(path.read_text())
+    recorded = payload.pop("content_digest")
+    cal = HouseGateCalibration.model_validate(payload)
+    assert cal.content_digest() == recorded
+    assert cal.thresholds.ink_floor > 0 and cal.thresholds.palette_floor > 0
+    assert cal.duplicate_cluster_count < len(cal.pages)  # duplicates exist and are clustered

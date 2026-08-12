@@ -480,8 +480,8 @@ def _interstitial(order: int, slide_id: str, archetype: str, heading: str, *, ma
                    bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08), text=heading,
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="divider-heading", kind=DocElementKind.TEXT, role="message",
-                   bbox=Bbox(x=0.08, y=0.36, w=0.84, h=0.2), text=heading,
-                   style=DocTextStyle(size_pt=48.0, bold=True, align="center", color="#065E7C"),
+                   bbox=Bbox(x=0.08, y=0.34, w=0.84, h=0.24), text=heading,
+                   style=DocTextStyle(size_pt=54.0, bold=True, align="center", color="#065E7C"),
                    binding_paths=["message"]),
     ]
     if mark:
@@ -632,7 +632,7 @@ def materialize_outline(
     # stays claim-bound.
     sections = [("The Problem", ["problem_solution"]),
                 ("How It Works", ["architecture", "value_prop"]),
-                ("Proof", ["proof"]),
+                ("Proof in the Product", ["proof"]),
                 ("Where This Goes", ["roadmap"])]
     by_name = {m.module: m for m in active}
     slides: list[DocSlide] = []

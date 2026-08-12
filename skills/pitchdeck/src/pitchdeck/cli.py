@@ -730,9 +730,10 @@ def build_manifest_cmd(
 @app.command(name="house-similarity")
 def house_similarity_cmd(
     slides_dir: Annotated[Path, typer.Option(help="Directory of rendered slide PNGs to score.")],
-    threshold: Annotated[float, typer.Option(help="Semantic anomaly floor: MIN of duplicate-free real pages. The embedding channel reads the words, so new on-domain content legitimately scores 0.4-0.5; style is gated by the text-invariant metrics.")] = 0.395,
-    ink_floor: Annotated[float, typer.Option(help="Per-slide ink-coverage floor: p5 of the real pages (style_metrics; text-invariant).")] = 0.1534,
-    palette_floor: Annotated[float, typer.Option(help="Per-slide floor on Bhattacharyya similarity to the corpus mean color histogram (the corpus defines the palette): p5 of the real pages.")] = 0.7631,
+    calibration: Annotated[Path, typer.Option(help="Frozen house_gate_calibration.v1 artifact — the ONLY source of thresholds and the reference histogram (#1379).")] = Path("fixtures/house-gate/calibration.v1.json"),
+    render_receipt: Annotated[Path | None, typer.Option(help="Render receipt binding the scored PNGs to the delivered pptx (pptx sha, dpi, per-page hashes). Without it the verdict is UNBOUND.")] = None,
+    pptx: Annotated[Path | None, typer.Option(help="The delivered pptx the receipt must describe.")] = None,
+    document: Annotated[Path | None, typer.Option(help="deck.document.json — declares the expected visible slide count.")] = None,
     glob: Annotated[str, typer.Option(help="Filename pattern.")] = "*.png",
 ) -> None:
     """Gate each rendered slide on house style: text-invariant pixel metrics
@@ -745,10 +746,30 @@ def house_similarity_cmd(
 
     import httpx
 
+    from .house_gate_calibration import HouseGateCalibration, verify_render_receipt
     from .style_metrics import measure
     from .visual_sync import EMBED_URL, HTTP_TIMEOUT, QDRANT_URL
 
     try:
+        cal_payload = json_mod.loads(calibration.read_text())
+        recorded_digest = cal_payload.pop("content_digest", None)
+        cal = HouseGateCalibration.model_validate(cal_payload)
+        if recorded_digest != cal.content_digest():
+            raise ValueError(f"calibration artifact digest mismatch: recorded {str(recorded_digest)[:12]}… "
+                             f"vs recomputed {cal.content_digest()[:12]}… — the artifact was edited by hand")
+        threshold = cal.thresholds.embedding_anomaly_floor
+        ink_floor = cal.thresholds.ink_floor
+        palette_floor = cal.thresholds.palette_floor
+        corpus_hist = cal.corpus_palette_histogram
+        binding_findings = []
+        if render_receipt is not None:
+            expected_pages = None
+            if document is not None:
+                doc = json_mod.loads(document.read_text())
+                expected_pages = len([sl for sl in doc["slides"] if not sl.get("hidden")])
+            binding_findings = [f.model_dump() for f in verify_render_receipt(
+                json_mod.loads(render_receipt.read_text()), renders_dir=slides_dir,
+                pptx_path=pptx, expected_pages=expected_pages, calibration=cal)]
         rows = []
         failed = 0
         with httpx.Client(timeout=HTTP_TIMEOUT) as client:
@@ -763,7 +784,7 @@ def house_similarity_cmd(
                 hits.raise_for_status()
                 hit = hits.json()["result"][0]
                 score = hit["score"]
-                style = measure(image)
+                style = measure(image, corpus_hist=corpus_hist)
                 reasons = []
                 if score < threshold:
                     reasons.append(f"embedding {score:.3f} < {threshold}")
@@ -783,9 +804,13 @@ def house_similarity_cmd(
                 })
         import statistics as stats_mod
         deck_median = round(stats_mod.median(r["score"] for r in rows), 3) if rows else 0.0
-        ok = bool(rows) and failed == 0
+        ok = bool(rows) and failed == 0 and not binding_findings
         typer.echo(json_mod.dumps({
             "status": "HOUSE_NON_ANOMALOUS" if ok else "FAIL",  # anomaly filter, not a positive looks-like-Graham classifier
+            "calibration_digest": recorded_digest,
+            "binding": ("BOUND" if (render_receipt is not None and not binding_findings)
+                         else ("VIOLATED" if binding_findings else "UNBOUND")),
+            "binding_findings": binding_findings,
             "threshold": threshold, "ink_floor": ink_floor, "palette_floor": palette_floor,
             "deck_median": deck_median, "failed": failed, "slides": rows,
         }, indent=1))
@@ -794,6 +819,31 @@ def house_similarity_cmd(
         raise typer.Exit(0 if ok else 1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="calibrate-house-gate")
+def calibrate_house_gate_cmd(
+    output: Annotated[Path, typer.Option(help="Where to write house_gate_calibration.v1 JSON.")] = Path("fixtures/house-gate/calibration.v1.json"),
+    pages_dir: Annotated[Path, typer.Option(help="Corpus renders directory.")] = Path("/mnt/storage12tb/skills/pitchdeck/outputs/house-slides"),
+) -> None:
+    """Build the frozen content-addressed house-gate calibration artifact (#1379)."""
+    import json as json_mod
+
+    from .house_gate_calibration import build_calibration
+
+    try:
+        cal = build_calibration(pages_dir)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        payload = json_mod.loads(cal.model_dump_json(by_alias=True))
+        payload["content_digest"] = cal.content_digest()
+        output.write_text(json_mod.dumps(payload, indent=1))
+        typer.echo(json_mod.dumps({"status": "PASS", "output": str(output),
+                                   "pages": len(cal.pages),
+                                   "duplicate_clusters": cal.duplicate_cluster_count,
+                                   "thresholds": cal.thresholds.model_dump(),
+                                   "content_digest": payload["content_digest"]}, indent=1))
     except Exception as exc:
         _abort(exc)
 
