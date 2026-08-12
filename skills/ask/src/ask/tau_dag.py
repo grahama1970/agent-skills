@@ -3551,6 +3551,7 @@ def main() -> int:
     parser.add_argument("--scillm-api-key", required=True)
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--evidence", action="append", default=[])
+    parser.add_argument("--attach-file", action="append", default=[], dest="attach_files")
     args = parser.parse_args()
     start = json.loads(sys.stdin.read() or "{}")
     artifact_dir = Path(args.artifact_dir)
@@ -3601,6 +3602,29 @@ def main() -> int:
     return 0
 
 
+
+
+def _content_with_attachments(args: Any, prompt: str) -> Any:
+    """Attached images are SHOWN to the model (#1391); text files are inlined;
+    a missing attachment raises — a vision seat never judges blind."""
+    files = [str(item) for item in (getattr(args, "attach_files", None) or [])]
+    if not files:
+        return prompt
+    import base64
+    parts = []
+    for item in files:
+        path = Path(item)
+        if not path.is_file():
+            raise RuntimeError(f"attachment missing: {item}")
+        suffix = path.suffix.lower().lstrip(".")
+        if suffix in {"png", "jpg", "jpeg", "webp", "gif"}:
+            mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg"}.get(suffix, f"image/{suffix}")
+            parts.append({"type": "image_url", "image_url": {
+                "url": f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()}})
+        else:
+            prompt += f"\n\n--- ATTACHED FILE {path.name} ---\n" + path.read_text(encoding="utf-8", errors="replace")[:20000]
+    return ([{"type": "text", "text": prompt}] + parts) if parts else prompt
+
 def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[str, Any]:
     if args.mode == "fixture":
         return {
@@ -3621,7 +3645,7 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
     prompt = _prompt(start)
     payload = {
         "model": args.model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "user", "content": _content_with_attachments(args, prompt)}],
     }
     if args.reasoning_effort:
         payload["reasoning_effort"] = args.reasoning_effort
