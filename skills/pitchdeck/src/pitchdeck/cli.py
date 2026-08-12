@@ -34,6 +34,28 @@ app = typer.Typer(
 )
 
 
+def _asset_sources(bundle_dir: Path) -> dict[str, Path]:
+    """Every present bundle asset becomes a digested manifest input (#1384):
+    deleting or altering one generated art file fails the chain closed."""
+    import os
+
+    import yaml as yaml_mod
+
+    manifest_path = bundle_dir / "asset_manifest.yaml"
+    out: dict[str, Path] = {}
+    try:
+        payload = yaml_mod.safe_load(manifest_path.read_text())
+    except OSError:
+        return out
+    for asset in (payload or {}).get("assets", []):
+        local = os.path.expandvars(str(asset.get("local_path", "")))
+        if not local:
+            continue
+        path = Path(local) if Path(local).is_absolute() else bundle_dir / local
+        out[f"asset:{asset.get('id')}"] = path
+    return out
+
+
 def _skill_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
@@ -605,6 +627,9 @@ def verify_publish_cmd(
             for role in ("approved_outline", "template", "icon_library"):
                 if recorded.get(role):
                     manifest_sources[role] = Path(recorded[role])
+            for role, path in recorded.items():
+                if role.startswith("asset:") and path:
+                    manifest_sources[role] = Path(path)
         receipt = verify_publish(
             pptx,
             claim_texts=load_claim_texts(ledger),
@@ -700,6 +725,7 @@ def build_manifest_cmd(
         }
         if house_template is not None:
             sources["template"] = house_template
+        sources.update(_asset_sources(bundle_dir))
         if verify:
             existing = BuildManifest.model_validate(json_mod.loads(output.read_text(encoding="utf-8")))
             findings = verify_manifest(existing, repo_root=repo_root, sources=sources,

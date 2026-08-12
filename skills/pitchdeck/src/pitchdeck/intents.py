@@ -638,6 +638,16 @@ def materialize_outline(
     slides: list[DocSlide] = []
     order = 1
 
+    available_assets = {a.id for a in assets.assets}
+    _required_art = {"gen-problem-scene", "gen-architecture-scene", "gen-valueprop-scene",
+                     "gen-roadmap-scene", "gen-ask-scene", "sparta-helmet-mark-png"}
+    _missing_art = sorted(_required_art - available_assets)
+    if _missing_art:
+        # #1384: a cold bundle without approved art must stop honestly — never
+        # emit a filler visual, and never pass a style gate without the art.
+        raise ValueError(f"NEEDS_APPROVED_ART: the house arc requires approved art assets "
+                         f"absent from this bundle: {_missing_art}. Approve art via the asset "
+                         f"registry or run the artifact-mode eval on a bundle that carries it.")
     scene_art = {"m-problem-solution": "gen-problem-scene",
                  "m-value-prop": "gen-valueprop-scene", "m-roadmap": "gen-roadmap-scene",
                  "m-architecture": "gen-architecture-scene"}
