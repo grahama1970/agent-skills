@@ -67,6 +67,39 @@ assets:
     generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
     source_ref:
       source_id: sparta-public-readme
+  - id: crop-threat-matrix-techniques
+    kind: screenshot
+    visibility: public
+    local_path: assets/crop-threat-matrix-techniques.png
+    required: false
+    alt_text: "Threat Matrix technique columns with F-36 mapping badges (detail crop)"
+    target_aspect: "free"
+    status: present
+    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: crop-threat-console-cwe
+    kind: screenshot
+    visibility: public
+    local_path: assets/crop-threat-console-cwe.png
+    required: false
+    alt_text: "Sparta console answering a CWE-23 question with sources and evidence (detail crop)"
+    target_aspect: "free"
+    status: present
+    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
+    source_ref:
+      source_id: sparta-public-readme
+  - id: crop-evidence-gates
+    kind: screenshot
+    visibility: public
+    local_path: assets/crop-evidence-gates.png
+    required: false
+    alt_text: "Mission context and evidence gates panel showing NOT_READY adjudication (detail crop)"
+    target_aspect: "free"
+    status: present
+    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
+    source_ref:
+      source_id: sparta-public-readme
   - id: sparta-helmet-mark-png
     kind: logo
     visibility: public

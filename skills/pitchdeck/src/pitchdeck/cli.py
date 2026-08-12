@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -674,17 +675,41 @@ def emit_document_ui_cmd(
         copied = 0
         from .io import expand_path
 
+        missing_assets = []
         for asset in doc.assets:
             raw = getattr(asset, "local_path", None)
-            # local_path carries ${SPARTA_PUBLIC_ROOT}-style vars; expand before use
-            source = expand_path(raw) if raw else None
-            if source and not source.is_absolute():
-                source = asset_base / source
-            if source and source.is_file():
+            if not raw:
+                continue
+            # expand_path resolves RELATIVE paths against the CWD (that bug
+            # silently dropped every bundle-relative asset, #1388) — decide
+            # relativity on the raw string, then join against the bundle.
+            expanded = os.path.expandvars(str(raw))
+            source = Path(expanded) if Path(expanded).is_absolute() else asset_base / expanded
+            if source.is_file():
                 shutil_mod.copy(source, assets_dir / source.name)
                 copied += 1
+            else:
+                missing_assets.append(f"{asset.id}: {source}")
+        if missing_assets:
+            raise SkillError("asset copy failed closed — referenced assets not found: "
+                             + "; ".join(missing_assets[:5]))
+        payload["assets_index"] = [
+            {"id": a.id, "kind": getattr(a, "kind", ""), "alt_text": getattr(a, "alt_text", ""),
+             "file": f"assets/{Path(os.path.expandvars(str(getattr(a, 'local_path', '') or ''))).name}"}
+            for a in doc.assets
+        ]
         (output_dir / "deck.data.json").write_text(json_mod.dumps(payload, indent=1), encoding="utf-8")
         (output_dir / "deck.document.json").write_text(document.read_text(encoding="utf-8"), encoding="utf-8")
+        (output_dir / "emit_ui_receipt.json").write_text(json_mod.dumps({
+            "schema": "pitchdeck.emit_ui_receipt.v1",
+            "operation": "emit-document-ui",
+            "outputs": {
+                "deck_data": str((output_dir / "deck.data.json").resolve()),
+                "document_path": str(document.resolve()),
+                "asset_base": str(asset_base.resolve()),
+                "output_dir": str(output_dir.resolve()),
+            },
+        }, indent=1), encoding="utf-8")
         typer.echo(json_mod.dumps({
             "status": "PASS" if payload["validation_readiness"] == "READY" else "USABLE_WITH_GAPS",
             "slides": len(payload["slides"]),
@@ -1027,6 +1052,71 @@ def asset_alternates_cmd(
         raise typer.Exit(0 if all(r["ok"] for r in results) else 1)
     except typer.Exit:
         raise
+    except Exception as exc:
+        _abort(exc)
+
+
+@app.command(name="document-edit")
+def document_edit_cmd(
+    document: Annotated[Path, typer.Option(help="Canonical deck.document.json to edit in place.")],
+    slide_id: Annotated[str, typer.Option(help="Slide id.")],
+    field: Annotated[str, typer.Option(help="element:<id>:frame|text|size|bold|align|asset, or slide hidden.")],
+    value: Annotated[str, typer.Option(help="frame: 'x,y,w,h' fractions; asset: asset id; others: literal.")],
+    output_dir: Annotated[Path, typer.Option(help="UI public dir to re-project into.")],
+    asset_base: Annotated[Path, typer.Option(help="Bundle dir for asset resolution.")],
+) -> None:
+    """Apply ONE validated edit to the canonical document, then re-project
+    deck.data.json (#1388). The document model re-validates on every write —
+    a rejected edit changes nothing on disk."""
+    import json as json_mod
+
+    from .document import DeckDocument
+    from .document_ui import project_document_to_ui
+
+    try:
+        doc = DeckDocument.model_validate(json_mod.loads(document.read_text(encoding="utf-8")))
+        slide = next((sl for sl in doc.slides if sl.id == slide_id), None)
+        if slide is None:
+            raise ValueError(f"unknown slide '{slide_id}'")
+        parts = field.split(":")
+        if parts[0] == "element" and len(parts) == 3:
+            element_id, attr = parts[1], parts[2]
+            el = next((e for e in slide.elements if e.id == element_id), None)
+            if el is None:
+                raise ValueError(f"unknown element '{element_id}' on slide '{slide_id}'")
+            from .document import Bbox as _Bbox
+            if attr == "frame":
+                x, y, w, h = (float(v) for v in value.split(","))
+                el.bbox = _Bbox(x=x, y=y, w=w, h=h)
+            elif attr == "text":
+                el.text = value
+            elif attr == "asset":
+                if not any(a.id == value for a in doc.assets):
+                    raise ValueError(f"asset '{value}' is not registered in the document")
+                el.asset_id = value
+            elif attr in {"size", "bold", "align"}:
+                style = el.style or type(el).model_fields["style"].annotation.__args__[0]()
+                if attr == "size":
+                    style.size_pt = float(value)
+                elif attr == "bold":
+                    style.bold = value.lower() in {"1", "true", "yes"}
+                else:
+                    style.align = value
+                el.style = style
+            else:
+                raise ValueError(f"unsupported element attribute '{attr}'")
+        else:
+            raise ValueError(f"unsupported field '{field}'")
+        # full-model revalidation before anything touches disk
+        revalidated = DeckDocument.model_validate(json_mod.loads(doc.model_dump_json(by_alias=True)))
+        document.write_text(revalidated.model_dump_json(by_alias=True, indent=1), encoding="utf-8")
+        payload = project_document_to_ui(revalidated)
+        existing = json_mod.loads((output_dir / "deck.data.json").read_text(encoding="utf-8"))
+        payload["revision"] = int(existing.get("revision", 0)) + 1
+        payload["assets_index"] = existing.get("assets_index", [])
+        (output_dir / "deck.data.json").write_text(json_mod.dumps(payload, indent=1), encoding="utf-8")
+        typer.echo(json_mod.dumps({"status": "PASS", "slide": slide_id, "field": field,
+                                   "revision": payload["revision"]}))
     except Exception as exc:
         _abort(exc)
 

@@ -461,24 +461,37 @@ function slideEditApi(): Plugin {
               return
             }
             const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
+            // Document-pipeline decks (#1388) edit the canonical document;
+            // legacy bundle decks keep the apply-edit path unchanged.
+            const isDocument = receipt?.operation === 'emit-document-ui'
             const bundleDir = receipt?.outputs?.bundle_dir
-            if (!bundleDir) {
+            if (!isDocument && !bundleDir) {
               res.statusCode = 409
               res.end(JSON.stringify({ error: 'emit_ui_receipt.json has no bundle_dir; re-run emit-ui first' }))
               return
             }
             execFile(
               `${skillRoot}/run.sh`,
-              [
-                'apply-edit',
-                '--bundle-dir', bundleDir,
-                '--output-dir', publicDir,
-                '--slide-id', String(slide_id),
-                '--field', String(field),
-                '--value', String(value),
-                ...(base_revision !== undefined ? ['--base-revision', String(base_revision)] : []),
-                '--json',
-              ],
+              isDocument
+                ? [
+                    'document-edit',
+                    '--document', receipt.outputs.document_path,
+                    '--output-dir', receipt.outputs.output_dir,
+                    '--asset-base', receipt.outputs.asset_base,
+                    '--slide-id', String(slide_id),
+                    '--field', String(field),
+                    '--value', String(value),
+                  ]
+                : [
+                    'apply-edit',
+                    '--bundle-dir', bundleDir,
+                    '--output-dir', publicDir,
+                    '--slide-id', String(slide_id),
+                    '--field', String(field),
+                    '--value', String(value),
+                    ...(base_revision !== undefined ? ['--base-revision', String(base_revision)] : []),
+                    '--json',
+                  ],
               { timeout: 60_000 },
               (error, stdout, stderr) => {
                 res.setHeader('Content-Type', 'application/json')
