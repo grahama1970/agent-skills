@@ -1,5 +1,14 @@
 {
-  "schema": "monitor_opportunities.warm_paths.v1",
-  "note": "Warm connection paths per org (mutual / 2nd-degree connections from Graham's network) that turn a cold InMail into a warm intro. Populated by /discover-contacts against his LinkedIn network — empty until that runs, so warm_path stays 0 (honest, not faked). Each entry: {\"warm_path\": 0..1, \"via\": \"who/how\"}. Matched by case-insensitive org substring.",
-  "by_org": {}
+ "schema": "monitor_opportunities.warm_paths.v1",
+ "note": "Warm connection paths per org (mutual / 2nd-degree connections from Graham's network) that turn a cold InMail into a warm intro. Populated by /discover-contacts against his LinkedIn network \u2014 empty until that runs, so warm_path stays 0 (honest, not faked). Each entry: {\"warm_path\": 0..1, \"via\": \"who/how\"}. Matched by case-insensitive org substring.",
+ "by_org": {
+  "Aerospace Corporation": {
+   "warm_path": 0.9,
+   "via": "Randi Tinney (1st-degree, accepted 2026-08-12) \u2014 SPARTA co-author with Brandon Bailey, CARD dept; ex-NASA IV&V; DEF CON Aerospace Village presenter",
+   "evidence": [
+    "https://sparta.aerospace.org/resources/OTR202500882-DefCon2025-Hacking_Space_to_Defend_It_1.pdf",
+    "https://aerospace.org/article/aerospace-def-con-31"
+   ]
+  }
+ }
 }
