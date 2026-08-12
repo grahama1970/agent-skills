@@ -157,7 +157,7 @@ export function Split({ slide }: { slide: UiSlide }) {
         <p className="mt-4 text-4xl text-[var(--deck-accent,#67e8f9)]"><Editable slide={slide} field="message" label="message" value={slide.message}>{slide.message}</Editable></p>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-2 items-center gap-16">
-        {slide.visual.position === 'left' ? (
+        {slide.visual?.position === 'left' ? (
           <>
             <Visual visual={slide.visual} />
             <BodyList slide={slide} />
