@@ -108,6 +108,46 @@ def research_prospect(prospect: dict[str, Any]) -> dict[str, Any] | None:
     return {"summary_snippets": snippets, "sources": sources, "researched_via": via}
 
 
+def mailbox_warm_contacts(
+    memory_url: str, orgs: list[str], timeout: int = 15
+) -> dict[str, dict[str, Any]]:
+    """Warm contacts from the mailbox-mined /memory `contacts` collection.
+
+    /mailbox-mining (under its redaction contract) writes typed contact records
+    to /memory; people Graham has actually corresponded with are the warmest
+    paths there are. Returns {org: {warm_path, via}} for shortlist orgs that
+    match a mined contact. Fail-soft: service down / no matches -> {}.
+    """
+    import urllib.request
+
+    out: dict[str, dict[str, Any]] = {}
+    low_orgs = {o.lower(): o for o in orgs if o}
+    if not low_orgs:
+        return out
+    try:
+        body = json.dumps({"query": "warm contact company organization", "limit": 50,
+                           "collections": ["contacts"]}).encode()
+        req = urllib.request.Request(
+            f"{memory_url}/recall", data=body, headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode())
+    except Exception as exc:  # noqa: BLE001 - warm enrichment must never fail the run
+        logger.warning("mailbox warm-contact recall skipped: {}", exc)
+        return {}
+    for item in data.get("results", []) or data.get("items", []) or []:
+        doc = item.get("document") or item
+        org = str(doc.get("company") or doc.get("organization") or "").strip()
+        name = str(doc.get("name") or doc.get("contact") or "").strip()
+        if not org:
+            continue
+        for low, orig in low_orgs.items():
+            if low in org.lower() or org.lower() in low:
+                out[orig] = {"warm_path": 0.9,
+                             "via": f"mailbox contact: {name or 'known correspondent'} at {org}"}
+    return out
+
+
 def research_prospects(prospects: list[dict[str, Any]], limit: int = 5) -> list[dict[str, Any]]:
     """Research the top-N prospects in place (bounded for nightly speed)."""
     enriched: list[dict[str, Any]] = []

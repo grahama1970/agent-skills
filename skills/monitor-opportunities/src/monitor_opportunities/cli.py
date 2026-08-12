@@ -757,6 +757,19 @@ def nightly(
             warm_paths = json.loads(warm_paths_cfg.read_text(encoding="utf-8")).get("by_org", {})
         except (OSError, ValueError):
             warm_paths = {}
+        # Mailbox-mined warm contacts (/mailbox-mining -> /memory `contacts`):
+        # people Graham actually corresponds with at shortlist orgs. Fail-soft.
+        try:
+            from .prospect_research import mailbox_warm_contacts
+
+            mb_warm = mailbox_warm_contacts(
+                memory_url, [str(r.get("organization") or "") for r in shortlist_rows]
+            )
+            for org, entry in mb_warm.items():
+                warm_paths.setdefault(org, entry)
+            steps["mailbox_warm"] = {"orgs_matched": len(mb_warm)}
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("mailbox warm contacts skipped: {}", exc)
         # Premium inbound: who viewed the profile already showed interest — the
         # warmest signal for BOTH employment and consulting. Their orgs join the
         # warm-paths overlay; the viewers themselves are researched (dogpile/
