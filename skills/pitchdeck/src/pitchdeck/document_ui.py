@@ -30,27 +30,39 @@ from .document import DeckDocument, DocElementKind
 UI_SCHEMA = "pitchdeck.ui_deck_bundle.v1"
 
 
-def _element_payload(element) -> dict[str, Any]:
-    """One document element as renderer-ready JSON, geometry preserved."""
+def _element_payload(element, assets=None, asset_dir: str = "assets") -> dict[str, Any]:
+    """One document element in the renderer's UiElement shape (flat frame,
+    type text/asset, resolved asset file) — the projection speaks the
+    consumer's contract, not its own (#1388)."""
+    style = element.style
     payload: dict[str, Any] = {
         "id": element.id,
         "kind": element.kind.value,
         "role": element.role,
-        "bbox": {"x": element.bbox.x, "y": element.bbox.y, "w": element.bbox.w, "h": element.bbox.h},
+        "type": "asset" if element.kind is DocElementKind.IMAGE else "text",
+        "x": element.bbox.x, "y": element.bbox.y, "w": element.bbox.w, "h": element.bbox.h,
         "z": element.z,
+        "size_pt": (style.size_pt if style and style.size_pt else 20.0),
+        "bold": bool(style and style.bold),
+        "color": (style.color if style else None),
+        "align": (style.align if style else "left") or "left",
+        "entrance": "none",
+        "entrance_delay_ms": 0,
+        "bbox": {"x": element.bbox.x, "y": element.bbox.y, "w": element.bbox.w, "h": element.bbox.h},
     }
     if element.kind is DocElementKind.TEXT and element.text:
         payload["text"] = element.text
-        if element.style:
-            payload["style"] = {
-                "size_pt": element.style.size_pt,
-                "bold": element.style.bold,
-                "color": element.style.color,
-                "align": element.style.align,
-                "font": element.style.font,
-            }
     if element.kind is DocElementKind.IMAGE and element.asset_id:
         payload["asset_id"] = element.asset_id
+        asset = (assets or {}).get(element.asset_id)
+        payload["asset"] = {
+            "id": element.asset_id,
+            "kind": getattr(asset, "kind", "image") if asset else "image",
+            "status": "present" if asset else "missing",
+            "alt_text": getattr(asset, "alt_text", "") if asset else "",
+            "file": f"{asset_dir}/{Path(getattr(asset, 'local_path', '') or '').name}" if asset else "",
+            "missing": asset is None,
+        }
     if element.kind is DocElementKind.ICON and element.icon:
         payload["icon"] = {"library_id": element.icon.library_id, "tint_role": element.icon.tint_role}
     if element.kind is DocElementKind.DIAGRAM and element.diagram:
@@ -125,7 +137,8 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
         slides.append({
             "id": slide.id,
             "order": slide.order,
-            "layout": slide.intent.recipe if slide.intent else "freeform",
+            "layout": "freeform",  # geometry passthrough IS the layout (#1388)
+            "recipe": slide.intent.recipe if slide.intent else "chrome",
             "role": slide.intent.module if slide.intent else "",
             "title": (title_el.text if title_el and title_el.text else ""),
             "message": (message_el.text if message_el and message_el.text else ""),
@@ -133,7 +146,12 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             "visual": visual,
             # geometry passthrough: the renderer places these by bbox instead of
             # re-deriving a layout the document already decided
-            "elements": [_element_payload(e) for e in sorted(slide.elements, key=lambda e: e.z)],
+            "elements": [_element_payload(e, assets=assets, asset_dir=asset_dir)
+                          for e in sorted(slide.elements, key=lambda e: e.z)
+                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE}
+                          # band-duty titles are absorbed by the chrome band,
+                          # exactly as the PPTX emitter absorbs them (skip_title)
+                          and not (e.role == "title" and e.bbox.y < 0.15)],
             # carry the document's OWN transition/reveal decisions: reveal order
             # follows the argument, so re-deciding it here would change rhetoric
             "transition": slide.transition.value if hasattr(slide.transition, "value") else str(slide.transition),

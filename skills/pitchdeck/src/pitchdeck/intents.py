@@ -517,7 +517,8 @@ def _toc_slide(order: int, section_names: list[str]) -> DocSlide:
 
 
 def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
-                           qualifiers: dict, siblings: list | None = None) -> DocSlide:
+                           qualifiers: dict, siblings: list | None = None,
+                           title_text: str | None = None) -> DocSlide:
     """One proof slide PER real screenshot (mixed Q&A/proof archetype): the
     working surfaces each get their own evidence page instead of one crowded
     slide. Caption = the asset's own alt text (chrome); the takeaway binds to
@@ -526,10 +527,10 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
     elements = [
         DocElement(id="title", kind=DocElementKind.TEXT, role="title",
                    bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08),
-                   text=(asset.alt_text or asset.id).split(" showing")[0][:60],
+                   text=(title_text or (asset.alt_text or asset.id).split(" showing")[0])[:60],
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                   bbox=Bbox(x=0.4, y=0.18, w=0.33, h=0.27), asset_id=asset.id),
+                   bbox=Bbox(x=0.3, y=0.17, w=0.66, h=0.52), asset_id=asset.id),
         DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
                    bbox=Bbox(x=0.03, y=0.18, w=0.25, h=0.6),
                    text=f"> {_truncate_words(claim_text, 200)}",
@@ -553,12 +554,9 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
                                    style=DocTextStyle(size_pt=12.0, color="#595959"),
                                    binding_paths=["footer"]))
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
-    elements.append(DocElement(id="proof-scene", kind=DocElementKind.IMAGE, role="visual",
-                               bbox=Bbox(x=0.02, y=0.5, w=0.4, h=0.38),
-                               asset_id="gen-valueprop-scene"))
     for t_index, sib in enumerate((siblings or [])[:2]):
         elements.append(DocElement(id=f"thumb-{t_index}", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.44 + t_index * 0.19, y=0.5, w=0.16, h=0.13),
+                                   bbox=Bbox(x=0.3 + t_index * 0.34, y=0.71, w=0.32, h=0.21),
                                    asset_id=sib.id))
     return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order, section="proof",
                     layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
@@ -587,10 +585,10 @@ def _claims_bullets_slide(slide_id: str, order: int, heading: str,
         for el in elements[1:]:
             el.bbox = Bbox(x=el.bbox.x, y=el.bbox.y, w=0.44, h=el.bbox.h)
         elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.6, y=0.2, w=0.3, h=0.26),
+                                   bbox=Bbox(x=0.5, y=0.18, w=0.46, h=0.5),
                                    asset_id=visual_asset_id))
         elements.append(DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.03, y=0.5, w=0.52, h=0.42),
+                                   bbox=Bbox(x=0.05, y=0.62, w=0.34, h=0.28),
                                    asset_id="gen-ask-scene" if "ask" in slide_id else "gen-valueprop-scene"))
     quals = [qualifiers[c.id] for c in picked if c.id in qualifiers]
     if quals:
@@ -675,7 +673,7 @@ def materialize_outline(
             # recipe and refuses the transitional state.
             new_elements = [e for e in slide.elements if e.kind is not DocElementKind.DIAGRAM] + [
                 DocElement(id="scene-art", kind=DocElementKind.IMAGE, role="visual",
-                           bbox=Bbox(x=0.02, y=0.42, w=0.96, h=0.5), asset_id=art)]
+                           bbox=Bbox(x=0.25, y=0.45, w=0.5, h=0.42), asset_id=art)]
             has_chevrons = any(e.role == "chevrons" for e in new_elements)
             slide = slide.model_copy(update={
                 "elements": new_elements,
@@ -719,12 +717,25 @@ def materialize_outline(
                           "section-divider", section_name))
         for module_name in module_names:
             if module_name == "proof" and surfaces_claim is not None and proof_assets:
+                # The PRODUCT interface is the hero (operator, 2026-08-12):
+                # the threat-matrix page shows the legible technique-column
+                # crop as its primary with the console + full UI beneath.
+                asset_by_id = {a.id: a for a in assets.assets}
+                crop_layout = {"sparta-threat-matrix": ("crop-threat-matrix-techniques",
+                                                          ["crop-threat-console-cwe", "sparta-threat-matrix"])}
                 primaries = proof_assets[:2]
                 rest = proof_assets[2:]
                 for a_index, asset in enumerate(primaries):
-                    sibs = rest[a_index * 2:a_index * 2 + 2] or [a for a in proof_assets if a.id != asset.id][:2]
-                    add(_proof_slide_for_asset(order, asset, surfaces_claim.id,
-                                               surfaces_claim.text, qualifiers, siblings=sibs))
+                    override = crop_layout.get(asset.id)
+                    if override and override[0] in asset_by_id:
+                        primary = asset_by_id[override[0]]
+                        sibs = [asset_by_id[i] for i in override[1] if i in asset_by_id]
+                    else:
+                        primary = asset
+                        sibs = rest[a_index * 2:a_index * 2 + 2] or [a for a in proof_assets if a.id != asset.id][:2]
+                    add(_proof_slide_for_asset(order, primary, surfaces_claim.id,
+                                               surfaces_claim.text, qualifiers, siblings=sibs,
+                                               title_text=(asset.alt_text or asset.id).split(" showing")[0]))
                 continue
             if module_name in by_name:
                 add(_materialize_slide(by_name[module_name], order, recipes, title, tagline,

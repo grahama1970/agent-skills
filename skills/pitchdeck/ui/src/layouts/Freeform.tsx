@@ -140,7 +140,7 @@ function ElementContent({ element }: { element: UiElement }) {
       style={{
         fontSize: `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
         fontWeight: element.bold ? 700 : 400,
-        color: element.color ?? '#e6edf3',
+        color: element.color ?? '#3a4550',  // dark ink on the house white canvas
         textAlign: element.align as 'left' | 'center' | 'right',
       }}
     >
@@ -163,7 +163,19 @@ export function Freeform({ slide }: { slide: UiSlide }) {
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full bg-white text-slate-800">
+      {/* house chrome (#1388): the PPTX inherits this from the template; the
+          browser draws the same anatomy so review is faithful */}
+      <div
+        className="absolute left-0 top-0 z-0 flex w-full items-center px-10"
+        style={{ height: 0.11 * CANVAS_HEIGHT, background: '#076889' }}
+      >
+        <span className="text-4xl font-semibold text-white">{slide.title}</span>
+      </div>
+      <div className="absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: '#076889' }}>
+        grahama.co
+      </div>
+      <div className="absolute bottom-3 right-10 z-0 text-xl text-slate-400">{slide.order}</div>
       {error ? (
         <p role="alert" className="absolute left-4 top-4 z-30 m-0 rounded-lg border border-rose-500/60 bg-rose-500/10 px-3 py-1.5 text-xl text-rose-300">
           Rejected: {error}

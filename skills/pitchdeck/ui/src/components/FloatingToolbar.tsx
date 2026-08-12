@@ -38,6 +38,9 @@ export function FloatingToolbar({
   const button =
     'inline-flex cursor-pointer items-center justify-center rounded p-1.5 text-slate-200 transition-colors hover:bg-slate-700 disabled:opacity-40'
   const isText = element.type === 'text'
+  const isAsset = element.type === 'asset'
+  const assetsIndex: { id: string; alt_text: string }[] =
+    ((window as unknown as { __deckAssets?: { id: string; alt_text: string }[] }).__deckAssets) ?? []
 
   return (
     <div
@@ -48,7 +51,23 @@ export function FloatingToolbar({
     >
       {isText ? (
         <>
-          <Button
+          {isAsset && assetsIndex.length ? (
+        <select
+          data-qid={`freeform:toolbar:swap-asset:${element.id}`}
+          data-qs-action="DECK_SWAP_ASSET"
+          title="Swap this image for another registered asset"
+          className="max-w-48 cursor-pointer rounded bg-slate-700 px-1.5 py-1 text-xs text-slate-100"
+          value={element.asset?.id ?? ''}
+          onChange={(event) => act(`element:${element.id}:asset`, event.target.value)}
+        >
+          {assetsIndex.map((asset) => (
+            <option key={asset.id} value={asset.id}>
+              {asset.id}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      <Button
             type="button"
             data-qid={`deck:eltoolbar:bold:${element.id}`}
             data-qs-action="DECK_ELEMENT_BOLD"

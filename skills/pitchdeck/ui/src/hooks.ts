@@ -29,6 +29,8 @@ export function useDeck(): { deck: UiDeckBundle | null; error: string | null; re
           throw new Error('deck bundle is missing its seam_validation PASS stamp; re-run `run.sh emit-ui`')
         }
         revisionStore.current = bundle.revision ?? 0
+        ;(window as unknown as { __deckAssets?: unknown }).__deckAssets =
+          (bundle as unknown as { assets_index?: unknown }).assets_index ?? []
         setDeck(bundle)
         setError(null)
       })
