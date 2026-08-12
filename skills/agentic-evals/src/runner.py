@@ -82,6 +82,70 @@ def _is_real_world(case: dict[str, Any]) -> bool:
     return any(marker in text for marker in ("run.sh", ".py", "curl", "http://", "https://", "pytest", "nightly", "e2e"))
 
 
+def _is_non_deterministic(case: dict[str, Any]) -> bool:
+    """A case that samples fresh inputs each run rather than a hard-coded key.
+
+    Non-determinism is what makes an adversarial eval bite: a fixed-key case can
+    be satisfied by overfitting to that one key, and it silently rots as the
+    system moves. The markers below name the sampling explicitly so the runner
+    can require it, not infer it.
+    """
+    text = _command_text(case["command"])
+    # Explicit sampling markers only. A probe SCRIPT name is not enough --
+    # "analyst_probe.py resolve CWE-999999" is a fixed key. Non-determinism
+    # means the case draws fresh inputs each run: a --samples/--seed sweep or a
+    # shell $RANDOM. (Caught by the gate on monitor-sparta, whose fixed-key
+    # probe calls were wrongly counted as non-deterministic.)
+    return "--samples" in text or "--seed" in text or "RANDOM" in text
+
+
+def _compliance_tier_problems(manifest: dict[str, Any], cases: list[dict[str, Any]]) -> list[str]:
+    """Enforce the compliance-grade eval contract when a fixture declares it.
+
+    Ordinary skills keep the baseline gate (>=1 adversarial, >=1 real-world). A
+    fixture that sets `eval_tier: "compliance"` is asserting it guards a
+    compliance pipeline stage, and the runner then MANDATES what practice alone
+    does not guarantee (operator directive 2026-08-12, "this is a compliance
+    pipeline and must be robustly hardened"):
+
+      - the majority of cases are adversarial/negative, not positive controls
+      - at least one case is non-deterministic (samples fresh inputs per run)
+      - every non-deterministic case names a per-run sample size of >= 50, so a
+        stage's nightly coverage is hundreds-to-thousands of assertions, not a
+        handful
+
+    Declaring the tier and then failing to meet it is itself a slop failure:
+    the mandate cannot be satisfied by removing the declaration quietly, because
+    the compliance pipeline's own fixtures set it and their conformance tests
+    read it back.
+    """
+    if manifest.get("eval_tier") != "compliance":
+        return []
+    problems: list[str] = []
+    adversarial = [c for c in cases if c.get("type") in {"negative", "adversarial"}]
+    if len(adversarial) * 2 <= len(cases):
+        problems.append(
+            f"eval_tier=compliance requires a strict MAJORITY of cases to be adversarial/negative "
+            f"(more than half, not exactly half); got {len(adversarial)}/{len(cases)}"
+        )
+    nd = [c for c in cases if _is_non_deterministic(c)]
+    if not nd:
+        problems.append(
+            "eval_tier=compliance requires at least one non-deterministic case "
+            "(--samples/--seed/random probe); a fixed-key-only fixture cannot harden a pipeline"
+        )
+    for c in nd:
+        text = _command_text(c["command"])
+        import re as _re
+        sizes = [int(n) for n in _re.findall(r"--samples\s+(\d+)", text)]
+        if sizes and max(sizes) < 50:
+            problems.append(
+                f"eval_tier=compliance case {c['name']!r} samples only {max(sizes)}; "
+                "compliance stages need >= 50 assertions per run (target ~1000/stage across modes)"
+            )
+    return problems
+
+
 def _assert_not_slop(manifest: dict[str, Any], cases: list[dict[str, Any]], trials: int) -> None:
     """Fail-closed on self-serving slop fixtures.
 
@@ -108,6 +172,7 @@ def _assert_not_slop(manifest: dict[str, Any], cases: list[dict[str, Any]], tria
             "path (skill entrypoint / script / live HTTP / test runner) WITHOUT feeding itself "
             "fixtures/ stub inputs"
         )
+    problems.extend(_compliance_tier_problems(manifest, cases))
     if problems:
         raise typer.BadParameter(
             "fixture rejected as low-value ('slop'): "

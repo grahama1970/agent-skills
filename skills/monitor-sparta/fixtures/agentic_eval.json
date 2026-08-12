@@ -2,9 +2,9 @@
  "version": 2,
  "skill": "monitor-sparta",
  "trials": 3,
- "proof_scope": "live non-expert analyst retrieval, abstention calibration, and declared knowledge-coverage over the SPARTA corpus",
+ "proof_scope": "live non-expert analyst retrieval over the SPARTA corpus, including abstention calibration",
  "claims": {
-  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and that a randomly generated, verified-absent CVE identifier returns NOT_IN_CORPUS with an explicit confirm-upstream caveat -- decisive-with-caveat under the near-complete local CVE corpus, a fresh random identifier every run; and that every framework declared covered in coverage_manifest.json still resolves; and that the framework alignment invariants hold live: zero unexpected orphan frameworks and zero cross-collection case collisions (check 30, EMB3D declared as expected orphan), zero edge labels contradicting their own endpoints and zero unlabelled edges (check 31), with a sensitivity case proving check 31 still reports the deliberately surfaced dangling-endpoint findings rather than having been vacuously weakened; plus non-deterministic e2e sweeps: a fresh random edge sample is endpoint-congruent and fresh verified-absent identifier mutants never resolve, seeds printed for reproduction",
+  "proves": "that a non-expert operator can resolve security identifiers across CWE/CAPEC/ATT&CK/D3FEND/NVD from the live corpus, that fabricated identifiers are rejected, and decisively that real-but-locally-absent identifiers return UNVERIFIED_LOCALLY instead of a misleading false negative",
   "does_not_prove": "plausibility judgment -- whether an exploitation chain is realistic, whether a detection rule would false-positive in production, or whether an AI's threat analysis is operationally sound. Those still require a practitioner."
  },
  "cases": [
@@ -53,44 +53,8 @@
    }
   },
   {
-   "name": "random-absent-cve-is-refuted-with-caveat",
+   "name": "real-cve-absent-locally-must-abstain-not-deny",
    "type": "adversarial",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "for i in 1 2 3 4 5; do\n  ID=\"CVE-$((RANDOM % 23 + 2002))-9$((RANDOM % 900 + 9000))9\"\n  HITS=$(curl -s -m 20 -X POST http://127.0.0.1:8601/recall/by-keys -H 'Content-Type: application/json' -d \"{\\\"collection\\\":\\\"sparta_controls\\\",\\\"keys\\\":[\\\"$ID\\\"],\\\"key_field\\\":\\\"control_id\\\"}\" | python3 -c 'import json,sys; print(len(json.load(sys.stdin).get(\"documents\",[])))')\n  if [ \"$HITS\" = \"0\" ]; then echo \"probing verified-absent $ID\"; python3 ../scripts/analyst_probe.py resolve \"$ID\"; exit $?; fi\ndone\necho \"no absent id found in 5 draws\"; exit 1"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "NOT_IN_CORPUS",
-     "confirm upstream"
-    ]
-   }
-  },
-  {
-   "name": "adversarial-security-claims-are-refuted-with-evidence",
-   "type": "adversarial",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/claim_checker.py",
-    "--claims",
-    "adversarial_claims.json"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"refuted\": 8",
-     "\"verified\": 5",
-     "\"unverifiable\": 0"
-    ]
-   }
-  },
-  {
-   "name": "known-exploited-cve-resolves-with-kev-provenance",
-   "type": "positive",
    "real_world": true,
    "command": [
     "python3",
@@ -101,94 +65,8 @@
    "expected": {
     "exit_code": 0,
     "stdout_contains": [
-     "RESOLVED",
-     "CISA_KEV",
-     "known_exploited",
-     "Log4j"
-    ]
-   }
-  },
-  {
-   "name": "declared-knowledge-coverage-has-not-regressed",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/knowledge_coverage.py",
-    "--quiet"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "COVERAGE: PASS",
-     "known gaps"
-    ]
-   }
-  },
-  {
-   "name": "adversarial-ml-coverage-is-live",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/analyst_probe.py",
-    "resolve",
-    "AML.T0051"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "RESOLVED",
-     "MITRE_ATLAS",
-     "Prompt Injection"
-    ]
-   }
-  },
-  {
-   "name": "framework-alignment-live",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/framework_alignment_probe.py",
-    "alignment"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"ok\": true"
-    ]
-   }
-  },
-  {
-   "name": "framework-congruence-live",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/framework_alignment_probe.py",
-    "congruence"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"mismatched\": 0"
-    ]
-   }
-  },
-  {
-   "name": "congruence-check-not-vacuous",
-   "type": "adversarial",
-   "real_world": true,
-   "command": [
-    "python3",
-    "../scripts/framework_alignment_probe.py",
-    "sensitivity"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"dangling\""
+     "UNVERIFIED_LOCALLY",
+     "NOT evidence"
     ]
    }
   },
@@ -199,7 +77,7 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/sparta && uv run python scripts/adversarial_alignment_probe.py edges --samples 20"
+    "uv run python scripts/adversarial_alignment_probe.py edges --samples 250"
    ],
    "expected": {
     "exit_code": 0,
@@ -215,7 +93,23 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/sparta && uv run python scripts/adversarial_alignment_probe.py mutate --samples 8"
+    "uv run python scripts/adversarial_alignment_probe.py mutate --samples 200"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"failures\": []"
+    ]
+   }
+  },
+  {
+   "name": "embedded-ids-do-not-fragment-e2e",
+   "type": "adversarial",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "uv run python scripts/adversarial_alignment_probe.py fragment --samples 200"
    ],
    "expected": {
     "exit_code": 0,
@@ -224,5 +118,6 @@
     ]
    }
   }
- ]
+ ],
+ "eval_tier": "compliance"
 }

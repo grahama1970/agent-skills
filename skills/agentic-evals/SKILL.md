@@ -114,6 +114,26 @@ skill fixture MUST:
 Rejection message names every violation. This prevents an eval that passes
 trivially while proving nothing about whether the skill actually works.
 
+### Compliance tier (`"eval_tier": "compliance"`)
+
+A fixture that guards a compliance-pipeline stage declares
+`"eval_tier": "compliance"` and the runner then MANDATES the strong contract on
+top of the baseline (operator directive 2026-08-12, "this is a compliance
+pipeline and must be robustly hardened"). Such a fixture is REJECTED unless:
+
+- a **strict majority** of cases are `adversarial`/`negative` (more than half,
+  not exactly half — positive controls are the minority);
+- at least one case is **non-deterministic**: its command samples fresh inputs
+  each run via `--samples`, `--seed`, or a shell `$RANDOM` (a probe *script*
+  name with a fixed key does not count);
+- every non-deterministic case names `--samples` >= 50, so each stage's coverage
+  is hundreds-to-thousands of assertions per run, targeting ~1000 per stage
+  across its modes.
+
+The declaration cannot be quietly relaxed: the compliance pipeline's own
+fixtures set the tier, so removing it to dodge the gate is itself a regression.
+`tests/test_compliance_tier_gate.py` pins each rule against its weakening.
+
 Two honestly-declared exemptions bypass the gate — never valid for a real skill
 evaluation:
 
