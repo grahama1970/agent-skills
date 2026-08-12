@@ -823,6 +823,29 @@ def house_similarity_cmd(
         _abort(exc)
 
 
+@app.command(name="house-structure")
+def house_structure_cmd(
+    pptx: Annotated[Path, typer.Option(help="Delivered .pptx.")],
+    document: Annotated[Path, typer.Option(help="Canonical deck.document.json (role source).")],
+) -> None:
+    """Archetype-conditioned structural + typography contracts on the delivered file (#1381)."""
+    import json as json_mod
+
+    from .house_structure import check_structure
+
+    try:
+        findings = check_structure(pptx, document)
+        typer.echo(json_mod.dumps({
+            "status": "PASS" if not findings else "FINDINGS",
+            "findings": [f.model_dump() for f in findings],
+        }, indent=1))
+        raise typer.Exit(0 if not findings else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="calibrate-house-gate")
 def calibrate_house_gate_cmd(
     output: Annotated[Path, typer.Option(help="Where to write house_gate_calibration.v1 JSON.")] = Path("fixtures/house-gate/calibration.v1.json"),

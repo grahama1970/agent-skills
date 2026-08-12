@@ -67,6 +67,7 @@ stage verify-publish ./run.sh verify-publish --pptx "$WORK/deck.pptx" \
   --document "$WORK/deck.document.json" \
   --build-manifest "$WORK/manifest.json" --bundle-dir "$BUNDLE"
 stage house-conformance ./run.sh house-conformance --pptx "$WORK/deck.pptx"
+stage house-structure ./run.sh house-structure --pptx "$WORK/deck.pptx" --document "$WORK/deck.document.json"
 
 echo "--- stage 5: render ---"
 mkdir -p "$WORK/render"
