@@ -32,7 +32,7 @@ class ActionRegistry:
         documents = [_memory_document(action) for action in unseen]
         timeout = httpx.Timeout(connect=1.5, read=3.0, write=3.0, pool=1.5)
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
+            async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
                 response = await client.post(
                     f"{self._settings.memory_url}/upsert",
                     json={"collection": "app_actions", "documents": documents},

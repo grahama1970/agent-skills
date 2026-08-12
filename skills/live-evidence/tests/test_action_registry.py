@@ -1,0 +1,25 @@
+"""Tests for QuerySpec action registration degradation."""
+
+import asyncio
+from types import SimpleNamespace
+
+from live_evidence.action_registry import ActionRegistry
+from live_evidence.models import ActionDefinition
+
+
+def test_action_registry_ignores_invalid_host_ca_env(monkeypatch) -> None:
+    monkeypatch.setenv("SSL_CERT_FILE", "/does/not/exist")
+    registry = ActionRegistry(SimpleNamespace(memory_url="http://127.0.0.1:9"))
+    action = ActionDefinition(
+        element_id="live-evidence:test:button",
+        app="live-evidence",
+        action="LIVE_EVIDENCE_TEST_ACTION",
+        label="Test action",
+        description="Exercise action registration degradation",
+    )
+
+    result = asyncio.run(registry.register([action]))
+
+    assert result["status"] == "degraded"
+    assert result["registered"] == 1
+    assert result["memory_written"] is False
