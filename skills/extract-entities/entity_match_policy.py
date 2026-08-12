@@ -89,13 +89,26 @@ def is_fragment_of_larger_token(text: str, start: int, end: int) -> bool:
     before = text[start - 1].lower() if start > 0 else ""
     after = text[end].lower() if end < len(text) else ""
 
-    # A trailing '.' is usually the end of a sentence, not part of an id. It only
-    # continues one when a character follows it: T1003.001 fragments, "see
-    # CWE-89." does not. Treating every trailing dot as continuation silently
-    # dropped every identifier that ended a sentence.
+    # A trailing '.' is sentence punctuation unless a character follows it:
+    # T1003.001 fragments, "see CWE-89." does not.
     if after == ".":
         following = text[end + 1].lower() if end + 1 < len(text) else ""
         after = "." if following.isalnum() else ""
+
+    # Parentheses are position-specific (conformance fixture, 2026-08-12).
+    # '(' AFTER the span continues the id only in NIST enhancement notation,
+    # i.e. when a digit follows: "SA-15(6)" fragments SA-15. A plain
+    # parenthesized mention "(see CWE-396)" must not: ')' never continues,
+    # and '(' BEFORE the span is ordinary punctuation. The old rule put both
+    # parens in the continuation set and silently dropped every identifier
+    # that sat inside parentheses.
+    if after == "(":
+        following = text[end + 1] if end + 1 < len(text) else ""
+        after = "(" if following.isdigit() else ""
+    if after == ")":
+        after = ""
+    if before in "()":
+        before = ""
 
     return before in _ID_CONTINUATION or after in _ID_CONTINUATION
 
