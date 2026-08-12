@@ -29,7 +29,11 @@ from pydantic import BaseModel, Field
 from .build_manifest import bytes_digest, file_digest
 from .style_metrics import _histogram
 
-HOUSE_PAGES_DIR = Path("/mnt/storage12tb/skills/pitchdeck/outputs/house-slides")
+# LibreOffice renders of the corpus decks — the SAME renderer the gate scores
+# generated decks through. Calibrating on the decks' authored-PDF rasters
+# false-rejected all five real decks in the 2026-08-12 holdout (provenance
+# mismatch): calibration and scoring must share one render pipeline.
+HOUSE_PAGES_DIR = Path("/mnt/storage12tb/skills/pitchdeck/outputs/house-slides-lo")
 
 
 def dhash(image_path: Path, size: int = 8) -> int:
@@ -80,6 +84,9 @@ class HouseGateCalibration(BaseModel):
     populations: dict[str, int | str]
     duplicate_cluster_count: int
     corpus_palette_histogram: list[float]
+    cluster_histograms: list[list[float]] = Field(default_factory=list)
+    pixel_allowance_rate: float = 0.05
+    conformance_allowance_rate: float = 0.0
     distributions: dict
     thresholds: Thresholds
     render_profile: RenderProfile
@@ -151,18 +158,63 @@ def build_calibration(pages_dir: Path = HOUSE_PAGES_DIR,
     mean_hist = [sum(col) / len(cluster_hists) for col in zip(*cluster_hists)]
 
     import math
-    def bhatt(h):
-        return round(sum(math.sqrt(a * b) for a, b in zip(h, mean_hist)), 4)
-    sims = [bhatt(h) for h in per_page_hist]
+    def bhatt(h, ref):
+        return sum(math.sqrt(a * b) for a, b in zip(h, ref))
+    # nearest-cluster palette: score each page against every cluster histogram,
+    # excluding its OWN cluster (a page must resemble some other house cluster,
+    # matching how a generated page — never in any cluster — is scored)
+    cluster_list = list(by_cluster.keys())
+    sims = []
+    for idx, h in enumerate(per_page_hist):
+        own = clusters[idx]
+        best = max(bhatt(h, ch) for ck, ch in zip(cluster_list, cluster_hists) if ck != own)
+        sims.append(round(best, 4))
 
-    # cluster-weighted distributions: one representative per cluster
-    rep_idx = [members[0] for members in by_cluster.values()]
-    rep_sims = sorted(sims[i] for i in rep_idx)
-    rep_inks = sorted(inks[i] for i in rep_idx)
-    n = len(rep_idx)
+    # Floors are calibrated over PAGES — the unit the gate judges. The first
+    # holdout run (2026-08-12) proved cluster-representative p5 floors fail
+    # 8-24% of real pages: sparse singletons form the tail while dense
+    # duplicates each got one vote. Cluster weighting stays where it belongs:
+    # the reference MEAN histogram (so duplicates don't define the palette).
     def dist(v):
+        v = sorted(v); n = len(v)
         return {"n": n, "min": v[0], "p5": v[int(0.05 * n)], "p25": v[int(0.25 * n)],
                 "median": round(statistics.median(v), 4), "p95": v[int(0.95 * n)]}
+    rep_sims = sims
+    rep_inks = inks
+
+    # frozen deck-level allowance: the worst per-deck failure rate any REAL
+    # deck shows under these floors (LODO-flavored; a generated deck may fail
+    # at most as hard as the worst real deck)
+    # ANOMALY floors sit at the corpus MINIMUM over pages — the same
+    # semantics as the embedding floor: no generated page may measure less
+    # house than the least-house real page. Holdout runs 1-3 proved every
+    # stricter percentile splits into either false-rejecting real sparse
+    # pages or false-passing register swaps; the register hole is #1383's
+    # vision channel, not a pixel floor's job.
+    # floor at the true minimum, rounded DOWN so the minimum page itself passes
+    ink_floor = math.floor(dist(rep_inks)["min"] * 10000) / 10000
+    palette_floor = math.floor(dist(rep_sims)["min"] * 10000) / 10000
+    deck_of = [p.name.rsplit("-", 1)[0] for p in pngs]
+    rates = {}
+    for deck in set(deck_of):
+        idx = [i for i, d0 in enumerate(deck_of) if d0 == deck]
+        fails = sum(1 for i in idx if inks[i] < ink_floor or sims[i] < palette_floor)
+        rates[deck] = fails / len(idx)
+    allowance_rate = round(max(rates.values()), 4)  # 0.0 by construction at min floors
+
+    # conformance allowance: the worst per-deck flagged-slide rate any REAL
+    # deck shows (real pages legitimately trip density/band-fill exceptions)
+    conf_rate = 0.0
+    decks_dir = Path("/mnt/storage12tb/skills/pitchdeck/sources/style-corpus")
+    if decks_dir.is_dir():
+        from .house_conformance import check_conformance
+        for deck in sorted(decks_dir.glob("*.pptx")):
+            findings = check_conformance(deck)
+            flagged = len({f.slide for f in findings})
+            from pptx import Presentation
+            total = len(Presentation(str(deck)).slides.__iter__.__self__._sldIdLst)
+            conf_rate = max(conf_rate, flagged / max(total, 1))
+    conf_rate = round(conf_rate + 0.0001, 4)
 
     arch = _archetype_by_page(pages_dir)
     pages = [CorpusPage(file=p.name, deck=p.name.rsplit("-", 1)[0], sha256=file_digest(p) or "",
@@ -197,19 +249,31 @@ def build_calibration(pages_dir: Path = HOUSE_PAGES_DIR,
             "rendered_pages": len(pngs),
             "indexed_records": n_records,
             "catalogued_slides": catalogued,
-            "reconciliation": ("catalogued counts pptx slides incl. hidden; rendered counts visible "
-                                "PDF pages; records cover pages resolvable through page-mapping.json"),
+            "reconciliation": ("catalogued counts pptx slides incl. hidden; rendered counts LibreOffice "
+                                "pages (render provenance = the gate's own pipeline); records/archetype "
+                                "catalogs remain keyed to the authored-PDF page set"),
         },
         duplicate_cluster_count=len(by_cluster),
         corpus_palette_histogram=[round(v, 6) for v in mean_hist],
-        distributions={"palette_similarity": dist(rep_sims), "ink_fraction": dist(rep_inks)},
+        cluster_histograms=[[round(v, 6) for v in h] for h in cluster_hists],
+        pixel_allowance_rate=allowance_rate,
+        conformance_allowance_rate=conf_rate,
+        distributions={"palette_similarity": dist(rep_sims), "ink_fraction": dist(rep_inks),
+                        "per_deck_failure_rates": {k: round(v, 4) for k, v in rates.items()}},
         thresholds=Thresholds(
-            embedding_anomaly_floor=0.395,
-            ink_floor=dist(rep_inks)["p5"],
-            palette_floor=dist(rep_sims)["p5"],
-            provenance=("p5 of duplicate-CLUSTER representatives (one vote per perceptual cluster, "
-                         "dhash hamming<=6); embedding floor = duplicate-free corpus minimum, "
-                         "2026-08-11 analysis"),
+            # 0.395 was the duplicate-free minimum on authored-PDF rasters;
+            # LibreOffice re-renders of the same pages jitter by ~0.005
+            # (measured: ReqML p49 scored 0.39496), so the floor is set one
+            # jitter-margin below the measured minimum.
+            embedding_anomaly_floor=0.39,
+            ink_floor=ink_floor,
+            palette_floor=palette_floor,
+            provenance=("floors = MIN over PAGES of the LibreOffice-rendered corpus (anomaly semantics, "
+                         "matching the embedding floor; holdout runs 1-3 showed stricter percentiles "
+                         "false-reject real sparse pages or oscillate) — previously: p5 (population matches "
+                         "the judged unit; holdout run 1 proved cluster-representative floors false-reject "
+                         "real pages); reference histogram stays cluster-weighted; embedding floor = "
+                         "duplicate-free corpus minimum, 2026-08-11 analysis"),
         ),
         render_profile=RenderProfile(renderer=renderer),
         embedding_model=model,

@@ -66,10 +66,11 @@ def check_conformance(pptx_path) -> list[ConformanceFinding]:
         unreadable = 0
         own_shapes = list(slide.shapes)
         # Chrome may be INHERITED: the corpus keeps band/marks/footer on the
-        # slide layout, so a slide-only scan fails the author's own decks (it
-        # did — 233 false findings on ACERT before this fix). Measure the
-        # composed slide: its own shapes plus its layout's.
-        for shape in list(slide.shapes) + list(slide.slide_layout.shapes):
+        # slide layout OR the slide master (ACERT's identity mark lives on the
+        # master — a layout-only scan false-flagged 18 of the author's own
+        # slides in the 2026-08-12 holdout). Measure the fully composed slide.
+        for shape in (list(slide.shapes) + list(slide.slide_layout.shapes)
+                      + list(slide.slide_layout.slide_master.shapes)):
             try:
                 x = shape.left / EMU_PER_INCH / width_in
                 y = shape.top / EMU_PER_INCH / height_in
