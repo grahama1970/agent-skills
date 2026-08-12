@@ -119,7 +119,7 @@ name two different modules. Always invoke the full module name.
 
 Verified live 2026-08-11 after the framework alignment audit (active =
 `deprecated != true`). Every active framework except EMB3D participates in
-crosswalk edges; 419,304 total relationships.
+crosswalk edges; 419,326 total relationships (2026-08-12: 419,299 post-audit + 27 OWASP_LLM).
 
 | source_framework | Active controls | Loaded by | Edges |
 |------------------|---------------:|-----------|-------|
