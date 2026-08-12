@@ -144,7 +144,10 @@ def build_digest(
         "signals_wired": {
             "fit": True, "low_competition": True, "local": True,
             "trigger": bool(triggers),
-            "warm_path": bool(warm_paths),
+            # wired via the org-level config OR row-level premium capture signals
+            "warm_path": bool(warm_paths) or any(
+                float(o.get("warm_path") or 0.0) > 0 for o in shortlist
+            ),
         },
         "top": top,
     }

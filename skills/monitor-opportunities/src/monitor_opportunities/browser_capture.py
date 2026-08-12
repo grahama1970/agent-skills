@@ -820,6 +820,143 @@ def _finish_linkedin_advanced(
     return receipt
 
 
+# New (2026) virtualized search UI: cards are found via the accessibility-mandated
+# aria-labels ('Dismiss <title> job'), then the enclosing card's text carries
+# company/location plus the PREMIUM signals: 'Be an early applicant' (low
+# competition), 'connection works here' (warm path), and the posted age.
+_LI_ARIA_EXTRACT_JS = (
+    "(function(){var out=[];"
+    "var btns=[].slice.call(document.querySelectorAll('button[aria-label^=\"Dismiss\"]'));"
+    "for(var i=0;i<btns.length;i++){"
+    "var al=btns[i].getAttribute('aria-label')||'';"
+    "var title=al.replace(/^Dismiss /,'').replace(/ job$/,'');"
+    "var card=btns[i].parentElement;var best=null;"
+    "for(var d=0;d<12&&card;d++){var t=card.innerText||'';"
+    "if(/ago/.test(t)&&t.length<1200){best=card;}"
+    "if(t.length>1500)break;card=card.parentElement;}"
+    "var txt=best?best.innerText:'';"
+    "var lines=txt.split(String.fromCharCode(10))"
+    ".map(function(s){return s.trim()}).filter(Boolean);"
+    "var ti=lines.indexOf(title);"
+    "var company=ti>=0&&lines[ti+1]?lines[ti+1]:'';"
+    "var loc=ti>=0&&lines[ti+2]?lines[ti+2]:'';"
+    "var warm=/connection works here|connections work here|school alumni/.test(txt);"
+    "var early=/Be an early applicant/.test(txt);"
+    "var age=(txt.match(/(\\d+ (?:minute|hour|day|week|month)s? ago)/)||[])[1]||null;"
+    "out.push({title:title,company:company,location:loc,warm:warm,early:early,age:age});"
+    "}return JSON.stringify(out);})()"
+)
+
+
+def capture_linkedin_premium(
+    out_dir: Path,
+    surf_run: Path = SURF_RUN_DEFAULT,
+    profile: dict[str, Any] | None = None,
+    max_queries: int = 3,
+) -> dict[str, Any]:
+    """Read-only capture of LinkedIn Premium low-competition search results.
+
+    Runs the profile's search queries with f_EA=true (Under 10 applicants) so
+    LinkedIn's own engine pre-filters for the response-first thesis, then
+    extracts each card via aria-labels (stable against class churn). Cards carry
+    the premium signals the ranker wants: under-10-applicants -> competition 0.1,
+    'connection works here' -> warm_path 0.9. Strictly read-only navigation of
+    the human's authenticated session; no LinkedIn action is taken.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    profile = profile if profile is not None else _load_candidate_profile()
+    queries = linkedin_search_queries_from_profile(profile)[:max_queries]
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "linkedin_premium_under10",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+        "queries_planned": [q["label"] for q in queries],
+    }
+    tab_id = ""
+    rows: list[dict[str, Any]] = []
+    queries_run: list[str] = []
+    try:
+        ensure_browser(surf_run)
+        first_url = queries[0]["url"] + "&f_EA=true"
+        created = _surf(surf_run, "tab.new", first_url, "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        for qi, query in enumerate(queries):
+            try:
+                if qi > 0:
+                    url = query["url"] + "&f_EA=true"
+                    _surf(surf_run, "js", "--tab-id", tab_id,
+                          f"(function(){{location.href={json.dumps(url)}; return 'NAV';}})()",
+                          timeout=20)
+                _surf(surf_run, "wait", "8")
+                raw = _surf(surf_run, "js", "--tab-id", tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
+                for r in json.loads(json.loads(raw)):
+                    if r.get("title"):
+                        r["matched_query"] = query["label"] + " | under-10-applicants"
+                        rows.append(r)
+                queries_run.append(query["label"])
+            except (BrowserCaptureError, ValueError, json.JSONDecodeError,
+                    subprocess.TimeoutExpired) as exc:
+                logger.warning("premium query {!r} skipped: {}", query["label"], exc)
+        seen: dict[str, dict[str, Any]] = {}
+        for r in rows:
+            key = r["title"] + "|" + (r.get("company") or "")
+            if key not in seen:
+                seen[key] = r
+        opps = [
+            {
+                "source": "human_authorized_linkedin_advanced_search",
+                "observed_at": utc_now(),
+                "title": r["title"],
+                "organization": (r.get("company") or "UNKNOWN").strip() or "UNKNOWN",
+                "location": (r.get("location") or "UNKNOWN").strip() or "UNKNOWN",
+                "primary_evidence_url": _LINKEDIN_JOB_SEARCH_BASE,
+                "matched_query": r.get("matched_query", ""),
+                "posted_age": r.get("age"),
+                "under_10_applicants": bool(r.get("early")),
+                "warm_path": 0.9 if r.get("warm") else 0.0,
+                "warm_path_via": "LinkedIn: connection works here" if r.get("warm") else None,
+                "top_candidate": False,
+            }
+            for r in seen.values()
+        ]
+        evidence = {
+            "schema_version": "ops-linkedin.opportunity_capture.v1",
+            "source": "human_authorized_linkedin_advanced_search",
+            "capture_method": "surf_read_only_authenticated_session_premium_under10",
+            "automation_policy": "linkedin_authorized_read_only_no_actions",
+            "observed_at": utc_now(),
+            "queries_run": queries_run,
+            "opportunities": opps,
+        }
+        evidence_path = out_dir / "linkedin-premium-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if opps else "EMPTY"
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["opportunities_captured"] = len(opps)
+        receipt["warm_paths_found"] = sum(1 for o in opps if o["warm_path"])
+        receipt["queries_run"] = queries_run
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError,
+            subprocess.TimeoutExpired) as exc:
+        logger.error("LinkedIn premium capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["evidence_path"] = None
+    finally:
+        if tab_id:
+            try:
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+                logger.warning("could not close premium capture tab {}: {}", tab_id, exc)
+    (out_dir / "linkedin-premium-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
 def capture_linkedin_advanced_search(
     out_dir: Path,
     surf_run: Path = SURF_RUN_DEFAULT,

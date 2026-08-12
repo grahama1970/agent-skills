@@ -616,6 +616,37 @@ def nightly(
     linkedin_candidates.sort(key=lambda r: int(r.get("opportunities_captured") or 0), reverse=True)
     linkedin_evidence = linkedin_candidates[0].get("evidence_path") if linkedin_candidates else None
 
+    # LinkedIn Premium low-competition pass: same searches with f_EA=true (Under
+    # 10 applicants), extracted via aria-labels. Rows carry the premium signals
+    # (competition 0.1, warm_path from 'connection works here') and are MERGED
+    # into the chosen evidence so ranking sees one deduped stream. Best-effort.
+    from .browser_capture import capture_linkedin_premium
+
+    prem_receipt = capture_linkedin_premium(capture_dir)
+    steps["browser_capture_linkedin_premium"] = {
+        "status": prem_receipt.get("status"),
+        "captured": prem_receipt.get("opportunities_captured"),
+        "warm_paths_found": prem_receipt.get("warm_paths_found"),
+    }
+    if prem_receipt.get("evidence_path") and linkedin_evidence:
+        try:
+            base = json.loads(Path(linkedin_evidence).read_text(encoding="utf-8"))
+            prem = json.loads(Path(prem_receipt["evidence_path"]).read_text(encoding="utf-8"))
+            seen_keys = {
+                (o.get("title"), o.get("organization")) for o in base.get("opportunities", [])
+            }
+            merged = 0
+            for o in prem.get("opportunities", []):
+                if (o.get("title"), o.get("organization")) not in seen_keys:
+                    base["opportunities"].append(o)
+                    merged += 1
+            Path(linkedin_evidence).write_text(json.dumps(base, indent=1), encoding="utf-8")
+            steps["browser_capture_linkedin_premium"]["merged_into_evidence"] = merged
+        except (OSError, ValueError) as exc:
+            logger.warning("premium evidence merge skipped: {}", exc)
+    elif prem_receipt.get("evidence_path") and not linkedin_evidence:
+        linkedin_evidence = prem_receipt["evidence_path"]
+
     # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
     # strictly read-only. Best-effort; captured to its own evidence, not fed to the
     # jobs run. Graham transmits every outreach himself.
