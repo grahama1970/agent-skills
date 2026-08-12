@@ -94,7 +94,10 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             if e.role in {"chevrons", "callout"} and e.kind is DocElementKind.TEXT and e.text
         ]
         visual_el = next((e for e in slide.elements if e.role == "visual" and e.asset_id), None)
-        visual: dict[str, Any] | None = None
+        # the renderer contract expects a visual object on every slide — a
+        # slide without one carries type 'none', never null (crashed <Split>)
+        visual: dict[str, Any] = {"type": "none", "position": "right", "asset": None,
+                                   "items": [], "callouts": []}
         if visual_el is not None:
             asset = assets.get(visual_el.asset_id)
             visual = {
