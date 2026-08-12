@@ -15,6 +15,7 @@ exports/
 *.pdf
 *.png
 !fixtures/**/*.png
+!examples/sparta-explorer/assets/*.png
 .env
 readme-to-pitchdeck.config.yml
 ui/node_modules
