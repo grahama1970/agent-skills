@@ -96,3 +96,47 @@ def test_api_failure_with_website_capture_passes(tmp_path: Path) -> None:
         "content_sha256": None, "evidence_refs": [], "limitations": []}))
     (d / "source-receipts.jsonl").write_text("\n".join(lines), encoding="utf-8")
     assert _enforce_api_website_fallback(SKILL_DIR, d)["api_website_fallback_enforced"] is True
+
+
+def test_federal_website_receipt_emits_only_relevant_candidates(tmp_path: Path) -> None:
+    """SAM website capture: on-mandate notices become lane-B candidates, noise drops.
+
+    Previously the receipt discarded every captured notice (returned []), so lane B
+    produced 0 candidates even on a successful capture.
+    """
+    import json
+
+    from monitor_opportunities.required_source_receipts import federal_website_receipt
+
+    ev = tmp_path / "sam-website-evidence.json"
+    ev.write_text(json.dumps({
+        "schema_version": "monitor_opportunities.federal_capture.v1",
+        "opportunities": [
+            {"title": "Artificial Intelligence Threat Detection Platform",
+             "url": "https://sam.gov/workspace/contract/opp/aaaa1111/view", "opp_id": "aaaa1111"},
+            {"title": "Greenhouse Ridge Vent Replacements",
+             "url": "https://sam.gov/workspace/contract/opp/bbbb2222/view", "opp_id": "bbbb2222"},
+        ],
+    }), encoding="utf-8")
+
+    receipt, cands = federal_website_receipt(ev)
+    assert receipt["result_status"] == "MATCHES"
+    assert len(cands) == 1  # only the AI notice survives the relevance gate
+    c = cands[0]
+    assert c["lane"] == "B" and c["organization"] == "Federal (SAM.gov)"
+    assert c["candidate_id"] == "candidate:b:sam:aaaa1111"
+    assert 0.5 <= c["fit_score"] <= 0.85
+
+
+def test_federal_website_receipt_no_matches_when_all_off_mandate(tmp_path: Path) -> None:
+    import json
+
+    from monitor_opportunities.required_source_receipts import federal_website_receipt
+
+    ev = tmp_path / "sam-website-evidence.json"
+    ev.write_text(json.dumps({"opportunities": [
+        {"title": "Lab Renovations Rooms 118 & 120",
+         "url": "https://sam.gov/workspace/contract/opp/cccc/view", "opp_id": "cccc"},
+    ]}), encoding="utf-8")
+    receipt, cands = federal_website_receipt(ev)
+    assert receipt["result_status"] == "NO_MATCHES" and cands == []

@@ -34,18 +34,26 @@ _SAM_URL = (
     "&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D=artificial%20intelligence"
 )
 
+# Only real opportunity links (/opp/<id>/view); org/filter links are excluded so
+# the capture is clean. Dedup by opp id. Returns {count, rows} so the poll below
+# can tell "not loaded yet" (count 0) from "genuinely empty".
 _SAM_EXTRACT_JS = (
     "(function(){"
     "var out=[],seen={};"
-    "var links=[].slice.call(document.querySelectorAll("
-    "\"a[href*='/opp/'], a.usa-link, h3 a, [class*='result'] a\"));"
+    "var links=[].slice.call(document.querySelectorAll(\"a[href*='/opp/']\"));"
     "for (var i=0;i<links.length;i++){"
+    "var h=links[i].href||'';"
+    "var m=h.match(/\\/opp\\/([0-9a-f]+)\\//);"
     "var t=(links[i].innerText||'').trim();"
-    "if (t.length>12 && !seen[t]){ seen[t]=1; out.push({title:t.slice(0,120), href:links[i].href}); }"
+    "if (m && t.length>3 && !seen[m[1]]){ seen[m[1]]=1;"
+    " out.push({title:t.slice(0,140), url:h, opp_id:m[1]}); }"
     "}"
-    "return JSON.stringify(out.slice(0,40));"
+    "return JSON.stringify({count:out.length, rows:out.slice(0,40)});"
     "})()"
 )
+
+# Cheap readiness probe: how many opportunity rows are currently rendered.
+_SAM_READY_JS = "(function(){return document.querySelectorAll(\"a[href*='/opp/']\").length;})()"
 
 
 class BrowserCaptureError(ValueError):
@@ -381,11 +389,27 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        _surf(surf_run, "wait", "10")
+        # SAM is an Angular SPA that renders results only after its backend call
+        # returns; a fixed 10s wait was too short and captured 0 rows. Poll for
+        # opportunity links (up to ~36s) and proceed as soon as they render.
+        _surf(surf_run, "wait", "6")
+        ready = 0
+        for _ in range(10):
+            try:
+                probe = _surf(surf_run, "js", "--tab-id", tab_id, _SAM_READY_JS) or "0"
+                ready = int(probe.strip())
+            except (BrowserCaptureError, ValueError):
+                ready = 0
+            if ready > 0:
+                break
+            _surf(surf_run, "wait", "3")
+        receipt["poll_ready_links"] = ready
         raw = _surf(surf_run, "js", "--tab-id", tab_id, _SAM_EXTRACT_JS)
-        rows = json.loads(json.loads(raw))
+        parsed = json.loads(json.loads(raw))
+        rows = parsed.get("rows", []) if isinstance(parsed, dict) else []
         opps = [
-            {"title": r["title"], "url": r.get("href"), "source": "sam.gov_website"}
+            {"title": r["title"], "url": r.get("url"), "opp_id": r.get("opp_id"),
+             "source": "sam.gov_website"}
             for r in rows
             if r.get("title")
         ]
