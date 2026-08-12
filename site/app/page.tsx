@@ -5,6 +5,7 @@ import { HeroProofBridge } from '@/components/hero-proof-bridge';
 import { ResearchMap } from '@/components/research-map';
 import { ProofLegend } from '@/components/proof-legend';
 import {
+  DeferredCapabilityConstellation,
   DeferredCapabilitySearch,
   DeferredKeyboardNav,
   DeferredReceiptTicket,
@@ -297,18 +298,7 @@ export default function Home() {
         <section id="search" className="search-band">
           <div className="wrap">
             <DeferredCapabilitySearch />
-            <p className="depth-preview-link">
-              Public repo map, project fit, and evidence access continue on{' '}
-              <a
-                href="/explore"
-                data-qid="search:link:explore-depth"
-                data-qs-action="SEARCH_OPEN_EXPLORE"
-                title="Open the Explore route for the full repo map and evidence access"
-              >
-                the Explore route
-              </a>
-              .
-            </p>
+            <DeferredCapabilityConstellation />
           </div>
         </section>
 
