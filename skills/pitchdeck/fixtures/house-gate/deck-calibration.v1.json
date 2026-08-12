@@ -1,0 +1,21 @@
+{
+ "schema": "pitchdeck.deck_gate_calibration.v1",
+ "fold_medians": {
+  "ACERT_Darpa_PI_Meeting_FtWorth": 0.0,
+  "Rack_Assurance_Ecosystem_RAES_v1": 0.1945,
+  "ReqML_GE_Presentation": 0.103,
+  "SpartaAI_CyberSummitv_v3": 0.0,
+  "SpartaAI_SBIR": 0.0229
+ },
+ "fold_p90s": {
+  "ACERT_Darpa_PI_Meeting_FtWorth": 0.0899,
+  "Rack_Assurance_Ecosystem_RAES_v1": 0.3332,
+  "ReqML_GE_Presentation": 0.1738,
+  "SpartaAI_CyberSummitv_v3": 0.0,
+  "SpartaAI_SBIR": 0.1481
+ },
+ "median_bar": 0.1945,
+ "p90_bar": 0.3332,
+ "provenance": "leave-one-entire-deck-out over the layout_signature records; the bar is the WORST held-out real deck (every real deck passes by construction, none of the candidate deck's data is in the calibration)",
+ "content_digest": "1e8009b4e2633e7611ca04c16b3caf6cb1098651bd482a2c53635b492caaf2ba"
+}

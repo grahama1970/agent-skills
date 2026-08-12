@@ -57,3 +57,27 @@ second acceptance criterion is met for the current mutant set. Sparse
 archetypes (divider/toc/close) carry no area floor, so they are not pressured
 toward filler art. Remaining mutants (palette-matched card grid, art-register
 swap, arc-shuffle) still to build; deck-level bar is #1382.
+
+
+## Update 2 — #1382 deck-level LODO bar + full coverage matrix
+
+`house-deck-gate`: spatially-aware structural features (3x3 occupancy grid +
+kind areas/counts/words) computed identically from the corpus records and the
+delivered pptx; bar = the WORST held-out real deck under leave-one-deck-out
+(median 0.1945 = RAES; folds: ACERT 0.0, CyberSummit 0.0 — cross-deck
+duplicates — SBIR 0.0229, ReqML 0.103). The candidate deck is in no fold.
+
+| Deck | house-structure | house-deck-gate | pixel floors | net |
+|---|---|---|---|---|
+| honest deck | PASS 0 | MATCH 0.117 ≤ 0.195 | PASS | **passes all** |
+| layout-mirror | FAIL 28 | (passes — bbox features are role-blind) | (passes) | rejected |
+| typography-swap | FAIL 15 | (passes — type is not geometry) | (2/15) | rejected |
+| two-tiny-visuals | FAIL 7 | — | FAIL 15/15 | rejected |
+| bbox-shuffle | FAIL 15 | — | FAIL 9/15 (side effect) | rejected |
+
+Single channels keep known blind spots; the COMPOSITION catches every seeded
+mutant while the honest deck passes every channel
+(tests/test_house_deck_gate.py::test_composed_gate_catches_every_mutant pins
+this). The honest deck's DECK_STRUCTURAL_MATCH is the first calibrated
+POSITIVE deck-level evidence — still not the blinded-holdout validation
+(#1385) required to print 'looks like Graham'.

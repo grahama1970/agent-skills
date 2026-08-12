@@ -872,6 +872,49 @@ def house_structure_cmd(
         _abort(exc)
 
 
+@app.command(name="house-deck-gate")
+def house_deck_gate_cmd(
+    pptx: Annotated[Path, typer.Option(help="Delivered .pptx.")],
+    calibration: Annotated[Path, typer.Option(help="deck_gate_calibration.v1 (leave-one-deck-out).")] = Path("fixtures/house-gate/deck-calibration.v1.json"),
+    records_dir: Annotated[Path, typer.Option(help="Corpus layout_signature records.")] = Path("/mnt/storage12tb/skills/pitchdeck/outputs/house-slides/records"),
+    calibrate_only: Annotated[bool, typer.Option("--calibrate", help="(Re)build the calibration artifact and exit.")] = False,
+) -> None:
+    """Deck-level structural positive bar, LODO-calibrated (#1382). PASS here is
+    DECK_STRUCTURAL_MATCH — positive evidence, distinct from the anomaly floors."""
+    import json as json_mod
+
+    from .house_deck_gate import DeckGateCalibration, calibrate, score_deck
+
+    try:
+        if calibrate_only:
+            cal = calibrate(records_dir)
+            payload = json_mod.loads(cal.model_dump_json(by_alias=True))
+            payload["content_digest"] = cal.content_digest()
+            calibration.parent.mkdir(parents=True, exist_ok=True)
+            calibration.write_text(json_mod.dumps(payload, indent=1))
+            typer.echo(json_mod.dumps({"status": "PASS", **payload}, indent=1))
+            raise typer.Exit(0)
+        payload = json_mod.loads(calibration.read_text())
+        digest = payload.pop("content_digest", None)
+        cal = DeckGateCalibration.model_validate(payload)
+        if digest != cal.content_digest():
+            raise ValueError("deck-gate calibration digest mismatch — the artifact was edited by hand")
+        result = score_deck(pptx, records_dir)
+        ok = result["median"] <= cal.median_bar and result["p90"] <= cal.p90_bar
+        typer.echo(json_mod.dumps({
+            "status": "DECK_STRUCTURAL_MATCH" if ok else "FAIL",
+            "median": result["median"], "median_bar": cal.median_bar,
+            "p90": result["p90"], "p90_bar": cal.p90_bar,
+            "slides": result["slides"], "per_slide": result["per_slide"],
+            "fold_medians": cal.fold_medians,
+        }, indent=1))
+        raise typer.Exit(0 if ok else 1)
+    except typer.Exit:
+        raise
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="calibrate-house-gate")
 def calibrate_house_gate_cmd(
     output: Annotated[Path, typer.Option(help="Where to write house_gate_calibration.v1 JSON.")] = Path("fixtures/house-gate/calibration.v1.json"),
