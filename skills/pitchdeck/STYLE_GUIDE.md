@@ -181,15 +181,19 @@ the base prompt; `--figure` routes to /create-figure for charts) into
 `outputs/asset-alternates/<id>/` with a receipt. Adopt one with
 `--select <candidate.png>` — the asset file is replaced in place and the
 #1384 digest chain forces the next build-manifest/eval run to see the change.
-Backends, in order of preference:
+Backends, all live-verified 2026-08-12:
 - `claude-svg` (default): Claude authors the scene as SVG — palette-exact by
   construction, deterministic to rasterize, and the .svg source stays beside
-  the .png so a human can EDIT the art instead of regenerating. Uses the
-  Claude Code subscription (no API key).
-- `flux` (HF token): raster diffusion fallback, verified working.
-- `google` (nano banana / gemini-2.5-flash-image): richest character art;
-  requires a valid GEMINI_API_KEY (the previous key was revoked as leaked,
-  2026-08-12).
-- GPT: no funded API key on this workstation (OAuth-only policy); the GPT
-  route is the webgpt browser lane (submit an image request to the bound
-  ChatGPT tab, fetch with `surf webgpt.download --match`), used manually.
+  the .png so a human can EDIT the art instead of regenerating. Subscription,
+  no API key.
+- `fal --model fal-ai/nano-banana`: nano banana via FAL (FAL_API_KEY from
+  ~/.zshrc, injected as FAL_KEY). Richest raster character art. CAUTION: it
+  sometimes embeds words despite the no-text prompt — inspect candidates
+  before adoption (raster text bypasses the string scan; keep art wordless).
+- `flux` (HF token): raster diffusion fallback.
+- `google` (direct Gemini): NANO_BANANA_FREE_API_KEY from ~/.zshrc is
+  injected as GEMINI_API_KEY (overriding any stale session key — the wallet
+  key was revoked as leaked); the free tier currently lacks image quota, so
+  prefer the fal route.
+- GPT: no funded OpenAI key (OAuth-only policy); manual webgpt browser lane
+  only.

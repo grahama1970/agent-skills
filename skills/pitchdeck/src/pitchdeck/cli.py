@@ -925,6 +925,7 @@ def asset_alternates_cmd(
     backend: Annotated[str, typer.Option(help="Art backend: claude-svg (Claude authors an SVG scene — on-palette by construction, editable source kept beside the PNG), flux (HF), google (nano banana; needs a valid GEMINI_API_KEY), fal, ollama.")] = "claude-svg",
     select: Annotated[Path | None, typer.Option(help="Adopt this previously generated candidate into the bundle (replaces the asset file; the build-manifest digest chain records the change).")] = None,
     figure: Annotated[str | None, typer.Option(help="Instead of AI art, route to /create-figure with this spec, e.g. 'workflow:Ask,Retrieve,Answer' or 'force-graph:<json>'.")] = None,
+    model: Annotated[str | None, typer.Option(help="Model override for the backend (e.g. fal-ai/nano-banana for --backend fal).")] = None,
 ) -> None:
     """Generate N alternates for a bundle image asset (nano banana / gemini,
     flux) or a /create-figure chart, then adopt one with --select. Every
@@ -999,7 +1000,22 @@ def asset_alternates_cmd(
                        str(Path.home() / ".claude/skills/create-image/generate.py"), "generate",
                        f"{full} Variation {index + 1}: explore a different composition.",
                        "--output", str(out), "--size", "1280x720", "--backend", backend]
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300,
+                if model:
+                    cmd += ["--model", model]
+            env = dict(os.environ)
+            # key resolution for raster backends: NANO_BANANA_FREE_API_KEY and
+            # FAL_API_KEY live in ~/.zshrc; create-image reads GEMINI_API_KEY
+            # and FAL_KEY. Resolve without requiring an interactive shell.
+            zshrc = Path.home() / ".zshrc"
+            if zshrc.is_file():
+                for line in zshrc.read_text().splitlines():
+                    for src, dst in (("NANO_BANANA_FREE_API_KEY", "GEMINI_API_KEY"),
+                                      ("FAL_API_KEY", "FAL_KEY")):
+                        # ALWAYS override: the session env may carry the old
+                        # revoked key; the zshrc names are authoritative here
+                        if src in line and "=" in line:
+                            env[dst] = line.split("=", 1)[1].strip().strip('"').split(" #")[0].strip()
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300, env=env,
                                   cwd=str(Path.home() / ".claude/skills/create-image"))
             results.append({"file": str(out), "ok": out.is_file(),
                             "error": None if out.is_file() else proc.stdout[-200:] + proc.stderr[-200:]})
