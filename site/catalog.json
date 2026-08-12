@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "ccf584df6",
+  "sourceCommit": "651e5460bc",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 344
+    "skills": 346
   },
   "documents": [
     {
@@ -94,7 +94,7 @@
         "engineering-standards"
       ],
       "summary": "Evidence-grounded reasoning where a human, not the model, holds authority.",
-      "skillCount": 56
+      "skillCount": 61
     },
     {
       "id": "area:adaptive-lineage",
@@ -152,7 +152,7 @@
         "ui-design-engineering"
       ],
       "summary": "Interfaces and design systems built to be operated, not just admired.",
-      "skillCount": 19
+      "skillCount": 20
     },
     {
       "id": "area:creative-media",
@@ -172,7 +172,7 @@
         "content-creation"
       ],
       "summary": "Image, video, voice, and music generation — the creative-production half of the practice.",
-      "skillCount": 26
+      "skillCount": 27
     },
     {
       "id": "project:persona-dream",
@@ -237,7 +237,7 @@
       ],
       "question": "How does an agent prove which browser tab actually answered?",
       "summary": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
-      "body": "Unified browser automation for AI agents. Uses surf-cli extension when available (full features), falls back to CDP (zero-config). Navigate, read with element refs, click, type, screenshot. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Surf Browser Automation for AI Agents Two modes of operation: 1. With surf cli extension (recommended): Full features, works with your existing browser 2. CDP fallback : Zero config, but requires starting a separate Chrome instance If /tmp/surf.sock exists (extension installed), all commands route through surf cli. Otherwise, commands use CDP. Runtime Entrypoint And PATH The reliable agent entrypoint is the skill local wrapper: Some interactive shells also have a bare surf command on PATH , but agents must not assume that. If surf tab.list returns command not found , that is a PATH/wrapper issue, not evidence that Surf transport, the extension, or Chrome automation is broken. Re run the command through skills/surf/run.sh before diagnosing browser failure. Use this quick distinction: Native Host And Socket Incidents When Chrome was reloaded, updated, or the Surf extension was loaded more than once, diagnose the native host path before blaming WebGPT, Ask, or the target provider: Failure code stale socket no listener means /tmp/surf.sock exists but no native host is accepting connections. The wrapper attempts to move the stale socket aside and emits a structured surf.extension incident.v1 line. Reload the single enabled Surf extension in chrome://extensions , or restart Chrome, then rerun ./run.sh tab.list json . If Chrome shows duplicate Surf extensions, keep only the intended unpacked extension enabled. Its extension id must be the only current allowed origins entry in the native host manifest. After an extension id changes, run: If /tmp/surf host.log reports Cannot find module ... , the native host can launch but the vendored CLI dependencies are incomplete. Repair from the vendored CLI directory, then reload the extension: Capability And Result Contracts Before diagnosing provider breakage after a Surf update, capture the versioned contract and normalize any provider meta receipt: capabilities json reports the vendored engine version, skill identity, provider support, lock behavior, recovery features, and update gate references. meta.normalize converts WebGPT, Claude, Gemini, Kimi, and Grok receipts into surf.provider result.v1 with proof status, controlled tab/view id, URL, model, reasoning, delivery proof, retryability, stale binding repair, bounded error details, and immutable request snapshot",
+      "body": "Unified browser automation for AI agents. Uses surf-cli extension when available (full features), falls back to CDP (zero-config). Navigate, read with element refs, click, type, screenshot. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Surf Browser Automation for AI Agents Two modes of operation: 1. With surf cli extension (recommended): Full features, works with your existing browser 2. CDP fallback : Zero config, but requires starting a separate Chrome instance If /tmp/surf.sock exists (extension installed), all commands route through surf cli. Otherwise, commands use CDP. Runtime Entrypoint And PATH The reliable agent entrypoint is the skill local wrapper: Some interactive shells also have a bare surf command on PATH , but agents must not assume that. If surf tab.list returns command not found , that is a PATH/wrapper issue, not evidence that Surf transport, the extension, or Chrome automation is broken. Re run the command through skills/surf/run.sh before diagnosing browser failure. Use this quick distinction: Native Host And Socket Incidents When Chrome was reloaded, updated, or the Surf extension was loaded more than once, diagnose the native host path before blaming WebGPT, Ask, or the target provider: Failure code stale socket no listener means /tmp/surf.sock exists but no native host is accepting connections. The wrapper attempts to move the stale socket aside and emits a structured surf.extension incident.v1 line. Reload the single enabled Surf extension in chrome://extensions , or restart Chrome, then rerun ./run.sh tab.list json . If Chrome shows duplicate Surf extensions, keep only the intended unpacked extension enabled. Its extension id must be the only current allowed origins entry in the native host manifest. After an extension id changes, run: If /tmp/surf host.log reports Cannot find module ... , the native host can launch but the vendored CLI dependencies are incomplete. Repair from the vendored CLI directory, then reload the extension: Tab Age Chrome exposes no tab creation time — tab.list returns only id, title, url, active, and windowId — so age is observed and remembered rather than read: Each tab gains first seen , age seconds , age human , and age source . age source is the field that matters. observed means the tab appeared after the ledger existed, so its age is accurate to the gap between scans. at least means the tab was already open when the ledger was first written, so its real age is unknown and only a lower bound is reported (rendered with a = prefix). Treating a lower bound as exact is how a wee",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
@@ -659,7 +659,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Use when the user asks to query project memory, ask an oracle, use supported browser-backed reviewers, run Tau roundtable/single-handler workflows, run persona/deep-review workflows, generate image prompts, check OS/project health through composed skills, or run an ask DAG. This skill is the executable /ask runtime; do not replace it with an informal subagent, plain web search, or hand-written review.",
-      "body": "ask Stop First If the user names $ask , /ask , an ask mode, oracle, deep review, parallel review, roundtable, argue, CAE gap review, or ask DAG, read this whole file before acting. Then use the real runtime entrypoint unless the user explicitly asks for a fallback or the runtime is unavailable and that fallback is reported. Do not substitute spawn agent , a plain model call, a plain web search, a manual summary, or an invented review for $ask . Runtime Entrypoint Run commands from this directory. ./run.sh tau dag \"<request \" maps to the Typer tau dag run subcommand internally. ./run.sh team plan \"<request \" team <preset renders a role based multi agent plan and frozen Tau DAG preview; execution requires explicit execute live (see README \"Team Orchestration\"). Every nontrivial run must preserve the runtime artifacts. The standard artifact set is: <ask id .request.json <ask id .status.json <ask id .events.jsonl mode specific outputs such as review.md , review.json , DAG manifests, or bro",
+      "body": "ask Stop First If the user names $ask , /ask , an ask mode, oracle, deep review, parallel review, roundtable, argue, CAE gap review, or ask DAG, read this whole file before acting. Then use the real runtime entrypoint unless the user explicitly asks for a fallback or the runtime is unavailable and that fallback is reported. Do not substitute spawn agent , a plain model call, a plain web search, a manual summary, or an invented review for $ask . Runtime Entrypoint Run commands from this directory. Pi skill command syntax such as /skill:ask webgpt What is 2 + 2? is a first class shortcut: the leading browser handler ( webgpt , webclaude , webkimi , webgemini , or webgrok ) routes to a Tau single call browser handler DAG with execute json . Inline Pi skill references such as $ask webgpt What is 2 + 2? and the spaced natural language spelling $ask web gpt What is 2 + 2? must be treated the same way ( web gpt normalizes to webgpt ). This is only a compatibility shortcut for Pi users; it mus",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ask/SKILL.md"
     },
     {
@@ -843,6 +843,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-design/SKILL.md"
     },
     {
+      "id": "skill:best-practices-font",
+      "type": "skill",
+      "name": "best-practices-font",
+      "category": "best-practices",
+      "sanity": true,
+      "summary": "Evidence-first typography and font-system guidance for digital products, websites, portfolios, dashboards, and design systems. Use when choosing or changing fonts, pairing typefaces, auditing overused font warnings, creating meaningful typographic hierarchy, validating font loading/provenance, or mapping typography to a visual world from best-practices-bespoke-design.",
+      "body": "Best Practices: Font Systems Position Fonts are not decoration. A font system is a contract between the product's world model, the user's reading job, and the browser's rendered behavior. Use this skill to select, pair, tune, and audit type. For bespoke work, typography inherits the world model from best practices bespoke design ; this skill owns the font specific decision and proof. Required Inputs Collect or mark missing: visual world brief, product/design contract, or incumbent typography source; audience, reading setting, primary user job, and dense/awkward content; required type roles: display, reading, utility, data, annotation, code; existing fonts, licenses, asset locations, and loading method; language coverage, fallback needs, browser targets, and performance budget; mechanical detector output, if a warning triggered the task. Do not invent brand values to justify a font. If the visual world is missing, create or request it before making a major type change. Workflow 1. Map r",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-font/SKILL.md"
+    },
+    {
       "id": "skill:best-practices-github-ticket",
       "type": "skill",
       "name": "best-practices-github-ticket",
@@ -971,6 +981,16 @@
       "summary": "Produce evidence-bearing technical reports and report UIs without dashboard theater. Use when creating or reviewing reports, HTML/CSS report surfaces, implementation reviews, design reviews, application inventories, validation readouts, evidence ledgers, status/readiness reports, compliance/control summaries, source-of-truth audits, or issue-to-plan repair reports that must expose persona, primary object, source of truth, findings, rationale, blockers, valid actions, acceptance checks, non-claims, and plan-iterate handoff instructions.",
       "body": "best practices report Use this skill to keep technical reports, HTML/CSS report surfaces, review readouts, readiness summaries, and issue to plan handoffs evidence first. A report is not a dashboard. A report is a structured argument over source data. For the full contract, read references/full report contract.md . That reference contains the complete rules for report flow, anti dashboard theater patterns, surface contracts, finding/action traceability, project specific source checks, SPARTA Explorer requirements, and $plan iterate handoff instructions. Core Invariant Build the semantic report model before designing the layout: 1. Persona 2. Primary object 3. Source of truth 4. Evidence 5. Finding 6. Rationale 7. Valid action 8. Constraint, blocker, or unknown 9. Acceptance check 10. Non claim Only after those objects are explicit may you render Markdown, HTML, React, or CSS. Required Report Shape Every substantial report must include: top summary with overall finding, core conclusion,",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-report/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-resume",
+      "type": "skill",
+      "name": "best-practices-resume",
+      "category": "best-practices",
+      "sanity": false,
+      "summary": "Canonical rules for writing, formatting, exporting, and verifying Graham Anderson's resume and its public surfaces, so an agent never re-derives them by trial and error. Use when editing RESUME.md, changing the resume PDF, DOCX, Markdown or /resume page, reconciling LinkedIn with the resume, deciding page count or section order, judging whether a claim may be made, or verifying a built resume artifact. /resume executes; this skill decides.",
+      "body": "Best Practices: Resume The rules layer for Graham's resume. /resume holds the executable checks; this holds the judgements those checks cannot make. Every rule below was established by a measurement or a mistake recorded in this repository, and the evidence is cited so a future agent can re test it rather than trust it. The purpose of the document A resume is read by software before a person sees it. Both readers matter and they want different things, so the rules split accordingly: content rules serve the human who decides, format rules serve the parser that filters, and verification rules exist because both are easy to break silently. Never optimise one to zero. Keyword coverage that a person finds unreadable fails the second reader; prose a parser cannot extract never reaches the first. Content rules 1. Lead with current capability, not biography. The first paragraph states what he builds now. The unusual creative to DARPA arc is a differentiator and belongs in the document, but a c",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-resume/SKILL.md"
     },
     {
       "id": "skill:best-practices-roundtable",
@@ -2349,7 +2369,7 @@
       "category": "ingest",
       "sanity": true,
       "summary": "Ingest codebases into /memory for knowledge extraction and CWE scanning. Phase 1 extracts functional knowledge (module docstrings, function signatures, class hierarchies, markdown docs) via Python AST. Phase 2 scans for CWE mappings via /taxonomy. Designed to run nightly via /monitor-codebase.",
-      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. ingest code Codebase ingestion into /memory : 1. Phase 1 — Functional Knowledge : Python AST extracts module docstrings, function signatures, class hierarchies. Markdown parser extracts section level knowledge from CONTEXT.md, README.md, etc. Generic parser handles TS/JS exports. 2. Phase 2 — CWE Scanning : /taxonomy extracts security relevant patterns (bridge tags + CWE mappings) per file. 3. Phase 3 — Relationship Edges : Python import analysis stores code dependency edges in /memory . 4. Phase 4 — Structured Code Index : Optional Tree sitter extraction emits rich code symbol records to /memory via /upsert into the code symbols collection. Functional lessons and CWE summaries remain lesson style memory records for compatibility. Structured code symbols are stored through /memory /upsert ; /memory owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. /ingest code must not talk to Qdrant dire",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. ingest code Codebase ingestion into /memory : 1. Phase 1 — Functional Knowledge : Python AST extracts module docstrings, function signatures, class hierarchies. Markdown parser extracts section level knowledge from CONTEXT.md, README.md, etc. Generic parser handles TS/JS exports. 2. Phase 2 — CWE Scanning : /taxonomy extracts security relevant patterns (bridge tags + CWE mappings) per file. 3. Phase 3 — Relationship Edges : Python import analysis stores resolved code dependency edges in /memory ; the local code graph bundle also records typed import/call/inheritance occurrences, including inactive unresolved and ambiguous candidates for audit. 4. Phase 4 — Structured Code Index : Optional Tree sitter extraction emits a complete code graph bundle and applies it through Memory/GMO's governed /code/projection/apply lifecycle endpoint. 5. Static Debugger Affordances : Code graph bundles emit debugger.invocation candidate.v1 rows ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ingest-code/SKILL.md"
     },
     {
@@ -2629,7 +2649,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Continuous codebase health monitoring for all registered projects. Composes project-state, cleanup, ingest-code, quality-checks, skills-ci, dogpile research, and orchestrated fix verification.",
-      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. monitor codebase Continuous codebase health monitoring for all registered projects. Scans for violations, researches fixes, runs isolated remediation workflows, and tracks health trends over time. Commands Command Description scan <project Scan a single registered project (full or light based on git changes) scan all Scan every project in the registry scan all force Force full scan on all projects (ignore change detection) scan <project fix Scan and run an orchestrated fix workflow for violations audit <project [ base REF] Run a changed file audit and emit a Fallow style pass / warn / fail verdict cache state [project...] [ force] Refresh project state only for projects with new commits report [project] Show latest findings from memory create pr [ base main] [ title ...] Create PR with violation summary from latest nightly pr comment <pr number [project] Add violation summary comment to an existing PR visualize <project [ for",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. monitor codebase Continuous codebase health monitoring for all registered projects. Scans for violations, researches fixes, runs isolated remediation workflows, and tracks health trends over time. Commands Command Description scan <project Scan a single registered project (full or light based on git changes) scan all Scan every project in the registry scan all force Force full scan on all projects (ignore change detection) scan <project fix Scan and run an orchestrated fix workflow for violations propose docstrings <target output candidates.jsonl Emit read only, hash bound docstring candidates apply docstrings candidates.jsonl branch or worktree <path receipt receipt.json Apply only reviewed candidates with stale source and AST equivalence gates audit <project [ base REF] Run a changed file audit and emit a Fallow style pass / warn / fail verdict cache state [project...] [ force] Refresh project state only for projects with n",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-codebase/SKILL.md"
     },
     {

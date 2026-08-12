@@ -330,7 +330,8 @@ export function CapabilityConstellation() {
   return (
     <figure className="constellation" aria-label="How the practice connects">
       <figcaption className="constellation-cap">
-        Public repo map — skill contracts, project routes, and evidence access.
+        Select a node. Public repo map — skill contracts, project routes, and
+        evidence access.
         <span className="constellation-hint"> Drag a node.</span>
       </figcaption>
       <div className="constellation-field">

@@ -541,8 +541,8 @@
    ]
   }
  ],
- "sourceCommit": "ccf584df6",
- "asOf": "2026-08-08",
+ "sourceCommit": "651e5460bc",
+ "asOf": "2026-08-12",
  "generator": "site/scripts/gen_resume.py",
  "sourceSha256": "3c95a522cca989502f9c1545abef36bf8adfbb4f44a422093552e631bcf1314d",
  "downloads": {

@@ -44,12 +44,18 @@ registered_effects:
     allowed_keyframes: [proof-bridge-wire, proof-draw, proof-fade, proof-evaluate, proof-judge-dot, proof-token]
     motion: finite source-to-receipt trace
     reduced_motion_equivalent: static proof graph with tokens hidden
+  - id: unusual-career-path
+    trigger: career path scrolls into view
+    semantic_purpose: "Show the non-linear route from creative production through defense research and formal methods into the current practice."
+    allowed_selectors: [".unusual-path-svg.is-visible"]
+    allowed_keyframes: [trace-converge, node-lock, final-hesi, goal-ring]
+    motion: finite path draw, hesitant final segment, and arrival ring
+    reduced_motion_equivalent: static complete path with all milestones visible
 removed_homepage_effects:
   - fixed .glow layer
   - fixed .grain layer
   - decorative .ruledbg grid on hero
   - load-time .rise choreography
-  - animated UnusualPath SVG
 removed_public_effects:
   - ledger cell pseudo-tooltip that expanded document scroll width
   - ledger cell pop animation and hover scale

@@ -60,6 +60,25 @@ export function DeferredCapabilitySearch() {
   return <div ref={ref}>{Surface ? <Surface /> : null}</div>;
 }
 
+export function DeferredCapabilityConstellation() {
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(ref);
+  const [Surface, setSurface] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    if (!near || Surface) return;
+    import('./capability-constellation').then((mod) => {
+      setSurface(() => mod.CapabilityConstellation);
+    });
+  }, [near, Surface]);
+
+  return (
+    <div ref={ref} className="deferred-surface deferred-surface--constellation">
+      {Surface ? <Surface /> : null}
+    </div>
+  );
+}
+
 export function DeferredDreamStepper({ phases }: { phases: DreamPhase[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const near = useNearViewport(ref);

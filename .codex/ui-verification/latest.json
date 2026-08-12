@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-11T16:39:34.048068+00:00",
+  "verified_at": "2026-08-12T16:06:48.323566+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
   "url": "http://127.0.0.1:3003/",
-  "name": "grahama-progressive-disclosure-1377-scoped",
+  "name": "grahama-home-node-chart-restored-final-3003",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-progressive-disclosure-1377-scoped/20260811T163924Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-progressive-disclosure-1377-scoped/20260811T163924Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-home-node-chart-restored-final-3003/20260812T160638Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-home-node-chart-restored-final-3003/20260812T160638Z.read.json"
 }

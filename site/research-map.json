@@ -137,7 +137,7 @@
           "href": "https://github.com/grahama1970/sparta-public"
         }
       ],
-      "skillCount": 56
+      "skillCount": 61
     },
     {
       "id": "adaptive-lineage",
@@ -201,7 +201,7 @@
         "ui-design-engineering"
       ],
       "systems": [],
-      "skillCount": 19
+      "skillCount": 20
     },
     {
       "id": "creative-media",
@@ -221,7 +221,7 @@
         "content-creation"
       ],
       "systems": [],
-      "skillCount": 26
+      "skillCount": 27
     }
   ],
   "supportingDisciplines": [
@@ -229,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "ccf584df6"
+  "sourceCommit": "651e5460bc"
 }
