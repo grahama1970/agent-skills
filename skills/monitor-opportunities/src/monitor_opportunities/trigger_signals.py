@@ -10,6 +10,7 @@ Deliberately bounded (one search per distinct org) so the nightly stays fast.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -31,15 +32,33 @@ _MEDIUM = re.compile(
 
 
 def _brave(query: str, count: int = 5) -> str:
+    """Brave web search; free key first, paid key fallback on quota exhaustion.
+
+    The free plan is 2000 req/month and hard-429s past it (observed 2026-08-12).
+    Falling back to BRAVE_API_KEY_PAID for the bounded nightly volume was
+    explicitly authorized by Graham on 2026-08-12.
+    """
     if not BRAVE_SEARCH.exists():
         return ""
+    argv = [
+        "python3", str(BRAVE_SEARCH), "web", query,
+        "--count", str(count), "--no-json", "--freshness", "pm",
+    ]
     try:
-        argv = [
-            "python3", str(BRAVE_SEARCH), "web", query,
-            "--count", str(count), "--no-json", "--freshness", "pm",
-        ]
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=40)
-        return proc.stdout if proc.returncode == 0 else ""
+        if proc.returncode == 0 and proc.stdout.strip():
+            return proc.stdout
+        paid = os.environ.get("BRAVE_API_KEY_PAID")
+        quota_failed = (
+            "429" in proc.stderr or "QUOTA" in proc.stderr.upper()
+            or "not found in env" in proc.stderr
+        )
+        if paid and quota_failed:
+            env = dict(os.environ, BRAVE_API_KEY=paid)
+            proc = subprocess.run(argv, capture_output=True, text=True, timeout=40, env=env)
+            if proc.returncode == 0:
+                return proc.stdout
+        return ""
     except (subprocess.TimeoutExpired, OSError):
         return ""
 
