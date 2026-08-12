@@ -81,11 +81,16 @@ case "$command_name" in
       shift
     fi
     prepare_python_environment
-    uv sync --project "$SCRIPT_DIR" --extra dev
     if [[ "$with_stt" == "true" ]]; then
-      uv pip install \
-        --python "$UV_PROJECT_ENVIRONMENT/bin/python" \
-        "RealtimeSTT[faster-whisper] @ git+https://github.com/grahama1970/RealtimeSTT.git@cbdbd12a8f573a92d7ffd14cfbd82baa59a59849"
+      uv sync --project "$SCRIPT_DIR" --extra dev --extra stt
+    else
+      uv sync --project "$SCRIPT_DIR" --extra dev
+    fi
+    if [[ "$with_stt" == "true" ]]; then
+      uv run --project "$SCRIPT_DIR" --extra stt python - <<'PY'
+import RealtimeSTT
+print(f"RealtimeSTT import: PASS ({RealtimeSTT.__file__})")
+PY
     fi
     install_ui_modules
     echo "Live Evidence dependencies installed outside the code volume."
@@ -105,10 +110,20 @@ case "$command_name" in
     shift || true
     exec "$SCRIPT_DIR/sanity.sh" "$@"
     ;;
+  doctor)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra stt python -m live_evidence doctor "$@"
+    ;;
+  listen)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra stt python -m live_evidence listen "$@"
+    ;;
   eval-adversarial)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/eval_adversarial.py" "$SCRIPT_DIR" "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra stt python "$SCRIPT_DIR/scripts/eval_adversarial.py" "$SCRIPT_DIR" "$@"
     ;;
 esac
 

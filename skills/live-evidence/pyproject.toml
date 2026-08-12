@@ -22,12 +22,18 @@ dependencies = [
 dev = [
   "pytest>=8,<10",
 ]
+stt = [
+  "RealtimeSTT[faster-whisper] @ git+https://github.com/grahama1970/RealtimeSTT.git@cbdbd12a8f573a92d7ffd14cfbd82baa59a59849",
+]
 
 [project.scripts]
 live-evidence = "live_evidence.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/live_evidence"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

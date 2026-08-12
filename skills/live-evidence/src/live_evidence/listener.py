@@ -253,18 +253,7 @@ class LiveListener:
             daemon=True,
         )
         transcription_thread.start()
-        command = [
-            "pw-record",
-            "--target",
-            str(self._options.pipewire_source),
-            "--rate",
-            "16000",
-            "--channels",
-            "1",
-            "--format",
-            "s16",
-            "-",
-        ]
+        command = _pipewire_record_command(str(self._options.pipewire_source))
         process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
@@ -336,6 +325,38 @@ def _load_recorder() -> Any:
             "RealtimeSTT is not installed. Run ./run.sh setup --with-stt."
         ) from exc
     return AudioToTextRecorder
+
+
+def _pipewire_record_command(target: str) -> list[str]:
+    """Build a pw-record command for physical sources or sink monitors."""
+
+    if target.startswith("sink:"):
+        return [
+            "pw-record",
+            "-P",
+            "{ stream.capture.sink=true }",
+            "--target",
+            target.split(":", 1)[1],
+            "--rate",
+            "16000",
+            "--channels",
+            "1",
+            "--format",
+            "s16",
+            "-",
+        ]
+    return [
+        "pw-record",
+        "--target",
+        target,
+        "--rate",
+        "16000",
+        "--channels",
+        "1",
+        "--format",
+        "s16",
+        "-",
+    ]
 
 
 def _external_text_loop(recorder: Any, callback: Callable[[str], None], stop: threading.Event) -> None:

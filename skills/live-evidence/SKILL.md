@@ -87,6 +87,12 @@ In another terminal, after obtaining any required recording consent:
   --speaker interviewer \
   --consent-confirmed
 
+# Browser/video audio from a PipeWire output sink
+./run.sh listen --mode pipewire \
+  --pipewire-source 'sink:<sink-node-name>' \
+  --speaker interviewer \
+  --consent-confirmed
+
 # Two channels: default microphone + a PipeWire meeting source
 ./run.sh listen --mode dual \
   --pipewire-source '<source-name>' \
