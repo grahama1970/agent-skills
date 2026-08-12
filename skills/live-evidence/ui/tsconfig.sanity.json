@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "skipLibCheck": true,
+    "noImplicitAny": false
+  },
+  "include": ["sanity-shims.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["vite.config.ts"]
+}

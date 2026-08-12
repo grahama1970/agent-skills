@@ -1,0 +1,80 @@
+name: default
+candidate_name: Graham Anderson
+organization: null
+watch_terms:
+  - agent
+  - evaluation
+  - benchmark
+  - orchestration
+  - receipt
+  - evidence
+  - memory
+  - retrieval
+  - knowledge graph
+  - compliance
+  - security
+  - TypeScript
+  - Python
+  - Rust
+project_aliases:
+  tau:
+    - tau
+    - t'au
+    - receipt-gated
+    - agent harness
+    - goal-locked
+  agent-skills:
+    - agent skills
+    - skillsbench
+    - reusable skill
+    - bounded worker
+  sparta:
+    - sparta
+    - compliance evidence
+    - candidate coverage
+    - human authority
+  graph-memory-operator:
+    - graph memory
+    - arangodb
+    - qdrant
+    - jina
+    - bm25
+repo_priorities:
+  - tau
+  - agent-skills
+  - sparta
+  - graph-memory-operator
+stt_prompt_terms:
+  - G2i
+  - SkillsBench
+  - Multi-SWE-bench
+  - Tau
+  - SPARTA
+  - ArangoDB
+  - Qdrant
+  - Jina
+  - ITAR
+  - DARPA
+  - ARCOS
+memory_collections:
+  - project_memory_active
+  - project_states
+  - project_activity
+  - project_knowledge
+  - lessons_v2
+  - tau_orchestration_episodes
+  - dogpile_research
+  - code_symbols
+blocked_tags:
+  - private
+  - confidential
+  - restricted
+  - secret
+  - credential
+  - itar-sensitive
+  - export-controlled-content
+blocked_path_fragments:
+  - /.env
+  - /secrets/
+  - /credentials/
+  - /private/

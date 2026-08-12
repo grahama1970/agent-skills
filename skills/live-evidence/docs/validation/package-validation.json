@@ -1,0 +1,68 @@
+{
+  "schema": "live_evidence.package_validation.v1",
+  "status": "PASS_BOUNDED_READY",
+  "created_at": "2026-08-12T16:10:06Z",
+  "commands": [
+    "./sanity.sh",
+    "python3 skills/best-practices-skills/scripts/validate_skill.py skills/live-evidence --json --skills-root skills",
+    "python3 scripts/check_mock_evidence_claims.py",
+    "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/.venv uv run --project skills/live-evidence --extra dev python -c \"import live_evidence, dotenv, fastapi, httpx, loguru, pydantic, typer, uvicorn, yaml\"",
+    "skills/agentic-evals/run.sh run skills/live-evidence/fixtures/agentic_eval.json --output /tmp/live-evidence-agentic-eval.json --timeout-seconds 240"
+  ],
+  "checks": {
+    "skill_contract": "PASS",
+    "best_practices_skills_validator": {
+      "status": "PASS",
+      "findings": 0
+    },
+    "python_compile": "PASS",
+    "uv_isolated_imports": "PASS",
+    "python_tests": {
+      "status": "PASS",
+      "count": 17
+    },
+    "real_loopback_http": "PASS",
+    "real_ripgrep_temp_repository": "PASS",
+    "ripgrep_global_match_bound": "PASS",
+    "source_bound_card": "PASS",
+    "stopped_session_blocks_retrieval": "PASS",
+    "react_queryspec_instrumentation": "PASS",
+    "react_typecheck": "PASS",
+    "react_vite_build": "PASS",
+    "ui_static_design_fixture": "PASS",
+    "agentic_evals": {
+      "status": "READY",
+      "cases": 3,
+      "trials": 6,
+      "passed_trials": 6,
+      "positive_case": "verify-entrypoint-local-http-ripgrep-ui",
+      "negative_case": "listener-requires-explicit-consent",
+      "adversarial_case": "invalid-skill-contract-rejected",
+      "receipt": "/tmp/live-evidence-agentic-eval.json"
+    },
+    "mock_evidence_claims": "PASS",
+    "realtimestt_live_audio": "NOT_RUN_NO_AUDIO_MODEL_RUNTIME",
+    "pipewire_live_audio": "NOT_RUN_NO_AUDIO_DEVICE",
+    "listener_stop_propagation_live": "NOT_RUN_NO_AUDIO_DEVICE",
+    "graph_memory_live": "NOT_RUN_SERVICE_UNAVAILABLE",
+    "brave_live": "NOT_RUN_MANUAL_OPTIONAL",
+    "dogpile_live": "NOT_RUN_MANUAL_OPTIONAL"
+  },
+  "boundaries": [
+    "The sanity canary uses a real FastAPI server and real ripgrep, not mocked retrieval.",
+    "The ripgrep lane is fixed-string, repository-allowlisted, deadline-bounded, and globally match-bounded.",
+    "The React proof includes QuerySpec instrumentation checks, TypeScript typecheck, and Vite production build.",
+    "The UI screenshot is a static design fixture; ui/src and the Vite build are the authoritative React implementation.",
+    "No live-audio, Graph Memory, Brave, or Dogpile success is claimed by this receipt."
+  ],
+  "pinned_inputs": {
+    "realtimestt_commit": "cbdbd12a8f573a92d7ffd14cfbd82baa59a59849"
+  },
+  "artifacts": {
+    "ui_preview": {
+      "path": "docs/live-evidence-ui-preview.png",
+      "sha256": "d264816a163a623aa7801dfcd851ae20487d25fc4dcb5fab452707e530adacfe",
+      "bytes": 391634
+    }
+  }
+}

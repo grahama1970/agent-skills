@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live Evidence UI Preview</title>
+<style>
+  :root{color-scheme:dark;--bg:#071113;--panel:#0b1719;--fg:#eef6f3;--muted:#8ea29f;--accent:#3ed3c2;--gold:#d4a853}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+  body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 0%,rgba(62,211,194,.08),transparent 32%),radial-gradient(circle at 90% 100%,rgba(212,168,83,.055),transparent 30%)}
+  header{height:78px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:relative}
+  .brand{display:flex;gap:14px;align-items:center}.mark{width:44px;height:44px;border:1px solid rgba(62,211,194,.25);background:rgba(62,211,194,.1);border-radius:16px;display:grid;place-items:center;box-shadow:0 0 34px rgba(62,211,194,.08)}
+  .wave{width:22px;height:22px;display:flex;gap:2px;align-items:center;justify-content:center}.wave i{display:block;width:2px;border-radius:3px;background:var(--accent)}.wave i:nth-child(1),.wave i:nth-child(5){height:8px}.wave i:nth-child(2),.wave i:nth-child(4){height:15px}.wave i:nth-child(3){height:22px}
+  .brandline{display:flex;align-items:center;gap:9px}.brand h1{font-size:16px;margin:0;letter-spacing:-.02em}.brand p{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid rgba(62,211,194,.25);background:rgba(62,211,194,.1);padding:5px 10px;color:var(--accent);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}.dot{width:6px;height:6px;background:#86efac;border-radius:99px}
+  .header-right{display:flex;align-items:center;gap:14px}.local{font-size:11px;color:var(--muted);border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.14);border-radius:999px;padding:7px 12px}.privacy{font-size:11px;color:var(--muted)}
+  .controls{display:flex;gap:8px}.button{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);color:var(--fg);height:34px;padding:0 13px;border-radius:10px;font-size:12px;font-weight:650;display:flex;align-items:center;gap:7px}.button.primary{background:var(--accent);border-color:transparent;color:#031315;box-shadow:0 10px 30px rgba(62,211,194,.16)}.button.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+  main{height:calc(100vh - 78px);display:grid;grid-template-columns:minmax(230px,.72fr) minmax(500px,1.72fr) minmax(260px,.82fr);gap:16px;padding:20px 24px 24px;position:relative}
+  .col{min-height:0;display:flex;flex-direction:column;gap:12px}.card{border:1px solid rgba(255,255,255,.075);background:linear-gradient(180deg,rgba(15,31,34,.92),rgba(9,21,23,.94));border-radius:18px;box-shadow:0 20px 70px rgba(0,0,0,.18);overflow:hidden}
+  .thread{padding:17px}.eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:.19em;color:var(--accent);font-weight:750}.thread h2{font-size:18px;line-height:1.25;margin:10px 0 0;letter-spacing:-.025em}.small{font-size:11px;line-height:1.55;color:var(--muted)}
+  .transcript{flex:1;min-height:0;display:flex;flex-direction:column}.cardhead{padding:15px 17px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between}.cardhead span:last-child{font-size:10px;color:var(--muted)}.turns{padding:8px 12px 16px;overflow:hidden}.turn{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.045)}.speaker{display:flex;justify-content:space-between;align-items:center;font-size:9px;text-transform:uppercase;letter-spacing:.14em;font-weight:750;color:var(--accent)}.speaker.you{color:var(--gold)}.turn p{font-size:12px;line-height:1.55;margin:7px 0 0;color:rgba(238,246,243,.88)}
+  .evidence{flex:1;min-height:0;position:relative;border-color:rgba(62,211,194,.15);display:flex;flex-direction:column}.evidence:before{content:"";position:absolute;inset:0 0 auto;height:135px;background:radial-gradient(ellipse at top,rgba(62,211,194,.1),transparent 68%);pointer-events:none}.e-top{padding:24px 26px 18px;position:relative}.row{display:flex;justify-content:space-between;gap:18px}.threadlabel{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:var(--muted);font-weight:700}.asked{font-size:11px;color:var(--muted);margin-top:11px}.iconbuttons{display:flex;gap:3px}.iconbtn{width:34px;height:34px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:16px}
+  .e-body{padding:0 28px 24px;display:flex;flex:1;min-height:0;flex-direction:column;position:relative}.e-body h3{font-size:clamp(25px,2.5vw,36px);line-height:1.14;margin:13px 0 0;letter-spacing:-.04em;max-width:980px}.proofgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:12px;margin-top:25px}.well{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.15);border-radius:16px;padding:16px}.well.bound{border-color:rgba(252,211,77,.13);background:rgba(252,211,77,.035)}.well p{font-size:13px;line-height:1.65;margin:9px 0 0;color:rgba(238,246,243,.9)}.well.bound p{font-size:11px;color:rgba(255,251,235,.76)}
+  .sourcebar{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding-top:15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{font-size:9px;color:var(--muted);border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.035);padding:7px 9px;border-radius:8px}.chip b{color:rgba(238,246,243,.85)}.confidence{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.13em;white-space:nowrap}.confidence i{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:99px;margin-right:7px}
+  .queue{height:92px;padding:14px 16px}.queueitems{display:flex;gap:8px;margin-top:10px}.qitem{flex:1;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);border-radius:10px;padding:8px 10px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qitem strong{display:block;color:rgba(238,246,243,.8);margin-bottom:4px}
+  .rail{padding:14px}.lane{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:11px 5px;border-bottom:1px solid rgba(255,255,255,.045)}.lane:last-child{border:0}.laneicon{width:28px;height:28px;border:1px solid rgba(255,255,255,.07);border-radius:9px;display:grid;place-items:center;color:var(--accent);font-size:12px}.lane h4{font-size:11px;margin:0}.lane p{font-size:9px;color:var(--muted);margin:3px 0 0}.state{font-size:8px;text-transform:uppercase;letter-spacing:.13em;color:#86efac}.state.manual{color:var(--muted)}
+  .search{padding:16px}.search h3{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.18em;margin:0}.search p{font-size:10px;color:var(--muted);line-height:1.5}.input{height:40px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);border-radius:12px;padding:0 12px;color:#748985;font-size:11px;display:flex;align-items:center;margin-top:12px}.searchrow{display:grid;grid-template-columns:1fr 38px;gap:8px;margin-top:8px}.select{height:38px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);border-radius:11px;padding:0 11px;font-size:10px;color:var(--fg);display:flex;align-items:center;justify-content:space-between}.go{height:38px;border-radius:11px;background:var(--accent);color:#031315;display:grid;place-items:center;font-weight:900}.boundary{border:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.1);border-radius:13px;padding:11px 13px;font-size:9px;line-height:1.5;color:var(--muted)}.boundary b{color:rgba(238,246,243,.8)}
+  .preview-note{position:fixed;right:14px;bottom:8px;color:rgba(142,162,159,.45);font-size:8px;letter-spacing:.1em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark"><div class="wave"><i></i><i></i><i></i><i></i><i></i></div></div><div><div class="brandline"><h1>Live Evidence</h1><span class="badge"><span class="dot"></span>Listening</span></div><p>Listen to the person. Let the system find the proof.</p></div></div>
+  <div class="header-right"><div class="local"><span class="dot" style="display:inline-block;margin-right:7px"></span>Local stream connected</div><div class="privacy">⌁ Raw audio is not retained</div><div class="controls"><div class="button primary">◉ Start</div><div class="button">Ⅱ Pause</div><div class="button ghost">■ Stop</div></div></div>
+</header>
+<main>
+  <section class="col">
+    <div class="card thread"><div class="eyebrow">Current thread</div><h2>Tau · agent evaluation · durable orchestration</h2><p class="small">The subject under discussion, condensed without writing Graham’s answer for him.</p></div>
+    <div class="card transcript"><div class="cardhead"><span class="eyebrow">Live transcript</span><span>4 turns</span></div><div class="turns">
+      <div class="turn"><div class="speaker"><span>David</span><span>18:09:12</span></div><p>How do you prevent an agent from silently drifting during a long-running workflow?</p></div>
+      <div class="turn"><div class="speaker you"><span>Graham</span><span>18:09:18</span></div><p>I treat each handoff as an untrusted claim and make the execution path inspectable.</p></div>
+      <div class="turn"><div class="speaker"><span>David</span><span>18:09:33</span></div><p>And how do you know the evidence is current rather than just something the model retrieved?</p></div>
+      <div class="turn"><div class="speaker you"><span>Graham</span><span>18:09:39</span></div><p>That is where source freshness, receipt admission, and explicit proof boundaries matter.</p></div>
+    </div></div>
+  </section>
+  <section class="col">
+    <div class="card evidence"><div class="e-top"><div class="row"><div><div><span class="badge">Now</span> <span class="threadlabel">Tau · agent evaluation</span></div><div class="asked">Asked: “How do you prevent an agent from silently drifting during a long-running workflow?”</div></div><div class="iconbuttons"><button class="iconbtn">⌖</button><button class="iconbtn">□</button><button class="iconbtn">×</button></div></div></div>
+      <div class="e-body"><section><div class="eyebrow">Say / remember</div><h3>Tau treats every agent output as a claim, then admits work only through explicit contracts, evidence, and receipts.</h3></section>
+        <div class="proofgrid"><div class="well"><div class="threadlabel">Best evidence</div><p>Typed DAG contracts bind goals and handoffs; the admission path records policy, source, validator, and effect state so a long-running workflow can be inspected, rejected, or replayed.</p></div><div class="well bound"><div class="threadlabel" style="color:#fde68a">⚠ Keep bounded</div><p>This supports containment and inspectability. It does not prove that a model’s conclusion is semantically correct.</p></div></div>
+        <div class="sourcebar"><div class="chips"><div class="chip"><b>tau</b> / README.md:31</div><div class="chip"><b>tau</b> / CURRENT_STATE.md:4</div><div class="chip"><b>agent-skills</b> / skills/tau/SKILL.md:18</div></div><div class="confidence"><i></i>92% evidence confidence</div></div>
+      </div>
+    </div>
+    <div class="card queue"><div class="eyebrow">Recent evidence</div><div class="queueitems"><div class="qitem"><strong>SkillsBench</strong>Executable skill contracts</div><div class="qitem"><strong>SPARTA</strong>Candidate ≠ reviewed</div><div class="qitem"><strong>Graph Memory</strong>BM25 + graph + Jina</div></div></div>
+  </section>
+  <section class="col">
+    <div class="card rail"><div class="eyebrow" style="padding:4px 5px 7px">Retrieval lanes</div>
+      <div class="lane"><div class="laneicon">◇</div><div><h4>Graph Memory</h4><p>Hybrid recall 6 · 1.2 s</p></div><div class="state">ready</div></div>
+      <div class="lane"><div class="laneicon">{ }</div><div><h4>Indexed code</h4><p>2 current symbols · 1.2 s</p></div><div class="state">ready</div></div>
+      <div class="lane"><div class="laneicon">rg</div><div><h4>Current source</h4><p>4 exact matches · 82 ms</p></div><div class="state">ready</div></div>
+      <div class="lane"><div class="laneicon">W</div><div><h4>Brave</h4><p>Explicit external query only</p></div><div class="state manual">manual</div></div>
+      <div class="lane"><div class="laneicon">D</div><div><h4>Dogpile</h4><p>Deep research on demand</p></div><div class="state manual">manual</div></div>
+    </div>
+    <div class="card search"><h3>⌕ Explicit search</h3><p>External lanes run only when you ask. The full transcript is never forwarded.</p><div class="input">Find proof for…</div><div class="searchrow"><div class="select">Graph Memory <span>⌄</span></div><div class="go">→</div></div></div>
+    <div class="boundary"><b>Boundary:</b> evidence cards restore context; they do not authorize disclosure or prove a model-generated claim.</div>
+  </section>
+</main>
+<div class="preview-note">Static design fixture · React source is authoritative</div>
+</body>
+</html>
