@@ -756,3 +756,29 @@ Graham approved the five reviewer-amended headline renderings in chat (provenanc
 
 ## 2026-08-07 — full compliance: lint clean, oracle clean, eval READY; awaiting blind rating
 Maximum-effort polish pass: icon library grown to 10 line-art glyphs (native PPTX mappings); diagram nodes render REAL glyphs in both emitters; per-module metaphor badges (compass/lightbulb/route/monitor/flag) in the band, both emitters; roadmap-lanes split the claim's own list items into bound lanes; badge-safe adaptive band titles; screenshot recomposed to corpus ink proportions with caption. Result: design-lint ZERO findings, render-oracle ALL SLIDES WITHIN CORPUS ENVELOPE, agentic-eval READY 3/3 (real-world case now asserts the cold deck is clean), suite + sanity green. Blind-rating packet (final renders, sealed key) at ui/public/blind — the ONLY remaining gate is Graham's 12 scores.
+
+## Current state — 2026-08-12 (post gate-hardening + imagery-rule session)
+
+- NORTH-STAR eval: 13 stages, all green (HOUSE_NON_ANOMALOUS semantics — an
+  anomaly filter, NOT a validated looks-like-Graham claim). Fixture 2/2 under
+  agentic-evals.
+- House gate: frozen digest-bound calibration (250 pages/127 dup clusters),
+  render-receipt binding, archetype-conditioned house-structure, LODO deck
+  bar. Blinded holdout runs 1-6: bar met on run 6 (5/5 real decks, 7/8
+  mutants; sole false pass art-register-swap -> #1383) but the blind is
+  SPENT; confirmatory run with frozen artifacts + fresh seeds required
+  before any positive phrase prints (#1385).
+- IMAGERY RULE (operator): the README is the design source for imagery as it
+  is the claim source for text; every generation must be SHOWN its reference
+  image (asset-alternates refuses otherwise). All prompt-generated clipart
+  removed; deck carries README figures + Pillow crops of real screenshots.
+- Human review/edit: React app renders by document geometry on house chrome;
+  document-edit CLI (frame/text/style/asset-swap) revalidates before disk.
+  KNOWN GAP: post-approval edits bypass outline/rendering approval flows —
+  edit-contract question is with the external reviewer.
+- Claude art lane: /ask -> Tau -> scillm claude-fable-low --attach-file
+  (never claude -p / webclaude); ask fixed to never probe browsers on
+  scillm-only DAGs (#1389).
+- test-interactions on the UI (2026-08-12): 4 keyboard-unreachable, 1
+  missing data-qs-action, 5 inert clicks, 9 HTTP 500s, 9 console errors —
+  open UI hardening backlog (#1388).
