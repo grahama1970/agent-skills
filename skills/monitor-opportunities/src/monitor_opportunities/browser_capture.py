@@ -719,6 +719,107 @@ def _load_candidate_profile() -> dict[str, Any]:
         return {}
 
 
+_LINKEDIN_GUEST_SEARCH = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+
+# Guest-card grammar (server-rendered, stable base-card markup): per-card title,
+# company anchor text, location span, post-date datetime attr, and the /jobs/view
+# link. Bounded known grammar with live fixtures — not open-ended HTML parsing.
+_GUEST_CARD_SPLIT = '<div class="base-card'
+_GUEST_FIELD_RES = {
+    "title": r"base-search-card__title[^>]*>\s*([^<]+)",
+    "company": r"base-search-card__subtitle[^>]*>\s*<a[^>]*>\s*([^<]+)",
+    "location": r"job-search-card__location[^>]*>\s*([^<]+)",
+    "posted": r'datetime="([0-9-]+)"',
+    "href": r'href="(https://www\.linkedin\.com/jobs/view/[^"?]+)',
+}
+
+
+def _linkedin_guest_search(queries: list[dict[str, Any]]) -> list[tuple[str, dict[str, Any]]]:
+    """Fetch each query via LinkedIn's guest search fragments (plain HTTP GET).
+
+    Returns (query_label, row) pairs; empty list if the endpoint fails so the
+    caller can fall back to the browser. Read-only public content, no session.
+    """
+    import html as _html
+    import re as _re
+
+    import httpx
+
+    rows: list[tuple[str, dict[str, Any]]] = []
+    timeout = httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
+    try:
+        with httpx.Client(timeout=timeout, follow_redirects=True,
+                          headers={"User-Agent": "Mozilla/5.0"}) as client:
+            for query in queries:
+                qs = query["url"].split("?", 1)[-1]
+                try:
+                    resp = client.get(f"{_LINKEDIN_GUEST_SEARCH}?{qs}&start=0")
+                    if resp.status_code != 200:
+                        continue
+                except httpx.HTTPError:
+                    continue
+                for card in resp.text.split(_GUEST_CARD_SPLIT)[1:]:
+                    fields = {}
+                    for name, pattern in _GUEST_FIELD_RES.items():
+                        m = _re.search(pattern, card)
+                        fields[name] = _html.unescape(m.group(1).strip()) if m else ""
+                    if not fields["title"]:
+                        continue
+                    rows.append((query["label"], {
+                        "title": fields["title"],
+                        "company": fields["company"],
+                        "location": fields["location"],
+                        "href": fields["href"],
+                        "posted": fields["posted"] or None,
+                    }))
+    except Exception as exc:  # noqa: BLE001 - guest path is best-effort; browser is the fallback
+        logger.warning("linkedin guest search failed: {}", exc)
+        return []
+    return rows
+
+
+def _finish_linkedin_advanced(
+    out_dir: Path,
+    receipt: dict[str, Any],
+    accumulated: dict[str, dict[str, Any]],
+    queries_run: list[str],
+) -> dict[str, Any]:
+    """Write advanced-search evidence + receipt from accumulated rows."""
+    opps = [
+        {
+            "source": "human_authorized_linkedin_advanced_search",
+            "observed_at": utc_now(),
+            "title": r["title"],
+            "organization": (r.get("company") or "UNKNOWN").strip() or "UNKNOWN",
+            "location": (r.get("location") or "UNKNOWN").strip() or "UNKNOWN",
+            "primary_evidence_url": r.get("href") or _LINKEDIN_JOB_SEARCH_BASE,
+            "matched_query": r.get("matched_query", ""),
+            "published_at": r.get("posted"),
+            "top_candidate": False,
+        }
+        for r in accumulated.values()
+    ]
+    evidence = {
+        "schema_version": "ops-linkedin.opportunity_capture.v1",
+        "source": "human_authorized_linkedin_advanced_search",
+        "capture_method": receipt.get("capture_method", "surf_read_only_authenticated_session"),
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+        "observed_at": utc_now(),
+        "queries_run": queries_run,
+        "opportunities": opps,
+    }
+    evidence_path = out_dir / "linkedin-advanced-search-evidence.json"
+    evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+    receipt["status"] = "OK" if opps else "EMPTY"
+    receipt["evidence_path"] = str(evidence_path)
+    receipt["opportunities_captured"] = len(opps)
+    receipt["queries_run"] = queries_run
+    (out_dir / "linkedin-advanced-search-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
 def capture_linkedin_advanced_search(
     out_dir: Path,
     surf_run: Path = SURF_RUN_DEFAULT,
@@ -747,6 +848,23 @@ def capture_linkedin_advanced_search(
     tab_id = ""
     accumulated: dict[str, dict[str, Any]] = {}
     queries_run: list[str] = []
+    # Primary: LinkedIn's server-rendered guest search fragments (plain HTTP,
+    # read-only, public content). The logged-in search UI moved to a virtualized
+    # /jobs/search-results/ page whose list our DOM extractor cannot see
+    # (observed 2026-08-12: 0 rows on every query), while the guest endpoint
+    # returns parseable cards with title/company/location/post-date.
+    guest_rows = _linkedin_guest_search(queries)
+    if guest_rows:
+        for label, r in guest_rows:
+            key = r["title"] + "|" + (r.get("company") or "")
+            if key not in accumulated:
+                r["matched_query"] = label
+                accumulated[key] = r
+            if label not in queries_run:
+                queries_run.append(label)
+        receipt["capture_method"] = "linkedin_guest_http"
+        return _finish_linkedin_advanced(out_dir, receipt, accumulated, queries_run)
+    logger.warning("linkedin guest search returned 0 rows; falling back to browser capture")
     try:
         ensure_browser(surf_run)
         created = _surf(surf_run, "tab.new", queries[0]["url"], "--json")

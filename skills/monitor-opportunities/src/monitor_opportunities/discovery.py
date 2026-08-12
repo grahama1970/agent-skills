@@ -478,19 +478,29 @@ def _builtin_candidates(
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     default_location = str(target.get("location_display") or "Remote")
+    # slug -> company map from every DOM job anchor (the JSON-LD lists canonical
+    # job ids while the DOM renders variant ids, so URL matching fails; and a
+    # first-occurrence slug find can land outside the cards). For each anchor,
+    # the nearest preceding /company/ link names the employer.
+    slug_company: dict[str, str] = {}
+    for m in re.finditer(r'href="/job/([a-z0-9-]+)/[0-9]+"', html):
+        slug = m.group(1)
+        if slug in slug_company:
+            continue
+        window = html[max(0, m.start() - 2500):m.start()]
+        found = re.findall(r"/company/([a-z0-9-]+)", window)
+        if found:
+            slug_company[slug] = found[-1].replace("-", " ").title()
     candidates: list[dict[str, Any]] = []
     for item in items[: _registry_limit(target, 25)]:
         title = str(item.get("name") or "").strip()
         job_url = str(item.get("url") or "").strip()
         if not title or "/job/" not in job_url:
             continue
-        # Organization: nearest /company/<slug> link before this job link in the DOM.
         org = target["name"]
-        pos = html.find(job_url.split("builtin.com")[-1], 12000)  # skip the JSON-LD copy
-        if pos > 0:
-            slugs = re.findall(r"/company/([a-z0-9-]+)", html[max(0, pos - 2500):pos])
-            if slugs:
-                org = slugs[-1].replace("-", " ").title()
+        slug_m = re.search(r"/job/([a-z0-9-]+)/", job_url)
+        if slug_m:
+            org = slug_company.get(slug_m.group(1), org)
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
