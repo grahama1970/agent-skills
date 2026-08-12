@@ -539,6 +539,15 @@ def _sam_receipt(target: dict[str, Any] | None = None) -> dict[str, Any]:
         if response.status_code != 200:
             receipt["result_status"] = "FEED_DOWN"
             receipt["parser_result"] = "ERROR"
+            if response.status_code == 404 and not response.content:
+                # GSA returns an empty 404 for a superseded key. Keys rotate every
+                # 90 days (observed: a 10-month-stale key 404'd until replaced
+                # 2026-08-12). Name the likely fix so the morning report can say it.
+                receipt["limitations"].append(
+                    "Empty 404 usually means the API key was superseded by SAM's "
+                    "90-day rotation. Copy the current key from SAM.gov Account "
+                    "Details into ~/.zshrc AND ~/workspace/experiments/.env."
+                )
         elif len(response.content) > MAX_RESPONSE_BYTES:
             receipt["result_status"] = "INVALID_RESPONSE"
             receipt["parser_result"] = "SIZE_LIMIT"
