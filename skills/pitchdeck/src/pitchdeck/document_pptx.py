@@ -608,9 +608,10 @@ def emit_document_pptx(
                     display.text_frame.word_wrap = True
                     d_run = display.text_frame.paragraphs[0].add_run()
                     d_run.text = element.text or ""
-                    d_run.font.size = Pt(44)
-                    d_run.font.bold = True
-                    d_run.font.color.rgb = _hex("#065E7C")
+                    style = element.style
+                    d_run.font.size = Pt(style.size_pt if style and style.size_pt else 44)
+                    d_run.font.bold = bool(style.bold) if style else True
+                    d_run.font.color.rgb = _hex((style.color if style and style.color else None) or "#065E7C")
                     from pptx.enum.text import PP_ALIGN as _PAL
                     display.text_frame.paragraphs[0].alignment = _PAL.CENTER
                     continue

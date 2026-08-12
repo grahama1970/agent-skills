@@ -268,7 +268,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         # One coherent lockup (visual review): wordmark only, generous leading,
         # tagline on its own clear line — nothing shares a vertical band.
         assertion = assertion.split("\u2014")[0].split("—")[0].strip()
-        title_bbox = Bbox(x=0.08, y=0.30, w=0.84, h=0.18)
+        title_bbox = Bbox(x=0.0, y=0.32, w=1.0, h=0.20)  # full-bleed centered display (real cover anatomy)
     elif hero:
         title_bbox = Bbox(x=0.08, y=0.22, w=0.84, h=0.26)
     else:
@@ -296,7 +296,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
     if "message" in {r.value for r in recipe.required_roles}:
         message_text = (context_ask or tagline or module.purpose) if recipe.id == "cover-brand" else (tagline or module.purpose)
         elements.append(DocElement(id="message", kind=DocElementKind.TEXT, role="message",
-                                   bbox=Bbox(x=0.08, y=0.52, w=0.84, h=0.09), text=message_text,
+                                   bbox=Bbox(x=0.15, y=0.54, w=0.7, h=0.08), text=message_text,
                                    style=DocTextStyle(size_pt=22.0, align="center", color="#595959"),
                                    binding_paths=["message"]))
         bindings.append(TextBinding(path="message", kind=BindingKind.NON_CLAIM))
@@ -662,7 +662,7 @@ def materialize_outline(
                 e.kind is DocElementKind.IMAGE and e.id == "cover-mark" for e in slide.elements):
             slide.elements = slide.elements + [DocElement(
                 id="cover-mark", kind=DocElementKind.IMAGE, role="badge",
-                bbox=Bbox(x=0.66, y=0.3, w=0.26, h=0.44), asset_id="sparta-helmet-mark-png")]
+                bbox=Bbox(x=0.78, y=0.58, w=0.16, h=0.3), asset_id="sparta-helmet-mark-png")]
         art = scene_art.get(slide.id)
         if art and not any(e.kind is DocElementKind.IMAGE and e.role == "visual" for e in slide.elements):
             # The drawn scene IS the illustration; a squeezed vector diagram
