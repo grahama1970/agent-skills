@@ -40,7 +40,7 @@ class ActionRegistry:
                 )
                 response.raise_for_status()
             return {"status": "ok", "registered": len(unseen), "memory_written": True}
-        except (httpx.HTTPError, ValueError) as exc:
+        except (httpx.HTTPError, OSError, ValueError) as exc:
             logger.error("action registry memory write degraded: {}", type(exc).__name__)
             return {
                 "status": "degraded",
