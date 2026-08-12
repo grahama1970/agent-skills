@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "live-evidence",
+  "trials": 2,
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, and fail-closed contract smoke",
+  "claims": {
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
+  },
+  "cases": [
+    {
+      "name": "verify-entrypoint-local-http-ripgrep-ui",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "verify"],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "live HTTP/ripgrep canary: PASS",
+          "live-evidence sanity: PASS"
+        ]
+      }
+    },
+    {
+      "name": "listener-requires-explicit-consent",
+      "type": "negative",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "listen", "--mode", "microphone"],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": ["live modes require --consent-confirmed"]
+      }
+    },
+    {
+      "name": "invalid-skill-contract-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["bash", "../run.sh", "eval-adversarial"],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["invalid skill rejected: PASS"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+{"schema":"live_evidence.transcript_event.v1","speaker":"interviewer","kind":"final","source":"demo","text":"How do you prevent an agent from silently drifting during a long-running workflow?"}
+{"schema":"live_evidence.transcript_event.v1","speaker":"graham","kind":"final","source":"demo","text":"I treat every handoff as an untrusted claim and require explicit receipts before the run advances."}
+{"schema":"live_evidence.transcript_event.v1","speaker":"interviewer","kind":"final","source":"demo","text":"How do reusable skills help a model operate inside an engineering team's own taxonomy?"}

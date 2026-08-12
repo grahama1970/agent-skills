@@ -122,6 +122,18 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  live-transcription:
+    providers:
+      - live-evidence
+  live-evidence-retrieval:
+    providers:
+      - live-evidence
+  source-bound-talking-points:
+    providers:
+      - live-evidence
+  interview-copilot-ui:
+    providers:
+      - live-evidence
   canonical-resume-validation:
     providers:
       - resume

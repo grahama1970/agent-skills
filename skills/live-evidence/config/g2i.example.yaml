@@ -1,0 +1,78 @@
+name: g2i-interview
+candidate_name: Graham Anderson
+organization: G2i
+watch_terms:
+  - AI training
+  - reinforcement learning environment
+  - software engineering evaluation
+  - benchmark quality
+  - agent workflow
+  - rubric
+  - expert review
+  - TypeScript
+  - Next.js
+  - Python
+  - secure enterprise delivery
+project_aliases:
+  tau:
+    - Orc
+    - multi-agent orchestration
+    - drift
+    - receipts
+    - durable run
+  agent-skills:
+    - SkillsBench
+    - skill document
+    - engineering taxonomy
+    - bounded worker
+  sparta:
+    - regulated AI
+    - human approval
+    - candidate versus reviewed
+    - ITAR
+  graph-memory-operator:
+    - shared memory
+    - BM25
+    - semantic retrieval
+    - graph traversal
+repo_priorities:
+  - tau
+  - agent-skills
+  - sparta
+  - graph-memory-operator
+stt_prompt_terms:
+  - G2i
+  - David Chung
+  - G2i.ai
+  - Orc
+  - SkillsBench
+  - Multi-SWE-bench TypeScript
+  - Tau
+  - SPARTA Explorer
+  - ArangoDB
+  - Qdrant
+  - Jina embeddings
+  - ITAR
+  - DARPA ARCOS
+memory_collections:
+  - project_memory_active
+  - project_states
+  - project_activity
+  - project_knowledge
+  - lessons_v2
+  - tau_orchestration_episodes
+  - dogpile_research
+  - code_symbols
+blocked_tags:
+  - private
+  - confidential
+  - restricted
+  - secret
+  - credential
+  - itar-sensitive
+  - export-controlled-content
+blocked_path_fragments:
+  - /.env
+  - /secrets/
+  - /credentials/
+  - /private/

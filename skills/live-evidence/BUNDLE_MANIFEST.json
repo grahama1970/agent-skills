@@ -1,0 +1,503 @@
+{
+  "schema": "live_evidence.bundle_manifest.v1",
+  "name": "live-evidence",
+  "version": "0.1.0",
+  "generated_at": "2026-08-12T15:19:01.729091+00:00",
+  "install_destination": "grahama1970/agent-skills/skills/live-evidence",
+  "top_level_directory": "live-evidence",
+  "file_count_excluding_manifest": 81,
+  "pinned_inputs": {
+    "realtimestt_repository": "grahama1970/RealtimeSTT",
+    "realtimestt_commit": "cbdbd12a8f573a92d7ffd14cfbd82baa59a59849"
+  },
+  "validation_receipt": "docs/validation/package-validation.json",
+  "proof_boundary": "Packaging proved Python contracts/tests, real loopback HTTP, real bounded ripgrep, React action instrumentation, offline TypeScript sanity, and the static design fixture. It did not prove live audio, a running Graph Memory service, Brave, Dogpile, or a full network-installed Vite dependency build.",
+  "files": [
+    {
+      "path": ".env.example",
+      "bytes": 872,
+      "sha256": "b1349995dc9727c779e713b0a9395dde7af0088313c94d51f5beda1f0a43061a",
+      "executable": false
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 191,
+      "sha256": "2df451d8e7b7f4d7b0db1641d1c540866c7e5f6cd381954869ab0eae9244b707",
+      "executable": false
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1072,
+      "sha256": "d4fc5d6958d018db16080b379f7033c4ec5bab427d2acd1cd92d6d8dbeb474d3",
+      "executable": false
+    },
+    {
+      "path": "PROJECT_STATE.md",
+      "bytes": 1521,
+      "sha256": "5b50e6e40480aef5ab2f81ce43946c23399dbe07810e396983904ae1081ef9e1",
+      "executable": false
+    },
+    {
+      "path": "README.md",
+      "bytes": 3337,
+      "sha256": "fb988ea6be61afdc0a34ecab82692e18bb1c30e28afde843e0eccdb7077a2327",
+      "executable": false
+    },
+    {
+      "path": "SKILL.md",
+      "bytes": 4794,
+      "sha256": "045a18a6495a852b8f576b576292f335b931b9c82ab9b0144895414256e5fd44",
+      "executable": false
+    },
+    {
+      "path": "config/default.yaml",
+      "bytes": 1283,
+      "sha256": "e400b5dbb3bdd3dd72b4ff60e891656d63402a36af9741be13b6db94b68d1aef",
+      "executable": false
+    },
+    {
+      "path": "config/g2i.example.yaml",
+      "bytes": 1412,
+      "sha256": "6a8c7b3fa9b1e558369c49c8dde99ab7c3df9eeef079dba7518ac22f616ac6b2",
+      "executable": false
+    },
+    {
+      "path": "docs/live-evidence-ui-preview.png",
+      "bytes": 391634,
+      "sha256": "d264816a163a623aa7801dfcd851ae20487d25fc4dcb5fab452707e530adacfe",
+      "executable": false
+    },
+    {
+      "path": "docs/ui-preview.html",
+      "bytes": 13254,
+      "sha256": "1aa610ee60912a66065fb43f74d37e69eb99e0cf81ae2160cf65e8b39952371c",
+      "executable": false
+    },
+    {
+      "path": "docs/validation/README.md",
+      "bytes": 296,
+      "sha256": "938dacd5c0f3bcdd34c941a823c68486873f996576bab32ba330df35dde2e542",
+      "executable": false
+    },
+    {
+      "path": "docs/validation/package-validation.json",
+      "bytes": 2012,
+      "sha256": "ac607956ae8c35d967ee631c3f14ec44240dbe28ff2f534c0f5ef6848520ce79",
+      "executable": false
+    },
+    {
+      "path": "fixtures/interview.jsonl",
+      "bytes": 597,
+      "sha256": "75815fa92c27ad302f8ef8f206c8312a97f73f272afafb48a5b2da3096eb1f6e",
+      "executable": false
+    },
+    {
+      "path": "fixtures/repo/tau/README.md",
+      "bytes": 385,
+      "sha256": "9ad90aa85b56d22d53443843480ee132afab1cb522316ce80cb526ddfe98e1f1",
+      "executable": false
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 666,
+      "sha256": "ecaa22ba18ded4d65d443888c615eaf4b0cfff80b4cea777ce87f8c43022dd1d",
+      "executable": false
+    },
+    {
+      "path": "references/architecture.md",
+      "bytes": 1703,
+      "sha256": "e324c4f90dd04615856f25deab19f1e3ba51f6890e2d56e06d33e995a348db71",
+      "executable": false
+    },
+    {
+      "path": "references/data-contracts.md",
+      "bytes": 985,
+      "sha256": "49e4ebd604b88b7b39f1293c2dc5f02ca4a95846ec05605a7ef956d890d3444e",
+      "executable": false
+    },
+    {
+      "path": "references/gmo-integration.md",
+      "bytes": 2507,
+      "sha256": "1305df84986e407f5e7113730b25cb1b20a81064eed7c63dc90f385faad0407f",
+      "executable": false
+    },
+    {
+      "path": "references/privacy-consent.md",
+      "bytes": 931,
+      "sha256": "32a5881e1d411a1ecc0c42d0c642f803950a830288ae1f3e1fe3d13671a71463",
+      "executable": false
+    },
+    {
+      "path": "run.sh",
+      "bytes": 3369,
+      "sha256": "271ebe6ee6b256279026d100dfa1d64f855bac7100d957e79e7860394b494aaf",
+      "executable": true
+    },
+    {
+      "path": "sanity.sh",
+      "bytes": 837,
+      "sha256": "54887a84ea8a9ff6de6556a8c16dbd252bf2fb011776f9c2e1baf79ec57a5bd0",
+      "executable": true
+    },
+    {
+      "path": "scripts/sanity_live.py",
+      "bytes": 5877,
+      "sha256": "119c07ce00e7e28bbc4afdafb9dfb3b0819dcc54c034b4b0b361a58cd69e5823",
+      "executable": true
+    },
+    {
+      "path": "scripts/verify_data_qid.py",
+      "bytes": 3327,
+      "sha256": "5c5bf09ce374a220917224466e3932efb6d0e98957bfdca8f1496ce8c7cac043",
+      "executable": true
+    },
+    {
+      "path": "scripts/verify_file_size.py",
+      "bytes": 1439,
+      "sha256": "e6c843f5037f4c359555c105bdb3ac82768e03e5f13e4b6d7769a902a8501b95",
+      "executable": true
+    },
+    {
+      "path": "scripts/verify_skill.py",
+      "bytes": 3489,
+      "sha256": "be3e2f39339549f4485fe5fdac779bf34911b15bd06de922d1baac30b6ed547a",
+      "executable": true
+    },
+    {
+      "path": "src/live_evidence/__init__.py",
+      "bytes": 227,
+      "sha256": "eeb0ce0078953750b0e362e1b2cccbcb9969c69e279bfd625537c0c8f6bd5afb",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/__main__.py",
+      "bytes": 119,
+      "sha256": "25713ab44b97420dc70ccd9f2a1b16df76e56de76b1654d70b20b385ae06f111",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/action_registry.py",
+      "bytes": 2901,
+      "sha256": "15d1949918992acebf3f300c88b31d10466b1bbd3b0336af917d8ecd381d6aed",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/api.py",
+      "bytes": 6276,
+      "sha256": "a1bb7a69cf82323065c48fb16d9e00fb4b1e7239e379c2ddadf1d951b6c8baff",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/cli.py",
+      "bytes": 9650,
+      "sha256": "8969e7bb306165626a13b05e5e5b17de5d7ed5407375e9224f6e7d77bf087474",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/config.py",
+      "bytes": 8134,
+      "sha256": "ce148cfb91f0e2fee90648310f06431864dab807f1a919086ce11f015b08a8e3",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/coordinator.py",
+      "bytes": 8126,
+      "sha256": "2a93ae73c1c1ca6e9698ae9885e37e3cc48820de9ee3c300b720e7dc4b7b01c1",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/listener.py",
+      "bytes": 12769,
+      "sha256": "09dfffeda8e82fb882c8ed14bafdad00b1837f9ee185f9b19531a5849e4d34e5",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/models.py",
+      "bytes": 10849,
+      "sha256": "07e041cb641002ef37b3dbb704974c60d913bfa44f2fa3c2813dc39215f12c40",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/persistence.py",
+      "bytes": 1674,
+      "sha256": "fd5e1df812dd58437397bbe5e09be29fe2f1b87f9dbec4bd24e3ce907ef752af",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/retrieval/__init__.py",
+      "bytes": 333,
+      "sha256": "a18dfebf41fd7cc8e8a4b4010090cd7755030edac6eb2be14ecb4f3709a07f4b",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/retrieval/external.py",
+      "bytes": 4852,
+      "sha256": "8822e32db7c3b89236d5a41f0c575cbbf57b0a352fc0cf5c16ee55cc65aa560a",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/retrieval/memory.py",
+      "bytes": 18454,
+      "sha256": "5aab0e5a350c1a6bf862d68c0b0a5fa1ebc653f71a06187e578e0149119f456f",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/retrieval/ranker.py",
+      "bytes": 2099,
+      "sha256": "344d0a9ec0976a130c67fd572af1ee63125a32977fd67edbac608d36f88d447d",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/retrieval/ripgrep.py",
+      "bytes": 10345,
+      "sha256": "b675279547d42ce1827d0b2b3c85889bb24c9adf81e1567eda8fbdf7c4af2588",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/state.py",
+      "bytes": 9613,
+      "sha256": "6bc821c9a4dfebb93fadc709fc8aca1ab10a83acfda439d404156509a31f5956",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/summarizer.py",
+      "bytes": 3971,
+      "sha256": "a4ccd84b6d023dad6adb16a03d4dfa17a847ddd3c0e3982dfa8e51e44ee2afa0",
+      "executable": false
+    },
+    {
+      "path": "src/live_evidence/trigger.py",
+      "bytes": 5492,
+      "sha256": "5c1d0e18f73c5fe87d47dc0ffcf8896d4eb6127d4482f94464cfab45d7a842a5",
+      "executable": false
+    },
+    {
+      "path": "tests/test_api.py",
+      "bytes": 3371,
+      "sha256": "6a0466a33ef3abcd026c74d96471e125899d1e019f6c5ce26d9577dc81c34e3d",
+      "executable": false
+    },
+    {
+      "path": "tests/test_memory_policy.py",
+      "bytes": 1024,
+      "sha256": "7aba9b32cfed3b8216d578609b916b88a69765ee6130fb85b0957be89ac2a0f4",
+      "executable": false
+    },
+    {
+      "path": "tests/test_models.py",
+      "bytes": 1259,
+      "sha256": "428958acf8c6bea36c29c67eacc6f7cb043b246990302dcbeb1adb7822abeb28",
+      "executable": false
+    },
+    {
+      "path": "tests/test_ripgrep.py",
+      "bytes": 2497,
+      "sha256": "e5bf3c3bc14d55dd95335bc4560f78a751090b7ecb85a6c4a6d8fbdaaac24bc4",
+      "executable": false
+    },
+    {
+      "path": "tests/test_summarizer.py",
+      "bytes": 1116,
+      "sha256": "abcbb0583793763c74026d12b0f6db5031fe2aa2f5ba17d5100293a61ddb8952",
+      "executable": false
+    },
+    {
+      "path": "tests/test_trigger.py",
+      "bytes": 1543,
+      "sha256": "844e4a5f21262e8d2a592e7395d8e1270ad035f6f1fcba2784841a1aff6ad4cd",
+      "executable": false
+    },
+    {
+      "path": "ui/components.json",
+      "bytes": 424,
+      "sha256": "257b9b8663a9a2f9644f2647d017e72c37e301fbbc5fbe36c276ff055c98ac59",
+      "executable": false
+    },
+    {
+      "path": "ui/index.html",
+      "bytes": 497,
+      "sha256": "2e4317c29a72c395f135d7dc6e5c3e5dc7f62a95cf8a2425e553768a5a84a475",
+      "executable": false
+    },
+    {
+      "path": "ui/package.json",
+      "bytes": 714,
+      "sha256": "9a9ccf18b0aaba0e1398355acb1cdbbe5d7626ba5c21d5169fd74f098889a4d2",
+      "executable": false
+    },
+    {
+      "path": "ui/sanity-shims.d.ts",
+      "bytes": 3132,
+      "sha256": "e72075b12b63b34bbaaed52a9f339e601b17f43506a03b58a7fcdfafa3234039",
+      "executable": false
+    },
+    {
+      "path": "ui/src/App.tsx",
+      "bytes": 3462,
+      "sha256": "0e92e0ad5b53f38b84bb3ae3b60fae4a6c6372136e62b1e4b402240245aacb7f",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/CurrentThread.tsx",
+      "bytes": 794,
+      "sha256": "07934e03457b839806a223847e69cf485a430ec25647a6d72b0181e2864c69b1",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/EmptyEvidence.tsx",
+      "bytes": 1274,
+      "sha256": "9c906ab45d9d1bc737f83e329cf42e24c0886966f8711751e8d20287ddb3b573",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/EvidenceCardView.tsx",
+      "bytes": 7632,
+      "sha256": "3652c9b3ac3ba2f5df646197a09f2548ccaa73feef1fb135ab1a0c5b4f2fd8a6",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/EvidenceQueue.tsx",
+      "bytes": 1384,
+      "sha256": "5521e12c6ef163b928ee5779ed43ded92e34a848d6bf341b4060c621b7e340b4",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ManualSearch.tsx",
+      "bytes": 4055,
+      "sha256": "2a119f6fda2e19abf989fd2062c377e5d0acdd7d7374c80b689fd62da078632b",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/RetrievalRail.tsx",
+      "bytes": 2943,
+      "sha256": "263db0c50ee5dfacc0966c39c6d5dac24e3267116a444036cd7a44b767e40495",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/SessionControls.tsx",
+      "bytes": 2655,
+      "sha256": "d45c4ba1d837549e75c760b69143447aef6d47a4dac05635a7cc1aa901104515",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/SessionHeader.tsx",
+      "bytes": 2422,
+      "sha256": "35365c92a731b5bef70ed2b45e8c33a386aa4c9f184130547ed011811097b27c",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/TranscriptPanel.tsx",
+      "bytes": 2351,
+      "sha256": "287e12e99a8736ae81a8aedb9791ba8b7fdfeebad7cd9d207646d737f7c3a987",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/badge.tsx",
+      "bytes": 1011,
+      "sha256": "0aaf918eecf96e76b163432b1de1892b4fb6d5b69fca39e9eb30de2bdb608ae5",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/button.tsx",
+      "bytes": 1866,
+      "sha256": "d772914479141d2bf0471e5e698326c1fbdbe12290f62271f4563cefa65636a1",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/card.tsx",
+      "bytes": 1071,
+      "sha256": "ace9821bc10a33329f608f2375b2a89a98e9a4cc344dc1e197411650c166823b",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/input.tsx",
+      "bytes": 730,
+      "sha256": "615a5098c7dfb28e20a1044cfda8550f105f85437390b1c3e7c0e9953d761b89",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/scroll-area.tsx",
+      "bytes": 270,
+      "sha256": "e8caf3fec1a2e6c0520a13c703f6c57822aa6aecf9a5aae13eaeb21e9de7e1de",
+      "executable": false
+    },
+    {
+      "path": "ui/src/components/ui/separator.tsx",
+      "bytes": 199,
+      "sha256": "8f5c727f1061815a0d94e454fe5cb5096bdc4fd86adc1acc41d30894adc60709",
+      "executable": false
+    },
+    {
+      "path": "ui/src/hooks/useLiveEvidence.ts",
+      "bytes": 2806,
+      "sha256": "b665f64478c6309debecbcc1d8799560d9f7c87659261fbde7e4dde32041738d",
+      "executable": false
+    },
+    {
+      "path": "ui/src/hooks/useRegisterAction.ts",
+      "bytes": 1467,
+      "sha256": "8e395784198976fb22d1bc060758b1c86d78f350894831d90f85640440a85ee2",
+      "executable": false
+    },
+    {
+      "path": "ui/src/index.css",
+      "bytes": 1149,
+      "sha256": "24198e81044f8c58774575fc9864928001196d8fad65b61bae30ea81555d9866",
+      "executable": false
+    },
+    {
+      "path": "ui/src/lib/api.ts",
+      "bytes": 1280,
+      "sha256": "a2b8ebdabe69394877a6c6898b4ab65ace35e2fe3a22e1c77bd400e849809a28",
+      "executable": false
+    },
+    {
+      "path": "ui/src/lib/utils.ts",
+      "bytes": 814,
+      "sha256": "107b2ae6a0c9c9e31e0f9c1e1599afbef646880562db409641ade6be3d23b51c",
+      "executable": false
+    },
+    {
+      "path": "ui/src/main.tsx",
+      "bytes": 326,
+      "sha256": "de65a5e45f163e105df96f7b17d81e3073948cc6e4b2113ed858a3eedebdc0f3",
+      "executable": false
+    },
+    {
+      "path": "ui/src/types.ts",
+      "bytes": 2370,
+      "sha256": "1532c1c83a6a7da47bf69ba16c793bb53a945bfeea7422667489e8e936f60e66",
+      "executable": false
+    },
+    {
+      "path": "ui/src/vite-env.d.ts",
+      "bytes": 38,
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "executable": false
+    },
+    {
+      "path": "ui/tsconfig.json",
+      "bytes": 628,
+      "sha256": "144431c35972b0cc5eb4a9f4a33d5fde3f6dccbf82f83d1f6b2d7854059fd28f",
+      "executable": false
+    },
+    {
+      "path": "ui/tsconfig.node.json",
+      "bytes": 213,
+      "sha256": "f49ef24e097144fecc29f677361cb45b2019e1bcc0dba54bab083760f7df6200",
+      "executable": false
+    },
+    {
+      "path": "ui/tsconfig.sanity.json",
+      "bytes": 233,
+      "sha256": "675de1e2c3655d7d0a4167621c3c29fe2517abc727e7fb41c4fed46c8bd9add4",
+      "executable": false
+    },
+    {
+      "path": "ui/vite.config.ts",
+      "bytes": 424,
+      "sha256": "b7f83a10b6622e6d67e0d6b44c9199140407e9671d2582d4c1e781c323efeebf",
+      "executable": false
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+"""Tests for cross-layer Pydantic contracts."""
+
+from datetime import datetime
+
+import pytest
+from pydantic import ValidationError
+
+from live_evidence.models import (
+    CardStatus,
+    EvidenceCard,
+    EvidenceSource,
+    Freshness,
+    RetrievalLane,
+    Speaker,
+    TranscriptEvent,
+    TranscriptKind,
+)
+
+
+def test_transcript_rejects_naive_timestamp() -> None:
+    with pytest.raises(ValidationError):
+        TranscriptEvent(
+            speaker=Speaker.INTERVIEWER,
+            kind=TranscriptKind.FINAL,
+            text="How does the system work?",
+            created_at=datetime(2026, 8, 12, 12, 0, 0),
+        )
+
+
+def test_supported_card_requires_source() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceCard(
+            query="How?",
+            thread="Tau",
+            talking_point="Point",
+            proof="Proof",
+            qualifier="Qualifier",
+            confidence=0.8,
+            status=CardStatus.SUPPORTED,
+        )
+
+
+def test_source_requires_locator() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceSource(
+            lane=RetrievalLane.MEMORY,
+            label="No locator",
+            excerpt="Some text",
+            score=0.5,
+            freshness=Freshness.UNKNOWN,
+        )
