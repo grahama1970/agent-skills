@@ -868,7 +868,7 @@ def nightly(
     from .nightly_digest import lane_health_phase, run_digest_phase
 
     try:
-        run_digest_phase(out, skill_dir, capture_dir, memory_url, steps)
+        run_digest_phase(out, skill_dir, capture_dir, memory_url, steps, degrade_digest_contract=diagnostic)
     except ContractError as exc:
         _fail(exc)
     lane_health_phase(out, steps)

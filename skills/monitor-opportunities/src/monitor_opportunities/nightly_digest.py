@@ -29,6 +29,7 @@ def run_digest_phase(
     capture_dir: Path,
     memory_url: str,
     steps: dict[str, Any],
+    degrade_digest_contract: bool = False,
 ) -> None:
     """DIGEST phase: build, enrich, persist, and receipt the morning digest."""
     import urllib.request as _digest_urlreq
@@ -294,11 +295,42 @@ def run_digest_phase(
         }
         if not contract_ok:
             rules = sorted({v["rule"] for v in contract_report["violations"]})
-            raise ContractError(
-                "NIGHTLY_DIGEST_CONTRACT_VIOLATION",
+            message = (
                 f"{len(contract_report['violations'])} pre-publish violation(s) "
-                f"[{', '.join(rules)}]; digest withheld. See prepublish-contract.json",
+                f"[{', '.join(rules)}]; digest withheld. See prepublish-contract.json"
             )
+            if not degrade_digest_contract:
+                raise ContractError(
+                    "NIGHTLY_DIGEST_CONTRACT_VIOLATION",
+                    message,
+                )
+            steps["digest"] = {
+                "phase": "DIGEST_DEGRADED",
+                "top": len(digest.get("top", [])),
+                "counts": digest.get("counts", {}),
+                "artifact": None,
+                "trigger_receipt": (
+                    str(out / "trigger-receipt.json")
+                    if (out / "trigger-receipt.json").exists() else None
+                ),
+                "degraded_contract": {
+                    "code": "NIGHTLY_DIGEST_CONTRACT_VIOLATION",
+                    "message": message,
+                    "artifact": str(out / "prepublish-contract.json"),
+                },
+                "seam_validation": {
+                    "kind": "morning_digest.v1",
+                    "status": "DEGRADED_WITHHELD",
+                },
+            }
+            steps.setdefault("degraded_contracts", []).append(
+                {
+                    "code": "NIGHTLY_DIGEST_CONTRACT_VIOLATION",
+                    "message": message,
+                    "artifact": str(out / "prepublish-contract.json"),
+                }
+            )
+            return
         # STAGE CONSERVATION LEDGER (webgpt P0 #04): every discovered record must
         # have exactly one disposition — accepted, rejected, or deduplicated into
         # a NAMED canonical record. Silent loss is the defect this catches.
