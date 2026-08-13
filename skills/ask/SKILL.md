@@ -638,7 +638,7 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `cooldown_policy.status: LANE_LOCAL_RETRY`, records `cooldown_seconds: 600`,
   selects an available fallback such as WebClaude, WebGemini, or WebKimi when
   possible, and continues with available participants. Roundtable-mode
-  WebClaude uses Fable 5 High by default; competition-mode WebClaude uses Opus
+  WebClaude roundtable AND competition seats use Opus 5 High (Fable is rate-limited on this account, operator 2026-08-13); WebClaude uses Opus
   5 High by default. Stale or background old-tab read timeouts appear as
   `probe_degraded`; they are diagnostic, not proof of provider cooldown. Surf
   tab-list failure or non-timeout probe failures remain `ERROR`.

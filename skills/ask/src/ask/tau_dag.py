@@ -38,7 +38,9 @@ DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS = 900
 BROWSER_COMMAND_GRACE_SECONDS = 180
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
-ROUNDTABLE_WEBCLAUDE_MODEL = "Fable 5 High"
+# Fable is rate-limited on this account (operator, 2026-08-13; Claude API 429
+# on the scillm lane), so the webclaude roundtable seat runs Opus 5.
+ROUNDTABLE_WEBCLAUDE_MODEL = "Opus 5 High"
 TERMINAL_STATUSES = {"PASS", "DEGRADED", "NEEDS_ATTENTION", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
 SUPPORTED_DAG_TEMPLATES = {
