@@ -78,7 +78,7 @@ _MODULE_RECIPES: dict[str, list[str]] = {
 }
 
 _TITLE_STYLE = DocTextStyle(size_pt=40.0, bold=True)
-_HERO_STYLE = DocTextStyle(size_pt=64.0, bold=True, align="center")
+_HERO_STYLE = DocTextStyle(size_pt=64.0, bold=False, align="center", color="#076889")
 _CHEVRON_STYLE = DocTextStyle(size_pt=HOUSE_BODY_PT)
 _CAPTION_STYLE = DocTextStyle(size_pt=HOUSE_CAPTION_PT)
 
@@ -402,7 +402,7 @@ def _materialize_slide(module: OutlineModule, order: int, recipes, deck_title: s
         elements.append(DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
                                    bbox=Bbox(x=0.37, y=0.27, w=0.47, h=0.42), asset_id=module.visual_asset_id))
         elements.append(DocElement(id="visual-caption", kind=DocElementKind.TEXT, role="caption",
-                                   bbox=Bbox(x=0.37, y=0.71, w=0.47, h=0.05),
+                                   bbox=Bbox(x=0.3, y=0.80, w=0.66, h=0.04),
                                    text="Prepared-host capture",
                                    style=_CAPTION_STYLE, binding_paths=["element:visual-caption"]))
         bindings.append(TextBinding(path="element:visual-caption", kind=BindingKind.NON_CLAIM))
@@ -481,7 +481,7 @@ def _interstitial(order: int, slide_id: str, archetype: str, heading: str, *, ma
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="divider-heading", kind=DocElementKind.TEXT, role="message",
                    bbox=Bbox(x=0.08, y=0.34, w=0.84, h=0.24), text=heading,
-                   style=DocTextStyle(size_pt=54.0, bold=True, align="center", color="#065E7C"),
+                   style=DocTextStyle(size_pt=54.0, bold=False, align="center", color="#065E7C"),
                    binding_paths=["message"]),
     ]
     if mark:
@@ -527,10 +527,10 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
     elements = [
         DocElement(id="title", kind=DocElementKind.TEXT, role="title",
                    bbox=Bbox(x=0.02, y=0.02, w=0.76, h=0.08),
-                   text=(title_text or (asset.alt_text or asset.id).split(" showing")[0])[:60],
+                   text=" ".join((title_text or (asset.alt_text or asset.id).split(" showing")[0])[:60].split(" ")[:-1]) or (asset.alt_text or asset.id)[:60],
                    style=DocTextStyle(size_pt=24.0, bold=True), binding_paths=["title"]),
         DocElement(id="visual", kind=DocElementKind.IMAGE, role="visual",
-                   bbox=Bbox(x=0.3, y=0.17, w=0.66, h=0.52), asset_id=asset.id),
+                   bbox=Bbox(x=0.3, y=0.16, w=0.66, h=0.44), asset_id=asset.id),
         DocElement(id="callout", kind=DocElementKind.TEXT, role="callout",
                    bbox=Bbox(x=0.03, y=0.18, w=0.25, h=0.6),
                    text=f"> {_truncate_words(claim_text, 200)}",
@@ -556,7 +556,7 @@ def _proof_slide_for_asset(order: int, asset, claim_id: str, claim_text: str,
         bindings.append(TextBinding(path="footer", kind=BindingKind.QUALIFIER, claim_id=claim_id))
     for t_index, sib in enumerate((siblings or [])[:2]):
         elements.append(DocElement(id=f"thumb-{t_index}", kind=DocElementKind.IMAGE, role="visual",
-                                   bbox=Bbox(x=0.3 + t_index * 0.34, y=0.71, w=0.32, h=0.21),
+                                   bbox=Bbox(x=0.3 + t_index * 0.34, y=0.62, w=0.32, h=0.17),
                                    asset_id=sib.id))
     return DocSlide(id=f"m-proof-{asset.id.replace('sparta-','')}", order=order, section="proof",
                     layout_origin=SlideLayout.FREEFORM, elements=elements, bindings=bindings,
@@ -680,6 +680,11 @@ def materialize_outline(
                     "recipe": "assertion-chevrons-scene" if has_chevrons else "statement-thesis",
                     "reveal_order": [r for r in slide.intent.reveal_order if r != "diagram"],
                 }) if slide.intent is not None else None})
+        # Real bands carry a small top-right glyph; stamp the mini-mark.
+        if not any(e.kind is DocElementKind.IMAGE and e.id == "band-mark" for e in slide.elements):
+            slide.elements = slide.elements + [DocElement(
+                id="band-mark", kind=DocElementKind.IMAGE, role="badge",
+                bbox=Bbox(x=0.925, y=0.015, w=0.05, h=0.085), asset_id="sparta-helmet-mark-png")]
         # Every corpus page carries an authored bottom-left identity mark (a
         # logo row of pictures, 262/263 slides) — stamp it on every slide.
         if not any(e.kind is DocElementKind.IMAGE and e.id == "house-mark" for e in slide.elements):
