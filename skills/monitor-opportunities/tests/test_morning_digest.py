@@ -62,3 +62,48 @@ def test_competition_varies_by_source_not_flat_default() -> None:
     assert cold["drivers"]["low_competition"] < li["drivers"]["low_competition"]
     # And neither is the flat 0.4 default (1 - 0.6) that collapsed the last run.
     assert cold["drivers"]["low_competition"] != 0.4
+
+
+def test_digest_balances_employment_and_consulting() -> None:
+    # Graham 2026-08-13: "roughly equal number of employment and consulting".
+    # Employment vastly outnumbers consulting in discovery, so a global top-N
+    # returned 8 employment / 0 consulting even with consulting rows available.
+    sl = [{"organization": f"Emp{i}", "title": "AI Architect", "lane": "A",
+           "fit_score": 0.9, "source_class": "ashby", "candidate_id": f"e{i}"}
+          for i in range(10)]
+    sl += [{"organization": f"Fed{i}", "title": "Sources Sought", "lane": "B",
+            "signal_type": "federal", "fit_score": 0.6, "candidate_id": f"c{i}"}
+           for i in range(6)]
+    d = build_digest(sl, top_n=8)
+    kinds = [e["opportunity_type"] for e in d["top"]]
+    assert kinds.count("consulting") == 4 and kinds.count("employment") == 4
+
+
+def test_short_track_releases_its_slots_instead_of_padding() -> None:
+    # Under-supply must be honest: unfilled consulting slots go to employment
+    # rather than admitting weak consulting rows.
+    sl = [{"organization": f"Emp{i}", "title": "AI Architect", "lane": "A",
+           "fit_score": 0.9, "source_class": "ashby", "candidate_id": f"e{i}"}
+          for i in range(10)]
+    sl += [{"organization": "Fed0", "title": "Sources Sought", "lane": "B",
+            "signal_type": "federal", "fit_score": 0.6, "candidate_id": "c0"}]
+    d = build_digest(sl, top_n=8)
+    kinds = [e["opportunity_type"] for e in d["top"]]
+    assert len(d["top"]) == 8
+    assert kinds.count("consulting") == 1 and kinds.count("employment") == 7
+
+
+def test_researched_consulting_leads_compete_for_the_consulting_half() -> None:
+    # Consulting leads are researched (buyer-in-motion signals), not scraped.
+    # They must reach the digest's consulting half rather than sit in a side file.
+    sl = [{"organization": f"Emp{i}", "title": "AI Architect", "lane": "A",
+           "fit_score": 0.9, "source_class": "ashby", "candidate_id": f"e{i}"}
+          for i in range(10)]
+    sl += [{"organization": "Hadrius", "title": "Raises $27M to build agentic compliance",
+            "lane": "C", "signal_type": "commercial", "fit_score": 0.6,
+            "source_provider": "consulting-research", "candidate_id": "r1"}]
+    d = build_digest(sl, top_n=8)
+    orgs = [e["organization"] for e in d["top"]]
+    assert "Hadrius" in orgs
+    assert next(e for e in d["top"] if e["organization"] == "Hadrius")[
+        "opportunity_type"] == "consulting"

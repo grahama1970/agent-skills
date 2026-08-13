@@ -119,6 +119,32 @@ def run_digest_phase(
                 hiring_contacts = _rp(contacts, limit=5)
         except Exception as exc:  # noqa: BLE001 - enrichment must never fail the run
             logger.warning("actively-hiring enrichment skipped: {}", exc)
+        # CONSULTING DISCOVERY (Graham 2026-08-13: consulting opportunities are
+        # RESEARCHED, not scraped — deep brave-search plus SAM.gov/DARPA/industry
+        # news). Researched leads join the shortlist so they compete for the
+        # digest's consulting half; without this the consulting track was 12 SAM
+        # notices and two placeholder rows.
+        try:
+            from .consulting_discovery import discover as discover_consulting
+
+            consulting_rows, consulting_receipt = discover_consulting()
+            (out / "consulting-research.json").write_text(
+                json.dumps(
+                    {"receipt": consulting_receipt, "candidates": consulting_rows},
+                    indent=2, sort_keys=True,
+                ) + "\n",
+                encoding="utf-8",
+            )
+            if consulting_rows:
+                shortlist_rows = shortlist_rows + consulting_rows
+            steps["consulting_research"] = {
+                "queries": consulting_receipt.get("queries_run"),
+                "leads": consulting_receipt.get("candidates"),
+                "by_kind": consulting_receipt.get("by_signal_kind"),
+            }
+        except Exception as exc:  # noqa: BLE001 - research must never fail the run
+            logger.warning("consulting research skipped: {}", exc)
+            steps["consulting_research"] = {"error": str(exc)}
         digest = build_digest(shortlist_rows, triggers=triggers, warm_paths=warm_paths)
         if inbound_viewers:
             digest["inbound_interest"] = inbound_viewers[:10]

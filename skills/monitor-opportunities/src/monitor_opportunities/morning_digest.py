@@ -68,6 +68,54 @@ def _org_signal(org: str, lookup: dict[str, Any], key: str) -> float:
     return 0.0
 
 
+def _balanced_top(
+    entries: list[dict[str, Any]], top_n: int, max_per_org: int
+) -> list[dict[str, Any]]:
+    """Fill the digest with roughly equal employment and consulting.
+
+    Graham (2026-08-13): "we need roughly equal number of employment and
+    consulting opportunities". Pure score ordering does not deliver that —
+    employment postings vastly outnumber consulting signals in discovery, so a
+    global top-N returned 8 employment and 0 consulting even with 14 consulting
+    rows shortlisted. Each track therefore gets its own half of the slots,
+    filled by that track's own best.
+
+    Under-supply is honest, not padded: if a track cannot fill its half, the
+    remaining slots go to the other track rather than admitting weak rows.
+    Entries must be pre-sorted best-first; the per-org cap still applies.
+    """
+    tracks: dict[str, list[dict[str, Any]]] = {"employment": [], "consulting": []}
+    for e in entries:
+        tracks.setdefault(str(e.get("opportunity_type") or "employment"), []).append(e)
+
+    quota = top_n // 2
+    picked: list[dict[str, Any]] = []
+    seen_org: dict[str, int] = {}
+
+    def _take(pool: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for e in pool:
+            if len(out) >= limit:
+                break
+            org = str(e.get("organization") or "").lower()
+            if seen_org.get(org, 0) >= max_per_org:
+                continue
+            seen_org[org] = seen_org.get(org, 0) + 1
+            out.append(e)
+        return out
+
+    consulting = _take(tracks.get("consulting", []), quota)
+    employment = _take(tracks.get("employment", []), top_n - len(consulting))
+    # A short track releases its slots to the other rather than padding.
+    if len(consulting) + len(employment) < top_n:
+        already = {id(e) for e in consulting + employment}
+        remainder = [e for e in tracks.get("consulting", []) if id(e) not in already]
+        consulting += _take(remainder, top_n - len(consulting) - len(employment))
+    picked = consulting + employment
+    picked.sort(key=lambda e: -float(e.get("response_score") or 0))
+    return picked[:top_n]
+
+
 def _cap_per_org(
     entries: list[dict[str, Any]], top_n: int, max_per_org: int
 ) -> list[dict[str, Any]]:
@@ -133,7 +181,7 @@ def build_digest(
             "inmail_target": dm,
         })
     entries.sort(key=lambda e: -e["response_score"])
-    top = _cap_per_org(entries, top_n, max_per_org)
+    top = _balanced_top(entries, top_n, max_per_org)
     return {
         "schema": "monitor_opportunities.morning_digest.v1",
         "counts": {
