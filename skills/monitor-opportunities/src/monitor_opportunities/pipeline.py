@@ -181,7 +181,24 @@ def _lane_coverage(discovery_dir: Path, shortlist: list[dict[str, Any]]) -> list
 def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
-    if candidate["lane"] == "B":
+    if candidate.get("source_provider") == "meetup_surf":
+        opportunity_type = "networking_signal"
+        decision = str(candidate.get("networking_decision") or "WATCH")
+        observed = [
+            f"Meetup source-intel capture observed: {evidence_url or source_id}",
+            f"Recommended Meetup decision: {decision}",
+            f"Automation policy: {candidate.get('automation_policy', 'meetup_authorized_read_only_no_rsvp_no_message')}",
+        ]
+        if candidate.get("company_sponsors"):
+            observed.append("Company/venue sponsor signal: " + ", ".join(candidate["company_sponsors"]))
+        if candidate.get("known_monitor_contacts"):
+            observed.append("Known monitor contact signal: " + ", ".join(candidate["known_monitor_contacts"]))
+        inferred = [
+            "Treat as an attend/watch/skip networking decision only; this is not a job, application, or outreach authorization.",
+            "Do not RSVP, join, message, scrape attendee lists, or call Meetup GraphQL from the monitor.",
+        ]
+        claim_keys = ["claim:memory:retrieval-platform"]
+    elif candidate["lane"] == "B":
         opportunity_type = "federal_notice"
         observed = [f"Federal primary source observed: {evidence_url or source_id}"]
         inferred = ["Treat as a federal notice/signal; do not coerce into an employment application."]
@@ -219,6 +236,9 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
     why_candidate = ["Ranked after deterministic eligibility gating and source receipt readback."]
     if candidate.get("top_candidate_evidence"):
         why_candidate.append("Ranking includes LinkedIn profile/recommendation-based relevance evidence.")
+    if candidate.get("source_provider") == "meetup_surf":
+        why_candidate.extend(candidate.get("networking_reasons") or [])
+        why_candidate.append("Meetup is source-intel only; human decides whether attendance is worth the time.")
     return {
         "opportunity_id": candidate["candidate_id"],
         "lane": candidate["lane"],
@@ -245,7 +265,7 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
             "evidence_refs": [source_id],
             "unknowns": ["Employer/client ranking weights and workflow remain unknown."],
         },
-        "status": "SHORTLISTED",
+        "status": "WATCHLISTED" if candidate.get("source_provider") == "meetup_surf" else "SHORTLISTED",
         "action_worthy": True,
         "visible_in_report": True,
     }
@@ -397,6 +417,9 @@ def _report_from_run(
             {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},
             {"action": "REJECT", "target_type": "opportunity", "enabled": True, "effects_external": False},
             {"action": "DEFER", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "ATTEND_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "WATCH_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "SKIP_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
             {
                 "action": "ACCEPT_RESUME_VARIANT",
                 "target_type": "resume_variant",
@@ -538,6 +561,7 @@ def run_stage0(
     roundtable_receipts_path: Path | None = None,
     outreach_effects_path: Path | None = None,
     federal_evidence: Path | None = None,
+    meetup_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
@@ -554,6 +578,7 @@ def run_stage0(
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
         federal_evidence=federal_evidence,
+        meetup_evidence=meetup_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
     if fixture_dir is None:

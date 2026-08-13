@@ -143,6 +143,30 @@ def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevan
     )
 
 
+def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    meetup = fixture_dir / "meetup-buffalo-capture.json"
+    out = tmp_path / "nightly-meetup"
+    result = runner.invoke(
+        app,
+        ["run", "--fixture-dir", str(fixture_dir), "--meetup-evidence", str(meetup), "--out", str(out)],
+    )
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    networking = [row for row in manifest["opportunities"] if row["opportunity_type"] == "networking_signal"]
+    assert networking
+    assert any(row["organization"] == "Infosec 716" for row in networking)
+    infosec = next(row for row in networking if row["organization"] == "Infosec 716")
+    assert infosec["apply_url"] is None
+    assert infosec["status"] == "WATCHLISTED"
+    assert any("Meetup is source-intel only" in item for item in infosec["why_candidate"])
+    assert any("Recommended Meetup decision: ATTEND" in item for item in infosec["screening_interface_profile"]["observed"])
+    actions = {row["action"]: row for row in manifest["decision_actions"]}
+    assert actions["ATTEND_MEETUP"]["effects_external"] is False
+    assert actions["WATCH_MEETUP"]["effects_external"] is False
+    assert actions["SKIP_MEETUP"]["effects_external"] is False
+
+
 def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:
     fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
     baseline = tmp_path / "baseline"

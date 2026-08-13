@@ -17,10 +17,12 @@ from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
     LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
     LINKEDIN_AUTOMATION_POLICY,
+    MEETUP_AUTOMATION_POLICY,
     _ashby_candidates,
     _candidate_id,
     _employment_candidates,
     _linkedin_evidence_candidates,
+    _meetup_evidence_candidates,
     _sam_receipt,
     _source_locator_receipt,
 )
@@ -162,6 +164,53 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[0]["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
     assert rows[0]["apply_url"] is None
     assert rows[1]["location_display"] == "New York, NY (On-site)"
+
+
+def test_meetup_evidence_emits_only_attend_or_watch_source_intel() -> None:
+    fixture = Path(__file__).parent / "fixtures" / "discovery" / "meetup-buffalo-capture.json"
+    receipt, rows = _meetup_evidence_candidates(fixture)
+    assert receipt["source_class"] == "meetup_surf_capture"
+    assert receipt["automation_policy"] == MEETUP_AUTOMATION_POLICY
+    assert receipt["result_status"] == "MATCHES"
+    assert any("not a job or application source" in item for item in receipt["limitations"])
+    names = {row["organization"] for row in rows}
+    assert "Infosec 716" in names
+    assert "Bit Haven Hackerspace" in names
+    assert "Serendipity Labs Seneca One" in names
+    assert "Business Networking & Referral Community" not in names
+    assert "ClubMoss" not in names
+    decisions = {row["organization"]: row["networking_decision"] for row in rows}
+    assert decisions["Infosec 716"] == "ATTEND"
+    assert decisions["Serendipity Labs Seneca One"] == "WATCH"
+    assert all(row["apply_url"] is None for row in rows)
+    assert all(row["automation_policy"] == MEETUP_AUTOMATION_POLICY for row in rows)
+
+
+def test_sweep_with_meetup_evidence_adds_lane_c_source_intel(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    meetup = fixture_dir / "meetup-buffalo-capture.json"
+    out = tmp_path / "discovery"
+    result = runner.invoke(
+        app,
+        [
+            "sweep",
+            "--fixture-dir",
+            str(fixture_dir),
+            "--meetup-evidence",
+            str(meetup),
+            "--lane",
+            "A,B,C",
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    receipts = [json.loads(line) for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()]
+    candidates = [json.loads(line) for line in (out / "candidates.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(row["source_class"] == "meetup_surf_capture" for row in receipts)
+    assert any(row["source_provider"] == "meetup_surf" for row in candidates)
+    lane_summaries = json.loads((out / "lane-summaries.json").read_text(encoding="utf-8"))
+    assert {row["lane"]: row["result_status"] for row in lane_summaries}["C"] == "MATCHES"
 
 
 def test_candidate_identity_ignores_mutable_content_receipts() -> None:

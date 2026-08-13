@@ -1,0 +1,105 @@
+{
+  "schema_version": "monitor_opportunities.meetup_capture.v1",
+  "source": "human_authorized_meetup_tab",
+  "capture_method": "surf_read_only_visible_pages",
+  "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+  "observed_at": "2026-08-13T12:00:00-04:00",
+  "category_pages": [
+    {
+      "category_id": "546",
+      "category_name": "Technology",
+      "url": "https://www.meetup.com/find/?source=GROUPS&distance=anyDistance&categoryId=546"
+    },
+    {
+      "category_id": "405",
+      "category_name": "Career & Business",
+      "url": "https://www.meetup.com/find/?source=GROUPS&distance=anyDistance&categoryId=405"
+    }
+  ],
+  "groups": [
+    {
+      "source": "human_authorized_meetup_tab",
+      "observed_at": "2026-08-13T12:00:00-04:00",
+      "name": "Infosec 716",
+      "url": "https://www.meetup.com/infosec-716/",
+      "category_id": "546",
+      "location": "Buffalo, NY",
+      "description": "Western New York information security practitioners, cyber defense, security engineering, SO-CRATES demo.",
+      "organizers": ["Infosec 716"],
+      "known_monitor_contacts": ["Bit Haven overlap"],
+      "upcoming_events": [
+        {
+          "title": "Infosec 716 August Virtual Meetup",
+          "starts_at": "2026-08-19T18:00:00-04:00",
+          "venue": "Hybrid: Bit Haven Hackerspace, Buffalo, NY"
+        }
+      ]
+    },
+    {
+      "source": "human_authorized_meetup_tab",
+      "observed_at": "2026-08-13T12:00:00-04:00",
+      "name": "Bit Haven Hackerspace",
+      "url": "https://www.meetup.com/bit-haven-hackerspace/",
+      "category_id": "546",
+      "location": "Buffalo, NY",
+      "description": "Cybersecurity hackerspace with Python for Hackers, software, security, and hands-on technical community.",
+      "organizers": ["Matthew Gracie"],
+      "upcoming_events": [
+        {
+          "title": "Python for Hackers",
+          "starts_at": "2026-08-16T16:00:00-04:00",
+          "venue": "2495 Main St Suite 351, Buffalo, NY"
+        }
+      ]
+    },
+    {
+      "source": "human_authorized_meetup_tab",
+      "observed_at": "2026-08-13T12:00:00-04:00",
+      "name": "Serendipity Labs Seneca One",
+      "url": "https://www.meetup.com/serendipity-labs-seneca-one/",
+      "category_id": "405",
+      "location": "Buffalo, NY",
+      "description": "Coworking and business community in Seneca One.",
+      "company_sponsors": ["Serendipity Labs Seneca One"],
+      "upcoming_events": [
+        {
+          "title": "Buffalo founders coworking open house",
+          "starts_at": "2026-08-20T17:00:00-04:00",
+          "venue": "Seneca One, Buffalo, NY"
+        }
+      ]
+    },
+    {
+      "source": "human_authorized_meetup_tab",
+      "observed_at": "2026-08-13T12:00:00-04:00",
+      "name": "Business Networking & Referral Community",
+      "url": "https://www.meetup.com/business-networking-referral-community/",
+      "category_id": "405",
+      "location": "Buffalo, NY",
+      "description": "General business networking and referral meetup with no technical, sponsor, or monitor-contact signal.",
+      "upcoming_events": [
+        {
+          "title": "Open networking lunch",
+          "starts_at": "2026-08-21T12:00:00-04:00",
+          "venue": "Buffalo, NY"
+        }
+      ]
+    },
+    {
+      "source": "human_authorized_meetup_tab",
+      "observed_at": "2026-08-13T12:00:00-04:00",
+      "name": "ClubMoss",
+      "url": "https://www.meetup.com/club-moss/",
+      "category_id": "546",
+      "location": "Buffalo, NY",
+      "description": "Natural sciences, conservation, ecology, botany, iNaturalist, identification events, hikes, botanical art and painting meetups.",
+      "upcoming_events": [
+        {
+          "title": "Rock the Boat Cruise",
+          "starts_at": "2026-08-22T18:00:00-04:00",
+          "venue": "Buffalo, NY"
+        }
+      ]
+    }
+  ]
+}

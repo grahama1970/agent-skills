@@ -26,6 +26,42 @@ MAX_RESPONSE_BYTES = 1_500_000
 SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
 LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
 LINKEDIN_AUTHORIZED_READ_ONLY_POLICY = "linkedin_authorized_read_only_no_actions"
+MEETUP_AUTOMATION_POLICY = "meetup_authorized_read_only_no_rsvp_no_message"
+
+_MEETUP_RELEVANT_TERMS = (
+    "ai",
+    "artificial intelligence",
+    "machine learning",
+    "ml",
+    "llm",
+    "agent",
+    "python",
+    "rust",
+    "azure",
+    "cloud",
+    "data",
+    "security",
+    "infosec",
+    "cyber",
+    "hackerspace",
+    "cmmc",
+    "compliance",
+    "software",
+    "developer",
+    "code",
+    "robotics",
+    "d365",
+    "power platform",
+)
+_MEETUP_GENERIC_OR_LOW_VALUE_TERMS = (
+    "real estate",
+    "apartment investor",
+    "wealth",
+    "toastmasters",
+    "referral",
+    "network after work",
+    "business networking",
+)
 
 
 
@@ -201,6 +237,224 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         payload["candidate_id"] = _candidate_id("candidate:a:linkedin", payload)
         candidates.append(payload)
     return receipt, candidates
+
+
+def _as_str_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def _load_meetup_records(path: Path) -> list[dict[str, Any]]:
+    payload = read_json(path)
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    if isinstance(payload, dict):
+        for key in ("groups", "meetups", "records", "items"):
+            rows = payload.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+        return [payload]
+    return []
+
+
+def _meetup_text(record: dict[str, Any]) -> str:
+    parts = [
+        record.get("name"),
+        record.get("title"),
+        record.get("description"),
+        record.get("summary"),
+        record.get("page_text"),
+    ]
+    for event in record.get("upcoming_events") or []:
+        if isinstance(event, dict):
+            parts.extend([event.get("title"), event.get("description"), event.get("venue")])
+    parts.extend(_as_str_list(record.get("organizers")))
+    parts.extend(_as_str_list(record.get("company_sponsors") or record.get("sponsors")))
+    parts.extend(_as_str_list(record.get("known_monitor_contacts")))
+    return "\n".join(str(part) for part in parts if part)
+
+
+def _meetup_url(record: dict[str, Any]) -> str | None:
+    for key in ("url", "group_url", "meetup_url", "primary_evidence_url"):
+        value = str(record.get(key) or "").strip()
+        if value:
+            return value
+    return None
+
+
+def _meetup_first_event(record: dict[str, Any]) -> dict[str, Any]:
+    events = record.get("upcoming_events")
+    if isinstance(events, list):
+        for event in events:
+            if isinstance(event, dict):
+                return event
+    return {}
+
+
+def _meetup_decision(record: dict[str, Any]) -> tuple[str, float, list[str], list[str]]:
+    text = _meetup_text(record)
+    low = f" {text.lower()} "
+    hits = []
+    for term in _MEETUP_RELEVANT_TERMS:
+        if term in {"ai", "ml", "llm", "agent"}:
+            if re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", low):
+                hits.append(term)
+        elif term in low:
+            hits.append(term)
+    generic_hits = [term for term in _MEETUP_GENERIC_OR_LOW_VALUE_TERMS if term in low]
+    sponsors = _as_str_list(record.get("company_sponsors") or record.get("sponsors"))
+    contacts = _as_str_list(record.get("known_monitor_contacts") or record.get("monitor_contacts"))
+    upcoming = bool(_meetup_first_event(record)) or "upcoming event" in low or "upcoming events" in low
+    buffalo = any(term in low for term in ("buffalo", "western new york", "wny"))
+
+    reasons: list[str] = []
+    if hits:
+        reasons.append("topical match: " + ", ".join(hits[:6]))
+    if sponsors:
+        reasons.append("company/venue sponsor signal: " + ", ".join(sponsors[:4]))
+    if contacts:
+        reasons.append("monitor contact signal: " + ", ".join(contacts[:4]))
+    if upcoming:
+        reasons.append("upcoming event present")
+    if buffalo:
+        reasons.append("Buffalo/WNY area signal")
+    if generic_hits:
+        reasons.append("generic/low-value meetup warning: " + ", ".join(generic_hits[:4]))
+
+    if not (hits or sponsors or contacts):
+        return "SKIP", 0.0, reasons or ["no topical, company, or contact signal"], generic_hits
+    if generic_hits and not hits and not (sponsors or contacts):
+        return "SKIP", 0.0, reasons, generic_hits
+
+    score = 0.18
+    if hits:
+        score += 0.2 + min(0.12, 0.03 * len(hits))
+    if sponsors:
+        score += 0.16
+    if contacts:
+        score += 0.18
+    if upcoming:
+        score += 0.08
+    if buffalo:
+        score += 0.06
+    if generic_hits:
+        score -= 0.12
+    score = round(max(0.0, min(score, 0.78)), 3)
+    if score >= 0.6 and upcoming:
+        return "ATTEND", score, reasons, generic_hits
+    if score >= 0.45:
+        return "WATCH", score, reasons, generic_hits
+    return "SKIP", score, reasons, generic_hits
+
+
+def _meetup_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    raw = path.read_bytes()
+    receipt = _base_receipt("C", "meetup", "Meetup Buffalo source-intel capture", "meetup_surf_capture")
+    receipt["automation_policy"] = MEETUP_AUTOMATION_POLICY
+    receipt["request_summary"] = (
+        f"Read local Meetup evidence artifact {path.name}; source-intel only, no RSVP, message, join, or GraphQL action"
+    )
+    receipt["content_type"] = "application/json"
+    receipt["response_bytes"] = len(raw)
+    receipt["content_sha256"] = sha256_bytes(raw)
+    receipt["evidence_refs"] = [_local_file_ref(path)]
+    receipt["limitations"].extend(
+        [
+            "Meetup evidence is not a job or application source.",
+            "Most Meetup groups are expected to be skipped unless topical, company-sponsored, or contact-linked.",
+            f"Automation policy: {MEETUP_AUTOMATION_POLICY}.",
+        ]
+    )
+    try:
+        records = _load_meetup_records(path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Local Meetup artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    candidates: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    for record in records:
+        name = str(record.get("name") or record.get("title") or "").strip()
+        if not name:
+            skipped.append("unnamed record")
+            continue
+        decision, fit_score, reasons, warnings = _meetup_decision(record)
+        if decision == "SKIP":
+            skipped.append(name)
+            continue
+        group_url = _meetup_url(record)
+        event = _meetup_first_event(record)
+        event_title = str(event.get("title") or "").strip()
+        event_url = str(event.get("url") or event.get("event_url") or "").strip()
+        location = str(
+            event.get("venue")
+            or record.get("location")
+            or record.get("location_display")
+            or "Buffalo/WNY meetup; delivery model not applicable"
+        )
+        sponsors = _as_str_list(record.get("company_sponsors") or record.get("sponsors"))
+        contacts = _as_str_list(record.get("known_monitor_contacts") or record.get("monitor_contacts"))
+        evidence_url = event_url or group_url or _local_file_ref(path)
+        posting_text = "\n".join(
+            [
+                f"Meetup decision: {decision}",
+                "Reasons: " + "; ".join(reasons),
+                "Warnings: " + "; ".join(warnings) if warnings else "",
+                _meetup_text(record)[:3000],
+            ]
+        ).strip()
+        payload = {
+            "lane": "C",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "meetup_surf",
+            "source_class": "meetup_surf_capture",
+            "source_identity": group_url or name,
+            "automation_policy": MEETUP_AUTOMATION_POLICY,
+            "networking_decision": decision,
+            "networking_reasons": reasons,
+            "networking_warnings": warnings,
+            "company_sponsors": sponsors,
+            "known_monitor_contacts": contacts,
+            "organization": name,
+            "title": event_title or f"{name} meetup source-intel",
+            "location_display": location,
+            "workplace_type": "NOT_APPLICABLE",
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": evidence_url,
+            "apply_url": None,
+            "primary_evidence_url": evidence_url,
+            "published_at": event.get("starts_at") or record.get("observed_at"),
+            "updated_at": record.get("observed_at"),
+            "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
+            "posting_text": posting_text,
+            "fit_score": fit_score,
+            "contact_state": "CONTACT_PRESENT" if contacts else "CONTACT_UNKNOWN",
+            "unresolved_assumptions": [
+                "Actual attendee list, sponsor intent, and decision-maker attendance are unknown until human inspection.",
+                "Attend/watch/skip is a human networking decision, not outreach or application authorization.",
+            ],
+        }
+        payload["candidate_id"] = _candidate_id("candidate:c:meetup", payload)
+        candidates.append(payload)
+        if group_url:
+            receipt["evidence_refs"].append(group_url)
+    receipt["result_status"] = "MATCHES" if candidates else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["limitations"].append(
+        f"{len(records)} Meetup records inspected; {len(candidates)} attend/watch candidates emitted; {len(skipped)} skipped."
+    )
+    if skipped:
+        receipt["limitations"].append("Skipped Meetup groups: " + ", ".join(skipped[:12]))
+    finalized = _finalize_receipt(receipt)
+    for candidate in candidates:
+        candidate["source_receipt_id"] = finalized["receipt_id"]
+    return finalized, candidates
 
 
 def _registry_limit(target: dict[str, Any], default: int) -> int:
@@ -826,6 +1080,7 @@ def sweep(
     fixture_dir: Path | None = None,
     linkedin_evidence: Path | None = None,
     federal_evidence: Path | None = None,
+    meetup_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -865,6 +1120,10 @@ def sweep(
                 receipt, rows = _commercial_receipt(target)
                 receipts.append(receipt)
                 candidates.extend(rows)
+    if "C" in lanes and meetup_evidence is not None:
+        receipt, rows = _meetup_evidence_candidates(meetup_evidence)
+        receipts.append(receipt)
+        candidates.extend(rows)
 
     lane_summaries = []
     for lane in LANES:

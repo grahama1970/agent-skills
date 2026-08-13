@@ -57,6 +57,24 @@ _SAM_EXTRACT_JS = (
 # Cheap readiness probe: how many opportunity rows are currently rendered.
 _SAM_READY_JS = "(function(){return document.querySelectorAll(\"a[href*='/opp/']\").length;})()"
 
+_MEETUP_CATEGORY_URLS = [
+    ("546", "Technology", "https://www.meetup.com/find/?source=GROUPS&distance=anyDistance&categoryId=546"),
+    ("405", "Career & Business", "https://www.meetup.com/find/?source=GROUPS&distance=anyDistance&categoryId=405"),
+]
+_MEETUP_SEED_GROUP_URLS = [
+    "https://www.meetup.com/bit-haven-hackerspace/",
+    "https://www.meetup.com/infosec-716/",
+]
+_MEETUP_PAGE_EXTRACT_JS = (
+    "(function(){"
+    "var links=[].slice.call(document.querySelectorAll('a[href]')).map(function(a){return a.href;});"
+    "var seen={},uniq=[];"
+    "for(var i=0;i<links.length;i++){var h=links[i];if(h&&h.indexOf('meetup.com')>=0&&!seen[h]){seen[h]=1;uniq.push(h);}}"
+    "return JSON.stringify({url:location.href,title:document.title,"
+    "text:(document.body.innerText||'').slice(0,18000),links:uniq.slice(0,140)});"
+    "})()"
+)
+
 
 class BrowserCaptureError(ValueError):
     """Stable browser-capture error."""
@@ -548,6 +566,191 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
             except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
                 logger.warning("could not close SAM capture tab {}: {}", tab_id, exc)
     (out_dir / "sam-capture-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def _meetup_page_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
+    raw = _surf(surf_run, "js", "--tab-id", tab_id, _MEETUP_PAGE_EXTRACT_JS, timeout=30)
+    parsed = json.loads(json.loads(raw))
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _meetup_group_url(url: str) -> str | None:
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if "meetup.com" not in parsed.netloc.lower():
+        return None
+    parts = [part for part in parsed.path.split("/") if part]
+    if not parts:
+        return None
+    slug = parts[0].lower()
+    if slug in {
+        "account",
+        "apps",
+        "find",
+        "graphql",
+        "home",
+        "login",
+        "members",
+        "messages",
+        "notifications",
+        "hc",
+        "topics",
+    }:
+        return None
+    return f"https://www.meetup.com/{parts[0]}/"
+
+
+def _meetup_name_from_snapshot(snapshot: dict[str, Any], fallback_url: str) -> str:
+    title = str(snapshot.get("title") or "").strip()
+    for marker in (" | Meetup", " - Meetup"):
+        if marker in title:
+            title = title.split(marker, 1)[0].strip()
+    if title and title.lower() not in {"meetup", "search groups"}:
+        return title
+    text = str(snapshot.get("text") or "")
+    for line in text.splitlines():
+        clean = line.strip()
+        if clean and clean.lower() not in {"meetup", "log in", "sign up"}:
+            return clean[:120]
+    return fallback_url.rstrip("/").rsplit("/", 1)[-1].replace("-", " ").title()
+
+
+def _meetup_events_from_text(text: str) -> list[dict[str, Any]]:
+    import re
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    events: list[dict[str, Any]] = []
+    date_re = re.compile(
+        r"\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+|"
+        r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}\b|"
+        r"\b\d{1,2}:\d{2}\s*(?:AM|PM)\b",
+        re.I,
+    )
+    for idx, line in enumerate(lines):
+        if not date_re.search(line):
+            continue
+        title = ""
+        for prev in reversed(lines[max(0, idx - 4):idx]):
+            if len(prev) > 3 and not date_re.search(prev) and prev.lower() not in {"upcoming events", "events"}:
+                title = prev
+                break
+        if title:
+            events.append({"title": title[:140], "starts_at_text": line[:120]})
+        if len(events) >= 3:
+            break
+    return events
+
+
+def capture_meetup_buffalo(
+    out_dir: Path,
+    surf_run: Path = SURF_RUN_DEFAULT,
+    max_group_pages: int = 12,
+) -> dict[str, Any]:
+    """Read-only Meetup capture for Buffalo source-intel networking.
+
+    Visits the Technology and Career & Business category pages plus known
+    high-signal seed groups, extracts visible page text and group links, then
+    writes evidence consumed by run --meetup-evidence. No GraphQL, RSVP, join,
+    message, attendee scrape, or other platform action is attempted.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "meetup_buffalo",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+        "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
+    }
+    tab_id = ""
+    groups: list[dict[str, Any]] = []
+    try:
+        ensure_browser(surf_run)
+        first_url = _MEETUP_CATEGORY_URLS[0][2]
+        created = _surf(surf_run, "tab.new", first_url, "--json", timeout=40)
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        category_pages: list[dict[str, Any]] = []
+        group_sources: dict[str, dict[str, str]] = {}
+        for idx, (category_id, category_name, url) in enumerate(_MEETUP_CATEGORY_URLS):
+            if idx > 0:
+                _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(url), timeout=20)
+            _surf_pause(surf_run, "7")
+            snapshot = _meetup_page_snapshot(surf_run, tab_id)
+            category_pages.append(
+                {
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "url": url,
+                    "title": snapshot.get("title"),
+                }
+            )
+            for link in snapshot.get("links") or []:
+                group_url = _meetup_group_url(str(link))
+                if group_url and group_url not in group_sources:
+                    group_sources[group_url] = {"category_id": category_id, "category_name": category_name}
+        for seed in _MEETUP_SEED_GROUP_URLS:
+            group_sources.setdefault(seed, {"category_id": "seed", "category_name": "Seed group"})
+        for group_url, source in list(group_sources.items())[:max_group_pages]:
+            try:
+                _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
+                _surf_pause(surf_run, "6")
+                snapshot = _meetup_page_snapshot(surf_run, tab_id)
+            except (BrowserCaptureError, subprocess.TimeoutExpired, ValueError, json.JSONDecodeError) as exc:
+                logger.warning("Meetup group capture skipped for {}: {}", group_url, exc)
+                continue
+            text = str(snapshot.get("text") or "")
+            groups.append(
+                {
+                    "source": "human_authorized_meetup_tab",
+                    "observed_at": utc_now(),
+                    "name": _meetup_name_from_snapshot(snapshot, group_url),
+                    "url": group_url,
+                    "category_id": source["category_id"],
+                    "category_name": source["category_name"],
+                    "location": "Buffalo, NY",
+                    "description": text[:1200],
+                    "page_text": text,
+                    "upcoming_events": _meetup_events_from_text(text),
+                }
+            )
+        evidence = {
+            "schema_version": "monitor_opportunities.meetup_capture.v1",
+            "source": "human_authorized_meetup_tab",
+            "capture_method": "surf_read_only_visible_pages",
+            "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+            "observed_at": utc_now(),
+            "category_pages": category_pages,
+            "seed_group_urls": _MEETUP_SEED_GROUP_URLS,
+            "groups": groups,
+            "non_claims": [
+                "Meetup evidence is source-intel only, not a job/application source.",
+                "Capture uses visible page text and links only; no Meetup GraphQL call or attendee scraping.",
+            ],
+        }
+        evidence_path = out_dir / "meetup-buffalo-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if groups else "EMPTY"
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["groups_captured"] = len(groups)
+        receipt["category_pages_captured"] = len(category_pages)
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.error("Meetup Buffalo capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["evidence_path"] = None
+    finally:
+        if tab_id:
+            try:
+                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+                logger.warning("could not close Meetup capture tab {}: {}", tab_id, exc)
+    (out_dir / "meetup-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return receipt

@@ -201,6 +201,14 @@ def sweep(
         readable=True,
         help="Local human-supplied LinkedIn top-candidate evidence; no LinkedIn automation.",
     ),
+    meetup_evidence: Path | None = typer.Option(
+        None,
+        "--meetup-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
+    ),
 ) -> None:
     """Run read-only source discovery and write local receipts."""
     _configure_logging()
@@ -212,6 +220,7 @@ def sweep(
         out_dir=out,
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
+        meetup_evidence=meetup_evidence,
     )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
@@ -340,6 +349,14 @@ def run_command(
         readable=True,
         help="Read-only SAM.gov website capture (used when the SAM API is down; API break must use the website).",
     ),
+    meetup_evidence: Path | None = typer.Option(
+        None,
+        "--meetup-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
+    ),
     outreach_effects: Path | None = typer.Option(
         None,
         "--outreach-effects",
@@ -363,6 +380,7 @@ def run_command(
             roundtable_receipts,
             outreach_effects,
             federal_evidence=federal_evidence,
+            meetup_evidence=meetup_evidence,
         )
     except ValueError as exc:
         _fail(ContractError("RUN_REJECTED", str(exc)))
@@ -595,6 +613,7 @@ def nightly(
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
+        capture_meetup_buffalo,
         capture_linkedin_advanced_search,
         capture_linkedin_top_applicant,
         capture_sales_navigator_saved,
@@ -653,6 +672,14 @@ def nightly(
     sn_receipt = capture_sales_navigator_saved(capture_dir)
     steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
+    meetup_receipt = capture_meetup_buffalo(capture_dir / "meetup")
+    steps["browser_capture_meetup_buffalo"] = {
+        "status": meetup_receipt.get("status"),
+        "captured": meetup_receipt.get("groups_captured"),
+        "category_ids": meetup_receipt.get("category_ids"),
+    }
+    meetup_evidence = meetup_receipt.get("evidence_path")
+
     # DEPLOYMENT ATTESTATION (webgpt P0 #06): record what code/config/credentials
     # actually ran BEFORE any source is touched, so a later reader can tell a
     # data change from a deployment change. Missing credentials must never be
@@ -683,6 +710,8 @@ def nightly(
         run_cmd += ["--federal-evidence", str(federal_evidence)]
     if linkedin_evidence:
         run_cmd += ["--linkedin-evidence", str(linkedin_evidence)]
+    if meetup_evidence:
+        run_cmd += ["--meetup-evidence", str(meetup_evidence)]
     run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
