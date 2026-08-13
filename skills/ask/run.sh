@@ -213,9 +213,10 @@ Ask Options:
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
 
   WebGPT/ChatGPT routing:
-  WebGPT has been removed from /ask. Stale webgpt/chatgpt aliases and
-  --webgpt-* flags fail closed. Use $surf webgpt.submit or the project-level
-  $webgpt workflow directly.
+  Use './run.sh webgpt <question>' — it compiles to a Tau single-call DAG
+  (see the 'webgpt' shortcut above). Only the pre-Tau DIRECT WebGPT oracle
+  was removed: --webgpt-* oracle flags fail closed. /ask always executes
+  browser handlers through the Tau harness, never by calling surf directly.
 
   Other browser oracle backends (--oracle-backend):
   --gemini-tab-id <id>         Chrome tab id for webgemini
