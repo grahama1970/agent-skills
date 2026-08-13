@@ -653,6 +653,31 @@ def nightly(
     sn_receipt = capture_sales_navigator_saved(capture_dir)
     steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
+    # DEPLOYMENT ATTESTATION (webgpt P0 #06): record what code/config/credentials
+    # actually ran BEFORE any source is touched, so a later reader can tell a
+    # data change from a deployment change. Missing credentials must never be
+    # read as "no opportunities today".
+    from .run_attestation import attest
+
+    attestation = attest(skill_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "run-attestation.json").write_text(
+        json.dumps(attestation, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    steps["attestation"] = {
+        "ok": attestation["ok"],
+        "git_revision": attestation["code"]["git_revision"],
+        "skill_tree_dirty": attestation["code"]["skill_tree_dirty"],
+        "environment": attestation["runtime"]["environment"],
+        "missing_required_credentials": attestation["credentials"]["missing_required"],
+    }
+    if not attestation["ok"]:
+        logger.error(
+            "CREDENTIAL PREFLIGHT FAILED: missing {}. Results will be incomplete; "
+            "this is a deployment failure, not an empty market.",
+            attestation["credentials"]["missing_required"],
+        )
+
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if federal_evidence:
         run_cmd += ["--federal-evidence", str(federal_evidence)]
