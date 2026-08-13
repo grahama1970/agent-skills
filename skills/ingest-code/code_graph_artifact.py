@@ -760,6 +760,7 @@ def write_code_graph_bundle(
     symbols: list[CodeSymbolRecord],
     edges: list[dict[str, Any]],
     artifact_root: Path | None = None,
+    environment_manifest_digest: str | None = None,
 ) -> dict[str, Any]:
     """Write the deterministic ingest-code code graph bundle and return metadata."""
     root = codebase_root.resolve()
@@ -839,6 +840,7 @@ def write_code_graph_bundle(
         "artifacts": list(ARTIFACT_FILENAMES) + ["checksums.json"],
         "coverage_complete": coverage["complete"],
         "counts": counts,
+        "environment_manifest_digest": environment_manifest_digest,
     }
 
     payloads: dict[str, bytes] = {

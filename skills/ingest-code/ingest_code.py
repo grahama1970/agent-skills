@@ -31,20 +31,18 @@ from pathlib import Path
 from typing import Any, Optional
 
 import httpx
-from dotenv import load_dotenv
 
 from code_memory_client import (
     CodeMemoryClient,
     code_graph_bundle_digest,
     write_code_projection_request,
 )
+from environment_manifest import write_environment_manifest
 from code_freshness_preflight import refresh_allowed, run_preflight
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
 from incremental_state import FileComponentState, build_transform_fingerprints
 from ingest_code_cwe import scan_file_cwe
-
-load_dotenv(override=False)
 
 try:
     import typer
@@ -209,6 +207,7 @@ def _write_ingest_marker(
     completed_scan_roots: list[str | Path] | None = None,
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
+    environment_manifest: dict[str, Any] | None = None,
     code_graph_artifact: dict[str, Any] | None = None,
     code_projection_request: dict[str, Any] | None = None,
     code_projection_receipt: dict[str, Any] | None = None,
@@ -275,6 +274,7 @@ def _write_ingest_marker(
                 if local_code_symbols_artifact else None
             ),
             "code_symbols_written": local_code_symbols_written,
+            "environment_manifest": environment_manifest,
             "code_graph": code_graph_artifact,
             "code_projection_request": code_projection_request,
             "code_projection_receipt": code_projection_receipt,
@@ -440,6 +440,7 @@ def _apply_code_projection_artifact(
     path: Path,
     scope: str,
     code_graph_artifact: dict[str, Any],
+    environment_manifest: dict[str, Any] | None = None,
     client: CodeMemoryClient | None = None,
 ):
     """Submit one complete code graph artifact to Memory/GMO and require a bound receipt."""
@@ -459,6 +460,9 @@ def _apply_code_projection_artifact(
         source_commit=_current_commit(path),
         expected_counts=expected_counts,
         idempotency_key=idempotency_key,
+        environment_manifest_digest=(
+            environment_manifest or {}
+        ).get("environment_manifest_digest"),
     )
 
 
@@ -467,6 +471,7 @@ def _projection_request_for_artifact(
     path: Path,
     scope: str,
     code_graph_artifact: dict[str, Any],
+    environment_manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Emit a code projection request artifact without opening the Memory socket."""
     expected_counts = _expected_projection_counts(code_graph_artifact)
@@ -484,6 +489,9 @@ def _projection_request_for_artifact(
         source_commit=_current_commit(path),
         expected_counts=expected_counts,
         idempotency_key=idempotency_key,
+        environment_manifest_digest=(
+            environment_manifest or {}
+        ).get("environment_manifest_digest"),
     )
     return {
         "schema": "ingest-code.code_projection_request_artifact.v1",
@@ -493,6 +501,9 @@ def _projection_request_for_artifact(
         "submitted_bundle_digest": result.submitted_bundle_digest,
         "checksums_digest": result.checksums_digest,
         "idempotency_key": idempotency_key,
+        "environment_manifest_digest": (
+            environment_manifest or {}
+        ).get("environment_manifest_digest"),
         "status": "emitted_not_applied",
         "non_claims": result.request.get("non_claims", []),
     }
@@ -1791,6 +1802,14 @@ def scan(
     code_symbols_pruned = 0
     code_projection_request: dict[str, Any] | None = None
     code_projection_receipt: dict[str, Any] | None = None
+    environment_manifest = write_environment_manifest(
+        path / "artifacts" / "ingest-code" / "environment_manifest.json",
+        skill_root=Path(__file__).parent,
+        source_root=path,
+        projection_mode=selected_projection_mode.value,
+        argv=sys.argv,
+        terminal_status="complete",
+    )
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
@@ -1847,6 +1866,7 @@ def scan(
             files=files,
             symbols=code_symbol_records,
             edges=precomputed_edges,
+            environment_manifest_digest=environment_manifest["environment_manifest_digest"],
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
 
@@ -1989,6 +2009,7 @@ def scan(
                 path=path,
                 scope=scope,
                 code_graph_artifact=code_graph_artifact,
+                environment_manifest=environment_manifest,
             )
             print(
                 "Code projection request: "
@@ -2000,6 +2021,7 @@ def scan(
                 path=path,
                 scope=scope,
                 code_graph_artifact=code_graph_artifact,
+                environment_manifest=environment_manifest,
             )
             if apply_result.errors:
                 for error in apply_result.errors[:5]:
@@ -2079,6 +2101,7 @@ def scan(
         "file_components": component_plan.summary() if component_plan else None,
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
+        "environment_manifest": environment_manifest,
         "code_graph_artifact": code_graph_artifact,
         "code_projection_request": code_projection_request,
         "code_projection_receipt": code_projection_receipt,
@@ -2104,6 +2127,7 @@ def scan(
                 completed_scan_roots=scan_roots if code_symbols_stored > 0 else [],
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
+                environment_manifest=environment_manifest,
                 code_graph_artifact=code_graph_artifact,
                 code_projection_request=code_projection_request,
                 code_projection_receipt=code_projection_receipt,
@@ -2228,6 +2252,14 @@ def rescan(
         code_graph_artifact: dict[str, Any] | None = None
         code_projection_request: dict[str, Any] | None = None
         code_projection_receipt: dict[str, Any] | None = None
+        environment_manifest = write_environment_manifest(
+            path / "artifacts" / "ingest-code" / "environment_manifest.json",
+            skill_root=Path(__file__).parent,
+            source_root=path,
+            projection_mode=selected_projection_mode.value,
+            argv=sys.argv,
+            terminal_status="complete",
+        )
         if treesitter and selected_projection_mode is not ProjectionMode.NONE:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
@@ -2250,12 +2282,14 @@ def rescan(
                 files=projection_files,
                 symbols=projection_records,
                 edges=projection_edges,
+                environment_manifest_digest=environment_manifest["environment_manifest_digest"],
             )
             if selected_projection_mode is ProjectionMode.EMIT:
                 code_projection_request = _projection_request_for_artifact(
                     path=path,
                     scope=scope,
                     code_graph_artifact=code_graph_artifact,
+                    environment_manifest=environment_manifest,
                 )
                 print(
                     "Code projection request: "
@@ -2267,6 +2301,7 @@ def rescan(
                     path=path,
                     scope=scope,
                     code_graph_artifact=code_graph_artifact,
+                    environment_manifest=environment_manifest,
                 )
                 if apply_result.errors:
                     for error in apply_result.errors[:5]:
@@ -2299,6 +2334,7 @@ def rescan(
             completed_scan_roots=completed_code_symbol_scan_roots,
             local_code_symbols_artifact=local_code_symbols_artifact,
             local_code_symbols_written=local_code_symbols_written,
+            environment_manifest=environment_manifest,
             code_graph_artifact=code_graph_artifact,
             code_projection_request=code_projection_request,
             code_projection_receipt=code_projection_receipt,

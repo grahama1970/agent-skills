@@ -73,6 +73,54 @@ cd .pi/skills/ingest-code
   --json
 ```
 
+## Runner Reproducibility Contract
+
+`run.sh` executes through the skill-scoped `pyproject.toml` and `uv.lock`:
+
+```text
+uv run --project "$SCRIPT_DIR" --locked python "$SCRIPT_DIR/ingest_code.py" ...
+```
+
+Normal execution does not use dynamic `uv --with` dependencies, does not source
+the repository root `.env`, and does not fall back to ambient `python3`. Missing
+`uv`, missing lock state, or incompatible Python/dependency resolution fails
+closed before the scanner runs.
+
+Each invocation gets run-scoped mutable paths under:
+
+```text
+${INGEST_CODE_RUN_ROOT:-${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/ingest-code-runs/$INGEST_CODE_RUN_ID}
+```
+
+The runner sets `UV_PROJECT_ENVIRONMENT`, `UV_CACHE_DIR`, `XDG_CACHE_HOME`,
+`PYTHONPYCACHEPREFIX`, and `TMPDIR` under that run root unless the caller has
+already supplied explicit values. Concurrent runs therefore do not share the
+normal virtual environment, uv cache, pycache, or temp directory.
+
+Every scan/rescan emits:
+
+```text
+artifacts/ingest-code/environment_manifest.json
+```
+
+with schema `ingest-code.environment_manifest.v1`. The manifest records the
+interpreter, package versions, runner/module/lock hashes, source repository
+identity, projection mode, run-scoped mutable paths, terminal status, and the
+allowlisted environment variable names as present/absent classifications only.
+It never records environment variable values. Its stable
+`environment_manifest_digest` is included in the code-graph manifest and in
+`ingest-code.code_projection_request.v1`.
+
+For Docker-backed Memory/GMO deployments where the service sees a different
+mount path than the host, set:
+
+```bash
+export INGEST_CODE_BUNDLE_PATH_MAP=/host/prefix=/service/prefix
+```
+
+The host still computes bundle/checksum digests from the local artifacts; only
+the request's `bundle_path` transport field is translated for the service.
+
 ## Commands
 
 ### `scan` — Full Codebase Scan

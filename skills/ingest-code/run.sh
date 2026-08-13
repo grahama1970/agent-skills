@@ -1,34 +1,29 @@
 #!/usr/bin/env bash
-# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
-unset VIRTUAL_ENV
-# ingest-code skill runner
-# Scans codebases for CWE mappings and stores in /memory
+# ingest-code skill runner.
+#
+# Normal execution is lock-bound and uses run-scoped mutable paths. This script
+# intentionally does not source the repository-level .env.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/ingest-code-runner-venv}"
-export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/ingest-code-runner-pycache}"
+RUN_ID="${INGEST_CODE_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
+RUN_BASE="${INGEST_CODE_RUN_ROOT:-${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/ingest-code-runs/$RUN_ID}"
+mkdir -p "$RUN_BASE"/{venv,cache,pycache,tmp}
 
-PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+export INGEST_CODE_RUN_ID="$RUN_ID"
+export INGEST_CODE_RUN_ROOT="$RUN_BASE"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$RUN_BASE/venv}"
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$RUN_BASE/cache/uv}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$RUN_BASE/cache}"
+export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-$RUN_BASE/pycache}"
+export TMPDIR="${TMPDIR:-$RUN_BASE/tmp}"
+unset VIRTUAL_ENV
 
-# Load .env if present
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    set -a
-    source "$PROJECT_ROOT/.env"
-    set +a
+if ! command -v uv >/dev/null 2>&1; then
+    echo '{"error":"uv is required for locked ingest-code execution","admissible":false}' >&2
+    exit 127
 fi
-PYTHON="${PYTHON:-python3}"
 
-# Check for uv
-if command -v uv &>/dev/null; then
-    # Don't cd - preserve user's working directory so paths like "." resolve correctly
-    exec uv run --no-project --isolated \
-        --with typer \
-        --with httpx \
-        --with loguru \
-        --with python-dotenv \
-        python "$SCRIPT_DIR/ingest_code.py" "$@"
-else
-    exec "$PYTHON" "$SCRIPT_DIR/ingest_code.py" "$@"
-fi
+# Preserve caller working directory so relative codebase paths still resolve.
+exec uv run --project "$SCRIPT_DIR" --locked python "$SCRIPT_DIR/ingest_code.py" "$@"

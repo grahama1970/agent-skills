@@ -10,12 +10,9 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from dotenv import load_dotenv
 
 from code_symbol_record import CodeSymbolRecord
 
-
-load_dotenv(override=False)
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
 DEFAULT_CODE_SYMBOLS_BATCH_SIZE = 100
@@ -126,6 +123,7 @@ def build_code_projection_request(
     source_commit: str,
     expected_counts: dict[str, int],
     idempotency_key: str,
+    environment_manifest_digest: str | None = None,
 ) -> dict[str, Any]:
     """Build the deterministic ingest-code projection request handoff."""
     bundle_path = bundle_path.resolve()
@@ -152,6 +150,7 @@ def build_code_projection_request(
         "submitted_bundle_digest": submitted_digest,
         "checksums_digest": checksums_digest,
         "expected_counts": dict(expected_counts),
+        "environment_manifest_digest": environment_manifest_digest,
         "transform_fingerprints": manifest.get("transform_fingerprints"),
         "skill": "ingest-code",
         "schema_versions": {
@@ -188,6 +187,7 @@ def write_code_projection_request(
     source_commit: str,
     expected_counts: dict[str, int],
     idempotency_key: str,
+    environment_manifest_digest: str | None = None,
 ) -> CodeProjectionRequestResult:
     """Write and digest one projection request without contacting Memory/GMO."""
     request = build_code_projection_request(
@@ -199,6 +199,7 @@ def write_code_projection_request(
         source_commit=source_commit,
         expected_counts=expected_counts,
         idempotency_key=idempotency_key,
+        environment_manifest_digest=environment_manifest_digest,
     )
     target = request_path or (bundle_path.resolve() / "code_projection_request.json")
     target.write_text(json.dumps(request, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -280,6 +281,7 @@ class CodeMemoryClient:
         source_commit: str,
         expected_counts: dict[str, int],
         idempotency_key: str,
+        environment_manifest_digest: str | None = None,
     ) -> CodeProjectionApplyResult:
         """Apply one complete code-graph bundle through Memory/GMO lifecycle authority."""
         bundle_path = bundle_path.resolve()
@@ -292,6 +294,7 @@ class CodeMemoryClient:
             source_commit=source_commit,
             expected_counts=expected_counts,
             idempotency_key=idempotency_key,
+            environment_manifest_digest=environment_manifest_digest,
         )
         submitted_digest = request["submitted_bundle_digest"]
         checksums_digest = request["checksums_digest"]

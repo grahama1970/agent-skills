@@ -276,6 +276,7 @@ def test_scan_projection_mode_emit_writes_request_without_memory_effect(monkeypa
     assert request["schema"] == "ingest-code.code_projection_request.v1"
     assert request["requested_effect_kind"] == "memory_gmo.code_projection.apply"
     assert request["submitted_bundle_digest"] == request_artifact["submitted_bundle_digest"]
+    assert request["environment_manifest_digest"] == request_artifact["environment_manifest_digest"]
     assert marker["code_index"]["projection_status"] == "requested_not_applied"
     assert marker["code_index"]["projection_applied"] is False
     assert marker["local_artifacts"]["code_projection_receipt"] is None
