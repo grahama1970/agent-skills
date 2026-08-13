@@ -1,0 +1,38 @@
+"""Claim-bearing artifacts bind to one run-scoped snapshot."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from monitor_opportunities.cli import app
+from monitor_opportunities.contracts import ContractError
+from monitor_opportunities.pipeline import _resolve_claim_snapshot_path
+from monitor_opportunities.util import sha256_json
+
+runner = CliRunner()
+SKILL_DIR = Path("skills/monitor-opportunities")
+
+
+def test_live_run_cannot_resolve_claims_from_test_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
+    fixture_claims = SKILL_DIR / "tests" / "fixtures" / "claims" / "approved-claims.json"
+    monkeypatch.setenv("MONITOR_CLAIM_SNAPSHOT_PATH", str(fixture_claims))
+    with pytest.raises(ContractError) as exc:
+        _resolve_claim_snapshot_path(SKILL_DIR, None, True)
+    assert exc.value.code == "TEST_FIXTURE_AUTHORITY_FORBIDDEN"
+
+
+def test_report_claim_artifacts_share_one_snapshot_digest(tmp_path: Path) -> None:
+    fixture_dir = SKILL_DIR / "tests" / "fixtures" / "discovery"
+    out = tmp_path / "run"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    snapshot = json.loads((out / "claim-snapshot.json").read_text())
+    digest = sha256_json(snapshot)
+    manifest = json.loads((out / "report-manifest.json").read_text())
+    assert {row["claim_snapshot_sha256"] for row in manifest["resume_variants"]} == {digest}
+    assert {row["claim_snapshot_sha256"] for row in manifest["outreach_packets"]} == {digest}
+    assert {row["claim_snapshot_digest"] for row in manifest["application_packets"]} == {digest}

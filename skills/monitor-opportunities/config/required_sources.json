@@ -8,7 +8,20 @@
       "channel": "browser_human_supplied",
       "note": "LinkedIn 'top applicant' collection via read-only surf capture or --linkedin-evidence; never platform automation.",
       "website_fallback": "https://www.linkedin.com/jobs/collections/top-applicant/",
-      "api_failure_requires_browser": true
+      "api_failure_requires_browser": true,
+      "source_classes": [
+        "human_supplied_linkedin",
+        "ops_linkedin_authorized_read_only"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
     },
     {
       "id": "indeed",
@@ -16,27 +29,79 @@
       "channel": "browser_human_supplied",
       "note": "Indeed automation hits captcha; requires human-supplied results-page capture.",
       "website_fallback": "https://www.indeed.com/jobs",
-      "api_failure_requires_browser": true
+      "api_failure_requires_browser": true,
+      "source_classes": [
+        "human_supplied_indeed"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
     },
     {
       "id": "hiddenjobs",
       "lane": "A",
-      "channel": "browser_or_locator",
+      "channel": "browser_human_supplied",
       "note": "No public API \u2014 browser capture from hiddenjobs.dev is mandatory, always.",
       "website_fallback": "https://hiddenjobs.dev/",
-      "api_failure_requires_browser": true
+      "api_failure_requires_browser": true,
+      "source_classes": [
+        "human_supplied_hiddenjobs"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
     },
     {
       "id": "greenhouse",
       "lane": "A",
       "channel": "api",
-      "note": "Registry greenhouse employers."
+      "note": "Registry greenhouse employers.",
+      "source_classes": [
+        "employer_ats"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA",
+        "INVALID_REQUEST"
+      ]
     },
     {
       "id": "ashby",
       "lane": "A",
       "channel": "api",
-      "note": "Registry ashby employers (Reducto/Unstructured/Datalab)."
+      "note": "Registry ashby employers (Reducto/Unstructured/Datalab).",
+      "source_classes": [
+        "employer_ats"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA",
+        "INVALID_REQUEST"
+      ]
     },
     {
       "id": "sam.gov",
@@ -44,19 +109,61 @@
       "channel": "browser_or_api",
       "note": "SAM.gov active opportunities; API 404s so browser capture is the channel.",
       "website_fallback": "https://sam.gov/search/?index=opp&keyword=artificial+intelligence",
-      "api_failure_requires_browser": true
+      "api_failure_requires_browser": true,
+      "source_classes": [
+        "federal_feed",
+        "sam.gov_website"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA",
+        "INVALID_REQUEST"
+      ]
     },
     {
       "id": "darpa",
       "lane": "B",
       "channel": "api",
-      "note": "DARPA opportunities."
+      "note": "DARPA opportunities.",
+      "source_classes": [
+        "federal_feed"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA",
+        "INVALID_REQUEST"
+      ]
     },
     {
       "id": "client_research",
       "lane": "C",
       "channel": "brave_search",
-      "note": "Deep client-services research over candidate mandates (document extraction, agentic pipelines, compliance, Buffalo prospects). Mandatory, no exceptions."
+      "note": "Deep client-services research over candidate mandates (document extraction, agentic pipelines, compliance, Buffalo prospects). Mandatory, no exceptions.",
+      "source_classes": [
+        "source_locator"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
     }
   ],
   "accepted_non_match_states": [

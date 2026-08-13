@@ -110,6 +110,14 @@ def render_html(manifest: ReportManifest) -> str:
         for item in manifest.eligibility_rejections
     ) or "<li>None</li>"
 
+    source_intel = "".join(
+        f"<article><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
+        f"<p>{_badge(item.signal_type)} {_badge(item.decision)}</p>"
+        f"{_link('Source evidence', item.primary_evidence_url)}"
+        f"<h4>Reasons</h4>{_list(item.reasons)}</article>"
+        for item in manifest.source_intel
+    ) or "<p>None</p>"
+
     variants = "".join(
         f"<article><h3>{html.escape(item.variant_id)}</h3>"
         f"<p>{_badge(item.status)}</p><h4>Claims</h4>{_list(item.claim_keys)}"
@@ -220,7 +228,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <p><strong>Run:</strong> {html.escape(manifest.run_id)} · <strong>Stage:</strong> {_badge(manifest.stage)} · <strong>Readiness:</strong> {_badge(manifest.operational_readiness)}</p>
 <p>{html.escape(manifest.immutable_goal.text)}</p></header>
 <section><h2>Coverage and feed health</h2><table><thead><tr><th>Lane</th><th>Status</th><th>Observed</th><th>Admitted</th><th>Limitations</th></tr></thead><tbody>{lanes}</tbody></table></section>
-<section><h2>Opportunities</h2>{opportunities}<h3>Hard rejections</h3><ul>{rejections}</ul></section>
+<section><h2>Opportunities</h2>{opportunities}<h3>Source intelligence</h3>{source_intel}<h3>Hard rejections</h3><ul>{rejections}</ul></section>
 <section><h2>Tailored resume variants</h2>{variants}</section>
 <section><h2>Human-transmitted outreach</h2><p><strong>The human transmits. Stage 0 packets are not sendable.</strong></p>{outreach}</section>
 <section><h2>ATS application state</h2>{applications}</section>

@@ -132,6 +132,8 @@ def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
 def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     raw = path.read_bytes()
     receipt = _base_receipt("A", "linkedin", "Human-supplied LinkedIn evidence", "human_supplied_linkedin")
+    receipt["required_source_id"] = "linkedin_top_applicant"
+    receipt["channel"] = "browser_human_supplied"
     receipt["automation_policy"] = LINKEDIN_AUTOMATION_POLICY
     receipt["request_summary"] = f"Read local human-supplied LinkedIn artifact {path.name}; no browser or platform access"
     receipt["response_status"] = None
@@ -489,6 +491,8 @@ def _fixture_sweep(fixture_dir: Path, lanes: set[str]) -> tuple[list[dict[str, A
 def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     slug = target["slug"]
     receipt = _base_receipt("A", "greenhouse", target["name"], "employer_ats")
+    receipt["required_source_id"] = "greenhouse"
+    receipt["channel"] = "api"
     url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true"
     _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
@@ -557,6 +561,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
 def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     slug = target["slug"]
     receipt = _base_receipt("A", "lever", target["name"], "employer_ats")
+    receipt["channel"] = "api"
     url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
     _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
@@ -626,6 +631,8 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
 def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     slug = target["slug"]
     receipt = _base_receipt("A", "ashby", target["name"], "employer_ats")
+    receipt["required_source_id"] = "ashby"
+    receipt["channel"] = "api"
     url = f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
     _add_registry_evidence(receipt, target, target.get("primary_source_url"), url)
     receipt["request_summary"] = f"GET {url} with no credentials; response capped"
@@ -837,6 +844,10 @@ def _source_locator_receipt(client: httpx.Client, target: dict[str, Any]) -> dic
     provider = str(target.get("provider") or "source-locator")
     lane = str(target.get("lane") or "A")
     receipt = _base_receipt(lane, provider, target["name"], "source_locator")
+    required_ids = {"hiddenjobs.dev": "hiddenjobs", "indeed": "indeed"}
+    if provider in required_ids:
+        receipt["required_source_id"] = required_ids[provider]
+        receipt["channel"] = "source_locator"
     url = target["url"]
     _add_registry_evidence(receipt, target, url)
     receipt["request_summary"] = f"GET {url} source-locator hint only; no candidates admitted"
@@ -873,6 +884,8 @@ def _source_locator_receipt(client: httpx.Client, target: dict[str, Any]) -> dic
 def _sam_receipt(target: dict[str, Any] | None = None) -> dict[str, Any]:
     target = target or {"name": "SAM.gov Opportunities"}
     receipt = _base_receipt("B", "sam.gov", target["name"], "federal_feed")
+    receipt["required_source_id"] = "sam.gov"
+    receipt["channel"] = "api"
     api_key = os.getenv("SAM_GOV_API_KEY")
     _add_registry_evidence(receipt, target, "https://api.sam.gov/prod/opportunities/v2/search")
     receipt["request_summary"] = "SAM.gov opportunity probe; credential value redacted"
@@ -934,6 +947,9 @@ def _sam_receipt(target: dict[str, Any] | None = None) -> dict[str, Any]:
 def _federal_page_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     provider = str(target.get("provider") or "federal-primary")
     receipt = _base_receipt("B", provider, target["name"], "federal_feed")
+    if provider == "darpa":
+        receipt["required_source_id"] = "darpa"
+        receipt["channel"] = "api"
     url = target["url"]
     _add_registry_evidence(receipt, target, url)
     receipt["request_summary"] = f"GET {url} federal primary source; no credentials"
@@ -991,6 +1007,7 @@ def _federal_page_candidates(target: dict[str, Any]) -> tuple[dict[str, Any], li
 
 def _commercial_receipt(target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     receipt = _base_receipt("C", "primary-company-source", target["name"], "primary_company_source")
+    receipt["channel"] = "primary_source"
     receipt["request_summary"] = f"GET {target['url']} primary source; no credentials"
     _add_registry_evidence(receipt, target, target["url"])
     candidates: list[dict[str, Any]] = []
@@ -1112,6 +1129,17 @@ def sweep(
                 candidates.extend(rows)
             if federal_evidence is not None:
                 receipt, rows = _federal_website_receipt(federal_evidence)
+                sam_api = next(
+                    (
+                        row
+                        for row in receipts
+                        if row.get("required_source_id") == "sam.gov"
+                        and row.get("source_class") == "federal_feed"
+                    ),
+                    None,
+                )
+                if sam_api is not None:
+                    receipt["fallback_for_receipt_id"] = sam_api["receipt_id"]
                 receipts.append(receipt)
                 candidates.extend(rows)
         if "C" in lanes:

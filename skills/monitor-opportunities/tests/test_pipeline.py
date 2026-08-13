@@ -14,6 +14,8 @@ from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
 from monitor_opportunities.contracts import IMMUTABLE_GOAL
+from monitor_opportunities.discovery import _linkedin_evidence_candidates
+from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel
 from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
@@ -99,20 +101,18 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
     out = tmp_path / "nightly-linkedin"
     sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
-    assert result.exit_code == 0, result.output
-    receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
-    assert receipt["external_effects"] is False
-    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
-    linkedin_receipts = [
-        row for row in manifest["source_receipts"] if row["source_class"] == "human_supplied_linkedin"
-    ]
-    assert linkedin_receipts
-    assert linkedin_receipts[0]["automation_policy"] == "linkedin_no_automation"
-    assert any(
-        "linkedin profile/recommendation-based relevance evidence" in " ".join(row["why_candidate"]).lower()
-        for row in manifest["opportunities"]
-    )
-    assert all(action["effects_external"] is False for action in manifest["decision_actions"])
+    assert result.exit_code == 2
+    assert "REQUIRED_SOURCE_CONTRACT_VIOLATION" in result.stderr
+    receipt, rows = _linkedin_evidence_candidates(fixture)
+    assert receipt["required_source_id"] == "linkedin_top_applicant"
+    assert receipt["automation_policy"] == "linkedin_no_automation"
+    assert rows
+    assert _is_report_opportunity(rows[0]) is False
+    intel = _source_intel(rows[0])
+    assert intel is not None
+    assert intel["signal_type"] == "LINKEDIN_LOCATOR"
+    assert intel["decision"] == "LOCATOR_ONLY"
+    assert intel["action_worthy"] is False
 
 
 def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevant(tmp_path: Path) -> None:
@@ -120,27 +120,15 @@ def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevan
     out = tmp_path / "nightly-ops-linkedin"
     sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
-    assert result.exit_code == 0, result.output
-    receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
-    assert receipt["external_effects"] is False
-    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
-    linkedin_receipts = [
-        row for row in manifest["source_receipts"] if row["source_class"] == "ops_linkedin_authorized_read_only"
-    ]
-    assert linkedin_receipts
-    assert linkedin_receipts[0]["automation_policy"] == "linkedin_authorized_read_only_no_actions"
-    assert any(row["title"] == "GenAI Python Systems Engineer - Senior Manager" for row in manifest["opportunities"])
-    linked = next(row for row in manifest["opportunities"] if row["title"] == "GenAI Python Systems Engineer - Senior Manager")
-    assert linked["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
-    assert linked["posting_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
-    assert linked["apply_url"] is None
-    assert not any(row["title"] == "Founders Associate" for row in manifest["opportunities"])
-    # "Founders Associate" is now dropped by the role-type filter (off-mandate
-    # founder gig) before the location check — a more specific, correct reason.
-    assert any(
-        row["title"] == "Founders Associate" and row["reason_code"] == "REJECT_ROLE_TYPE"
-        for row in manifest["eligibility_rejections"]
-    )
+    assert result.exit_code == 2
+    assert "REQUIRED_SOURCE_CONTRACT_VIOLATION" in result.stderr
+    receipt, rows = _linkedin_evidence_candidates(fixture)
+    assert receipt["source_class"] == "ops_linkedin_authorized_read_only"
+    assert receipt["automation_policy"] == "linkedin_authorized_read_only_no_actions"
+    assert rows
+    assert all(_is_report_opportunity(row) is False for row in rows)
+    intel = [_source_intel(row) for row in rows]
+    assert all(row and row["signal_type"] == "LINKEDIN_LOCATOR" for row in intel)
 
 
 def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_path: Path) -> None:
@@ -153,16 +141,20 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
     )
     assert result.exit_code == 0, result.output
     manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
-    networking = [row for row in manifest["opportunities"] if row["opportunity_type"] == "networking_signal"]
+    networking = [row for row in manifest["source_intel"] if row["signal_type"] == "MEETUP_NETWORKING"]
     assert networking
     assert any(row["organization"] == "Infosec 716" for row in networking)
     infosec = next(row for row in networking if row["organization"] == "Infosec 716")
-    assert infosec["apply_url"] is None
-    assert infosec["status"] == "WATCHLISTED"
-    assert any("Meetup is source-intel only" in item for item in infosec["why_candidate"])
-    assert any("Recommended Meetup decision: ATTEND" in item for item in infosec["screening_interface_profile"]["observed"])
+    assert infosec["decision"] == "ATTEND_MEETUP"
+    assert any("Meetup source-intel only" in item for item in infosec["reasons"])
+    intel_ids = {row["signal_id"] for row in networking}
+    assert not any(row["opportunity_id"] in intel_ids for row in manifest["resume_variants"])
+    assert not any(row["opportunity_id"] in intel_ids for row in manifest["outreach_packets"])
+    assert not any(row["opportunity_id"] in intel_ids for row in manifest["applications"])
+    assert not any(row["opportunity_id"] in intel_ids for row in manifest["application_packets"])
     actions = {row["action"]: row for row in manifest["decision_actions"]}
     assert actions["ATTEND_MEETUP"]["effects_external"] is False
+    assert actions["ATTEND_MEETUP"]["target_type"] == "source_intel"
     assert actions["WATCH_MEETUP"]["effects_external"] is False
     assert actions["SKIP_MEETUP"]["effects_external"] is False
 

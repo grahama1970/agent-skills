@@ -58,6 +58,8 @@ def linkedin_required_receipt(evidence_supplied: bool) -> dict[str, Any]:
     required', never a silent skip.
     """
     receipt = base_receipt("A", "linkedin", "LinkedIn top-applicant", "human_supplied_linkedin")
+    receipt["required_source_id"] = "linkedin_top_applicant"
+    receipt["channel"] = "browser_human_supplied"
     receipt["automation_policy"] = "linkedin_authorized_read_only_no_actions"
     receipt["request_summary"] = "LinkedIn top-applicant requires human-supplied read-only capture"
     if evidence_supplied:
@@ -78,6 +80,8 @@ def client_research_receipt(skill_dir: Path) -> dict[str, Any]:
     prospects). Honest FEED_DOWN receipt if the search tool is unavailable.
     """
     receipt = base_receipt("C", "client-research", "Client-services prospects", "source_locator")
+    receipt["required_source_id"] = "client_research"
+    receipt["channel"] = "brave_search"
     queries = [
         "companies hiring document extraction AI agentic pipelines compliance",
         "Buffalo NY AI consulting document extraction machine learning company",
@@ -137,6 +141,8 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
     source_class 'sam.gov_website' marks a browser fallback capture.
     """
     receipt = base_receipt("B", "sam.gov", "SAM.gov website capture", "sam.gov_website")
+    receipt["required_source_id"] = "sam.gov"
+    receipt["channel"] = "browser_or_api"
     receipt["request_summary"] = "read-only surf capture of SAM.gov opportunity search"
     try:
         data = json.loads(evidence_path.read_text(encoding="utf-8"))

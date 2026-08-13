@@ -14,28 +14,49 @@ from monitor_opportunities.pipeline import _enforce_required_sources
 SKILL_DIR = Path("skills/monitor-opportunities")
 
 
-def _write_receipts(tmp: Path, providers_and_status: list[tuple[str, str]]) -> Path:
+def _required_config() -> dict[str, dict[str, object]]:
     import json
 
+    cfg = json.loads((SKILL_DIR / "config" / "required_sources.json").read_text())
+    return {row["id"]: row for row in cfg["required"]}
+
+
+def _write_receipts(
+    tmp: Path,
+    providers_and_status: list[tuple[str, str]],
+    *,
+    overrides: dict[str, dict[str, object]] | None = None,
+) -> Path:
+    import json
+
+    config = _required_config()
+    overrides = overrides or {}
     d = tmp / "discovery"
     d.mkdir(parents=True)
     lines = []
     for i, (prov, status) in enumerate(providers_and_status):
-        lines.append(json.dumps({
-            "receipt_id": f"r{i}", "lane": "A", "provider": prov, "target": prov,
-            "source_class": "employer_ats", "result_status": status,
+        required = config[prov]
+        source_classes = required.get("source_classes") or ["employer_ats"]
+        row = {
+            "receipt_id": f"r{i}", "lane": required["lane"], "provider": prov, "target": prov,
+            "required_source_id": prov, "channel": required["channel"],
+            "source_class": source_classes[0], "result_status": status,
             "observed_at": "2026-08-06T00:00:00Z", "request_summary": "x",
             "response_status": 200, "content_type": None, "response_bytes": 0,
-            "content_sha256": None, "evidence_refs": [], "limitations": [],
+            "content_sha256": "a" * 64 if status in {"MATCHES", "NO_MATCHES"} else None,
+            "evidence_refs": ["fixture://source"] if status in {"MATCHES", "NO_MATCHES"} else [],
+            "limitations": [],
+        }
+        row.update(overrides.get(prov, {}))
+        lines.append(json.dumps({
+            **row,
         }))
     (d / "source-receipts.jsonl").write_text("\n".join(lines), encoding="utf-8")
     return d
 
 
 def _all_required() -> list[tuple[str, str]]:
-    import json
-    cfg = json.loads((SKILL_DIR / "config" / "required_sources.json").read_text())
-    return [(r["id"], "MATCHES") for r in cfg["required"]]
+    return [(rid, "MATCHES") for rid in _required_config()]
 
 
 def test_all_required_present_passes(tmp_path: Path) -> None:
@@ -47,21 +68,41 @@ def test_all_required_present_passes(tmp_path: Path) -> None:
 def test_absent_required_source_fails(tmp_path: Path) -> None:
     rows = [r for r in _all_required() if r[0] != "client_research"]
     d = _write_receipts(tmp_path, rows)
-    with pytest.raises(ContractError, match="must attempt every required source"):
+    with pytest.raises(ContractError, match="exact required_source_id"):
         _enforce_required_sources(SKILL_DIR, d)
 
 
 def test_not_searched_status_fails(tmp_path: Path) -> None:
     rows = [(rid, "NOT_SEARCHED" if rid == "indeed" else "MATCHES") for rid, _ in _all_required()]
     d = _write_receipts(tmp_path, rows)
-    with pytest.raises(ContractError, match="must attempt every required source"):
+    with pytest.raises(ContractError, match="exact required_source_id"):
         _enforce_required_sources(SKILL_DIR, d)
 
 
 def test_honest_feed_down_is_allowed(tmp_path: Path) -> None:
     rows = [(rid, "FEED_DOWN" if rid == "sam.gov" else "MATCHES") for rid, _ in _all_required()]
-    d = _write_receipts(tmp_path, rows)
+    d = _write_receipts(tmp_path, rows, overrides={"sam.gov": {"channel": "browser_or_api"}})
     assert _enforce_required_sources(SKILL_DIR, d)["required_sources_enforced"] is True
+
+
+def test_wrong_lane_channel_or_source_class_fails(tmp_path: Path) -> None:
+    d = _write_receipts(
+        tmp_path,
+        _all_required(),
+        overrides={"hiddenjobs": {"channel": "source_locator", "source_class": "source_locator"}},
+    )
+    with pytest.raises(ContractError, match="source_class=source_locator"):
+        _enforce_required_sources(SKILL_DIR, d)
+
+
+def test_generic_linkedin_does_not_satisfy_top_applicant(tmp_path: Path) -> None:
+    d = _write_receipts(
+        tmp_path,
+        _all_required(),
+        overrides={"linkedin_top_applicant": {"required_source_id": "linkedin"}},
+    )
+    with pytest.raises(ContractError, match="linkedin_top_applicant"):
+        _enforce_required_sources(SKILL_DIR, d)
 
 
 def test_api_failure_without_website_fallback_fails(tmp_path: Path) -> None:
@@ -69,7 +110,11 @@ def test_api_failure_without_website_fallback_fails(tmp_path: Path) -> None:
 
     rows = [(rid, "MATCHES") for rid, _ in _all_required()]
     rows = [(rid, "FEED_DOWN" if rid == "sam.gov" else s) for rid, s in rows]
-    d = _write_receipts(tmp_path, rows)
+    d = _write_receipts(
+        tmp_path,
+        rows,
+        overrides={"sam.gov": {"channel": "api", "response_status": 503}},
+    )
     with pytest.raises(ContractError, match="use the website"):
         _enforce_api_website_fallback(SKILL_DIR, d)
 
@@ -80,20 +125,27 @@ def test_api_failure_with_website_capture_passes(tmp_path: Path) -> None:
 
     d = tmp_path / "discovery"
     d.mkdir(parents=True)
-    lines = [json.dumps({"receipt_id": f"r{i}", "lane": "A", "provider": rid, "target": rid,
-        "source_class": "employer_ats", "result_status": "MATCHES", "observed_at": "2026-08-06T00:00:00Z",
-        "request_summary": "x", "response_status": 200, "content_type": None, "response_bytes": 0,
-        "content_sha256": None, "evidence_refs": [], "limitations": []})
-        for i, (rid, _) in enumerate(_all_required())]
+    config = _required_config()
+    lines = []
+    for i, (rid, _) in enumerate(_all_required()):
+        required = config[rid]
+        source_classes = required.get("source_classes") or ["employer_ats"]
+        lines.append(json.dumps({"receipt_id": f"r{i}", "lane": required["lane"], "provider": rid, "target": rid,
+            "required_source_id": rid, "channel": required["channel"], "source_class": source_classes[0],
+            "result_status": "MATCHES", "observed_at": "2026-08-06T00:00:00Z",
+            "request_summary": "x", "response_status": 200, "content_type": None, "response_bytes": 1,
+            "content_sha256": "a" * 64, "evidence_refs": ["fixture://source"], "limitations": []}))
     # SAM API fails, but a website capture receipt exists
     lines.append(json.dumps({"receipt_id": "sam_api", "lane": "B", "provider": "sam.gov", "target": "sam",
-        "source_class": "federal_feed", "result_status": "FEED_DOWN", "observed_at": "2026-08-06T00:00:00Z",
+        "required_source_id": "sam.gov", "channel": "api", "source_class": "federal_feed",
+        "result_status": "FEED_DOWN", "observed_at": "2026-08-06T00:00:00Z",
         "request_summary": "x", "response_status": 404, "content_type": None, "response_bytes": 0,
         "content_sha256": None, "evidence_refs": [], "limitations": []}))
     lines.append(json.dumps({"receipt_id": "sam_web", "lane": "B", "provider": "sam.gov", "target": "sam",
-        "source_class": "sam.gov_website", "result_status": "MATCHES", "observed_at": "2026-08-06T00:00:00Z",
+        "required_source_id": "sam.gov", "channel": "browser_or_api", "source_class": "sam.gov_website",
+        "fallback_for_receipt_id": "sam_api", "result_status": "MATCHES", "observed_at": "2026-08-06T00:00:00Z",
         "request_summary": "x", "response_status": 200, "content_type": None, "response_bytes": 0,
-        "content_sha256": None, "evidence_refs": [], "limitations": []}))
+        "content_sha256": "b" * 64, "evidence_refs": ["fixture://sam"], "limitations": []}))
     (d / "source-receipts.jsonl").write_text("\n".join(lines), encoding="utf-8")
     assert _enforce_api_website_fallback(SKILL_DIR, d)["api_website_fallback_enforced"] is True
 

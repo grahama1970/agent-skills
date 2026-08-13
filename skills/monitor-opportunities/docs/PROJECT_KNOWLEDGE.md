@@ -1,15 +1,31 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-08
+Updated: 2026-08-13
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
 
-## Current state (2026-08-08): OPERATIONAL nightly, human-gated effects
+## Current state (2026-08-13): fail-closed Stage 0 repair, live readiness gated
 
-The nightly is scheduled (`monitor-opportunities-nightly`, cron `0 2 * * *`) and runs
-live end-to-end — proven by a successful scheduled run and by the `/agentic-evals`
-real-world case (READY). `external_effects` stays FALSE by design: no auto-submit, no
-InMail/Gmail send; submit is human-authorized, outreach drafts go to `/memory`.
+WebGPT review on 2026-08-13 found that current main could produce success-looking reports
+with schema-invalid Meetup values, loose required-source matching, hidden downstream work,
+LinkedIn-only opportunity admission, and test-fixture claim authority. The current repair
+slice makes those paths fail closed:
+
+- report manifests validate against the committed `schemas/report.schema.json` before
+  rendering;
+- the authoritative shortlist and all downstream apply-prep artifacts are capped at the
+  report-visible set;
+- required source receipts bind exact `required_source_id`, lane/channel/source-class, and
+  accepted terminal states;
+- API failure fallback requires a bound website/browser receipt with retained evidence;
+- LinkedIn rows and Meetup groups render as `source_intel`, not opportunities;
+- Meetup source intelligence cannot create resume, outreach, application, or application
+  packet artifacts;
+- claim-bearing artifacts bind one run-scoped claim snapshot digest, and live runs cannot
+  use `tests/fixtures` as claim authority.
+
+`external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
+LinkedIn platform action.
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
@@ -35,8 +51,9 @@ Written but NOT yet live-proven (honest gaps):
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
 
-Legacy note: the old "Stage 0 kernel / NOT_ESTABLISHED / network_access=false" language
-below predates 2026-08-08 and is superseded by this section.
+Live nightly readiness remains gated until the browser-required source captures
+(Indeed/Hidden Jobs and any API fallback), a non-fixture claim snapshot export, and
+delivery/readback receipts are present in a scheduled run.
 
 The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
 run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through

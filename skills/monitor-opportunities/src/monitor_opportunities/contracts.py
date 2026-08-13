@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
+from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 IMMUTABLE_GOAL = (
@@ -107,6 +111,9 @@ class SourceReceipt(StrictModel):
     evidence_refs: list[str]
     limitations: list[str]
     automation_policy: str | None = None
+    required_source_id: str | None = None
+    channel: str | None = None
+    fallback_for_receipt_id: str | None = None
 
 
 class EligibilityRejection(StrictModel):
@@ -155,6 +162,20 @@ class Opportunity(StrictModel):
     visible_in_report: bool
 
 
+class SourceIntel(StrictModel):
+    signal_id: str
+    lane: str
+    signal_type: str
+    title: str
+    organization: str
+    source_receipt_ids: list[str] = Field(min_length=1)
+    primary_evidence_url: str | None = None
+    decision: str
+    reasons: list[str]
+    action_worthy: bool
+    visible_in_report: bool
+
+
 class PresentationDiff(StrictModel):
     allowed_changes: list[str]
     prohibited_changes: list[str]
@@ -182,6 +203,7 @@ class OutreachPacket(StrictModel):
     body: str
     character_count: int = Field(ge=1)
     claim_keys: list[str] = Field(min_length=1)
+    claim_snapshot_sha256: str
     roundtable_status: str
     roundtable_verdict: str | None
     roundtable_receipt_digest: str | None
@@ -283,6 +305,7 @@ class ReportManifest(StrictModel):
     source_receipts: list[SourceReceipt]
     eligibility_rejections: list[EligibilityRejection]
     opportunities: list[Opportunity]
+    source_intel: list[SourceIntel] = []
     resume_variants: list[ResumeVariant]
     outreach_packets: list[OutreachPacket]
     applications: list[Application]
@@ -336,6 +359,24 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError(
                 "RELOCATION_SHORTLISTED", "Relocation-required opportunities cannot be shortlisted"
             )
+        if opportunity.get("opportunity_type") == "networking_signal":
+            raise ContractError(
+                "NETWORKING_SIGNAL_ADMITTED",
+                "Networking source intelligence cannot be admitted as an opportunity",
+            )
+        if any("linkedin.com" in str(opportunity.get(field) or "").lower() for field in ("posting_url", "primary_evidence_url")):
+            raise ContractError(
+                "LINKEDIN_ONLY_ADMITTED",
+                "LinkedIn-only evidence is source intelligence until primary-source readback admits it",
+            )
+
+    for item in raw.get("source_intel", []):
+        signal_type = item.get("signal_type")
+        decision = item.get("decision")
+        if signal_type == "MEETUP_NETWORKING" and decision not in {"ATTEND_MEETUP", "WATCH_MEETUP", "SKIP_MEETUP"}:
+            raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported Meetup decision: {decision}")
+        if signal_type == "LINKEDIN_LOCATOR" and item.get("action_worthy") is not False:
+            raise ContractError("LINKEDIN_LOCATOR_ACTIONABLE", "LinkedIn locator evidence is not action-worthy")
 
     for packet in _require(raw, "outreach_packets"):
         if packet.get("sendable") is not False:
@@ -401,6 +442,8 @@ def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
     rows: list[tuple[str, bool, bool]] = []
     for item in manifest.opportunities:
         rows.append((item.opportunity_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.source_intel:
+        rows.append((item.signal_id, item.action_worthy, item.visible_in_report))
     for item in manifest.resume_variants:
         rows.append((item.variant_id, item.action_worthy, item.visible_in_report))
     for item in manifest.outreach_packets:
@@ -496,6 +539,18 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
             )
 
 
+def _validate_against_committed_schema(raw: dict[str, Any]) -> None:
+    schema_path = Path(__file__).resolve().parents[2] / "schemas" / "report.schema.json"
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        Draft202012Validator(schema, format_checker=FormatChecker()).validate(raw)
+    except OSError as exc:
+        raise ContractError("REPORT_SCHEMA_MISSING", str(schema_path)) from exc
+    except JsonSchemaValidationError as exc:
+        path = ".".join(str(part) for part in exc.absolute_path) or "$"
+        raise ContractError("REPORT_SCHEMA_INVALID", f"{path}: {exc.message}") from exc
+
+
 def validate_manifest(raw: dict[str, Any]) -> ReportManifest:
     """Parse and semantically validate a Stage 0 report manifest."""
 
@@ -505,4 +560,5 @@ def validate_manifest(raw: dict[str, Any]) -> ReportManifest:
     except ValidationError as exc:
         raise ContractError("SCHEMA_INVALID", str(exc)) from exc
     _validate_model_semantics(manifest)
+    _validate_against_committed_schema(raw)
     return manifest

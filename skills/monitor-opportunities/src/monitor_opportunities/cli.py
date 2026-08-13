@@ -382,6 +382,8 @@ def run_command(
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
         )
+    except ContractError as exc:
+        _fail(exc)
     except ValueError as exc:
         _fail(ContractError("RUN_REJECTED", str(exc)))
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))

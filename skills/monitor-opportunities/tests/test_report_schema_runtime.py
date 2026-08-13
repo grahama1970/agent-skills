@@ -1,0 +1,39 @@
+"""Runtime report manifests must validate against the committed JSON Schema."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from jsonschema import Draft202012Validator
+from typer.testing import CliRunner
+
+from monitor_opportunities.cli import app
+
+runner = CliRunner()
+
+
+def test_runtime_manifest_validates_against_committed_schema(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "run"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    schema = json.loads(Path("skills/monitor-opportunities/schemas/report.schema.json").read_text())
+    manifest = json.loads((out / "report-manifest.json").read_text())
+    Draft202012Validator(schema).validate(manifest)
+
+
+def test_meetup_runtime_manifest_validates_schema_without_opportunity_leak(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    meetup = fixture_dir / "meetup-buffalo-capture.json"
+    out = tmp_path / "meetup"
+    result = runner.invoke(
+        app,
+        ["run", "--fixture-dir", str(fixture_dir), "--meetup-evidence", str(meetup), "--out", str(out)],
+    )
+    assert result.exit_code == 0, result.output
+    schema = json.loads(Path("skills/monitor-opportunities/schemas/report.schema.json").read_text())
+    manifest = json.loads((out / "report-manifest.json").read_text())
+    Draft202012Validator(schema).validate(manifest)
+    assert not any(row["opportunity_type"] == "networking_signal" for row in manifest["opportunities"])
+    assert any(row["signal_type"] == "MEETUP_NETWORKING" for row in manifest["source_intel"])

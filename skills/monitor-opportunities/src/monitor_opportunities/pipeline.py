@@ -9,7 +9,7 @@ from typing import Any
 from loguru import logger
 
 from .application_packets import build_application_packets
-from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
+from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError, ResultStatus
 from .discovery import sweep
 from .outreach import build_outreach_packets
 from .ranking import rank
@@ -36,11 +36,12 @@ def _int_env(name: str, default: int) -> int:
         return default
 
 
-SHORTLIST_LIMIT = _int_env("MONITOR_SHORTLIST_LIMIT", 150)
-# The rendered human-facing report is a digest; Stage-0 contract caps it at 8.
 REPORT_DIGEST_LIMIT = 8
+# The report manifest is the authoritative action registry; downstream prep
+# cannot retain actionable opportunities that are hidden from the report.
+SHORTLIST_LIMIT = min(_int_env("MONITOR_SHORTLIST_LIMIT", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
 # How many top jobs get a custom targeted resume + apply-prep packet per run.
-APPLY_PREP_TOP_N = _int_env("MONITOR_APPLY_PREP_TOP_N", 100)
+APPLY_PREP_TOP_N = min(_int_env("MONITOR_APPLY_PREP_TOP_N", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
 
 
 def _capability_authority() -> dict[str, str]:
@@ -155,6 +156,9 @@ def _source_receipts(discovery_dir: Path) -> list[dict[str, Any]]:
         }
         if row.get("automation_policy"):
             receipt["automation_policy"] = row["automation_policy"]
+        for optional in ("required_source_id", "channel", "fallback_for_receipt_id"):
+            if row.get(optional):
+                receipt[optional] = row[optional]
         receipts.append(receipt)
     return receipts
 
@@ -178,27 +182,71 @@ def _lane_coverage(discovery_dir: Path, shortlist: list[dict[str, Any]]) -> list
     ]
 
 
+def _is_linkedin_locator(candidate: dict[str, Any]) -> bool:
+    return candidate.get("source_provider") in {
+        "human_supplied_linkedin",
+        "ops_linkedin_authorized_read_only",
+    }
+
+
+def _is_networking_signal(candidate: dict[str, Any]) -> bool:
+    return candidate.get("source_provider") == "meetup_surf"
+
+
+def _is_report_opportunity(candidate: dict[str, Any]) -> bool:
+    return not _is_linkedin_locator(candidate) and not _is_networking_signal(candidate)
+
+
+def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
+    source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
+    evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
+    if _is_networking_signal(candidate):
+        decision = str(candidate.get("networking_decision") or "WATCH").upper()
+        return {
+            "signal_id": stable_id("source-intel", candidate["candidate_id"]),
+            "lane": candidate["lane"],
+            "signal_type": "MEETUP_NETWORKING",
+            "title": candidate["title"],
+            "organization": candidate["organization"],
+            "source_receipt_ids": [source_id],
+            "primary_evidence_url": evidence_url,
+            "decision": f"{decision}_MEETUP",
+            "reasons": [
+                *(candidate.get("networking_reasons") or []),
+                "Meetup source-intel only; no RSVP, join, message, attendee scrape, or GraphQL action.",
+            ],
+            "action_worthy": decision in {"ATTEND", "WATCH"},
+            "visible_in_report": True,
+        }
+    if _is_linkedin_locator(candidate):
+        return {
+            "signal_id": stable_id("source-intel", candidate["candidate_id"]),
+            "lane": candidate["lane"],
+            "signal_type": "LINKEDIN_LOCATOR",
+            "title": candidate["title"],
+            "organization": candidate["organization"],
+            "source_receipt_ids": [source_id],
+            "primary_evidence_url": evidence_url,
+            "decision": "LOCATOR_ONLY",
+            "reasons": [
+                "LinkedIn row is profile/recommendation source intelligence only.",
+                "Primary employer/client source readback is required before opportunity admission.",
+            ],
+            "action_worthy": False,
+            "visible_in_report": True,
+        }
+    return None
+
+
 def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
-    if candidate.get("source_provider") == "meetup_surf":
-        opportunity_type = "networking_signal"
-        decision = str(candidate.get("networking_decision") or "WATCH")
-        observed = [
-            f"Meetup source-intel capture observed: {evidence_url or source_id}",
-            f"Recommended Meetup decision: {decision}",
-            f"Automation policy: {candidate.get('automation_policy', 'meetup_authorized_read_only_no_rsvp_no_message')}",
-        ]
-        if candidate.get("company_sponsors"):
-            observed.append("Company/venue sponsor signal: " + ", ".join(candidate["company_sponsors"]))
-        if candidate.get("known_monitor_contacts"):
-            observed.append("Known monitor contact signal: " + ", ".join(candidate["known_monitor_contacts"]))
-        inferred = [
-            "Treat as an attend/watch/skip networking decision only; this is not a job, application, or outreach authorization.",
-            "Do not RSVP, join, message, scrape attendee lists, or call Meetup GraphQL from the monitor.",
-        ]
-        claim_keys = ["claim:memory:retrieval-platform"]
-    elif candidate["lane"] == "B":
+    if _is_linkedin_locator(candidate) or _is_networking_signal(candidate):
+        raise ContractError(
+            "SOURCE_INTEL_NOT_OPPORTUNITY",
+            f"{candidate['candidate_id']} must be rendered as source_intel, not opportunity",
+        )
+    if candidate["lane"] == "B":
         opportunity_type = "federal_notice"
         observed = [f"Federal primary source observed: {evidence_url or source_id}"]
         inferred = ["Treat as a federal notice/signal; do not coerce into an employment application."]
@@ -208,24 +256,6 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         observed = [f"Primary-source need signal observed: {evidence_url or source_id}"]
         inferred = ["Use a capability profile; do not send outreach automatically."]
         claim_keys = ["claim:pdf-oxide:document-extraction"]
-    elif candidate.get("source_provider") in {"human_supplied_linkedin", "ops_linkedin_authorized_read_only"}:
-        opportunity_type = "employment_posting"
-        source_label = (
-            "ops-linkedin authorized read-only LinkedIn evidence"
-            if candidate.get("source_provider") == "ops_linkedin_authorized_read_only"
-            else "Human-supplied LinkedIn evidence"
-        )
-        observed = [
-            f"{source_label} observed: {evidence_url or source_id}",
-            f"Automation policy: {candidate.get('automation_policy', 'linkedin_no_automation')}",
-        ]
-        if candidate.get("top_candidate_evidence"):
-            observed.append("LinkedIn evidence marks this as a profile/recommendation-based relevance signal.")
-        inferred = [
-            "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
-            "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn.",
-        ]
-        claim_keys = ["claim:arcos:acert-architect"]
     else:
         opportunity_type = "employment_posting"
         observed = [
@@ -234,11 +264,6 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
         inferred = ["Single-column ATS-readable resume is prudent."]
         claim_keys = ["claim:arcos:acert-architect"]
     why_candidate = ["Ranked after deterministic eligibility gating and source receipt readback."]
-    if candidate.get("top_candidate_evidence"):
-        why_candidate.append("Ranking includes LinkedIn profile/recommendation-based relevance evidence.")
-    if candidate.get("source_provider") == "meetup_surf":
-        why_candidate.extend(candidate.get("networking_reasons") or [])
-        why_candidate.append("Meetup is source-intel only; human decides whether attendance is worth the time.")
     return {
         "opportunity_id": candidate["candidate_id"],
         "lane": candidate["lane"],
@@ -265,7 +290,7 @@ def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
             "evidence_refs": [source_id],
             "unknowns": ["Employer/client ranking weights and workflow remain unknown."],
         },
-        "status": "WATCHLISTED" if candidate.get("source_provider") == "meetup_surf" else "SHORTLISTED",
+        "status": "SHORTLISTED",
         "action_worthy": True,
         "visible_in_report": True,
     }
@@ -284,17 +309,24 @@ def _rejection(candidate: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _resume_variant(tailoring_dir: Path, fallback_opportunity_id: str | None) -> list[dict[str, Any]]:
-    variant_path = tailoring_dir / "resume-variant.json"
-    diff_path = tailoring_dir / "presentation-diff.json"
-    if not variant_path.exists() or fallback_opportunity_id is None:
-        return []
-    variant = read_json(variant_path)
-    diff = read_json(diff_path)
-    return [
-        {
+def _resume_variants(tailoring_dir: Path, opportunities: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    variants: list[dict[str, Any]] = []
+    for opportunity in opportunities:
+        candidate_dir = tailoring_dir / opportunity["opportunity_id"]
+        variant_path = candidate_dir / "resume-variant.json"
+        diff_path = candidate_dir / "presentation-diff.json"
+        if not variant_path.exists() and (tailoring_dir / "resume-variant.json").exists():
+            variant_path = tailoring_dir / "resume-variant.json"
+            diff_path = tailoring_dir / "presentation-diff.json"
+        if not variant_path.exists():
+            continue
+        variant = read_json(variant_path)
+        diff = read_json(diff_path)
+        if variant.get("opportunity_id") != opportunity["opportunity_id"]:
+            continue
+        variants.append({
             "variant_id": variant["variant_id"],
-            "opportunity_id": variant.get("opportunity_id") or fallback_opportunity_id,
+            "opportunity_id": variant["opportunity_id"],
             "claim_snapshot_sha256": variant["claim_snapshot_sha256"],
             "claim_keys": [ref["claim_key"] for ref in variant["claim_refs"]],
             "artifact_refs": variant["artifact_refs"],
@@ -305,8 +337,53 @@ def _resume_variant(tailoring_dir: Path, fallback_opportunity_id: str | None) ->
             "status": variant["status"],
             "action_worthy": True,
             "visible_in_report": True,
-        }
-    ]
+        })
+    return variants
+
+
+def _resolve_claim_snapshot_path(skill_dir: Path, fixture_dir: Path | None, needs_claims: bool) -> Path | None:
+    if not needs_claims:
+        return None
+    configured = os.environ.get("MONITOR_CLAIM_SNAPSHOT_PATH")
+    if configured:
+        path = Path(configured).expanduser().resolve()
+    elif fixture_dir is not None:
+        path = (skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json").resolve()
+    else:
+        raise ContractError(
+            "CLAIM_SNAPSHOT_REQUIRED",
+            "Live claim-bearing runs require MONITOR_CLAIM_SNAPSHOT_PATH pointing to an approved export.",
+        )
+    fixture_root = (skill_dir / "tests" / "fixtures").resolve()
+    if fixture_dir is None and (path == fixture_root or fixture_root in path.parents):
+        raise ContractError(
+            "TEST_FIXTURE_AUTHORITY_FORBIDDEN",
+            "Live runs cannot use tests/fixtures as claim authority.",
+        )
+    if not path.exists():
+        raise ContractError("CLAIM_SNAPSHOT_MISSING", str(path))
+    snapshot = read_json(path)
+    if snapshot.get("schema") != "monitor_opportunities.claim_snapshot.v1" or snapshot.get("active") is not True:
+        raise ContractError("CLAIM_SNAPSHOT_INVALID", "Exactly one active approved claim snapshot is required.")
+    return path
+
+
+def _application_ats_provider(opportunity: dict[str, Any]) -> str | None:
+    profile = opportunity.get("screening_interface_profile") or {}
+    observed = "\n".join(profile.get("observed", [])).lower()
+    for provider in ("greenhouse", "ashby", "lever"):
+        if provider in observed:
+            return provider
+    return None
+
+
+def _operational_readiness(source_receipts: list[dict[str, Any]], opportunities: list[dict[str, Any]], resume_variants: list[dict[str, Any]]) -> str:
+    degraded = {status.value for status in ResultStatus if status not in {ResultStatus.MATCHES, ResultStatus.NO_MATCHES}}
+    if any(row["result_status"] in degraded for row in source_receipts):
+        return "DEGRADED"
+    if opportunities and len(resume_variants) != len(opportunities):
+        return "DEGRADED"
+    return "STAGE_0_READY"
 
 
 def _report_from_run(
@@ -316,18 +393,30 @@ def _report_from_run(
     ranking_dir: Path,
     tailoring_dir: Path,
     skill_dir: Path,
+    claim_snapshot: dict[str, Any] | None,
     roundtable_receipts: dict[str, dict[str, Any]] | None = None,
     outreach_effects: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     rejections = read_json(ranking_dir / "rejections.json")
-    # The rendered report is a human digest (Stage-0 contract caps it at 8). The
-    # full shortlist stays available for apply-prep + memory at volume; only the
-    # report is truncated to the top REPORT_DIGEST_LIMIT.
-    opportunities = [_opportunity(candidate) for candidate in shortlist[:REPORT_DIGEST_LIMIT]]
-    first_opportunity_id = opportunities[0]["opportunity_id"] if opportunities else None
-    resume_variants = _resume_variant(tailoring_dir, first_opportunity_id)
-    claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
+    opportunity_candidates = [candidate for candidate in shortlist if _is_report_opportunity(candidate)]
+    opportunities = [_opportunity(candidate) for candidate in opportunity_candidates[:REPORT_DIGEST_LIMIT]]
+    source_intel = [
+        item
+        for item in (_source_intel(candidate) for candidate in shortlist)
+        if item is not None
+    ]
+    resume_variants = _resume_variants(tailoring_dir, opportunities)
+    if len(resume_variants) != len(opportunities):
+        missing = sorted(
+            {row["opportunity_id"] for row in opportunities}
+            - {row["opportunity_id"] for row in resume_variants}
+        )
+        raise ContractError(
+            "RESUME_VARIANT_MISSING",
+            f"Every report-admitted opportunity requires a visible claim-bound resume variant; missing={missing}",
+        )
+    claim_snapshot = claim_snapshot or {"claims": []}
     outreach_packets = build_outreach_packets(
         opportunities=opportunities,
         claim_snapshot=claim_snapshot,
@@ -338,7 +427,7 @@ def _report_from_run(
         {
             "application_id": stable_id("application", opportunity["opportunity_id"]),
             "opportunity_id": opportunity["opportunity_id"],
-            "ats_provider": "greenhouse" if opportunity["lane"] == "A" else None,
+            "ats_provider": _application_ats_provider(opportunity) if opportunity["lane"] == "A" else None,
             "state": "BLOCKED_STAGE_0",
             "authorized": False,
             "form_schema_digest": sha256_json({"opportunity_id": opportunity["opportunity_id"], "stage": STAGE}),
@@ -379,6 +468,7 @@ def _report_from_run(
     ]
     action_worthy_total = (
         len(opportunities)
+        + sum(1 for item in source_intel if item["action_worthy"])
         + len(resume_variants)
         + len(outreach_packets)
         + len(applications)
@@ -402,12 +492,13 @@ def _report_from_run(
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
-        "operational_readiness": "STAGE_0_READY",
+        "operational_readiness": _operational_readiness(_source_receipts(discovery_dir), opportunities, resume_variants),
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, shortlist),
         "source_receipts": _source_receipts(discovery_dir),
         "eligibility_rejections": [_rejection(candidate) for candidate in rejections],
         "opportunities": opportunities,
+        "source_intel": source_intel,
         "resume_variants": resume_variants,
         "outreach_packets": outreach_packets,
         "applications": applications,
@@ -417,9 +508,9 @@ def _report_from_run(
             {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},
             {"action": "REJECT", "target_type": "opportunity", "enabled": True, "effects_external": False},
             {"action": "DEFER", "target_type": "opportunity", "enabled": True, "effects_external": False},
-            {"action": "ATTEND_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
-            {"action": "WATCH_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
-            {"action": "SKIP_MEETUP", "target_type": "opportunity", "enabled": True, "effects_external": False},
+            {"action": "ATTEND_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
+            {"action": "WATCH_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
+            {"action": "SKIP_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
             {
                 "action": "ACCEPT_RESUME_VARIANT",
                 "target_type": "resume_variant",
@@ -480,28 +571,37 @@ def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str,
         raise ContractError("REQUIRED_SOURCES_CONFIG_MISSING", str(config_path))
     config = read_json(config_path)
     receipts = _source_receipts(discovery_dir)
-    def _norm(value: str) -> str:
-        return value.lower().replace("-", "").replace("_", "").replace(".", "")
-
-    seen: dict[str, str] = {}
-    for r in receipts:
-        provider = _norm(str(r.get("provider", "")))
-        seen[provider] = str(r.get("result_status", ""))
     missing: list[str] = []
-    not_searched: list[str] = []
+    invalid: list[str] = []
+    by_required: dict[str, list[dict[str, Any]]] = {}
+    for receipt in receipts:
+        required_id = receipt.get("required_source_id")
+        if required_id:
+            by_required.setdefault(str(required_id), []).append(receipt)
+    accepted_default = set(config.get("accepted_non_match_states", []))
+    forbidden = set(config.get("forbidden_states", []))
     for required in config.get("required", []):
-        rid = _norm(str(required["id"]))
-        # match by normalized provider substring (linkedin/indeed/sam.gov/etc)
-        match = next((s for p, s in seen.items() if rid in p or p in rid), None)
-        if match is None:
-            missing.append(required["id"])
-        elif match == "NOT_SEARCHED":
-            not_searched.append(required["id"])
-    if missing or not_searched:
+        rid = str(required["id"])
+        matches = by_required.get(rid, [])
+        if not matches:
+            missing.append(rid)
+            continue
+        accepted = set(required.get("accepted_statuses") or accepted_default)
+        allowed_classes = set(required.get("source_classes") or [])
+        channel = required.get("channel")
+        for receipt in matches:
+            status = str(receipt.get("result_status", ""))
+            if status in forbidden or status not in accepted:
+                invalid.append(f"{rid}:{receipt['receipt_id']}:status={status}")
+            if channel and receipt.get("channel") != channel:
+                invalid.append(f"{rid}:{receipt['receipt_id']}:channel={receipt.get('channel')}")
+            if allowed_classes and receipt.get("source_class") not in allowed_classes:
+                invalid.append(f"{rid}:{receipt['receipt_id']}:source_class={receipt.get('source_class')}")
+    if missing or invalid:
         raise ContractError(
-            "REQUIRED_SOURCE_NOT_SEARCHED",
-            f"mandated sources missing={missing} not_searched={not_searched}; "
-            "discovery must attempt every required source (config/required_sources.json)",
+            "REQUIRED_SOURCE_CONTRACT_VIOLATION",
+            f"mandated sources missing={missing} invalid={invalid}; "
+            "discovery must satisfy exact required_source_id/lane/channel/source_class/status",
         )
     return {"required_sources_enforced": True, "checked": [r["id"] for r in config.get("required", [])]}
 
@@ -519,31 +619,39 @@ def _enforce_api_website_fallback(skill_dir: Path, discovery_dir: Path) -> dict[
     receipts = _source_receipts(discovery_dir)
     api_failure = {"FEED_DOWN", "AUTH_FAILED", "INVALID_RESPONSE", "INVALID_REQUEST"}
 
-    def _norm(v: str) -> str:
-        return v.lower().replace("-", "").replace("_", "").replace(".", "")
-
-    by_provider: dict[str, list[str]] = {}
-    browser_captured: set[str] = set()
-    for r in receipts:
-        prov = _norm(str(r.get("provider", "")))
-        by_provider.setdefault(prov, []).append(str(r.get("result_status", "")))
-        src_class = str(r.get("source_class", ""))
-        if src_class.endswith("_website") or src_class.startswith("human_supplied") or "authorized_read_only" in src_class:
-            browser_captured.add(prov)
-
     violations: list[str] = []
     for required in config.get("required", []):
         if not required.get("api_failure_requires_browser"):
             continue
-        rid = _norm(str(required["id"]))
-        statuses = next((s for p, s in by_provider.items() if rid in p or p in rid), None)
-        if statuses is None:
+        rid = str(required["id"])
+        source_receipts = [row for row in receipts if row.get("required_source_id") == rid]
+        if not source_receipts:
             continue
-        had_api_failure = any(s in api_failure for s in statuses)
-        had_success = any(s == "MATCHES" for s in statuses)
-        has_browser = any(rid in p or p in rid for p in browser_captured)
-        if had_api_failure and not had_success and not has_browser:
-            violations.append(required["id"])
+        failed_api_receipts = []
+        for receipt in source_receipts:
+            response_status = receipt.get("response_status")
+            non_2xx = isinstance(response_status, int) and not (200 <= response_status <= 299)
+            if receipt.get("channel") == "api" and (receipt.get("result_status") in api_failure or non_2xx):
+                failed_api_receipts.append(receipt)
+        for failed in failed_api_receipts:
+            fallback = next(
+                (
+                    row
+                    for row in source_receipts
+                    if row.get("fallback_for_receipt_id") == failed["receipt_id"]
+                    and (
+                        str(row.get("source_class", "")).endswith("_website")
+                        or str(row.get("source_class", "")).startswith("human_supplied")
+                        or "authorized_read_only" in str(row.get("source_class", ""))
+                    )
+                    and row.get("content_sha256")
+                    and row.get("evidence_refs")
+                    and row.get("result_status") in {"MATCHES", "NO_MATCHES"}
+                ),
+                None,
+            )
+            if fallback is None:
+                violations.append(f"{rid}:{failed['receipt_id']}")
     if violations:
         raise ContractError(
             "API_BREAK_REQUIRES_WEBSITE",
@@ -589,46 +697,46 @@ def run_stage0(
         phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
     ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
-    claims_path = skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json"
     tailoring_receipt = None
     apply_prep: list[dict[str, Any]] = []
-    if claims_path.exists():
-        shortlist_path = ranking_dir / "shortlist.json"
-        shortlist = read_json(shortlist_path) if shortlist_path.exists() else []
-        if shortlist:
-            # A custom targeted resume for each of the top jobs (goal: "custom
-            # targeted resume" for top opportunities), not just the single top
-            # one. Submit stays human-gated: each packet carries the apply_url
-            # and flags the ATS form-inspect/submit as the next human stage.
-            top_jobs = [c for c in shortlist if c.get("lane") == "A"][:APPLY_PREP_TOP_N] or shortlist[:APPLY_PREP_TOP_N]
-            for candidate in top_jobs:
-                cand_id = str(candidate.get("candidate_id") or sha256_json(candidate)[:16])
-                cand_dir = tailoring_dir / cand_id
-                try:
-                    receipt = tailor_candidate(candidate, claims_path, cand_dir)
-                except ValueError as exc:
-                    logger.warning("apply-prep tailoring skipped for {}: {}", cand_id, exc)
-                    continue
-                apply_prep.append(
-                    {
-                        "candidate_id": cand_id,
-                        "title": candidate.get("title"),
-                        "organization": candidate.get("organization"),
-                        "apply_url": candidate.get("apply_url") or candidate.get("posting_url"),
-                        "ats_provider": candidate.get("source_provider") or "not-established",
-                        "resume_variant_id": receipt.get("variant_id"),
-                        "resume_dir": str(cand_dir),
-                        "next_stage": "human_review_then_ats_form_inspect",
-                        "external_effects": False,
-                        "automation_policy": "submit_requires_human_authorization",
-                    }
-                )
-            # Preserve the single primary tailoring_receipt for the report.
-            primary = next((c for c in shortlist if c.get("lane") == "A"), shortlist[0])
-            tailoring_receipt = tailor_candidate(primary, claims_path, tailoring_dir)
-        else:
-            tailoring_receipt = tailor("fixture:eligible-ai-architect", claims_path, tailoring_dir)
+    shortlist_path = ranking_dir / "shortlist.json"
+    shortlist = read_json(shortlist_path) if shortlist_path.exists() else []
+    opportunity_candidates = [candidate for candidate in shortlist if _is_report_opportunity(candidate)]
+    claims_path = _resolve_claim_snapshot_path(skill_dir, fixture_dir, bool(opportunity_candidates))
+    claim_snapshot = read_json(claims_path) if claims_path is not None else None
+    if claims_path is not None and opportunity_candidates:
+        # A custom targeted resume for each report-admitted top opportunity.
+        # Source-intel records such as LinkedIn locators and Meetup networking
+        # signals cannot enter apply-prep, resume, outreach, or application packets.
+        top_jobs = opportunity_candidates[:APPLY_PREP_TOP_N]
+        for candidate in top_jobs:
+            cand_id = str(candidate.get("candidate_id") or sha256_json(candidate)[:16])
+            cand_dir = tailoring_dir / cand_id
+            try:
+                receipt = tailor_candidate(candidate, claims_path, cand_dir)
+            except ValueError as exc:
+                logger.warning("apply-prep tailoring skipped for {}: {}", cand_id, exc)
+                continue
+            if tailoring_receipt is None:
+                tailoring_receipt = receipt
+            apply_prep.append(
+                {
+                    "candidate_id": cand_id,
+                    "title": candidate.get("title"),
+                    "organization": candidate.get("organization"),
+                    "apply_url": candidate.get("apply_url") or candidate.get("posting_url"),
+                    "ats_provider": candidate.get("source_provider") or "not-established",
+                    "resume_variant_id": receipt.get("variant_id"),
+                    "resume_dir": str(cand_dir),
+                    "next_stage": "human_review_then_ats_form_inspect",
+                    "external_effects": False,
+                    "automation_policy": "submit_requires_human_authorization",
+                }
+            )
         write_json(tailoring_dir / "apply-prep.json", apply_prep)
+        if tailoring_receipt is not None:
+            write_json(tailoring_dir / "tailoring-receipt.json", tailoring_receipt)
+        write_json(out_dir / "claim-snapshot.json", claim_snapshot)
         phases.append({"phase": "TAILORING_COMPLETE", "artifact": str(tailoring_dir / "tailoring-receipt.json")})
         phases.append({"phase": "APPLY_PREP_COMPLETE", "prepared": len(apply_prep), "artifact": str(tailoring_dir / "apply-prep.json")})
 
@@ -640,6 +748,7 @@ def run_stage0(
         ranking_dir,
         tailoring_dir,
         skill_dir,
+        claim_snapshot,
         _load_receipt_map(roundtable_receipts_path, key_field="receipt_key"),
         _load_receipt_map(outreach_effects_path, key_field="packet_id"),
     )

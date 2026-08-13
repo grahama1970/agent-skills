@@ -204,6 +204,7 @@ def built_in_fixture() -> dict[str, Any]:
                 "body": "Local candidate-transmitted text.",
                 "character_count": 33,
                 "claim_keys": ["claim:tau"],
+                "claim_snapshot_sha256": three,
                 "roundtable_status": "NOT_RUN",
                 "roundtable_verdict": None,
                 "roundtable_receipt_digest": None,

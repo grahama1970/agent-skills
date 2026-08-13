@@ -69,6 +69,7 @@ def build_outreach_packet(
     if channel not in OUTREACH_CHANNELS:
         raise OutreachError(f"unsupported outreach channel: {channel}")
     approved = approved_claims_by_key(claim_snapshot, channel)
+    claim_snapshot_sha256 = sha256_json(claim_snapshot)
     claim_keys = list(opportunity.get("claim_keys", []))
     missing = [claim_key for claim_key in claim_keys if claim_key not in approved]
     if missing:
@@ -87,6 +88,7 @@ def build_outreach_packet(
         "subject": subject,
         "body": body,
         "claim_keys": claim_keys,
+        "claim_snapshot_sha256": claim_snapshot_sha256,
         "candidate_transmits": True,
     }
     payload_digest = sha256_json(basis)
@@ -111,6 +113,7 @@ def build_outreach_packet(
         "body": body,
         "character_count": len(body),
         "claim_keys": claim_keys,
+        "claim_snapshot_sha256": claim_snapshot_sha256,
         "roundtable_status": "PASS" if gate["ok"] else ("NOT_RUN" if roundtable_receipt is None else "BLOCKED"),
         "roundtable_verdict": gate["verdict"],
         "roundtable_receipt_digest": gate["receipt_digest"],
