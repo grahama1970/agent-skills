@@ -36,6 +36,10 @@ DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS = 900
+# Matches surf webgpt.submit --timeout default (2400s / 40 min): a normal
+# webgpt Pro call runs 15-20 min, so the old 900s worker budget sat at the low
+# end of the distribution and killed longer answers mid-generation.
+DEFAULT_BROWSER_WORKER_TIMEOUT_SECONDS = 2400
 BROWSER_COMMAND_GRACE_SECONDS = 180
 COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
 # Fable is rate-limited on this account (operator, 2026-08-13; Claude API 429
@@ -2408,7 +2412,14 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "terminal_nodes": ["human"],
         "limits": {
             "resume": True,
-            "default_timeout_seconds": 300,
+            # A flat 300s guaranteed failure for browser handlers: a ChatGPT Pro
+            # reasoning call normally runs 15-20 minutes, and surf's own
+            # webgpt.submit default is 2400s. The node-level default must not be
+            # shorter than the per-node command budget it governs, so derive it
+            # from the handlers actually in this DAG (2026-08-13: a webgpt node
+            # was killed at 300s mid-generation, then recovery closed the tab and
+            # destroyed the in-flight answer).
+            "default_timeout_seconds": _dag_default_timeout_seconds(input),
             "max_total_attempts": len(handler_nodes) + 1 + len(extra_nodes),
             "max_concurrency": (
                 min(len(handler_nodes), TAU_STANDARD_PROFILE_MAX_CONCURRENCY)
@@ -2532,12 +2543,24 @@ def _write_roundtable_command_spec(
     is_subagent_handler = str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec"
     browser_handler = _is_browser_handler(handler)
     lock_timeout_s = _browser_lock_timeout_seconds(input) if browser_handler else 0
+    command_timeout_budget_s = _browser_command_timeout_budget_seconds(input) if browser_handler else 0
+    # Browser handlers were given 900s, which is the LOW end of a normal webgpt
+    # Pro call (15-20 min) — so any longer-than-average answer timed out
+    # mid-generation. Match surf webgpt.submit's own documented default (2400s /
+    # 40 min) so the worker is not the binding constraint. An explicit
+    # --execution-timeout still caps it: the caller's budget always wins.
+    browser_worker_timeout_s = DEFAULT_BROWSER_WORKER_TIMEOUT_SECONDS
+    if command_timeout_budget_s > 0:
+        browser_worker_timeout_s = min(browser_worker_timeout_s, command_timeout_budget_s)
     worker_provider_timeout_s = (
         "5400"
         if handler == "codex"
-        else ("1500" if is_subagent_handler else ("900" if browser_handler else "300"))
+        else (
+            "1500"
+            if is_subagent_handler
+            else (str(browser_worker_timeout_s) if browser_handler else "300")
+        )
     )
-    command_timeout_budget_s = _browser_command_timeout_budget_seconds(input) if browser_handler else 0
     command = [
         sys.executable,
         str(worker_path),
@@ -2643,6 +2666,40 @@ def _write_roundtable_command_spec(
     }
     spec_path = root / node_id / "tau-dispatch-command.json"
     _write_json(spec_path, payload)
+
+
+NON_BROWSER_DAG_DEFAULT_TIMEOUT_SECONDS = 300
+
+
+# Tau's standard execution profile caps max_run_seconds at 3600; a DAG that
+# declares more is refused with
+# execution_profile_override_broadens_policy:max_run_seconds (observed live
+# 2026-08-13). Browser envelopes must be clamped to the cap they run under.
+TAU_STANDARD_MAX_RUN_SECONDS = 3600
+
+
+def _dag_default_timeout_seconds(input: TauDagCompileInput) -> int:
+    """Node-level default timeout for the compiled DAG.
+
+    Must cover the slowest node this DAG can dispatch. Browser handlers run a
+    human-speed model in a real tab (webgpt Pro: 15-20 min typical), so the
+    old flat 300s could never succeed for them. Derived from the same
+    per-handler budgets the dispatch commands use, so the two can't drift.
+    """
+    if not any(_is_browser_handler(h) for h in input.handlers):
+        return NON_BROWSER_DAG_DEFAULT_TIMEOUT_SECONDS
+    lock_timeout_s = _browser_lock_timeout_seconds(input)
+    execution_timeout_s = int(getattr(input, "execution_timeout_seconds", 0) or 0)
+    budgets = [
+        _roundtable_command_timeout(
+            handler,
+            is_subagent_handler=False,
+            lock_timeout_s=lock_timeout_s,
+            execution_timeout_s=execution_timeout_s,
+        )
+        for handler in input.handlers
+    ]
+    return min(TAU_STANDARD_MAX_RUN_SECONDS, max([NON_BROWSER_DAG_DEFAULT_TIMEOUT_SECONDS, *budgets]))
 
 
 def _roundtable_command_timeout(
