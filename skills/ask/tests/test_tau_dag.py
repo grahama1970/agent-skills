@@ -3609,7 +3609,7 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
     assert captured["bundle"]["status"] == "READY"
     assert captured["lifecycle_handlers"] == ["webclaude", "webgemini"]
     assert captured["dag_handlers"] == ["webclaude", "webgemini"]
-    assert captured["claude_model_preference"] == "Fable 5 High"
+    assert captured["claude_model_preference"] == "Opus 5 High"
     assert payload["browser_provider_availability"]["status"] == "NEEDS_ATTENTION"
     assert payload["browser_provider_availability"]["limited_providers"] == ["webgpt"]
     assert payload["browser_provider_availability"]["cooldown_policy"]["status"] == "LANE_LOCAL_RETRY"

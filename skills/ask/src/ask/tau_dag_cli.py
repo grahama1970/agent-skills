@@ -1039,10 +1039,35 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
         for name, payload in providers.items()
         if isinstance(payload, dict) and payload.get("provider_limited") is True
     }
+    # A provider is unusable for more reasons than being rate limited (#1397).
+    # webgpt probed with provider_limited=false but probe_degraded=true and
+    # failure_code browser_provider_probe_timeout; only `limited` was consulted,
+    # so it stayed active, Tau dispatched into a provider whose state was
+    # unknown, and the lane produced no handler artifacts at all -- leaving the
+    # caller waiting rather than failing closed.
+    #
+    # The probe's own recovery packet is the authority on whether dispatch is
+    # safe: when it sets auto_retry_allowed false it is saying this provider
+    # needs a human readback before anything is sent. Dispatching anyway
+    # contradicts the artifact the probe just wrote.
+    unusable: dict[str, str] = {}
+    for name, payload in providers.items():
+        if not isinstance(payload, dict):
+            continue
+        if payload.get("provider_limited") is True:
+            unusable[name] = "provider_limited"
+        elif payload.get("probe_failed") is True:
+            unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
+        elif payload.get("probe_degraded") is True:
+            packet = payload.get("provider_probe_recovery_packet")
+            blocked = isinstance(packet, dict) and packet.get("auto_retry_allowed") is False
+            if blocked:
+                unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_degraded")
+
     active: list[str] = []
     removed: list[str] = []
     for handler in requested:
-        if handler in BROWSER_FRESH_URLS and handler in limited:
+        if handler in BROWSER_FRESH_URLS and handler in unusable:
             removed.append(handler)
         else:
             active.append(handler)
@@ -1050,12 +1075,12 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
     min_handlers = _minimum_handlers_for_workflow(input_payload)
     desired_handlers = max(min_handlers, len(requested))
     fallback_added: list[str] = []
-    if removed:
+    single_explicit_seat = len([h for h in requested if h in BROWSER_FRESH_URLS]) == 1
+    if removed and not single_explicit_seat:
         for candidate in _fallback_provider_order(str(getattr(input_payload, "request", "") or "")):
-            if candidate in active or candidate in requested or candidate in limited:
+            if candidate in active or candidate in requested:
                 continue
-            payload = providers.get(candidate)
-            if isinstance(payload, dict) and payload.get("probe_failed") is True:
+            if candidate in unusable:
                 continue
             active.append(candidate)
             fallback_added.append(candidate)
@@ -1080,10 +1105,18 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
         "original_handlers": requested,
         "active_handlers": active,
         "limited_providers": sorted(limited.intersection(set(requested))),
+        "unusable_providers": {k: v for k, v in sorted(unusable.items()) if k in set(requested)},
         "removed_handlers": removed,
         "fallback_handlers": fallback_added,
         "fallback_order": _fallback_provider_order(str(getattr(input_payload, "request", "") or "")),
-        "failure_code": "browser_provider_rate_limited" if removed else None,
+        # Report why the handler was actually removed. Hardcoding
+        # browser_provider_rate_limited mislabelled every removal, so a probe
+        # timeout surfaced to the caller as a rate limit (#1397).
+        "failure_code": (
+            next((unusable[h] for h in removed if h in unusable), "browser_provider_unavailable")
+            if removed
+            else None
+        ),
         "cooldown_seconds": 600 if removed else 0,
         "message": (
             "Provider cooldown/capacity is lane-local. Ask removed unavailable browser handlers "
