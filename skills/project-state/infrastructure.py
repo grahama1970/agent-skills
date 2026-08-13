@@ -95,16 +95,25 @@ def collect_tests() -> dict[str, Any]:
         }
     try:
         if (PROJECT_ROOT / "pyproject.toml").exists():
+            # `python -m pytest` uses the project env without dev groups, so a
+            # project whose pytest is a dev dependency reports 0 tests. Let uv
+            # resolve the tool (with an ephemeral fallback) instead.
             cmd = [
-                "uv", "run", "--project", str(PROJECT_ROOT),
-                "python", "-m", "pytest", str(tests_dir), "--collect-only", "-q",
+                "uv", "run", "--project", str(PROJECT_ROOT), "--with", "pytest",
+                "pytest", str(tests_dir), "--collect-only", "-q",
             ]
         else:
             cmd = ["python", "-m", "pytest", str(tests_dir), "--collect-only", "-q"]
+        # A cross-project subprocess must not inherit THIS skill's venv:
+        # uv then warns/ignores and collection returns 0 for a target that has
+        # tests (observed 2026-08-13: pitchdeck reported 0 of its 131 tests).
+        child_env = {k: v for k, v in os.environ.items()
+                     if k not in {"VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT"}}
+        child_env["PYTHONPATH"] = f"{PROJECT_ROOT / 'services'}:{os.environ.get('PYTHONPATH', '')}"
         out = subprocess.run(
             cmd,
-            capture_output=True, text=True, timeout=30,
-            env={**os.environ, "PYTHONPATH": f"{PROJECT_ROOT / 'services'}:{os.environ.get('PYTHONPATH', '')}"},
+            capture_output=True, text=True, timeout=120,
+            env=child_env,
             cwd=str(PROJECT_ROOT),
         )
         for stream in (out.stdout, out.stderr):
@@ -115,7 +124,12 @@ def collect_tests() -> dict[str, Any]:
                     "collected": out.returncode == 0,
                     "path": str(tests_dir),
                 }
-        count = sum(1 for ln in out.stdout.splitlines() if "::" in ln)
+        # pytest -q --collect-only emits either "N tests collected" or, in
+        # newer versions, one "path/to/test_x.py: N" line per file with NO
+        # summary — parsing only "::" lines under-reported real suites as 0.
+        per_file = re.findall(r"^\S+\.py:\s*(\d+)\s*$", out.stdout, re.M)
+        count = (sum(int(n) for n in per_file) if per_file
+                 else sum(1 for ln in out.stdout.splitlines() if "::" in ln))
         return {
             "total": count,
             "collected": out.returncode == 0,
@@ -201,14 +215,22 @@ def collect_cascade() -> dict[str, Any]:
 
 def collect_skills() -> dict[str, Any]:
     """Count skills and check for SKILL.md + sanity.sh compliance."""
+    # Only roots the TARGET owns. Falling back to the global skills tree
+    # reported 386 unrelated skills as a single skill's state (2026-08-13) —
+    # a silent scope error is worse than an honest not-applicable.
     candidate_roots = [
         PROJECT_ROOT / ".skills" / "skills",
         PROJECT_ROOT / "skills",
-        PI_SKILLS,
     ]
-    if is_embry_project() and PI_SKILLS not in candidate_roots:
+    if is_embry_project() and PI_SKILLS.exists():
         candidate_roots.append(PI_SKILLS)
-    skills_root = next((_normalize_skills_root(path) for path in candidate_roots if path.exists()), PI_SKILLS)
+    if PROJECT_ROOT.resolve() == PI_SKILLS.resolve().parent or PROJECT_ROOT.resolve() == PI_SKILLS.resolve():
+        candidate_roots.append(PI_SKILLS)
+    skills_root = next((_normalize_skills_root(path) for path in candidate_roots if path.exists()), None)
+    if skills_root is None:
+        return {"total": 0, "applicable": False,
+                "reason": "target root owns no skills/ tree (not a skills workspace)",
+                "path": None, "missing_skill_md": [], "missing_sanity": []}
     if not skills_root.exists():
         return {"total": 0, "path": str(skills_root), "missing_skill_md": [], "missing_sanity": []}
     dirs = sorted(

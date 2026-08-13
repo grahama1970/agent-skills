@@ -227,7 +227,6 @@ def cmd_report(
     figures: Optional[str] = typer.Option(None, "--figures", help="Generate figures to this directory"),
     cached: bool = typer.Option(False, "--cached", help="Return cached checkpoint if fresh (< 1 hour), otherwise run live and save"),
     force: bool = typer.Option(False, "--force", help="Always run live and save a checkpoint after collection"),
-    store: bool = typer.Option(False, "--store", help="Persist PROJECT_STATE.md + project_state.json into the inspected root and upsert a timeline snapshot into /memory"),
     cleanup_tail: bool = typer.Option(False, "--cleanup-tail", help="Generate post-cleanup readiness state instead of the default report"),
     cleanup_receipt: Optional[Path] = typer.Option(None, "--cleanup-receipt", exists=True, file_okay=True, dir_okay=False, readable=True, help="Cleanup receipt JSON for --cleanup-tail"),
     project_root: Optional[Path] = typer.Option(None, "--project-root", exists=True, file_okay=False, dir_okay=True, readable=True, help="Project root to inspect for --cleanup-tail; defaults to cwd"),
@@ -286,14 +285,6 @@ def cmd_report(
         print(f"Report written to {output}")
     else:
         print(text)
-
-    if store:
-        from state_store import store as _store_state
-        receipt = _store_state(report, Path(report.get("project_root") or Path.cwd()))
-        print(json.dumps({"stored": receipt}, indent=2))
-        if not receipt.get("memory_stored"):
-            logger.error("snapshot written to disk but NOT to /memory: {}",
-                         receipt.get("memory_error", "unknown"))
 
     if figures:
         generated = generate_figures(report, figures)

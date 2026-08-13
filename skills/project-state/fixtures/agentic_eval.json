@@ -1,23 +1,89 @@
 {
-  "version": 2,
-  "skill": "project-state",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "project-state",
+ "trials": 2,
+ "proof_scope": "Report scoping through the real report entrypoint: a report about target X describes X's own tests and never borrows counts from an unrelated global tree.",
+ "claims": {
+  "proves": "Running ./run.sh report against a skill directory collects that skill's real test count and refuses to report the global skills tree as the target's state, while the repo root still counts its own skills.",
+  "does_not_prove": "That the later phases (memory recall, doc drift, best-practices audit, external research via brave-search/github-search) are accurate, or that a passing report means the target project is healthy."
+ },
+ "cases": [
+  {
+   "name": "skill-target-scope-tests-and-no-global-skills",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 900,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 50 --expect-skills-not-applicable"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SKILLS_APPLICABLE=False",
+     "SCOPE_OK"
+    ],
+    "stderr_contains": []
+   }
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "name": "repo-root-still-counts-its-own-skills",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 900,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills --min-skills 100"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SCOPE_OK"
+    ],
+    "stderr_contains": []
+   }
+  },
+  {
+   "name": "global-skills-count-for-skill-target-is-refused",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 900,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-skills 100"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "SKILLS_TOTAL=0"
+    ],
+    "stderr_contains": [
+     "SCOPE_FAIL"
+    ]
+   }
+  },
+  {
+   "name": "silent-zero-tests-for-a-real-suite-is-refused",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 900,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 500"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "TESTS_TOTAL=132"
+    ],
+    "stderr_contains": [
+     "SCOPE_FAIL"
+    ]
+   }
+  }
+ ]
 }
