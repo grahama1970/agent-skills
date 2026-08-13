@@ -870,6 +870,25 @@ Use the narrowest mode that matches the user request.
 
 ## Browser Rules
 
+### MANDATORY prompt/bundle preflight (run before EVERY browser submit)
+
+surf's webgpt submit **rejects** any prompt or attached bundle that references
+an unreadable local filesystem path (schema `surf.webgpt_prompt_preflight.v1`,
+reason `web_review_bundle_unreadable`) or a `~<digits>` token (agent-skills#973),
+failing late with `browser_submit_not_accepted` after tab binding and wasted
+cycles. This is a *recurring* mistake — a comprehensive-context bundle naturally
+contains paths (`/run/...`, `/home/...`, `/mnt/...`, `~/...`) and shorthand like
+`~20 pages`. Do not rely on eyeballing it.
+
+Before any `tau-dag`/`compete`/`webgpt`-shortcut submit with a web* handler, run
+the fail-closed preflight on your prompt AND every `--attach-file`, and fix what
+it names (describe paths/sockets as prose; write "about 20", not "~20"):
+
+```bash
+python3 skills/ask/scripts/browser_prompt_preflight.py --prompt "<prompt>" <each --attach-file>
+# exit 0 = safe to submit; exit 2 = offending tokens listed, fix them first
+```
+
 Direct WebGPT/ChatGPT browser oracle workflows have moved out of `$ask ask`.
 `$ask webgpt`, `$ask chatgpt`, `--oracle-backend webgpt`, `--webgpt-*`, and
 `webgpt-project` must fail closed.

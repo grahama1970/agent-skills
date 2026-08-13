@@ -1,0 +1,11 @@
+import subprocess, sys, os
+H = os.path.join(os.path.dirname(__file__), "..", "scripts", "browser_prompt_preflight.py")
+def run(*a): return subprocess.run([sys.executable, H, *a], capture_output=True, text=True)
+def test_clean_passes():
+    r = run("--prompt", "review the daemon's Unix socket, about 20 pages"); assert r.returncode == 0
+def test_abs_path_fails():
+    r = run("--prompt", "probe /run/user/1000/embry/memory.sock"); assert r.returncode == 2 and "memory.sock" in r.stderr
+def test_tilde_digits_fails():
+    r = run("--prompt", "hardens ~6 repos, ~20 pages"); assert r.returncode == 2 and "tilde_digits" in r.stderr
+def test_home_path_fails():
+    r = run("--prompt", "see ~/workspace/notes.md"); assert r.returncode == 2
