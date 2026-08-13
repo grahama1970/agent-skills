@@ -1150,9 +1150,14 @@ def capture_linkedin_who_viewed(
         lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
         # Observed block shape (live 2026-08-12): name / '• 2nd|3rd' degree /
         # headline / 'Viewed Nh ago'. Anchor on the Viewed line, walk back.
+        # Page chrome is not a person. "Sort by most recent" was captured as a
+        # viewer and sent through the research pass (2026-08-13 digest), so UI
+        # controls are excluded explicitly. A real viewer name also has no verb
+        # phrasing and at least two characters of a given name.
         _junk = _re.compile(
             r"viewed|profile|premium|upgrade|search appearance|view all|pending|"
-            r"graham anderson|^•|^\d+$", _re.I,
+            r"graham anderson|^•|^\d+$|sort by|filter|most recent|show more|"
+            r"see all|all filters|^results?$|^people$|dismiss|^back$", _re.I,
         )
         seen_names: set[str] = set()
         for i, ln in enumerate(lines):
