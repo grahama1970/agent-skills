@@ -1341,3 +1341,48 @@ def test_worker_lane_recovery_never_retries_provider_refusal(tmp_path: Path) -> 
     assert receipt["recovered"] is False
     assert receipt["attempts"] == []
     assert "provider-side" in receipt["skipped_reason"]
+
+
+def test_worker_lane_recovery_skips_interrupted_submit(tmp_path: Path, monkeypatch) -> None:
+    """A cancelled browser submit must not spawn a long in-run extractor."""
+    artifact_dir = tmp_path / "art"
+    artifact_dir.mkdir()
+    args = SimpleNamespace(
+        handler="webgpt",
+        node_id="handler-webgpt",
+        surf_run=str(tmp_path / "surf.sh"),
+        timeout=2400,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+    )
+    (tmp_path / "surf.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    (tmp_path / "surf.sh").chmod(0o755)
+
+    def fail_if_called(*args, **kwargs):  # noqa: ANN002, ANN003
+        raise AssertionError("interrupted lane recovery must not execute commands")
+
+    monkeypatch.setattr(tau_roundtable_worker, "_run_cmd", fail_if_called)
+
+    receipt = tau_roundtable_worker._attempt_lane_recovery(
+        args,
+        recovery_packet={
+            "failure_code": tau_roundtable_worker.BROWSER_HANDLER_INTERRUPTED,
+            "next_command": [str(tmp_path / "surf.sh"), "webgpt.extract"],
+        },
+        browser_oracle={"tab_id": "837389526"},
+        submit_meta={
+            "exit_code": 143,
+            "sentinel": "<<<WEBGPT_DONE:test>>>",
+            "submitted_to_chatgpt": True,
+        },
+        response_path=artifact_dir / "response.md",
+        raw_path=artifact_dir / "response.raw.md",
+        meta_path=artifact_dir / "response.meta.json",
+        artifact_dir=artifact_dir,
+        deadline=time.time() + 300,
+    )
+
+    assert receipt["recovered"] is False
+    assert receipt["attempts"] == []
+    assert "interrupted" in receipt["skipped_reason"]

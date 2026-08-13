@@ -196,6 +196,7 @@ BROWSER_CLEAN_OUTPUT_CONTAMINATED = "browser_clean_output_contaminated"
 BROWSER_SENTINEL_TRAILING_CONTENT = "browser_sentinel_trailing_content"
 WEBGPT_UNVERIFIED_CLEAN_OUTPUT = "missing_controlled_tab_id_or_contaminated_clean_output"
 BROWSER_HANDLER_TIMEOUT = "browser_handler_timeout"
+BROWSER_HANDLER_INTERRUPTED = "browser_handler_interrupted"
 BROWSER_EXTENSION_COMMAND_TIMEOUT = "browser_extension_command_timeout"
 BROWSER_COMPOSER_INTERACTION_FAILED = "browser_composer_interaction_failed"
 ENVIRONMENT_DEPENDENCY_INSTALL_FAILED = "environment_dependency_install_failed"
@@ -302,6 +303,11 @@ BROWSER_FAILURE_CODES: dict[str, BrowserFailureCode] = {
         BROWSER_HANDLER_TIMEOUT,
         "The browser handler did not produce a usable, receipt-backed response before the declared worker timeout.",
         auto_retry_blocked_reason="browser_handler_timeout_expired",
+    ),
+    BROWSER_HANDLER_INTERRUPTED: BrowserFailureCode(
+        BROWSER_HANDLER_INTERRUPTED,
+        "The browser handler was interrupted by its parent or operator before a terminal response receipt was written.",
+        auto_retry_blocked_reason="browser_handler_interrupted_no_automatic_recovery",
     ),
     BROWSER_EXTENSION_COMMAND_TIMEOUT: BrowserFailureCode(
         BROWSER_EXTENSION_COMMAND_TIMEOUT,
@@ -2221,6 +2227,8 @@ def _classify_browser_failure(
         return BROWSER_SENTINEL_TRAILING_CONTENT
     if _looks_browser_tab_read_timeout(haystack):
         return BROWSER_TAB_READ_TIMEOUT
+    if _looks_browser_handler_interrupted(submit_meta, commands):
+        return BROWSER_HANDLER_INTERRUPTED
     if _looks_browser_handler_timeout(haystack, commands):
         return BROWSER_HANDLER_TIMEOUT
     if _looks_repo_access_blocked(haystack):
@@ -2841,6 +2849,28 @@ def _looks_browser_handler_timeout(text: str, commands: list[dict[str, Any]]) ->
         stderr = str(command.get("stderr_excerpt") or "").lower()
         if "[tau-worker] command timed out after" in stderr:
             return True
+    return False
+
+
+def _looks_browser_handler_interrupted(
+    meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+) -> bool:
+    interrupted_codes = {-15, 143}
+    for key in ("exit_code", "returncode"):
+        try:
+            if int(meta.get(key)) in interrupted_codes:
+                return True
+        except (TypeError, ValueError):
+            pass
+    for command in commands:
+        if not isinstance(command, dict):
+            continue
+        try:
+            if int(command.get("returncode")) in interrupted_codes:
+                return True
+        except (TypeError, ValueError):
+            pass
     return False
 
 
@@ -3837,6 +3867,7 @@ def _lane_diagnostics(
 
 LANE_RECOVERY_HOPELESS = frozenset(
     {
+        BROWSER_HANDLER_INTERRUPTED,
         BROWSER_PROVIDER_RATE_LIMITED,
         "grok_provider_rate_limited",
         "browser_provider_capacity_busy",
@@ -3961,9 +3992,12 @@ def _attempt_lane_recovery(
         "recovered": False,
     }
     if failure_code in LANE_RECOVERY_HOPELESS:
-        receipt["skipped_reason"] = (
-            f"{failure_code} is provider-side; retrying cannot change it"
+        reason = (
+            "the browser handler was interrupted; in-run recovery would outlive the cancelled Ask run"
+            if failure_code == BROWSER_HANDLER_INTERRUPTED
+            else f"{failure_code} is provider-side; retrying cannot change it"
         )
+        receipt["skipped_reason"] = reason
         return receipt
     heartbeat_path = meta_path.parent / "webgpt_heartbeat.json"
     heartbeat = _read_json(heartbeat_path) if heartbeat_path.is_file() else None

@@ -60,6 +60,7 @@ def _packet(
     prompt_text: str = "",
     submit_meta: dict | None = None,
     browser_oracle: dict | None = None,
+    command_returncode: int = 1,
 ) -> dict:
     artifact_dir = tmp_path / "artifacts"
     artifact_dir.mkdir()
@@ -80,7 +81,7 @@ def _packet(
         commands=[
             {
                 "command": ["surf", f"{handler}.submit"],
-                "returncode": 1,
+                "returncode": command_returncode,
                 "stdout_excerpt": "",
                 "stderr_excerpt": failure,
             }
@@ -794,6 +795,36 @@ def test_webgpt_unverified_clean_output_is_quarantined_not_tab_identity_retry(tm
     assert quarantine["failure_code"] == tau_roundtable_worker.WEBGPT_UNVERIFIED_CLEAN_OUTPUT
     assert not response_path.exists()
     assert Path(quarantine["quarantine_path"]).name == "response.contaminated.md"
+
+
+def test_interrupted_webgpt_submit_is_not_missing_sentinel(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="Terminated\n",
+        prompt_text="Answer and include the sentinel.",
+        submit_meta={
+            "status": "failed",
+            "exit_code": 143,
+            "failure": "missing_sentinel",
+            "sentinel": "<<<WEBGPT_DONE:test>>>",
+            "requested_tab_id": "837389526",
+            "controlled_tab_id": "837389526",
+            "submitted_to_chatgpt": True,
+        },
+        browser_oracle={
+            "project": "battle-webgpt",
+            "tab_id": "837389526",
+            "conversation_url": "https://chatgpt.com/c/example",
+        },
+        command_returncode=143,
+    )
+
+    assert packet["failure_code"] == tau_roundtable_worker.BROWSER_HANDLER_INTERRUPTED
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_handler_interrupted_no_automatic_recovery"
+    assert packet["transport_failure_summary"]["failure_code"] == tau_roundtable_worker.BROWSER_HANDLER_INTERRUPTED
+    assert "webgpt.extract" not in packet["next_command"]
 
 
 def test_gemini_terminal_sentinel_trailing_content_precedes_prompt_stalled(tmp_path: Path) -> None:
