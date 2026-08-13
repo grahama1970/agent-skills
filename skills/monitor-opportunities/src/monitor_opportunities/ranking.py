@@ -139,9 +139,51 @@ def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     return {"geo_priority": geo, "role_fit": role, "source_quality": source, "total": total}
 
 
+def _posting_identity(candidate: dict[str, Any]) -> str:
+    """Stable identity for one real-world posting, across sources.
+
+    A board can list the same posting under several ids (Built In's JSON-LD
+    emits variant job ids: ServiceNow 'Solution Architect - AI & Data' appeared
+    6x on 2026-08-13), and the same role arrives from both LinkedIn lanes. Key
+    on the durable pair instead: normalized organization + title.
+    """
+    org = " ".join(str(candidate.get("organization") or "").lower().split())
+    title = " ".join(str(candidate.get("title") or "").lower().split())
+    return f"{org}|{title}"
+
+
+def dedupe_postings(candidates: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
+    """Collapse duplicate postings, keeping the richest row. Returns (rows, dropped)."""
+    best: dict[str, dict[str, Any]] = {}
+    order: list[str] = []
+    for c in candidates:
+        key = _posting_identity(c)
+        if key == "|":  # no identity to dedupe on; keep as-is
+            order.append(f"__keep__{len(order)}")
+            best[order[-1]] = c
+            continue
+        prior = best.get(key)
+        if prior is None:
+            best[key] = c
+            order.append(key)
+            continue
+        # Keep the row carrying more usable signal (real apply/posting url wins,
+        # then more populated fields) so dedup never loses the clickable one.
+        def _richness(row: dict[str, Any]) -> tuple[int, int]:
+            url = str(row.get("posting_url") or "")
+            clickable = 1 if ("/jobs/view/" in url or url.rstrip("/").count("/") > 3) else 0
+            return (clickable, sum(1 for v in row.values() if v not in (None, "", [], {})))
+
+        if _richness(c) > _richness(prior):
+            best[key] = c
+    deduped = [best[k] for k in order]
+    return deduped, len(candidates) - len(deduped)
+
+
 def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     candidates = _load_candidates(discovery_run)
+    candidates, duplicates_dropped = dedupe_postings(candidates)
     eligibility_receipts = []
     ranking_receipts = []
     admitted = []
@@ -197,6 +239,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
         "input": str(discovery_run),
         "limit": limit,
         "inspected": len(candidates),
+        "duplicates_dropped": duplicates_dropped,
         "admitted": len(admitted),
         "shortlisted": len(shortlist),
         "rejected_or_review": len(rejections),

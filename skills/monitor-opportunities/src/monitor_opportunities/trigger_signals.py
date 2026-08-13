@@ -88,10 +88,20 @@ def triggers_for_orgs(orgs: list[str], limit: int = 12) -> dict[str, dict[str, o
     return out
 
 
+def _default_limit() -> int:
+    """Trigger search budget. The flat 12 covered only 12 of 81 orgs once the
+    shortlist grew 8x (2026-08-13), so most orgs never got a trigger check.
+    Default raised to 40 and env-overridable."""
+    try:
+        return max(1, int(os.environ.get("MONITOR_TRIGGER_LIMIT", "40")))
+    except ValueError:
+        return 40
+
+
 def triggers_for_shortlist(
     rows: list[dict[str, object]],
     min_fit: float = 0.6,
-    limit: int = 12,
+    limit: int | None = None,
 ) -> tuple[dict[str, dict[str, object]], dict[str, object]]:
     """Fit-gated, receipted trigger pass over a shortlist.
 
@@ -107,6 +117,7 @@ def triggers_for_shortlist(
     (e.g. Roswell Park, CUBRC) legitimately win — dropping them would lose real
     budget+urgency signal. Fit is the honest gate.
     """
+    limit = _default_limit() if limit is None else limit
     best_fit: dict[str, float] = {}
     for r in rows:
         org = str(r.get("organization") or "").strip()

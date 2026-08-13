@@ -104,6 +104,76 @@
           "recall=1.00"
         ]
       }
+    },
+    {
+      "name": "regression-2026-08-13-defects-fixed",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_13.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL REGRESSION GATES PASS"
+        ]
+      },
+      "timeout_seconds": 180,
+      "proves": "Against the newest REAL nightly artifacts: digest entries link to specific postings, per-job premium insights differ across jobs, the 'Under 10 applicants' filter chip is never read as an applicant count, postings are deduped, tracker filing is bounded, and the trigger budget covers the shortlist."
+    },
+    {
+      "name": "gates-detect-the-2026-08-13-defects",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_13.py --run /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/run-2026-08-13-buggy; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAILED GATES",
+          "clickable-urls",
+          "distinct-insights"
+        ]
+      },
+      "timeout_seconds": 180,
+      "proves": "The gates are not vacuous: replayed against the preserved 2026-08-13 run they FAIL on the real defects (generic search URLs, identical per-job insights, x6 duplicate postings)."
+    },
+    {
+      "name": "insights-fail-closed-on-identical-values",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import monitor_opportunities.browser_capture as bc;src=open(bc.__file__).read();assert 'identical across' in src, 'no fail-closed guard';assert 'return {}' in src.split('identical across')[1][:400], 'guard does not discard';print('FAIL_CLOSED_GUARD_PRESENT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAIL_CLOSED_GUARD_PRESENT"
+        ]
+      },
+      "timeout_seconds": 60,
+      "proves": "capture_linkedin_job_insights discards results outright when >2 jobs report byte-identical insights, rather than emitting wrong-but-plausible per-job facts."
+    },
+    {
+      "name": "surf-pacing-wait-is-nonfatal",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"from pathlib import Path;import monitor_opportunities.browser_capture as bc;bc._surf_pause(Path('/nonexistent/surf.sh'), '1');print('PAUSE_SURVIVED_BROKEN_SURF')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PAUSE_SURVIVED_BROKEN_SURF"
+        ]
+      },
+      "timeout_seconds": 60,
+      "proves": "A busy/unavailable surf lease during a pacing sleep no longer aborts a capture that already has rows (the 2026-08-13 top-applicant failure)."
     }
   ]
 }

@@ -124,6 +124,45 @@ def run_digest_phase(
             digest["inbound_interest"] = inbound_viewers[:10]
         if hiring_contacts:
             digest["warm_hiring_contacts"] = hiring_contacts[:10]
+        # CONSULTING/PROSPECT QUEUE — federal buyers + commercial signals. This
+        # was built and unit-tested but never wired into the nightly, so it had
+        # produced nothing every run despite being "equally important to the
+        # employer queue". Fail-soft, written to its own artifact and surfaced
+        # in the digest.
+        try:
+            from .prospect_queue import build_prospect_queue
+
+            sam_evidence = None
+            sam_path = capture_dir / "sam-website-evidence.json"
+            if sam_path.exists():
+                sam_evidence = json.loads(sam_path.read_text(encoding="utf-8"))
+            prospects = build_prospect_queue(sam_evidence, shortlist_rows)
+            (out / "prospect-queue.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "monitor_opportunities.prospect_queue.v1",
+                        "generated_from": {
+                            "sam_evidence": str(sam_path) if sam_evidence else None,
+                            "shortlist_rows": len(shortlist_rows),
+                        },
+                        "prospects": prospects,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            if prospects:
+                digest["prospect_queue"] = prospects[:10]
+            steps["prospect_queue"] = {
+                "prospects": len(prospects),
+                "federal": sum(1 for p in prospects if p.get("signal_type") == "federal"),
+                "artifact": str(out / "prospect-queue.json"),
+            }
+        except Exception as exc:  # noqa: BLE001 - prospecting must never fail the run
+            logger.warning("prospect queue skipped: {}", exc)
+            steps["prospect_queue"] = {"error": str(exc)}
         # Premium per-job competitive insights for the digest top (bounded):
         # applicant-rank percentile ('top N%'), applicant count, salary.
         try:

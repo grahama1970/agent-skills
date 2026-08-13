@@ -19,6 +19,7 @@ from __future__ import annotations
 import contextlib
 import json
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -59,6 +60,33 @@ _SAM_READY_JS = "(function(){return document.querySelectorAll(\"a[href*='/opp/']
 
 class BrowserCaptureError(ValueError):
     """Stable browser-capture error."""
+
+
+def _nav_js(url: str) -> str:
+    """Fire-and-forget navigation. Assigning location.href synchronously makes
+    the surf js call block until load (LinkedIn job pages exceed 20s and timed
+    out 3 of 4 insight probes on 2026-08-13); defer it so the call returns now
+    and the caller's explicit wait covers the load."""
+    return (
+        "(function(){setTimeout(function(){location.href="
+        + json.dumps(url)
+        + ";},0); return 'NAV';})()"
+    )
+
+
+def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
+    """Best-effort pacing sleep. A busy surf lease must not kill a capture.
+
+    On 2026-08-13 a `surf wait 1` timed out under lease contention (many
+    captures now run back-to-back) and aborted the whole top-applicant capture.
+    A sleep failing is never a reason to lose already-captured rows; fall back
+    to a local sleep.
+    """
+    try:
+        _surf(surf_run, "wait", seconds, timeout=timeout)
+    except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
+        logger.warning("surf wait {}s unavailable ({}); local sleep instead", seconds, exc)
+        time.sleep(min(float(seconds or 1), 10.0))
 
 
 def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
@@ -274,12 +302,12 @@ def _linkedin_scroll_paginate_capture(surf_run: Path, tab_id: str, max_pages: in
             if stable >= 3:
                 break
             _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_SCROLL_JS, timeout=20)
-            _surf(surf_run, "wait", "1", timeout=15)
+            _surf_pause(surf_run, "1", timeout=15)
         if page < max_pages:
             clicked = _surf(surf_run, "js", "--tab-id", tab_id, _linkedin_next_page_js(page + 1), timeout=20)
             if "CLICKED" not in clicked:
                 break
-            _surf(surf_run, "wait", "4", timeout=20)
+            _surf_pause(surf_run, "4", timeout=20)
     return list(accumulated.values())
 
 
@@ -307,7 +335,7 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        _surf(surf_run, "wait", "9")
+        _surf_pause(surf_run, "9")
         wall = _surf(
             surf_run,
             "js",
@@ -473,7 +501,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
         # SAM is an Angular SPA that renders results only after its backend call
         # returns; a fixed 10s wait was too short and captured 0 rows. Poll for
         # opportunity links (up to ~36s) and proceed as soon as they render.
-        _surf(surf_run, "wait", "6")
+        _surf_pause(surf_run, "6")
         ready = 0
         for _ in range(10):
             try:
@@ -483,7 +511,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
                 ready = 0
             if ready > 0:
                 break
-            _surf(surf_run, "wait", "3")
+            _surf_pause(surf_run, "3")
         receipt["poll_ready_links"] = ready
         raw = _surf(surf_run, "js", "--tab-id", tab_id, _SAM_EXTRACT_JS)
         parsed = json.loads(json.loads(raw))
@@ -684,7 +712,7 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
             tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
             if not tab_id:
                 raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-            _surf(surf_run, "wait", "7")
+            _surf_pause(surf_run, "7")
             raw = _surf(surf_run, "js", "--tab-id", tab_id, _ATS_FORM_EXTRACT_JS, timeout=25)
             rows = json.loads(json.loads(raw))
             form = _generic_form_from_dom(provider, site, posting_id, apply_url, rows)
@@ -844,7 +872,26 @@ _LI_ARIA_EXTRACT_JS = (
     "var warm=/connection works here|connections work here|school alumni/.test(txt);"
     "var early=/Be an early applicant/.test(txt);"
     "var age=(txt.match(/(\\d+ (?:minute|hour|day|week|month)s? ago)/)||[])[1]||null;"
-    "out.push({title:title,company:company,location:loc,warm:warm,early:early,age:age});"
+    # Per-job link. Without it every row inherits the generic search URL, which
+    # made job-insights read the SAME page 8x and attribute one page's numbers
+    # to 8 different jobs (2026-08-13). The virtualized card renders NO anchor
+    # of its own (verified live: card subtree has 0 <a>); the job id lives in an
+    # ancestor's componentkey="job-card-component-ref-<id>". Fall back to any
+    # in-card anchor for older/other layouts.
+    "var href=null;"
+    "var walk=btns[i];"
+    "for(var k=0;k<12&&walk&&!href;k++){"
+    "var ck=walk.getAttribute&&walk.getAttribute('componentkey');"
+    "var cm=ck&&ck.match(/job-card-component-ref-(\\d+)/);"
+    "if(cm){href='https://www.linkedin.com/jobs/view/'+cm[1]+'/';}"
+    "walk=walk.parentElement;}"
+    "if(!href&&best){var a=best.querySelector(\"a[href*='/jobs/view/']\");"
+    "if(a){href=a.href.split('?')[0];}"
+    "else{var a2=best.querySelector(\"a[href*='currentJobId=']\");"
+    "if(a2){var m=a2.href.match(/currentJobId=(\\d+)/);"
+    "if(m){href='https://www.linkedin.com/jobs/view/'+m[1]+'/';}}}}"
+    "out.push({title:title,company:company,location:loc,warm:warm,early:early,"
+    "age:age,href:href});"
     "}return JSON.stringify(out);})()"
 )
 
@@ -899,9 +946,9 @@ def capture_linkedin_premium(
                 if pi > 0:
                     url = query["url"] + "&" + lane_param
                     _surf(surf_run, "js", "--tab-id", tab_id,
-                          f"(function(){{location.href={json.dumps(url)}; return 'NAV';}})()",
+                          _nav_js(url),
                           timeout=20)
-                _surf(surf_run, "wait", "8")
+                _surf_pause(surf_run, "8")
                 raw = _surf(surf_run, "js", "--tab-id", tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
                 for r in json.loads(json.loads(raw)):
                     if r.get("title"):
@@ -929,7 +976,7 @@ def capture_linkedin_premium(
                 "title": r["title"],
                 "organization": (r.get("company") or "UNKNOWN").strip() or "UNKNOWN",
                 "location": (r.get("location") or "UNKNOWN").strip() or "UNKNOWN",
-                "primary_evidence_url": _LINKEDIN_JOB_SEARCH_BASE,
+                "primary_evidence_url": r.get("href") or _LINKEDIN_JOB_SEARCH_BASE,
                 "matched_query": r.get("matched_query", ""),
                 "posted_age": r.get("age"),
                 "under_10_applicants": bool(r.get("early")),
@@ -1012,31 +1059,57 @@ def capture_linkedin_job_insights(
             try:
                 if ui > 0:
                     _surf(surf_run, "js", "--tab-id", tab_id,
-                          f"(function(){{location.href={json.dumps(url)}; return 'NAV';}})()",
+                          _nav_js(url),
                           timeout=20)
-                _surf(surf_run, "wait", "7")
+                _surf_pause(surf_run, "7")
                 text = _page_text(surf_run, tab_id)
             except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
                 logger.warning("job insights skipped for {}: {}", url[:60], exc)
+                continue
+            # Guard: the search-results chrome ("Under 10 applicants" filter chip,
+            # sidebar cards) parses as job data. Only read insights when the page
+            # actually IS a job view for the requested id.
+            job_id = (_re.search(r"/jobs/view/(\d+)", url) or [None, None])[1]
+            on_job_page = bool(job_id) and (
+                "people clicked apply" in text.lower()
+                or "applicant" in text.lower()
+                and "Under 10 applicants" not in text
+            )
+            if not on_job_page:
+                logger.warning("job insights: {} did not render a job view; skipping", url[:70])
                 continue
             info: dict[str, Any] = {}
             rank = _re.search(r"top (\d+)% of (?:\d+ )?applicants|in the top (\d+)%", text, _re.I)
             if rank:
                 info["applicant_rank_pct"] = int(rank.group(1) or rank.group(2))
-            count = _re.search(r"(\d+)\s+(?:people clicked apply|applicants?)\b", text, _re.I)
+            # 'Under 10 applicants' is a FILTER CHIP, not job data — exclude it.
+            count = _re.search(
+                r"(?<!Under )\b(\d+)\s+(?:people clicked apply|applicants)\b", text, _re.I
+            )
             if count:
                 info["applicants"] = int(count.group(1))
             salary = _re.search(
                 r"(\$[\d,.]+(?:K)?(?:/yr)?\s*[-–]\s*\$[\d,.]+(?:K)?(?:/yr)?|\$[\d,.]+K?/yr)", text
             )
             if salary:
-                info["salary"] = salary.group(1)
+                info["salary"] = salary.group(1).rstrip(".,").strip()
             if info:
                 out[url] = info
     finally:
         if tab_id:
             with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
                 _surf(surf_run, "tab.close", tab_id, timeout=30)
+    # FAIL CLOSED on the 2026-08-13 defect: >2 jobs all reporting byte-identical
+    # insights means we read one page repeatedly, not N jobs. Wrong-but-plausible
+    # per-job facts are worse than no facts, so emit nothing.
+    if len(out) > 2:
+        fingerprints = {json.dumps(v, sort_keys=True) for v in out.values()}
+        if len(fingerprints) == 1:
+            logger.error(
+                "job insights identical across {} jobs — page navigation failed; discarding",
+                len(out),
+            )
+            return {}
     return out
 
 
@@ -1072,7 +1145,7 @@ def capture_linkedin_who_viewed(
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        _surf(surf_run, "wait", "8")
+        _surf_pause(surf_run, "8")
         text = _page_text(surf_run, tab_id, 30000)
         lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
         # Observed block shape (live 2026-08-12): name / '• 2nd|3rd' degree /
@@ -1096,10 +1169,19 @@ def capture_linkedin_who_viewed(
             if _junk.search(name) or not (2 < len(name) < 60) or name in seen_names:
                 continue
             seen_names.add(name)
+            # Org from the headline. "X at Y" is the common shape, but many
+            # headlines use "Y | role" or "role @Y" or bare "Y" (2 of 4 viewers
+            # yielded None on 2026-08-13), so try those too before giving up.
             org = None
-            om = _re.search(r"\bat @?([A-Z][\w&.' -]{2,40}?)(?:\s*[|,•]|$)", headline)
-            if om:
-                org = om.group(1).strip().rstrip(".,")
+            for pat in (
+                r"\bat @?([A-Z][\w&.' -]{2,40}?)(?:\s*[|,•]|$)",
+                r"@([A-Z][\w&.'-]{2,40})",
+                r"^([A-Z][\w&.' -]{2,40}?)\s*[|]",
+            ):
+                om = _re.search(pat, headline)
+                if om:
+                    org = om.group(1).strip().rstrip(".,")
+                    break
             viewers.append({"name": name, "headline": headline[:120], "org": org,
                             "when": m.group(1)})
             if len(viewers) >= 20:
@@ -1118,7 +1200,10 @@ def capture_linkedin_who_viewed(
                                     "org": c.get("org"), "when": None})
                 if viewers:
                     receipt["extract_strategy"] = "anchor_fallback"
-                    logger.warning("who-viewed text-block parser found 0; anchor fallback recovered {}", len(viewers))
+                    logger.warning(
+                        "who-viewed text-block parser found 0; anchor fallback recovered {}",
+                        len(viewers),
+                    )
             except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired):
                 pass
         if not viewers:
@@ -1213,7 +1298,7 @@ def capture_linkedin_actively_hiring(
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        _surf(surf_run, "wait", "8")
+        _surf_pause(surf_run, "8")
         contacts = json.loads(json.loads(
             _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
         ))
@@ -1296,8 +1381,8 @@ def capture_linkedin_advanced_search(
             # pages are heavy) must skip that query, not tank the whole batch.
             try:
                 if qi > 0:
-                    _surf(surf_run, "js", "--tab-id", tab_id, f"(function(){{location.href={json.dumps(query['url'])}; return 'NAV';}})()", timeout=20)
-                _surf(surf_run, "wait", "6")
+                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(query["url"]), timeout=20)
+                _surf_pause(surf_run, "6")
                 wall = _surf(
                     surf_run,
                     "js",
@@ -1420,7 +1505,7 @@ def capture_sales_navigator_saved(out_dir: Path, surf_run: Path = SURF_RUN_DEFAU
         tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        _surf(surf_run, "wait", "8")
+        _surf_pause(surf_run, "8")
         wall = _surf(
             surf_run,
             "js",

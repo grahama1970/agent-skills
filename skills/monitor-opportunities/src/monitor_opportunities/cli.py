@@ -711,9 +711,16 @@ def nightly(
     tracker_repo = _os.environ.get("MONITOR_TRACKER_REPO", "grahama1970/opportunities")
     shortlist_path = out / "ranking" / "shortlist.json"
     tracked: list[dict[str, object]] = []
+    # Track only the top slice, not the whole shortlist: the 2026-08-13 run filed
+    # 150 issues in one night, which is noise rather than tracking. The board
+    # should hold what Graham might act on. Env-overridable.
+    try:
+        tracker_top_n = max(1, int(_os.environ.get("MONITOR_TRACKER_TOP_N", "25")))
+    except ValueError:
+        tracker_top_n = 25
     if _os.environ.get("MONITOR_TRACKER_ENABLED", "1") == "1" and shortlist_path.exists():
         shortlist = json.loads(shortlist_path.read_text(encoding="utf-8"))
-        for opp in shortlist:
+        for opp in shortlist[:tracker_top_n]:
             try:
                 result = file_or_update_opportunity(
                     opp,
@@ -724,7 +731,7 @@ def nightly(
                 tracked.append({"number": result.get("number"), "action": result.get("action")})
             except (GithubTrackerError, subprocess.TimeoutExpired) as exc:
                 logger.warning("tracker skipped for {}: {}", opp.get("candidate_id"), exc)
-    steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo}
+    steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo, "top_n": tracker_top_n}
 
     # Morning digest + lane health: extracted to nightly_digest (thin-function rule).
     from .nightly_digest import lane_health_phase, run_digest_phase
