@@ -90,9 +90,11 @@ Before any deck compiles, all four must hold:
    to the generator. No prompt-only art. (`$pitchdeck` STYLE_GUIDE §9b.)
 3. **Archetype declared** per slide, from `$best-practices-slide-design`, and
    the slide's geometry matches that archetype's contract.
-4. **Judgment ran**: deterministic gates are FLOORS; a vision seat must have
-   seen each rendered slide beside its nearest real page and returned a
-   verdict. A green gate alone is not a house-shaped deck.
+4. **Judgment ran, in order**: architecture review FIRST (does the deck
+   represent the source, its images, the project?), then slide-by-slide with
+   the JSON and the image beside the nearest real page, each slide bounded to
+   N creator-reviewer rounds. Deterministic gates are FLOORS; a green gate
+   alone is not a house-shaped deck. See `references/REVIEW_PROMPTS.md`.
 
 ## Review questions for a slide plan
 
@@ -108,6 +110,9 @@ Before any deck compiles, all four must hold:
 ## Progressive disclosure
 
 - `references/DECK_ARCHITECTURE.md` — measured per-deck numbers + method.
+- `references/REVIEW_PROMPTS.md` — the TWO review prompts (architecture
+  first, then slide-by-slide), what the reviewer is given, and the N-round
+  bound. Review is two prompts through `$ask`, never a harness.
 - `references/SECTIONING_CONTRACT.md` — the /ask packet shape and plan schema.
 - `$best-practices-slide-design` — page-level archetypes.
 - `$pitchdeck` — the compiler; `STYLE_GUIDE.md` for house measurements.
