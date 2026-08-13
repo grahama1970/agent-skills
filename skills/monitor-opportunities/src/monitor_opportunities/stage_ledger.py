@@ -1,0 +1,165 @@
+"""Stage conservation: every discovered record gets exactly one disposition.
+
+webgpt eval review P0 #04. The failure it prevents is the one this pipeline has
+actually shown twice: a stage silently losing records while every receipt still
+reports success — a lane reporting MATCHES having emitted nothing usable (DARPA
+returning one landing page), a parser collapsing to zero on an HTTP 200, or
+over-deduplication quietly merging distinct roles.
+
+Accounting rule, checked against the run's own artifacts:
+
+    discovered == deduplicated + admitted + rejected
+
+Every discovered candidate_id must resolve to exactly ONE disposition:
+    accepted       present in the shortlist
+    rejected       present in rejections with an eligibility state and reason
+    deduplicated   named in the ranking receipt's duplicates_merged_into map,
+                   pointing at the canonical record it merged into
+Anything else is `unaccounted` — a silent loss, which is the defect.
+
+Also asserts the claim/emit contract: a lane whose source receipts report
+MATCHES must have contributed at least one discovered candidate. A lane that
+claims matches and emits nothing is degraded, not healthy.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+LEDGER_SCHEMA = "monitor_opportunities.stage_ledger.v1"
+
+
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            continue
+    return rows
+
+
+def build_ledger(
+    discovered: list[dict[str, Any]],
+    shortlist: list[dict[str, Any]],
+    rejections: list[dict[str, Any]],
+    merged_into: dict[str, str],
+    source_receipts: list[dict[str, Any]] | None = None,
+) -> tuple[bool, dict[str, Any]]:
+    """Reconcile the stages. Returns (ok, ledger)."""
+    disc_ids = [str(c.get("candidate_id") or "") for c in discovered]
+    accepted = {str(r.get("candidate_id") or "") for r in shortlist}
+    rejected = {str(r.get("candidate_id") or "") for r in rejections}
+    deduped = {str(k) for k in merged_into}
+
+    violations: list[dict[str, Any]] = []
+    dispositions: dict[str, str] = {}
+    for cid in disc_ids:
+        where = [
+            name
+            for name, bucket in (
+                ("accepted", accepted), ("rejected", rejected), ("deduplicated", deduped)
+            )
+            if cid in bucket
+        ]
+        if len(where) == 1:
+            dispositions[cid] = where[0]
+        elif not where:
+            dispositions[cid] = "unaccounted"
+            violations.append({
+                "rule": "no-silent-loss",
+                "detail": f"discovered record {cid} has no disposition",
+                "candidate_id": cid,
+            })
+        else:
+            dispositions[cid] = "+".join(where)
+            violations.append({
+                "rule": "single-disposition",
+                "detail": f"record {cid} appears in multiple buckets: {where}",
+                "candidate_id": cid,
+            })
+
+    # Deduplicated rows must name a canonical record that actually survived.
+    for dropped, canonical in merged_into.items():
+        if canonical and canonical not in accepted and canonical not in rejected:
+            violations.append({
+                "rule": "dedupe-names-canonical",
+                "detail": f"{dropped} merged into {canonical}, which is in no later stage",
+                "candidate_id": str(dropped),
+            })
+
+    # Arithmetic conservation across the whole run.
+    counts = {
+        "discovered": len(disc_ids),
+        "accepted": sum(1 for d in dispositions.values() if d == "accepted"),
+        "rejected": sum(1 for d in dispositions.values() if d == "rejected"),
+        "deduplicated": sum(1 for d in dispositions.values() if d == "deduplicated"),
+        "unaccounted": sum(1 for d in dispositions.values() if d == "unaccounted"),
+    }
+    total = counts["accepted"] + counts["rejected"] + counts["deduplicated"]
+    if total + counts["unaccounted"] != counts["discovered"]:
+        violations.append({
+            "rule": "stage-conservation",
+            "detail": (
+                f"discovered {counts['discovered']} != accepted {counts['accepted']} + "
+                f"rejected {counts['rejected']} + deduplicated {counts['deduplicated']}"
+            ),
+        })
+
+    # Claim/emit contract per lane: MATCHES must mean records were emitted.
+    lane_claims: dict[str, dict[str, Any]] = {}
+    if source_receipts is not None:
+        emitted_by_lane: dict[str, int] = {}
+        for c in discovered:
+            lane = str(c.get("lane") or "?")
+            emitted_by_lane[lane] = emitted_by_lane.get(lane, 0) + 1
+        for rec in source_receipts:
+            lane = str(rec.get("lane") or "?")
+            claims = str(rec.get("result_status") or "") == "MATCHES"
+            entry = lane_claims.setdefault(
+                lane, {"claimed_matches": False, "emitted": emitted_by_lane.get(lane, 0)}
+            )
+            entry["claimed_matches"] = entry["claimed_matches"] or claims
+        for lane, entry in lane_claims.items():
+            if entry["claimed_matches"] and entry["emitted"] == 0:
+                violations.append({
+                    "rule": "claim-implies-emit",
+                    "detail": f"lane {lane} reports MATCHES but emitted 0 candidates",
+                })
+
+    ledger = {
+        "schema": LEDGER_SCHEMA,
+        "counts": counts,
+        "lane_claims": lane_claims,
+        "violations": violations,
+        "ok": not violations,
+    }
+    return not violations, ledger
+
+
+def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
+    """Build the ledger from a nightly run directory's artifacts."""
+    discovered = _read_jsonl(run_dir / "discovery" / "candidates.jsonl")
+    receipts = _read_jsonl(run_dir / "discovery" / "source-receipts.jsonl")
+    shortlist_p = run_dir / "ranking" / "shortlist.json"
+    rejections_p = run_dir / "ranking" / "rejections.json"
+    receipt_p = run_dir / "ranking" / "ranking-receipt.json"
+    shortlist = json.loads(shortlist_p.read_text(encoding="utf-8")) if shortlist_p.exists() else []
+    rejections = (
+        json.loads(rejections_p.read_text(encoding="utf-8")) if rejections_p.exists() else []
+    )
+    merged: dict[str, str] = {}
+    if receipt_p.exists():
+        try:
+            merged = json.loads(receipt_p.read_text(encoding="utf-8")).get(
+                "duplicates_merged_into", {}
+            ) or {}
+        except ValueError:
+            merged = {}
+    return build_ledger(discovered, shortlist, rejections, merged, source_receipts=receipts)

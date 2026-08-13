@@ -269,6 +269,26 @@ def run_digest_phase(
                 f"{len(contract_report['violations'])} pre-publish violation(s) "
                 f"[{', '.join(rules)}]; digest withheld. See prepublish-contract.json",
             )
+        # STAGE CONSERVATION LEDGER (webgpt P0 #04): every discovered record must
+        # have exactly one disposition — accepted, rejected, or deduplicated into
+        # a NAMED canonical record. Silent loss is the defect this catches.
+        # Reported, not fail-closed: an accounting gap is a maintainer signal,
+        # and withholding a correct digest over it would be the wrong trade.
+        try:
+            from .stage_ledger import build_ledger_for_run
+
+            ledger_ok, ledger = build_ledger_for_run(out)
+            (out / "stage-ledger.json").write_text(
+                json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            steps["stage_ledger"] = {
+                "ok": ledger_ok,
+                "counts": ledger.get("counts"),
+                "violations": len(ledger.get("violations", [])),
+            }
+        except Exception as exc:  # noqa: BLE001 - accounting must never fail the run
+            logger.warning("stage ledger skipped: {}", exc)
+            steps["stage_ledger"] = {"error": str(exc)}
         (out / "morning-digest.json").write_text(
             json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )

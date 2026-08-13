@@ -208,6 +208,23 @@
       },
       "timeout_seconds": 120,
       "proves": "The contract runs BEFORE morning-digest.json is written and raises, so a violating digest is never persisted or mirrored to memory/Discord."
+    },
+    {
+      "name": "stage-conservation-no-silent-record-loss",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import json;from pathlib import Path;from monitor_opportunities.ranking import dedupe_postings;from monitor_opportunities.stage_ledger import build_ledger,_read_jsonl;run=Path('local/nightly/latest');disc=_read_jsonl(run/'discovery/candidates.jsonl');short=json.load(open(run/'ranking/shortlist.json'));rej=json.load(open(run/'ranking/rejections.json'));_,_,merged=dedupe_postings(disc);ok,l=build_ledger(disc,short,rej,merged,source_receipts=_read_jsonl(run/'discovery/source-receipts.jsonl'));c=l['counts'];assert c['discovered']>0, 'no records discovered';assert c['unaccounted']==0, ('records vanished', c);assert c['accepted']+c['rejected']+c['deduplicated']==c['discovered'], c;bad,l2=build_ledger(disc+[{'candidate_id':'ghost','lane':'A'}],short,rej,merged);assert not bad, 'ledger failed to notice an unaccounted record';print('STAGE_CONSERVATION_OK', c)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "STAGE_CONSERVATION_OK"
+        ]
+      },
+      "timeout_seconds": 180,
+      "proves": "Against the REAL run: every discovered record resolves to exactly one disposition (accepted/rejected/deduplicated-into-a-named-canonical) with zero unaccounted, and the ledger provably fails when an unaccounted record is injected."
     }
   ]
 }

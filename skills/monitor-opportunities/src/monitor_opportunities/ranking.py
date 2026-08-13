@@ -152,10 +152,23 @@ def _posting_identity(candidate: dict[str, Any]) -> str:
     return f"{org}|{title}"
 
 
-def dedupe_postings(candidates: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
-    """Collapse duplicate postings, keeping the richest row. Returns (rows, dropped)."""
+def dedupe_postings(
+    candidates: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], int, dict[str, str]]:
+    """Collapse duplicate postings, keeping the richest row.
+
+    Returns (rows, dropped, merged_into). `merged_into` maps every dropped
+    candidate_id to the canonical candidate_id that survived, because a
+    disposition of "deduplicated" is only auditable if it names the record the
+    row was merged INTO (webgpt eval review P0 #04).
+    """
     best: dict[str, dict[str, Any]] = {}
     order: list[str] = []
+    merged_into: dict[str, str] = {}
+
+    def _cid(row: dict[str, Any]) -> str:
+        return str(row.get("candidate_id") or "")
+
     for c in candidates:
         key = _posting_identity(c)
         if key == "|":  # no identity to dedupe on; keep as-is
@@ -175,15 +188,19 @@ def dedupe_postings(candidates: list[dict[str, Any]]) -> tuple[list[dict[str, An
             return (clickable, sum(1 for v in row.values() if v not in (None, "", [], {})))
 
         if _richness(c) > _richness(prior):
+            # the incoming row wins; the prior one is now the duplicate
             best[key] = c
+            merged_into[_cid(prior)] = _cid(c)
+        else:
+            merged_into[_cid(c)] = _cid(prior)
     deduped = [best[k] for k in order]
-    return deduped, len(candidates) - len(deduped)
+    return deduped, len(candidates) - len(deduped), merged_into
 
 
 def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     candidates = _load_candidates(discovery_run)
-    candidates, duplicates_dropped = dedupe_postings(candidates)
+    candidates, duplicates_dropped, merged_into = dedupe_postings(candidates)
     eligibility_receipts = []
     ranking_receipts = []
     admitted = []
@@ -240,6 +257,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
         "limit": limit,
         "inspected": len(candidates),
         "duplicates_dropped": duplicates_dropped,
+        "duplicates_merged_into": merged_into,
         "admitted": len(admitted),
         "shortlisted": len(shortlist),
         "rejected_or_review": len(rejections),
