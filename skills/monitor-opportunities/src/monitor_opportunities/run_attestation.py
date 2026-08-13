@@ -92,6 +92,7 @@ def attest(skill_dir: Path | None = None) -> dict[str, Any]:
         "schema": ATTESTATION_SCHEMA,
         "code": {
             "git_revision": _git(["rev-parse", "HEAD"], repo)[:12],
+            "git_revision_full": _git(["rev-parse", "HEAD"], repo),
             "git_branch": _git(["rev-parse", "--abbrev-ref", "HEAD"], repo),
             "skill_tree_dirty": bool(dirty),
             "dirty_file_count": len([ln for ln in dirty.splitlines() if ln.strip()]),

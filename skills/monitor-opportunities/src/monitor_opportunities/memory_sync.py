@@ -25,7 +25,11 @@ class MemorySyncError(ValueError):
     """Stable memory sync error."""
 
 
-def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, Any]]:
+def morning_documents(
+    report: dict[str, Any],
+    run_dir: str,
+    include_relationship_signals: bool = True,
+) -> list[dict[str, Any]]:
     """Build keyed memory documents for one run's shortlist and summary."""
 
     run_id = report.get("run_id")
@@ -72,7 +76,8 @@ def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, An
                 "external_effects": False,
             }
         )
-    for signal in report.get("relationship_signals", []):
+    relationship_signals = report.get("relationship_signals", []) if include_relationship_signals else []
+    for signal in relationship_signals:
         sid = signal["signal_id"]
         org = str(signal.get("organization") or "").strip()
         subject = str(signal.get("subject") or "").strip()
@@ -163,14 +168,22 @@ def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, An
     return documents
 
 
-def sync_run_to_memory(run_dir: Path, memory_url: str = MEMORY_URL_DEFAULT) -> dict[str, Any]:
+def sync_run_to_memory(
+    run_dir: Path,
+    memory_url: str = MEMORY_URL_DEFAULT,
+    include_relationship_signals: bool = True,
+) -> dict[str, Any]:
     """Store one run's shortlist docs and read one back for proof."""
 
     report_path = run_dir / "report" / "report.json"
     if not report_path.exists():
         raise MemorySyncError("RUN_REPORT_MISSING")
     report = json.loads(report_path.read_text(encoding="utf-8"))
-    documents = morning_documents(report, str(run_dir))
+    documents = morning_documents(
+        report,
+        str(run_dir),
+        include_relationship_signals=include_relationship_signals,
+    )
     stored: list[str] = []
     with httpx.Client(timeout=HTTP_TIMEOUT) as client:
         for document in documents:
@@ -192,5 +205,6 @@ def sync_run_to_memory(run_dir: Path, memory_url: str = MEMORY_URL_DEFAULT) -> d
         "stored_keys": stored,
         "readback_found": documents[-1]["_key"] in readback_keys,
         "memory_url": memory_url,
+        "relationship_signals_included": include_relationship_signals,
         "external_effects": False,
     }

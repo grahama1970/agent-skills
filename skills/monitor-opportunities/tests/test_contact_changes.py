@@ -98,3 +98,16 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert all("LINKEDIN_HUMAN_HANDOFF" in row["preferred_human_channels"] for row in signals)
     assert all("AUTHORIZED_PERSONA_GMAIL" in row["preferred_human_channels"] for row in signals)
     assert all(any("Corporate email may be blocked" in item for item in row["channel_guidance"]) for row in signals)
+
+
+def test_relationship_signals_can_be_disabled_for_scheduler_diagnostic(monkeypatch) -> None:
+    monkeypatch.setenv("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "0")
+    candidates = [
+        {
+            "candidate_id": "candidate:c:darpa-arcos",
+            "organization": "DARPA I2O",
+            "known_monitor_contacts": ["William Brad Martin"],
+            "adjacent_contacts": ["Eric Mertens"],
+        }
+    ]
+    assert cc.relationship_signals_from_candidates(candidates) == []

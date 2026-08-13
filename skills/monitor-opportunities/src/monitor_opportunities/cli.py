@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import sys
 from pathlib import Path
 from typing import NoReturn
@@ -365,12 +366,21 @@ def run_command(
         readable=True,
         help="Local outreach effect receipt(s); Gmail drafts must remain unsent.",
     ),
+    disable_relationship_signals: bool = typer.Option(
+        False,
+        "--disable-relationship-signals",
+        help="Do not emit relationship/reconnect signals in this run.",
+    ),
 ) -> None:
     """Run one resumable Stage 0 transaction with no external effects."""
     _configure_logging()
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
         out = skill_dir / "local" / "nightly" / "latest"
+    if disable_relationship_signals:
+        import os
+
+        os.environ["MONITOR_RELATIONSHIP_SIGNALS_ENABLED"] = "0"
     try:
         receipt = run_stage0(
             skill_dir,
@@ -578,13 +588,22 @@ def ats_prefill(
 def memory_sync(
     run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
     memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
+    include_relationship_signals: bool = typer.Option(
+        True,
+        "--include-relationship-signals/--skip-relationship-signals",
+        help="Publish relationship graph documents to Memory.",
+    ),
 ) -> None:
     """Publish one run's shortlist into the memory service (chat is the interface)."""
     _configure_logging()
     from .memory_sync import MemorySyncError, sync_run_to_memory
 
     try:
-        receipt = sync_run_to_memory(run, memory_url)
+        receipt = sync_run_to_memory(
+            run,
+            memory_url,
+            include_relationship_signals=include_relationship_signals,
+        )
     except MemorySyncError as exc:
         _fail(ContractError("MEMORY_SYNC_REJECTED", str(exc)))
     except Exception as exc:
@@ -596,6 +615,13 @@ def memory_sync(
 def nightly(
     out: Path | None = typer.Option(None, "--out", file_okay=False),
     memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
+    diagnostic: bool = typer.Option(False, "--diagnostic", help="Run with external publication effects disabled."),
+    require_clean: bool = typer.Option(False, "--require-clean", help="Fail before capture if this skill tree is dirty."),
+    expected_revision: str | None = typer.Option(None, "--expected-revision", help="Fail unless the running commit matches."),
+    skip_tracker: bool = typer.Option(False, "--skip-tracker", help="Do not create or update tracker issues."),
+    skip_ats_memory: bool = typer.Option(False, "--skip-ats-memory", help="Do not persist learned ATS forms to Memory."),
+    skip_memory_sync: bool = typer.Option(False, "--skip-memory-sync", help="Do not publish the run summary to Memory."),
+    skip_relationship_memory: bool = typer.Option(False, "--skip-relationship-memory", help="Exclude relationship graph docs from Memory sync."),
     skip_buzz: bool = typer.Option(False, "--skip-buzz", help="Skip the Buzz shortlist post."),
 ) -> None:
     """One nightly transaction: run, publish shortlist to memory, post Buzz summary.
@@ -611,6 +637,59 @@ def nightly(
         out = skill_dir / "local" / "nightly" / "latest"
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
+
+    if diagnostic:
+        skip_buzz = True
+        skip_tracker = True
+        skip_ats_memory = True
+        skip_relationship_memory = True
+        require_clean = True
+
+    # Deployment attestation must happen before any browser/source capture so a
+    # scheduled run cannot silently execute stale or dirty code.
+    from .run_attestation import attest
+
+    attestation = attest(skill_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "run-attestation.json").write_text(
+        json.dumps(attestation, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    revision_full = str(attestation["code"].get("git_revision_full") or "")
+    revision_short = str(attestation["code"].get("git_revision") or "")
+    expected_matches = (
+        not expected_revision
+        or expected_revision in {revision_full, revision_short}
+        or revision_full.startswith(expected_revision)
+    )
+    steps["attestation"] = {
+        "ok": attestation["ok"],
+        "git_revision": revision_short,
+        "git_revision_full": revision_full,
+        "expected_revision": expected_revision,
+        "expected_revision_matches": expected_matches,
+        "skill_tree_dirty": attestation["code"]["skill_tree_dirty"],
+        "environment": attestation["runtime"]["environment"],
+        "missing_required_credentials": attestation["credentials"]["missing_required"],
+        "diagnostic": diagnostic,
+    }
+    if require_clean and attestation["code"]["skill_tree_dirty"]:
+        _fail(ContractError("NIGHTLY_DIRTY_SKILL_TREE", "Refusing scheduled run from a dirty monitor-opportunities tree"))
+    if not expected_matches:
+        _fail(ContractError("NIGHTLY_REVISION_MISMATCH", f"Expected {expected_revision}, got {revision_full}"))
+    if not attestation["ok"]:
+        logger.error(
+            "CREDENTIAL PREFLIGHT FAILED: missing {}. Results will be incomplete; "
+            "this is a deployment failure, not an empty market.",
+            attestation["credentials"]["missing_required"],
+        )
+    steps["effect_policy"] = {
+        "diagnostic": diagnostic,
+        "tracker": "SKIPPED" if skip_tracker else "ENABLED",
+        "ats_memory": "SKIPPED" if skip_ats_memory else "ENABLED",
+        "memory_sync": "SKIPPED" if skip_memory_sync else "ENABLED",
+        "relationship_memory": "SKIPPED" if skip_relationship_memory else "ENABLED",
+        "buzz": "SKIPPED" if skip_buzz else "ENABLED",
+    }
 
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
@@ -682,32 +761,9 @@ def nightly(
     }
     meetup_evidence = meetup_receipt.get("evidence_path")
 
-    # DEPLOYMENT ATTESTATION (webgpt P0 #06): record what code/config/credentials
-    # actually ran BEFORE any source is touched, so a later reader can tell a
-    # data change from a deployment change. Missing credentials must never be
-    # read as "no opportunities today".
-    from .run_attestation import attest
-
-    attestation = attest(skill_dir)
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "run-attestation.json").write_text(
-        json.dumps(attestation, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    steps["attestation"] = {
-        "ok": attestation["ok"],
-        "git_revision": attestation["code"]["git_revision"],
-        "skill_tree_dirty": attestation["code"]["skill_tree_dirty"],
-        "environment": attestation["runtime"]["environment"],
-        "missing_required_credentials": attestation["credentials"]["missing_required"],
-    }
-    if not attestation["ok"]:
-        logger.error(
-            "CREDENTIAL PREFLIGHT FAILED: missing {}. Results will be incomplete; "
-            "this is a deployment failure, not an empty market.",
-            attestation["credentials"]["missing_required"],
-        )
-
     run_cmd = [str(run_sh), "run", "--out", str(out)]
+    if diagnostic:
+        run_cmd.append("--disable-relationship-signals")
     if federal_evidence:
         run_cmd += ["--federal-evidence", str(federal_evidence)]
     if linkedin_evidence:
@@ -747,11 +803,14 @@ def nightly(
             packet["ats_form_path"] = form_receipt.get("form_path")
             packet["ats_form_field_count"] = form_receipt.get("field_count")
             packet["ats_form_human_required"] = form_receipt.get("human_required_fields")
-            # Persist the learned apply form to /memory per opportunity (digest-bound;
-            # real forms only, not LinkedIn-view stubs). Fail-soft.
-            from .ats_store import store_learned_form
+            if skip_ats_memory:
+                learned = {"key": None, "stored": False, "skipped": "diagnostic_or_explicit_skip"}
+            else:
+                # Persist the learned apply form to /memory per opportunity
+                # (digest-bound; real forms only, not LinkedIn-view stubs). Fail-soft.
+                from .ats_store import store_learned_form
 
-            learned = store_learned_form(str(packet.get("candidate_id") or ""), form_receipt)
+                learned = store_learned_form(str(packet.get("candidate_id") or ""), form_receipt)
             packet["ats_form_memory_key"] = learned.get("key")
             packet["ats_form_stored"] = learned.get("stored")
             ats_summary.append({"candidate_id": packet.get("candidate_id"), "status": form_receipt.get("status"), "fields": form_receipt.get("field_count"), "memory_stored": learned.get("stored")})
@@ -774,7 +833,9 @@ def nightly(
         tracker_top_n = max(1, int(_os.environ.get("MONITOR_TRACKER_TOP_N", "25")))
     except ValueError:
         tracker_top_n = 25
-    if _os.environ.get("MONITOR_TRACKER_ENABLED", "1") == "1" and shortlist_path.exists():
+    if skip_tracker:
+        steps["tracker"] = {"tracked": 0, "repo": tracker_repo, "top_n": tracker_top_n, "skipped": True}
+    elif _os.environ.get("MONITOR_TRACKER_ENABLED", "1") == "1" and shortlist_path.exists():
         shortlist = json.loads(shortlist_path.read_text(encoding="utf-8"))
         for opp in shortlist[:tracker_top_n]:
             try:
@@ -787,7 +848,9 @@ def nightly(
                 tracked.append({"number": result.get("number"), "action": result.get("action")})
             except (GithubTrackerError, subprocess.TimeoutExpired) as exc:
                 logger.warning("tracker skipped for {}: {}", opp.get("candidate_id"), exc)
-    steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo, "top_n": tracker_top_n}
+        steps["tracker"] = {"tracked": len(tracked), "repo": tracker_repo, "top_n": tracker_top_n}
+    else:
+        steps["tracker"] = {"tracked": 0, "repo": tracker_repo, "top_n": tracker_top_n, "disabled": True}
 
     # Morning digest + lane health: extracted to nightly_digest (thin-function rule).
     from .nightly_digest import lane_health_phase, run_digest_phase
@@ -811,24 +874,33 @@ def nightly(
         except Exception:  # noqa: BLE001 - any failure means restart-and-retry
             return False
 
-    if not _memory_healthy():
+    if not skip_memory_sync and not _memory_healthy():
         logger.warning("memory service down; restarting embry-memory container")
         subprocess.run(["docker", "restart", "embry-memory"], capture_output=True, text=True, timeout=120)
         for _ in range(30):
             if _memory_healthy():
                 break
             _time.sleep(5)
-    steps["memory_healthy"] = _memory_healthy()
+    steps["memory_healthy"] = _memory_healthy() if not skip_memory_sync else "SKIPPED"
 
-    sync_proc = subprocess.run(
-        [str(run_sh), "memory-sync", "--run", str(out), "--memory-url", memory_url],
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-    steps["memory_sync"] = {"exit_code": sync_proc.returncode}
-    if sync_proc.returncode != 0:
-        _fail(ContractError("NIGHTLY_MEMORY_SYNC_FAILED", sync_proc.stderr[-2000:]))
+    if skip_memory_sync:
+        steps["memory_sync"] = {"skipped": True}
+    else:
+        sync_cmd = [str(run_sh), "memory-sync", "--run", str(out), "--memory-url", memory_url]
+        if skip_relationship_memory:
+            sync_cmd.append("--skip-relationship-signals")
+        sync_proc = subprocess.run(
+            sync_cmd,
+            capture_output=True,
+            text=True,
+            timeout=600,
+        )
+        steps["memory_sync"] = {
+            "exit_code": sync_proc.returncode,
+            "relationship_signals_included": not skip_relationship_memory,
+        }
+        if sync_proc.returncode != 0:
+            _fail(ContractError("NIGHTLY_MEMORY_SYNC_FAILED", sync_proc.stderr[-2000:]))
 
     if skip_buzz:
         steps["buzz"] = {"skipped": True}
@@ -898,6 +970,7 @@ def ats_inspect(
 @app.command()
 def schedule(
     cron: str = typer.Option("0 2 * * *", "--cron"),
+    diagnostic: bool = typer.Option(True, "--diagnostic/--full-effects", help="Register the safe diagnostic 2 AM command."),
 ) -> None:
     """Register the single full-run transaction with the scheduler and read it back."""
     _configure_logging()
@@ -905,7 +978,36 @@ def schedule(
 
     repo_root = _canonical_repo_root()
     scheduler = repo_root / "skills" / "scheduler" / "run.sh"
-    command = str(repo_root / "skills" / "monitor-opportunities" / "run.sh") + " nightly"
+    run_sh = repo_root / "skills" / "monitor-opportunities" / "run.sh"
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    ).stdout.strip()
+    nightly_args = ["nightly"]
+    if diagnostic:
+        nightly_args.extend(
+            [
+                "--diagnostic",
+                "--expected-revision",
+                revision,
+                "--skip-buzz",
+                "--skip-tracker",
+                "--skip-ats-memory",
+                "--skip-relationship-memory",
+            ]
+        )
+    command_parts = [
+        "source ~/.zshrc >/dev/null 2>&1",
+        "export MONITOR_TRACKER_ENABLED=0",
+        "export MONITOR_ATS_MEMORY_ENABLED=0",
+        "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=0" if diagnostic else "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
+        "exec " + " ".join([shlex.quote(str(run_sh)), *[shlex.quote(arg) for arg in nightly_args]]),
+    ]
+    command = "zsh -lc " + shlex.quote("; ".join(command_parts))
     register = subprocess.run(
         [
             str(scheduler),
@@ -935,7 +1037,7 @@ def schedule(
     )
     jobs = json.loads(listing.stdout)
     job = jobs.get("monitor-opportunities-nightly")
-    if not job or job.get("cron") != cron or job.get("command") != command:
+    if not job or job.get("cron") != cron or job.get("command") != command or job.get("workdir") != str(repo_root) or not job.get("enabled", True):
         _fail(ContractError("SCHEDULER_READBACK_FAILED", "Registered job did not read back"))
     typer.echo(
         json.dumps(
@@ -946,6 +1048,8 @@ def schedule(
                 "name": "monitor-opportunities-nightly",
                 "cron": cron,
                 "command": command,
+                "diagnostic": diagnostic,
+                "expected_revision": revision,
                 "workdir": str(repo_root),
                 "register_stdout": register.stdout,
                 "readback": job,

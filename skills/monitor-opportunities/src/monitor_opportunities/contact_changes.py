@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import urllib.request
@@ -297,6 +298,8 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
     signals only. The human still decides whether to reconnect, attend, or skip.
     """
     signals: list[dict[str, Any]] = []
+    if os.environ.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "1") == "0":
+        return signals
     seen: set[str] = set()
     for c in candidates:
         source_id = str(c.get("candidate_id") or c.get("source_identity") or c.get("title") or "")
