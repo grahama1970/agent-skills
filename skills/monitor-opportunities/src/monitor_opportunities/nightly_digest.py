@@ -227,6 +227,30 @@ def run_digest_phase(
                 "NIGHTLY_DIGEST_EMPTY",
                 f"{len(shortlist_rows)} shortlisted rows produced 0 digest entries",
             )
+        # PRE-PUBLISH TRUTH CONTRACT (webgpt eval review P0 #01/#05). The digest
+        # is the human-visible product, so it is validated against this run's own
+        # independent evidence BEFORE it is written or mirrored anywhere. A
+        # violation fails the run closed: a wrong digest is worse than none.
+        from .prepublish_contract import validate as validate_prepublish
+
+        contract_ok, contract_report = validate_prepublish(
+            digest, shortlist_rows, trigger_receipt=trigger_receipt
+        )
+        (out / "prepublish-contract.json").write_text(
+            json.dumps(contract_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        steps["prepublish_contract"] = {
+            "ok": contract_ok,
+            "violations": len(contract_report.get("violations", [])),
+            "artifact": str(out / "prepublish-contract.json"),
+        }
+        if not contract_ok:
+            rules = sorted({v["rule"] for v in contract_report["violations"]})
+            raise ContractError(
+                "NIGHTLY_DIGEST_CONTRACT_VIOLATION",
+                f"{len(contract_report['violations'])} pre-publish violation(s) "
+                f"[{', '.join(rules)}]; digest withheld. See prepublish-contract.json",
+            )
         (out / "morning-digest.json").write_text(
             json.dumps(digest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )

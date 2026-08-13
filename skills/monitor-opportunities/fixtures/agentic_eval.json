@@ -174,6 +174,40 @@
       },
       "timeout_seconds": 60,
       "proves": "A busy/unavailable surf lease during a pacing sleep no longer aborts a capture that already has rows (the 2026-08-13 top-applicant failure)."
+    },
+    {
+      "name": "prepublish-truth-contract-blocks-untrustworthy-digest",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "uv run python -c \"from pathlib import Path;from monitor_opportunities.prepublish_contract import validate_run;ok_now,_=validate_run(Path('local/nightly/latest'));ok_bad,rep=validate_run(Path('/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/run-2026-08-13-buggy'));rules=sorted({v['rule'] for v in rep['violations']});assert ok_now, 'current run must pass the contract';assert not ok_bad, 'the known-bad run must be blocked';assert 'resolvable-url' in rules and 'evidence-backed' in rules, rules;print('PREPUBLISH_CONTRACT_DISCRIMINATES', len(rep['violations']), rules)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PREPUBLISH_CONTRACT_DISCRIMINATES"
+        ]
+      },
+      "timeout_seconds": 180,
+      "proves": "The pre-publish truth contract passes the current REAL run and BLOCKS the preserved 2026-08-13 run on its actual defects (generic search URLs, per-job facts without a per-job source). It is a publication gate, not a post-hoc report."
+    },
+    {
+      "name": "nightly-withholds-digest-on-contract-violation",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import inspect;from monitor_opportunities import nightly_digest as nd;src=inspect.getsource(nd);i=src.index('validate_prepublish');j=src.index('morning-digest.json', i);seg=src[i:j];assert 'NIGHTLY_DIGEST_CONTRACT_VIOLATION' in seg, 'no fail-closed raise before publish';assert 'raise ContractError' in seg, 'violation does not raise';print('DIGEST_WITHHELD_ON_VIOLATION')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DIGEST_WITHHELD_ON_VIOLATION"
+        ]
+      },
+      "timeout_seconds": 120,
+      "proves": "The contract runs BEFORE morning-digest.json is written and raises, so a violating digest is never persisted or mirrored to memory/Discord."
     }
   ]
 }
