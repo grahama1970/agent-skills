@@ -50,4 +50,15 @@ def collect_memory() -> dict[str, Any]:
         except Exception as e:
             results.append({"query": q, "found": False, "error": str(e)[:100]})
 
-    return {"available": True, "recalls": results}
+    # `available` must describe the SERVICE, not the presence of a skill file.
+    # It previously returned True whenever the skill existed, so a reader saw
+    # "available, 0 found" when the truth was "memory was unreachable"
+    # (2026-08-13). Availability is now: at least one recall actually answered.
+    answered = [r for r in results if "error" not in r and "raw" not in r]
+    return {
+        "available": bool(answered),
+        "successful_recalls": len(answered),
+        "attempted_recalls": len(results),
+        "recalls": results,
+        **({} if answered else {"error": "no recall returned a parseable response"}),
+    }

@@ -2,10 +2,10 @@
  "version": 2,
  "skill": "project-state",
  "trials": 2,
- "proof_scope": "Report scoping through the real report entrypoint: a report about target X describes X's own tests and never borrows counts from an unrelated global tree.",
+ "proof_scope": "Report scoping AND phase honesty through the real ./run.sh entrypoint: a report about target X describes X's own tests, never borrows the global skills count, produces all six phases target-scoped under --full, and never claims a composed service is available when nothing answered.",
  "claims": {
-  "proves": "Running ./run.sh report against a skill directory collects that skill's real test count and refuses to report the global skills tree as the target's state, while the repo root still counts its own skills.",
-  "does_not_prove": "That the later phases (memory recall, doc drift, best-practices audit, external research via brave-search/github-search) are accurate, or that a passing report means the target project is healthy."
+  "proves": "Quick reports are target-scoped (own tests, no borrowed skills count); full reports produce all six phases with memory-recall and research queries naming the target; and phase_2 availability is consistent with the number of recalls that actually answered.",
+  "does_not_prove": "That recall/research RESULTS are relevant or correct, that doc-drift findings are true positives, that the best-practices audit is complete, or that a passing report means the target project is healthy. Paths are pinned to this machine."
  },
  "cases": [
   {
@@ -16,7 +16,7 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 50 --expect-skills-not-applicable"
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 50 --expect-skills-not-applicable"
    ],
    "expected": {
     "exit_code": 0,
@@ -35,7 +35,7 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills --min-skills 100"
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills --min-skills 100"
    ],
    "expected": {
     "exit_code": 0,
@@ -53,7 +53,7 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-skills 100"
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-skills 100"
    ],
    "expected": {
     "exit_code": 1,
@@ -73,7 +73,7 @@
    "command": [
     "bash",
     "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 500"
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 500"
    ],
    "expected": {
     "exit_code": 1,
@@ -83,6 +83,61 @@
     "stderr_contains": [
      "SCOPE_FAIL"
     ]
+   }
+  },
+  {
+   "name": "full-report-all-phases-target-scoped",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 1500,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py full-phases --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --require-memory-available"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "PHASES_PRESENT=6/6",
+     "PHASES_OK"
+    ],
+    "stderr_contains": []
+   }
+  },
+  {
+   "name": "phase-availability-must-match-successful-recalls",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 1500,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python -c \"import json,sys; sys.path.insert(0,'.'); from memory_recall import collect_memory; m=collect_memory(); ok = bool(m['available']) == (m.get('successful_recalls',0) > 0) and 'successful_recalls' in m; print('AVAILABLE=%s SUCCESSFUL=%s' % (m['available'], m.get('successful_recalls'))); sys.exit(0 if ok else 1)\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "SUCCESSFUL="
+    ],
+    "stderr_contains": []
+   }
+  },
+  {
+   "name": "research-queries-derive-from-target-not-template",
+   "type": "adversarial",
+   "real_world": true,
+   "timeout_seconds": 600,
+   "command": [
+    "bash",
+    "-c",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck uv run python -c \"import sys; sys.path.insert(0,'.'); from research import _build_research_queries; qs=[q['query'] for q in _build_research_queries({'applicable': False, 'tier_status': {}}, {}, {}, full=True)]; print('QUERIES=%d' % len(qs)); bad=[q for q in qs if 'extraction pipeline' in q or 'layout parsing' in q]; print('TEMPLATED=%d' % len(bad)); sys.exit(0 if not bad else 1)\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "TEMPLATED=0"
+    ],
+    "stderr_contains": []
    }
   }
  ]

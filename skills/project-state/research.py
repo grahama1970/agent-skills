@@ -16,6 +16,7 @@ from typing import Any
 from loguru import logger
 
 from constants import (
+    PROJECT_ROOT,
     ARXIV_SKILL,
     BRAVE_SEARCH_SKILL,
     DOGPILE_SKILL,
@@ -23,6 +24,39 @@ from constants import (
     PROJECT_NAME,
     PROJECT_PROFILE,
 )
+
+
+
+def _target_topic_terms() -> str:
+    """Topic words derived from the TARGET's own metadata.
+
+    The generic branch used to hardcode "extraction pipeline" / "layout
+    parsing" regardless of target (observed 2026-08-13: a slide-deck compiler
+    was researched as a document-extraction project). Read the target's
+    pyproject description or README heading instead; fall back to the project
+    name alone rather than inventing a domain.
+    """
+    import re
+    import tomllib
+
+    pyproject = PROJECT_ROOT / "pyproject.toml"
+    if pyproject.exists():
+        try:
+            description = tomllib.loads(pyproject.read_text()).get("project", {}).get("description", "")
+            if description:
+                return " ".join(re.findall(r"[A-Za-z][A-Za-z-]{3,}", description)[:6])
+        except (OSError, tomllib.TOMLDecodeError):
+            pass
+    readme = PROJECT_ROOT / "README.md"
+    if readme.exists():
+        try:
+            for line in readme.read_text(errors="replace").splitlines():
+                text = line.strip().lstrip("#").strip()
+                if len(text) > 20 and not text.startswith(("!", "[", "<")):
+                    return " ".join(re.findall(r"[A-Za-z][A-Za-z-]{3,}", text)[:6])
+        except OSError:
+            pass
+    return ""
 
 
 def _build_research_queries(cascade: dict, daemons: dict,
@@ -39,7 +73,7 @@ def _build_research_queries(cascade: dict, daemons: dict,
     else:
         queries.append({
             "source": "brave-search",
-            "query": f"{PROJECT_NAME} python project extraction pipeline best practices",
+            "query": f"{PROJECT_NAME} {_target_topic_terms()} best practices".replace("  ", " "),
             "reason": "target-project technical landscape",
         })
 
@@ -99,12 +133,12 @@ def _build_research_queries(cascade: dict, daemons: dict,
     elif full:
         queries.append({
             "source": "brave-search",
-            "query": f"{PROJECT_NAME} GitHub issues python extraction validation",
+            "query": f"{PROJECT_NAME} GitHub issues {_target_topic_terms()}".replace("  ", " "),
             "reason": "current implementation and issue landscape",
         })
         queries.append({
             "source": "arxiv",
-            "query": "document extraction validation layout parsing Python",
+            "query": f"{_target_topic_terms()}".strip() or f"{PROJECT_NAME} software engineering",
             "reason": "target-project technical approach validation",
             "categories": "cs.AI,cs.SE",
         })
