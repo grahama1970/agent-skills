@@ -2,7 +2,7 @@
   "project": "monitor-opportunities",
   "project_root": "/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities",
   "project_profile": "generic",
-  "timestamp": "2026-08-11T14:38:03.274335+00:00",
+  "timestamp": "2026-08-12T06:30:13.253391+00:00",
   "mode": "standard",
   "phase_1_infrastructure": {
     "daemons": {
@@ -13,7 +13,7 @@
       "total": 0
     },
     "tests": {
-      "total": 182,
+      "total": 198,
       "collected": true,
       "path": "/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests"
     },
@@ -44,7 +44,7 @@
       "wired": {}
     },
     "skills": {
-      "total": 379,
+      "total": 384,
       "path": "/home/graham/workspace/experiments/agent-skills/skills",
       "missing_skill_md": [
         "__pycache__",
@@ -71,7 +71,7 @@
         "best-practices-cots",
         "best-practices-design"
       ],
-      "missing_sanity_count": 54
+      "missing_sanity_count": 58
     },
     "frontend": {
       "exists": false

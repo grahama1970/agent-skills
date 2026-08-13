@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -179,9 +179,6 @@ class OutreachPacket(StrictModel):
     recipient: str
     contact_provenance: str
     subject: str | None
-    funnel: Literal["consulting", "employment"]
-    funnel_url: str
-    funnel_label: Literal["grahama.co", "grahama.co/resume"]
     body: str
     character_count: int = Field(ge=1)
     claim_keys: list[str] = Field(min_length=1)

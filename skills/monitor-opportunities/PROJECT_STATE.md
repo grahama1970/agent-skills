@@ -1,6 +1,6 @@
 # Project State: monitor-opportunities
 
-**Generated 2026-08-11T14:38:09.583334+00:00** from `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`.
+**Generated 2026-08-12T06:30:20.428841+00:00** from `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`.
 A dated assessment artifact, not rolling context — see `PROJECT_KNOWLEDGE.md`
 for current understanding. Claims below are `not established` unless a receipt
 is named.

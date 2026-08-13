@@ -14,11 +14,6 @@ from .roundtable_gate import validate_roundtable_receipt
 from .util import sha256_json, stable_id
 
 OUTREACH_CHANNELS = ("GMAIL", "LINKEDIN")
-CONSULTING_FUNNEL_URL = "https://grahama.co"
-EMPLOYMENT_FUNNEL_URL = "https://grahama.co/resume"
-CONSULTING_OPPORTUNITY_TYPES = {"commercial_signal", "federal_notice"}
-CONSULTING_PROSPECT_CLASSES = {"commercial_signal", "federal_buyer"}
-CONSULTING_LANES = {"B", "C"}
 
 
 class OutreachError(ValueError):
@@ -82,8 +77,7 @@ def build_outreach_packet(
     recipient = "CONTACT_UNKNOWN"
     contact_provenance = "CONTACT_UNKNOWN"
     subject = None if channel == "LINKEDIN" else f"Relevant background for {opportunity['organization']}"
-    funnel = _funnel(opportunity)
-    body = _body(opportunity, channel, [approved[key] for key in claim_keys], funnel)
+    body = _body(opportunity, channel, [approved[key] for key in claim_keys])
     basis = {
         "immutable_goal": IMMUTABLE_GOAL,
         "opportunity_id": opportunity["opportunity_id"],
@@ -92,9 +86,6 @@ def build_outreach_packet(
         "contact_provenance": contact_provenance,
         "subject": subject,
         "body": body,
-        "funnel": funnel["funnel"],
-        "funnel_url": funnel["funnel_url"],
-        "funnel_label": funnel["funnel_label"],
         "claim_keys": claim_keys,
         "candidate_transmits": True,
     }
@@ -117,9 +108,6 @@ def build_outreach_packet(
         "recipient": recipient,
         "contact_provenance": contact_provenance,
         "subject": subject,
-        "funnel": funnel["funnel"],
-        "funnel_url": funnel["funnel_url"],
-        "funnel_label": funnel["funnel_label"],
         "body": body,
         "character_count": len(body),
         "claim_keys": claim_keys,
@@ -143,35 +131,7 @@ def _receipt_key(opportunity_id: str, channel: str) -> str:
     return f"{opportunity_id}:{channel}"
 
 
-def _funnel(opportunity: dict[str, Any]) -> dict[str, str]:
-    """Route each opportunity to the correct public surface."""
-
-    opportunity_type = str(opportunity.get("opportunity_type") or "")
-    prospect_class = str(opportunity.get("prospect_class") or "")
-    lane = str(opportunity.get("lane") or "")
-    if (
-        opportunity_type in CONSULTING_OPPORTUNITY_TYPES
-        or prospect_class in CONSULTING_PROSPECT_CLASSES
-        or lane in CONSULTING_LANES
-    ):
-        return {
-            "funnel": "consulting",
-            "funnel_url": CONSULTING_FUNNEL_URL,
-            "funnel_label": "grahama.co",
-        }
-    return {
-        "funnel": "employment",
-        "funnel_url": EMPLOYMENT_FUNNEL_URL,
-        "funnel_label": "grahama.co/resume",
-    }
-
-
-def _body(
-    opportunity: dict[str, Any],
-    channel: str,
-    claims: list[dict[str, Any]],
-    funnel: dict[str, str],
-) -> str:
+def _body(opportunity: dict[str, Any], channel: str, claims: list[dict[str, Any]]) -> str:
     claim_lines = []
     for claim in claims:
         wording = next((item for item in claim.get("wordings", []) if item.get("approved") is True), None)
@@ -190,8 +150,6 @@ def _body(
             "",
             "Relevant approved claims:",
             *claim_lines,
-            "",
-            f"Best next link: {funnel['funnel_url']} — {funnel['funnel_label']}.",
             "",
             "Human transmission note: Graham reviews and sends this text manually.",
         ]

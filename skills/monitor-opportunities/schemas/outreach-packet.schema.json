@@ -11,9 +11,6 @@
     "recipient",
     "contact_provenance",
     "subject",
-    "funnel",
-    "funnel_url",
-    "funnel_label",
     "body",
     "character_count",
     "claim_keys",
@@ -36,12 +33,6 @@
     "recipient": { "type": "string", "minLength": 1 },
     "contact_provenance": { "type": "string", "minLength": 1 },
     "subject": { "type": ["string", "null"] },
-    "funnel": { "enum": ["consulting", "employment"] },
-    "funnel_url": {
-      "type": "string",
-      "pattern": "^https://grahama\\.co(/resume)?$"
-    },
-    "funnel_label": { "enum": ["grahama.co", "grahama.co/resume"] },
     "body": { "type": "string", "minLength": 1 },
     "character_count": { "type": "integer", "minimum": 1 },
     "claim_keys": {

@@ -18,8 +18,6 @@ from typing import Any
 
 from .relevance import mandate_hits as _entity_mandate_hits
 
-CONSULTING_FUNNEL_URL = "https://grahama.co"
-
 # Fallback ONLY when /extract-entities or /memory is unavailable. The primary
 # path is vocabulary-based whole-phrase matching via relevance.mandate_hits
 # (best-practices-python: no regex for classifying unknown text).
@@ -79,8 +77,6 @@ def federal_prospects(sam_evidence: dict[str, Any]) -> list[dict[str, Any]]:
                 "source": "sam.gov_website",
                 "mandate_hits": hits,
                 "prospect_class": "federal_buyer",
-                "recommended_funnel": "consulting",
-                "recommended_funnel_url": CONSULTING_FUNNEL_URL,
             }
         )
     return out
@@ -103,8 +99,6 @@ def commercial_prospects(shortlist: list[dict[str, Any]]) -> list[dict[str, Any]
                 "source": c.get("source_provider") or "commercial-research",
                 "mandate_hits": _mandate_hits(f"{title} {c.get('posting_text', '')}"),
                 "prospect_class": "commercial_signal",
-                "recommended_funnel": "consulting",
-                "recommended_funnel_url": CONSULTING_FUNNEL_URL,
             }
         )
     return out
