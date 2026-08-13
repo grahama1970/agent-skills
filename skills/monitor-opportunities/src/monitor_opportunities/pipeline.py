@@ -676,6 +676,7 @@ def run_stage0(
     outreach_effects_path: Path | None = None,
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
+    degrade_required_source_failures: bool = False,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
@@ -695,12 +696,27 @@ def run_stage0(
         meetup_evidence=meetup_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
+    degraded_contracts: list[dict[str, str]] = []
     if fixture_dir is None:
         # Enforcement is for live runs; fixtures are deterministic test scaffolding.
-        required_sources = _enforce_required_sources(skill_dir, discovery_dir)
-        phases.append({"phase": "REQUIRED_SOURCES_ENFORCED", "checked": required_sources["checked"]})
-        _enforce_api_website_fallback(skill_dir, discovery_dir)
-        phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
+        try:
+            required_sources = _enforce_required_sources(skill_dir, discovery_dir)
+        except ContractError as exc:
+            if not degrade_required_source_failures:
+                raise
+            degraded_contracts.append({"code": exc.code, "message": exc.message})
+            phases.append({"phase": "REQUIRED_SOURCES_DEGRADED", "code": exc.code, "message": exc.message})
+        else:
+            phases.append({"phase": "REQUIRED_SOURCES_ENFORCED", "checked": required_sources["checked"]})
+        try:
+            _enforce_api_website_fallback(skill_dir, discovery_dir)
+        except ContractError as exc:
+            if not degrade_required_source_failures:
+                raise
+            degraded_contracts.append({"code": exc.code, "message": exc.message})
+            phases.append({"phase": "API_WEBSITE_FALLBACK_DEGRADED", "code": exc.code, "message": exc.message})
+        else:
+            phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
     ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     tailoring_receipt = None
@@ -774,6 +790,7 @@ def run_stage0(
         "immutable_goal": IMMUTABLE_GOAL,
         "budget": {"currency": "USD", "max": 10.0, "estimated": 0.0, "actual": 0.0},
         "phase_artifacts": phases,
+        "degraded_contracts": degraded_contracts,
         "discovery_receipt": discovery_receipt,
         "ranking_receipt": ranking_receipt,
         "tailoring_receipt": tailoring_receipt,

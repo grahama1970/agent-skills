@@ -371,6 +371,11 @@ def run_command(
         "--disable-relationship-signals",
         help="Do not emit relationship/reconnect signals in this run.",
     ),
+    degrade_required_sources: bool = typer.Option(
+        False,
+        "--degrade-required-sources",
+        help="Continue report generation after required-source contract violations; diagnostic cron only.",
+    ),
 ) -> None:
     """Run one resumable Stage 0 transaction with no external effects."""
     _configure_logging()
@@ -391,6 +396,7 @@ def run_command(
             outreach_effects,
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
+            degrade_required_source_failures=degrade_required_sources,
         )
     except ContractError as exc:
         _fail(exc)
@@ -763,7 +769,7 @@ def nightly(
 
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if diagnostic:
-        run_cmd.append("--disable-relationship-signals")
+        run_cmd.extend(["--disable-relationship-signals", "--degrade-required-sources"])
     if federal_evidence:
         run_cmd += ["--federal-evidence", str(federal_evidence)]
     if linkedin_evidence:
@@ -774,6 +780,12 @@ def nightly(
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
         _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
+    run_receipt_path = out / "run-receipt.json"
+    if run_receipt_path.exists():
+        run_receipt = read_json(run_receipt_path)
+        degraded_contracts = run_receipt.get("degraded_contracts") or []
+        steps["run"]["degraded_contracts"] = degraded_contracts
+        steps["run"]["degraded_contract_codes"] = [str(item.get("code")) for item in degraded_contracts if item.get("code")]
 
     # Live ATS form capture: for each top job, read-only capture of the
     # application-form schema so a human-promoted site policy can later drive

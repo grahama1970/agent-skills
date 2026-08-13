@@ -10,15 +10,92 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
+import monitor_opportunities.pipeline as pipeline
 from monitor_opportunities.cli import app
-from monitor_opportunities.contracts import IMMUTABLE_GOAL
+from monitor_opportunities.contracts import IMMUTABLE_GOAL, ContractError
 from monitor_opportunities.discovery import _linkedin_evidence_candidates
-from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel
+from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel, run_stage0
 from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
+
+
+def test_diagnostic_run_degrades_required_source_gate_without_changing_strict_mode(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    skill_dir = Path("skills/monitor-opportunities")
+
+    def fake_sweep(*, out_dir: Path, **_: object) -> dict[str, object]:
+        out_dir.mkdir(parents=True)
+        (out_dir / "source-receipts.jsonl").write_text(
+            json.dumps(
+                {
+                    "receipt_id": "locator-only",
+                    "lane": "A",
+                    "provider": "indeed",
+                    "target": "indeed",
+                    "required_source_id": "indeed",
+                    "channel": "source_locator",
+                    "source_class": "source_locator",
+                    "result_status": "NO_MATCHES",
+                    "observed_at": "2026-08-13T00:00:00Z",
+                    "request_summary": "locator only",
+                    "response_status": 200,
+                    "content_type": None,
+                    "response_bytes": 1,
+                    "content_sha256": "a" * 64,
+                    "evidence_refs": ["fixture://locator"],
+                    "limitations": [],
+                },
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        (out_dir / "run-manifest.json").write_text("{}", encoding="utf-8")
+        return {"schema": "fake.discovery"}
+
+    def fake_rank(discovery_dir: Path, limit: int, ranking_dir: Path) -> dict[str, object]:
+        del discovery_dir, limit
+        ranking_dir.mkdir(parents=True)
+        (ranking_dir / "shortlist.json").write_text("[]\n", encoding="utf-8")
+        (ranking_dir / "rejections.json").write_text("[]\n", encoding="utf-8")
+        (ranking_dir / "ranking-receipt.json").write_text("{}", encoding="utf-8")
+        return {"schema": "fake.ranking"}
+
+    def fake_report_from_run(*_: object, **__: object) -> dict[str, object]:
+        return {"schema": "fake.report", "generated_at": "2026-08-13T00:00:00Z"}
+
+    def fake_render_report(_manifest: object, report_dir: Path) -> dict[str, str]:
+        report_dir.mkdir(parents=True)
+        html = report_dir / "index.html"
+        report_json = report_dir / "report.json"
+        html.write_text("<html></html>\n", encoding="utf-8")
+        report_json.write_text("{}\n", encoding="utf-8")
+        return {"report_html": str(html), "report_json": str(report_json)}
+
+    monkeypatch.setattr(pipeline, "sweep", fake_sweep)
+    monkeypatch.setattr(pipeline, "rank", fake_rank)
+    monkeypatch.setattr(pipeline, "_report_from_run", fake_report_from_run)
+    monkeypatch.setattr(pipeline, "load_manifest", lambda path: json.loads(path.read_text(encoding="utf-8")))
+    monkeypatch.setattr(pipeline, "render_report", fake_render_report)
+
+    with pytest.raises(ContractError) as strict_error:
+        run_stage0(skill_dir, tmp_path / "strict")
+    assert strict_error.value.code == "REQUIRED_SOURCE_CONTRACT_VIOLATION"
+
+    receipt = run_stage0(skill_dir, tmp_path / "diagnostic", degrade_required_source_failures=True)
+    assert receipt["terminal_state"] == "AWAITING_HUMAN"
+    assert receipt["live"] is True
+    assert receipt["degraded_contracts"]
+    assert receipt["degraded_contracts"][0]["code"] == "REQUIRED_SOURCE_CONTRACT_VIOLATION"
+    phases = {row["phase"] for row in receipt["phase_artifacts"]}
+    assert "REQUIRED_SOURCES_DEGRADED" in phases
+    assert (tmp_path / "diagnostic" / "report" / "index.html").exists()
 
 
 def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
