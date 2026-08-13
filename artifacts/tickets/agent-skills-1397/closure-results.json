@@ -1,0 +1,38 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1397,
+  "ticket": {
+    "repo": "grahama1970/agent-skills",
+    "issue": 1397
+  },
+  "unit": {
+    "command": "uv run --project skills/ask python -m pytest -q skills/ask/tests/test_browser_provider_selection_probe_state.py skills/ask/tests/test_tau_dag.py -k 'browser_provider_selection or browser_availability'",
+    "exit_code": 0,
+    "passed": 16,
+    "mocked": false,
+    "live": false,
+    "proved": "Provider-selection logic treats non-retryable degraded or failed browser-provider probes as unusable, blocks single-seat WebGPT dispatch, preserves the real failure code, and keeps healthy fallback behavior for multi-provider roundtables."
+  },
+  "e2e": {
+    "command": "python3 live-readback receipt assertion for the non-mocked skills/ask/run.sh tau-dag --execute WebGPT run",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/home/graham/workspace/experiments/agent-skills/.worktrees/ticket-1397-push/artifacts/tickets/agent-skills-1397/live-readback.json",
+    "artifact_sha256": "sha256:d5779e847b6d881ff83a64c162b65c8bf7e6991cefef0ee5866ff6e44d539fba",
+    "proved": "The live Ask/WebGPT availability receipts are read back and show WebGPT was removed before Tau execution with browser_provider_probe_timeout, active_handlers is empty, no handler artifact directories were created, and the availability probe itself was live and unmocked."
+  },
+  "sanity": {
+    "command": "python3 scripts/check_mock_evidence_claims.py",
+    "exit_code": 0,
+    "result": "OK: checked 623 test file(s); no mock+proof claim violations",
+    "mocked": false,
+    "live": false
+  },
+  "mocked": "no",
+  "live": "yes",
+  "service_commit_before": "a998be21c03f28037115ed42fe0138c085257a7f",
+  "service_commit_after": "2afde2851775228e746cd092d341d3dbd9e2a530",
+  "worktree_audit_ok": false,
+  "worktree_audit_note": "The primary checkout contains unrelated pre-existing dirty files and is divergent from origin/main. A clean origin/main worktree was used for cherry-pick proof and push."
+}

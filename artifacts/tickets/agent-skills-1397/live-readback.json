@@ -1,0 +1,37 @@
+{
+  "schema": "agent_skills.ticket_1397.live_readback.v1",
+  "issue": 1397,
+  "mocked": false,
+  "live": true,
+  "status": "PASS",
+  "failed_checks": [],
+  "run_directory": "/mnt/storage12tb/skills/ask/outputs/ticket-1397-live-proof-20260813/ask-tau-create-a-comprehensive-battle-ag-b33f13da4a09",
+  "read_artifacts": {
+    "browser_provider_selection": "/mnt/storage12tb/skills/ask/outputs/ticket-1397-live-proof-20260813/ask-tau-create-a-comprehensive-battle-ag-b33f13da4a09/browser-provider-selection.json",
+    "provider_gate": "/mnt/storage12tb/skills/ask/outputs/ticket-1397-live-proof-20260813/ask-tau-create-a-comprehensive-battle-ag-b33f13da4a09/provider-gate.json",
+    "browser_provider_availability": "/mnt/storage12tb/skills/ask/outputs/ticket-1397-live-proof-20260813/ask-tau-create-a-comprehensive-battle-ag-b33f13da4a09/browser-provider-availability.json"
+  },
+  "observed": {
+    "selection_status": "BLOCKED",
+    "failure_code": "browser_provider_probe_timeout",
+    "removed_handlers": [
+      "webgpt"
+    ],
+    "active_handlers": [],
+    "unusable_providers": {
+      "webgpt": "browser_provider_probe_timeout"
+    },
+    "handler_artifact_dirs": [],
+    "provider_gate_live": false,
+    "provider_gate_mocked": false,
+    "provider_gate_provider_live": false,
+    "availability_live": true,
+    "availability_mocked": false,
+    "webgpt_probe_degraded": true
+  },
+  "sha256": {
+    "browser_provider_selection": "1378989a9479d3b87a30a7cb219edfa6db9821aff9984774a1d154e66d831c4b",
+    "provider_gate": "1b5384cb06ded0dd2fb222a888863c904442a88272b432eb524a8639f0d63798",
+    "browser_provider_availability": "7f74e99cd32fd1ed0bc088ade07b2c7e24e78d45d476566683a9fcd9da419e40"
+  }
+}
