@@ -20,6 +20,12 @@ Invariants (webgpt's mandatory list, restricted to what this run can prove):
   evidence-backed    displayed facts have provenance: premium_insights only on
                      rows with a real posting URL; a nonzero trigger driver
                      requires trigger evidence
+  lineage-traceable  every row names a source receipt emitted by THIS run
+                     (webgpt P0 #03), so any fact walks back to source bytes
+  lineage-no-crossjoin  job-level and org-level enrichments never cross-join:
+                     distinct jobs must not share byte-identical per-job
+                     insights, and one org must not carry conflicting
+                     org-level trigger evidence
   typed-missingness  an unavailable signal is never presented as an observed
                      zero (webgpt P0 #05): if the trigger pass could not run,
                      the digest must not imply triggers were observed-absent
@@ -58,6 +64,7 @@ def validate(
     digest: dict[str, Any],
     shortlist: list[dict[str, Any]],
     trigger_receipt: dict[str, Any] | None = None,
+    source_receipt_ids: set[str] | None = None,
     max_rows: int = 8,
     max_age_days: int = 14,
     now: datetime | None = None,
@@ -121,6 +128,50 @@ def validate(
             bad("frozen-selection", f"score {score} follows lower score {prior_score}", e)
         prior_score = score
 
+    # lineage-traceable (webgpt P0 #03) — every row must name a source receipt
+    # emitted by THIS run, so a fact can always be walked back to source bytes.
+    if source_receipt_ids is not None:
+        for e in top:
+            row = by_id.get(e.get("candidate_id"))
+            if row is None:
+                continue
+            sid = row.get("source_receipt_id")
+            if not sid:
+                bad("lineage-traceable", "row has no source_receipt_id", e)
+            elif sid not in source_receipt_ids:
+                bad("lineage-traceable", f"source_receipt_id {sid} is not from this run", e)
+
+    # lineage-no-crossjoin (webgpt P0 #03) — job-level and organization-level
+    # enrichments must not cross-join. Two DIFFERENT jobs sharing byte-identical
+    # per-job insights means one page was read repeatedly and attributed to many
+    # jobs (the 2026-08-13 defect). One ORG carrying conflicting trigger evidence
+    # means org-level news was attached per-row instead of per-organization.
+    insight_owners: dict[str, set[str]] = {}
+    org_trigger: dict[str, set[str]] = {}
+    for e in top:
+        insights = e.get("premium_insights")
+        if insights:
+            fp = json.dumps(insights, sort_keys=True)
+            insight_owners.setdefault(fp, set()).add(str(e.get("candidate_id")))
+        org = " ".join(str(e.get("organization") or "").lower().split())
+        ev = e.get("trigger_evidence")
+        if org and ev:
+            org_trigger.setdefault(org, set()).add(str(ev))
+    for fp, owners in insight_owners.items():
+        if len(owners) > 1:
+            bad(
+                "lineage-no-crossjoin",
+                f"{len(owners)} distinct jobs share byte-identical premium_insights "
+                f"({fp[:60]}): one page was attributed to many jobs",
+            )
+    for org, evidence in org_trigger.items():
+        if len(evidence) > 1:
+            bad(
+                "lineage-no-crossjoin",
+                f"organization {org!r} carries {len(evidence)} conflicting trigger "
+                "evidences; org-level signal must be identical across its rows",
+            )
+
     # typed-missingness — an unavailable signal must not read as observed-absent
     wired = digest.get("signals_wired") or {}
     if trigger_receipt is not None:
@@ -164,9 +215,23 @@ def validate_run(run_dir: Path, **kwargs: Any) -> tuple[bool, dict[str, Any]]:
             trigger = json.loads(trigger_p.read_text(encoding="utf-8"))
         except ValueError:
             trigger = None
+    receipts_p = run_dir / "discovery" / "source-receipts.jsonl"
+    source_ids: set[str] | None = None
+    if receipts_p.exists():
+        source_ids = set()
+        for line in receipts_p.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                rid = json.loads(line).get("receipt_id")
+            except ValueError:
+                continue
+            if rid:
+                source_ids.add(str(rid))
     return validate(
         json.loads(digest_p.read_text(encoding="utf-8")),
         json.loads(shortlist_p.read_text(encoding="utf-8")),
         trigger_receipt=trigger,
+        source_receipt_ids=source_ids,
         **kwargs,
     )

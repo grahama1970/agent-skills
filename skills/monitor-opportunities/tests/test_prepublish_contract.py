@@ -127,3 +127,52 @@ def test_unavailable_signal_must_not_read_as_observed() -> None:
     )
     assert not ok
     assert any(v["rule"] == "typed-missingness" for v in rep["violations"])
+
+
+def test_identical_insights_across_jobs_is_a_crossjoin_violation() -> None:
+    # The 2026-08-13 defect: one page read 8x, its numbers attached to 8 jobs.
+    rows = [_row(), _row(candidate_id="c2", organization="Beta", title="ML Eng")]
+    same = {"applicants": 10, "salary": "$119K/yr - $154K/yr"}
+    top = [
+        _entry(premium_insights=same, response_score=0.9),
+        _entry(candidate_id="c2", organization="Beta", title="ML Eng",
+               premium_insights=same, response_score=0.8),
+    ]
+    ok, rep = validate({"top": top}, rows, now=NOW)
+    assert not ok
+    assert any(v["rule"] == "lineage-no-crossjoin" for v in rep["violations"])
+
+
+def test_distinct_insights_across_jobs_pass() -> None:
+    rows = [_row(), _row(candidate_id="c2", organization="Beta", title="ML Eng")]
+    top = [
+        _entry(premium_insights={"applicants": 9}, response_score=0.9),
+        _entry(candidate_id="c2", organization="Beta", title="ML Eng",
+               premium_insights={"applicants": 22}, response_score=0.8),
+    ]
+    ok, rep = validate({"top": top}, rows, now=NOW)
+    assert ok, rep["violations"]
+
+
+def test_conflicting_org_trigger_evidence_is_a_crossjoin_violation() -> None:
+    # Trigger news is ORG-level: two rows of one org cannot disagree about it.
+    rows = [_row(), _row(candidate_id="c2", title="ML Eng")]
+    top = [
+        _entry(trigger_evidence="raised $40M", drivers={"trigger": 0.9}, response_score=0.9),
+        _entry(candidate_id="c2", title="ML Eng", trigger_evidence="awarded contract",
+               drivers={"trigger": 0.9}, response_score=0.8),
+    ]
+    ok, rep = validate({"top": top}, rows, now=NOW)
+    assert not ok
+    assert any(v["rule"] == "lineage-no-crossjoin" for v in rep["violations"])
+
+
+def test_source_receipt_from_another_run_is_rejected() -> None:
+    ok, rep = validate(
+        {"top": [_entry()]},
+        [_row(source_receipt_id="src:from:another:run")],
+        source_receipt_ids={"src:a:linkedin:thisrun"},
+        now=NOW,
+    )
+    assert not ok
+    assert any(v["rule"] == "lineage-traceable" for v in rep["violations"])

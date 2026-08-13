@@ -233,8 +233,26 @@ def run_digest_phase(
         # violation fails the run closed: a wrong digest is worse than none.
         from .prepublish_contract import validate as validate_prepublish
 
+        # Source receipt ids from THIS run, so lineage-traceable can prove every
+        # displayed fact walks back to source bytes this run actually fetched.
+        receipts_path = out / "discovery" / "source-receipts.jsonl"
+        run_source_ids: set[str] | None = None
+        if receipts_path.exists():
+            run_source_ids = set()
+            for line in receipts_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    rid = json.loads(line).get("receipt_id")
+                except ValueError:
+                    continue
+                if rid:
+                    run_source_ids.add(str(rid))
         contract_ok, contract_report = validate_prepublish(
-            digest, shortlist_rows, trigger_receipt=trigger_receipt
+            digest,
+            shortlist_rows,
+            trigger_receipt=trigger_receipt,
+            source_receipt_ids=run_source_ids,
         )
         (out / "prepublish-contract.json").write_text(
             json.dumps(contract_report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
