@@ -92,6 +92,18 @@
             }
           ],
           "default": null
+        },
+        "clearance": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clearance"
         }
       },
       "required": [
