@@ -1,56 +1,35 @@
 {
-  "schema": "agent_skills.ticket_1400.closure_results.v1",
+  "schema": "agent_skills.ticket_closure_evidence.v1",
   "issue": 1400,
-  "status": "proof_ready",
-  "mocked": false,
-  "live": true,
-  "code_changes": [
-    "skills/ask/scripts/tau_roundtable_worker.py",
-    "skills/ask/tests/test_browser_failure_recovery.py",
-    "skills/ask/tests/test_tau_roundtable_sanity_eval.py"
-  ],
-  "proof_artifacts": {
-    "proof_markdown": "artifacts/tickets/agent-skills-1400/proof.md",
-    "live_readback": "artifacts/tickets/agent-skills-1400/live-readback.json",
-    "live_run_dir": "/mnt/storage12tb/skills/ask/outputs/ticket-1400-live-proof-20260813/ask-tau-reply-with-exactly-ticket-1400-w-3dde91b65654",
-    "dag_receipt": "/mnt/storage12tb/skills/ask/outputs/ticket-1400-live-proof-20260813/ask-tau-reply-with-exactly-ticket-1400-w-3dde91b65654/tau-receipts/dag-receipt.json",
-    "handler_receipt": "/mnt/storage12tb/skills/ask/outputs/ticket-1400-live-proof-20260813/ask-tau-reply-with-exactly-ticket-1400-w-3dde91b65654/node-artifacts/handler-webgpt/node-receipt.json",
-    "submit_meta": "/mnt/storage12tb/skills/ask/outputs/ticket-1400-live-proof-20260813/ask-tau-reply-with-exactly-ticket-1400-w-3dde91b65654/node-artifacts/handler-webgpt/response.meta.json"
+  "unit": {
+    "command": "uv run --project skills/ask python -m pytest -q skills/ask/tests/test_browser_failure_recovery.py::test_interrupted_webgpt_submit_is_not_missing_sentinel skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_lane_recovery_skips_interrupted_submit",
+    "exit_code": 0,
+    "passed": 2,
+    "artifact": "artifacts/tickets/agent-skills-1400/proof.md"
   },
-  "deterministic_checks": [
-    {
-      "command": "uv run --project skills/ask python -m pytest -q skills/ask/tests/test_browser_failure_recovery.py::test_webgpt_unverified_clean_output_is_quarantined_not_tab_identity_retry skills/ask/tests/test_browser_failure_recovery.py::test_interrupted_webgpt_submit_is_not_missing_sentinel skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_lane_recovery_skips_interrupted_submit skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_lane_recovery_never_retries_provider_refusal",
-      "result": "4 passed in 0.81s"
-    },
+  "e2e": {
+    "command": "skills/ask/run.sh tau-dag Reply-with-exact-token --handler webgpt --execute --browser-tab-lifecycle fresh-keep",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/mnt/storage12tb/skills/ask/outputs/ticket-1400-live-proof-20260813/ask-tau-reply-with-exactly-ticket-1400-w-3dde91b65654/node-artifacts/handler-webgpt/node-receipt.json"
+  },
+  "additional_checks": [
     {
       "command": "python3 -m py_compile skills/ask/scripts/tau_roundtable_worker.py",
-      "result": "exit 0"
+      "exit_code": 0
     },
     {
-      "command": "uv run --project skills/ask python -m pytest -q skills/ask/tests/test_browser_failure_recovery.py skills/ask/tests/test_tau_roundtable_sanity_eval.py -k 'interrupted or lane_recovery or missing_sentinel or browser_handler_timeout or unverified_clean_output'",
-      "result": "8 passed, 96 deselected in 1.10s"
+      "command": "python3 -m json.tool artifacts/tickets/agent-skills-1400/live-readback.json >/dev/null && python3 -m json.tool artifacts/tickets/agent-skills-1400/closure-results.json >/dev/null",
+      "exit_code": 0
     },
     {
       "command": "python3 scripts/check_mock_evidence_claims.py",
-      "result": "OK: checked 670 test file(s); no mock+proof claim violations"
-    },
-    {
-      "command": "git diff --check -- skills/ask/scripts/tau_roundtable_worker.py skills/ask/tests/test_browser_failure_recovery.py skills/ask/tests/test_tau_roundtable_sanity_eval.py",
-      "result": "exit 0"
+      "exit_code": 0,
+      "result": "OK: checked 628 test file(s); no mock+proof claim violations"
     }
   ],
-  "live_smoke": {
-    "command": "skills/ask/run.sh tau-dag Reply-with-exact-token --handler webgpt --execute --browser-tab-lifecycle fresh-keep",
-    "dag_status": "PASS",
-    "handler_status": "PASS",
-    "handler_live": true,
-    "handler_mocked": false,
-    "handler_provider_live": true,
-    "submit_status": "completed",
-    "submit_proof_status": "response_proven",
-    "raw_contains_sentinel": true,
-    "clean_contains_sentinel": false,
-    "expected_response_observed": "TICKET_1400_WEBGPT_OK"
-  },
-  "remaining_battle_boundary": "This closes the Ask transport/interrupted-lane bug only. The broader Battle adaptive-lineage eval-suite request remains unproven by this ticket."
+  "live_readback": "artifacts/tickets/agent-skills-1400/live-readback.json",
+  "code_commit": "9f205f9af941cb837f64d60c38bfb3d126083ad8",
+  "boundary": "This closes the Ask transport/interrupted-lane bug only. The broader Battle adaptive-lineage eval-suite request remains unproven by this ticket."
 }
