@@ -39,6 +39,7 @@ from code_memory_client import (
 )
 from code_analysis_handoff import write_analysis_handoff
 from environment_manifest import write_environment_manifest
+from runtime_verification_request import write_runtime_verification_requests
 from code_freshness_preflight import refresh_allowed, run_preflight
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
@@ -213,6 +214,7 @@ def _write_ingest_marker(
     code_projection_request: dict[str, Any] | None = None,
     code_projection_receipt: dict[str, Any] | None = None,
     analysis_handoff: dict[str, Any] | None = None,
+    runtime_verification_requests: dict[str, Any] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -281,6 +283,7 @@ def _write_ingest_marker(
             "code_projection_request": code_projection_request,
             "code_projection_receipt": code_projection_receipt,
             "analysis_handoff": analysis_handoff,
+            "runtime_verification_requests": runtime_verification_requests,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -514,6 +517,10 @@ def _projection_request_for_artifact(
 
 def _default_analysis_handoff_path(path: Path) -> Path:
     return path / "artifacts" / "ingest-code" / "analysis_handoff.json"
+
+
+def _default_runtime_verification_requests_path(path: Path) -> Path:
+    return path / "artifacts" / "ingest-code" / "runtime_verification_requests.jsonl"
 
 
 def _analysis_handoff_target(option_value: Any, path: Path) -> Path:
@@ -1821,6 +1828,7 @@ def scan(
     code_projection_request: dict[str, Any] | None = None
     code_projection_receipt: dict[str, Any] | None = None
     analysis_handoff: dict[str, Any] | None = None
+    runtime_verification_requests: dict[str, Any] | None = None
     environment_manifest = write_environment_manifest(
         path / "artifacts" / "ingest-code" / "environment_manifest.json",
         skill_root=Path(__file__).parent,
@@ -2117,6 +2125,18 @@ def scan(
                 projection_receipt=code_projection_receipt,
             )
             print(f"Analysis handoff: {analysis_handoff['path']}", flush=True)
+            runtime_verification_requests = write_runtime_verification_requests(
+                _default_runtime_verification_requests_path(path),
+                code_graph_artifact=code_graph_artifact,
+                analysis_handoff=analysis_handoff,
+                environment_manifest=environment_manifest,
+                scope=scope,
+            )
+            print(
+                "Runtime verification requests: "
+                f"{runtime_verification_requests['path']}",
+                flush=True,
+            )
 
     # Output summary
     result = {
@@ -2138,6 +2158,7 @@ def scan(
         "code_projection_request": code_projection_request,
         "code_projection_receipt": code_projection_receipt,
         "analysis_handoff": analysis_handoff,
+        "runtime_verification_requests": runtime_verification_requests,
         "projection_mode": selected_projection_mode.value,
         "dry_run": dry_run,
     }
@@ -2165,6 +2186,7 @@ def scan(
                 code_projection_request=code_projection_request,
                 code_projection_receipt=code_projection_receipt,
                 analysis_handoff=analysis_handoff,
+                runtime_verification_requests=runtime_verification_requests,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -2291,6 +2313,7 @@ def rescan(
         code_projection_request: dict[str, Any] | None = None
         code_projection_receipt: dict[str, Any] | None = None
         analysis_handoff: dict[str, Any] | None = None
+        runtime_verification_requests: dict[str, Any] | None = None
         environment_manifest = write_environment_manifest(
             path / "artifacts" / "ingest-code" / "environment_manifest.json",
             skill_root=Path(__file__).parent,
@@ -2364,6 +2387,18 @@ def rescan(
                     projection_receipt=code_projection_receipt,
                 )
                 print(f"Analysis handoff: {analysis_handoff['path']}", flush=True)
+                runtime_verification_requests = write_runtime_verification_requests(
+                    _default_runtime_verification_requests_path(path),
+                    code_graph_artifact=code_graph_artifact,
+                    analysis_handoff=analysis_handoff,
+                    environment_manifest=environment_manifest,
+                    scope=scope,
+                )
+                print(
+                    "Runtime verification requests: "
+                    f"{runtime_verification_requests['path']}",
+                    flush=True,
+                )
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
@@ -2389,6 +2424,7 @@ def rescan(
             code_projection_request=code_projection_request,
             code_projection_receipt=code_projection_receipt,
             analysis_handoff=analysis_handoff,
+            runtime_verification_requests=runtime_verification_requests,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})

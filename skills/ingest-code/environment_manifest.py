@@ -36,6 +36,7 @@ HASHED_SKILL_FILES = (
     "uv.lock",
     "ingest_code.py",
     "code_analysis_handoff.py",
+    "runtime_verification_request.py",
     "code_memory_client.py",
     "code_graph_artifact.py",
     "code_symbol_record.py",

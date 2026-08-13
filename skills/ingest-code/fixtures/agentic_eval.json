@@ -89,6 +89,30 @@
           "handoff mutations fail closed before downstream analysis"
         ]
       }
+    },
+    {
+      "name": "runtime-verification-request-boundary",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--locked",
+        "pytest",
+        "../tests/test_runtime_verification_request.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "required_assertions": [
+          "ready requests bind exact fixture/source/symbol inputs",
+          "non-ready candidates keep explicit dispositions",
+          "runtime result fields and path escapes are rejected",
+          "request emission leaves canonical code-graph digest unchanged"
+        ]
+      }
     }
   ]
 }

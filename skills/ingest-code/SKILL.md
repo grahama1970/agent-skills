@@ -466,6 +466,8 @@ should not query `/memory` during a task:
 | `artifacts/ingest-code/code-graph/diagnostics.jsonl` | Distinct parse, ignored-file, and skip diagnostics with exact root-relative paths |
 | `artifacts/ingest-code/code-graph/coverage.json` | Coverage receipt with parsed, failed, ignored, skipped, symbol, edge, and diagnostic counts; parse failures set `fail_closed=true` |
 | `artifacts/ingest-code/code-graph/checksums.json` | SHA-256 checksums for all other files in the bundle |
+| `artifacts/ingest-code/analysis_handoff.json` | `ingest-code.analysis_handoff.v1` binding the deterministic bundle to optional downstream analysis without changing canonical code-graph identity |
+| `artifacts/ingest-code/runtime_verification_requests.jsonl` | `ingest-code.runtime_verification_request.v1` rows that classify static debugger candidates for a later Tau/debugger workflow without executing target code |
 
 These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
@@ -496,6 +498,16 @@ Status values remain static and conservative:
 mark anything `verified_*`. Runtime promotion belongs to `$debugger` and Memory.
 Changing `debug_affordance.py` invalidates incremental file-component reuse via
 the `debug_invocation_candidates` transform fingerprint.
+
+`runtime_verification_requests.jsonl` packages those candidates into explicit,
+freshness-bound request rows with dispositions such as
+`READY_FOR_VERIFICATION`, `NEEDS_INPUT`, `AMBIGUOUS_TARGET`,
+`DYNAMIC_TARGET`, `STALE_SOURCE_BINDING`, `INCOMPLETE_COVERAGE`, and
+`BLOCKED_POLICY`. A ready request only means the static source, symbol,
+candidate, input artifacts, environment manifest, analysis handoff, containment,
+profile, and resource limits are exact enough for a downstream verifier to try.
+It is not runtime proof and must not contain stdout, stderr, exit codes,
+debugger observations, accepted effects, or Memory promotion claims.
 
 ## Related Skills
 

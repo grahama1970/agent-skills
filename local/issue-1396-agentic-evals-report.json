@@ -1,0 +1,174 @@
+{
+  "schema": "agentic_evals.report.v1",
+  "source": "skills/ingest-code/fixtures/agentic_eval.json",
+  "mocked": false,
+  "fixture_backed": true,
+  "live": false,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "declared local commands met explicit fixture expectations across repeated trials",
+    "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_count": 5,
+  "trial_count": 15,
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1486.847,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1472.979,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1511.378,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1476.185,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "analysis-handoff-readback",
+      "type": "positive",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 3671.511,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.45s\n",
+          "stderr": "",
+          "duration_ms": 3709.749,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.36s\n",
+          "stderr": "",
+          "duration_ms": 3611.412,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.42s\n",
+          "stderr": "",
+          "duration_ms": 3693.371,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "freshness-incomplete-coverage-boundary",
+      "type": "negative",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1128.216,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.87s\n",
+          "stderr": "",
+          "duration_ms": 1131.452,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.87s\n",
+          "stderr": "",
+          "duration_ms": 1120.328,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.87s\n",
+          "stderr": "",
+          "duration_ms": 1132.867,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "projection-authority-adversarial",
+      "type": "adversarial",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 5146.685,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 4.78s\n",
+          "stderr": "",
+          "duration_ms": 5048.742,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 4.80s\n",
+          "stderr": "",
+          "duration_ms": 5091.12,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 5.00s\n",
+          "stderr": "",
+          "duration_ms": 5300.194,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "runtime-verification-request-boundary",
+      "type": "adversarial",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 3243.857,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "......                                                                   [100%]\n6 passed in 2.96s\n",
+          "stderr": "",
+          "duration_ms": 3234.906,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "......                                                                   [100%]\n6 passed in 2.80s\n",
+          "stderr": "",
+          "duration_ms": 3075.39,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "......                                                                   [100%]\n6 passed in 3.12s\n",
+          "stderr": "",
+          "duration_ms": 3421.274,
+          "timed_out": false
+        }
+      ]
+    }
+  ]
+}
