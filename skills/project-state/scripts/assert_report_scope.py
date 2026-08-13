@@ -114,6 +114,12 @@ def full_phases(
     elif bool(memory.get("available")) != (answered > 0):
         problems.append(f"phase_2 availability ({memory.get('available')}) contradicts "
                         f"successful_recalls ({answered}) — silent success or silent failure")
+    answered_research = research.get("queries_answered")
+    if answered_research is None:
+        problems.append("phase_5 reports no queries_answered count — availability is unfalsifiable")
+    elif bool(research.get("available")) != (answered_research > 0):
+        problems.append(f"phase_5 availability ({research.get('available')}) contradicts "
+                        f"queries_answered ({answered_research})")
     if expect_memory_unavailable and memory.get("available"):
         problems.append("phase_2 claimed memory available when no recall answered")
     if problems:

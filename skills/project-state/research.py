@@ -300,9 +300,16 @@ def collect_competitive(skip: bool = False, full: bool = False,
             entry.update(_run_arxiv(q["query"], q.get("categories", "")))
         results.append(entry)
 
+    # `available` must describe whether any search lane ANSWERED, not that we
+    # attempted queries (same silent-success class fixed in memory_recall on
+    # 2026-08-13: 3 queries, 0 results, "available": true).
+    answered = [r for r in results if (r.get("results") or r.get("items") or r.get("count"))
+                and not r.get("error")]
     return {
-        "available": True,
+        "available": bool(answered),
         "queries_run": len(results),
+        "queries_answered": len(answered),
         "mode": "full" if full else "standard",
         "results": results,
+        **({} if answered else {"error": "no search lane returned results"}),
     }
