@@ -91,6 +91,16 @@ class CodeSymbolRecord:
     identity_discriminator: str = ""
     tags: list[str] = field(default_factory=list)
 
+    def __eq__(self, other: object) -> bool:
+        """Compare field values across equivalent module reloads."""
+        other_fields = getattr(other, "__dataclass_fields__", None)
+        if not isinstance(other_fields, dict):
+            return NotImplemented
+        field_names = tuple(self.__dataclass_fields__)
+        if tuple(other_fields) != field_names:
+            return NotImplemented
+        return all(getattr(self, name) == getattr(other, name) for name in field_names)
+
     @property
     def normalized_path(self) -> str:
         """Return the path form used for logical identity and retrieval."""

@@ -37,6 +37,7 @@ from code_memory_client import (
     code_graph_bundle_digest,
     write_code_projection_request,
 )
+from code_analysis_handoff import write_analysis_handoff
 from environment_manifest import write_environment_manifest
 from code_freshness_preflight import refresh_allowed, run_preflight
 from code_graph_artifact import write_code_graph_bundle
@@ -211,6 +212,7 @@ def _write_ingest_marker(
     code_graph_artifact: dict[str, Any] | None = None,
     code_projection_request: dict[str, Any] | None = None,
     code_projection_receipt: dict[str, Any] | None = None,
+    analysis_handoff: dict[str, Any] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
     now = datetime.now().isoformat()
@@ -278,6 +280,7 @@ def _write_ingest_marker(
             "code_graph": code_graph_artifact,
             "code_projection_request": code_projection_request,
             "code_projection_receipt": code_projection_receipt,
+            "analysis_handoff": analysis_handoff,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
     }
@@ -507,6 +510,18 @@ def _projection_request_for_artifact(
         "status": "emitted_not_applied",
         "non_claims": result.request.get("non_claims", []),
     }
+
+
+def _default_analysis_handoff_path(path: Path) -> Path:
+    return path / "artifacts" / "ingest-code" / "analysis_handoff.json"
+
+
+def _analysis_handoff_target(option_value: Any, path: Path) -> Path:
+    if isinstance(option_value, Path):
+        return option_value
+    if isinstance(option_value, str):
+        return Path(option_value)
+    return _default_analysis_handoff_path(path)
 
 
 def _legacy_projection_flags_present() -> bool:
@@ -1287,9 +1302,11 @@ def _code_files_within_scan_roots(files: list[Path], scan_roots: list[Path], cod
 
 
 def _record_from_component_payload(payload: dict[str, Any]) -> CodeSymbolRecord:
-    allowed = set(CodeSymbolRecord.__dataclass_fields__)
+    from code_symbol_record import CodeSymbolRecord as CurrentCodeSymbolRecord
+
+    allowed = set(CurrentCodeSymbolRecord.__dataclass_fields__)
     values = {key: payload[key] for key in allowed if key in payload}
-    return CodeSymbolRecord(**values)
+    return CurrentCodeSymbolRecord(**values)
 
 
 def _symbols_by_path(records: list[CodeSymbolRecord]) -> dict[str, list[dict[str, Any]]]:
@@ -1770,6 +1787,7 @@ def scan(
     code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Apply treesitter code graph bundle to Memory/GMO projection"),
     projection_mode: ProjectionMode | None = typer.Option(None, "--projection-mode", help="Projection handling: emit, apply, or none"),
     compat_symbol_upsert: bool = typer.Option(False, "--compat-symbol-upsert", help="Use legacy per-symbol upserts instead of complete projection application"),
+    emit_analysis_handoff: Path | None = typer.Option(None, "--emit-analysis-handoff", help="Write ingest-code.analysis_handoff.v1 to this path; defaults under artifacts/ingest-code when Tree-sitter runs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     batch_size: int = typer.Option(50, help="Files per batch"),
@@ -1802,6 +1820,7 @@ def scan(
     code_symbols_pruned = 0
     code_projection_request: dict[str, Any] | None = None
     code_projection_receipt: dict[str, Any] | None = None
+    analysis_handoff: dict[str, Any] | None = None
     environment_manifest = write_environment_manifest(
         path / "artifacts" / "ingest-code" / "environment_manifest.json",
         skill_root=Path(__file__).parent,
@@ -2086,6 +2105,19 @@ def scan(
                 })
             print(f"Code index: {code_symbols_stored} symbols stored", flush=True)
 
+    if code_graph_artifact and not dry_run and not cwe_only:
+        if selected_projection_mode is not ProjectionMode.APPLY or code_projection_receipt:
+            analysis_handoff_path = _analysis_handoff_target(emit_analysis_handoff, path)
+            analysis_handoff = write_analysis_handoff(
+                analysis_handoff_path,
+                code_graph_artifact=code_graph_artifact,
+                environment_manifest=environment_manifest,
+                projection_mode=selected_projection_mode.value,
+                projection_request=code_projection_request,
+                projection_receipt=code_projection_receipt,
+            )
+            print(f"Analysis handoff: {analysis_handoff['path']}", flush=True)
+
     # Output summary
     result = {
         "files_scanned": len(files),
@@ -2105,6 +2137,7 @@ def scan(
         "code_graph_artifact": code_graph_artifact,
         "code_projection_request": code_projection_request,
         "code_projection_receipt": code_projection_receipt,
+        "analysis_handoff": analysis_handoff,
         "projection_mode": selected_projection_mode.value,
         "dry_run": dry_run,
     }
@@ -2131,6 +2164,7 @@ def scan(
                 code_graph_artifact=code_graph_artifact,
                 code_projection_request=code_projection_request,
                 code_projection_receipt=code_projection_receipt,
+                analysis_handoff=analysis_handoff,
             )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
@@ -2152,6 +2186,7 @@ def rescan(
     treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for symbol extraction"),
     code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
     projection_mode: ProjectionMode | None = typer.Option(None, "--projection-mode", help="Projection handling: emit, apply, or none"),
+    emit_analysis_handoff: Path | None = typer.Option(None, "--emit-analysis-handoff", help="Write ingest-code.analysis_handoff.v1 to this path; defaults under each codebase artifacts/ingest-code when Tree-sitter runs"),
     verify_embeddings: bool = typer.Option(False, "--verify-embeddings", help="Spot-check recalled embeddings for stored symbols"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
@@ -2180,6 +2215,9 @@ def rescan(
     if not codebases:
         print('{"error": "No codebases specified"}', file=sys.stderr)
         raise SystemExit(1)
+    if isinstance(emit_analysis_handoff, (Path, str)) and len(codebases) > 1:
+        print('{"error": "--emit-analysis-handoff is only allowed with one --codebase"}', file=sys.stderr)
+        raise SystemExit(2)
 
     print(f"Rescanning {len(codebases)} codebase(s)", flush=True)
     if mtime_threshold:
@@ -2252,6 +2290,7 @@ def rescan(
         code_graph_artifact: dict[str, Any] | None = None
         code_projection_request: dict[str, Any] | None = None
         code_projection_receipt: dict[str, Any] | None = None
+        analysis_handoff: dict[str, Any] | None = None
         environment_manifest = write_environment_manifest(
             path / "artifacts" / "ingest-code" / "environment_manifest.json",
             skill_root=Path(__file__).parent,
@@ -2314,6 +2353,17 @@ def rescan(
                         "name": record.symbol_name,
                         "problem": record.problem,
                     })
+            if code_graph_artifact and (selected_projection_mode is not ProjectionMode.APPLY or code_projection_receipt):
+                analysis_handoff_path = _analysis_handoff_target(emit_analysis_handoff, path)
+                analysis_handoff = write_analysis_handoff(
+                    analysis_handoff_path,
+                    code_graph_artifact=code_graph_artifact,
+                    environment_manifest=environment_manifest,
+                    projection_mode=selected_projection_mode.value,
+                    projection_request=code_projection_request,
+                    projection_receipt=code_projection_receipt,
+                )
+                print(f"Analysis handoff: {analysis_handoff['path']}", flush=True)
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
@@ -2338,6 +2388,7 @@ def rescan(
             code_graph_artifact=code_graph_artifact,
             code_projection_request=code_projection_request,
             code_projection_receipt=code_projection_receipt,
+            analysis_handoff=analysis_handoff,
         )
         print(f"Marker written: {marker_path}", flush=True)
         pending_markers.append({"path": str(marker_path), "codebase": str(path)})

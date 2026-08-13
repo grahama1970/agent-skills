@@ -27,7 +27,7 @@ echo "OK"
 
 # Check 3: Python source syntax valid
 echo -n "Check 3: Python source syntax... "
-if ! "${UV_PYTHON[@]}" -c "import py_compile; [py_compile.compile(path, doraise=True) for path in ['$SCRIPT_DIR/ingest_code.py', '$SCRIPT_DIR/code_graph_artifact.py', '$SCRIPT_DIR/debug_affordance.py', '$SCRIPT_DIR/scripts/prove_debug_affordances.py']]" 2>/dev/null; then
+if ! "${UV_PYTHON[@]}" -c "import py_compile; [py_compile.compile(path, doraise=True) for path in ['$SCRIPT_DIR/ingest_code.py', '$SCRIPT_DIR/code_graph_artifact.py', '$SCRIPT_DIR/code_analysis_handoff.py', '$SCRIPT_DIR/debug_affordance.py', '$SCRIPT_DIR/scripts/prove_debug_affordances.py']]" 2>/dev/null; then
     echo "FAIL - syntax error"
     exit 1
 fi

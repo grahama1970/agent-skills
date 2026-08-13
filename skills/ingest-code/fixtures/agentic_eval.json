@@ -2,21 +2,92 @@
   "version": 2,
   "skill": "ingest-code",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "deterministic static ingest artifact gates",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the skill has deterministic tests for scan sanity, analysis handoff readback, and static freshness fail-closed behavior",
+    "does_not_prove": "Memory activation, runtime debugger proof, model summaries, semantic correctness, or full release readiness"
   },
   "cases": [
     {
       "name": "sanity",
       "type": "positive",
+      "real_world": true,
       "command": [
         "bash",
         "../sanity.sh"
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "analysis-handoff-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--locked",
+        "pytest",
+        "../tests/test_analysis_handoff.py",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "required_assertions": [
+          "emit handoff has no generation_id",
+          "apply handoff binds generation and receipt digest",
+          "source, environment, projection, generation, and path mutations fail closed"
+        ]
+      }
+    },
+    {
+      "name": "freshness-incomplete-coverage-boundary",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--locked",
+        "pytest",
+        "../tests/test_code_freshness_preflight.py",
+        "../tests/test_analysis_handoff.py::test_incomplete_coverage_blocks_downstream_claim_classes",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "required_assertions": [
+          "incomplete coverage blocks absence claims",
+          "analysis handoff permits only attempted downstream reconciliation, not asserted proof"
+        ]
+      }
+    },
+    {
+      "name": "projection-authority-adversarial",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--locked",
+        "pytest",
+        "../tests/test_projection_handoff.py",
+        "../tests/test_analysis_handoff.py::test_handoff_verifier_fails_closed_on_mutations",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "required_assertions": [
+          "emit mode does not open Memory",
+          "projection apply digest mismatch is rejected",
+          "handoff mutations fail closed before downstream analysis"
+        ]
       }
     }
   ]

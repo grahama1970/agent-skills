@@ -35,6 +35,7 @@ HASHED_SKILL_FILES = (
     "pyproject.toml",
     "uv.lock",
     "ingest_code.py",
+    "code_analysis_handoff.py",
     "code_memory_client.py",
     "code_graph_artifact.py",
     "code_symbol_record.py",

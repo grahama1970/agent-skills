@@ -1,0 +1,143 @@
+{
+  "schema": "agentic_evals.report.v1",
+  "source": "skills/ingest-code/fixtures/agentic_eval.json",
+  "mocked": false,
+  "fixture_backed": true,
+  "live": false,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "declared local commands met explicit fixture expectations across repeated trials",
+    "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_count": 4,
+  "trial_count": 12,
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1474.139,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1476.117,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1505.987,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "=== [ingest-code] Sanity Check ===\nCheck 1: Required files... OK\nCheck 2: uv available... OK\nCheck 3: Python source syntax... OK\nCheck 4: Typer import... typer=0.27.1 OK\nCheck 5: Dry-run scan smoke test... OK\nCheck 6: taxonomy skill... OK (/home/graham/workspace/experiments/agent-skills/.worktrees/issue-1395-analysis-handoff/skills/ingest-code/../taxonomy/taxonomy.py)\nResult: PASS\n",
+          "stderr": "",
+          "duration_ms": 1440.314,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "analysis-handoff-readback",
+      "type": "positive",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 3668.462,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.35s\n",
+          "stderr": "",
+          "duration_ms": 3632.351,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.42s\n",
+          "stderr": "",
+          "duration_ms": 3681.373,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "....                                                                     [100%]\n4 passed in 3.42s\n",
+          "stderr": "",
+          "duration_ms": 3691.661,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "freshness-incomplete-coverage-boundary",
+      "type": "negative",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1199.961,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.92s\n",
+          "stderr": "",
+          "duration_ms": 1191.44,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.96s\n",
+          "stderr": "",
+          "duration_ms": 1239.162,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..........                                                               [100%]\n10 passed in 0.89s\n",
+          "stderr": "",
+          "duration_ms": 1169.281,
+          "timed_out": false
+        }
+      ]
+    },
+    {
+      "name": "projection-authority-adversarial",
+      "type": "adversarial",
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 5057.518,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 4.76s\n",
+          "stderr": "",
+          "duration_ms": 5053.13,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 4.76s\n",
+          "stderr": "",
+          "duration_ms": 5036.692,
+          "timed_out": false
+        },
+        {
+          "exit_code": 0,
+          "stdout": "........                                                                 [100%]\n8 passed in 4.80s\n",
+          "stderr": "",
+          "duration_ms": 5082.732,
+          "timed_out": false
+        }
+      ]
+    }
+  ]
+}
