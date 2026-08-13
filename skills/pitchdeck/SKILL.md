@@ -513,6 +513,9 @@ Read only what the task requires:
 - `references/google_slides_handoff.md` — browser editing and export workflow.
 - `examples/sparta-explorer/` — curated SPARTA public deck and private appendix.
 - `docs/PROJECT_KNOWLEDGE.md` — current implementation state and known gaps.
+- `$best-practices-pitchdeck` — DECK architecture laws (measured) and the
+  sectioning contract: sections are DERIVED from the source each run through
+  `$ask`, never hardcoded in this compiler.
 
 ## Evaluation posture
 

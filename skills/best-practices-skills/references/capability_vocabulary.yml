@@ -58,21 +58,6 @@ capabilities:
   design-engineering-guidance:
     providers:
       - emil-design-eng
-  font-world-contract:
-    providers:
-      - best-practices-font
-  type-role-hierarchy:
-    providers:
-      - best-practices-font
-  font-pairing-rationale:
-    providers:
-      - best-practices-font
-  font-proof-receipt:
-    providers:
-      - best-practices-font
-  font-template-residue-audit:
-    providers:
-      - best-practices-font
   ui-polish-guidance:
     providers:
       - emil-design-eng
@@ -137,6 +122,18 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  live-transcription:
+    providers:
+      - live-evidence
+  live-evidence-retrieval:
+    providers:
+      - live-evidence
+  source-bound-talking-points:
+    providers:
+      - live-evidence
+  interview-copilot-ui:
+    providers:
+      - live-evidence
   canonical-resume-validation:
     providers:
       - resume
@@ -146,8 +143,26 @@ capabilities:
   resume-artifact-handoff:
     providers:
       - resume
+  font-world-contract:
+    providers:
+      - best-practices-font
+  type-role-hierarchy:
+    providers:
+      - best-practices-font
+  font-pairing-rationale:
+    providers:
+      - best-practices-font
+  font-proof-receipt:
+    providers:
+      - best-practices-font
+  font-template-residue-audit:
+    providers:
+      - best-practices-font
   house-conformance-gate: [pitchdeck]
   house-style-measurement: [pitchdeck]
   author-voice-profile: [pitchdeck]
   nearest-slide-layout-retrieval: [pitchdeck]
   native-editable-icon-library: [pitchdeck]
+  deck-architecture-laws: [best-practices-pitchdeck]
+  sectioning-contract: [best-practices-pitchdeck]
+  slide-plan-review: [best-practices-pitchdeck]

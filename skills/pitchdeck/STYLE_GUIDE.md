@@ -17,6 +17,14 @@ diagonal-hatch texture invented before the real photographic strip was found
 inside the layout; the bottom-left logo the blind judges named in every round
 was simply the template's own mark.
 
+## 1a. Deck architecture (the layer above pages)
+
+Section structure, divider cadence, opening/closing shape and the rule that
+sections must be DERIVED from the source (never hardcoded here) live in
+`$best-practices-pitchdeck` — measured from the same corpus. KNOWN DEBT
+(2026-08-13): `intents.py` still contains a hardcoded `sections` list; the
+derived plan (reports/readme-sectioning-2026-08-13.md) must replace it.
+
 ## 1b. Archetypes
 
 The complete per-slide design assessment (all 263 pages classified into ten
