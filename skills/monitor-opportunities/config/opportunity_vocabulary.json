@@ -1,7 +1,7 @@
 {
   "schema": "monitor_opportunities.opportunity_vocabulary.v1",
   "collection": "opportunity_vocabulary",
-  "note": "Curated terms corpus for opportunity relevance, matched by /extract-entities (Flashtext + fuzzy, no LLM). Version-controlled like the SPARTA/aerospace corpora. Prefer multi-word specific aliases over short tokens to avoid fuzzy false positives (e.g. bare 'agent'/'agentic' fuzzy-matches 'Agency'). Tune via the adversarial eval, not intuition.",
+  "note": "Curated terms corpus for opportunity relevance, matched by /extract-entities (Flashtext + fuzzy, no LLM). Version-controlled like the SPARTA/aerospace corpora. Prefer multi-word specific aliases over short tokens to avoid fuzzy false positives (e.g. bare 'agent'/'agentic' fuzzy-matches 'Agency'). Tune via the adversarial eval, not intuition. Category values are namespaced (never bare English words): extract-entities indexes `category` as a matchable term, so 'federal'/'security'/'verification' produced false positives on unrelated text (2026-08-13).",
   "concepts": [
     {
       "_key": "ai-ml-general",
@@ -88,7 +88,7 @@
       "_key": "agentic-compliance",
       "control_id": "agentic-compliance",
       "name": "AI compliance",
-      "category": "compliance",
+      "category": "compliance-ai",
       "aliases": [
         "GRC",
         "governance risk and compliance",
@@ -105,7 +105,7 @@
       "_key": "compliance-frameworks",
       "control_id": "compliance-frameworks",
       "name": "compliance framework",
-      "category": "compliance",
+      "category": "compliance-ai",
       "aliases": [
         "NIST",
         "OSCAL",
@@ -124,7 +124,7 @@
       "_key": "verification-ai",
       "control_id": "verification-ai",
       "name": "AI verification",
-      "category": "verification",
+      "category": "verification-ai",
       "aliases": [
         "model verification",
         "model evaluation",
@@ -143,7 +143,7 @@
       "_key": "cyber-security",
       "control_id": "cyber-security",
       "name": "cybersecurity",
-      "category": "security",
+      "category": "security-cyber",
       "aliases": [
         "cyber engineering",
         "information security",
@@ -158,7 +158,7 @@
       "_key": "rd-modernization",
       "control_id": "rd-modernization",
       "name": "research and development",
-      "category": "rd",
+      "category": "rd-modernization",
       "aliases": [
         "R&D",
         "modeling and simulation",
@@ -171,7 +171,7 @@
       "_key": "federal-acquisition",
       "control_id": "federal-acquisition",
       "name": "federal solicitation",
-      "category": "federal",
+      "category": "federal-acquisition",
       "aliases": [
         "SBIR",
         "STTR",
@@ -183,6 +183,28 @@
         "other transaction authority",
         "DARPA",
         "AFWERX"
+      ]
+    },
+    {
+      "_key": "ai-evaluation",
+      "control_id": "ai-evaluation",
+      "name": "AI evaluation",
+      "category": "evaluation-ai",
+      "aliases": [
+        "LLM evaluation",
+        "model evaluation",
+        "AI evaluation",
+        "evaluation lead",
+        "evaluation engineer",
+        "eval harness",
+        "evals",
+        "benchmarking",
+        "model benchmarking",
+        "red teaming",
+        "AI assurance",
+        "model validation",
+        "quality assurance for AI",
+        "AI testing"
       ]
     }
   ]

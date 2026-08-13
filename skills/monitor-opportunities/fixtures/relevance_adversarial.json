@@ -1,6 +1,6 @@
 {
   "schema": "monitor_opportunities.relevance_adversarial.v1",
-  "note": "Adversarial regression set for opportunity relevance. must_match = real opportunities that MUST match >=1 mandate concept. must_not_match = facilities/services/unrelated titles that MUST match none (includes real false-positives caught in production). Run scripts/relevance_eval.py; it fails on any regression.",
+  "note": "Adversarial regression set for opportunity relevance. must_match = real opportunities that MUST match >=1 mandate concept. must_not_match = facilities/services/unrelated titles that MUST match none (includes real false-positives caught in production). Run scripts/relevance_eval.py; it fails on any regression. Negatives added 2026-08-13 from a real precision bug: extract-entities indexes a concept's `category`, so bare-word categories (federal/security/verification/compliance) matched unrelated text. Positives cover evaluation work, which had no concept at all.",
   "must_match": [
     "Staff AI Engineer",
     "Senior Machine Learning Engineer",
@@ -14,7 +14,9 @@
     "DARPA SBIR - Machine Learning for Verification",
     "Sources Sought - NextGen Cyber Engineering",
     "Request for Solutions: RAG retrieval augmented generation",
-    "Prostate Cancer Testing Artificial Intelligence"
+    "Prostate Cancer Testing Artificial Intelligence",
+    "LLM Evaluation Engineer",
+    "Model Red Teaming Specialist"
   ],
   "must_not_match": [
     "Flooring Abatement and Replacement",
@@ -27,6 +29,10 @@
     "Federal Emergency Management Agency Notice",
     "Elevator Modernization and Repair",
     "Accounting Manager, Technical Accounting",
-    "Warehouse Forklift Operator"
+    "Warehouse Forklift Operator",
+    "Physical Security Guard Services for Federal Building",
+    "Employment Verification Letter Processing",
+    "Compliance Training for Warehouse Staff",
+    "Federal Holiday Schedule Notice"
   ]
 }
