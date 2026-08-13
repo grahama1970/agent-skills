@@ -1,6 +1,18 @@
 schema: pitchdeck.asset_manifest.v1
 project_name: Sparta Explorer
 assets:
+- id: sparta-rd0003-candidate
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-threat-matrix-rd0003-candidate-20260721.webp
+  required: false
+  alt_text: Threat Matrix RD-0003 candidate coverage beside reviewed controls at zero
+  target_aspect: '16:9'
+  status: present
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+  generation_brief: Source screenshot from the canonical repo; candidate-vs-reviewed proof.
+  source_ref:
+    source_id: sparta-public-readme
 - id: gen-problem-scene
   kind: illustration
   visibility: public

@@ -704,17 +704,20 @@ def materialize_outline(
                                use_candidate_renderings=use_candidate_renderings,
                                qualifiers=qualifiers, claim_text_map=claim_text_map,
                                context_ask=context.desired_action))
-    proof_assets = [a for a in assets.assets if getattr(a, "kind", "") == "screenshot"]
+    proof_assets = [a for a in assets.assets if getattr(a, "kind", "") == "screenshot"
+                    and a.id not in {"sparta-rd0003-candidate"}]
     surfaces_claim = next((c for c in ledger.claims if "working-surfaces" in c.id), None)
     claims_by_id_local = {c.id: c for c in ledger.claims}
-    extra_content = {
-        "How It Works": ("m-ask", "What You Can Ask",
-                          ["sparta-public-three-questions", "sparta-public-f36-demo"],
-                          "sparta-chat-console"),
-        "Where This Goes": ("m-partners", "Where It Runs, Who It Is For",
-                            ["sparta-public-embry-foundation", "sparta-public-collaboration-stage"],
-                            "sparta-global-posture"),
-    }
+    extra_content = [
+        ("How It Works", "m-embry", "Built on Embry OS",
+         ["sparta-public-embry-foundation"], "sparta-embry-os-foundation"),
+        ("How It Works", "m-ask", "What You Can Ask",
+         ["sparta-public-three-questions", "sparta-public-f36-demo"], "sparta-chat-console"),
+        ("Proof in the Product", "m-rd0003", "Visibility Is Not Compliance Credit",
+         ["sparta-public-working-surfaces"], "sparta-rd0003-candidate"),
+        ("Where This Goes", "m-partners", "Where It Runs, Who It Is For",
+         ["sparta-public-collaboration-stage"], "sparta-global-posture"),
+    ]
     for section_name, module_names in sections:
         add(_interstitial(order, f"m-div-{section_name.lower().replace(' ', '-')}",
                           "section-divider", section_name))
@@ -745,12 +748,16 @@ def materialize_outline(
                                        use_candidate_renderings=use_candidate_renderings,
                                        qualifiers=qualifiers, claim_text_map=claim_text_map,
                                        context_ask=context.desired_action))
-        if section_name in extra_content:
-            sid, heading, wanted, visual = extra_content[section_name]
+        for owner, sid, heading, wanted, visual in extra_content:
+            if owner != section_name:
+                continue
             picked = [claims_by_id_local[c] for c in wanted if c in claims_by_id_local]
             if picked:
-                add(_claims_bullets_slide(sid, order, heading, picked, qualifiers,
-                                          visual_asset_id=visual))
+                slide = _claims_bullets_slide(sid, order, heading, picked, qualifiers,
+                                              visual_asset_id=visual)
+                # 3) no architecturally orphaned slides: every content slide
+                #    declares the section it serves (reviewer finding 2)
+                add(slide.model_copy(update={"section": section_name}))
     add(_interstitial(order, "m-close", "close", "Open Discussion", mark=True))
     return DeckDocument(
         deck=DeckMeta(
