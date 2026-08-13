@@ -9,6 +9,7 @@ from typing import Any
 from loguru import logger
 
 from .application_packets import build_application_packets
+from .contact_changes import relationship_signals_from_candidates
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError, ResultStatus
 from .discovery import sweep
 from .outreach import build_outreach_packets
@@ -406,6 +407,7 @@ def _report_from_run(
         for item in (_source_intel(candidate) for candidate in shortlist)
         if item is not None
     ]
+    relationship_signals = relationship_signals_from_candidates(shortlist[:REPORT_DIGEST_LIMIT])
     resume_variants = _resume_variants(tailoring_dir, opportunities)
     if len(resume_variants) != len(opportunities):
         missing = sorted(
@@ -473,6 +475,7 @@ def _report_from_run(
         + len(outreach_packets)
         + len(applications)
         + len(application_packets)
+        + len(relationship_signals)
     )
     gmail_draft_effects = any(packet["effect_status"] == "DRAFT_CREATED_NOT_SENT" for packet in outreach_packets)
     non_claims = [
@@ -503,6 +506,7 @@ def _report_from_run(
         "outreach_packets": outreach_packets,
         "applications": applications,
         "application_packets": application_packets,
+        "relationship_signals": relationship_signals,
         "interview_prep": interview_prep,
         "decision_actions": [
             {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},
@@ -511,6 +515,8 @@ def _report_from_run(
             {"action": "ATTEND_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
             {"action": "WATCH_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
             {"action": "SKIP_MEETUP", "target_type": "source_intel", "enabled": True, "effects_external": False},
+            {"action": "RECONNECT_CONTACT", "target_type": "relationship_signal", "enabled": True, "effects_external": False},
+            {"action": "DEFER_CONTACT", "target_type": "relationship_signal", "enabled": True, "effects_external": False},
             {
                 "action": "ACCEPT_RESUME_VARIANT",
                 "target_type": "resume_variant",

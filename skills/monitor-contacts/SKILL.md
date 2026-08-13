@@ -27,8 +27,6 @@ composes:
 disciplines:
   - observability-operations
   - research-retrieval
-domains:
-  - marketing
 ---
 
 # monitor-contacts
@@ -246,6 +244,20 @@ The skill integrates with the shared memory and taxonomy systems via
 - **Tags**: `["monitor_contacts", person_name, "drift_tracking"] + bridges`
 
 Gracefully degrades if `common.memory_client` or `taxonomy/taxonomy.py` are unavailable.
+
+## monitor-opportunities Composition
+
+`monitor-opportunities` consumes this skill as the standard reconnect graph,
+not as an ad hoc lookup. Contact observations, direct relationships, adjacent
+ARCOS/formal-methods colleagues, company sponsors, event co-presence, role
+moves, project wins, and source-backed no-profile evidence (for example SOS-VO
+or LinkedIn News) become local relationship signals in the opportunity report.
+
+Those signals are human-decision records only: reconnect, defer, attend, watch,
+or skip. They do not authorize email, LinkedIn, Meetup RSVP, messaging, or ATS
+effects. When published to Memory, the opportunity monitor stores recallable
+graph-shaped documents through `/store` or `/upsert`; it does not write raw
+ArangoDB or vector fields.
 
 ## File Structure
 

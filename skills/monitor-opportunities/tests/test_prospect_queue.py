@@ -7,6 +7,7 @@ from monitor_opportunities.prospect_queue import (
     build_prospect_queue,
     commercial_prospects,
     federal_prospects,
+    relationship_prospects,
 )
 
 # Real junk the SAM sweep returned on 2026-08-08 + realistic relevant solicitations.
@@ -57,3 +58,23 @@ def test_build_queue_combines_both() -> None:
     q = build_prospect_queue(SAM, shortlist)
     assert len([x for x in q if x["signal_type"] == "federal"]) == 2
     assert len([x for x in q if x["signal_type"] == "commercial"]) == 1
+
+
+def test_relationship_signals_become_warm_reconnect_prospects() -> None:
+    signals = [
+        {
+            "signal_id": "rel-1",
+            "subject": "Eric Mertens",
+            "organization": "Galois, Inc.",
+            "signal_type": "adjacent_contact",
+            "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+        }
+    ]
+    prospects = relationship_prospects(signals)
+    assert prospects[0]["signal_type"] == "relationship"
+    assert prospects[0]["prospect_class"] == "warm_reconnect"
+    assert prospects[0]["source"] == "monitor-contacts"
+    assert prospects[0]["external_effects"] is False
+    assert "Eric Mertens" in prospects[0]["title"]

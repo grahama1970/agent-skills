@@ -240,6 +240,12 @@
       "items": {
         "$ref": "#/$defs/sourceIntel"
       }
+    },
+    "relationship_signals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationshipSignal"
+      }
     }
   },
   "$defs": {
@@ -1175,26 +1181,29 @@
       "properties": {
         "action": {
           "enum": [
-            "KEEP",
-            "REJECT",
-            "DEFER",
             "ACCEPT_RESUME_VARIANT",
-            "PROPOSE_CLAIM_AMENDMENT",
-            "WITHHOLD_APPLICATION",
+            "ATTEND_MEETUP",
             "AUTHORIZE_APPLICATION_PAYLOAD",
+            "DEFER",
+            "DEFER_CONTACT",
+            "KEEP",
             "MARK_HUMAN_SENT_GMAIL",
             "MARK_HUMAN_SENT_LINKEDIN",
-            "ATTEND_MEETUP",
+            "PROPOSE_CLAIM_AMENDMENT",
+            "RECONNECT_CONTACT",
+            "REJECT",
+            "SKIP_MEETUP",
             "WATCH_MEETUP",
-            "SKIP_MEETUP"
+            "WITHHOLD_APPLICATION"
           ]
         },
         "target_type": {
           "enum": [
-            "opportunity",
-            "resume_variant",
             "application",
+            "opportunity",
             "outreach_packet",
+            "relationship_signal",
+            "resume_variant",
             "source_intel"
           ]
         },
@@ -1418,6 +1427,89 @@
         },
         "action_worthy": {
           "type": "boolean"
+        },
+        "visible_in_report": {
+          "const": true
+        }
+      }
+    },
+    "relationshipSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signal_id",
+        "source_opportunity_id",
+        "signal_type",
+        "subject",
+        "organization",
+        "relationship_path",
+        "evidence_refs",
+        "source_receipt_ids",
+        "provenance",
+        "recommended_action",
+        "external_effects",
+        "action_worthy",
+        "visible_in_report"
+      ],
+      "properties": {
+        "signal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_opportunity_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signal_type": {
+          "enum": [
+            "direct_contact",
+            "adjacent_contact",
+            "organization_sponsor"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relationship_path": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_receipt_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "provenance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommended_action": {
+          "enum": [
+            "human_decide_attend_watch_or_skip",
+            "human_decide_reconnect_or_defer"
+          ]
+        },
+        "external_effects": {
+          "const": false
+        },
+        "action_worthy": {
+          "const": true
         },
         "visible_in_report": {
           "const": true

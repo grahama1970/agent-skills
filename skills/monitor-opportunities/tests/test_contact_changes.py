@@ -73,3 +73,24 @@ def test_public_signal_win_becomes_lead(monkeypatch) -> None:
     assert changes[0]["evidence_source"] == "brave-search"
     leads = cc.vendor_leads(changes)
     assert "staff up and hire vendors" in leads[0]["why_now"]
+
+
+def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() -> None:
+    candidates = [
+        {
+            "candidate_id": "candidate:c:darpa-arcos",
+            "organization": "DARPA I2O",
+            "title": "ARCOS reconnect",
+            "source_receipt_id": "src:sos-vo:william-brad-martin",
+            "primary_evidence_url": "https://sos-vo.org/user/91",
+            "known_monitor_contacts": ["William Brad Martin"],
+            "adjacent_contacts": ["Eric Mertens", "David Archer"],
+        }
+    ]
+    signals = cc.relationship_signals_from_candidates(candidates)
+    assert {row["signal_type"] for row in signals} == {"direct_contact", "adjacent_contact"}
+    assert any(row["subject"] == "William Brad Martin" for row in signals)
+    assert any(row["subject"] == "Eric Mertens" for row in signals)
+    assert all(row["external_effects"] is False for row in signals)
+    assert all(row["visible_in_report"] is True for row in signals)
+    assert all("https://sos-vo.org/user/91" in row["evidence_refs"] for row in signals)

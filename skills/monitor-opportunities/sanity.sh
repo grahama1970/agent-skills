@@ -2,9 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 OUT_DIR="${TMPDIR:-/tmp}/monitor-opportunities-sanity"
 rm -rf "$OUT_DIR"
 
+cd "$REPO_ROOT"
 uv run --project "$SCRIPT_DIR" --extra test pytest "$SCRIPT_DIR/tests" -q
 "$SCRIPT_DIR/run.sh" status --json >/dev/null
 "$SCRIPT_DIR/run.sh" verify --out "$OUT_DIR" >/dev/null

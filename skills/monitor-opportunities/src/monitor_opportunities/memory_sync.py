@@ -72,6 +72,64 @@ def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, An
                 "external_effects": False,
             }
         )
+    for signal in report.get("relationship_signals", []):
+        sid = signal["signal_id"]
+        org = str(signal.get("organization") or "").strip()
+        subject = str(signal.get("subject") or "").strip()
+        path = signal.get("relationship_path") or []
+        text = "\n".join(
+            [
+                f"Relationship signal for {subject} at {org}.",
+                f"Type: {signal.get('signal_type')}.",
+                "Path: " + " -> ".join(str(item) for item in path),
+                f"Provenance: {signal.get('provenance')}.",
+                f"Recommended local action: {signal.get('recommended_action')}.",
+                "External effects: false; the human decides whether to reconnect, attend, watch, skip, or defer.",
+                "Evidence: " + ", ".join(str(ref) for ref in signal.get("evidence_refs", []) or ["n/a"]),
+            ]
+        )
+        documents.append(
+            {
+                "_key": f"{date_slug}-{sid}",
+                "schema": "monitor_opportunities.relationship_signal.v1",
+                "title": f"Relationship signal {date_slug}: {subject} — {org}",
+                "text": text,
+                "run_id": run_id,
+                "run_dir": run_dir,
+                "date": date_slug,
+                "relationship_signal_id": sid,
+                "source_opportunity_id": signal.get("source_opportunity_id"),
+                "subject": subject,
+                "organization": org,
+                "signal_type": signal.get("signal_type"),
+                "relationship_path": path,
+                "relationship_graph": {
+                    "nodes": [
+                        {"id": str(node).lower().replace(" ", "-"), "label": str(node)}
+                        for node in path
+                    ],
+                    "edges": [
+                        {
+                            "from": str(path[idx]).lower().replace(" ", "-"),
+                            "to": str(path[idx + 1]).lower().replace(" ", "-"),
+                            "relationship": signal.get("signal_type"),
+                        }
+                        for idx in range(max(0, len(path) - 1))
+                    ],
+                },
+                "evidence_refs": signal.get("evidence_refs", []),
+                "tags": [
+                    "morning-opportunities",
+                    "relationship-signal",
+                    "monitor-contacts",
+                    "reconnect",
+                    date_slug,
+                    org.lower().replace(" ", "-") if org else "unknown-org",
+                ],
+                "scope": "",
+                "external_effects": False,
+            }
+        )
     accounting = report.get("artifact_accounting", {})
     documents.append(
         {

@@ -9,6 +9,14 @@
     "https://sparta.aerospace.org/resources/OTR202500882-DefCon2025-Hacking_Space_to_Defend_It_1.pdf",
     "https://aerospace.org/article/aerospace-def-con-31"
    ]
+  },
+  "DARPA I2O": {
+   "warm_path": 0.82,
+   "via": "William \"Brad\" Martin — ARCOS/DARPA-adjacent contact found through SOS-VO and LinkedIn News; no LinkedIn profile assumed.",
+   "evidence": [
+    "https://sos-vo.org/user/91",
+    "human-observed:LinkedIn News"
+   ]
   }
  }
 }

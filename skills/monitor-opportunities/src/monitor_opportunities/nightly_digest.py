@@ -190,13 +190,15 @@ def run_digest_phase(
         # employer queue". Fail-soft, written to its own artifact and surfaced
         # in the digest.
         try:
+            from .contact_changes import relationship_signals_from_candidates
             from .prospect_queue import build_prospect_queue
 
             sam_evidence = None
             sam_path = capture_dir / "sam-website-evidence.json"
             if sam_path.exists():
                 sam_evidence = json.loads(sam_path.read_text(encoding="utf-8"))
-            prospects = build_prospect_queue(sam_evidence, shortlist_rows)
+            relationship_signals = relationship_signals_from_candidates(shortlist_rows)
+            prospects = build_prospect_queue(sam_evidence, shortlist_rows, relationship_signals)
             (out / "prospect-queue.json").write_text(
                 json.dumps(
                     {
@@ -204,6 +206,7 @@ def run_digest_phase(
                         "generated_from": {
                             "sam_evidence": str(sam_path) if sam_evidence else None,
                             "shortlist_rows": len(shortlist_rows),
+                            "relationship_signals": len(relationship_signals),
                         },
                         "prospects": prospects,
                     },
@@ -218,6 +221,7 @@ def run_digest_phase(
             steps["prospect_queue"] = {
                 "prospects": len(prospects),
                 "federal": sum(1 for p in prospects if p.get("signal_type") == "federal"),
+                "relationship": sum(1 for p in prospects if p.get("signal_type") == "relationship"),
                 "artifact": str(out / "prospect-queue.json"),
             }
         except Exception as exc:  # noqa: BLE001 - prospecting must never fail the run
@@ -406,4 +410,3 @@ def lane_health_phase(out: Path, steps: dict[str, Any]) -> None:
                                  "healthy_sources": len(healthy),
                                  "candidates_observed": observed, "degraded": degraded}
     steps["lane_health"] = lane_health
-

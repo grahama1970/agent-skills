@@ -267,6 +267,22 @@ class ApplicationPacket(StrictModel):
     external_effects: bool
 
 
+class RelationshipSignal(StrictModel):
+    signal_id: str
+    source_opportunity_id: str
+    signal_type: str
+    subject: str
+    organization: str
+    relationship_path: list[str] = Field(min_length=2)
+    evidence_refs: list[str]
+    source_receipt_ids: list[str]
+    provenance: str
+    recommended_action: str
+    external_effects: bool
+    action_worthy: bool
+    visible_in_report: bool
+
+
 class TalkingPoint(StrictModel):
     text: str
     claim_keys: list[str] = Field(min_length=1)
@@ -310,6 +326,7 @@ class ReportManifest(StrictModel):
     outreach_packets: list[OutreachPacket]
     applications: list[Application]
     application_packets: list[ApplicationPacket] = []
+    relationship_signals: list[RelationshipSignal] = []
     interview_prep: list[InterviewPrep]
     decision_actions: list[DecisionAction]
     artifact_accounting: ArtifactAccounting
@@ -377,6 +394,12 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported Meetup decision: {decision}")
         if signal_type == "LINKEDIN_LOCATOR" and item.get("action_worthy") is not False:
             raise ContractError("LINKEDIN_LOCATOR_ACTIONABLE", "LinkedIn locator evidence is not action-worthy")
+
+    for signal in raw.get("relationship_signals", []):
+        if signal.get("external_effects") is not False:
+            raise ContractError("RELATIONSHIP_SIGNAL_EXTERNAL_EFFECT", "Relationship signals are local-only")
+        if signal.get("visible_in_report") is not True:
+            raise ContractError("RELATIONSHIP_SIGNAL_HIDDEN", "Relationship signals must be report-visible")
 
     for packet in _require(raw, "outreach_packets"):
         if packet.get("sendable") is not False:
@@ -452,6 +475,8 @@ def _artifact_rows(manifest: ReportManifest) -> list[tuple[str, bool, bool]]:
         rows.append((item.application_id, item.action_worthy, item.visible_in_report))
     for item in manifest.application_packets:
         rows.append((item.packet_id, item.action_worthy, item.visible_in_report))
+    for item in manifest.relationship_signals:
+        rows.append((item.signal_id, item.action_worthy, item.visible_in_report))
     return rows
 
 

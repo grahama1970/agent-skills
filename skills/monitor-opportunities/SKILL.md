@@ -37,6 +37,7 @@ provides:
   - interactive-opportunity-report
 composes:
   - memory
+  - monitor-contacts
   - brave-search
   - extract-entities
   - surf
@@ -93,6 +94,7 @@ transmitted **by the candidate**.
 ```
 cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
   discovery  → SAM.gov + LinkedIn (read-only, human's own session) + Greenhouse/Ashby + brave-search
+             + monitor-contacts relationship graph (direct + adjacent contacts, event co-presence)
   filter     → recency (2wk) · role-type · mandate relevance via /extract-entities vocabulary (not regex)
   per top-N  → /tau creator-reviewer eval loop [contracts written; evaluator+reviewer subagents in agents/]
   tailor     → claim-bound resume · live ATS form capture (human-gated submit)
@@ -107,6 +109,17 @@ reviewer reviews against it, ranker orders by it — no bespoke top-N). GitHub `
 (public agent-skills) is for the skill's own code defects only; opportunities are private.
 Effects are human-gated: **no auto-submit, no auto-send**.
 
+`monitor-contacts` is a standard composition, not an optional side quest. Every
+run should preserve direct contacts, adjacent ARCOS/formal-methods contacts,
+company sponsors, Meetup co-presence, role moves, and project-win signals as
+relationship evidence. These signals may become consulting/reconnect prospects
+or attendance/watch decisions, but they are never outreach authority.
+
+Relationship evidence is stored through `/memory` as recallable
+`morning_opportunities` documents with graph-shaped node/edge payloads. Do not
+write raw ArangoDB AQL or vector arrays from this skill; use Memory `/store` or
+`/upsert` and query via `/recall`.
+
 ## The interactive report is the product
 
 Not a byproduct. One report manifest and one human entry point per completed run cover:
@@ -118,6 +131,7 @@ Not a byproduct. One report manifest and one human entry point per completed run
 | InMail | verbatim local handoff text, claim keys, roundtable state, human steps | candidate transmits |
 | Gmail | verbatim text and, only after separate promotion, mailbox draft location | candidate transmits |
 | ATS application | inspect/prefill/submit state, exact payload binding, blockers | authorize / withhold |
+| Relationship signals | direct/adjacent monitor-contact graph, source provenance, event/company path | reconnect / defer |
 | Interview prep | source- and claim-bound talking points | read |
 | Coverage and health | lanes searched, source receipts, feed failures, unknowns | inspect |
 
@@ -138,8 +152,15 @@ does not require equal output or filler opportunities.
 - **C — commercial contract** (`commercial_signal`) for grahamaco: document extraction,
   agent pipelines, agentic integration, and applied R&D. Usually there is no apply
   button; find and source the need before proposing work.
+- **Relationship/reconnect signals** (`relationship_signal`, report-visible metadata):
+  direct contacts, adjacent ARCOS/formal-methods contacts, event co-presence, company
+  sponsors, role moves, funding/contract wins, and source-backed contact paths from
+  `monitor-contacts`. These are standard consulting and networking signals attached to
+  lanes A/B/C, not a fourth application lane.
 
 Federal notices and commercial signals are not forced into an employment-posting schema.
+Relationship signals are not forced into employment, federal, or commercial schemas; they
+remain local human-decision records and Memory recall graph documents.
 
 ## Discovery: research first, never board enumeration
 

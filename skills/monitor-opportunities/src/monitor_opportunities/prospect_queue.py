@@ -104,13 +104,46 @@ def commercial_prospects(shortlist: list[dict[str, Any]]) -> list[dict[str, Any]
     return out
 
 
+def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Direct and adjacent contact paths become reconnect prospects.
+
+    This is intentionally local-only: it queues a human decision to reconnect,
+    attend, watch, skip, or defer. It never sends messages or claims the contact
+    is reachable beyond the supplied evidence.
+    """
+    out: list[dict[str, Any]] = []
+    for signal in relationship_signals:
+        subject = str(signal.get("subject") or "").strip()
+        org = str(signal.get("organization") or subject).strip()
+        if not subject:
+            continue
+        out.append(
+            {
+                "organization": org,
+                "title": f"Reconnect signal: {subject} — {org}",
+                "signal_type": "relationship",
+                "evidence_url": (signal.get("evidence_refs") or [None])[0],
+                "source": "monitor-contacts",
+                "mandate_hits": ["relationship", str(signal.get("signal_type") or "contact")],
+                "prospect_class": "warm_reconnect",
+                "relationship_signal_id": signal.get("signal_id"),
+                "relationship_path": signal.get("relationship_path", []),
+                "recommended_action": signal.get("recommended_action"),
+                "external_effects": False,
+            }
+        )
+    return out
+
+
 def build_prospect_queue(
     sam_evidence: dict[str, Any] | None,
     shortlist: list[dict[str, Any]],
+    relationship_signals: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Assemble the full prospect queue from federal + commercial signals."""
     prospects: list[dict[str, Any]] = []
     if sam_evidence:
         prospects += federal_prospects(sam_evidence)
     prospects += commercial_prospects(shortlist)
+    prospects += relationship_prospects(relationship_signals or [])
     return prospects

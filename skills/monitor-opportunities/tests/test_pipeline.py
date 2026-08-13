@@ -152,11 +152,17 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
     assert not any(row["opportunity_id"] in intel_ids for row in manifest["outreach_packets"])
     assert not any(row["opportunity_id"] in intel_ids for row in manifest["applications"])
     assert not any(row["opportunity_id"] in intel_ids for row in manifest["application_packets"])
+    relationship_signals = manifest["relationship_signals"]
+    assert relationship_signals
+    assert any(row["subject"] == "Bit Haven overlap" for row in relationship_signals)
+    assert all(row["visible_in_report"] is True for row in relationship_signals)
+    assert all(row["external_effects"] is False for row in relationship_signals)
     actions = {row["action"]: row for row in manifest["decision_actions"]}
     assert actions["ATTEND_MEETUP"]["effects_external"] is False
     assert actions["ATTEND_MEETUP"]["target_type"] == "source_intel"
     assert actions["WATCH_MEETUP"]["effects_external"] is False
     assert actions["SKIP_MEETUP"]["effects_external"] is False
+    assert actions["RECONNECT_CONTACT"]["target_type"] == "relationship_signal"
 
 
 def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:

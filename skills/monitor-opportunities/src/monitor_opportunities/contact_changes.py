@@ -262,6 +262,88 @@ def vendor_leads(changes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return leads
 
 
+def _as_str_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def relationship_signal_key(source_id: str, subject: str, organization: str) -> str:
+    payload = "|".join([source_id, subject, organization]).lower()
+    return "rel-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Normalize warm/direct/adjacent contact evidence from opportunity candidates.
+
+    This is the standard reconnect lane for monitor-opportunities. It consumes
+    evidence that discovery already captured (Meetup contacts/sponsors, warm
+    paths, SOS-VO/LinkedIn News/source refs, etc.) and emits local Stage-0
+    signals only. The human still decides whether to reconnect, attend, or skip.
+    """
+    signals: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for c in candidates:
+        source_id = str(c.get("candidate_id") or c.get("source_identity") or c.get("title") or "")
+        org = str(c.get("organization") or "").strip()
+        source_receipt = str(c.get("source_receipt_id") or "")
+        evidence_refs = [
+            ref
+            for ref in [
+                c.get("primary_evidence_url"),
+                c.get("posting_url"),
+                c.get("profile"),
+                c.get("source_identity") if str(c.get("source_identity") or "").startswith("http") else None,
+            ]
+            if ref
+        ]
+        contacts = _as_str_list(c.get("known_monitor_contacts") or c.get("monitor_contacts"))
+        adjacent = _as_str_list(c.get("adjacent_contacts"))
+        sponsors = _as_str_list(c.get("company_sponsors") or c.get("sponsors"))
+        warm_via = str(c.get("warm_path_via") or "").strip()
+        if warm_via:
+            contacts.append(warm_via)
+
+        rows: list[tuple[str, str, str]] = []
+        rows.extend(("direct_contact", name, "Known monitor-contact path") for name in contacts)
+        rows.extend(("adjacent_contact", name, "Adjacent ARCOS/formal-methods contact path") for name in adjacent)
+        rows.extend(("organization_sponsor", name, "Company/venue sponsor path") for name in sponsors)
+        if not rows:
+            continue
+        for signal_type, subject, provenance in rows:
+            key = relationship_signal_key(source_id, subject, org)
+            if key in seen:
+                continue
+            seen.add(key)
+            path = ["Graham Anderson", subject]
+            if org and org.lower() not in subject.lower():
+                path.append(org)
+            if c.get("source_provider") == "meetup_surf":
+                recommended = "human_decide_attend_watch_or_skip"
+            else:
+                recommended = "human_decide_reconnect_or_defer"
+            signals.append(
+                {
+                    "signal_id": key,
+                    "source_opportunity_id": source_id,
+                    "signal_type": signal_type,
+                    "subject": subject,
+                    "organization": org or subject,
+                    "relationship_path": path,
+                    "evidence_refs": evidence_refs,
+                    "source_receipt_ids": [source_receipt] if source_receipt else [],
+                    "provenance": provenance,
+                    "recommended_action": recommended,
+                    "external_effects": False,
+                    "action_worthy": True,
+                    "visible_in_report": True,
+                }
+            )
+    return signals
+
+
 def detect(
     captured: list[dict[str, Any]],
     source: str,

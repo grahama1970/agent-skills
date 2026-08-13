@@ -34,6 +34,34 @@ def test_documents_are_keyed_and_recall_shaped() -> None:
         assert document["external_effects"] is False
 
 
+def test_relationship_signals_publish_recallable_graph_documents() -> None:
+    report = _report()
+    report["relationship_signals"] = [
+        {
+            "signal_id": "rel-galois-eric",
+            "source_opportunity_id": "opp:c:galois:arcos",
+            "signal_type": "adjacent_contact",
+            "subject": "Eric Mertens",
+            "organization": "Galois, Inc.",
+            "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "source_receipt_ids": ["src:galois:team"],
+            "provenance": "Adjacent ARCOS/formal-methods contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    documents = morning_documents(report, "/tmp/run")
+    graph_doc = next(doc for doc in documents if doc["schema"] == "monitor_opportunities.relationship_signal.v1")
+    assert "relationship-signal" in graph_doc["tags"]
+    assert "monitor-contacts" in graph_doc["tags"]
+    assert graph_doc["relationship_graph"]["nodes"]
+    assert graph_doc["relationship_graph"]["edges"]
+    assert "Eric Mertens" in graph_doc["text"]
+
+
 def test_missing_run_id_fails_closed() -> None:
     report = _report()
     report.pop("run_id", None)
