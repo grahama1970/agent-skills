@@ -41,6 +41,41 @@
           "1 passed"
         ]
       }
+    },
+    {
+      "name": "help-does-not-contradict-dispatch",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "uv run python scripts/check_help_dispatch_consistency.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HELP_DISPATCH_CONSISTENT"
+        ]
+      },
+      "timeout_seconds": 400,
+      "proves": "Every handler shortcut --help advertises really routes to tau-dag (probed behaviorally, not by text match), --help makes no blanket 'removed from /ask' claim about a command it still advertises, and the webgpt shortcut genuinely compiles to a Tau DAG."
+    },
+    {
+      "name": "help-contradiction-is-actually-detected",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ask && cp run.sh /tmp/ask-run-sh.bak && python3 - <<'EOF'\ns=open('run.sh').read()\ns=s.replace(\"  Use './run.sh webgpt <question>'\", \"  WebGPT has been removed from /ask. Use $surf webgpt.submit\\n  Use './run.sh webgpt <question>'\")\nopen('run.sh','w').write(s)\nEOF\nuv run python scripts/check_help_dispatch_consistency.py --skip-compile; rc=$?; cp /tmp/ask-run-sh.bak run.sh; rm -f /tmp/ask-run-sh.bak; test $rc -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAILED GATES",
+          "no-contradictory-removal-claim"
+        ]
+      },
+      "timeout_seconds": 400,
+      "proves": "The gate is not vacuous: reintroducing the real 2026-08-13 contradiction ('WebGPT has been removed from /ask' beside the advertised webgpt shortcut) makes it FAIL, and run.sh is restored afterward."
     }
   ]
 }

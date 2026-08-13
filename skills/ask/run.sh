@@ -451,7 +451,7 @@ case "${1:-help}" in
         ;;
     webgpt-project)
         shift
-        echo "WebGPT/ChatGPT routing has been removed from /ask. Use \$surf webgpt.submit or the project-level \$webgpt workflow directly." >&2
+        echo "The 'webgpt-project' direct-oracle subcommand was removed. WebGPT itself is still supported: use './run.sh webgpt <question>', which executes through the Tau harness as a single-call DAG." >&2
         exit 2
         ;;
     cursor-browser-project)
