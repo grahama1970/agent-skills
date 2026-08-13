@@ -902,7 +902,13 @@ def test_browser_command_specs_use_long_provider_timeout_envelope(tmp_path: Path
     assert specs["handler-webgrok"]["timeout_s"] == 4680
     for node in ("handler-webclaude", "handler-webkimi", "handler-webgrok", "handler-webgemini"):
         command = specs[node]["command"]
-        assert command[command.index("--timeout") + 1] == "900"
+        # 900s was the LOW end of a normal browser-model call (webgpt Pro runs
+        # 15-20 min), so it killed longer answers mid-generation. The envelope
+        # now matches surf webgpt.submit's own 2400s default. Asserted via the
+        # constant so the test tracks the policy instead of a stale literal.
+        assert command[command.index("--timeout") + 1] == str(
+            tau_dag.DEFAULT_BROWSER_WORKER_TIMEOUT_SECONDS
+        )
         assert command[command.index("--browser-lock-timeout") + 1] == "3600"
 
 

@@ -15,6 +15,8 @@ code — so it cannot pass by our code agreeing with itself):
      still advertises
   3. the advertised browser-handler shortcut really compiles to a Tau DAG
      (proves /ask executes browser handlers through Tau, not around it)
+  4. that DAG's timeouts can actually cover a normal webgpt Pro call
+     (15-20 min); a flat 300s node default made failure certain
 
 Usage: python check_help_dispatch_consistency.py [--skip-compile]
 """
@@ -22,6 +24,7 @@ Usage: python check_help_dispatch_consistency.py [--skip-compile]
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -113,6 +116,55 @@ def check_shortcut_compiles_to_tau(skip: bool) -> None:
     )
 
 
+def check_browser_timeouts_are_viable(skip: bool) -> None:
+    """A browser handler's timeouts must cover a normal webgpt Pro call.
+
+    Graham: "a webgpt call normally takes 15-20 minutes". The DAG shipped a flat
+    limits.default_timeout_seconds=300 and a 900s worker budget, so a normal
+    call was ~certain to be killed mid-generation (2026-08-13). Require both to
+    cover a 20-minute answer with margin.
+    """
+    if skip:
+        gate("browser-timeouts-viable", True, "skipped by --skip-compile")
+        return
+    min_required = 1200  # 20 minutes, the top of a normal webgpt Pro call
+    proc = subprocess.run(
+        [str(RUN_SH), "webgpt", "--compile-only", "timeout gate probe"],
+        capture_output=True,
+        text=True,
+        timeout=400,
+    )
+    try:
+        payload = json.loads(proc.stdout[proc.stdout.find("{") :])
+        bundle = payload["bundle"]
+        # dag_path may point at the run directory OR at dag.json inside it.
+        dag_path = Path(bundle["dag_path"])
+        run_root = dag_path.parent if dag_path.name.endswith(".json") else dag_path
+        dag = (
+            bundle["dag"]
+            if isinstance(bundle.get("dag"), dict)
+            else json.loads((run_root / "dag.json").read_text(encoding="utf-8"))
+        )
+        node_default = int(dag["limits"]["default_timeout_seconds"])
+        spec = json.loads(
+            (
+                run_root / "command-specs" / "handler-webgpt" / "tau-dispatch-command.json"
+            ).read_text(encoding="utf-8")
+        )
+        cmd = spec["command"]
+        worker_timeout = int(cmd[cmd.index("--timeout") + 1])
+    except Exception as exc:  # noqa: BLE001 - any parse failure is a gate failure
+        gate("browser-timeouts-viable", False, f"could not read compiled timeouts: {exc}")
+        return
+    ok = node_default >= min_required and worker_timeout >= min_required
+    gate(
+        "browser-timeouts-viable",
+        ok,
+        f"node default={node_default}s, webgpt worker={worker_timeout}s "
+        f"(both must be >= {min_required}s for a 15-20 min Pro call)",
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-compile", action="store_true")
@@ -122,6 +174,7 @@ def main() -> int:
     check_advertised_shortcuts_dispatch(help_text, run_src)
     check_no_contradictory_removal(help_text)
     check_shortcut_compiles_to_tau(args.skip_compile)
+    check_browser_timeouts_are_viable(args.skip_compile)
     if FAILURES:
         print("FAILED GATES: " + ", ".join(FAILURES))
         return 1
