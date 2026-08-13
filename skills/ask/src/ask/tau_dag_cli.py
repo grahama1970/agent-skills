@@ -56,6 +56,34 @@ BROWSER_BACKENDS = {
 }
 
 
+def _browser_submit_preflight_or_exit(
+    request: str, attach_files, handlers, execute: bool
+) -> None:
+    """Fail EARLY when a browser submit would be rejected by surf for local
+    filesystem paths / ~<digits> (browser_submit_not_accepted), before any DAG
+    compile or tab binding. Auto-enforced so this recurring mistake does not
+    depend on the caller remembering to preflight.
+    """
+    if not execute:
+        return
+    if not any((h or "").strip().lower() in BROWSER_BACKENDS for h in (handlers or [])):
+        return
+    script = Path(__file__).resolve().parents[2] / "scripts" / "browser_prompt_preflight.py"
+    if not script.exists():
+        return  # capability absent -> do not block
+    cmd = [sys.executable, str(script), "--prompt", request or ""]
+    cmd.extend(str(f) for f in (attach_files or []))
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode == 2:
+        typer.echo(proc.stderr.rstrip(), err=True)
+        typer.echo(
+            "Pre-dispatch browser preflight blocked this submit; fix the "
+            "prompt/bundle above and retry (surf would reject it late).",
+            err=True,
+        )
+        raise typer.Exit(2)
+
+
 def _emit_dag_chart(bundle: dict[str, Any], *, execute: bool) -> None:
     """Print an ASCII confirmation chart of the compiled DAG before any run.
 
@@ -239,6 +267,7 @@ def run(
     ] = 1.0,
     json_output: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
 ) -> None:
+    _browser_submit_preflight_or_exit(request, attach_file, handler, execute)
     input_payload = infer_compile_input(
         request.strip(),
         repo=repo,
@@ -533,6 +562,7 @@ def compete(
     ] = 1.0,
     json_output: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
 ) -> None:
+    _browser_submit_preflight_or_exit(request, attach_file, handler, execute)
     input_payload = infer_compile_input(
         request.strip(),
         repo=repo,
