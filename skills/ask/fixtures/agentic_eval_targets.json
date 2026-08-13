@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "the three peer target types /ask can address: Herdr sessions via monitor-herdr, model calls via tau, and web models via surf",
   "claims": {
-    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages",
+    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages; and that a provider whose probe timed out or failed is removed before dispatch with its real failure code, so the caller receives a terminal artifact instead of waiting (#1397); and that a compiled request carries the same goal_hash as its DAG, so the terminal join seam cannot fail after provider spend (#1399)",
     "does_not_prove": "that a targeted agent understood or acted on a delivered message, browser or model semantic correctness, or that a Herdr session works as a roundtable seat (no capture lane exists yet)"
   },
   "cases": [
@@ -239,6 +239,70 @@
         "exit_code": 0,
         "stdout_contains": [
           "cold-ledger honesty ok"
+        ]
+      }
+    },
+    {
+      "name": "degraded-provider-is-never-dispatched-into",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_browser_provider_selection_probe_state.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "ticket-1397-real-artifact-blocks-instead-of-stalling",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python -c \"import json,sys; sys.path.insert(0,'src')\nfrom types import SimpleNamespace\nfrom ask.tau_dag_cli import _select_available_browser_handlers as sel, browser_provider_selection_blocked_execution as blocked\nr=json.load(open('fixtures/ticket-1397-degraded-webgpt-availability.json'))\np=SimpleNamespace(handlers=['webgpt'],workflow_mode='',dag_template='single-call',request='battle')\ns=sel(p,r)\nassert s['status']=='BLOCKED', s['status']\nassert s['removed_handlers']==['webgpt'], s['removed_handlers']\nassert s['failure_code']=='browser_provider_probe_timeout', s['failure_code']\ne=blocked(s)\nassert e['ok'] is False and e['no_tau_execution'] is True\nprint('ticket-1397 artifact blocks pre-dispatch with', s['failure_code'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "blocks pre-dispatch with browser_provider_probe_timeout"
+        ]
+      }
+    },
+    {
+      "name": "compiled-request-carries-the-goal-hash-1399",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_request_carries_goal_hash_1399.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "join-seam-never-fails-after-provider-spend",
+      "type": "adversarial",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Objective: eval regression probe' --repo local/agent-skills --target eval-1399 --immutable-goal 'Probe that the compiled request carries its goal hash' --handler webgpt --topology sequential --json | python3 -c \"import json,sys,pathlib; o=json.load(sys.stdin); b=o.get('bundle') or o; rd=pathlib.Path(b['run_dir']); req=json.loads((rd/'request.json').read_text()); dag=json.loads((rd/'dag.json').read_text()); g=req.get('goal') or {}; assert g.get('goal_hash'), 'request.json has no goal_hash; the join seam dies after provider spend'; assert g['goal_hash']==dag['goal']['goal_hash'], 'request and dag goal hashes disagree'; print('compiled request carries goal_hash matching the dag')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "compiled request carries goal_hash matching the dag"
         ]
       }
     }

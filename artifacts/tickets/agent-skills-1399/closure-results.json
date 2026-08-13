@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1399,
+  "unit": {
+    "command": "uv run pytest skills/ask/tests/test_request_carries_goal_hash_1399.py -q",
+    "exit_code": 0,
+    "summary": "5 passed - goal object present, request/dag hashes agree, the real HandoffContract validates, a goalless payload still fails, hash stable across compiles"
+  },
+  "e2e": {
+    "command": "cd skills/ask && ./run.sh tau-dag 'Objective: ticket 1399 closure proof' --repo local/agent-skills --target ticket-1399-closure --immutable-goal 'Prove the compiled request carries goal_hash so the join seam validates' --handler webgpt --topology sequential --json",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-objective-ticket-1399-closure-pr-df0527b9fc09/request.json",
+    "summary": "live compile through the real entrypoint; request.json carries goal_hash sha256:493a6b95... matching dag.json, read back from disk"
+  }
+}

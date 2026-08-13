@@ -47,6 +47,19 @@ INVENTORY: dict[str, RouteEntry] = {
     # --- Tau-native compile/submit surface -------------------------------
     "tau_dag.py": RouteEntry(TAU_NATIVE_AGENT, "Compiles and submits tau.dag_contract.v1 bundles; Tau owns execution."),
     "tau_dag_cli.py": RouteEntry(TAU_NATIVE_AGENT, "CLI wrapper over tau_dag compile/submit/status."),
+    # Sending a prompt into another agent's Herdr pane IS agentic dispatch that
+    # does not pass through Tau, so it is a bounded compat runtime rather than
+    # a local module excused as probe-only: it sends, it does not merely observe.
+    "herdr_cli.py": RouteEntry(
+        TAU_OPAQUE_COMPAT,
+        "Delivers a prompt to a human-owned Herdr pane through monitor-herdr's transport.",
+        migration_target="tau#310 compat node: Herdr seat as a DAG node, blocked on a pane capture lane",
+    ),
+    "herdr_target.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Resolves a name to a Herdr pane and samples pane state to decide addressability.",
+        probe_only=True,
+    ),
     "ask_dag.py": RouteEntry(TAU_NATIVE_AGENT, "Natural-language DAG inference feeding tau_dag compilation."),
     # --- Browser / legacy provider runtimes (opaque compat) --------------
     "kimi_runtime.py": RouteEntry(TAU_OPAQUE_COMPAT, "surf kimi.submit browser handler.", migration_target="tau#310 compat node"),

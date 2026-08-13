@@ -667,6 +667,9 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             "repo": input.repo,
             "target": input.target,
             "immutable_goal": input.immutable_goal,
+            # Workers read this file as `start`; without the goal object the
+            # join handoff has no goal_hash to stamp (#1399).
+            "goal": _goal_object(input),
             "solver_models": list(input.solver_models),
             "reviewer_model": input.reviewer_model,
             "criteria": list(input.criteria),
@@ -2063,12 +2066,7 @@ def browser_compete_blocked_execution(gate: dict[str, Any]) -> dict[str, Any]:
 
 def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any]:
     dag_id = _dag_id(input)
-    goal = {
-        "goal_id": f"ask-{dag_id}",
-        "goal_version": 1,
-        "immutable_goal": input.immutable_goal,
-        "goal_hash": _goal_hash(input),
-    }
+    goal = _goal_object(input)
     solver_nodes: list[dict[str, Any]] = []
     for index, model in enumerate(input.solver_models, start=1):
         node_id = f"solver-{index}"
@@ -2169,12 +2167,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
 
 def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any]:
     dag_id = _dag_id(input)
-    goal = {
-        "goal_id": f"ask-{dag_id}",
-        "goal_version": 1,
-        "immutable_goal": input.immutable_goal,
-        "goal_hash": _goal_hash(input),
-    }
+    goal = _goal_object(input)
     handler_nodes: list[dict[str, Any]] = []
     is_compete = input.workflow_mode == "compete"
     node_ids = _handler_node_ids(input.handlers)
@@ -3281,6 +3274,24 @@ def _dag_id(input: TauDagCompileInput) -> str:
     )
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
     return f"ask-tau-{_slug(input.request)[:32]}-{digest}"
+
+
+def _goal_object(input: TauDagCompileInput) -> dict[str, Any]:
+    """The immutable goal as every consumer must see it.
+
+    Built in one place because it has to appear in two: the DAG contract Tau
+    validates, and the request payload the workers read. They drifted (#1399)
+    -- the DAG carried goal_hash while request.json carried only the
+    immutable_goal string and no goal object at all, so the join node's
+    handoff had no hash to stamp and died at the terminal seam with
+    'goal.goal_hash is required' AFTER all provider spend.
+    """
+    return {
+        "goal_id": f"ask-{_dag_id(input)}",
+        "goal_version": 1,
+        "immutable_goal": input.immutable_goal,
+        "goal_hash": _goal_hash(input),
+    }
 
 
 def _goal_hash(input: TauDagCompileInput) -> str:

@@ -1,0 +1,1185 @@
+{
+  "command_receipt": {
+    "command": [
+      "/home/graham/workspace/experiments/agent-skills/skills/ask/.venv/bin/python3",
+      "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/probe_browser_provider_availability.py",
+      "--provider",
+      "webgpt",
+      "--provider",
+      "webclaude",
+      "--provider",
+      "webgemini",
+      "--provider",
+      "webkimi",
+      "--provider",
+      "webgrok",
+      "--output",
+      "/mnt/storage12tb/skills/ask/outputs/battle-comprehensive-agentic-evals-webgpt-retry-20260813/ask-tau-create-a-comprehensive-battle-ag-06bc334864e0/browser-provider-availability.json",
+      "--max-tabs-per-provider",
+      "2",
+      "--json"
+    ],
+    "duration_seconds": 71.234,
+    "returncode": 0,
+    "stderr": "",
+    "stdout": "{\n  \"degraded_providers\": [\n    \"webgpt\",\n    \"webgemini\",\n    \"webkimi\"\n  ],\n  \"finished_at_unix\": 1786632280,\n  \"live\": true,\n  \"mocked\": false,\n  \"output\": \"/mnt/storage12tb/skills/ask/outputs/battle-comprehensive-agentic-evals-webgpt-retry-20260813/ask-tau-create-a-comprehensive-battle-ag-06bc334864e0/browser-provider-availability.json\",\n  \"provider_probe_recovery_packets\": {\n    \"webgemini\": {\n      \"auto_retry_allowed\": false,\n      \"auto_retry_blocked_reason\": \"provider_probe_uncertain_requires_readback\",\n      \"checked_tab_ids\": [\n        \"837385409\",\n        \"837382179\"\n      ],\n      \"cooldown_seconds\": 0,\n      \"evidence\": {\n        \"checked_tabs\": [\n          {\n            \"href\": \"https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw\",\n            \"limited\": false,\n            \"match_source\": \"main\",\n            \"matched_snippet\": null,\n            \"matched_text\": null,\n            \"returncode\": 0,\n            \"stderr_tail\": \"\",\n            \"stdout_tail\": \" Markdown Integrity Review\\\\\\\\nSurf 1119 Roundtable Smoke Test\\\\\\\\nRoundtable Transport Proof Confirmation\\\\\\\\nRoundtable Transport Packet Proof\\\\\\\\nREADME Review: Sparta Explorer\\\\\\\\nREADME Quality and Roundtable Compliance\\\\\\\\nREADME Quality and Roundtable Compliance\\\\\\\\nProposing Smallest Production Infrastructure Slice\\\\\\\\nBattle MVP: Containerized Deployment\\\\\\\\nREADME Roundtable Closure Rerun\\\\\\\\nSPARTA README Best Practices Roundtable\\\\\\\\nSPARTA README Closure Review\\\\\\\\nREADME Audit Blocked by Missing Data\\\\\\\\nWebSocket Transport MVP Implementation Plan\\\\\\\\nGraham Anderson\\\\\\\\nWork\\\\\\\\n\\u2022\\\\\\\\nPro\\\\\\\\nConversation with Gemini\\\\\\\\nCreate images\\\\\\\\nTry a template or describe an idea in chat.\\\\\\\\nCreate with Nano Banana 2.\\\\\\\\nMonochrome\\\\\\\\nColor block\\\\\\\\nRunway\\\\\\\\nTechnicolor\\\\\\\\nGothic clay\\\\\\\\nDynamite\\\\\\\\nSalon\\\\\\\\nSketch\\\\\\\\nCinematic\\\\\\\\nSteampunk\\\\\\\\nSunrise\\\\\\\\nMythic fighter\\\\\\\\nSurreal\\\\\\\\nMoody\\\\\\\\nEnamel pin\\\\\\\\nCyborg\\\\\\\\nSoft portrait\\\\\\\\nOld cartoon\\\\\\\\nOil painting\\\\\\\\nLight beams\\\\\\\\n\\\\\\\\n\\\\\\\\n\\\\\\\\n\\\\\\\\nImages\\\\\\\\nThinking\\\\\\\\n\\\\\\\\n\\\\\\\\n\\\\\\\",\\\\\\\"has_main\\\\\\\":true}\\\"\\n\",\n            \"tab_id\": \"837385409\",\n            \"text_excerpt\": \"Gemini\\nUpgrade\\nNew chat\\nSearch chats\\nImages\\nVideos\\nLibrary\\nRecents\\nAgent Skills Nightly Review\\nReal-Time Co-Pilot Design & Architecture\\nAgentic Timeline Viewer Design Updates\\nYubico Security Key C NFC Sufficiency\\nAgentic Timeline Viewer UX Location\\nAgent Skills Review: Risk & Action\\nClaude Max OAuth Not Supported\\nClaude Extra Usage vs. API Billing\\nAshby Registration and Login Guide\\nNico's Best Practices Guides\\nSetting Up Google Voice on Gmail\\nAnimated SVG Focus Ring and Path\\nOrca and Herdr Integration\\nAI Rater Assesses Proof Workshop Screens\\ngrahama.co Blind Distinctiveness Rater Prompt r3 ## \",\n            \"timed_out\": false,\n            \"title\": \"Google Gemini\"\n          },\n          {\n            \"returncode\": 124,\n            \"stderr_tail\": \"\\n[provider-availability] command timed out after 20s; killed process group\\n\",\n            \"stdout_tail\": \"\",\n            \"tab_id\": \"837382179\",\n            \"timed_out\": true\n          }\n        ],\n        \"provider_tabs\": [\n          {\n            \"active\": false,\n            \"id\": 837380559,\n            \"title\": \"Google Gemini\",\n            \"url\": \"https://gemini.google.com/app\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837382179,\n            \"title\": \"Google Gemini\",\n            \"url\": \"https://gemini.google.com/app\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837385409,\n            \"title\": \"Google Gemini\",\n            \"url\": \"https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw\",\n            \"windowId\": 837380548\n          }\n        ],\n        \"tab_count\": 3\n      },\n      \"failure_code\": \"browser_provider_probe_timeout\",\n      \"fallback_instruction\": \"Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.\",\n      \"next_command\": \"cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json\",\n      \"probe_degraded\": true,\n      \"probe_failed\": false,\n      \"provider\": \"webgemini\",\n      \"provider_limited\": false,\n      \"schema\": \"ask.browser_provider_probe_recovery_packet.v1\",\n      \"status\": \"DEGRADED\",\n      \"ticket_command\": \"skills/ticket/run.sh bug \\\"Ask browser availability probe degraded for webgemini\\\" --target skills/ask --observed \\\"webgemini provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837385409, 837382179\\\" --expected \\\"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\\\" --repro \\\"cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json\\\" --proof \\\"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\\\" --apply\",\n      \"ticket_instruction\": \"If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.\",\n      \"ticket_target\": \"$ask at agent-skills@main\"\n    },\n    \"webgpt\": {\n      \"auto_retry_allowed\": false,\n      \"auto_retry_blocked_reason\": \"provider_probe_uncertain_requires_readback\",\n      \"checked_tab_ids\": [\n        \"837389487\",\n        \"837389483\"\n      ],\n      \"cooldown_seconds\": 0,\n      \"evidence\": {\n        \"checked_tabs\": [\n          {\n            \"href\": \"https://chatgpt.com/\",\n            \"limited\": false,\n            \"match_source\": \"main\",\n            \"matched_snippet\": null,\n            \"matched_text\": null,\n            \"returncode\": 0,\n            \"stderr_tail\": \"\",\n            \"stdout_tail\": \"GPT Retry Analysis\\\\\\\\nRepo Analysis and Suggestions\\\\\\\\nTau timeline viewer review\\\\\\\\nAgentic-evals for Unattended Task\\\\\\\\nREADME to Pitch Deck\\\\\\\\nNightly skill review\\\\\\\\nG2i Inc interview prep\\\\\\\\nTau-managed roundtable review\\\\\\\\nGraham Anderson Job Research\\\\\\\\nExtract-Entities Hardening Review\\\\\\\\nTau Timeline UX Review\\\\\\\\nTau UX Review\\\\\\\\nTau Video Timeline Review\\\\\\\\nTau UX Design Review\\\\\\\\nTau project video review\\\\\\\\nNightly Skill Review\\\\\\\\nPortfolio Site Comparison\\\\\\\\nSPARTA audit round-2 review\\\\\\\\nFingerprint Review Process\\\\\\\\nSPARTA audit review\\\\\\\\nFingerprint Review Process\\\\\\\\nTau roundtable review process\\\\\\\\nTau-managed Roundtable Review\\\\\\\\nReview of grahama.co candidate\\\\\\\\nCaptcha Defeat with Agents\\\\\\\\nGraham Anderson\\\\\\\\nPro\\\\\\\\nChat\\\\\\\\nWork\\\\\\\\nWhat\\u2019s on the agenda today?\\\\\\\\n\\\\\\\\nPro\\\\\\\\nPrepare for Monday\\u2019s G2i agentic technical interview with Bruno Klein\\\\\\\\nFinish the draft reply to Adarsh about the AI Practice Lead role\\\\\\\\nBuild a tailored Moog brief for the new agentic AI engineering role\\\\\\\",\\\\\\\"has_main\\\\\\\":true}\\\"\\n\",\n            \"tab_id\": \"837389487\",\n            \"text_excerpt\": \"What\\u2019s on the agenda today?\\n\\nPro\\nPrepare for Monday\\u2019s G2i agentic technical interview with Bruno Klein\\nFinish the draft reply to Adarsh about the AI Practice Lead role\\nBuild a tailored Moog brief for the new agentic AI engineering role\",\n            \"timed_out\": false,\n            \"title\": \"ChatGPT\"\n          },\n          {\n            \"returncode\": 124,\n            \"stderr_tail\": \"\\n[provider-availability] command timed out after 20s; killed process group\\n\",\n            \"stdout_tail\": \"\",\n            \"tab_id\": \"837389483\",\n            \"timed_out\": true\n          }\n        ],\n        \"provider_tabs\": [\n          {\n            \"active\": false,\n            \"id\": 837385584,\n            \"title\": \"ChatGPT\",\n            \"url\": \"https://chatgpt.com/\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837385573,\n            \"title\": \"Advanced Account Security - OpenAI\",\n            \"url\": \"https://chatgpt.com/advanced-account-security\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837381240,\n            \"title\": \"Graham Anderson Job Research\",\n            \"url\": \"https://chatgpt.com/c/6a7c71f5-0fb4-83ea-ad87-7a7893a6a500\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837382415,\n            \"title\": \"Pitchdeck - Audit pitchdeck skill\",\n            \"url\": \"https://chatgpt.com/g/g-p-6a773923324c8191b79a9f49efb88e46-pitchdeck/c/6a773c31-0eac-83ea-84bc-a4968f0bb9e3\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837382423,\n            \"title\": \"Portfolio Site Comparison\",\n            \"url\": \"https://chatgpt.com/c/6a7b411a-c9b4-83ea-b06f-6ae3434f0347\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": true,\n            \"id\": 837382608,\n            \"title\": \"SPARTA audit review\",\n            \"url\": \"https://chatgpt.com/c/6a7b6079-9be0-83ea-a91d-d0e1ce6fcc93\",\n            \"windowId\": 837382607\n          },\n          {\n            \"active\": true,\n            \"id\": 837385151,\n            \"title\": \"Tau UX Design Review\",\n            \"url\": \"https://chatgpt.com/c/6a7c641b-66a0-83ea-8219-a1d63516ca36\",\n            \"windowId\": 837385150\n          },\n          {\n            \"active\": true,\n            \"id\": 837385302,\n            \"title\": \"Tau Video Timeline Review\",\n            \"url\": \"https://chatgpt.com/c/6a7c717b-fbe4-83ea-ac62-af4fa63e2ab3\",\n            \"windowId\": 837385301\n          },\n          {\n            \"active\": true,\n            \"id\": 837389304,\n            \"title\": \"WebGPT Retry Analysis\",\n            \"url\": \"https://chatgpt.com/c/6a7dc84a-85f8-83ea-bb71-a8b93848e014\",\n            \"windowId\": 837389303\n          },\n          {\n            \"active\": true,\n            \"id\": 837389338,\n            \"title\": \"Watch - Annotation Tracking Code\",\n            \"url\": \"https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a453096-f1ac-83ea-b610-eb238c4a4177\",\n            \"windowId\": 837389337\n          },\n          {\n            \"active\": true,\n            \"id\": 837389354,\n            \"title\": \"Battle agentic eval design\",\n            \"url\": \"https://chatgpt.com/c/6a7dcb6e-ac9c-83ea-8d6d-d9e21f63b73e\",\n            \"windowId\": 837389353\n          },\n          {\n            \"active\": false,\n            \"id\": 837389384,\n            \"title\": \"Agentic Evals Design\",\n            \"url\": \"https://chatgpt.com/c/6a7dcc60-5a88-83ea-bd75-1da6ffa1e59d\",\n            \"windowId\": 837389383\n          },\n          {\n            \"active\": false,\n            \"id\": 837389438,\n            \"title\": \"ChatGPT\",\n            \"url\": \"https://chatgpt.com/\",\n            \"windowId\": 837389383\n          },\n          {\n            \"active\": true,\n            \"id\": 837389487,\n            \"title\": \"ChatGPT\",\n            \"url\": \"https://chatgpt.com/\",\n            \"windowId\": 837389383\n          },\n          {\n            \"active\": true,\n            \"id\": 837389473,\n            \"title\": \"Agentic-Evals Design Request\",\n            \"url\": \"https://chatgpt.com/c/6a7dd179-1240-83ea-8307-0a034c153fea\",\n            \"windowId\": 837389472\n          },\n          {\n            \"active\": true,\n            \"id\": 837389478,\n            \"title\": \"ChatGPT\",\n            \"url\": \"https://chatgpt.com/\",\n            \"windowId\": 837389477\n          },\n          {\n            \"active\": true,\n            \"id\": 837389483,\n            \"title\": \"ChatGPT\",\n            \"url\": \"https://chatgpt.com/\",\n            \"windowId\": 837389482\n          }\n        ],\n        \"tab_count\": 17\n      },\n      \"failure_code\": \"browser_provider_probe_timeout\",\n      \"fallback_instruction\": \"Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.\",\n      \"next_command\": \"cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json\",\n      \"probe_degraded\": true,\n      \"probe_failed\": false,\n      \"provider\": \"webgpt\",\n      \"provider_limited\": false,\n      \"schema\": \"ask.browser_provider_probe_recovery_packet.v1\",\n      \"status\": \"DEGRADED\",\n      \"ticket_command\": \"skills/ticket/run.sh bug \\\"Ask browser availability probe degraded for webgpt\\\" --target skills/ask --observed \\\"webgpt provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837389487, 837389483\\\" --expected \\\"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\\\" --repro \\\"cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json\\\" --proof \\\"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\\\" --apply\",\n      \"ticket_instruction\": \"If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.\",\n      \"ticket_target\": \"$ask at agent-skills@main\"\n    },\n    \"webkimi\": {\n      \"auto_retry_allowed\": false,\n      \"auto_retry_blocked_reason\": \"provider_probe_uncertain_requires_readback\",\n      \"checked_tab_ids\": [\n        \"837386418\",\n        \"837380562\"\n      ],\n      \"cooldown_seconds\": 0,\n      \"evidence\": {\n        \"checked_tabs\": [\n          {\n            \"href\": \"https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home\",\n            \"limited\": false,\n            \"match_source\": \"body\",\n            \"matched_snippet\": null,\n            \"matched_text\": null,\n            \"returncode\": 0,\n            \"stderr_tail\": \"\",\n            \"stdout_tail\": \"is appropriate for the recipient's level/formality?\\\\\\\\nLet me keep it concise and critical as the user prefers.\\\\\\\\nThis is meaningfully better than the first draft \\u2014 \\\\\\\\\\\\\\\"stalled\\\\\\\\\\\\\\\" rescues the project mention from self-sabotage, and \\\\\\\\\\\\\\\"caught my eye\\\\\\\\\\\\\\\" replaces hollow hyperbole with something calmer. But it still has a structural problem: the two sentences don't talk to each other. You mention Brandon, then you mention their byline, and the reader has to guess whether those thoughts are related or just two things you remembered in sequence. That ambiguity makes the message feel slightly unfinished.\\\\\\\\nA few specific issues remain:\\\\\\\\nTypo: (with Sandia Labs ) has a space before the closing parenthesis.\\\\\\\\nVague compliment: \\\\\\\\\\\\\\\"Caught my eye\\\\\\\\\\\\\\\" is safer than \\\\\\\\\\\\\\\"best I ever seen,\\\\\\\\\\\\\\\" but it still doesn't tell them what you noticed. A byline is just a name on an article \\u2014 saying it \\\\\\\\\\\\\\\"caught your eye\\\\\\\\\\\\\\\" without naming the article, the topic, or the quality you ad\\\\\\\",\\\\\\\"has_main\\\\\\\":false}\\\"\\n\",\n            \"tab_id\": \"837386418\",\n            \"text_excerpt\": \"New Chat\\nCtrl\\nK\\nMy Kimi\\nScheduled Tasks\\nCollapse\\nSwarm\\nSlides\\nDeep Research\\nWebsites\\nDocs\\nSheets\\nDesign\\nKimi Work\\nKimi Code\\nKimi Claw\\nProjects\\nNew project\\nChats\\nAll Chats\\nLinkedIn Response Improvement Tips\\nCaptcha Bypass via Agents\\nGrahama Finish Review G16/G17\\nGrahama Finish Review G16-G18\\nBlind Distinctiveness Rater Issue\\nBlind Distinctiveness Rater Issue 1358\\nBlind Distinctiveness Rater Prompt\\nBlind Distinctiveness Rater Issue\\nBlind Distinctiveness Rater Prompt\\ngrahama.co Post-Repair Review\\nBlind Distinctiveness Issue 1358\\nBlind Distinctiveness Issue 1358\\nBlind Distinctiveness Rater Issue\\nB\",\n            \"timed_out\": false,\n            \"title\": \"LinkedIn Response Improvement Tips - Kimi\"\n          },\n          {\n            \"returncode\": 124,\n            \"stderr_tail\": \"\\n[provider-availability] command timed out after 20s; killed process group\\n\",\n            \"stdout_tail\": \"\",\n            \"tab_id\": \"837380562\",\n            \"timed_out\": true\n          }\n        ],\n        \"provider_tabs\": [\n          {\n            \"active\": false,\n            \"id\": 837380562,\n            \"title\": \"Captcha Bypass via Agents - Kimi\",\n            \"url\": \"https://www.kimi.com/chat/19ff13a4-7c12-820e-8000-095c143f136f?chat_enter_method=new_chat\",\n            \"windowId\": 837380548\n          },\n          {\n            \"active\": false,\n            \"id\": 837386418,\n            \"title\": \"LinkedIn Response Improvement Tips - Kimi\",\n            \"url\": \"https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home\",\n            \"windowId\": 837380548\n          }\n        ],\n        \"tab_count\": 2\n      },\n      \"failure_code\": \"browser_provider_probe_timeout\",\n      \"fallback_instruction\": \"Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.\",\n      \"next_command\": \"cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json\",\n      \"probe_degraded\": true,\n      \"probe_failed\": false,\n      \"provider\": \"webkimi\",\n      \"provider_limited\": false,\n      \"schema\": \"ask.browser_provider_probe_recovery_packet.v1\",\n      \"status\": \"DEGRADED\",\n      \"ticket_command\": \"skills/ticket/run.sh bug \\\"Ask browser availability probe degraded for webkimi\\\" --target skills/ask --observed \\\"webkimi provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837386418, 837380562\\\" --expected \\\"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\\\" --repro \\\"cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json\\\" --proof \\\"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\\\" --apply\",\n      \"ticket_instruction\": \"If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.\",\n      \"ticket_target\": \"$ask at agent-skills@main\"\n    }\n  },\n  \"providers\": {\n    \"webclaude\": {\n      \"checked_tabs\": [\n        {\n          \"href",
+    "timed_out": false
+  },
+  "degraded_providers": [
+    "webgpt",
+    "webgemini",
+    "webkimi"
+  ],
+  "finished_at_unix": 1786632280,
+  "live": true,
+  "mocked": false,
+  "path": "/mnt/storage12tb/skills/ask/outputs/battle-comprehensive-agentic-evals-webgpt-retry-20260813/ask-tau-create-a-comprehensive-battle-ag-06bc334864e0/browser-provider-availability.json",
+  "provider_probe_recovery_packets": {
+    "webgemini": {
+      "auto_retry_allowed": false,
+      "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+      "checked_tab_ids": [
+        "837385409",
+        "837382179"
+      ],
+      "cooldown_seconds": 0,
+      "evidence": {
+        "checked_tabs": [
+          {
+            "href": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+            "limited": false,
+            "match_source": "main",
+            "matched_snippet": null,
+            "matched_text": null,
+            "returncode": 0,
+            "stderr_tail": "",
+            "stdout_tail": " Markdown Integrity Review\\\\nSurf 1119 Roundtable Smoke Test\\\\nRoundtable Transport Proof Confirmation\\\\nRoundtable Transport Packet Proof\\\\nREADME Review: Sparta Explorer\\\\nREADME Quality and Roundtable Compliance\\\\nREADME Quality and Roundtable Compliance\\\\nProposing Smallest Production Infrastructure Slice\\\\nBattle MVP: Containerized Deployment\\\\nREADME Roundtable Closure Rerun\\\\nSPARTA README Best Practices Roundtable\\\\nSPARTA README Closure Review\\\\nREADME Audit Blocked by Missing Data\\\\nWebSocket Transport MVP Implementation Plan\\\\nGraham Anderson\\\\nWork\\\\n\u2022\\\\nPro\\\\nConversation with Gemini\\\\nCreate images\\\\nTry a template or describe an idea in chat.\\\\nCreate with Nano Banana 2.\\\\nMonochrome\\\\nColor block\\\\nRunway\\\\nTechnicolor\\\\nGothic clay\\\\nDynamite\\\\nSalon\\\\nSketch\\\\nCinematic\\\\nSteampunk\\\\nSunrise\\\\nMythic fighter\\\\nSurreal\\\\nMoody\\\\nEnamel pin\\\\nCyborg\\\\nSoft portrait\\\\nOld cartoon\\\\nOil painting\\\\nLight beams\\\\n\\\\n\\\\n\\\\n\\\\nImages\\\\nThinking\\\\n\\\\n\\\\n\\\",\\\"has_main\\\":true}\"\n",
+            "tab_id": "837385409",
+            "text_excerpt": "Gemini\nUpgrade\nNew chat\nSearch chats\nImages\nVideos\nLibrary\nRecents\nAgent Skills Nightly Review\nReal-Time Co-Pilot Design & Architecture\nAgentic Timeline Viewer Design Updates\nYubico Security Key C NFC Sufficiency\nAgentic Timeline Viewer UX Location\nAgent Skills Review: Risk & Action\nClaude Max OAuth Not Supported\nClaude Extra Usage vs. API Billing\nAshby Registration and Login Guide\nNico's Best Practices Guides\nSetting Up Google Voice on Gmail\nAnimated SVG Focus Ring and Path\nOrca and Herdr Integration\nAI Rater Assesses Proof Workshop Screens\ngrahama.co Blind Distinctiveness Rater Prompt r3 ## ",
+            "timed_out": false,
+            "title": "Google Gemini"
+          },
+          {
+            "returncode": 124,
+            "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+            "stdout_tail": "",
+            "tab_id": "837382179",
+            "timed_out": true
+          }
+        ],
+        "provider_tabs": [
+          {
+            "active": false,
+            "id": 837380559,
+            "title": "Google Gemini",
+            "url": "https://gemini.google.com/app",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837382179,
+            "title": "Google Gemini",
+            "url": "https://gemini.google.com/app",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837385409,
+            "title": "Google Gemini",
+            "url": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+            "windowId": 837380548
+          }
+        ],
+        "tab_count": 3
+      },
+      "failure_code": "browser_provider_probe_timeout",
+      "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webgemini",
+      "provider_limited": false,
+      "schema": "ask.browser_provider_probe_recovery_packet.v1",
+      "status": "DEGRADED",
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgemini\" --target skills/ask --observed \"webgemini provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837385409, 837382179\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+      "ticket_target": "$ask at agent-skills@main"
+    },
+    "webgpt": {
+      "auto_retry_allowed": false,
+      "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+      "checked_tab_ids": [
+        "837389487",
+        "837389483"
+      ],
+      "cooldown_seconds": 0,
+      "evidence": {
+        "checked_tabs": [
+          {
+            "href": "https://chatgpt.com/",
+            "limited": false,
+            "match_source": "main",
+            "matched_snippet": null,
+            "matched_text": null,
+            "returncode": 0,
+            "stderr_tail": "",
+            "stdout_tail": "GPT Retry Analysis\\\\nRepo Analysis and Suggestions\\\\nTau timeline viewer review\\\\nAgentic-evals for Unattended Task\\\\nREADME to Pitch Deck\\\\nNightly skill review\\\\nG2i Inc interview prep\\\\nTau-managed roundtable review\\\\nGraham Anderson Job Research\\\\nExtract-Entities Hardening Review\\\\nTau Timeline UX Review\\\\nTau UX Review\\\\nTau Video Timeline Review\\\\nTau UX Design Review\\\\nTau project video review\\\\nNightly Skill Review\\\\nPortfolio Site Comparison\\\\nSPARTA audit round-2 review\\\\nFingerprint Review Process\\\\nSPARTA audit review\\\\nFingerprint Review Process\\\\nTau roundtable review process\\\\nTau-managed Roundtable Review\\\\nReview of grahama.co candidate\\\\nCaptcha Defeat with Agents\\\\nGraham Anderson\\\\nPro\\\\nChat\\\\nWork\\\\nWhat\u2019s on the agenda today?\\\\n\\\\nPro\\\\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\\\\nFinish the draft reply to Adarsh about the AI Practice Lead role\\\\nBuild a tailored Moog brief for the new agentic AI engineering role\\\",\\\"has_main\\\":true}\"\n",
+            "tab_id": "837389487",
+            "text_excerpt": "What\u2019s on the agenda today?\n\nPro\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\nFinish the draft reply to Adarsh about the AI Practice Lead role\nBuild a tailored Moog brief for the new agentic AI engineering role",
+            "timed_out": false,
+            "title": "ChatGPT"
+          },
+          {
+            "returncode": 124,
+            "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+            "stdout_tail": "",
+            "tab_id": "837389483",
+            "timed_out": true
+          }
+        ],
+        "provider_tabs": [
+          {
+            "active": false,
+            "id": 837385584,
+            "title": "ChatGPT",
+            "url": "https://chatgpt.com/",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837385573,
+            "title": "Advanced Account Security - OpenAI",
+            "url": "https://chatgpt.com/advanced-account-security",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837381240,
+            "title": "Graham Anderson Job Research",
+            "url": "https://chatgpt.com/c/6a7c71f5-0fb4-83ea-ad87-7a7893a6a500",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837382415,
+            "title": "Pitchdeck - Audit pitchdeck skill",
+            "url": "https://chatgpt.com/g/g-p-6a773923324c8191b79a9f49efb88e46-pitchdeck/c/6a773c31-0eac-83ea-84bc-a4968f0bb9e3",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837382423,
+            "title": "Portfolio Site Comparison",
+            "url": "https://chatgpt.com/c/6a7b411a-c9b4-83ea-b06f-6ae3434f0347",
+            "windowId": 837380548
+          },
+          {
+            "active": true,
+            "id": 837382608,
+            "title": "SPARTA audit review",
+            "url": "https://chatgpt.com/c/6a7b6079-9be0-83ea-a91d-d0e1ce6fcc93",
+            "windowId": 837382607
+          },
+          {
+            "active": true,
+            "id": 837385151,
+            "title": "Tau UX Design Review",
+            "url": "https://chatgpt.com/c/6a7c641b-66a0-83ea-8219-a1d63516ca36",
+            "windowId": 837385150
+          },
+          {
+            "active": true,
+            "id": 837385302,
+            "title": "Tau Video Timeline Review",
+            "url": "https://chatgpt.com/c/6a7c717b-fbe4-83ea-ac62-af4fa63e2ab3",
+            "windowId": 837385301
+          },
+          {
+            "active": true,
+            "id": 837389304,
+            "title": "WebGPT Retry Analysis",
+            "url": "https://chatgpt.com/c/6a7dc84a-85f8-83ea-bb71-a8b93848e014",
+            "windowId": 837389303
+          },
+          {
+            "active": true,
+            "id": 837389338,
+            "title": "Watch - Annotation Tracking Code",
+            "url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a453096-f1ac-83ea-b610-eb238c4a4177",
+            "windowId": 837389337
+          },
+          {
+            "active": true,
+            "id": 837389354,
+            "title": "Battle agentic eval design",
+            "url": "https://chatgpt.com/c/6a7dcb6e-ac9c-83ea-8d6d-d9e21f63b73e",
+            "windowId": 837389353
+          },
+          {
+            "active": false,
+            "id": 837389384,
+            "title": "Agentic Evals Design",
+            "url": "https://chatgpt.com/c/6a7dcc60-5a88-83ea-bd75-1da6ffa1e59d",
+            "windowId": 837389383
+          },
+          {
+            "active": false,
+            "id": 837389438,
+            "title": "ChatGPT",
+            "url": "https://chatgpt.com/",
+            "windowId": 837389383
+          },
+          {
+            "active": true,
+            "id": 837389487,
+            "title": "ChatGPT",
+            "url": "https://chatgpt.com/",
+            "windowId": 837389383
+          },
+          {
+            "active": true,
+            "id": 837389473,
+            "title": "Agentic-Evals Design Request",
+            "url": "https://chatgpt.com/c/6a7dd179-1240-83ea-8307-0a034c153fea",
+            "windowId": 837389472
+          },
+          {
+            "active": true,
+            "id": 837389478,
+            "title": "ChatGPT",
+            "url": "https://chatgpt.com/",
+            "windowId": 837389477
+          },
+          {
+            "active": true,
+            "id": 837389483,
+            "title": "ChatGPT",
+            "url": "https://chatgpt.com/",
+            "windowId": 837389482
+          }
+        ],
+        "tab_count": 17
+      },
+      "failure_code": "browser_provider_probe_timeout",
+      "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webgpt",
+      "provider_limited": false,
+      "schema": "ask.browser_provider_probe_recovery_packet.v1",
+      "status": "DEGRADED",
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgpt\" --target skills/ask --observed \"webgpt provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837389487, 837389483\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+      "ticket_target": "$ask at agent-skills@main"
+    },
+    "webkimi": {
+      "auto_retry_allowed": false,
+      "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+      "checked_tab_ids": [
+        "837386418",
+        "837380562"
+      ],
+      "cooldown_seconds": 0,
+      "evidence": {
+        "checked_tabs": [
+          {
+            "href": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+            "limited": false,
+            "match_source": "body",
+            "matched_snippet": null,
+            "matched_text": null,
+            "returncode": 0,
+            "stderr_tail": "",
+            "stdout_tail": "is appropriate for the recipient's level/formality?\\\\nLet me keep it concise and critical as the user prefers.\\\\nThis is meaningfully better than the first draft \u2014 \\\\\\\"stalled\\\\\\\" rescues the project mention from self-sabotage, and \\\\\\\"caught my eye\\\\\\\" replaces hollow hyperbole with something calmer. But it still has a structural problem: the two sentences don't talk to each other. You mention Brandon, then you mention their byline, and the reader has to guess whether those thoughts are related or just two things you remembered in sequence. That ambiguity makes the message feel slightly unfinished.\\\\nA few specific issues remain:\\\\nTypo: (with Sandia Labs ) has a space before the closing parenthesis.\\\\nVague compliment: \\\\\\\"Caught my eye\\\\\\\" is safer than \\\\\\\"best I ever seen,\\\\\\\" but it still doesn't tell them what you noticed. A byline is just a name on an article \u2014 saying it \\\\\\\"caught your eye\\\\\\\" without naming the article, the topic, or the quality you ad\\\",\\\"has_main\\\":false}\"\n",
+            "tab_id": "837386418",
+            "text_excerpt": "New Chat\nCtrl\nK\nMy Kimi\nScheduled Tasks\nCollapse\nSwarm\nSlides\nDeep Research\nWebsites\nDocs\nSheets\nDesign\nKimi Work\nKimi Code\nKimi Claw\nProjects\nNew project\nChats\nAll Chats\nLinkedIn Response Improvement Tips\nCaptcha Bypass via Agents\nGrahama Finish Review G16/G17\nGrahama Finish Review G16-G18\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Issue 1358\nBlind Distinctiveness Rater Prompt\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Prompt\ngrahama.co Post-Repair Review\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Rater Issue\nB",
+            "timed_out": false,
+            "title": "LinkedIn Response Improvement Tips - Kimi"
+          },
+          {
+            "returncode": 124,
+            "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+            "stdout_tail": "",
+            "tab_id": "837380562",
+            "timed_out": true
+          }
+        ],
+        "provider_tabs": [
+          {
+            "active": false,
+            "id": 837380562,
+            "title": "Captcha Bypass via Agents - Kimi",
+            "url": "https://www.kimi.com/chat/19ff13a4-7c12-820e-8000-095c143f136f?chat_enter_method=new_chat",
+            "windowId": 837380548
+          },
+          {
+            "active": false,
+            "id": 837386418,
+            "title": "LinkedIn Response Improvement Tips - Kimi",
+            "url": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+            "windowId": 837380548
+          }
+        ],
+        "tab_count": 2
+      },
+      "failure_code": "browser_provider_probe_timeout",
+      "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webkimi",
+      "provider_limited": false,
+      "schema": "ask.browser_provider_probe_recovery_packet.v1",
+      "status": "DEGRADED",
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webkimi\" --target skills/ask --observed \"webkimi provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837386418, 837380562\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+      "ticket_target": "$ask at agent-skills@main"
+    }
+  },
+  "providers": {
+    "webclaude": {
+      "checked_tabs": [
+        {
+          "href": "https://claude.ai/new",
+          "limited": false,
+          "match_source": "main",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "laude lease_id: 20260806T140727Z-claude-1245 issue: 1245 -->  Lease: maintainer-active by claude. Scope: one ticket. Closure requirement: deterministic proof comment before close.  [grahama1970 2026-08-06T14:09:18] ## #1245/#1246 fixed via discovery evals  Ten graded [local-only path not attached: ask] probes found two real defects; both fixed and re-proven: - #1245: top-level --help omitted team-plan -> added (help now lists team-plan, tau-dag, compete). - #1246: spec_sha256 hashed absolute run_dir/receipt paths -> now hashed over the logical plan only (goal, source_plan, ordered node agent/role/model/deps), invariant to run location, still sensitive to plan changes.  Proof: agentic_eval_discovery.json READY 10/10 (this session, receipts [attached local evidence file ATTACHMENT_1: disc2.json]); 23 unit tests incl. freeze-hash invariance + change-sensitivity.  ## Closure evidence  Machine-checkable record of what proved this closure. The artifact paths are what a\\\",\\\"has_main\\\":true}\"\n",
+          "tab_id": "837389392",
+          "text_excerpt": "What\u2019s cooking, Graham?\nUse caution before running this prompt. Malicious conversation content could trick Claude into attempting harmful actions or sharing your data.\nresults-1268.json\n\n26 lines\n\nJSON\n\nrelease_receipt.json\n\n89 lines\n\nJSON\n\ntheme-migration-receipt.json\n\n56 lines\n\nJSON\n\nstyle_reference.json\n\n159 lines\n\nJSON\n\nproof-1257.md\n\n15 lines\n\nMD\n\nproof-1259.md\n\n24 lines\n\nMD\n\nresults.json\n\n48 lines\n\nJSON\n\nproof-1260.md\n\n11 lines\n\nMD\n\nresults.json\n\n20 lines\n\nJSON\n\nticket-revision.md\n\n14 lines\n\nMD\n\nticket-document.md\n\n16 lines\n\nMD\n\nresults-1266.json\n\n16 lines\n\nJSON\n\nresults-1267.json\n\n16 li",
+          "timed_out": false,
+          "title": "New chat - Claude"
+        },
+        {
+          "href": "https://claude.ai/new",
+          "limited": false,
+          "match_source": "main",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "70 2026-08-07T12:52:55] <!-- agent-lease agent: claude-pitchdeck lease_id: 20260807T125253Z-claude-pitchdeck-1274 issue: 1274 -->  Lease: maintainer-active by claude-pitchdeck. Scope: one ticket. Closure requirement: deterministic proof comment before close.  [grahama1970 2026-08-07T12:55:25] # #1274 \u2014 portable hash-pinned exemplar corpus Commit on main. pitchdeck.style_corpus.v1 (references/style_corpus.json): 11 entries (9 exemplars + 2 anti-exemplars), each with source deck name + sha256 (private-local classification; decks NOT committed), slide numbers, committed image + sha256, render-tool versions, audience, rule, rationale. assets/ is now real committed files (848K), not a 12TB symlink. ## Proof 1. Clean-clone: skill copied to a temp dir; verify ran with pathlib guarded to RAISE on any [local-only path not attached: storage12tb] read \u2014 PASS, exit 0, zero store access. 2. Integrity: every SKILL.md rule reference resolves to a manifest entry; both kinds pres\\\",\\\"has_main\\\":true}\"\n",
+          "tab_id": "837389299",
+          "text_excerpt": "What\u2019s cooking, Graham?\nUse caution before running this prompt. Malicious conversation content could trick Claude into attempting harmful actions or sharing your data.\nresults-1268.json\n\n26 lines\n\nJSON\n\nrelease_receipt.json\n\n89 lines\n\nJSON\n\ntheme-migration-receipt.json\n\n56 lines\n\nJSON\n\nstyle_reference.json\n\n159 lines\n\nJSON\n\nproof-1257.md\n\n15 lines\n\nMD\n\nproof-1259.md\n\n24 lines\n\nMD\n\nresults.json\n\n48 lines\n\nJSON\n\nproof-1260.md\n\n11 lines\n\nMD\n\nresults.json\n\n20 lines\n\nJSON\n\nticket-revision.md\n\n14 lines\n\nMD\n\nticket-document.md\n\n16 lines\n\nMD\n\nresults-1266.json\n\n16 lines\n\nJSON\n\nresults-1267.json\n\n16 li",
+          "timed_out": false,
+          "title": "New chat - Claude"
+        }
+      ],
+      "explicit_tab_ids": [],
+      "explicit_tabs_only": false,
+      "failure_code": null,
+      "probe_degraded": false,
+      "probe_failed": false,
+      "provider": "webclaude",
+      "provider_limited": false,
+      "read_only": true,
+      "tab_count": 28,
+      "tabs": [
+        {
+          "active": false,
+          "id": 837380556,
+          "title": "Font design verification for grahama.co - Claude",
+          "url": "https://claude.ai/chat/00a8699c-76fd-4f24-93e3-fb06bca2e37a",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837382497,
+          "title": "Design review inspection for GitHub issue #1369 - Claude",
+          "url": "https://claude.ai/chat/b4279024-ebed-4baa-ab9b-48d5ed73b023",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837381319,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837381250
+        },
+        {
+          "active": true,
+          "id": 837385102,
+          "title": "Portable exemplar corpus closure audit - Claude",
+          "url": "https://claude.ai/chat/2af1496c-3d99-4349-b7cc-9a995819174f",
+          "windowId": 837385101
+        },
+        {
+          "active": true,
+          "id": 837385271,
+          "title": "SVG sanitization audit for pitchdeck closure - Claude",
+          "url": "https://claude.ai/chat/8917cfda-10e4-44c6-9957-855824e088b3",
+          "windowId": 837385270
+        },
+        {
+          "active": true,
+          "id": 837385324,
+          "title": "Audit ticket closure for help command discovery fix - Claude",
+          "url": "https://claude.ai/chat/06e29bc3-1920-4d9d-925c-c23d28a31ea8",
+          "windowId": 837385323
+        },
+        {
+          "active": true,
+          "id": 837385595,
+          "title": "WebGPT ask-provisioned tab delivery audit - Claude",
+          "url": "https://claude.ai/chat/84c74b89-a77c-42e1-8123-3791f6143aa0",
+          "windowId": 837385594
+        },
+        {
+          "active": true,
+          "id": 837385993,
+          "title": "Audit renderer purity and theme state isolation in pitchdeck - Claude",
+          "url": "https://claude.ai/chat/8bc8bd9e-2584-4725-acba-d0e0116506e7",
+          "windowId": 837385992
+        },
+        {
+          "active": true,
+          "id": 837386005,
+          "title": "SVG sanitization audit for ticket closure - Claude",
+          "url": "https://claude.ai/chat/8675c421-fc78-4bb9-a610-c37e8c8a80f2",
+          "windowId": 837386004
+        },
+        {
+          "active": true,
+          "id": 837386173,
+          "title": "Audit renderer purity and theme state isolation in pitchdeck - Claude",
+          "url": "https://claude.ai/chat/ded9af10-2601-4cb1-a1be-ac879114c728",
+          "windowId": 837386172
+        },
+        {
+          "active": true,
+          "id": 837386182,
+          "title": "SVG sanitization audit for pitchdeck closure #1268 - Claude",
+          "url": "https://claude.ai/chat/9d679560-335a-4413-8677-97400f70a6bb",
+          "windowId": 837386181
+        },
+        {
+          "active": true,
+          "id": 837386189,
+          "title": "Portable exemplar corpus audit for slide design skill - Claude",
+          "url": "https://claude.ai/chat/cb22e861-c549-445c-8f88-b49a03951df9",
+          "windowId": 837386188
+        },
+        {
+          "active": true,
+          "id": 837386204,
+          "title": "Audit ticket #1243 closure: compete judge and report features - Claude",
+          "url": "https://claude.ai/chat/60c08ff1-1daf-4290-ae63-3ee4e3acee28",
+          "windowId": 837386203
+        },
+        {
+          "active": true,
+          "id": 837386209,
+          "title": "Audit ticket closure for spec_sha256 hash reproducibility fix - Claude",
+          "url": "https://claude.ai/chat/34312058-f113-406c-9555-c8387de895c1",
+          "windowId": 837386208
+        },
+        {
+          "active": true,
+          "id": 837386560,
+          "title": "Audit staged atomic export transaction closure - Claude",
+          "url": "https://claude.ai/chat/c2c8b14d-a937-47e6-9db4-2b2ad44712a5",
+          "windowId": 837386559
+        },
+        {
+          "active": true,
+          "id": 837388014,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388013
+        },
+        {
+          "active": true,
+          "id": 837388021,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388020
+        },
+        {
+          "active": true,
+          "id": 837388028,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388027
+        },
+        {
+          "active": true,
+          "id": 837388037,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388036
+        },
+        {
+          "active": true,
+          "id": 837388044,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388043
+        },
+        {
+          "active": true,
+          "id": 837388792,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837388791
+        },
+        {
+          "active": true,
+          "id": 837389136,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837389135
+        },
+        {
+          "active": true,
+          "id": 837389225,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837389224
+        },
+        {
+          "active": true,
+          "id": 837389244,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837389243
+        },
+        {
+          "active": true,
+          "id": 837389264,
+          "title": "New chat - Claude",
+          "url": "https://claude.ai/new",
+          "windowId": 837389263
+        }
+      ]
+    },
+    "webgemini": {
+      "checked_tabs": [
+        {
+          "href": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+          "limited": false,
+          "match_source": "main",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": " Markdown Integrity Review\\\\nSurf 1119 Roundtable Smoke Test\\\\nRoundtable Transport Proof Confirmation\\\\nRoundtable Transport Packet Proof\\\\nREADME Review: Sparta Explorer\\\\nREADME Quality and Roundtable Compliance\\\\nREADME Quality and Roundtable Compliance\\\\nProposing Smallest Production Infrastructure Slice\\\\nBattle MVP: Containerized Deployment\\\\nREADME Roundtable Closure Rerun\\\\nSPARTA README Best Practices Roundtable\\\\nSPARTA README Closure Review\\\\nREADME Audit Blocked by Missing Data\\\\nWebSocket Transport MVP Implementation Plan\\\\nGraham Anderson\\\\nWork\\\\n\u2022\\\\nPro\\\\nConversation with Gemini\\\\nCreate images\\\\nTry a template or describe an idea in chat.\\\\nCreate with Nano Banana 2.\\\\nMonochrome\\\\nColor block\\\\nRunway\\\\nTechnicolor\\\\nGothic clay\\\\nDynamite\\\\nSalon\\\\nSketch\\\\nCinematic\\\\nSteampunk\\\\nSunrise\\\\nMythic fighter\\\\nSurreal\\\\nMoody\\\\nEnamel pin\\\\nCyborg\\\\nSoft portrait\\\\nOld cartoon\\\\nOil painting\\\\nLight beams\\\\n\\\\n\\\\n\\\\n\\\\nImages\\\\nThinking\\\\n\\\\n\\\\n\\\",\\\"has_main\\\":true}\"\n",
+          "tab_id": "837385409",
+          "text_excerpt": "Gemini\nUpgrade\nNew chat\nSearch chats\nImages\nVideos\nLibrary\nRecents\nAgent Skills Nightly Review\nReal-Time Co-Pilot Design & Architecture\nAgentic Timeline Viewer Design Updates\nYubico Security Key C NFC Sufficiency\nAgentic Timeline Viewer UX Location\nAgent Skills Review: Risk & Action\nClaude Max OAuth Not Supported\nClaude Extra Usage vs. API Billing\nAshby Registration and Login Guide\nNico's Best Practices Guides\nSetting Up Google Voice on Gmail\nAnimated SVG Focus Ring and Path\nOrca and Herdr Integration\nAI Rater Assesses Proof Workshop Screens\ngrahama.co Blind Distinctiveness Rater Prompt r3 ## ",
+          "timed_out": false,
+          "title": "Google Gemini"
+        },
+        {
+          "returncode": 124,
+          "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+          "stdout_tail": "",
+          "tab_id": "837382179",
+          "timed_out": true
+        }
+      ],
+      "explicit_tab_ids": [],
+      "explicit_tabs_only": false,
+      "failure_code": "browser_provider_probe_timeout",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webgemini",
+      "provider_limited": false,
+      "provider_probe_recovery_packet": {
+        "auto_retry_allowed": false,
+        "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+        "checked_tab_ids": [
+          "837385409",
+          "837382179"
+        ],
+        "cooldown_seconds": 0,
+        "evidence": {
+          "checked_tabs": [
+            {
+              "href": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+              "limited": false,
+              "match_source": "main",
+              "matched_snippet": null,
+              "matched_text": null,
+              "returncode": 0,
+              "stderr_tail": "",
+              "stdout_tail": " Markdown Integrity Review\\\\nSurf 1119 Roundtable Smoke Test\\\\nRoundtable Transport Proof Confirmation\\\\nRoundtable Transport Packet Proof\\\\nREADME Review: Sparta Explorer\\\\nREADME Quality and Roundtable Compliance\\\\nREADME Quality and Roundtable Compliance\\\\nProposing Smallest Production Infrastructure Slice\\\\nBattle MVP: Containerized Deployment\\\\nREADME Roundtable Closure Rerun\\\\nSPARTA README Best Practices Roundtable\\\\nSPARTA README Closure Review\\\\nREADME Audit Blocked by Missing Data\\\\nWebSocket Transport MVP Implementation Plan\\\\nGraham Anderson\\\\nWork\\\\n\u2022\\\\nPro\\\\nConversation with Gemini\\\\nCreate images\\\\nTry a template or describe an idea in chat.\\\\nCreate with Nano Banana 2.\\\\nMonochrome\\\\nColor block\\\\nRunway\\\\nTechnicolor\\\\nGothic clay\\\\nDynamite\\\\nSalon\\\\nSketch\\\\nCinematic\\\\nSteampunk\\\\nSunrise\\\\nMythic fighter\\\\nSurreal\\\\nMoody\\\\nEnamel pin\\\\nCyborg\\\\nSoft portrait\\\\nOld cartoon\\\\nOil painting\\\\nLight beams\\\\n\\\\n\\\\n\\\\n\\\\nImages\\\\nThinking\\\\n\\\\n\\\\n\\\",\\\"has_main\\\":true}\"\n",
+              "tab_id": "837385409",
+              "text_excerpt": "Gemini\nUpgrade\nNew chat\nSearch chats\nImages\nVideos\nLibrary\nRecents\nAgent Skills Nightly Review\nReal-Time Co-Pilot Design & Architecture\nAgentic Timeline Viewer Design Updates\nYubico Security Key C NFC Sufficiency\nAgentic Timeline Viewer UX Location\nAgent Skills Review: Risk & Action\nClaude Max OAuth Not Supported\nClaude Extra Usage vs. API Billing\nAshby Registration and Login Guide\nNico's Best Practices Guides\nSetting Up Google Voice on Gmail\nAnimated SVG Focus Ring and Path\nOrca and Herdr Integration\nAI Rater Assesses Proof Workshop Screens\ngrahama.co Blind Distinctiveness Rater Prompt r3 ## ",
+              "timed_out": false,
+              "title": "Google Gemini"
+            },
+            {
+              "returncode": 124,
+              "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+              "stdout_tail": "",
+              "tab_id": "837382179",
+              "timed_out": true
+            }
+          ],
+          "provider_tabs": [
+            {
+              "active": false,
+              "id": 837380559,
+              "title": "Google Gemini",
+              "url": "https://gemini.google.com/app",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837382179,
+              "title": "Google Gemini",
+              "url": "https://gemini.google.com/app",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837385409,
+              "title": "Google Gemini",
+              "url": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+              "windowId": 837380548
+            }
+          ],
+          "tab_count": 3
+        },
+        "failure_code": "browser_provider_probe_timeout",
+        "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+        "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json",
+        "probe_degraded": true,
+        "probe_failed": false,
+        "provider": "webgemini",
+        "provider_limited": false,
+        "schema": "ask.browser_provider_probe_recovery_packet.v1",
+        "status": "DEGRADED",
+        "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgemini\" --target skills/ask --observed \"webgemini provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837385409, 837382179\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+        "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+        "ticket_target": "$ask at agent-skills@main"
+      },
+      "read_only": true,
+      "tab_count": 3,
+      "tabs": [
+        {
+          "active": false,
+          "id": 837380559,
+          "title": "Google Gemini",
+          "url": "https://gemini.google.com/app",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837382179,
+          "title": "Google Gemini",
+          "url": "https://gemini.google.com/app",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837385409,
+          "title": "Google Gemini",
+          "url": "https://gemini.google.com/app?android-min-version=301356232&ios-min-version=322.0&is_sa=1&hl=en-US&utm_campaign=microsite_gemini_image_generation_page&icid=microsite_gemini_image_generation_page&utm_source=gemini&utm_medium=web&_gl=1*ntp8m0*_gcl_au*MTU1NTMzNzQxMi4xNzg2NTQxODg4*_ga*MTIyNjM5MzAyMC4xNzg2NTQxODg4*_ga_WC57KJ50ZZ*czE3ODY1NDE4ODgkbzEkZzAkdDE3ODY1NDE4ODgkajYwJGwwJGgw",
+          "windowId": 837380548
+        }
+      ],
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgemini\" --target skills/ask --observed \"webgemini provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837385409, 837382179\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgemini --tab-id webgemini=837385409 --tab-id webgemini=837382179 --output /tmp/ask-browser-availability-webgemini.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry."
+    },
+    "webgpt": {
+      "checked_tabs": [
+        {
+          "href": "https://chatgpt.com/",
+          "limited": false,
+          "match_source": "main",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "GPT Retry Analysis\\\\nRepo Analysis and Suggestions\\\\nTau timeline viewer review\\\\nAgentic-evals for Unattended Task\\\\nREADME to Pitch Deck\\\\nNightly skill review\\\\nG2i Inc interview prep\\\\nTau-managed roundtable review\\\\nGraham Anderson Job Research\\\\nExtract-Entities Hardening Review\\\\nTau Timeline UX Review\\\\nTau UX Review\\\\nTau Video Timeline Review\\\\nTau UX Design Review\\\\nTau project video review\\\\nNightly Skill Review\\\\nPortfolio Site Comparison\\\\nSPARTA audit round-2 review\\\\nFingerprint Review Process\\\\nSPARTA audit review\\\\nFingerprint Review Process\\\\nTau roundtable review process\\\\nTau-managed Roundtable Review\\\\nReview of grahama.co candidate\\\\nCaptcha Defeat with Agents\\\\nGraham Anderson\\\\nPro\\\\nChat\\\\nWork\\\\nWhat\u2019s on the agenda today?\\\\n\\\\nPro\\\\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\\\\nFinish the draft reply to Adarsh about the AI Practice Lead role\\\\nBuild a tailored Moog brief for the new agentic AI engineering role\\\",\\\"has_main\\\":true}\"\n",
+          "tab_id": "837389487",
+          "text_excerpt": "What\u2019s on the agenda today?\n\nPro\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\nFinish the draft reply to Adarsh about the AI Practice Lead role\nBuild a tailored Moog brief for the new agentic AI engineering role",
+          "timed_out": false,
+          "title": "ChatGPT"
+        },
+        {
+          "returncode": 124,
+          "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+          "stdout_tail": "",
+          "tab_id": "837389483",
+          "timed_out": true
+        }
+      ],
+      "explicit_tab_ids": [],
+      "explicit_tabs_only": false,
+      "failure_code": "browser_provider_probe_timeout",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webgpt",
+      "provider_limited": false,
+      "provider_probe_recovery_packet": {
+        "auto_retry_allowed": false,
+        "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+        "checked_tab_ids": [
+          "837389487",
+          "837389483"
+        ],
+        "cooldown_seconds": 0,
+        "evidence": {
+          "checked_tabs": [
+            {
+              "href": "https://chatgpt.com/",
+              "limited": false,
+              "match_source": "main",
+              "matched_snippet": null,
+              "matched_text": null,
+              "returncode": 0,
+              "stderr_tail": "",
+              "stdout_tail": "GPT Retry Analysis\\\\nRepo Analysis and Suggestions\\\\nTau timeline viewer review\\\\nAgentic-evals for Unattended Task\\\\nREADME to Pitch Deck\\\\nNightly skill review\\\\nG2i Inc interview prep\\\\nTau-managed roundtable review\\\\nGraham Anderson Job Research\\\\nExtract-Entities Hardening Review\\\\nTau Timeline UX Review\\\\nTau UX Review\\\\nTau Video Timeline Review\\\\nTau UX Design Review\\\\nTau project video review\\\\nNightly Skill Review\\\\nPortfolio Site Comparison\\\\nSPARTA audit round-2 review\\\\nFingerprint Review Process\\\\nSPARTA audit review\\\\nFingerprint Review Process\\\\nTau roundtable review process\\\\nTau-managed Roundtable Review\\\\nReview of grahama.co candidate\\\\nCaptcha Defeat with Agents\\\\nGraham Anderson\\\\nPro\\\\nChat\\\\nWork\\\\nWhat\u2019s on the agenda today?\\\\n\\\\nPro\\\\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\\\\nFinish the draft reply to Adarsh about the AI Practice Lead role\\\\nBuild a tailored Moog brief for the new agentic AI engineering role\\\",\\\"has_main\\\":true}\"\n",
+              "tab_id": "837389487",
+              "text_excerpt": "What\u2019s on the agenda today?\n\nPro\nPrepare for Monday\u2019s G2i agentic technical interview with Bruno Klein\nFinish the draft reply to Adarsh about the AI Practice Lead role\nBuild a tailored Moog brief for the new agentic AI engineering role",
+              "timed_out": false,
+              "title": "ChatGPT"
+            },
+            {
+              "returncode": 124,
+              "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+              "stdout_tail": "",
+              "tab_id": "837389483",
+              "timed_out": true
+            }
+          ],
+          "provider_tabs": [
+            {
+              "active": false,
+              "id": 837385584,
+              "title": "ChatGPT",
+              "url": "https://chatgpt.com/",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837385573,
+              "title": "Advanced Account Security - OpenAI",
+              "url": "https://chatgpt.com/advanced-account-security",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837381240,
+              "title": "Graham Anderson Job Research",
+              "url": "https://chatgpt.com/c/6a7c71f5-0fb4-83ea-ad87-7a7893a6a500",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837382415,
+              "title": "Pitchdeck - Audit pitchdeck skill",
+              "url": "https://chatgpt.com/g/g-p-6a773923324c8191b79a9f49efb88e46-pitchdeck/c/6a773c31-0eac-83ea-84bc-a4968f0bb9e3",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837382423,
+              "title": "Portfolio Site Comparison",
+              "url": "https://chatgpt.com/c/6a7b411a-c9b4-83ea-b06f-6ae3434f0347",
+              "windowId": 837380548
+            },
+            {
+              "active": true,
+              "id": 837382608,
+              "title": "SPARTA audit review",
+              "url": "https://chatgpt.com/c/6a7b6079-9be0-83ea-a91d-d0e1ce6fcc93",
+              "windowId": 837382607
+            },
+            {
+              "active": true,
+              "id": 837385151,
+              "title": "Tau UX Design Review",
+              "url": "https://chatgpt.com/c/6a7c641b-66a0-83ea-8219-a1d63516ca36",
+              "windowId": 837385150
+            },
+            {
+              "active": true,
+              "id": 837385302,
+              "title": "Tau Video Timeline Review",
+              "url": "https://chatgpt.com/c/6a7c717b-fbe4-83ea-ac62-af4fa63e2ab3",
+              "windowId": 837385301
+            },
+            {
+              "active": true,
+              "id": 837389304,
+              "title": "WebGPT Retry Analysis",
+              "url": "https://chatgpt.com/c/6a7dc84a-85f8-83ea-bb71-a8b93848e014",
+              "windowId": 837389303
+            },
+            {
+              "active": true,
+              "id": 837389338,
+              "title": "Watch - Annotation Tracking Code",
+              "url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a453096-f1ac-83ea-b610-eb238c4a4177",
+              "windowId": 837389337
+            },
+            {
+              "active": true,
+              "id": 837389354,
+              "title": "Battle agentic eval design",
+              "url": "https://chatgpt.com/c/6a7dcb6e-ac9c-83ea-8d6d-d9e21f63b73e",
+              "windowId": 837389353
+            },
+            {
+              "active": false,
+              "id": 837389384,
+              "title": "Agentic Evals Design",
+              "url": "https://chatgpt.com/c/6a7dcc60-5a88-83ea-bd75-1da6ffa1e59d",
+              "windowId": 837389383
+            },
+            {
+              "active": false,
+              "id": 837389438,
+              "title": "ChatGPT",
+              "url": "https://chatgpt.com/",
+              "windowId": 837389383
+            },
+            {
+              "active": true,
+              "id": 837389487,
+              "title": "ChatGPT",
+              "url": "https://chatgpt.com/",
+              "windowId": 837389383
+            },
+            {
+              "active": true,
+              "id": 837389473,
+              "title": "Agentic-Evals Design Request",
+              "url": "https://chatgpt.com/c/6a7dd179-1240-83ea-8307-0a034c153fea",
+              "windowId": 837389472
+            },
+            {
+              "active": true,
+              "id": 837389478,
+              "title": "ChatGPT",
+              "url": "https://chatgpt.com/",
+              "windowId": 837389477
+            },
+            {
+              "active": true,
+              "id": 837389483,
+              "title": "ChatGPT",
+              "url": "https://chatgpt.com/",
+              "windowId": 837389482
+            }
+          ],
+          "tab_count": 17
+        },
+        "failure_code": "browser_provider_probe_timeout",
+        "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+        "next_command": "cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json",
+        "probe_degraded": true,
+        "probe_failed": false,
+        "provider": "webgpt",
+        "provider_limited": false,
+        "schema": "ask.browser_provider_probe_recovery_packet.v1",
+        "status": "DEGRADED",
+        "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgpt\" --target skills/ask --observed \"webgpt provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837389487, 837389483\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+        "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+        "ticket_target": "$ask at agent-skills@main"
+      },
+      "read_only": true,
+      "tab_count": 17,
+      "tabs": [
+        {
+          "active": false,
+          "id": 837385584,
+          "title": "ChatGPT",
+          "url": "https://chatgpt.com/",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837385573,
+          "title": "Advanced Account Security - OpenAI",
+          "url": "https://chatgpt.com/advanced-account-security",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837381240,
+          "title": "Graham Anderson Job Research",
+          "url": "https://chatgpt.com/c/6a7c71f5-0fb4-83ea-ad87-7a7893a6a500",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837382415,
+          "title": "Pitchdeck - Audit pitchdeck skill",
+          "url": "https://chatgpt.com/g/g-p-6a773923324c8191b79a9f49efb88e46-pitchdeck/c/6a773c31-0eac-83ea-84bc-a4968f0bb9e3",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837382423,
+          "title": "Portfolio Site Comparison",
+          "url": "https://chatgpt.com/c/6a7b411a-c9b4-83ea-b06f-6ae3434f0347",
+          "windowId": 837380548
+        },
+        {
+          "active": true,
+          "id": 837382608,
+          "title": "SPARTA audit review",
+          "url": "https://chatgpt.com/c/6a7b6079-9be0-83ea-a91d-d0e1ce6fcc93",
+          "windowId": 837382607
+        },
+        {
+          "active": true,
+          "id": 837385151,
+          "title": "Tau UX Design Review",
+          "url": "https://chatgpt.com/c/6a7c641b-66a0-83ea-8219-a1d63516ca36",
+          "windowId": 837385150
+        },
+        {
+          "active": true,
+          "id": 837385302,
+          "title": "Tau Video Timeline Review",
+          "url": "https://chatgpt.com/c/6a7c717b-fbe4-83ea-ac62-af4fa63e2ab3",
+          "windowId": 837385301
+        },
+        {
+          "active": true,
+          "id": 837389304,
+          "title": "WebGPT Retry Analysis",
+          "url": "https://chatgpt.com/c/6a7dc84a-85f8-83ea-bb71-a8b93848e014",
+          "windowId": 837389303
+        },
+        {
+          "active": true,
+          "id": 837389338,
+          "title": "Watch - Annotation Tracking Code",
+          "url": "https://chatgpt.com/g/g-p-6a3c1fa17b00819181834439378267b1-watch/c/6a453096-f1ac-83ea-b610-eb238c4a4177",
+          "windowId": 837389337
+        },
+        {
+          "active": true,
+          "id": 837389354,
+          "title": "Battle agentic eval design",
+          "url": "https://chatgpt.com/c/6a7dcb6e-ac9c-83ea-8d6d-d9e21f63b73e",
+          "windowId": 837389353
+        },
+        {
+          "active": false,
+          "id": 837389384,
+          "title": "Agentic Evals Design",
+          "url": "https://chatgpt.com/c/6a7dcc60-5a88-83ea-bd75-1da6ffa1e59d",
+          "windowId": 837389383
+        },
+        {
+          "active": false,
+          "id": 837389438,
+          "title": "ChatGPT",
+          "url": "https://chatgpt.com/",
+          "windowId": 837389383
+        },
+        {
+          "active": true,
+          "id": 837389487,
+          "title": "ChatGPT",
+          "url": "https://chatgpt.com/",
+          "windowId": 837389383
+        },
+        {
+          "active": true,
+          "id": 837389473,
+          "title": "Agentic-Evals Design Request",
+          "url": "https://chatgpt.com/c/6a7dd179-1240-83ea-8307-0a034c153fea",
+          "windowId": 837389472
+        },
+        {
+          "active": true,
+          "id": 837389478,
+          "title": "ChatGPT",
+          "url": "https://chatgpt.com/",
+          "windowId": 837389477
+        },
+        {
+          "active": true,
+          "id": 837389483,
+          "title": "ChatGPT",
+          "url": "https://chatgpt.com/",
+          "windowId": 837389482
+        }
+      ],
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webgpt\" --target skills/ask --observed \"webgpt provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837389487, 837389483\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webgpt --tab-id webgpt=837389487 --tab-id webgpt=837389483 --output /tmp/ask-browser-availability-webgpt.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry."
+    },
+    "webgrok": {
+      "checked_tabs": [
+        {
+          "href": "https://grok.com/c/c2786838-88a9-4c20-94f2-7acc2f4b6114?rid=c1bd671e-5c13-4009-83f2-a64dd41890cf",
+          "limited": false,
+          "match_source": "main",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "ted sites are immediately recognizable and penalized.\\\\nMinimal framework, maximal intentionality. Coherent spacing systems, negative space as a design element, and a single defended creative direction (here: classical serif monogram + precise brass accent on near-black/off-white).\\\\n\\\\nThe exploration sits comfortably inside these standards: refined two-tone identity, strong typographic hierarchy, and a monogram that functions as both mark and signature. Applied to the live site\u2019s existing content architecture (public evidence, running code, formal methods), it would support rather than fight the 2026 preference for craft + legibility + performance.\\\\n\\\\nBottom line: The font/monogram design is a faithful, elevated expression of what is already on grahama.co. It aligns with current award-winning practice for high-design technical/R&D sites by prioritizing a distinctive, usable, high-contrast identity over trend-chasing effects.\\\\n\\\\n45 sources\\\\n\\\\n\\\\n\\\\n\\\\nFast\\\",\\\"has_main\\\":true}\"\n",
+          "tab_id": "837380565",
+          "text_excerpt": "can you verify if this font design matches the site https://grahama.co Look at best practices for award winning high design R&D sites in 2026, use your web search.\n\nWorked for 24s\n\nYes \u2014 the provided identity exploration closely matches and extends the live branding on https://grahama.co.\u2060Grahama\n\nDirect match to the live site\n\nThe site (Graham Anderson / grahama.co \u2014 \u201cagent systems that prove what they did\u201d) already uses the Gc monogram and \u201cgrahamco\u201d lockup notation. The page content opens with \u201c[G c grahama .co]\u201d and repeatedly references the same precise signature style. The exploration\u2019s ",
+          "timed_out": false,
+          "title": "Grahama.co Monogram Refined for 2026 Design - Grok"
+        }
+      ],
+      "explicit_tab_ids": [],
+      "explicit_tabs_only": false,
+      "failure_code": null,
+      "probe_degraded": false,
+      "probe_failed": false,
+      "provider": "webgrok",
+      "provider_limited": false,
+      "read_only": true,
+      "tab_count": 1,
+      "tabs": [
+        {
+          "active": false,
+          "id": 837380565,
+          "title": "Grahama.co Monogram Refined for 2026 Design - Grok",
+          "url": "https://grok.com/c/c2786838-88a9-4c20-94f2-7acc2f4b6114?rid=c1bd671e-5c13-4009-83f2-a64dd41890cf",
+          "windowId": 837380548
+        }
+      ]
+    },
+    "webkimi": {
+      "checked_tabs": [
+        {
+          "href": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+          "limited": false,
+          "match_source": "body",
+          "matched_snippet": null,
+          "matched_text": null,
+          "returncode": 0,
+          "stderr_tail": "",
+          "stdout_tail": "is appropriate for the recipient's level/formality?\\\\nLet me keep it concise and critical as the user prefers.\\\\nThis is meaningfully better than the first draft \u2014 \\\\\\\"stalled\\\\\\\" rescues the project mention from self-sabotage, and \\\\\\\"caught my eye\\\\\\\" replaces hollow hyperbole with something calmer. But it still has a structural problem: the two sentences don't talk to each other. You mention Brandon, then you mention their byline, and the reader has to guess whether those thoughts are related or just two things you remembered in sequence. That ambiguity makes the message feel slightly unfinished.\\\\nA few specific issues remain:\\\\nTypo: (with Sandia Labs ) has a space before the closing parenthesis.\\\\nVague compliment: \\\\\\\"Caught my eye\\\\\\\" is safer than \\\\\\\"best I ever seen,\\\\\\\" but it still doesn't tell them what you noticed. A byline is just a name on an article \u2014 saying it \\\\\\\"caught your eye\\\\\\\" without naming the article, the topic, or the quality you ad\\\",\\\"has_main\\\":false}\"\n",
+          "tab_id": "837386418",
+          "text_excerpt": "New Chat\nCtrl\nK\nMy Kimi\nScheduled Tasks\nCollapse\nSwarm\nSlides\nDeep Research\nWebsites\nDocs\nSheets\nDesign\nKimi Work\nKimi Code\nKimi Claw\nProjects\nNew project\nChats\nAll Chats\nLinkedIn Response Improvement Tips\nCaptcha Bypass via Agents\nGrahama Finish Review G16/G17\nGrahama Finish Review G16-G18\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Issue 1358\nBlind Distinctiveness Rater Prompt\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Prompt\ngrahama.co Post-Repair Review\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Rater Issue\nB",
+          "timed_out": false,
+          "title": "LinkedIn Response Improvement Tips - Kimi"
+        },
+        {
+          "returncode": 124,
+          "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+          "stdout_tail": "",
+          "tab_id": "837380562",
+          "timed_out": true
+        }
+      ],
+      "explicit_tab_ids": [],
+      "explicit_tabs_only": false,
+      "failure_code": "browser_provider_probe_timeout",
+      "next_command": "cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json",
+      "probe_degraded": true,
+      "probe_failed": false,
+      "provider": "webkimi",
+      "provider_limited": false,
+      "provider_probe_recovery_packet": {
+        "auto_retry_allowed": false,
+        "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+        "checked_tab_ids": [
+          "837386418",
+          "837380562"
+        ],
+        "cooldown_seconds": 0,
+        "evidence": {
+          "checked_tabs": [
+            {
+              "href": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+              "limited": false,
+              "match_source": "body",
+              "matched_snippet": null,
+              "matched_text": null,
+              "returncode": 0,
+              "stderr_tail": "",
+              "stdout_tail": "is appropriate for the recipient's level/formality?\\\\nLet me keep it concise and critical as the user prefers.\\\\nThis is meaningfully better than the first draft \u2014 \\\\\\\"stalled\\\\\\\" rescues the project mention from self-sabotage, and \\\\\\\"caught my eye\\\\\\\" replaces hollow hyperbole with something calmer. But it still has a structural problem: the two sentences don't talk to each other. You mention Brandon, then you mention their byline, and the reader has to guess whether those thoughts are related or just two things you remembered in sequence. That ambiguity makes the message feel slightly unfinished.\\\\nA few specific issues remain:\\\\nTypo: (with Sandia Labs ) has a space before the closing parenthesis.\\\\nVague compliment: \\\\\\\"Caught my eye\\\\\\\" is safer than \\\\\\\"best I ever seen,\\\\\\\" but it still doesn't tell them what you noticed. A byline is just a name on an article \u2014 saying it \\\\\\\"caught your eye\\\\\\\" without naming the article, the topic, or the quality you ad\\\",\\\"has_main\\\":false}\"\n",
+              "tab_id": "837386418",
+              "text_excerpt": "New Chat\nCtrl\nK\nMy Kimi\nScheduled Tasks\nCollapse\nSwarm\nSlides\nDeep Research\nWebsites\nDocs\nSheets\nDesign\nKimi Work\nKimi Code\nKimi Claw\nProjects\nNew project\nChats\nAll Chats\nLinkedIn Response Improvement Tips\nCaptcha Bypass via Agents\nGrahama Finish Review G16/G17\nGrahama Finish Review G16-G18\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Issue 1358\nBlind Distinctiveness Rater Prompt\nBlind Distinctiveness Rater Issue\nBlind Distinctiveness Rater Prompt\ngrahama.co Post-Repair Review\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Issue 1358\nBlind Distinctiveness Rater Issue\nB",
+              "timed_out": false,
+              "title": "LinkedIn Response Improvement Tips - Kimi"
+            },
+            {
+              "returncode": 124,
+              "stderr_tail": "\n[provider-availability] command timed out after 20s; killed process group\n",
+              "stdout_tail": "",
+              "tab_id": "837380562",
+              "timed_out": true
+            }
+          ],
+          "provider_tabs": [
+            {
+              "active": false,
+              "id": 837380562,
+              "title": "Captcha Bypass via Agents - Kimi",
+              "url": "https://www.kimi.com/chat/19ff13a4-7c12-820e-8000-095c143f136f?chat_enter_method=new_chat",
+              "windowId": 837380548
+            },
+            {
+              "active": false,
+              "id": 837386418,
+              "title": "LinkedIn Response Improvement Tips - Kimi",
+              "url": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+              "windowId": 837380548
+            }
+          ],
+          "tab_count": 2
+        },
+        "failure_code": "browser_provider_probe_timeout",
+        "fallback_instruction": "Do not block healthy roundtable or competition participants on this probe. Rerun only this provider availability probe, or use Ask's browser provider selection to replace this lane when enough alternatives are available.",
+        "next_command": "cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json",
+        "probe_degraded": true,
+        "probe_failed": false,
+        "provider": "webkimi",
+        "provider_limited": false,
+        "schema": "ask.browser_provider_probe_recovery_packet.v1",
+        "status": "DEGRADED",
+        "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webkimi\" --target skills/ask --observed \"webkimi provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837386418, 837380562\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+        "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry.",
+        "ticket_target": "$ask at agent-skills@main"
+      },
+      "read_only": true,
+      "tab_count": 2,
+      "tabs": [
+        {
+          "active": false,
+          "id": 837380562,
+          "title": "Captcha Bypass via Agents - Kimi",
+          "url": "https://www.kimi.com/chat/19ff13a4-7c12-820e-8000-095c143f136f?chat_enter_method=new_chat",
+          "windowId": 837380548
+        },
+        {
+          "active": false,
+          "id": 837386418,
+          "title": "LinkedIn Response Improvement Tips - Kimi",
+          "url": "https://www.kimi.com/chat/19ff763e-3b82-862a-8000-095c44321acc?chat_enter_method=home",
+          "windowId": 837380548
+        }
+      ],
+      "ticket_command": "skills/ticket/run.sh bug \"Ask browser availability probe degraded for webkimi\" --target skills/ask --observed \"webkimi provider availability probe degraded with browser_provider_probe_timeout; checked tabs: 837386418, 837380562\" --expected \"The provider probe reads reliably or emits a recoverable, lane-local availability uncertainty packet.\" --repro \"cd skills/ask && ./run.sh browser-availability --provider webkimi --tab-id webkimi=837386418 --tab-id webkimi=837380562 --output /tmp/ask-browser-availability-webkimi.json --json\" --proof \"Non-mocked browser-availability receipt showing the provider either reads cleanly, is visibly provider-limited, or emits this recovery packet without blocking healthy providers.\" --apply",
+      "ticket_instruction": "If this provider remains degraded after rerunning next_command, if the provider is needed for the Ask workflow, or if the packet lacks enough evidence to recover, file a $ticket to $ask at agent-skills@main with browser-provider-availability.json and the provider entry."
+    }
+  },
+  "requested_providers": [
+    "webgpt",
+    "webclaude",
+    "webgemini",
+    "webkimi",
+    "webgrok"
+  ],
+  "schema": "ask.browser_provider_availability.v1",
+  "started_at_unix": 1786632209,
+  "status": "AVAILABLE_PREFLIGHT",
+  "surf_run": "/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh",
+  "tab_list": {
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "45,\n    \"title\": \"Search | LinkedIn\",\n    \"url\": \"https://www.linkedin.com/search/results/people/?keywords=AI%20engineering&network=%5B%22F%22%2C%22S%22%5D&activelyHiringForJobTitles=%5B%22-100%22%5D\",\n    \"active\": false,\n    \"windowId\": 837389383\n  },\n  {\n    \"id\": 837389487,\n    \"title\": \"ChatGPT\",\n    \"url\": \"https://chatgpt.com/\",\n    \"active\": true,\n    \"windowId\": 837389383\n  },\n  {\n    \"id\": 837389392,\n    \"title\": \"New chat - Claude\",\n    \"url\": \"https://claude.ai/new\",\n    \"active\": true,\n    \"windowId\": 837389391\n  },\n  {\n    \"id\": 837389473,\n    \"title\": \"Agentic-Evals Design Request\",\n    \"url\": \"https://chatgpt.com/c/6a7dd179-1240-83ea-8307-0a034c153fea\",\n    \"active\": true,\n    \"windowId\": 837389472\n  },\n  {\n    \"id\": 837389478,\n    \"title\": \"ChatGPT\",\n    \"url\": \"https://chatgpt.com/\",\n    \"active\": true,\n    \"windowId\": 837389477\n  },\n  {\n    \"id\": 837389483,\n    \"title\": \"ChatGPT\",\n    \"url\": \"https://chatgpt.com/\",\n    \"active\": true,\n    \"windowId\": 837389482\n  }\n]\n",
+    "timed_out": false
+  }
+}
