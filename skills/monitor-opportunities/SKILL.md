@@ -120,6 +120,13 @@ Relationship evidence is stored through `/memory` as recallable
 write raw ArangoDB AQL or vector arrays from this skill; use Memory `/store` or
 `/upsert` and query via `/recall`.
 
+Relationship signals must carry channel guidance. Corporate email is often
+blocked, filtered, or stale after a long gap, especially when a contact has moved
+roles or organizations. Prefer a LinkedIn human handoff when available; an
+authorized persona Gmail address may be listed only as a non-deceptive,
+human-transmitted route. These channel hints do not authorize automated email,
+LinkedIn messages, Meetup RSVP, or any external effect.
+
 ## The interactive report is the product
 
 Not a byproduct. One report manifest and one human entry point per completed run cover:
@@ -131,7 +138,7 @@ Not a byproduct. One report manifest and one human entry point per completed run
 | InMail | verbatim local handoff text, claim keys, roundtable state, human steps | candidate transmits |
 | Gmail | verbatim text and, only after separate promotion, mailbox draft location | candidate transmits |
 | ATS application | inspect/prefill/submit state, exact payload binding, blockers | authorize / withhold |
-| Relationship signals | direct/adjacent monitor-contact graph, source provenance, event/company path | reconnect / defer |
+| Relationship signals | direct/adjacent monitor-contact graph, source provenance, event/company path, channel risk | reconnect / defer |
 | Interview prep | source- and claim-bound talking points | read |
 | Coverage and health | lanes searched, source receipts, feed failures, unknowns | inspect |
 

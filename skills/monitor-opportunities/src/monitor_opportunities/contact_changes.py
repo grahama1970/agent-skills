@@ -275,6 +275,19 @@ def relationship_signal_key(source_id: str, subject: str, organization: str) -> 
     return "rel-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+DEFAULT_RELATIONSHIP_CHANNELS = [
+    "LINKEDIN_HUMAN_HANDOFF",
+    "AUTHORIZED_PERSONA_GMAIL",
+    "VERIFIED_CURRENT_EMAIL",
+]
+DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE = [
+    "Corporate email may be blocked or stale after a long contact gap.",
+    "Prefer a LinkedIn human handoff when the contact has an available profile or shared context.",
+    "Use an authorized persona Gmail address only when it is owned/approved, non-deceptive, and human-transmitted.",
+    "Do not automate outreach, RSVP, LinkedIn messaging, or email sending from this signal.",
+]
+
+
 def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Normalize warm/direct/adjacent contact evidence from opportunity candidates.
 
@@ -305,6 +318,8 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
         warm_via = str(c.get("warm_path_via") or "").strip()
         if warm_via:
             contacts.append(warm_via)
+        preferred_channels = _as_str_list(c.get("preferred_human_channels")) or list(DEFAULT_RELATIONSHIP_CHANNELS)
+        channel_guidance = _as_str_list(c.get("channel_guidance")) or list(DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE)
 
         rows: list[tuple[str, str, str]] = []
         rows.extend(("direct_contact", name, "Known monitor-contact path") for name in contacts)
@@ -336,6 +351,9 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                     "source_receipt_ids": [source_receipt] if source_receipt else [],
                     "provenance": provenance,
                     "recommended_action": recommended,
+                    "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+                    "preferred_human_channels": preferred_channels,
+                    "channel_guidance": channel_guidance,
                     "external_effects": False,
                     "action_worthy": True,
                     "visible_in_report": True,

@@ -157,6 +157,8 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
     assert any(row["subject"] == "Bit Haven overlap" for row in relationship_signals)
     assert all(row["visible_in_report"] is True for row in relationship_signals)
     assert all(row["external_effects"] is False for row in relationship_signals)
+    assert all(row["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap" for row in relationship_signals)
+    assert all("AUTHORIZED_PERSONA_GMAIL" in row["preferred_human_channels"] for row in relationship_signals)
     actions = {row["action"]: row for row in manifest["decision_actions"]}
     assert actions["ATTEND_MEETUP"]["effects_external"] is False
     assert actions["ATTEND_MEETUP"]["target_type"] == "source_intel"

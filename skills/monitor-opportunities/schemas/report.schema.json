@@ -1437,18 +1437,21 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "signal_id",
-        "source_opportunity_id",
-        "signal_type",
-        "subject",
-        "organization",
-        "relationship_path",
+        "action_worthy",
+        "channel_guidance",
+        "contact_channel_risk",
         "evidence_refs",
-        "source_receipt_ids",
+        "external_effects",
+        "organization",
+        "preferred_human_channels",
         "provenance",
         "recommended_action",
-        "external_effects",
-        "action_worthy",
+        "relationship_path",
+        "signal_id",
+        "signal_type",
+        "source_opportunity_id",
+        "source_receipt_ids",
+        "subject",
         "visible_in_report"
       ],
       "properties": {
@@ -1513,6 +1516,30 @@
         },
         "visible_in_report": {
           "const": true
+        },
+        "contact_channel_risk": {
+          "enum": [
+            "corporate_email_may_be_blocked_after_long_gap"
+          ]
+        },
+        "preferred_human_channels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "LINKEDIN_HUMAN_HANDOFF",
+              "AUTHORIZED_PERSONA_GMAIL",
+              "VERIFIED_CURRENT_EMAIL"
+            ]
+          }
+        },
+        "channel_guidance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

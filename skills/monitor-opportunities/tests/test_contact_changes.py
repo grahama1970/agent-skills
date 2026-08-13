@@ -94,3 +94,7 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert all(row["external_effects"] is False for row in signals)
     assert all(row["visible_in_report"] is True for row in signals)
     assert all("https://sos-vo.org/user/91" in row["evidence_refs"] for row in signals)
+    assert all(row["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap" for row in signals)
+    assert all("LINKEDIN_HUMAN_HANDOFF" in row["preferred_human_channels"] for row in signals)
+    assert all("AUTHORIZED_PERSONA_GMAIL" in row["preferred_human_channels"] for row in signals)
+    assert all(any("Corporate email may be blocked" in item for item in row["channel_guidance"]) for row in signals)

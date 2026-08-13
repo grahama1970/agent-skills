@@ -278,6 +278,9 @@ class RelationshipSignal(StrictModel):
     source_receipt_ids: list[str]
     provenance: str
     recommended_action: str
+    contact_channel_risk: str
+    preferred_human_channels: list[str] = Field(min_length=1)
+    channel_guidance: list[str] = Field(min_length=1)
     external_effects: bool
     action_worthy: bool
     visible_in_report: bool

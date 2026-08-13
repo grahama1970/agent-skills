@@ -48,6 +48,9 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
             "source_receipt_ids": ["src:galois:team"],
             "provenance": "Adjacent ARCOS/formal-methods contact path",
             "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
+            "channel_guidance": ["Corporate email may be blocked after a long gap."],
             "external_effects": False,
             "action_worthy": True,
             "visible_in_report": True,
@@ -59,7 +62,10 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
     assert "monitor-contacts" in graph_doc["tags"]
     assert graph_doc["relationship_graph"]["nodes"]
     assert graph_doc["relationship_graph"]["edges"]
+    assert graph_doc["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap"
+    assert "AUTHORIZED_PERSONA_GMAIL" in graph_doc["preferred_human_channels"]
     assert "Eric Mertens" in graph_doc["text"]
+    assert "Corporate email may be blocked" in graph_doc["text"]
 
 
 def test_missing_run_id_fails_closed() -> None:

@@ -84,6 +84,11 @@ def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, An
                 "Path: " + " -> ".join(str(item) for item in path),
                 f"Provenance: {signal.get('provenance')}.",
                 f"Recommended local action: {signal.get('recommended_action')}.",
+                f"Contact channel risk: {signal.get('contact_channel_risk')}.",
+                "Preferred human channels: "
+                + ", ".join(str(item) for item in signal.get("preferred_human_channels", []) or ["n/a"]),
+                "Channel guidance: "
+                + " ".join(str(item) for item in signal.get("channel_guidance", []) or ["n/a"]),
                 "External effects: false; the human decides whether to reconnect, attend, watch, skip, or defer.",
                 "Evidence: " + ", ".join(str(ref) for ref in signal.get("evidence_refs", []) or ["n/a"]),
             ]
@@ -103,6 +108,9 @@ def morning_documents(report: dict[str, Any], run_dir: str) -> list[dict[str, An
                 "organization": org,
                 "signal_type": signal.get("signal_type"),
                 "relationship_path": path,
+                "contact_channel_risk": signal.get("contact_channel_risk"),
+                "preferred_human_channels": signal.get("preferred_human_channels", []),
+                "channel_guidance": signal.get("channel_guidance", []),
                 "relationship_graph": {
                     "nodes": [
                         {"id": str(node).lower().replace(" ", "-"), "label": str(node)}

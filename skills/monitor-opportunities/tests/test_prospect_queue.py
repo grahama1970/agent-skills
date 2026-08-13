@@ -70,6 +70,9 @@ def test_relationship_signals_become_warm_reconnect_prospects() -> None:
             "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
             "recommended_action": "human_decide_reconnect_or_defer",
             "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
+            "channel_guidance": ["Corporate email may be blocked after a long gap."],
         }
     ]
     prospects = relationship_prospects(signals)
@@ -77,4 +80,6 @@ def test_relationship_signals_become_warm_reconnect_prospects() -> None:
     assert prospects[0]["prospect_class"] == "warm_reconnect"
     assert prospects[0]["source"] == "monitor-contacts"
     assert prospects[0]["external_effects"] is False
+    assert prospects[0]["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap"
+    assert "LINKEDIN_HUMAN_HANDOFF" in prospects[0]["preferred_human_channels"]
     assert "Eric Mertens" in prospects[0]["title"]

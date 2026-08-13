@@ -259,6 +259,13 @@ effects. When published to Memory, the opportunity monitor stores recallable
 graph-shaped documents through `/store` or `/upsert`; it does not write raw
 ArangoDB or vector fields.
 
+Contact-route freshness is part of the observation. Corporate email often fails
+after a long gap because the contact changed employers, the company blocks
+external mail, or aliases have gone stale. Relationship observations should
+preserve safe human routes such as LinkedIn handoff and, when owned/approved and
+non-deceptive, an authorized persona Gmail route. These routes are reachability
+guidance only; the human still transmits and the monitor never automates contact.
+
 ## File Structure
 
 ```

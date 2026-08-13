@@ -129,6 +129,9 @@ def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[d
                 "relationship_signal_id": signal.get("signal_id"),
                 "relationship_path": signal.get("relationship_path", []),
                 "recommended_action": signal.get("recommended_action"),
+                "contact_channel_risk": signal.get("contact_channel_risk"),
+                "preferred_human_channels": signal.get("preferred_human_channels", []),
+                "channel_guidance": signal.get("channel_guidance", []),
                 "external_effects": False,
             }
         )
