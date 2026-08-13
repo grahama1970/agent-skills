@@ -1,0 +1,84 @@
+{
+  "schema": "battle.issue_closure_receipt.v1",
+  "issue": 1149,
+  "repo": "grahama1970/agent-skills",
+  "created_at": "2026-08-13T13:10:22Z",
+  "purpose": "Project-local immutable-goal evidence for Battle #1149 Docker-backed bounded staging authority closure.",
+  "ticket_readback": {
+    "command": "skills/ticket/run.sh lookup --issue 1149 --repo grahama1970/agent-skills",
+    "artifact": "/tmp/battle-1149-staging-authority-20260813/ticket-1149-readback-refresh.json",
+    "state": "CLOSED",
+    "state_reason": "COMPLETED",
+    "closed_at": "2026-08-13T12:56:56Z",
+    "labels": [
+      "type:feature",
+      "agent-work",
+      "battle",
+      "route:ops_or_scheduler",
+      "lane:ops"
+    ],
+    "blocking_labels_present": false,
+    "url": "https://github.com/grahama1970/agent-skills/issues/1149"
+  },
+  "docker_staging_evidence": {
+    "mocked": false,
+    "live": true,
+    "infrastructure_receipt": {
+      "path": "/tmp/battle-1149-staging-authority-20260813/docker-production-infrastructure/production-infrastructure-deployment-proof.json",
+      "schema": "battle.production_infrastructure_deployment_proof.v1",
+      "status": "PASS",
+      "mocked": false,
+      "live": "production_infrastructure_deployment",
+      "frontend_status_code": 200,
+      "backend_health_status_code": 200,
+      "websocket_connected": true,
+      "tls_valid": true,
+      "dns_resolves": true,
+      "ingress_route_status": "PASS"
+    },
+    "readiness_receipt": {
+      "path": "/tmp/battle-1149-staging-authority-20260813/docker-readiness/production-readiness-contract.json",
+      "schema": "battle.production_readiness_contract.v1",
+      "status": "PASS",
+      "mocked": false,
+      "live": "receipt_contract_validation",
+      "blockers": [],
+      "errors": []
+    },
+    "teardown_receipt": {
+      "path": "/tmp/battle-1149-staging-authority-20260813/docker-teardown-receipt.json",
+      "schema": "battle.staging_container_teardown_receipt.v1",
+      "status": "PASS",
+      "mocked": false,
+      "live": "docker_container_rm_force_and_readback",
+      "post_teardown_ps_stdout": ""
+    },
+    "closure_evidence": {
+      "path": "/tmp/battle-1149-staging-authority-20260813/closure-evidence.json",
+      "schema": "agent_skills.ticket_closure_evidence.v1",
+      "ticket_close_result": "closure evidence accepted: unit exit 0, live e2e exit 0, artifact read back from /tmp/battle-1149-staging-authority-20260813/docker-readiness/production-readiness-contract.json"
+    },
+    "proof_markdown": "/tmp/battle-1149-staging-authority-20260813/issue-1149-closure-proof.md"
+  },
+  "ui_marker": {
+    "path": ".codex/ui-verification/latest.json",
+    "name": "battle-1149-closed-ticket",
+    "url": "https://github.com/grahama1970/agent-skills/issues/1149",
+    "screenshot": "/tmp/codex-ui-verification/agent-skills/battle-1149-closed-ticket/20260813T125717Z.png"
+  },
+  "claim_boundary": {
+    "proves": [
+      "A Dockerized bounded staging target satisfied the Battle production infrastructure receipt checks.",
+      "The Battle production readiness contract consumed the Docker-backed staging infrastructure receipt and returned PASS with no blockers or errors.",
+      "The staging container teardown was applied and read back empty for the exact container.",
+      "GitHub issue #1149 read back CLOSED with stateReason COMPLETED and without needs-human or maintainer-blocked labels."
+    ],
+    "does_not_prove": [
+      "Adaptive-lineage efficacy.",
+      "Battle Red/Blue strategy quality.",
+      "Public cloud production hosting.",
+      "Production autoscaling."
+    ]
+  },
+  "immutable_goal": "ACHIEVED_WITH_RECEIPT:skills/battle/docs/status/issue-1149-docker-staging-closure-20260813.json"
+}
