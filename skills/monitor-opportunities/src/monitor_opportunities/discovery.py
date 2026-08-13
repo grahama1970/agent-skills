@@ -13,7 +13,12 @@ import httpx
 from loguru import logger
 
 from .receipts import base_receipt as _base_receipt, finalize_receipt as _finalize_receipt
-from .required_source_receipts import client_research_receipt as _client_research_receipt, federal_website_receipt as _federal_website_receipt, linkedin_required_receipt as _linkedin_required_receipt
+from .required_source_receipts import (
+    client_research_receipt as _client_research_receipt,
+    federal_website_receipt as _federal_website_receipt,
+    human_browser_required_receipt as _human_browser_required_receipt,
+    linkedin_required_receipt as _linkedin_required_receipt,
+)
 from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write_jsonl
 
 from dotenv import load_dotenv
@@ -1118,6 +1123,24 @@ def sweep(
                 else:
                     # No human capture supplied: honest AUTH_REQUIRED, never a silent skip.
                     receipts.append(_linkedin_required_receipt(False))
+                receipts.append(
+                    _human_browser_required_receipt(
+                        provider="indeed",
+                        required_source_id="indeed",
+                        target="Indeed jobs",
+                        source_class="human_supplied_indeed",
+                        website_fallback="https://www.indeed.com/jobs",
+                    )
+                )
+                receipts.append(
+                    _human_browser_required_receipt(
+                        provider="hiddenjobs.dev",
+                        required_source_id="hiddenjobs",
+                        target="Hidden Jobs",
+                        source_class="human_supplied_hiddenjobs",
+                        website_fallback="https://hiddenjobs.dev/",
+                    )
+                )
                 for target in targets.get("employment", []):
                     receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)

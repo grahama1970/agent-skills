@@ -51,6 +51,7 @@ def build_ledger(
     rejections: list[dict[str, Any]],
     merged_into: dict[str, str],
     source_receipts: list[dict[str, Any]] | None = None,
+    admitted_count: int | None = None,
 ) -> tuple[bool, dict[str, Any]]:
     """Reconcile the stages. Returns (ok, ledger)."""
     disc_ids = [str(c.get("candidate_id") or "") for c in discovered]
@@ -60,6 +61,7 @@ def build_ledger(
 
     violations: list[dict[str, Any]] = []
     dispositions: dict[str, str] = {}
+    pending_unaccounted: list[str] = []
     for cid in disc_ids:
         where = [
             name
@@ -72,11 +74,7 @@ def build_ledger(
             dispositions[cid] = where[0]
         elif not where:
             dispositions[cid] = "unaccounted"
-            violations.append({
-                "rule": "no-silent-loss",
-                "detail": f"discovered record {cid} has no disposition",
-                "candidate_id": cid,
-            })
+            pending_unaccounted.append(cid)
         else:
             dispositions[cid] = "+".join(where)
             violations.append({
@@ -85,9 +83,26 @@ def build_ledger(
                 "candidate_id": cid,
             })
 
-    # Deduplicated rows must name a canonical record that actually survived.
+    if pending_unaccounted:
+        expected_not_shortlisted = 0
+        if admitted_count is not None:
+            expected_not_shortlisted = max(0, admitted_count - len(accepted))
+        if expected_not_shortlisted == len(pending_unaccounted):
+            for cid in pending_unaccounted:
+                dispositions[cid] = "eligible_not_shortlisted"
+        else:
+            for cid in pending_unaccounted:
+                violations.append({
+                    "rule": "no-silent-loss",
+                    "detail": f"discovered record {cid} has no disposition",
+                    "candidate_id": cid,
+                })
+
+    # Deduplicated rows must name a canonical record that actually survived the
+    # eligibility pass, even if it fell below the top-N shortlist.
     for dropped, canonical in merged_into.items():
-        if canonical and canonical not in accepted and canonical not in rejected:
+        canonical_disposition = dispositions.get(str(canonical))
+        if canonical and canonical_disposition not in {"accepted", "rejected", "eligible_not_shortlisted"}:
             violations.append({
                 "rule": "dedupe-names-canonical",
                 "detail": f"{dropped} merged into {canonical}, which is in no later stage",
@@ -100,9 +115,15 @@ def build_ledger(
         "accepted": sum(1 for d in dispositions.values() if d == "accepted"),
         "rejected": sum(1 for d in dispositions.values() if d == "rejected"),
         "deduplicated": sum(1 for d in dispositions.values() if d == "deduplicated"),
+        "eligible_not_shortlisted": sum(1 for d in dispositions.values() if d == "eligible_not_shortlisted"),
         "unaccounted": sum(1 for d in dispositions.values() if d == "unaccounted"),
     }
-    total = counts["accepted"] + counts["rejected"] + counts["deduplicated"]
+    total = (
+        counts["accepted"]
+        + counts["rejected"]
+        + counts["deduplicated"]
+        + counts["eligible_not_shortlisted"]
+    )
     if total + counts["unaccounted"] != counts["discovered"]:
         violations.append({
             "rule": "stage-conservation",
@@ -157,9 +178,19 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
     merged: dict[str, str] = {}
     if receipt_p.exists():
         try:
-            merged = json.loads(receipt_p.read_text(encoding="utf-8")).get(
-                "duplicates_merged_into", {}
-            ) or {}
+            receipt = json.loads(receipt_p.read_text(encoding="utf-8"))
+            merged = receipt.get("duplicates_merged_into", {}) or {}
+            admitted_count = int(receipt.get("admitted") or 0)
         except ValueError:
             merged = {}
-    return build_ledger(discovered, shortlist, rejections, merged, source_receipts=receipts)
+            admitted_count = None
+    else:
+        admitted_count = None
+    return build_ledger(
+        discovered,
+        shortlist,
+        rejections,
+        merged,
+        source_receipts=receipts,
+        admitted_count=admitted_count,
+    )

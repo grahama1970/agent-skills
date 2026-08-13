@@ -15,8 +15,20 @@ def test_full_accounting_passes() -> None:
     )
     assert ok, ledger["violations"]
     assert ledger["counts"] == {
-        "discovered": 3, "accepted": 1, "rejected": 1, "deduplicated": 1, "unaccounted": 0,
+        "discovered": 3,
+        "accepted": 1,
+        "rejected": 1,
+        "deduplicated": 1,
+        "eligible_not_shortlisted": 0,
+        "unaccounted": 0,
     }
+
+
+def test_eligible_rows_below_shortlist_limit_are_accounted() -> None:
+    ok, ledger = build_ledger([_c("a"), _c("b")], [_c("a")], [], {}, admitted_count=2)
+    assert ok, ledger["violations"]
+    assert ledger["counts"]["eligible_not_shortlisted"] == 1
+    assert ledger["counts"]["unaccounted"] == 0
 
 
 def test_silently_lost_record_is_a_violation() -> None:

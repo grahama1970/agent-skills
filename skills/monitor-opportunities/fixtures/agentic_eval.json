@@ -16,7 +16,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -24,10 +24,11 @@
           "E2E PASS",
           "sam_website_opps=",
           "live_board_candidates=",
-          "memory_recall_hits=",
+          "opportunities=",
+          "source_intel=",
           "recency_max_age_days=",
-          "apply_prep_resumes=",
-          "ats_forms_ok="
+          "resume_variants=",
+          "application_packets="
         ]
       }
     },
@@ -37,7 +38,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/recency_check.py"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/recency_check.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -47,19 +48,20 @@
       }
     },
     {
-      "name": "dead-api-source-must-not-be-silently-skipped",
+      "name": "source-contract-regression-2026-08-13",
       "type": "negative",
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/monitor-opportunities/run.sh run --out $(mktemp -d) --linkedin-evidence skills/monitor-opportunities/tests/fixtures/discovery/linkedin-top-candidate.json"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py::test_valid_required_receipt_tolerates_supplemental_locator_noise skills/monitor-opportunities/tests/test_required_sources.py::test_browser_or_api_accepts_healthy_api_receipt skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_browser_required_receipts_without_human_evidence -q"
       ],
       "expected": {
-        "exit_code": 2,
-        "stderr_contains": [
-          "use the website"
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
         ]
-      }
+      },
+      "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
     },
     {
       "name": "no-fabricated-god-of-war-claim",
@@ -67,7 +69,7 @@
       "command": [
         "bash",
         "-c",
-        "! grep -qi 'god of war' /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json"
+        "repo=$(git -C .. rev-parse --show-toplevel) && ! grep -qi 'god of war' \"$repo/skills/monitor-opportunities/tests/fixtures/claims/approved-claims.json\""
       ],
       "expected": {
         "exit_code": 0
@@ -79,7 +81,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_required_sources.py -q"
       ],
       "expected": {
         "exit_code": 0,
@@ -95,7 +97,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/relevance_eval.py"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/relevance_eval.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -111,7 +113,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_13.py"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_13.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -123,23 +125,21 @@
       "proves": "Against the newest REAL nightly artifacts: digest entries link to specific postings, per-job premium insights differ across jobs, the 'Under 10 applicants' filter chip is never read as an applicant count, postings are deduped, tracker filing is bounded, and the trigger budget covers the shortlist."
     },
     {
-      "name": "gates-detect-the-2026-08-13-defects",
+      "name": "prepublish-contract-detects-2026-08-13-defects",
       "type": "adversarial",
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_13.py --run /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/run-2026-08-13-buggy; test $? -eq 1"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_prepublish_contract.py::test_generic_search_url_is_rejected skills/monitor-opportunities/tests/test_prepublish_contract.py::test_premium_insights_without_per_job_url_is_rejected skills/monitor-opportunities/tests/test_prepublish_contract.py::test_identical_insights_across_jobs_is_a_crossjoin_violation -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "FAILED GATES",
-          "clickable-urls",
-          "distinct-insights"
+          "3 passed"
         ]
       },
       "timeout_seconds": 180,
-      "proves": "The gates are not vacuous: replayed against the preserved 2026-08-13 run they FAIL on the real defects (generic search URLs, identical per-job insights, x6 duplicate postings)."
+      "proves": "The publication gate is not vacuous: it rejects the 2026-08-13 defect classes for generic search URLs, per-job facts without per-job source URLs, and cross-joined identical insights."
     },
     {
       "name": "insights-fail-closed-on-identical-values",
@@ -147,7 +147,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import monitor_opportunities.browser_capture as bc;src=open(bc.__file__).read();assert 'identical across' in src, 'no fail-closed guard';assert 'return {}' in src.split('identical across')[1][:400], 'guard does not discard';print('FAIL_CLOSED_GUARD_PRESENT')\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run python -c \"import monitor_opportunities.browser_capture as bc;src=open(bc.__file__).read();assert 'identical across' in src, 'no fail-closed guard';assert 'return {}' in src.split('identical across')[1][:400], 'guard does not discard';print('FAIL_CLOSED_GUARD_PRESENT')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -164,7 +164,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"from pathlib import Path;import monitor_opportunities.browser_capture as bc;bc._surf_pause(Path('/nonexistent/surf.sh'), '1');print('PAUSE_SURVIVED_BROKEN_SURF')\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run python -c \"from pathlib import Path;import monitor_opportunities.browser_capture as bc;bc._surf_pause(Path('/nonexistent/surf.sh'), '1');print('PAUSE_SURVIVED_BROKEN_SURF')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -181,16 +181,16 @@
       "command": [
         "bash",
         "-c",
-        "uv run python -c \"from pathlib import Path;from monitor_opportunities.prepublish_contract import validate_run;ok_now,_=validate_run(Path('local/nightly/latest'));ok_bad,rep=validate_run(Path('/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/run-2026-08-13-buggy'));rules=sorted({v['rule'] for v in rep['violations']});assert ok_now, 'current run must pass the contract';assert not ok_bad, 'the known-bad run must be blocked';assert 'resolvable-url' in rules and 'evidence-backed' in rules, rules;print('PREPUBLISH_CONTRACT_DISCRIMINATES', len(rep['violations']), rules)\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_prepublish_contract.py -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "PREPUBLISH_CONTRACT_DISCRIMINATES"
+          "passed"
         ]
       },
       "timeout_seconds": 180,
-      "proves": "The pre-publish truth contract passes the current REAL run and BLOCKS the preserved 2026-08-13 run on its actual defects (generic search URLs, per-job facts without a per-job source). It is a publication gate, not a post-hoc report."
+      "proves": "The pre-publish truth contract accepts clean current-run data and rejects stale, ineligible, generic URL, unbacked, duplicated, out-of-order, missingness, cross-join, and foreign-lineage digest rows before publication."
     },
     {
       "name": "nightly-withholds-digest-on-contract-violation",
@@ -198,16 +198,33 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import inspect;from monitor_opportunities import nightly_digest as nd;src=inspect.getsource(nd);i=src.index('validate_prepublish');j=src.index('morning-digest.json', i);seg=src[i:j];assert 'NIGHTLY_DIGEST_CONTRACT_VIOLATION' in seg, 'no fail-closed raise before publish';assert 'raise ContractError' in seg, 'violation does not raise';print('DIGEST_WITHHELD_ON_VIOLATION')\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_nightly_digest.py::test_diagnostic_digest_contract_violation_is_withheld_and_degraded -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "DIGEST_WITHHELD_ON_VIOLATION"
+          "1 passed"
         ]
       },
       "timeout_seconds": 120,
-      "proves": "The contract runs BEFORE morning-digest.json is written and raises, so a violating digest is never persisted or mirrored to memory/Discord."
+      "proves": "Strict digest publication raises on prepublish violations, while diagnostic cron degrades explicitly and withholds morning-digest.json instead of publishing untrustworthy rows."
+    },
+    {
+      "name": "consulting-digest-lineage-regression-2026-08-13",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_nightly_digest.py::test_consulting_research_rows_are_bound_to_current_run_lineage -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "timeout_seconds": 120,
+      "proves": "Consulting research rows injected during digest construction carry ELIGIBLE_CONSULTING and a current-run client_research source_receipt_id before the prepublish contract runs."
     },
     {
       "name": "stage-conservation-no-silent-record-loss",
@@ -215,7 +232,7 @@
       "command": [
         "bash",
         "-c",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities && uv run python -c \"import json;from pathlib import Path;from monitor_opportunities.ranking import dedupe_postings;from monitor_opportunities.stage_ledger import build_ledger,_read_jsonl;run=Path('local/nightly/latest');disc=_read_jsonl(run/'discovery/candidates.jsonl');short=json.load(open(run/'ranking/shortlist.json'));rej=json.load(open(run/'ranking/rejections.json'));_,_,merged=dedupe_postings(disc);ok,l=build_ledger(disc,short,rej,merged,source_receipts=_read_jsonl(run/'discovery/source-receipts.jsonl'));c=l['counts'];assert c['discovered']>0, 'no records discovered';assert c['unaccounted']==0, ('records vanished', c);assert c['accepted']+c['rejected']+c['deduplicated']==c['discovered'], c;bad,l2=build_ledger(disc+[{'candidate_id':'ghost','lane':'A'}],short,rej,merged);assert not bad, 'ledger failed to notice an unaccounted record';print('STAGE_CONSERVATION_OK', c)\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run python -c \"import json;from pathlib import Path;from monitor_opportunities.stage_ledger import build_ledger,build_ledger_for_run,_read_jsonl;run=Path('local/nightly/latest');ok,l=build_ledger_for_run(run);c=l['counts'];assert ok, l['violations'];assert c['discovered']>0, 'no records discovered';assert c['unaccounted']==0, ('records vanished', c);assert c['accepted']+c['rejected']+c['deduplicated']+c['eligible_not_shortlisted']==c['discovered'], c;disc=_read_jsonl(run/'discovery/candidates.jsonl');short=json.load(open(run/'ranking/shortlist.json'));rej=json.load(open(run/'ranking/rejections.json'));merged=json.load(open(run/'ranking/ranking-receipt.json')).get('duplicates_merged_into',{});bad,l2=build_ledger(disc+[{'candidate_id':'ghost','lane':'A'}],short,rej,merged,admitted_count=json.load(open(run/'ranking/ranking-receipt.json')).get('admitted'));assert not bad, 'ledger failed to notice an unaccounted record';print('STAGE_CONSERVATION_OK', c)\""
       ],
       "expected": {
         "exit_code": 0,

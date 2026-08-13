@@ -95,6 +95,43 @@ def test_wrong_lane_channel_or_source_class_fails(tmp_path: Path) -> None:
         _enforce_required_sources(SKILL_DIR, d)
 
 
+def test_valid_required_receipt_tolerates_supplemental_locator_noise(tmp_path: Path) -> None:
+    import json
+
+    d = _write_receipts(tmp_path, _all_required())
+    with (d / "source-receipts.jsonl").open("a", encoding="utf-8") as f:
+        f.write(
+            "\n"
+            + json.dumps(
+                {
+                    "receipt_id": "indeed-locator",
+                    "lane": "A",
+                    "provider": "indeed",
+                    "target": "Indeed locator",
+                    "required_source_id": "indeed",
+                    "channel": "source_locator",
+                    "source_class": "source_locator",
+                    "result_status": "NO_MATCHES",
+                    "observed_at": "2026-08-13T00:00:00Z",
+                    "request_summary": "locator hint only",
+                    "response_status": 200,
+                    "content_type": None,
+                    "response_bytes": 1,
+                    "content_sha256": "b" * 64,
+                    "evidence_refs": ["fixture://locator"],
+                    "limitations": [],
+                },
+                sort_keys=True,
+            )
+        )
+    assert _enforce_required_sources(SKILL_DIR, d)["required_sources_enforced"] is True
+
+
+def test_browser_or_api_accepts_healthy_api_receipt(tmp_path: Path) -> None:
+    d = _write_receipts(tmp_path, _all_required(), overrides={"sam.gov": {"channel": "api"}})
+    assert _enforce_required_sources(SKILL_DIR, d)["required_sources_enforced"] is True
+
+
 def test_generic_linkedin_does_not_satisfy_top_applicant(tmp_path: Path) -> None:
     d = _write_receipts(
         tmp_path,

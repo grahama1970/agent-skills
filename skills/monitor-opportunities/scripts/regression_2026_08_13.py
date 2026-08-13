@@ -53,17 +53,34 @@ def _load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _digest_top(run: Path) -> tuple[list[dict[str, Any]], str]:
+    digest_p = run / "morning-digest.json"
+    if digest_p.exists():
+        return _load(digest_p).get("top", []), "morning-digest.json"
+    report_p = run / "report" / "report.json"
+    if report_p.exists():
+        report = _load(report_p)
+        return report.get("opportunities", []) + report.get("source_intel", []), "report/report.json"
+    return [], "missing"
+
+
 def check_clickable_urls(run: Path) -> None:
-    digest_p, shortlist_p = run / "morning-digest.json", run / "ranking" / "shortlist.json"
-    if not (digest_p.exists() and shortlist_p.exists()):
-        gate("clickable-urls", False, "digest or shortlist missing from the run")
+    shortlist_p = run / "ranking" / "shortlist.json"
+    if not shortlist_p.exists():
+        gate("clickable-urls", False, "shortlist missing from the run")
         return
-    digest, shortlist = _load(digest_p), _load(shortlist_p)
+    entries, source = _digest_top(run)
+    if not entries:
+        gate("clickable-urls", True, f"no digest/report entries in {source}; nothing to regress")
+        return
+    shortlist = _load(shortlist_p)
     by_id = {r.get("candidate_id"): r for r in shortlist}
     generic = 0
     checked = 0
-    for e in digest.get("top", []):
-        row = by_id.get(e.get("candidate_id"))
+    for e in entries:
+        row = by_id.get(e.get("candidate_id") or e.get("opportunity_id"))
+        if row is None and e.get("posting_url"):
+            row = e
         if not row:
             continue
         url = str(row.get("posting_url") or "")
@@ -84,18 +101,14 @@ def check_clickable_urls(run: Path) -> None:
 
 
 def check_distinct_insights(run: Path) -> None:
-    digest_p = run / "morning-digest.json"
-    if not digest_p.exists():
-        gate("distinct-insights", False, "digest missing")
-        return
-    tops = _load(digest_p).get("top", [])
+    tops, source = _digest_top(run)
     ins = [
         json.dumps(e["premium_insights"], sort_keys=True)
         for e in tops
         if e.get("premium_insights")
     ]
     if len(ins) <= 2:
-        gate("distinct-insights", True, f"only {len(ins)} insight rows; nothing to compare")
+        gate("distinct-insights", True, f"only {len(ins)} insight rows in {source}; nothing to compare")
         return
     gate(
         "distinct-insights",

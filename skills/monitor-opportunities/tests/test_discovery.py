@@ -11,8 +11,10 @@ import json
 from pathlib import Path
 
 import httpx
+import pytest
 from typer.testing import CliRunner
 
+import monitor_opportunities.discovery as discovery
 from monitor_opportunities.cli import app
 from monitor_opportunities.discovery import (
     LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
@@ -74,6 +76,57 @@ def test_source_locator_is_hint_only_and_admits_no_candidates() -> None:
     assert receipt["parser_result"] == "HINTS_ONLY"
     assert receipt["evidence_refs"] == ["https://hiddenjobs.dev/"]
     assert any("hint-only" in item for item in receipt["limitations"])
+
+
+def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        discovery,
+        "_load_targets",
+        lambda _skill_dir: {
+            "source_locators": [
+                {"lane": "A", "name": "Hidden Jobs", "provider": "hiddenjobs.dev", "url": "https://hiddenjobs.dev/"},
+                {"lane": "A", "name": "Indeed", "provider": "indeed", "url": "https://www.indeed.com/jobs"},
+            ],
+            "employment": [],
+        },
+    )
+    monkeypatch.setattr(
+        discovery,
+        "_source_locator_receipt",
+        lambda _client, target: {
+            "receipt_id": f"locator-{target['provider']}",
+            "lane": "A",
+            "provider": target["provider"],
+            "target": target["name"],
+            "required_source_id": "hiddenjobs" if target["provider"] == "hiddenjobs.dev" else "indeed",
+            "channel": "source_locator",
+            "source_class": "source_locator",
+            "result_status": "NO_MATCHES",
+            "observed_at": "2026-08-13T00:00:00Z",
+            "request_summary": "locator only",
+            "response_status": 200,
+            "content_type": None,
+            "response_bytes": 1,
+            "content_sha256": "a" * 64,
+            "evidence_refs": [target["url"]],
+            "limitations": ["hint-only"],
+        },
+    )
+    out = tmp_path / "discovery"
+    result = runner.invoke(app, ["sweep", "--lane", "A", "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipts = [
+        json.loads(line)
+        for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    required = {row.get("required_source_id"): row for row in receipts if row.get("required_source_id") in {"indeed", "hiddenjobs"} and row.get("channel") == "browser_human_supplied"}
+    assert required["indeed"]["source_class"] == "human_supplied_indeed"
+    assert required["hiddenjobs"]["source_class"] == "human_supplied_hiddenjobs"
+    assert {required["indeed"]["result_status"], required["hiddenjobs"]["result_status"]} == {"AUTH_REQUIRED"}
 
 
 def test_employment_dispatch_rejects_unknown_provider() -> None:

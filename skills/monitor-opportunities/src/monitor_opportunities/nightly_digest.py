@@ -23,6 +23,22 @@ from .morning_digest import build_digest
 from .util import read_json, utc_now  # noqa: F401  (read_json: parity with cli)
 
 
+def _source_receipt_id(out: Path, required_source_id: str) -> str | None:
+    receipts_path = out / "discovery" / "source-receipts.jsonl"
+    if not receipts_path.exists():
+        return None
+    for line in receipts_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            receipt = json.loads(line)
+        except ValueError:
+            continue
+        if receipt.get("required_source_id") == required_source_id and receipt.get("receipt_id"):
+            return str(receipt["receipt_id"])
+    return None
+
+
 def run_digest_phase(
     out: Path,
     skill_dir: Path,
@@ -129,6 +145,11 @@ def run_digest_phase(
             from .consulting_discovery import discover as discover_consulting
 
             consulting_rows, consulting_receipt = discover_consulting()
+            client_research_receipt_id = _source_receipt_id(out, "client_research")
+            for row in consulting_rows:
+                row.setdefault("eligibility_state", "ELIGIBLE_CONSULTING")
+                if client_research_receipt_id:
+                    row.setdefault("source_receipt_id", client_research_receipt_id)
             (out / "consulting-research.json").write_text(
                 json.dumps(
                     {"receipt": consulting_receipt, "candidates": consulting_rows},

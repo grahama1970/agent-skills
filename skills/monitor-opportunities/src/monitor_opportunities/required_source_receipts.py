@@ -72,6 +72,29 @@ def linkedin_required_receipt(evidence_supplied: bool) -> dict[str, Any]:
     return finalize_receipt(receipt)
 
 
+def human_browser_required_receipt(
+    *,
+    provider: str,
+    required_source_id: str,
+    target: str,
+    source_class: str,
+    website_fallback: str,
+) -> dict[str, Any]:
+    """Honest required-source receipt when human browser evidence is absent."""
+
+    receipt = base_receipt("A", provider, target, source_class)
+    receipt["required_source_id"] = required_source_id
+    receipt["channel"] = "browser_human_supplied"
+    receipt["request_summary"] = f"{target} requires read-only browser evidence"
+    receipt["result_status"] = "AUTH_REQUIRED"
+    receipt["parser_result"] = "BLOCKED"
+    receipt["evidence_refs"] = [website_fallback]
+    receipt["limitations"].append(
+        f"No human/browser evidence supplied for {target}; capture {website_fallback} and re-run."
+    )
+    return finalize_receipt(receipt)
+
+
 def client_research_receipt(skill_dir: Path) -> dict[str, Any]:
     """Mandatory client-services research over the candidate's mandates.
 

@@ -586,23 +586,31 @@ def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str,
             by_required.setdefault(str(required_id), []).append(receipt)
     accepted_default = set(config.get("accepted_non_match_states", []))
     forbidden = set(config.get("forbidden_states", []))
+    def _receipt_violations(required: dict[str, Any], receipt: dict[str, Any]) -> list[str]:
+        rid = str(required["id"])
+        accepted = set(required.get("accepted_statuses") or accepted_default)
+        allowed_classes = set(required.get("source_classes") or [])
+        channel = required.get("channel")
+        allowed_channels = {"api", "browser_or_api"} if channel == "browser_or_api" else {channel}
+        problems: list[str] = []
+        status = str(receipt.get("result_status", ""))
+        if status in forbidden or status not in accepted:
+            problems.append(f"{rid}:{receipt['receipt_id']}:status={status}")
+        if channel and receipt.get("channel") not in allowed_channels:
+            problems.append(f"{rid}:{receipt['receipt_id']}:channel={receipt.get('channel')}")
+        if allowed_classes and receipt.get("source_class") not in allowed_classes:
+            problems.append(f"{rid}:{receipt['receipt_id']}:source_class={receipt.get('source_class')}")
+        return problems
+
     for required in config.get("required", []):
         rid = str(required["id"])
         matches = by_required.get(rid, [])
         if not matches:
             missing.append(rid)
             continue
-        accepted = set(required.get("accepted_statuses") or accepted_default)
-        allowed_classes = set(required.get("source_classes") or [])
-        channel = required.get("channel")
-        for receipt in matches:
-            status = str(receipt.get("result_status", ""))
-            if status in forbidden or status not in accepted:
-                invalid.append(f"{rid}:{receipt['receipt_id']}:status={status}")
-            if channel and receipt.get("channel") != channel:
-                invalid.append(f"{rid}:{receipt['receipt_id']}:channel={receipt.get('channel')}")
-            if allowed_classes and receipt.get("source_class") not in allowed_classes:
-                invalid.append(f"{rid}:{receipt['receipt_id']}:source_class={receipt.get('source_class')}")
+        per_receipt = [_receipt_violations(required, receipt) for receipt in matches]
+        if all(problems for problems in per_receipt):
+            invalid.extend(problem for problems in per_receipt for problem in problems)
     if missing or invalid:
         raise ContractError(
             "REQUIRED_SOURCE_CONTRACT_VIOLATION",
