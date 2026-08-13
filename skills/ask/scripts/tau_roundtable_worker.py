@@ -1138,7 +1138,16 @@ def _browser_submit_command(
         str(args.timeout),
         "--stable-polls",
         str(args.stable_polls),
+        "--stable-stall-ms",
+        _browser_stable_stall_ms(),
     ]
+    # Reasoning models go quiet for minutes: the assistant text stops changing
+    # while the model thinks, which surf's default 30s stall heuristic reads as
+    # "finished, no sentinel" and returns empty. On 2026-08-13 this discarded a
+    # complete 15k-character ChatGPT Pro answer TWICE (lane-diagnostics:
+    # response_rendered_capture_missed / missing_sentinel) — the sentinel was
+    # present in the tab both times. The run --timeout is the real bound, so
+    # wait for the sentinel until it expires. Override with ASK_STABLE_STALL_MS.
     _append_browser_lock_timeout(command, args)
     if tab_id:
         command.extend(["--tab-id", tab_id])
@@ -1158,6 +1167,20 @@ def _browser_submit_command(
     if args.no_activate:
         command.append("--no-activate")
     return command
+
+
+def _browser_stable_stall_ms() -> str:
+    """Milliseconds of unchanged assistant text before surf gives up waiting.
+
+    "0" means wait until --timeout. That is the correct default here: a quiet
+    reasoning model is not a stalled one, and the run timeout already bounds
+    the wait. Env override exists for lanes that would rather fail fast.
+    """
+    raw = os.environ.get("ASK_STABLE_STALL_MS", "0").strip()
+    try:
+        return str(max(0, int(raw)))
+    except ValueError:
+        return "0"
 
 
 def _append_browser_lock_timeout(command: list[str], args: argparse.Namespace) -> None:
@@ -3290,8 +3313,12 @@ def _recovery_next_command(
             str(args.timeout),
             "--stable-polls",
             str(args.stable_polls),
+            "--stable-stall-ms",
+            _browser_stable_stall_ms(),
             "--create-tab",
         ]
+        # Same reasoning-model stall guard as the primary submit path: a quiet
+        # model is not a stalled one, and --timeout already bounds the wait.
         _append_browser_lock_timeout(command, args)
         # kimi.submit takes no --project; passing it fails argument parsing
         # before any browser work, which would hide the real blocker.
@@ -3346,6 +3373,8 @@ def _recovery_next_command(
                 str(args.timeout),
                 "--stable-polls",
                 str(args.stable_polls),
+                "--stable-stall-ms",
+                _browser_stable_stall_ms(),
             ]
             _append_browser_lock_timeout(command, args)
             append_browser_identity(command)
@@ -3382,6 +3411,8 @@ def _recovery_next_command(
             str(args.timeout),
             "--stable-polls",
             str(args.stable_polls),
+            "--stable-stall-ms",
+            _browser_stable_stall_ms(),
         ]
         _append_browser_lock_timeout(command, args)
         tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
@@ -3409,6 +3440,8 @@ def _recovery_next_command(
             str(args.timeout),
             "--stable-polls",
             str(args.stable_polls),
+            "--stable-stall-ms",
+            _browser_stable_stall_ms(),
         ]
         _append_browser_lock_timeout(command, args)
         tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "").strip()
@@ -3475,6 +3508,8 @@ def _recovery_next_command(
             str(args.timeout),
             "--stable-polls",
             str(args.stable_polls),
+            "--stable-stall-ms",
+            _browser_stable_stall_ms(),
         ]
         _append_browser_lock_timeout(command, args)
         append_browser_identity(command)
@@ -3513,6 +3548,8 @@ def _recovery_next_command(
             str(args.timeout),
             "--stable-polls",
             str(args.stable_polls),
+            "--stable-stall-ms",
+            _browser_stable_stall_ms(),
             "--attach-file",
             bundle_path,
         ]

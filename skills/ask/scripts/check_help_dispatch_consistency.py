@@ -17,6 +17,8 @@ code — so it cannot pass by our code agreeing with itself):
      (proves /ask executes browser handlers through Tau, not around it)
   4. that DAG's timeouts can actually cover a normal webgpt Pro call
      (15-20 min); a flat 300s node default made failure certain
+  5. every browser submit path passes --stable-stall-ms, so a silently
+     reasoning model is not mistaken for a stalled one
 
 Usage: python check_help_dispatch_consistency.py [--skip-compile]
 """
@@ -165,6 +167,32 @@ def check_browser_timeouts_are_viable(skip: bool) -> None:
     )
 
 
+def check_reasoning_stall_guard(skip: bool) -> None:
+    """Browser submits must not abandon a quiet reasoning model.
+
+    surf's --stable-stall-ms defaults to 30s: if assistant text stops changing
+    for that long WITHOUT the sentinel, it returns empty. ChatGPT Pro thinks
+    silently for minutes, so on 2026-08-13 a complete 15k-character answer was
+    discarded twice (lane-diagnostics: response_rendered_capture_missed /
+    missing_sentinel) — the sentinel was in the tab both times. Every browser
+    submit path must therefore pass --stable-stall-ms explicitly.
+    """
+    worker = ASK_DIR / "scripts" / "tau_roundtable_worker.py"
+    src = worker.read_text(encoding="utf-8")
+    # Count real submit argv builds, not dict lookups: every submit command
+    # interpolates str(args.stable_polls) exactly once. Counting the flag string
+    # instead would also catch the argparse definition; counting
+    # HANDLER_SUBMIT_COMMANDS[...] would catch an error string and a return.
+    submits = src.count("str(args.stable_polls),")
+    guards = src.count("--stable-stall-ms")
+    ok = submits > 0 and guards >= submits
+    gate(
+        "reasoning-stall-guard",
+        ok,
+        f"{guards} --stable-stall-ms guard(s) for {submits} browser submit path(s)",
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-compile", action="store_true")
@@ -175,6 +203,7 @@ def main() -> int:
     check_no_contradictory_removal(help_text)
     check_shortcut_compiles_to_tau(args.skip_compile)
     check_browser_timeouts_are_viable(args.skip_compile)
+    check_reasoning_stall_guard(args.skip_compile)
     if FAILURES:
         print("FAILED GATES: " + ", ".join(FAILURES))
         return 1
