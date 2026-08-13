@@ -1,0 +1,71 @@
+"""Container/service rebuild-restart capability (agent-skills#1398).
+
+Mocks run_cmd so nothing real is restarted.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+
+from watchdog import service  # noqa: E402
+
+
+def _fake_run_cmd(results):
+    calls = []
+
+    def _run(command, *, cwd=None, input_text=None, timeout_s=120):
+        calls.append(command)
+        return results.pop(0)
+
+    _run.calls = calls
+    return _run
+
+
+MEMORY = {
+    "project_id": "memory",
+    "service": {
+        "kind": "docker+systemd",
+        "restart_cmd": "uv pip install -e . && systemctl --user restart embry-memory",
+        "health_check": "test -S /run/user/1000/embry/memory.sock",
+        "proof_needs_restart": True,
+    },
+}
+NON_CONTAINER = {"project_id": "tau", "service": {"kind": "none", "proof_needs_restart": False}}
+
+
+def test_non_containerized_is_noop_success():
+    r = service.rebuild_restart_service(NON_CONTAINER, cwd="/tmp")
+    assert r["ok"] is True and r.get("skipped")
+
+
+def test_restart_then_healthy_passes(monkeypatch):
+    monkeypatch.setattr(service, "run_cmd",
+                        _fake_run_cmd([{"exit_code": 0}, {"exit_code": 0}]))
+    r = service.rebuild_restart_service(MEMORY, cwd="/tmp", _sleep=lambda *_: None)
+    assert r["ok"] is True
+    assert r["steps"][0]["exit_code"] == 0
+    assert r["steps"][-1]["healthy"] is True
+
+
+def test_restart_failure_fails_closed(monkeypatch):
+    monkeypatch.setattr(service, "run_cmd", _fake_run_cmd([{"exit_code": 1}]))
+    r = service.rebuild_restart_service(MEMORY, cwd="/tmp", _sleep=lambda *_: None)
+    assert r["ok"] is False and r["reason"] == "restart_cmd failed"
+
+
+def test_health_timeout_fails_closed(monkeypatch):
+    # restart ok, health never passes; clock jumps past the deadline
+    monkeypatch.setattr(service, "run_cmd",
+                        _fake_run_cmd([{"exit_code": 0}, {"exit_code": 1}, {"exit_code": 1}]))
+    clock = iter([0.0, 0.0, 1000.0])  # start, first check, second check past deadline
+    r = service.rebuild_restart_service(
+        MEMORY, cwd="/tmp", health_timeout_s=120,
+        _now=lambda: next(clock), _sleep=lambda *_: None)
+    assert r["ok"] is False and "health_check did not pass" in r["reason"]
+
+
+def test_missing_health_check_fails_closed(monkeypatch):
+    proj = {"service": {"kind": "systemd", "restart_cmd": "true", "proof_needs_restart": True}}
+    monkeypatch.setattr(service, "run_cmd", _fake_run_cmd([{"exit_code": 0}]))
+    r = service.rebuild_restart_service(proj, cwd="/tmp", _sleep=lambda *_: None)
+    assert r["ok"] is False and "health_check" in r["reason"]
