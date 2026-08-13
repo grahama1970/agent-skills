@@ -124,7 +124,12 @@ def format_markdown(report: dict) -> str:
 
     # Tests
     t = infra["tests"]
-    lines.append(f"### Tests: {t['total']} collected")
+    if t.get("error") == "tests dir missing":
+        lines.append("### Tests: not applicable (target has no tests/ directory)")
+    elif not t.get("collected", True):
+        lines.append(f"### Tests: COLLECTION FAILED — {str(t.get('error'))[:120]}")
+    else:
+        lines.append(f"### Tests: {t['total']} collected")
     lines.append("")
 
     # Cascade
@@ -173,7 +178,10 @@ def format_markdown(report: dict) -> str:
 
     # Skills
     sk = infra["skills"]
-    lines.append(f"### Skills: {sk['total']} total")
+    if sk.get("applicable") is False:
+        lines.append(f"### Skills: not applicable ({sk.get('reason', 'target owns no skills tree')})")
+    else:
+        lines.append(f"### Skills: {sk['total']} total")
     if sk.get("missing_skill_md_count", 0) > 0:
         lines.append(f"  - {sk['missing_skill_md_count']} dirs without SKILL.md")
     if sk.get("missing_sanity_count", 0) > 0:
