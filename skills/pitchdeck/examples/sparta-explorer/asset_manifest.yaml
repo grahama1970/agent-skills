@@ -1,223 +1,251 @@
 schema: pitchdeck.asset_manifest.v1
 project_name: Sparta Explorer
 assets:
-  - id: gen-problem-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-problem-scene.png
-    required: false
-    alt_text: "Drawn scene: robot analyst amid scattered space-cyber documents and warning marks"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: gen-architecture-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-architecture-scene.png
-    required: false
-    alt_text: "Drawn scene: documents flowing along a dotted path into one organized evidence thread"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: gen-valueprop-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-valueprop-scene.png
-    required: false
-    alt_text: "Drawn scene: analyst and robot reviewing one organized evidence board together"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: gen-thesis-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-thesis-scene.png
-    required: false
-    alt_text: "Drawn scene: a single golden thread connecting scattered document pages"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: gen-roadmap-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-roadmap-scene.png
-    required: false
-    alt_text: "Drawn scene: milestone road toward an orbiting satellite"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: gen-ask-scene
-    kind: illustration
-    visibility: public
-    local_path: assets/gen-ask-scene.png
-    required: false
-    alt_text: "Drawn scene: a person asking a robot librarian a question before an archive wall"
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette, no embedded text.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: crop-threat-matrix-techniques
-    kind: screenshot
-    visibility: public
-    local_path: assets/crop-threat-matrix-techniques.png
-    required: false
-    alt_text: "Threat Matrix technique columns with F-36 mapping badges (detail crop)"
-    target_aspect: "free"
-    status: present
-    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: crop-threat-console-cwe
-    kind: screenshot
-    visibility: public
-    local_path: assets/crop-threat-console-cwe.png
-    required: false
-    alt_text: "Sparta console answering a CWE-23 question with sources and evidence (detail crop)"
-    target_aspect: "free"
-    status: present
-    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: crop-evidence-gates
-    kind: screenshot
-    visibility: public
-    local_path: assets/crop-evidence-gates.png
-    required: false
-    alt_text: "Mission context and evidence gates panel showing NOT_READY adjudication (detail crop)"
-    target_aspect: "free"
-    status: present
-    generation_brief: Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp (2026-08-12) — derived, not generated.
-    source_ref:
-      source_id: sparta-public-readme
-  - id: sparta-helmet-mark-png
-    kind: logo
-    visibility: public
-    local_path: assets/sparta-helmet-mark.png
-    required: false
-    alt_text: Sparta Explorer cyan helmet mark (raster fallback)
-    target_aspect: "1:1"
-    status: present
-    generation_brief: Rasterized from sparta-front-helmet-cyan.svg at 1024x1024 (rsvg-convert, 2026-08-11).
-    source_ref:
-      source_id: sparta-public-readme
-  - id: sparta-helmet-mark
-    kind: logo
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-front-helmet-cyan.svg
-    required: false
-    alt_text: Sparta Explorer cyan helmet mark
-    target_aspect: "1:1"
-    status: present
-    generation_brief: Export a transparent PNG fallback at 1024 by 1024 if the SVG import changes in Google Slides.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Introduction
-  - id: sparta-threat-matrix
-    kind: screenshot
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp
-    required: true
-    alt_text: Sparta Explorer Threat Matrix showing tactic coverage, mapping state, mission context, and candidate versus reviewed state
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Recapture from one preflighted commit at 2560 by 1440 if the current UI differs from the dated image.
-    source_ref:
-      source_id: sparta-public-readme
-      section: The Product in One View
-  - id: sparta-global-posture
-    kind: screenshot
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp
-    required: true
-    alt_text: Global Posture showing degraded readiness, evidence gaps, threat context, and supplier lineage
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Recapture from the same commit and browser geometry as the other product slides.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Product Tour — Global Posture
-  - id: sparta-chat-console
-    kind: screenshot
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp
-    required: true
-    alt_text: Sparta Chat docked beside Supply Chain with an inspectable response pipeline and cited answer
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Recapture only after the exact response route and screenshot commit pass the current demo preflight.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Product Tour — Sparta Chat
-  - id: sparta-embry-os-foundation
-    kind: diagram
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-embry-os-value-prop-header.webp
-    required: true
-    alt_text: Conceptual Embry OS foundation connecting plant and warfighter program profiles through separated evidence, identity, policy, data scope, and authority boundaries
-    target_aspect: "16:9"
-    status: regenerate
-    generation_brief: Recompose for a true 16:9 slide with three zones—plant, governed local foundation, warfighter program—and no embedded small text.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Built on Embry OS
-  - id: sparta-response-flow
-    kind: diagram
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/sparta-explorer-response-flow.webp
-    required: false
-    alt_text: Conceptual response flow from source material through answerability to human workflow
-    target_aspect: "16:9"
-    status: regenerate
-    generation_brief: Prefer native PowerPoint flow shapes; use the image only as design reference.
-    source_ref:
-      source_id: sparta-public-readme
-      section: How Sparta Works
-  - id: sparta-supply-chain
-    kind: screenshot
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp
-    required: false
-    alt_text: Supply-chain topology showing a simulated service loss through suppliers, mission threads, and candidate requirements
-    target_aspect: "16:9"
-    status: present
-    generation_brief: Optional appendix capture; recapture with the main set if used.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Product Tour — Supply Chain
-  - id: sparta-qra-review
-    kind: screenshot
-    visibility: public
-    local_path: ${SPARTA_PUBLIC_ROOT}/docs/assets/screenshots/sparta-explorer-qras-20260730.webp
-    required: false
-    alt_text: QRA review queue showing candidate records, evidence gates, review state, and adjudication actions
-    target_aspect: "16:9"
-    status: stale
-    generation_brief: Keep in the private appendix or recapture after the named reasoning-field defect is repaired.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Product Tour — QRAs
-  - id: sparta-problem-fragmentation
-    kind: illustration
-    visibility: public
-    required: false
-    alt_text: Disconnected frameworks, engineering records, supplier data, tests, and human review converging on an unsupported answer
-    target_aspect: "16:9"
-    status: planned
-    generation_brief: Create a restrained dark 16:9 conceptual illustration with six disconnected source classes; do not include text or fake product UI.
-    source_ref:
-      source_id: sparta-public-readme
-      section: Why Sparta Explorer
+- id: gen-problem-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-problem-scene.png
+  required: false
+  alt_text: 'Drawn scene: robot analyst amid scattered space-cyber documents and warning marks'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: gen-architecture-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-architecture-scene.png
+  required: false
+  alt_text: 'Drawn scene: documents flowing along a dotted path into one organized evidence thread'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: gen-valueprop-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-valueprop-scene.png
+  required: false
+  alt_text: 'Drawn scene: analyst and robot reviewing one organized evidence board together'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: gen-thesis-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-thesis-scene.png
+  required: false
+  alt_text: 'Drawn scene: a single golden thread connecting scattered document pages'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: gen-roadmap-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-roadmap-scene.png
+  required: false
+  alt_text: 'Drawn scene: milestone road toward an orbiting satellite'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: gen-ask-scene
+  kind: illustration
+  visibility: public
+  local_path: assets/gen-ask-scene.png
+  required: false
+  alt_text: 'Drawn scene: a person asking a robot librarian a question before an archive wall'
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Generated 2026-08-11 (gemini-2.5-flash-image via create-image) in the house palette,
+    no embedded text.
+  source_ref:
+    source_id: sparta-public-readme
+- id: crop-threat-matrix-techniques
+  kind: screenshot
+  visibility: public
+  local_path: assets/crop-threat-matrix-techniques.png
+  required: false
+  alt_text: Threat Matrix technique columns with F-36 mapping badges (detail crop)
+  target_aspect: free
+  status: present
+  generation_brief: "Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp\
+    \ (2026-08-12) \u2014 derived, not generated."
+  source_ref:
+    source_id: sparta-public-readme
+- id: crop-threat-console-cwe
+  kind: screenshot
+  visibility: public
+  local_path: assets/crop-threat-console-cwe.png
+  required: false
+  alt_text: Sparta console answering a CWE-23 question with sources and evidence (detail crop)
+  target_aspect: free
+  status: present
+  generation_brief: "Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp\
+    \ (2026-08-12) \u2014 derived, not generated."
+  source_ref:
+    source_id: sparta-public-readme
+- id: crop-evidence-gates
+  kind: screenshot
+  visibility: public
+  local_path: assets/crop-evidence-gates.png
+  required: false
+  alt_text: Mission context and evidence gates panel showing NOT_READY adjudication (detail crop)
+  target_aspect: free
+  status: present
+  generation_brief: "Pillow crop from the README screenshot sparta-explorer-threat-matrix-20260730.webp\
+    \ (2026-08-12) \u2014 derived, not generated."
+  source_ref:
+    source_id: sparta-public-readme
+- id: sparta-helmet-mark-png
+  kind: logo
+  visibility: public
+  local_path: assets/sparta-helmet-mark.png
+  required: false
+  alt_text: Sparta Explorer cyan helmet mark (raster fallback)
+  target_aspect: '1:1'
+  status: present
+  generation_brief: Rasterized from sparta-front-helmet-cyan.svg at 1024x1024 (rsvg-convert, 2026-08-11).
+  source_ref:
+    source_id: sparta-public-readme
+- id: sparta-helmet-mark
+  kind: logo
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/sparta-front-helmet-cyan.svg
+  required: false
+  alt_text: Sparta Explorer cyan helmet mark
+  target_aspect: '1:1'
+  status: present
+  generation_brief: Export a transparent PNG fallback at 1024 by 1024 if the SVG import changes in Google
+    Slides.
+  source_ref:
+    source_id: sparta-public-readme
+    section: Introduction
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-threat-matrix
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp
+  required: true
+  alt_text: Sparta Explorer Threat Matrix showing tactic coverage, mapping state, mission context, and
+    candidate versus reviewed state
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Recapture from one preflighted commit at 2560 by 1440 if the current UI differs from
+    the dated image.
+  source_ref:
+    source_id: sparta-public-readme
+    section: The Product in One View
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-global-posture
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp
+  required: true
+  alt_text: Global Posture showing degraded readiness, evidence gaps, threat context, and supplier lineage
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Recapture from the same commit and browser geometry as the other product slides.
+  source_ref:
+    source_id: sparta-public-readme
+    section: "Product Tour \u2014 Global Posture"
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-chat-console
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp
+  required: true
+  alt_text: Sparta Chat docked beside Supply Chain with an inspectable response pipeline and cited answer
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Recapture only after the exact response route and screenshot commit pass the current
+    demo preflight.
+  source_ref:
+    source_id: sparta-public-readme
+    section: "Product Tour \u2014 Sparta Chat"
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-embry-os-foundation
+  kind: diagram
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/sparta-explorer-embry-os-value-prop-header.webp
+  required: true
+  alt_text: Conceptual Embry OS foundation connecting plant and warfighter program profiles through separated
+    evidence, identity, policy, data scope, and authority boundaries
+  target_aspect: '16:9'
+  status: regenerate
+  generation_brief: "Recompose for a true 16:9 slide with three zones\u2014plant, governed local foundation,\
+    \ warfighter program\u2014and no embedded small text."
+  source_ref:
+    source_id: sparta-public-readme
+    section: Built on Embry OS
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-response-flow
+  kind: diagram
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/sparta-explorer-response-flow.webp
+  required: false
+  alt_text: Conceptual response flow from source material through answerability to human workflow
+  target_aspect: '16:9'
+  status: regenerate
+  generation_brief: Prefer native PowerPoint flow shapes; use the image only as design reference.
+  source_ref:
+    source_id: sparta-public-readme
+    section: How Sparta Works
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-supply-chain
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp
+  required: false
+  alt_text: Supply-chain topology showing a simulated service loss through suppliers, mission threads,
+    and candidate requirements
+  target_aspect: '16:9'
+  status: present
+  generation_brief: Optional appendix capture; recapture with the main set if used.
+  source_ref:
+    source_id: sparta-public-readme
+    section: "Product Tour \u2014 Supply Chain"
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-qra-review
+  kind: screenshot
+  visibility: public
+  local_path: ${SPARTA_CANONICAL_ROOT}/docs/assets/screenshots/sparta-explorer-qras-20260730.webp
+  required: false
+  alt_text: QRA review queue showing candidate records, evidence gates, review state, and adjudication
+    actions
+  target_aspect: '16:9'
+  status: stale
+  generation_brief: Keep in the private appendix or recapture after the named reasoning-field defect is
+    repaired.
+  source_ref:
+    source_id: sparta-public-readme
+    section: "Product Tour \u2014 QRAs"
+  clearance: public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76
+- id: sparta-problem-fragmentation
+  kind: illustration
+  visibility: public
+  required: false
+  alt_text: Disconnected frameworks, engineering records, supplier data, tests, and human review converging
+    on an unsupported answer
+  target_aspect: '16:9'
+  status: planned
+  generation_brief: Create a restrained dark 16:9 conceptual illustration with six disconnected source
+    classes; do not include text or fake product UI.
+  source_ref:
+    source_id: sparta-public-readme
+    section: Why Sparta Explorer
 seam_validation:
   kind: asset_manifest
   status: PASS

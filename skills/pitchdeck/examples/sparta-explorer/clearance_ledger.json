@@ -1,0 +1,202 @@
+{
+ "schema": "pitchdeck.clearance_ledger.v1",
+ "canonical_root": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical",
+ "public_root": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public",
+ "public_ref": "a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+ "cleared_count": 9,
+ "attestation_required_count": 15,
+ "records": [
+  {
+   "asset": "sparta-explorer-chat-drilldown.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-chat-drilldown.webp",
+   "sha256": "0001e1e3a669ad9d91e53b869086a7820fa4fcbe2a28a8f82563f54797dfd7d7",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-console-supply-chain-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp",
+   "sha256": "46c82f0bba145902ef6e48cd05e624bd1522a76f0382780851608bc50c83907b",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-console-supply-chain-20260730.webp"
+  },
+  {
+   "asset": "sparta-explorer-controls-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-controls-20260730.webp",
+   "sha256": "77df0357e5ec267060df2ab08e1d4752e15ce50a0c18ba0f05fe067e51af00ae",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-coverage-drilldown.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-coverage-drilldown.webp",
+   "sha256": "e4079b91508c58a26ade8051c873c2348ed979736f5257470125bf4bb71095af",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-posture-10ft-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp",
+   "sha256": "50edcddeb28d515b1bbd541ba70121d0e89b256f104f060ccf7ca940190e0acf",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-posture-10ft-20260730.webp"
+  },
+  {
+   "asset": "sparta-explorer-posture-leanin-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-posture-leanin-20260730.webp",
+   "sha256": "82ec73e85ba2fce7f4045af18d5a948fa8c9d5151200cb30fa5effd0b6b7c706",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-qras-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-qras-20260730.webp",
+   "sha256": "df09a4545091f1c38f3d571923110312ad9be9d0b049ccbf346d3da25ff177ea",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-qras-20260730.webp"
+  },
+  {
+   "asset": "sparta-explorer-sources-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-sources-20260730.webp",
+   "sha256": "8888db79ad4bbab1c250631eba211ef581c43944e35d4b5a3f96b226abd9a1e4",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-supply-chain-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp",
+   "sha256": "282b17c27527c26dd2ae7e2dfc715538a0e4c1ba29eca6ead4ba1cc380054d4f",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-supply-chain-20260730.webp"
+  },
+  {
+   "asset": "sparta-explorer-threat-matrix-20260730.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp",
+   "sha256": "410ac4f3129ac6d5cce82ac6ea296496cc6225f46f49c281e2b64ca8db0e12b4",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-threat-matrix-20260730.webp"
+  },
+  {
+   "asset": "sparta-explorer-threat-matrix-rd0003-candidate-20260721.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-threat-matrix-rd0003-candidate-20260721.webp",
+   "sha256": "23afbbf95d5678ed137e351ab309458cb679c30b97794a170fa01761825ee676",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/screenshots/sparta-explorer-threat-matrix-rd0003-candidate-20260721.webp"
+  },
+  {
+   "asset": "sparta-explorer-urls-drilldown.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/screenshots/sparta-explorer-urls-drilldown.webp",
+   "sha256": "d4312d6a2306073d6e6eacce4673ed60d307383f2ad63331dd875ac3f85ea317",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-embry-os-value-prop-header.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-embry-os-value-prop-header.webp",
+   "sha256": "6f46e0a99d9af76fc082fb0c5b96c0ea0a1ab035164f02b309bde73bbfa48b47",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/sparta-explorer-embry-os-value-prop-header.webp"
+  },
+  {
+   "asset": "sparta-explorer-f36-evidence-lifecycle.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-f36-evidence-lifecycle.webp",
+   "sha256": "123a260e33f0129d855744f6b43c4c45178a0eee62a214a3129b02bbc58287e4",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-f36-overview.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-f36-overview.webp",
+   "sha256": "7acc976d1638810b7506f4391af6489353f373ba7fc6d78e777d4a64358916d2",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-header.svg",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-header.svg",
+   "sha256": "ee91ea25b76c1e7cc3630f897811467c347fe5ad7b246294b2ef7a1fe709300c",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-header.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-header.webp",
+   "sha256": "6f46e0a99d9af76fc082fb0c5b96c0ea0a1ab035164f02b309bde73bbfa48b47",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-page-distance-overview.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-page-distance-overview.webp",
+   "sha256": "77017817113a11f1cba2f7dfda6afa7c1eaf8daa0d8dfe1a45e9098525498415",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-product-overview.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-product-overview.webp",
+   "sha256": "1c9f02fecf59ed33dc89319d44f47d4fb7251596906eec3f7fb63ea55c427238",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-response-flow.svg",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-response-flow.svg",
+   "sha256": "e27eaa92b754b30ba16338d2cf79b2119cbc468c0f7223a464c075460b5cd9f7",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-explorer-response-flow.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-response-flow.webp",
+   "sha256": "96f593e6acb15b4f3c22360c32f12c9f59512f4bb4115112d9dae1b3b5778cca",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/sparta-explorer-response-flow.webp"
+  },
+  {
+   "asset": "sparta-explorer-shared-evidence-modes.webp",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-explorer-shared-evidence-modes.webp",
+   "sha256": "d7d37cd6e07459875cce7076bad4659b179d3ec29e11ec15955f25646c056e3f",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  },
+  {
+   "asset": "sparta-front-helmet-cyan.svg",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-front-helmet-cyan.svg",
+   "sha256": "6077e7aa3494953b798ce345f96e525ae38e0ea6a0c8b6b8ebe8ef82445490d3",
+   "cleared": true,
+   "basis": "public-by-precedent@a7241754f6954a8cdbe3cbac79a1b536023d1c76",
+   "public_evidence": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public/docs/assets/sparta-front-helmet-cyan.svg"
+  },
+  {
+   "asset": "sparta-front-helmet.svg",
+   "canonical_path": "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical/docs/assets/sparta-front-helmet.svg",
+   "sha256": "a861ccf6a012d27d7309845b8a94ca287f36a891fc96b531ae4c02f568de822c",
+   "cleared": false,
+   "basis": "canonical-only: requires named human attestation",
+   "public_evidence": null
+  }
+ ]
+}

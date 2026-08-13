@@ -5,8 +5,8 @@ audience: Aerospace and defense design partners, assessors, engineers, cyber ana
 sources:
   - id: sparta-public-readme
     title: Sparta Explorer public product overview
-    path: ${SPARTA_PUBLIC_ROOT}/README.md
-    visibility: public
+    path: ${SPARTA_CANONICAL_ROOT}/README.md
+    visibility: public   # cleared: text mirrored in sparta-public@a7241754
     role: primary
     required: true
     repo: grahama1970/sparta-public

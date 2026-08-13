@@ -265,6 +265,10 @@ class AssetSpec(StrictModel):
     status: AssetStatus = AssetStatus.PLANNED
     generation_brief: str | None = None
     source_ref: SourceRef | None = None
+    # Publication clearance is a SECOND layer above canonical truth: an asset
+    # may be canonical (private repo) yet not publishable. Cleared assets carry
+    # the precedent that cleared them; the rest require named attestation.
+    clearance: str | None = None
 
     @model_validator(mode="after")
     def validate_asset_location(self) -> "AssetSpec":

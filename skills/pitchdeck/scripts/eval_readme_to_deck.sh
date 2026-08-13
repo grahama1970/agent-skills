@@ -12,6 +12,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SCRIPT_DIR"
 export SPARTA_ROOT="${SPARTA_ROOT:-$HOME/workspace/experiments/sparta}"
 export SPARTA_PUBLIC_ROOT="${SPARTA_PUBLIC_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"
+# CANONICAL source of truth = the private repo (code, docs, full imagery).
+# Publication is a separate layer: clearance_ledger.json + assert_public_document.
+export SPARTA_CANONICAL_ROOT="${SPARTA_CANONICAL_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical}"
 
 WORK="${1:-$(mktemp -d /tmp/pitchdeck-e2e-XXXXXX)}"
 mkdir -p "$WORK"
