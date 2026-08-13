@@ -20,7 +20,7 @@ from loguru import logger
 
 from .contracts import ContractError
 from .morning_digest import build_digest
-from .util import read_json  # noqa: F401  (parity with cli imports)
+from .util import read_json, utc_now  # noqa: F401  (read_json: parity with cli)
 
 
 def run_digest_phase(
@@ -124,6 +124,40 @@ def run_digest_phase(
             digest["inbound_interest"] = inbound_viewers[:10]
         if hiring_contacts:
             digest["warm_hiring_contacts"] = hiring_contacts[:10]
+        # CONTACT CHANGES -> VENDOR LEADS. A contact who switched roles/orgs, or
+        # whose company just won a contract, is the strongest consulting signal
+        # we have: time-boxed mandate + already-warm relationship. Diffs tonight's
+        # captured contacts against the last snapshot in /memory, and runs a
+        # brave-search public-signal pass (which also works on first sighting).
+        try:
+            from .contact_changes import detect as detect_contact_changes
+
+            roster: list[dict[str, object]] = []
+            for src, rows in (
+                ("actively_hiring", hiring_contacts),
+                ("profile_viewer", inbound_viewers),
+            ):
+                for r in rows or []:
+                    roster.append({**r, "_capture_source": src})
+            if roster:
+                leads, cc_receipt = detect_contact_changes(
+                    roster, "linkedin_capture", memory_url, utc_now()
+                )
+                (out / "contact-changes.json").write_text(
+                    json.dumps(
+                        {"schema": "monitor_opportunities.contact_changes_run.v1",
+                         "receipt": cc_receipt, "vendor_leads": leads},
+                        indent=2, sort_keys=True,
+                    ) + "\n",
+                    encoding="utf-8",
+                )
+                if leads:
+                    digest["vendor_leads"] = leads[:10]
+                steps["contact_changes"] = cc_receipt
+        except Exception as exc:  # noqa: BLE001 - must never fail the run
+            logger.warning("contact-change detection skipped: {}", exc)
+            steps["contact_changes"] = {"error": str(exc)}
+
         # CONSULTING/PROSPECT QUEUE — federal buyers + commercial signals. This
         # was built and unit-tested but never wired into the nightly, so it had
         # produced nothing every run despite being "equally important to the
