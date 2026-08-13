@@ -15,6 +15,7 @@ Usage:
 
 import ast
 from dataclasses import asdict
+from enum import Enum
 import hashlib
 import importlib.util
 import json
@@ -32,7 +33,11 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
-from code_memory_client import CodeMemoryClient, code_graph_bundle_digest
+from code_memory_client import (
+    CodeMemoryClient,
+    code_graph_bundle_digest,
+    write_code_projection_request,
+)
 from code_freshness_preflight import refresh_allowed, run_preflight
 from code_graph_artifact import write_code_graph_bundle
 from code_symbol_record import CodeSymbolRecord
@@ -82,6 +87,12 @@ SKIP_DIRS = {
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
+
+
+class ProjectionMode(str, Enum):
+    EMIT = "emit"
+    APPLY = "apply"
+    NONE = "none"
 
 
 def load_taxonomy_module():
@@ -199,6 +210,7 @@ def _write_ingest_marker(
     local_code_symbols_artifact: str | Path | None = None,
     local_code_symbols_written: int = 0,
     code_graph_artifact: dict[str, Any] | None = None,
+    code_projection_request: dict[str, Any] | None = None,
     code_projection_receipt: dict[str, Any] | None = None,
 ) -> Path:
     """Write the local ingest-code marker consumed by monitor-codebase."""
@@ -223,6 +235,19 @@ def _write_ingest_marker(
             "line_ranges": code_symbols_stored > 0,
             "content_hashes": code_symbols_stored > 0,
             "hybrid_retrieval_capable": code_symbols_stored > 0,
+            "projection_mode": (
+                code_projection_request or code_projection_receipt or {}
+            ).get("projection_mode"),
+            "bundle_validated": bool(code_graph_artifact),
+            "projection_requested": bool(code_projection_request),
+            "projection_applied": bool(code_projection_receipt),
+            "projection_status": (
+                "applied"
+                if code_projection_receipt
+                else "requested_not_applied"
+                if code_projection_request
+                else "not_requested"
+            ),
             "projection_authority": "memory.code_projection.apply_receipt.v1"
             if code_projection_receipt
             else None,
@@ -251,6 +276,7 @@ def _write_ingest_marker(
             ),
             "code_symbols_written": local_code_symbols_written,
             "code_graph": code_graph_artifact,
+            "code_projection_request": code_projection_request,
             "code_projection_receipt": code_projection_receipt,
             "cleanup_evidence": str((path / ".cleanup-evidence.json").resolve()),
         },
@@ -434,6 +460,73 @@ def _apply_code_projection_artifact(
         expected_counts=expected_counts,
         idempotency_key=idempotency_key,
     )
+
+
+def _projection_request_for_artifact(
+    *,
+    path: Path,
+    scope: str,
+    code_graph_artifact: dict[str, Any],
+) -> dict[str, Any]:
+    """Emit a code projection request artifact without opening the Memory socket."""
+    expected_counts = _expected_projection_counts(code_graph_artifact)
+    bundle_path = Path(code_graph_artifact["path"])
+    submitted_bundle_digest = code_graph_bundle_digest(bundle_path)
+    idempotency_key = "gmo-code-projection:" + hashlib.sha256(
+        json.dumps([scope, path.resolve().name, _current_branch(path), submitted_bundle_digest], sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
+    result = write_code_projection_request(
+        bundle_path=bundle_path,
+        scope=scope,
+        repo=path.resolve().name,
+        branch=_current_branch(path),
+        root=str(path.resolve()),
+        source_commit=_current_commit(path),
+        expected_counts=expected_counts,
+        idempotency_key=idempotency_key,
+    )
+    return {
+        "schema": "ingest-code.code_projection_request_artifact.v1",
+        "projection_mode": ProjectionMode.EMIT.value,
+        "path": str(result.request_path.resolve()),
+        "sha256": result.request_digest,
+        "submitted_bundle_digest": result.submitted_bundle_digest,
+        "checksums_digest": result.checksums_digest,
+        "idempotency_key": idempotency_key,
+        "status": "emitted_not_applied",
+        "non_claims": result.request.get("non_claims", []),
+    }
+
+
+def _legacy_projection_flags_present() -> bool:
+    return any(arg in {"--code-index", "--no-code-index"} for arg in sys.argv[1:])
+
+
+def _resolve_projection_mode(
+    projection_mode: ProjectionMode | None,
+    *,
+    code_index: bool,
+    compat_symbol_upsert: bool,
+) -> ProjectionMode:
+    if not isinstance(projection_mode, ProjectionMode):
+        projection_mode = None
+    if projection_mode is not None:
+        if _legacy_projection_flags_present():
+            print(
+                "[ERROR] --projection-mode conflicts with legacy --code-index/--no-code-index flags",
+                file=sys.stderr,
+                flush=True,
+            )
+            raise SystemExit(2)
+        if compat_symbol_upsert and projection_mode is not ProjectionMode.APPLY:
+            print(
+                "[ERROR] --compat-symbol-upsert is only compatible with --projection-mode apply",
+                file=sys.stderr,
+                flush=True,
+            )
+            raise SystemExit(2)
+        return projection_mode
+    return ProjectionMode.APPLY if code_index else ProjectionMode.NONE
 
 
 # ---------------------------------------------------------------------------
@@ -1664,16 +1757,22 @@ def scan(
     validate: bool = typer.Option(False, "--validate/--no-validate", help="Run LLM validation on CWEs"),
     treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for structured code symbols"),
     code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Apply treesitter code graph bundle to Memory/GMO projection"),
+    projection_mode: ProjectionMode | None = typer.Option(None, "--projection-mode", help="Projection handling: emit, apply, or none"),
     compat_symbol_upsert: bool = typer.Option(False, "--compat-symbol-upsert", help="Use legacy per-symbol upserts instead of complete projection application"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     batch_size: int = typer.Option(50, help="Files per batch"),
 ):
     """Scan a codebase for functional knowledge and CWE mappings, store in /memory."""
+    selected_projection_mode = _resolve_projection_mode(
+        projection_mode,
+        code_index=code_index,
+        compat_symbol_upsert=compat_symbol_upsert,
+    )
     taxonomy = load_taxonomy_module()
     memory_script = find_memory_skill()
 
-    if not memory_script and not dry_run:
+    if not memory_script and not dry_run and selected_projection_mode is not ProjectionMode.EMIT:
         print('{"error": "Memory skill not found"}', file=sys.stderr)
         raise SystemExit(1)
 
@@ -1690,6 +1789,7 @@ def scan(
     component_plan = None
     current_entries: dict[str, str] = {}
     code_symbols_pruned = 0
+    code_projection_request: dict[str, Any] | None = None
     code_projection_receipt: dict[str, Any] | None = None
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
@@ -1877,13 +1977,24 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
-    if treesitter and code_index and not cwe_only:
-        print("\n--- Phase 4: Applying structured code projection ---", flush=True)
+    if treesitter and selected_projection_mode is not ProjectionMode.NONE and not cwe_only:
+        print("\n--- Phase 4: Structured code projection boundary ---", flush=True)
         if dry_run:
-            print("  [DRY RUN] code projection application skipped", flush=True)
+            print("  [DRY RUN] code projection request/application skipped", flush=True)
         elif not code_graph_artifact:
             print("  [ERROR] code graph artifact missing; refusing projection write", file=sys.stderr, flush=True)
             raise SystemExit(1)
+        elif selected_projection_mode is ProjectionMode.EMIT:
+            code_projection_request = _projection_request_for_artifact(
+                path=path,
+                scope=scope,
+                code_graph_artifact=code_graph_artifact,
+            )
+            print(
+                "Code projection request: "
+                f"{code_projection_request['path']} (not applied)",
+                flush=True,
+            )
         elif not compat_symbol_upsert:
             apply_result = _apply_code_projection_artifact(
                 path=path,
@@ -1969,7 +2080,9 @@ def scan(
         "local_code_symbols_written": local_code_symbols_written,
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "code_graph_artifact": code_graph_artifact,
+        "code_projection_request": code_projection_request,
         "code_projection_receipt": code_projection_receipt,
+        "projection_mode": selected_projection_mode.value,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
@@ -1992,6 +2105,7 @@ def scan(
                 local_code_symbols_artifact=local_code_symbols_artifact,
                 local_code_symbols_written=local_code_symbols_written,
                 code_graph_artifact=code_graph_artifact,
+                code_projection_request=code_projection_request,
                 code_projection_receipt=code_projection_receipt,
             )
             print(f"\nMarker written: {marker_path}")
@@ -2013,11 +2127,17 @@ def rescan(
     validate: bool = typer.Option(True, "--validate/--no-validate", help="Run LLM validation"),
     treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for symbol extraction"),
     code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
+    projection_mode: ProjectionMode | None = typer.Option(None, "--projection-mode", help="Projection handling: emit, apply, or none"),
     verify_embeddings: bool = typer.Option(False, "--verify-embeddings", help="Spot-check recalled embeddings for stored symbols"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
 ):
     """Nightly rescan for living document updates. Designed for /scheduler."""
+    selected_projection_mode = _resolve_projection_mode(
+        projection_mode,
+        code_index=code_index,
+        compat_symbol_upsert=False,
+    )
     mtime_threshold = None
     if since:
         if since.endswith("d"):
@@ -2106,8 +2226,9 @@ def rescan(
         local_code_symbols_written = 0
         codebase_ts_symbols = 0
         code_graph_artifact: dict[str, Any] | None = None
+        code_projection_request: dict[str, Any] | None = None
         code_projection_receipt: dict[str, Any] | None = None
-        if treesitter and code_index:
+        if treesitter and selected_projection_mode is not ProjectionMode.NONE:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             local_code_symbols_artifact = _prepare_local_code_symbols_artifact(path)
             projection_files = collect_files(path, DEFAULT_GLOB_PATTERNS)
@@ -2130,22 +2251,34 @@ def rescan(
                 symbols=projection_records,
                 edges=projection_edges,
             )
-            apply_result = _apply_code_projection_artifact(
-                path=path,
-                scope=scope,
-                code_graph_artifact=code_graph_artifact,
-            )
-            if apply_result.errors:
-                for error in apply_result.errors[:5]:
-                    print(f"  [ERROR] projection apply: {error}", file=sys.stderr, flush=True)
-                raise SystemExit(1)
-            codebase_ts_symbols = apply_result.stored
-            code_projection_receipt = apply_result.receipt
-            for record in projection_records[:codebase_ts_symbols]:
-                verifiable_samples.append({
-                    "name": record.symbol_name,
-                    "problem": record.problem,
-                })
+            if selected_projection_mode is ProjectionMode.EMIT:
+                code_projection_request = _projection_request_for_artifact(
+                    path=path,
+                    scope=scope,
+                    code_graph_artifact=code_graph_artifact,
+                )
+                print(
+                    "Code projection request: "
+                    f"{code_projection_request['path']} (not applied)",
+                    flush=True,
+                )
+            else:
+                apply_result = _apply_code_projection_artifact(
+                    path=path,
+                    scope=scope,
+                    code_graph_artifact=code_graph_artifact,
+                )
+                if apply_result.errors:
+                    for error in apply_result.errors[:5]:
+                        print(f"  [ERROR] projection apply: {error}", file=sys.stderr, flush=True)
+                    raise SystemExit(1)
+                codebase_ts_symbols = apply_result.stored
+                code_projection_receipt = apply_result.receipt
+                for record in projection_records[:codebase_ts_symbols]:
+                    verifiable_samples.append({
+                        "name": record.symbol_name,
+                        "problem": record.problem,
+                    })
             if local_code_symbols_artifact.exists():
                 local_code_symbols_written = sum(
                     1 for line in local_code_symbols_artifact.read_text().splitlines() if line.strip()
@@ -2167,6 +2300,7 @@ def rescan(
             local_code_symbols_artifact=local_code_symbols_artifact,
             local_code_symbols_written=local_code_symbols_written,
             code_graph_artifact=code_graph_artifact,
+            code_projection_request=code_projection_request,
             code_projection_receipt=code_projection_receipt,
         )
         print(f"Marker written: {marker_path}", flush=True)

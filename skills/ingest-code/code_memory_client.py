@@ -30,6 +30,7 @@ CODE_GRAPH_ARTIFACTS = (
     "coverage.json",
     "checksums.json",
 )
+CODE_GRAPH_BUNDLE_PATH_MAP_ENV = "INGEST_CODE_BUNDLE_PATH_MAP"
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,15 @@ class CodeProjectionApplyResult(MemoryWriteResult):
     checksums_digest: str
 
 
+@dataclass(frozen=True)
+class CodeProjectionRequestResult:
+    request: dict[str, Any]
+    request_path: Path
+    request_digest: str
+    submitted_bundle_digest: str
+    checksums_digest: str
+
+
 def code_graph_bundle_digest(bundle_path: Path) -> str:
     """Return a deterministic digest over the submitted code-graph bundle."""
     hasher = hashlib.sha256()
@@ -67,6 +77,138 @@ def code_graph_bundle_digest(bundle_path: Path) -> str:
 def code_graph_checksums_digest(bundle_path: Path) -> str:
     """Return the digest of checksums.json for the submitted code-graph bundle."""
     return f"sha256:{hashlib.sha256((bundle_path / 'checksums.json').read_bytes()).hexdigest()}"
+
+
+def _sha256_file(path: Path) -> str:
+    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
+
+
+def _code_graph_artifact_inventory(bundle_path: Path) -> list[dict[str, Any]]:
+    inventory: list[dict[str, Any]] = []
+    for name in CODE_GRAPH_ARTIFACTS:
+        artifact = bundle_path / name
+        inventory.append(
+            {
+                "name": name,
+                "path": str(artifact.resolve()),
+                "sha256": _sha256_file(artifact) if artifact.exists() else None,
+                "bytes": artifact.stat().st_size if artifact.exists() else 0,
+                "missing": not artifact.exists(),
+            }
+        )
+    return inventory
+
+
+def _transport_bundle_path(bundle_path: Path) -> str:
+    """Return the Memory/GMO-visible bundle path, preserving host hashing."""
+    raw_map = os.environ.get(CODE_GRAPH_BUNDLE_PATH_MAP_ENV, "")
+    if raw_map:
+        for item in raw_map.split(os.pathsep):
+            if not item or "=" not in item:
+                continue
+            host_prefix, service_prefix = item.split("=", 1)
+            host_root = Path(host_prefix).expanduser().resolve()
+            try:
+                relative = bundle_path.resolve().relative_to(host_root)
+            except ValueError:
+                continue
+            return str(Path(service_prefix) / relative)
+    return str(bundle_path.resolve())
+
+
+def build_code_projection_request(
+    *,
+    bundle_path: Path,
+    scope: str,
+    repo: str,
+    branch: str,
+    root: str,
+    source_commit: str,
+    expected_counts: dict[str, int],
+    idempotency_key: str,
+) -> dict[str, Any]:
+    """Build the deterministic ingest-code projection request handoff."""
+    bundle_path = bundle_path.resolve()
+    submitted_digest = code_graph_bundle_digest(bundle_path)
+    checksums_digest = code_graph_checksums_digest(bundle_path)
+    manifest_path = bundle_path / "manifest.json"
+    coverage_path = bundle_path / "coverage.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+    coverage = json.loads(coverage_path.read_text(encoding="utf-8")) if coverage_path.exists() else {}
+    return {
+        "schema": "ingest-code.code_projection_request.v1",
+        "scope": scope,
+        "repo": repo,
+        "branch": branch,
+        "root": root,
+        "source_commit": source_commit,
+        "code_index_id": manifest.get("code_index_id"),
+        "coverage_scope": coverage.get("scope") or manifest.get("coverage_scope"),
+        "reconciliation_eligible": bool(manifest.get("complete")) and not bool(coverage.get("fail_closed")),
+        "bundle_path": _transport_bundle_path(bundle_path),
+        "bundle_path_role": "transport_metadata_only",
+        "host_bundle_path": str(bundle_path),
+        "artifact_inventory": _code_graph_artifact_inventory(bundle_path),
+        "submitted_bundle_digest": submitted_digest,
+        "checksums_digest": checksums_digest,
+        "expected_counts": dict(expected_counts),
+        "transform_fingerprints": manifest.get("transform_fingerprints"),
+        "skill": "ingest-code",
+        "schema_versions": {
+            "projection_request": "ingest-code.code_projection_request.v1",
+            "code_graph_bundle": manifest.get("schema") or manifest.get("schema_version"),
+        },
+        "source_identity": {
+            "repo": repo,
+            "branch": branch,
+            "commit": source_commit,
+            "root": root,
+            "dirty_state": manifest.get("dirty_state") or manifest.get("worktree_state"),
+        },
+        "idempotency_key": idempotency_key,
+        "requested_effect_kind": "memory_gmo.code_projection.apply",
+        "proof_scope": "validated_static_code_graph_projection_request",
+        "non_claims": [
+            "request_emission_is_not_projection_activation",
+            "scanner_success_is_not_memory_generation_readback",
+            "local_bundle_path_is_not_durable_identity",
+            "static_extraction_is_not_semantic_correctness",
+        ],
+    }
+
+
+def write_code_projection_request(
+    *,
+    bundle_path: Path,
+    request_path: Path | None = None,
+    scope: str,
+    repo: str,
+    branch: str,
+    root: str,
+    source_commit: str,
+    expected_counts: dict[str, int],
+    idempotency_key: str,
+) -> CodeProjectionRequestResult:
+    """Write and digest one projection request without contacting Memory/GMO."""
+    request = build_code_projection_request(
+        bundle_path=bundle_path,
+        scope=scope,
+        repo=repo,
+        branch=branch,
+        root=root,
+        source_commit=source_commit,
+        expected_counts=expected_counts,
+        idempotency_key=idempotency_key,
+    )
+    target = request_path or (bundle_path.resolve() / "code_projection_request.json")
+    target.write_text(json.dumps(request, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return CodeProjectionRequestResult(
+        request=request,
+        request_path=target,
+        request_digest=_sha256_file(target),
+        submitted_bundle_digest=request["submitted_bundle_digest"],
+        checksums_digest=request["checksums_digest"],
+    )
 
 
 class CodeMemoryClient:
@@ -141,20 +283,18 @@ class CodeMemoryClient:
     ) -> CodeProjectionApplyResult:
         """Apply one complete code-graph bundle through Memory/GMO lifecycle authority."""
         bundle_path = bundle_path.resolve()
-        submitted_digest = code_graph_bundle_digest(bundle_path)
-        checksums_digest = code_graph_checksums_digest(bundle_path)
-        request = {
-            "bundle_path": str(bundle_path),
-            "scope": scope,
-            "repo": repo,
-            "branch": branch,
-            "root": root,
-            "source_commit": source_commit,
-            "submitted_bundle_digest": submitted_digest,
-            "checksums_digest": checksums_digest,
-            "expected_counts": expected_counts,
-            "idempotency_key": idempotency_key,
-        }
+        request = build_code_projection_request(
+            bundle_path=bundle_path,
+            scope=scope,
+            repo=repo,
+            branch=branch,
+            root=root,
+            source_commit=source_commit,
+            expected_counts=expected_counts,
+            idempotency_key=idempotency_key,
+        )
+        submitted_digest = request["submitted_bundle_digest"]
+        checksums_digest = request["checksums_digest"]
         try:
             with self._client() as client:
                 response = client.post("/code/projection/apply", json=request)

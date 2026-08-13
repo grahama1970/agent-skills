@@ -85,8 +85,9 @@ Options:
   --cwe-only         Skip Phase 1, only run CWE scan
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
-  --code-index       Apply the complete Tree-sitter code graph bundle to Memory/GMO (default)
-  --no-code-index    Disable structured code projection application
+  --projection-mode  Projection handling: emit, apply, or none
+  --code-index       Compatibility alias for --projection-mode apply
+  --no-code-index    Compatibility alias for --projection-mode none
   --compat-symbol-upsert
                      Use legacy per-symbol Memory upserts with a visible warning
   --dry-run          Preview without writing to /memory
@@ -104,8 +105,9 @@ Options:
   -c, --codebase     Codebase path(s) to rescan (repeatable)
   --validate         Run LLM validation
   --treesitter       Run Tree-sitter scan for structured code symbols
-  --code-index       Apply the complete Tree-sitter code graph bundle to Memory/GMO (default)
-  --no-code-index    Disable structured code projection application
+  --projection-mode  Projection handling: emit, apply, or none
+  --code-index       Compatibility alias for --projection-mode apply
+  --no-code-index    Compatibility alias for --projection-mode none
   --scope            Memory scope
 ```
 
@@ -172,9 +174,19 @@ the canonical main projection.
 
 ### Phase 4: Structured Code Index (Tree-sitter → /memory)
 
-When `--treesitter --code-index` is enabled, `/ingest-code` writes a deterministic local code-graph bundle under `artifacts/ingest-code/code-graph/`, computes the submitted bundle digest and checksums digest, and submits the complete bundle to Memory/GMO through `/code/projection/apply`.
+When `--treesitter` is enabled, `/ingest-code` writes a deterministic local code-graph bundle under `artifacts/ingest-code/code-graph/`, computes the submitted bundle digest and checksums digest, and then follows the selected projection mode:
+
+| Mode | Behavior |
+| --- | --- |
+| `--projection-mode emit` | Validate the complete bundle and write `code_projection_request.json` without opening the Memory/GMO socket or performing an external effect. This is the intended mode for Tau-managed execution. |
+| `--projection-mode apply` | Apply the validated request through Memory/GMO's governed `/code/projection/apply` endpoint and verify the returned application receipt. This is the standalone compatibility path. |
+| `--projection-mode none` | Build and validate the local bundle only; no projection request or application is requested. |
+
+`--code-index` and `--no-code-index` remain compatibility aliases for `apply` and `none` respectively during migration. Supplying a new projection mode together with an explicit legacy projection flag fails closed instead of guessing precedence.
 
 The Memory/GMO receipt is the only canonical projection success signal. It must bind the submitted bundle digest, checksums digest, activated generation, and expected file/symbol/edge counts. If Memory/GMO is unavailable, rejects the bundle, or returns a receipt whose digest does not match the submitted bundle, the scan fails closed and does not fall back to per-symbol writes.
+
+An emitted `ingest-code.code_projection_request.v1` is not activation proof. It binds scope, repo, branch, root, source commit, expected counts, artifact inventory, submitted bundle digest, checksums digest, stable idempotency key, requested effect kind, and explicit non-claims. Tau or another host authority must separately authorize and apply it before any Memory/GMO generation is considered active.
 
 Each record includes:
 
@@ -356,8 +368,8 @@ Two ordering rules the implementation depends on:
 A missing or corrupt state file degrades to a full re-index rather than failing
 the ingest.
 
-`scan --treesitter --code-index` uses the governed bundle-application endpoint
-by default. The legacy per-symbol Memory upsert path remains only under
+`scan --treesitter --projection-mode apply` uses the governed bundle-application endpoint.
+The legacy per-symbol Memory upsert path remains only under
 `--compat-symbol-upsert` and emits a visible warning because it is not
 complete-projection lifecycle authority.
 

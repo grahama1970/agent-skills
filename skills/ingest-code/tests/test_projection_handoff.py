@@ -232,6 +232,66 @@ def test_scan_uses_projection_apply_instead_of_legacy_symbol_upsert(monkeypatch,
     assert marker["local_artifacts"]["code_projection_receipt"]["generation"]["generation_id"] == "cg_scan"
 
 
+def test_scan_projection_mode_emit_writes_request_without_memory_effect(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    source = repo / "app.py"
+    source.write_text("def app():\n    return 1\n", encoding="utf-8")
+
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: None)
+    monkeypatch.setattr(ingest_code, "find_memory_skill", lambda: None)
+    monkeypatch.setattr(ingest_code, "_learn_http", lambda *_args, **_kwargs: False)
+    monkeypatch.setattr(ingest_code, "_current_branch", lambda path: "main")
+    monkeypatch.setattr(ingest_code, "_current_commit", lambda path: "abc123")
+    monkeypatch.setattr(ingest_code, "_extract_configured_scan_roots", lambda path: [repo])
+    monkeypatch.setattr(
+        ingest_code,
+        "_scan_treesitter_symbol_records_for_file",
+        lambda filepath, codebase_root, scope: [_symbol(repo)],
+    )
+
+    class ForbiddenClient:
+        def __init__(self, *_args, **_kwargs):
+            raise AssertionError("emit mode must not construct CodeMemoryClient")
+
+    monkeypatch.setattr(ingest_code, "CodeMemoryClient", ForbiddenClient)
+
+    ingest_code.scan(
+        path=repo,
+        glob=[],
+        cwe_only=False,
+        validate=False,
+        treesitter=True,
+        code_index=True,
+        projection_mode=ingest_code.ProjectionMode.EMIT,
+        compat_symbol_upsert=False,
+        dry_run=False,
+        scope="code",
+        batch_size=50,
+    )
+
+    marker = json.loads((repo / ".ingest-code.json").read_text(encoding="utf-8"))
+    request_artifact = marker["local_artifacts"]["code_projection_request"]
+    request = json.loads(Path(request_artifact["path"]).read_text(encoding="utf-8"))
+    assert request["schema"] == "ingest-code.code_projection_request.v1"
+    assert request["requested_effect_kind"] == "memory_gmo.code_projection.apply"
+    assert request["submitted_bundle_digest"] == request_artifact["submitted_bundle_digest"]
+    assert marker["code_index"]["projection_status"] == "requested_not_applied"
+    assert marker["code_index"]["projection_applied"] is False
+    assert marker["local_artifacts"]["code_projection_receipt"] is None
+
+
+def test_projection_mode_rejects_explicit_legacy_flag(monkeypatch) -> None:
+    monkeypatch.setattr(ingest_code.sys, "argv", ["ingest_code.py", "scan", "repo", "--projection-mode", "emit", "--no-code-index"])
+
+    with pytest.raises(SystemExit):
+        ingest_code._resolve_projection_mode(
+            ingest_code.ProjectionMode.EMIT,
+            code_index=False,
+            compat_symbol_upsert=False,
+        )
+
+
 def test_scan_fails_closed_when_projection_apply_is_rejected(monkeypatch, tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
