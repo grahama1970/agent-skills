@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1401,
+  "unit": {
+    "command": "uv run pytest skills/ask/tests/test_run_projection.py skills/ask/tests/test_run_projection_modes.py -q",
+    "exit_code": 0,
+    "summary": "67 passed - 10 cross-mode fixtures, absence reporting, candidate-not-success, partial roundtable seat enumeration, blocked preflight retention, three-consumer agreement, byte-stable reprojection"
+  },
+  "e2e": {
+    "command": "cd skills/ask && ./run.sh tau-dag 'Reply with exactly the word PROJECTION and nothing else.' --repo local/agent-skills --target ticket-1401-live-proof --immutable-goal 'Prove ask.run_projection.v1 reads back the same node and settlement states as the live run' --handler gpt-5.5-high --topology sequential --execute --json",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-reply-with-exactly-the-word-proj-328e8e7ffed3/node-artifacts/join/node-receipt.json",
+    "summary": "live non-mocked Tau run, provider_live true, PASS; projection, timeline and authoritative node-receipt.json agree on every node and settlement state, read back from disk"
+  }
+}

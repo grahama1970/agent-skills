@@ -1,0 +1,12 @@
+{
+  "failure_code": "browser_provider_probe_timeout",
+  "live": true,
+  "mocked": false,
+  "no_tau_execution": true,
+  "ok": false,
+  "provider_live": false,
+  "removed_seats": [
+    "webgpt"
+  ],
+  "status": "NEEDS_ATTENTION"
+}

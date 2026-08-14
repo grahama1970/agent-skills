@@ -264,7 +264,7 @@ def main(
         # surface from the legacy --run status path below, which reads a
         # different artifact family; unifying them is follow-on work rather
         # than a rewrite smuggled into this change.
-        from .run_projection import project_run
+        from .run_projection import project_run, render_text
 
         if not run:
             print("--projection requires --run <run-directory>", file=sys.stderr)
@@ -273,16 +273,8 @@ def main(
         if as_json:
             print(json.dumps(payload, indent=2, default=str))
             return
-        print(f"{payload['run_id']}  {payload['lifecycle']}  ({payload['lifecycle_source']})")
-        print(f"  goal_hash: {payload.get('goal_hash') or '-'}")
-        print(f"  nodes: {payload['node_count']} | settled: {payload['settled_node_count']} | admitted: {payload['admitted_node_count']}")
-        for node in payload["nodes"]:
-            extra = node.get("limitation") or node.get("failure_code") or ""
-            print(f"    {node['node_id']:<24} {node['stage']:<12} {node['target_kind']:<14} {extra}")
-        for limitation in payload["limitations"]:
-            print(f"  ! {limitation['scope']}: {limitation['reason']}")
-        if payload["next_action"]:
-            print(f"  next: {payload['next_action']}")
+        for line in render_text(payload):
+            print(line)
         return
 
     if prune:

@@ -356,3 +356,59 @@ def _next_action(
     if unsettled and projection["lifecycle"] not in {"RUNNING", "WAITING"}:
         return f"inspect nodes with no terminal receipt: {', '.join(unsettled[:5])}"
     return None
+
+
+def render_text(projection: dict[str, Any]) -> list[str]:
+    """Human status lines, derived only from the projection.
+
+    Required proof 8: human output, ``--json``, and the timeline must consume
+    one projection rather than each re-inferring state from artifacts. Keeping
+    the renderer here -- taking the projection dict and nothing else -- is what
+    makes that checkable: a consumer that re-reads the run directory would have
+    to bypass this function to do it.
+    """
+    lines = [
+        f"{projection['run_id']}  {projection['lifecycle']}  ({projection['lifecycle_source']})",
+        f"  goal_hash: {projection.get('goal_hash') or '-'}",
+        f"  nodes: {projection['node_count']}"
+        f" | settled: {projection['settled_node_count']}"
+        f" | admitted: {projection['admitted_node_count']}",
+    ]
+    for node in projection["nodes"]:
+        detail = node.get("limitation") or node.get("failure_code") or ""
+        lines.append(
+            f"    {node['node_id']:<24} {node['stage']:<12} {node['target_kind']:<14} {detail}"
+        )
+    for limitation in projection["limitations"]:
+        lines.append(f"  ! {limitation['scope']}: {limitation['reason']}")
+    if projection["next_action"]:
+        lines.append(f"  next: {projection['next_action']}")
+    return lines
+
+
+def to_timeline(projection: dict[str, Any]) -> dict[str, Any]:
+    """Timeline-shaped view, derived only from the projection.
+
+    The third consumer required by proof 8. It reshapes; it never re-reads the
+    run directory, so timeline and CLI JSON cannot disagree about a node's
+    settlement state.
+    """
+    return {
+        "schema": "ask.run_timeline.v1",
+        "run_id": projection["run_id"],
+        "lifecycle": projection["lifecycle"],
+        "terminal": projection["terminal"],
+        "goal_hash": projection.get("goal_hash"),
+        "entries": [
+            {
+                "node_id": node["node_id"],
+                "stage": node["stage"],
+                "target_kind": node["target_kind"],
+                "settled": node["stage"] == "SETTLED",
+                "evidence_admitted": node["evidence_admitted"],
+                "cause": node.get("failure_code") or node.get("limitation") or None,
+            }
+            for node in projection["nodes"]
+        ],
+        "limitations": list(projection["limitations"]),
+    }

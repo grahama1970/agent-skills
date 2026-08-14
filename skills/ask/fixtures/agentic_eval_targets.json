@@ -337,6 +337,38 @@
           "real runs; stages"
         ]
       }
+    },
+    {
+      "name": "run-projection-covers-every-execution-mode",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_run_projection_modes.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "run-projection-fixtures-regenerate-byte-identically",
+      "type": "adversarial",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && before=$(find tests/fixtures/run_projection -name '*.json' | sort | xargs sha256sum | sha256sum) && python3 tests/fixtures/run_projection/build_fixtures.py >/dev/null && after=$(find tests/fixtures/run_projection -name '*.json' | sort | xargs sha256sum | sha256sum) && [ \"$before\" = \"$after\" ] && echo 'fixtures regenerate byte-identically'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "byte-identically"
+        ]
+      }
     }
   ]
 }
