@@ -20,7 +20,7 @@ from ask import browser_windows
 
 @pytest.fixture(autouse=True)
 def _ledger(tmp_path, monkeypatch):
-    monkeypatch.setattr(browser_windows, "REGISTRY", tmp_path / "browser-windows.jsonl")
+    monkeypatch.setenv(browser_windows.REGISTRY_ENV, str(tmp_path / "browser-windows.jsonl"))
     return tmp_path / "browser-windows.jsonl"
 
 

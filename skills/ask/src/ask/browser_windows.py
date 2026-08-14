@@ -38,6 +38,18 @@ from typing import Any
 
 REGISTRY = Path.home() / ".ask" / "browser-windows.jsonl"
 
+#: Tests must never write into the real ledger. Before this override the
+#: tau_dag suite appended fake window ids (901, 902, 1002...) to the user's own
+#: file on every run -- harmless while no window carries those ids, and exactly
+#: the kind of thing a reaper should never be handed.
+REGISTRY_ENV = "ASK_BROWSER_WINDOW_REGISTRY"
+
+
+def registry_path() -> Path:
+    """The ledger to read and write, honouring the test override."""
+    override = os.environ.get(REGISTRY_ENV, "").strip()
+    return Path(override) if override else REGISTRY
+
 #: fresh-keep exists so a human can inspect the tabs. Four hours is long past
 #: the end of any session that would have looked.
 FRESH_KEEP_TTL_SECONDS = 4 * 3600
@@ -76,17 +88,18 @@ def register(
         return []
     entry_pid = os.getpid() if pid is None else int(pid)
     try:
-        REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+        registry = registry_path()
+        registry.parent.mkdir(parents=True, exist_ok=True)
         # A writer killed mid-append leaves a line with no terminator. Without
         # this the NEXT append concatenates onto it and loses two entries
         # instead of one, which defeats the point of an append-only ledger.
-        if REGISTRY.is_file() and REGISTRY.stat().st_size:
-            with REGISTRY.open("rb") as probe:
+        if registry.is_file() and registry.stat().st_size:
+            with registry.open("rb") as probe:
                 probe.seek(-1, os.SEEK_END)
                 if probe.read(1) != b"\n":
-                    with REGISTRY.open("a", encoding="utf-8") as repair:
+                    with registry.open("a", encoding="utf-8") as repair:
                         repair.write("\n")
-        with REGISTRY.open("a", encoding="utf-8") as handle:
+        with registry.open("a", encoding="utf-8") as handle:
             for window_id in unique:
                 handle.write(
                     json.dumps(
@@ -109,10 +122,11 @@ def register(
 
 def load() -> list[dict[str, Any]]:
     """Every registry entry, skipping lines a torn append left unreadable."""
-    if not REGISTRY.is_file():
+    registry = registry_path()
+    if not registry.is_file():
         return []
     try:
-        raw = REGISTRY.read_text(encoding="utf-8").splitlines()
+        raw = registry.read_text(encoding="utf-8").splitlines()
     except OSError:
         return []
     entries: list[dict[str, Any]] = []
@@ -130,15 +144,16 @@ def load() -> list[dict[str, Any]]:
 
 def deregister(window_ids: set[str]) -> None:
     """Drop entries for windows that are no longer an obligation."""
-    if not window_ids or not REGISTRY.is_file():
+    registry = registry_path()
+    if not window_ids or not registry.is_file():
         return
     try:
         kept = [
             line
-            for line in REGISTRY.read_text(encoding="utf-8").splitlines()
+            for line in registry.read_text(encoding="utf-8").splitlines()
             if line.strip() and _window_of(line) not in window_ids
         ]
-        REGISTRY.write_text("".join(line + "\n" for line in kept), encoding="utf-8")
+        registry.write_text("".join(line + "\n" for line in kept), encoding="utf-8")
     except OSError:
         pass
 
