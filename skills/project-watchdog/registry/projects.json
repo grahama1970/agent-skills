@@ -219,7 +219,7 @@
     "The repository is currently very dirty; watchdog mutation should require a clean-worktree policy or explicit dirty-worktree handling."
    ],
    "repair_creator": "gpt-5.5-high",
-   "repair_reviewer": "webclaude",
+   "repair_reviewer": "webgpt",
    "service": {
     "kind": "none",
     "note": "skills run from source; individual skill services (if any) restart per their own contract",
