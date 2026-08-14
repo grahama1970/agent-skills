@@ -73,6 +73,24 @@ def assert_card(
         raise RuntimeError(f"card missing source path fragment {path_fragment!r}: {card}")
 
 
+def assert_card_text(card: dict[str, Any], expected: list[str]) -> None:
+    visible = " ".join(
+        str(card.get(field) or "") for field in ("talking_point", "proof", "qualifier")
+    )
+    source_text = " ".join(str(source.get("excerpt") or "") for source in card.get("sources") or [])
+    combined = f"{visible} {source_text}".casefold()
+    missing = [phrase for phrase in expected if phrase.casefold() not in combined]
+    if missing:
+        raise RuntimeError(f"card missing answer text {missing}: {card}")
+
+
+def assert_ask_prompt(path: Path, expected: list[str]) -> None:
+    prompt = path.read_text(encoding="utf-8").casefold()
+    missing = [phrase for phrase in expected if phrase.casefold() not in prompt]
+    if missing:
+        raise RuntimeError(f"Ask prompt missing expected question/evidence text {missing}: {prompt}")
+
+
 def write_profile(path: Path) -> None:
     path.write_text(
         "\n".join(
@@ -194,10 +212,29 @@ def main() -> int:
                 )
                 state = wait_for_cards(client, 1)
                 assert_card(state["cards"][0], status="supported", lane="ask")
-                if not (ask_run_dir / "argv.txt").is_file():
+                ask_prompt_path = ask_run_dir / "argv.txt"
+                if not ask_prompt_path.is_file():
                     raise RuntimeError("Ask fixture runner was not invoked")
+                assert_ask_prompt(
+                    ask_prompt_path,
+                    [
+                        "How does the evidence-loop put interviewer questions into ambient hud cards?",
+                        "interview_evidence.py",
+                        "evidence-loop routes interviewer questions",
+                    ],
+                )
+                assert_card_text(
+                    state["cards"][0],
+                    [
+                        "Call evidence_loop()",
+                        "Ambient HUD cards",
+                        "Memory Vault records",
+                        "evalrepo/src/interview_evidence.py",
+                    ],
+                )
                 print("existing code evidence card: PASS")
                 print("ask code solution card: PASS")
+                print("question-to-answer text surfaced: PASS")
 
                 (source_dir / "new_code_path.ts").write_text(
                     "export const realtimeCardSorting = 'realtime-card-sorting keeps new code visible as interview cards';\n",
@@ -211,6 +248,10 @@ def main() -> int:
                 )
                 state = wait_for_cards(client, 2)
                 assert_card(state["cards"][0], status="supported", path_fragment="new_code_path.ts", lane="ripgrep")
+                assert_card_text(
+                    state["cards"][0],
+                    ["realtime-card-sorting keeps new code visible as interview cards"],
+                )
                 print("new code evidence card: PASS")
 
                 post_turn(
@@ -257,6 +298,8 @@ def main() -> int:
                         "graham_turn_suppressed": True,
                         "existing_code_card": True,
                         "ask_code_solution_card": True,
+                        "ask_prompt_contains_question_and_evidence": True,
+                        "answer_text_surfaced_in_card": True,
                         "new_code_card": True,
                         "unsupported_fail_closed": True,
                         "bounded_card_queue": True,

@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "live-evidence",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, Ask command/card plumbing, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, interviewer question detection, Ask command/card answer text plumbing, and fail-closed contract smoke",
   "claims": {
-    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, route code-related interview questions through the Ask lane when configured, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, reject consentless listener startup, and fail closed on malformed skill contracts",
     "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
   },
   "cases": [
@@ -34,6 +34,7 @@
           "graham turns do not trigger retrieval: PASS",
           "existing code evidence card: PASS",
           "ask code solution card: PASS",
+          "question-to-answer text surfaced: PASS",
           "new code evidence card: PASS",
           "unsupported question fail-closed: PASS",
           "card queue bounded for realtime scanning: PASS"
@@ -50,6 +51,7 @@
         "exit_code": 0,
         "stdout_contains": [
           "youtube-derived prompt routes to Ask solution: PASS",
+          "youtube-derived answer text surfaced: PASS",
           "candidate explanation suppressed: PASS",
           "youtube-derived follow-up routes to source-backed Ask card: PASS"
         ]
