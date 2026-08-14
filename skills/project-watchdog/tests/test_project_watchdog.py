@@ -82,6 +82,12 @@ def test_parse_goal_hash_requires_sha256_prefix() -> None:
     assert issue_fields.parse_goal_hash(config.TAU_ACTIVE_GOAL_HASH)
 
 
+def test_ask_runner_is_executable_for_repair_dispatch() -> None:
+    ask_runner = config.ask_run_sh()
+    assert ask_runner.exists()
+    assert os.access(ask_runner, os.X_OK)
+
+
 # --------------------------------------------------------------------------- #
 # Path containment — issue bodies are untrusted input
 # --------------------------------------------------------------------------- #
