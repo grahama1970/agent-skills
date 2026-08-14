@@ -369,8 +369,10 @@ def relationship_signals_from_memory(
     """Recall monitor-contacts graph seeds and emit LinkedIn-first reconnect signals.
 
     This uses Memory's `/recall` as the front door, then materializes the
-    source-backed ARCOS CSV recalled by Memory. It never lists memory
-    collections, scans Arango, writes raw graph fields, or sends outreach.
+    source-backed ARCOS CSV recalled by Memory. If semantic recall misses but
+    the bounded source file is present, the lane degrades its provenance instead
+    of erasing the reconnect candidates. It never lists memory collections,
+    scans Arango, writes raw graph fields, or sends outreach.
     """
 
     if not memory_url or os.environ.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "1") == "0":
@@ -380,8 +382,7 @@ def relationship_signals_from_memory(
     except ValueError:
         limit = 75
     recall = _memory_recall(memory_url, ARCOS_CONTACT_RECALL_QUERY, k=5)
-    if not recall.get("found"):
-        return []
+    memory_recall_found = bool(recall.get("found"))
     evidence_refs = _memory_evidence_refs(recall)
     if not evidence_refs:
         return []
@@ -392,11 +393,20 @@ def relationship_signals_from_memory(
         key = relationship_signal_key("memory:darpa-arcos-contact-network", subject, org)
         low = subject.lower()
         signal_type = "direct_contact" if low in PERSONAL_ARCOS_CONTACTS else "adjacent_contact"
-        provenance = (
-            "Memory-recalled direct ARCOS/formal-methods contact path"
-            if signal_type == "direct_contact"
-            else "Memory-recalled adjacent ARCOS/formal-methods contact path"
-        )
+        if memory_recall_found:
+            provenance = (
+                "Memory-recalled direct ARCOS/formal-methods contact path"
+                if signal_type == "direct_contact"
+                else "Memory-recalled adjacent ARCOS/formal-methods contact path"
+            )
+        else:
+            provenance = (
+                "Source-backed direct ARCOS/formal-methods contact path; "
+                "Memory recall did not return this seed"
+                if signal_type == "direct_contact"
+                else "Source-backed adjacent ARCOS/formal-methods contact path; "
+                "Memory recall did not return this seed"
+            )
         signals.append(
             {
                 "signal_id": key,
@@ -408,6 +418,8 @@ def relationship_signals_from_memory(
                 "evidence_refs": evidence_refs,
                 "source_receipt_ids": [],
                 "provenance": provenance,
+                "memory_recall_found": memory_recall_found,
+                "memory_recall_degraded": not memory_recall_found,
                 "recommended_action": "human_decide_reconnect_or_defer",
                 "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
                 "preferred_human_channels": list(DEFAULT_RELATIONSHIP_CHANNELS),
