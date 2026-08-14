@@ -1,0 +1,16 @@
+{
+  "e2e": {
+    "artifact": "/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-1415-integrate/artifacts/tickets/agent-skills-1415/proof-summary.json",
+    "command": "MONITOR_CLAIM_SNAPSHOT_PATH=/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/local/nightly/latest/tailoring/claim-snapshot.json timeout 1800 skills/monitor-opportunities/run.sh nightly --promoted-stage0 --expected-revision 6e8d281fe7e3a85157967a1be1776d06071f1e15 --out artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof",
+    "exit_code": 0,
+    "live": true,
+    "mocked": false
+  },
+  "issue": 1415,
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "unit": {
+    "command": "uv run --project skills/monitor-opportunities --extra test pytest -q skills/monitor-opportunities/tests",
+    "exit_code": 0,
+    "passed": 285
+  }
+}
