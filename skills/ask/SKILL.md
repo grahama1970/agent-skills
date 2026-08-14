@@ -19,6 +19,8 @@ triggers:
   - browser oracle
   - ask DAG
   - Tau DAG
+  - reasoning effort
+  - select reasoning level
   - compete
   - bakeoff
   - captcha security evaluation
@@ -166,7 +168,7 @@ standing:
 | Target | Example | Transport owner |
 | --- | --- | --- |
 | **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
-| **Model call** — API/model handler | `gpt-5.5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
+| **Model call** — API/model handler | `gpt-5.5-high`, `claude-opus-5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
 | **Web model** — browser-backed reviewer (chat tab, NOT the agentic model; see the `webclaude` warning below) | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
 
 A project agent should not care which side is browser, model, or live session
@@ -293,9 +295,73 @@ orchestration path.
 Handlers are peers even when their transports differ. Browser handlers
 (`webgpt`, `webclaude`, `webkimi`, `webgemini`, `webgrok`) run through `$surf`
 and `$browser-oracle`. API/model handlers such as `gpt-5.5-high`,
-`gpt-5.5-xhigh`, or `chutes deepseek-ai/DeepSeek-V3.2-TEE` are routed by Tau.
-Project agents should not care which side is browser or API beyond naming the
-handler.
+`gpt-5.5-xhigh`, `claude-opus-5-high`, or
+`chutes deepseek-ai/DeepSeek-V3.2-TEE` are routed by Tau. Project agents should
+not care which side is browser or API beyond naming the handler.
+
+### Reasoning / Effort Selection
+
+For Tau handler DAGs, choose reasoning effort as part of the non-browser
+handler selector unless the runtime exposes a future explicit effort flag. The
+current supported Ask handler grammar is:
+
+```text
+<exact-model-id>-<effort>
+```
+
+Current Ask/Tau handler suffixes are `low`, `medium`, `med`, `high`, and
+`xhigh`. `med` normalizes to `medium`. `xhigh` is preserved as the requested
+selector, but the current SciLLM adapter dispatches it as `high` and records the
+downgrade. Do not use `max` as an Ask handler suffix unless a future local
+`./run.sh tau-dag run --help` shows an explicit supported flag and the emitted
+receipts prove the applied effort.
+
+Use exact dynamic model ids from the provider/SciLLM catalog as the model part.
+For Claude, that means names such as `claude-opus-5`,
+`claude-sonnet-4-6`, or `claude-fable-5`, with the effort suffix appended when
+needed:
+
+```bash
+./run.sh tau-dag "Review this bundle" \
+  --repo local/agent-skills \
+  --target ask-review \
+  --immutable-goal "Return a receipt-backed review with explicit blockers." \
+  --handler claude-opus-5-high \
+  --execute --json
+
+./run.sh tau-dag "Compare these repair options" \
+  --repo local/agent-skills \
+  --target ask-roundtable \
+  --immutable-goal "Each seat returns a usable position or a blocker." \
+  --dag-template roundtable \
+  --handler claude-sonnet-4-6-medium \
+  --handler gpt-5.5-xhigh \
+  --topology concurrent \
+  --execute --json
+```
+
+Do not invent partial aliases such as `opus-5-high`, `sonnet-high`,
+`claude high`, or `webclaude-high`. `webclaude` is a browser chat tab and has no
+Ask-controlled reasoning effort. If the human asks for "Claude Opus 5 max" and
+the current Ask runtime has no supported `max` selector, fail closed unless the
+human explicitly accepts the highest supported Ask selector
+(`claude-opus-5-xhigh`) and the report states that `xhigh` dispatches as `high`
+in the current SciLLM adapter.
+
+Every executed API/model lane must preserve the effort evidence in the emitted
+Tau artifacts. Inspect the command spec and node receipt for:
+
+- `requested_model`: the exact selector the caller requested, such as
+  `claude-opus-5-xhigh`
+- `model`: the resolved model id dispatched to SciLLM, such as `claude-opus-5`
+- `requested_reasoning_effort`: the requested suffix, such as `xhigh`
+- `reasoning_effort`: the effort actually dispatched, such as `high`
+- `reasoning_downgrade_reason`: required when requested and dispatched effort
+  differ
+
+For non-Tau oracle synthesis (`./run.sh ask ... --oracle`), reasoning is chosen
+with `--oracle-reasoning <low|medium|high|xhigh>` and defaults to `high`
+(`xhigh` for deep review). This is a different path from Tau handler selection.
 
 For executed roundtables and competitions with browser handlers, Ask defaults to
 `--browser-tab-lifecycle auto`. Auto creates one Chrome window, creates one tab
@@ -610,26 +676,28 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   wants multiple steps. Use `--topology sequential` for a linear handler chain;
   use `--topology concurrent` when handlers can work independently before join.
 - **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
-  `webgemini`, and `webgrok`. Aliases normalize as `gpt -> webgpt`,
-  `claude -> webclaude`, `kimi -> webkimi`, `gemini -> webgemini`, and
-  `grok -> webgrok`.
-- **WARNING — `webclaude` IS NOT Claude** (operator, 2026-08-12). `webclaude`
-  is a claude.ai CHAT TAB: no tools, no filesystem or repo access, no effort
-  control, a different system prompt and context regime. It is a browser
-  REVIEW seat only. For agentic Claude — the model that reads bundles,
-  follows repo contracts, and emits artifacts — the intended lane is a
-  SciLLM model handler (`claude-fable-low|med|high`) executed inside the Tau
-  DAG, tracked in agent-skills#1386. Until that lands, the bare `claude`
-  alias silently substitutes the weaker chat seat: do NOT use `claude` as a
-  handler name expecting agentic Claude, and note that direct `claude -p`
-  subprocess calls are reported as degraded — they are not a substitute
-  either.
+  `webgemini`, and `webgrok`. Browser aliases normalize as `gpt -> webgpt`,
+  `kimi -> webkimi`, `gemini -> webgemini`, and `grok -> webgrok`. Spell
+  `webclaude` explicitly for the claude.ai browser tab; bare `claude` is the
+  agentic SciLLM Claude alias, not the browser seat.
+- **WARNING - `webclaude` IS NOT agentic Claude** (operator, 2026-08-12).
+  `webclaude` is a claude.ai CHAT TAB: no tools, no filesystem or repo access,
+  no Ask-controlled effort, a different system prompt and context regime. It is
+  a browser REVIEW seat only. For agentic Claude, use a SciLLM Claude handler
+  such as `claude-fable-5-high`, `claude-sonnet-4-6-high`, or
+  `claude-opus-5-high` executed inside the Tau DAG. The bare `claude` alias maps
+  to the default agentic SciLLM Claude handler, currently `claude-fable-5`; do
+  not use it when the requested lane must specifically be Opus or Sonnet. Direct
+  `claude -p` subprocess calls are reported as degraded and are not a substitute
+  for Ask/Tau receipts.
 - **Supported local/API handlers**: explicit non-browser handler labels are
-  routed by Tau according to their transport. SciLLM-compatible model labels,
-  such as `gpt-5.5-high`, emit Tau-owned `scillm.chat` adapter nodes.
-  OAuth/Codex subagent selectors such as `gpt-5.5-xhigh` emit Tau-owned
-  `subagent-runner.codex_exec` nodes and preserve `xhigh` as the requested
-  reasoning effort. For Chutes exact models, project agents may write
+  routed by Tau according to their transport. SciLLM-compatible model labels
+  use exact model ids plus optional effort suffixes, such as `gpt-5.5-high`,
+  `claude-opus-5-high`, or `claude-sonnet-4-6-medium`, and emit Tau-owned
+  `scillm.chat` adapter nodes. OAuth/Codex subagent selectors such as
+  `gpt-5.5-xhigh` emit Tau-owned `subagent-runner.codex_exec` nodes and
+  preserve `xhigh` as the requested reasoning effort. For Chutes exact models,
+  project agents may write
   `chutes <provider/model>: <prompt>`; `$ask` canonicalizes that to one API
   handler with `provider_hint=chutes` before Tau writes the DAG. Do not pass
   the transport prefix as the model id: use `deepseek-ai/DeepSeek-V3.2-TEE`,
