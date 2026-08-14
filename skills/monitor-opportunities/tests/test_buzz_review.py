@@ -111,3 +111,5 @@ def test_buzz_summary_emits_ops_buzz_message_dry_run(tmp_path: Path) -> None:
     assert ops_buzz["dry_run"] is True
     assert ops_buzz["attempted_network"] is False
     assert ops_buzz["posted"] is False
+    cmd = receipt["ops_buzz_receipt"]["cmd"]
+    assert Path(cmd[cmd.index("--input") + 1]).is_absolute()

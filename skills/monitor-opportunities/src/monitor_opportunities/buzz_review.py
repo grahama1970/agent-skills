@@ -214,6 +214,9 @@ def _request_payload(config: BuzzAgentReviewConfig, manifest: ReportManifest, ma
 
 
 def _run_ops_buzz_dry_run(ops_buzz_run: Path, payload_path: Path, rendered_request_path: Path) -> dict[str, Any]:
+    ops_buzz_run = ops_buzz_run.resolve()
+    payload_path = payload_path.resolve()
+    rendered_request_path = rendered_request_path.resolve()
     if not ops_buzz_run.exists():
         raise ContractError("OPS_BUZZ_RUN_MISSING", f"ops-buzz run.sh not found: {ops_buzz_run}")
     result = subprocess.run(
@@ -270,6 +273,8 @@ def _run_ops_buzz_post(
     payload_path: Path,
     dry_run: bool,
 ) -> dict[str, Any]:
+    ops_buzz_run = ops_buzz_run.resolve()
+    payload_path = payload_path.resolve()
     if not ops_buzz_run.exists():
         raise ContractError("OPS_BUZZ_RUN_MISSING", f"ops-buzz run.sh not found: {ops_buzz_run}")
     cmd = [
@@ -327,8 +332,8 @@ def create_buzz_summary(config: BuzzSummaryConfig) -> dict[str, Any]:
     config.out_dir.mkdir(parents=True, exist_ok=True)
 
     payload = _summary_payload(config, manifest)
-    payload_path = config.out_dir / "buzz-summary-message.json"
-    receipt_path = config.out_dir / "buzz-summary-receipt.json"
+    payload_path = (config.out_dir / "buzz-summary-message.json").resolve()
+    receipt_path = (config.out_dir / "buzz-summary-receipt.json").resolve()
     write_json(payload_path, payload)
 
     ops_buzz_run = config.ops_buzz_run or _default_ops_buzz_run()
