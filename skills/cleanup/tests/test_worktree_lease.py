@@ -90,29 +90,49 @@ def test_a_live_owner_is_never_reclaimed(repo: Path, registry: Path) -> None:
     assert wt.exists()
 
 
-def test_a_dirty_worktree_is_never_reclaimed(repo: Path, registry: Path) -> None:
-    """Uncommitted changes are the work."""
+def test_a_dirty_worktree_is_archived_never_deleted(repo: Path, tmp_path: Path, registry: Path) -> None:
+    """Uncommitted changes are the work: preserved, not deleted, not left to rot."""
     wt = _add_worktree(repo, "dirty")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
     (wt / "scratch.txt").write_text("in progress\n")
     register(wt, purpose="test", owner_pid=_dead_pid(), ttl_seconds=1, registry=registry)
-    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000)
-    assert receipt["removed"] == []
-    assert any("dirty" in k["reason"] for k in receipt["kept"])
-    assert wt.exists()
+
+    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000,
+                   archive_root=tmp_path / "dep")
+    assert receipt["removed"] == [], "uncertain work must never be deleted"
+    assert len(receipt["archived"]) == 1
+    entry = receipt["archived"][0]
+    assert "dirty" in entry["archived_because"]
+
+    # The point of archiving: the uncommitted file comes back.
+    subprocess.run(
+        ["git", "-C", str(repo), "fetch", "-q", entry["manifest"]["bundle"], "dirty:rec/dirty"],
+        check=True,
+    )
+    assert "in progress" in _git(repo, "show", "rec/dirty:scratch.txt")
 
 
-def test_unpushed_commits_are_never_reclaimed(repo: Path, registry: Path) -> None:
-    """A clean tree can still hold hours of committed, unpushed work."""
+def test_unmerged_commits_are_archived_never_deleted(repo: Path, tmp_path: Path, registry: Path) -> None:
+    """A clean tree can still hold hours of committed, unmerged work."""
     wt = _add_worktree(repo, "unpushed")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
     (wt / "real.txt").write_text("real work\n")
     subprocess.run(["git", "-C", str(wt), "add", "-A"], check=True)
     subprocess.run(["git", "-C", str(wt), "commit", "-qm", "real work"], check=True)
     register(wt, purpose="test", owner_pid=_dead_pid(), ttl_seconds=1, registry=registry)
 
-    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000)
+    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000,
+                   archive_root=tmp_path / "dep")
     assert receipt["removed"] == []
-    assert any("unpushed" in k["reason"] or "landed" in k["reason"] for k in receipt["kept"])
-    assert wt.exists()
+    entry = receipt["archived"][0]
+    assert "unmerged" in entry["archived_because"]
+    subprocess.run(
+        ["git", "-C", str(repo), "fetch", "-q", entry["manifest"]["bundle"], "unpushed:rec/unpushed"],
+        check=True,
+    )
+    assert "real work" in _git(repo, "show", "rec/unpushed:real.txt")
 
 
 def test_a_worktree_inside_its_ttl_is_left_alone(repo: Path, registry: Path) -> None:
@@ -124,12 +144,48 @@ def test_a_worktree_inside_its_ttl_is_left_alone(repo: Path, registry: Path) -> 
     assert any("within ttl" in k["reason"] for k in receipt["kept"])
 
 
-def test_an_unregistered_worktree_is_reported_never_removed(repo: Path, registry: Path) -> None:
-    """Unknown owner: guessing is how another lane loses a day."""
+def test_a_recent_unregistered_worktree_is_left_alone(repo: Path, registry: Path) -> None:
+    """A worktree created minutes ago may still be in use by someone."""
     wt = _add_worktree(repo, "orphan")
-    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000)
+    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000,
+                   unregistered_grace_days=14)
     assert receipt["removed"] == []
-    assert str(wt.resolve()) in receipt["unregistered"]
+    assert receipt["archived"] == []
+    assert any("unregistered but only" in k["reason"] for k in receipt["kept"])
+    assert wt.exists()
+
+
+def test_an_old_unregistered_worktree_is_archived_not_left_to_rot(
+    repo: Path, tmp_path: Path, registry: Path
+) -> None:
+    """Leaving unregistered worktrees in place is how 181 accumulated."""
+    wt = _add_worktree(repo, "orphanold")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
+    (wt / "orphan_work.txt").write_text("nobody claimed this\n")
+
+    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000,
+                   archive_root=tmp_path / "dep", unregistered_grace_days=0)
+    assert receipt["removed"] == []
+    entry = receipt["archived"][0]
+    assert "unregistered" in entry["archived_because"]
+    subprocess.run(
+        ["git", "-C", str(repo), "fetch", "-q", entry["manifest"]["bundle"],
+         "orphanold:rec/orphanold"],
+        check=True,
+    )
+    assert "nobody claimed this" in _git(repo, "show", "rec/orphanold:orphan_work.txt")
+
+
+def test_archiving_can_be_disabled_for_a_conservative_run(repo: Path, registry: Path) -> None:
+    """The old behaviour stays available, it is just no longer the default."""
+    wt = _add_worktree(repo, "conservative")
+    (wt / "x.txt").write_text("y\n")
+    register(wt, purpose="test", owner_pid=_dead_pid(), ttl_seconds=1, registry=registry)
+    receipt = reap(repo, apply=True, registry=registry, now=time.time() + 10_000,
+                   archive_uncertain=False)
+    assert receipt["archived"] == []
+    assert any("dirty" in k["reason"] for k in receipt["kept"])
     assert wt.exists()
 
 

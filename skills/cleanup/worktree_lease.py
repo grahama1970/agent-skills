@@ -21,8 +21,11 @@ Purpose
       still hold hours of committed, unpushed work.
     - Inside the TTL is never touched, even when idle -- a job between steps
       looks identical to one that finished.
-    - An UNREGISTERED worktree is reported, never auto-removed. We do not know
-      who owns it, and guessing is how another lane loses a day.
+    - Anything UNCERTAIN -- dirty, unmerged, unprovable, or unregistered --
+      is ARCHIVED, never deleted and never merely left alone. Leaving it
+      preserves nothing: the work stays unfindable and the sprawl stays. The
+      archive bundles the commits so they are recoverable and then unregisters
+      the worktree, so the count falls without anything being lost.
 
 Inputs
     The repository path and the lease registry.
@@ -166,12 +169,22 @@ def inspect_worktree(repo: Path, worktree: Path) -> dict[str, Any]:
     return state
 
 
+def _idle_days(path: Path) -> int | None:
+    try:
+        return int((time.time() - path.stat().st_mtime) / 86400)
+    except OSError:
+        return None
+
+
 def reap(
     repo: Path | str = ".",
     *,
     apply: bool = False,
     registry: Path | None = None,
     now: float | None = None,
+    archive_uncertain: bool = True,
+    archive_root: Path | None = None,
+    unregistered_grace_days: int = 14,
 ) -> dict[str, Any]:
     """Reclaim expired, abandoned, safely-landed worktrees.
 
@@ -185,6 +198,25 @@ def reap(
 
     removed: list[dict[str, Any]] = []
     kept: list[dict[str, Any]] = []
+    archived: list[dict[str, Any]] = []
+
+    def _archive(path: str, why: str) -> None:
+        """Uncertain work is preserved, not left to rot and not deleted.
+
+        Leaving it in place preserves nothing -- it just means the sprawl
+        stays and the work is still unfindable. Archiving bundles the commits
+        so they are recoverable, then unregisters, so the count goes down
+        without anything being lost.
+        """
+        if not archive_uncertain:
+            kept.append({"path": path, "reason": why})
+            return
+        receipt = archive_worktree(repo_path, Path(path), apply=apply, archive_root=archive_root)
+        receipt["archived_because"] = why
+        if receipt.get("outcome") in {"archived", "planned"}:
+            archived.append(receipt)
+        else:
+            kept.append({"path": path, "reason": f"{why}; archive failed: {receipt.get('reason')}"})
 
     for worktree in registered_worktrees(repo_path):
         resolved = str(worktree.resolve()) if worktree.exists() else str(worktree)
@@ -194,9 +226,15 @@ def reap(
 
         lease = leases.get(resolved)
         if lease is None:
-            # Unknown owner: report it, never reclaim it. Guessing here is how
-            # another lane loses a day of work.
-            kept.append({"path": resolved, "reason": "unregistered; owner unknown", "unregistered": True})
+            # Unknown owner. Never delete -- but never leave it either: an
+            # unregistered worktree left in place is exactly how 181 of them
+            # accumulated. Archive preserves the work AND clears the entry.
+            state = inspect_worktree(repo_path, Path(resolved))
+            age_days = _idle_days(Path(resolved))
+            if age_days is not None and age_days < unregistered_grace_days:
+                kept.append({"path": resolved, "reason": f"unregistered but only {age_days}d idle"})
+            else:
+                _archive(resolved, f"unregistered, {age_days}d idle, owner unknown")
             continue
 
         owner = lease.get("owner_pid")
@@ -212,14 +250,14 @@ def reap(
 
         state = inspect_worktree(repo_path, Path(resolved))
         if state.get("dirty"):
-            kept.append({"path": resolved, "reason": f"dirty: {state['dirty_files']} file(s)"})
+            _archive(resolved, f"dirty: {state['dirty_files']} uncommitted file(s)")
             continue
         unpushed = state.get("unpushed_commits")
         if unpushed is None:
-            kept.append({"path": resolved, "reason": "could not prove commits are landed"})
+            _archive(resolved, "could not prove commits are landed")
             continue
         if unpushed > 0:
-            kept.append({"path": resolved, "reason": f"{unpushed} unpushed commit(s)"})
+            _archive(resolved, f"{unpushed} unmerged commit(s)")
             continue
 
         entry = {
@@ -245,10 +283,12 @@ def reap(
         "schema": "cleanup.worktree_reap.v1",
         "repo": str(repo_path),
         "apply": bool(apply),
+        # Three dispositions, not two. "Uncertain" resolves to archive, so
+        # nothing is deleted and nothing is left to rot.
         "removed": removed,
+        "archived": archived,
         "kept": kept,
         "registered_total": len(registered_worktrees(repo_path)),
-        "unregistered": [k["path"] for k in kept if k.get("unregistered")],
     }
 
 
@@ -488,6 +528,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-age-days", type=int, default=14)
     parser.add_argument("--unmerged", action="store_true", help="Report worktrees holding unmerged commits.")
     parser.add_argument("--archive", help="Archive one worktree to the deprecated area.")
+    parser.add_argument("--no-archive-uncertain", action="store_true",
+                        help="Leave uncertain worktrees in place instead of archiving them.")
+    parser.add_argument("--unregistered-grace-days", type=int, default=14)
     args = parser.parse_args(argv)
 
     if args.unmerged:
@@ -522,16 +565,22 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(entry, indent=2, sort_keys=True) if args.json else f"registered {entry['path']}")
         return 0
 
-    receipt = reap(args.repo, apply=args.apply)
+    receipt = reap(
+        args.repo,
+        apply=args.apply,
+        archive_uncertain=not args.no_archive_uncertain,
+        unregistered_grace_days=args.unregistered_grace_days,
+    )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
         return 0
     verb = "removed" if args.apply else "would remove"
-    print(f"{verb} {len(receipt['removed'])} of {receipt['registered_total']} registered worktrees")
+    print(f"{verb} {len(receipt['removed'])}, archived {len(receipt['archived'])}, "
+          f"kept {len(receipt['kept'])} of {receipt['registered_total']} registered worktrees")
     for entry in receipt["removed"]:
-        print(f"  - {entry['path']}  ({entry['purpose']}, {entry['age_seconds']}s old)")
-    if receipt["unregistered"]:
-        print(f"  {len(receipt['unregistered'])} unregistered worktree(s) reported, never auto-removed")
+        print(f"  remove  {entry['path']}  (clean and landed)")
+    for entry in receipt["archived"]:
+        print(f"  archive {entry['path']}  ({entry.get('archived_because')})")
     return 0
 
 
