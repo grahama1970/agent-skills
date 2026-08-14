@@ -63,10 +63,9 @@ IMPLEMENTED = [
     "tailor-artifact",
     "memory-sync",
     "nightly",
-]
-NOT_IMPLEMENTED = [
     "apply",
 ]
+NOT_IMPLEMENTED: list[str] = []
 
 
 def _configure_logging() -> None:
@@ -627,6 +626,147 @@ def ats_prefill(
     except PrefillError as exc:
         _fail(ContractError("ATS_PREFILL_REJECTED", str(exc)))
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+def _decision_events_for(run: Path, item_id: str) -> list[dict[str, object]]:
+    ledger = run / "decision-ledger.jsonl"
+    if not ledger.exists():
+        return []
+    rows: list[dict[str, object]] = []
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if event.get("item_id") == item_id:
+            rows.append(event)
+    return rows
+
+
+@app.command("apply")
+def apply_command(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    application: str | None = typer.Option(None, "--application", help="Application id from the report manifest."),
+    packet: str | None = typer.Option(None, "--packet", help="Application packet id from the report manifest."),
+    posting: str | None = typer.Option(None, "--posting", help="Opportunity id alias for the intended posting."),
+    site_policy: Path | None = typer.Option(
+        None,
+        "--site-policy",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Future capability-promotion policy receipt; Stage 0 still refuses submit.",
+    ),
+) -> None:
+    """Fail-closed local ATS application gate; Stage 0 never submits."""
+    _configure_logging()
+    from .application_packets import verify_application_packet
+
+    manifest = read_json(run / "report-manifest.json")
+    packets = manifest.get("application_packets", [])
+    applications = manifest.get("applications", [])
+    matches = []
+    for row in packets:
+        if packet and row.get("packet_id") == packet:
+            matches.append(row)
+        elif application and row.get("application_id") == application:
+            matches.append(row)
+        elif posting and row.get("opportunity_id") == posting:
+            matches.append(row)
+    if not any([packet, application, posting]) and len(packets) == 1:
+        matches = list(packets)
+    receipt: dict[str, object] = {
+        "schema": "monitor_opportunities.apply_gate_receipt.v1",
+        "command": "apply",
+        "stage": STAGE,
+        "run": str(run),
+        "external_effects": False,
+        "does_not_submit": True,
+        "does_not_prefill": True,
+        "candidate_transmits": True,
+        "requested": {
+            "application": application,
+            "packet": packet,
+            "posting": posting,
+            "site_policy": str(site_policy) if site_policy else None,
+        },
+    }
+    if not matches:
+        receipt.update(
+            {
+                "status": "APPLICATION_PACKET_MISSING",
+                "reason": "No exact report-visible application packet matched the request.",
+                "application_count": len(applications),
+                "application_packet_count": len(packets),
+            }
+        )
+        typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+        raise typer.Exit(code=2)
+    if len(matches) > 1:
+        receipt.update(
+            {
+                "status": "AMBIGUOUS_APPLICATION_PACKET",
+                "reason": "Multiple application packets matched; pass --packet or --application.",
+                "matches": [row.get("packet_id") for row in matches],
+            }
+        )
+        typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+        raise typer.Exit(code=2)
+
+    selected = matches[0]
+    drift = verify_application_packet(selected)
+    app_id = str(selected["application_id"])
+    application_row = next((row for row in applications if row.get("application_id") == app_id), {})
+    unresolved_fields = [
+        field.get("name")
+        for field in application_row.get("fields", [])
+        if field.get("required") is True and field.get("disposition") == "human_required"
+    ]
+    events = _decision_events_for(run, app_id)
+    latest_action = str(events[-1].get("action")) if events else None
+    human_authorized = latest_action == "AUTHORIZE_APPLICATION_PAYLOAD"
+    receipt.update(
+        {
+            "application_id": app_id,
+            "opportunity_id": selected.get("opportunity_id"),
+            "packet_id": selected.get("packet_id"),
+            "packet_ref": selected.get("packet_ref"),
+            "approval_payload_digest": selected.get("approval_payload_digest"),
+            "drift_check": drift,
+            "human_authorized": human_authorized,
+            "latest_decision_action": latest_action,
+            "unresolved_required_fields": unresolved_fields,
+            "site_policy_present": site_policy is not None,
+            "capability_authority": {
+                "ats_form_submit": "BLOCKED_STAGE_0",
+                "ats_form_prefill": "BLOCKED_STAGE_0",
+                "gmail_send": "PERMANENTLY_FORBIDDEN",
+                "linkedin_action": "PERMANENTLY_FORBIDDEN",
+            },
+            "next_required_actions": [
+                "Review the report-visible application packet.",
+                "Resolve every human_required field.",
+                "Authorize the exact application payload through the decision ledger.",
+                "Promote a site/provider policy before any ATS prefill or submit effect.",
+            ],
+        }
+    )
+    if not drift["ok"]:
+        receipt["status"] = "APPLICATION_PACKET_DRIFT"
+        typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+        raise typer.Exit(code=2)
+    if unresolved_fields:
+        receipt["status"] = "HUMAN_FIELDS_REQUIRED"
+        receipt["reason"] = "Required application fields remain human_required; this skill must not auto-answer them."
+        typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+        raise typer.Exit(code=2)
+    if not human_authorized:
+        receipt["status"] = "HUMAN_AUTHORIZATION_REQUIRED"
+        typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+        raise typer.Exit(code=2)
+    receipt["status"] = "CAPABILITY_BLOCKED_STAGE_0"
+    receipt["reason"] = "Exact local payload is authorized, but Stage 0 has no ATS submit authority."
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True), err=True)
+    raise typer.Exit(code=2)
 
 
 @app.command("memory-sync")

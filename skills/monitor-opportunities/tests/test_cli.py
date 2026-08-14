@@ -27,6 +27,8 @@ def test_status_json_is_truthful() -> None:
     assert payload["network_access"] is True
     assert payload["external_effects"] is False
     assert payload["capabilities"]["gmail_send"] == "PERMANENTLY_FORBIDDEN"
+    assert "apply" in payload["implemented_commands"]
+    assert "apply" not in payload["not_implemented_commands"]
 
 
 def test_report_writes_self_contained_artifacts(tmp_path: Path) -> None:
@@ -56,17 +58,36 @@ def test_verify_writes_passing_receipt(tmp_path: Path) -> None:
     assert len(receipt["cases"]) >= 9
 
 
-def test_unsupported_command_fails_closed() -> None:
-    result = runner.invoke(app, ["apply"])
-    assert result.exit_code == 3
+def test_apply_requires_exact_report_visible_packet(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "run"
+    run_result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert run_result.exit_code == 0, run_result.output
+
+    result = runner.invoke(app, ["apply", "--run", str(out), "--application", "application:missing"])
+    assert result.exit_code == 2
     payload = json.loads(result.stderr)
-    assert payload["status"] == "NOT_IMPLEMENTED"
+    assert payload["status"] == "APPLICATION_PACKET_MISSING"
+    assert payload["application_packet_count"] >= 1
     assert payload["external_effects"] is False
+    assert payload["does_not_submit"] is True
 
 
-def test_unsupported_command_with_future_options_still_fails_closed() -> None:
-    result = runner.invoke(app, ["apply", "--posting", "example", "--force"])
-    assert result.exit_code == 3
+def test_apply_blocks_unresolved_human_required_fields(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "run"
+    run_result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert run_result.exit_code == 0, run_result.output
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    application_id = manifest["application_packets"][0]["application_id"]
+
+    result = runner.invoke(app, ["apply", "--run", str(out), "--application", application_id])
+    assert result.exit_code == 2
     payload = json.loads(result.stderr)
-    assert payload["status"] == "NOT_IMPLEMENTED"
+    assert payload["status"] == "HUMAN_FIELDS_REQUIRED"
+    assert payload["command"] == "apply"
+    assert payload["stage"] == "STAGE_0_RESEARCH_ONLY"
+    assert payload["external_effects"] is False
+    assert payload["does_not_submit"] is True
+    assert payload["unresolved_required_fields"] == ["Why this role?"]
     assert payload["command"] == "apply"
