@@ -97,6 +97,18 @@ def test_meetup_capture_wall_clock_timeout_writes_failed_receipt(
     assert stored["status"] == "FAILED"
 
 
+def test_surf_pause_reraises_capture_wall_clock_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def alarm_timeout(*_: object, **__: object) -> str:
+        raise TimeoutError("Meetup Buffalo capture exceeded 1s")
+
+    monkeypatch.setattr(browser_capture, "_surf", alarm_timeout)
+
+    with pytest.raises(TimeoutError, match="Meetup Buffalo capture exceeded 1s"):
+        browser_capture._surf_pause(Path("surf/run.sh"), "1")
+
+
 def test_isolated_meetup_capture_terminates_wedged_child(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

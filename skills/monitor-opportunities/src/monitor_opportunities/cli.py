@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
 import sys
 from pathlib import Path
@@ -821,11 +822,16 @@ def nightly(
     sn_receipt = capture_sales_navigator_saved(capture_dir)
     steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
-    meetup_receipt = capture_meetup_buffalo_isolated(capture_dir / "meetup")
+    meetup_max_group_pages = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_PAGES", "4")))
+    meetup_receipt = capture_meetup_buffalo_isolated(
+        capture_dir / "meetup",
+        max_group_pages=meetup_max_group_pages,
+    )
     steps["browser_capture_meetup_buffalo"] = {
         "status": meetup_receipt.get("status"),
         "captured": meetup_receipt.get("groups_captured"),
         "category_ids": meetup_receipt.get("category_ids"),
+        "max_group_pages": meetup_max_group_pages,
     }
     meetup_evidence = meetup_receipt.get("evidence_path")
 

@@ -79,7 +79,7 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_meetup_buffalo_isolated",
-        lambda capture_dir: capture_ok(capture_dir),
+        lambda capture_dir, **_kwargs: capture_ok(capture_dir),
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_ats_form",

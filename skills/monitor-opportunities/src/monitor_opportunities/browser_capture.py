@@ -105,6 +105,8 @@ def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
     """
     try:
         _surf(surf_run, "wait", seconds, timeout=timeout)
+    except TimeoutError:
+        raise
     except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
         logger.warning("surf wait {}s unavailable ({}); local sleep instead", seconds, exc)
         time.sleep(min(float(seconds or 1), 10.0))
