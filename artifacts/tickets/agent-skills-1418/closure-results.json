@@ -1,0 +1,19 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1418,
+  "unit": {
+    "command": "uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests",
+    "exit_code": 0,
+    "passed": 169,
+    "mocked": true,
+    "result": "169 passed in 3.02s"
+  },
+  "e2e": {
+    "command": "skills/project-watchdog/run.sh tick --project agent-skills --max-tickets 10; receipt readback asserts excluded_issues.target_busy contains 1411",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "artifacts/tickets/agent-skills-1418/live-target-busy-receipt.json",
+    "result": "live dry-run receipt ok=true; excluded_issues.target_busy contains 1411; excluded_counts.target_busy >= 1"
+  }
+}
