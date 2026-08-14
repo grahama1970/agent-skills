@@ -50,6 +50,7 @@ class EvidenceCoordinator:
         self._ask = AskSolutionClient(settings)
         self._summarizer = ExtractiveSummarizer()
         self._tasks: set[asyncio.Task[None]] = set()
+        self._trigger_lock = asyncio.Lock()
         self._ask_lock = asyncio.Lock()
         self._last_auto_ask_key = ""
         self._last_auto_ask_at = 0.0
@@ -62,7 +63,8 @@ class EvidenceCoordinator:
         await self._journal.append(snapshot.session.session_id, "transcript", event)
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
-        decision = self._trigger.decide(event)
+        async with self._trigger_lock:
+            decision = self._trigger.decide(event)
         if decision is None:
             return
         await self._state.set_thread(decision.thread)

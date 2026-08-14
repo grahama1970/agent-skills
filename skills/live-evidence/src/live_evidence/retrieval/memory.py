@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import subprocess
 from pathlib import Path
 from time import monotonic
@@ -99,7 +100,7 @@ class MemoryEvidenceClient:
         errors: list[str] = []
         for profile, payload in zip(profiles, payloads, strict=True):
             if isinstance(payload, Exception):
-                errors.append(f"{profile}:{type(payload).__name__}")
+                errors.append(f"{profile}:{_exception_summary(payload)}")
                 continue
             sources.extend(_memory_items_to_sources(payload, profile, self._profile))
         route = f"intent={selected_profile}" if selected_profile else "intent=degraded"
@@ -115,7 +116,7 @@ class MemoryEvidenceClient:
         url = f"{self._settings.memory_url}/intent"
         request = {"q": query, "fast": True, "app": "live-evidence"}
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
                 response = await client.post(
                     url,
                     json=request,
@@ -149,7 +150,7 @@ class MemoryEvidenceClient:
             "scope": "",
             "collections": self._profile.memory_collections,
         }
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
+        async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
             response = await client.post(url, json=request, headers={"X-Caller-Skill": "live-evidence"})
             if response.status_code in {400, 404, 422}:
                 fallback = await client.post(
@@ -213,6 +214,7 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
+                env=_subprocess_env(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             logger.warning("memory code search degraded: {}", type(exc).__name__)
@@ -243,6 +245,7 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
+                env=_subprocess_env(),
             )
         except (OSError, subprocess.TimeoutExpired):
             return None
@@ -289,6 +292,26 @@ def _validated_payload(value: Any) -> dict[str, Any]:
         raise ValueError("Memory response must be a JSON object")
     FlexibleMemoryResponse.model_validate(value)
     return value
+
+
+def _exception_summary(exc: Exception) -> str:
+    message = str(exc).strip()
+    if not message:
+        return type(exc).__name__
+    return f"{type(exc).__name__}({message[:160]})"
+
+
+def _subprocess_env() -> dict[str, str]:
+    env = dict(os.environ)
+    for key in (
+        "VIRTUAL_ENV",
+        "UV_PROJECT_ENVIRONMENT",
+        "PYTHONHOME",
+        "PYTHONPATH",
+    ):
+        env.pop(key, None)
+    env.setdefault("UV_LINK_MODE", "copy")
+    return env
 
 
 def _parse_json_output(stdout: str) -> dict[str, Any]:

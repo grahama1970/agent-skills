@@ -24,6 +24,26 @@ def test_interviewer_question_triggers() -> None:
     assert decision.reason in {"question", "watch-term:agent"}
 
 
+def test_growing_non_code_question_triggers_once() -> None:
+    engine = TriggerEngine(PROFILE, cooldown_s=30)
+    first = TranscriptEvent(
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text="What is under specified security clarify response?",
+    )
+    grown = TranscriptEvent(
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text=(
+            "What is under specified security clarify response? "
+            "What is under specified security clarify response in clarify helpers?"
+        ),
+    )
+
+    assert engine.decide(first) is not None
+    assert engine.decide(grown) is None
+
+
 def test_graham_turn_does_not_trigger() -> None:
     engine = TriggerEngine(PROFILE, cooldown_s=0)
     event = TranscriptEvent(

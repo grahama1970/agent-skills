@@ -290,7 +290,16 @@ def _dedupe_key(tokens: list[str], *, code_related: bool) -> str:
             if len(high_signal) == 5:
                 break
         return "code:" + " ".join(high_signal)
-    return " ".join(tokens).casefold()
+    high_signal = []
+    for token in tokens:
+        normalized = token.casefold()
+        if normalized in QUESTION_LEADS or normalized in STOPWORDS or len(normalized) < 4:
+            continue
+        if normalized not in high_signal:
+            high_signal.append(normalized)
+        if len(high_signal) == 5:
+            break
+    return "question:" + " ".join(high_signal) if high_signal else " ".join(tokens[:8]).casefold()
 
 
 def _has_code_action(text: str) -> bool:
