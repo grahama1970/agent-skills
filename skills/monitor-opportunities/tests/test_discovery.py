@@ -166,6 +166,36 @@ def test_ashby_candidate_maps_primary_fields() -> None:
     assert rows[0]["workplace_type"] == "REMOTE"
 
 
+def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:
+    large_description = "Build applied AI systems. " * 70_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/posting-api/job-board/large")
+        return httpx.Response(
+            200,
+            json={
+                "jobs": [
+                    {
+                        "title": "Large Board AI Engineer",
+                        "location": {"name": "Remote"},
+                        "jobUrl": "https://jobs.example/large-ai",
+                        "descriptionPlain": large_description,
+                    }
+                ]
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _ashby_candidates(client, {"name": "Large", "slug": "large"})
+
+    assert receipt["response_bytes"] > discovery.MAX_RESPONSE_BYTES
+    assert receipt["response_bytes"] < discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED"
+    assert rows[0]["title"] == "Large Board AI Engineer"
+    assert len(rows[0]["posting_text"]) == 4000
+
+
 def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
     monkeypatch.setenv("SAM_GOV_API_KEY", "example-key-not-secret")
 

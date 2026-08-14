@@ -28,6 +28,7 @@ load_dotenv(override=False)
 LANES = ("A", "B", "C")
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)
 MAX_RESPONSE_BYTES = 1_500_000
+MAX_EMPLOYER_ATS_RESPONSE_BYTES = 8_000_000
 SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
 LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
 LINKEDIN_AUTHORIZED_READ_ONLY_POLICY = "linkedin_authorized_read_only_no_actions"
@@ -505,7 +506,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
         response = client.get(url)
         receipt["response_status"] = response.status_code
         receipt["content_type"] = response.headers.get("content-type")
-        body = response.content[:MAX_RESPONSE_BYTES]
+        body = response.content[:MAX_EMPLOYER_ATS_RESPONSE_BYTES]
         receipt["response_bytes"] = len(response.content)
         receipt["content_sha256"] = sha256_bytes(body)
         if response.status_code == 404:
@@ -514,7 +515,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             receipt["limitations"].append("Greenhouse board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_RESPONSE_BYTES:
+        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
             receipt["result_status"] = "INVALID_RESPONSE"
             receipt["parser_result"] = "SIZE_LIMIT"
             receipt["limitations"].append("Response exceeded bounded parser limit.")
@@ -574,7 +575,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
         response = client.get(url)
         receipt["response_status"] = response.status_code
         receipt["content_type"] = response.headers.get("content-type")
-        body = response.content[:MAX_RESPONSE_BYTES]
+        body = response.content[:MAX_EMPLOYER_ATS_RESPONSE_BYTES]
         receipt["response_bytes"] = len(response.content)
         receipt["content_sha256"] = sha256_bytes(body)
         if response.status_code == 404:
@@ -583,7 +584,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             receipt["limitations"].append("Lever board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_RESPONSE_BYTES:
+        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
             receipt["result_status"] = "INVALID_RESPONSE"
             receipt["parser_result"] = "SIZE_LIMIT"
             receipt["limitations"].append("Response exceeded bounded parser limit.")
@@ -645,7 +646,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
         response = client.get(url)
         receipt["response_status"] = response.status_code
         receipt["content_type"] = response.headers.get("content-type")
-        body = response.content[:MAX_RESPONSE_BYTES]
+        body = response.content[:MAX_EMPLOYER_ATS_RESPONSE_BYTES]
         receipt["response_bytes"] = len(response.content)
         receipt["content_sha256"] = sha256_bytes(body)
         if response.status_code == 404:
@@ -654,7 +655,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             receipt["limitations"].append("Ashby board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_RESPONSE_BYTES:
+        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
             receipt["result_status"] = "INVALID_RESPONSE"
             receipt["parser_result"] = "SIZE_LIMIT"
             receipt["limitations"].append("Response exceeded bounded parser limit.")
