@@ -369,6 +369,38 @@
           "byte-identically"
         ]
       }
+    },
+    {
+      "name": "capability-report-never-collapses-readiness",
+      "type": "adversarial",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_capability_report.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "default-doctor-touches-no-subsystem",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh targets list --readiness --json | python3 -c \"import json,sys; r=json.load(sys.stdin); assert r['live'] is False; assert 'healthy' not in r, 'a global healthy flag hides blocked lanes'; ids={c['capability_id']:c for c in r['capabilities']}\nfor k in ('tau.harness','scillm.transport','memory.graph','session.herdr'):\n    assert ids[k]['state']=='NOT_TESTED', (k, ids[k]['state'])\nassert r['skipped_probes'], 'skipped probes must be enumerated'\nprint('default doctor is bounded; skipped', len(r['skipped_probes']), 'probes')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "default doctor is bounded"
+        ]
+      }
     }
   ]
 }

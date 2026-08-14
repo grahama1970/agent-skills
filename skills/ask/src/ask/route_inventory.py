@@ -47,14 +47,25 @@ INVENTORY: dict[str, RouteEntry] = {
     # --- Tau-native compile/submit surface -------------------------------
     "tau_dag.py": RouteEntry(TAU_NATIVE_AGENT, "Compiles and submits tau.dag_contract.v1 bundles; Tau owns execution."),
     "tau_dag_cli.py": RouteEntry(TAU_NATIVE_AGENT, "CLI wrapper over tau_dag compile/submit/status."),
+    "capability_report.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Read-only readiness probes over owning subsystems; never generates, submits, or mutates.",
+        probe_only=True,
+    ),
+    "targets_cli.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Narrows ask.capability_report.v1 for one target; runs no dispatch of its own.",
+        probe_only=True,
+    ),
     "run_projection.py": RouteEntry(
         LOCAL_NON_AGENTIC,
         "Read-only operator projection over run artifacts; issues no provider, model, or browser call.",
         probe_only=True,
     ),
     # Sending a prompt into another agent's Herdr pane IS agentic dispatch that
-    # does not pass through Tau, so it is a bounded compat runtime rather than
-    # a local module excused as probe-only: it sends, it does not merely observe.
+    # does not pass through Tau, so it is classified as a direct path with a
+    # named migration rather than excused as probe-only -- it sends, it does
+    # not merely observe.
     "herdr_cli.py": RouteEntry(
         TAU_OPAQUE_COMPAT,
         "Delivers a prompt to a human-owned Herdr pane through monitor-herdr's transport.",

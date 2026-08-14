@@ -141,6 +141,7 @@ Commands:
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
   team-plan <request> Plan a role-based multi-agent team and preview/run its Tau DAG
+  targets <verb>    Readiness per target kind (list --readiness|doctor kind:sel)
   herdr <verb>      Talk to another agent's Herdr session by name (list|who|send)
   tau-dag <request> Compile a human request into a strict Tau DAG
   webgpt <question>  Shortcut: Tau single-call handler webgpt (also webclaude/webkimi/webgemini/webgrok)
@@ -385,6 +386,10 @@ case "${1:-help}" in
         handler="$1"
         shift
         run_tau_handler_shortcut "$handler" "$@"
+        ;;
+    targets)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.targets_cli "$@"
         ;;
     herdr)
         shift

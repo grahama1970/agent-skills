@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1405,
+  "unit": {
+    "command": "uv run pytest skills/ask/tests/test_capability_report.py -q",
+    "exit_code": 0,
+    "summary": "22 passed - every state per target family, no global healthy flag, no cross-seat contamination, text-ready/attachment-blocked distinct, API vs web distinct, TTL and identity invalidation"
+  },
+  "e2e": {
+    "command": "cd skills/ask && ./run.sh targets list --readiness --live --json",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/tmp/1405_live_cli.json",
+    "summary": "live readback: tau READY(doctor_ok), scillm READY(health_2xx), six browser seats READY(probe_ok), memory BLOCKED(health_failed), herdr UNAVAILABLE(herdr_not_running) - blocked targets reported honestly, not substituted"
+  }
+}
