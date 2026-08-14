@@ -27,6 +27,7 @@ from .pipeline import prepare_run_output, run_stage0, status_for_run
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .service import serve as serve_report
+from .tau_semantic_prepare import prepare_tau_semantic_inputs
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
 from .util import read_json, write_json
@@ -64,6 +65,7 @@ IMPLEMENTED = [
     "memory-sync",
     "nightly",
     "apply",
+    "tau-semantic-prepare",
 ]
 NOT_IMPLEMENTED: list[str] = []
 
@@ -116,6 +118,7 @@ def status_payload() -> dict[str, object]:
             "ats_prefill": "BLOCKED_STAGE_0",
             "ats_submit": "BLOCKED_STAGE_0",
             "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
+            "tau_semantic_input_materializer": "IMPLEMENTED_LOCAL",
             "tau_semantic_provider_eval": "NOT_IMPLEMENTED",
         },
         "non_claims": [
@@ -152,6 +155,25 @@ def status(
     typer.echo(f"operational readiness: {payload['operational_readiness']}")
     typer.echo("implemented: " + ", ".join(IMPLEMENTED))
     typer.echo("external effects: blocked")
+
+
+@app.command("tau-semantic-prepare")
+def tau_semantic_prepare(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+    top_n: int = typer.Option(3, "--top-n", min=1, max=8),
+) -> None:
+    """Materialize validated Tau semantic inputs without provider calls."""
+    _configure_logging()
+    try:
+        receipt = prepare_tau_semantic_inputs(run_dir=run, out_dir=out, top_n=top_n)
+    except ContractError as exc:
+        _fail(exc)
+    except FileNotFoundError as exc:
+        _fail(ContractError("TAU_SEMANTIC_PREPARE_FAILED", str(exc)))
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt["status"] != "PASS":
+        raise typer.Exit(code=1)
 
 
 @app.command()
