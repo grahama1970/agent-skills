@@ -167,6 +167,8 @@ class AppSettings(BaseModel):
             ),
             request_timeout_s=float(os.getenv("LIVE_EVIDENCE_HTTP_TIMEOUT", "4")),
             subprocess_timeout_s=float(os.getenv("LIVE_EVIDENCE_PROCESS_TIMEOUT", "5")),
+            max_cards=int(os.getenv("LIVE_EVIDENCE_MAX_CARDS", "40")),
+            max_transcript_events=int(os.getenv("LIVE_EVIDENCE_MAX_TRANSCRIPT_EVENTS", "160")),
         )
 
     def load_profile(self) -> InterviewProfile:

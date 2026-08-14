@@ -12,7 +12,7 @@
       "name": "verify-entrypoint-local-http-ripgrep-ui",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../run.sh", "verify"],
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh verify"],
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
@@ -23,10 +23,27 @@
       }
     },
     {
+      "name": "interview-loop-question-to-scannable-cards",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-interview-loop"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "graham turns do not trigger retrieval: PASS",
+          "existing code evidence card: PASS",
+          "new code evidence card: PASS",
+          "unsupported question fail-closed: PASS",
+          "card queue bounded for realtime scanning: PASS"
+        ]
+      }
+    },
+    {
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "../run.sh", "listen", "--mode", "microphone"],
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh listen --mode microphone"],
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 2,
@@ -37,7 +54,7 @@
       "name": "invalid-skill-contract-rejected",
       "type": "adversarial",
       "real_world": true,
-      "command": ["bash", "../run.sh", "eval-adversarial"],
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-adversarial"],
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,

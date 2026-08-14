@@ -11,7 +11,7 @@ prepare_python_environment() {
   fi
   if [[ -z "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
     if [[ -d /mnt/storage12tb/skills && -w /mnt/storage12tb/skills ]]; then
-      export UV_PROJECT_ENVIRONMENT="/mnt/storage12tb/skills/live-evidence/.venv"
+      export UV_PROJECT_ENVIRONMENT="/mnt/storage12tb/skills/live-evidence/runtime-venv"
     else
       export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv"
     fi
@@ -113,17 +113,22 @@ PY
   doctor)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra stt python -m live_evidence doctor "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python -m live_evidence doctor "$@"
     ;;
   listen)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra stt python -m live_evidence listen "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python -m live_evidence listen "$@"
     ;;
   eval-adversarial)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra stt python "$SCRIPT_DIR/scripts/eval_adversarial.py" "$SCRIPT_DIR" "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_adversarial.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-interview-loop)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_interview_loop.py" "$SCRIPT_DIR" "$@"
     ;;
 esac
 
