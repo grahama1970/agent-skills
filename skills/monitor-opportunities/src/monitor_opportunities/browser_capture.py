@@ -731,6 +731,38 @@ def _meetup_events_from_text(text: str) -> list[dict[str, Any]]:
     return events
 
 
+def _meetup_interleaved_group_sources(
+    group_sources: dict[str, dict[str, str]],
+    max_group_pages: int,
+) -> list[tuple[str, dict[str, str]]]:
+    """Choose group pages across categories before spending the full page budget."""
+
+    buckets: dict[str, list[tuple[str, dict[str, str]]]] = {}
+    category_order = [category_id for category_id, _name, _url in _MEETUP_CATEGORY_URLS]
+    for group_url, source in group_sources.items():
+        category_id = source.get("category_id", "")
+        if category_id not in buckets:
+            buckets[category_id] = []
+        buckets[category_id].append((group_url, source))
+        if category_id not in category_order:
+            category_order.append(category_id)
+
+    selected: list[tuple[str, dict[str, str]]] = []
+    while len(selected) < max_group_pages:
+        progressed = False
+        for category_id in category_order:
+            bucket = buckets.get(category_id) or []
+            if not bucket:
+                continue
+            selected.append(bucket.pop(0))
+            progressed = True
+            if len(selected) >= max_group_pages:
+                break
+        if not progressed:
+            break
+    return selected
+
+
 def capture_meetup_buffalo(
     out_dir: Path,
     surf_run: Path = SURF_RUN_DEFAULT,
@@ -759,6 +791,11 @@ def capture_meetup_buffalo(
     try:
         wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "90")))
         max_group_failures = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")))
+        category_wait_seconds = os.environ.get("MONITOR_MEETUP_CATEGORY_WAIT_SECONDS", "4")
+        group_wait_seconds = os.environ.get("MONITOR_MEETUP_GROUP_WAIT_SECONDS", "3")
+        receipt["max_group_pages"] = max_group_pages
+        receipt["category_wait_seconds"] = category_wait_seconds
+        receipt["group_wait_seconds"] = group_wait_seconds
         with _wall_clock_timeout(wall_timeout, "Meetup Buffalo capture"):
             ensure_browser(surf_run)
             first_url = _MEETUP_CATEGORY_URLS[0][2]
@@ -771,7 +808,7 @@ def capture_meetup_buffalo(
             for idx, (category_id, category_name, url) in enumerate(_MEETUP_CATEGORY_URLS):
                 if idx > 0:
                     _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(url), timeout=20)
-                _surf_pause(surf_run, "7")
+                _surf_pause(surf_run, category_wait_seconds)
                 snapshot = _meetup_page_snapshot(surf_run, tab_id)
                 category_pages.append(
                     {
@@ -787,13 +824,13 @@ def capture_meetup_buffalo(
                         group_sources[group_url] = {"category_id": category_id, "category_name": category_name}
             for seed in _MEETUP_SEED_GROUP_URLS:
                 group_sources.setdefault(seed, {"category_id": "seed", "category_name": "Seed group"})
-            for group_url, source in list(group_sources.items())[:max_group_pages]:
+            for group_url, source in _meetup_interleaved_group_sources(group_sources, max_group_pages):
                 if len(group_capture_failures) >= max_group_failures:
                     skipped_group_urls.append(group_url)
                     continue
                 try:
                     _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
-                    _surf_pause(surf_run, "6")
+                    _surf_pause(surf_run, group_wait_seconds)
                     snapshot = _meetup_page_snapshot(surf_run, tab_id)
                 except (BrowserCaptureError, subprocess.TimeoutExpired, TimeoutError, ValueError, json.JSONDecodeError) as exc:
                     logger.warning("Meetup group capture skipped for {}: {}", group_url, exc)
@@ -830,9 +867,13 @@ def capture_meetup_buffalo(
             "source": "human_authorized_meetup_tab",
             "capture_method": "surf_read_only_visible_pages",
             "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+            "external_effects": False,
             "observed_at": utc_now(),
             "category_pages": category_pages,
             "seed_group_urls": _MEETUP_SEED_GROUP_URLS,
+            "max_group_pages": max_group_pages,
+            "category_wait_seconds": category_wait_seconds,
+            "group_wait_seconds": group_wait_seconds,
             "groups": groups,
             "group_capture_failures": group_capture_failures,
             "skipped_group_urls": skipped_group_urls,

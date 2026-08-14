@@ -215,3 +215,65 @@ def test_meetup_group_capture_circuit_breaks_repeated_timeouts(
     assert evidence["blocked_by_systemic_failure"] is True
     assert len(evidence["group_capture_failures"]) == 3
     assert len(evidence["skipped_group_urls"]) == 2
+
+
+def test_meetup_capture_uses_bounded_waits_and_eight_group_budget(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: "existing")
+    technology_urls = [f"https://www.meetup.com/tech-group-{idx}/" for idx in range(6)]
+    business_urls = [f"https://www.meetup.com/business-group-{idx}/" for idx in range(6)]
+    waits: list[str] = []
+    current_page = "546"
+
+    def fake_surf(_surf_run: Path, *args: str, timeout: int = 90) -> str:
+        nonlocal current_page
+        del _surf_run, timeout
+        if args[0] == "tab.new":
+            current_page = "546"
+            return "123: tab"
+        if args[0] == "tab.close":
+            return ""
+        if args[0] == "js":
+            script = args[-1]
+            if "categoryId=405" in script:
+                current_page = "405"
+            elif "categoryId=546" in script:
+                current_page = "546"
+            elif "business-group" in script:
+                current_page = "business-group"
+            elif "tech-group" in script:
+                current_page = "tech-group"
+            return "NAV"
+        raise AssertionError(f"unexpected surf args: {args!r}")
+
+    def fake_snapshot(_surf_run: Path, _tab_id: str) -> dict[str, object]:
+        links = business_urls if current_page == "405" else technology_urls
+        return {
+            "title": "Buffalo Meetup Groups",
+            "text": "Buffalo technology and business groups",
+            "links": links,
+        }
+
+    def fake_pause(_surf_run: Path, seconds: str, timeout: int = 30) -> None:
+        del _surf_run, timeout
+        waits.append(seconds)
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+    monkeypatch.setattr(browser_capture, "_surf_pause", fake_pause)
+    monkeypatch.setattr(browser_capture, "_meetup_page_snapshot", fake_snapshot)
+
+    receipt = capture_meetup_buffalo(tmp_path, max_group_pages=8)
+
+    assert receipt["status"] == "OK"
+    assert receipt["groups_captured"] == 8
+    assert receipt["max_group_pages"] == 8
+    assert receipt["category_wait_seconds"] == "4"
+    assert receipt["group_wait_seconds"] == "3"
+    assert waits.count("4") == 2
+    assert waits.count("3") == 8
+    evidence = json.loads((tmp_path / "meetup-buffalo-evidence.json").read_text(encoding="utf-8"))
+    assert len(evidence["groups"]) == 8
+    assert {"405", "546"}.issubset({group["category_id"] for group in evidence["groups"]})
+    assert evidence["external_effects"] is False

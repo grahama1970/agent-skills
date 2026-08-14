@@ -825,7 +825,7 @@ def nightly(
     sn_receipt = capture_sales_navigator_saved(capture_dir)
     steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
-    meetup_max_group_pages = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_PAGES", "4")))
+    meetup_max_group_pages = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_PAGES", "8")))
     meetup_receipt = capture_meetup_buffalo_isolated(
         capture_dir / "meetup",
         max_group_pages=meetup_max_group_pages,
