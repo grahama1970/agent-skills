@@ -145,3 +145,81 @@ def test_consulting_research_rows_are_bound_to_current_run_lineage(
     row = saved["candidates"][0]
     assert row["eligibility_state"] == "ELIGIBLE_CONSULTING"
     assert row["source_receipt_id"] == "src:c:client-research:test"
+
+
+def test_digest_prospect_queue_uses_report_relationship_signals(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    out = tmp_path / "run"
+    discovery = out / "discovery"
+    ranking = out / "ranking"
+    capture = out / "browser-capture"
+    discovery.mkdir(parents=True)
+    ranking.mkdir(parents=True)
+    capture.mkdir(parents=True)
+    (discovery / "source-receipts.jsonl").write_text("", encoding="utf-8")
+    (ranking / "shortlist.json").write_text("[]\n", encoding="utf-8")
+    (out / "report-manifest.json").write_text(
+        json.dumps(
+            {
+                "relationship_signals": [
+                    {
+                        "signal_id": "rel-memory",
+                        "subject": "Eric Mertens",
+                        "organization": "Galois, Inc.",
+                        "signal_type": "adjacent_contact",
+                        "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+                        "recommended_action": "human_decide_reconnect_or_defer",
+                        "evidence_refs": ["memory://rel-memory"],
+                        "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+                        "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+                        "channel_guidance": ["Corporate email may be blocked after a long gap."],
+                    }
+                ],
+                "artifact_accounting": {"hidden_total": 0},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        nightly_digest,
+        "build_digest",
+        lambda *_args, **_kwargs: {
+            "top": [],
+            "counts": {"total": 0},
+            "signals_wired": {},
+        },
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.trigger_signals.triggers_for_shortlist",
+        lambda _rows: ({}, {"schema": "monitor_opportunities.trigger_receipt.v1", "records": []}),
+    )
+    monkeypatch.setattr("monitor_opportunities.prospect_research.mailbox_warm_contacts", lambda *_args: {})
+    monkeypatch.setattr("monitor_opportunities.prospect_research.research_prospects", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_who_viewed",
+        lambda _capture_dir: {"status": "EMPTY", "viewers_captured": 0},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_actively_hiring",
+        lambda _capture_dir: {"status": "EMPTY", "contacts_captured": 0},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_job_insights",
+        lambda _urls: {},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.contact_changes.detect",
+        lambda *_args, **_kwargs: ([], {"schema": "monitor_opportunities.contact_changes.v1"}),
+    )
+    monkeypatch.setattr("monitor_opportunities.consulting_discovery.discover", lambda: ([], {}))
+
+    steps: dict[str, object] = {}
+    run_digest_phase(out, tmp_path, capture, "http://127.0.0.1:1", steps)
+
+    assert steps["prospect_queue"]["relationship"] == 1
+    queue = json.loads((out / "prospect-queue.json").read_text(encoding="utf-8"))
+    assert queue["generated_from"]["relationship_signals"] == 1
+    assert queue["prospects"][0]["relationship_signal_id"] == "rel-memory"

@@ -220,6 +220,14 @@ def run_digest_phase(
             if sam_path.exists():
                 sam_evidence = json.loads(sam_path.read_text(encoding="utf-8"))
             relationship_signals = relationship_signals_from_candidates(shortlist_rows)
+            report_manifest_path = out / "report-manifest.json"
+            if report_manifest_path.exists():
+                report_manifest = json.loads(report_manifest_path.read_text(encoding="utf-8"))
+                relationship_signal_ids = {row.get("signal_id") for row in relationship_signals}
+                for signal in report_manifest.get("relationship_signals") or []:
+                    if signal.get("signal_id") not in relationship_signal_ids:
+                        relationship_signals.append(signal)
+                        relationship_signal_ids.add(signal.get("signal_id"))
             prospects = build_prospect_queue(sam_evidence, shortlist_rows, relationship_signals)
             (out / "prospect-queue.json").write_text(
                 json.dumps(
