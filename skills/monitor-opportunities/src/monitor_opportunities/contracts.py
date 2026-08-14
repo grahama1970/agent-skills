@@ -91,6 +91,8 @@ class LaneCoverage(StrictModel):
     result_status: ResultStatus
     candidates_observed: int = Field(ge=0)
     candidates_admitted: int = Field(ge=0)
+    candidates_admitted_opportunities: int = Field(default=0, ge=0)
+    candidates_admitted_source_intel: int = Field(default=0, ge=0)
     source_receipt_ids: list[str]
     limitations: list[str]
 

@@ -264,6 +264,11 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
     assert actions["WATCH_MEETUP"]["effects_external"] is False
     assert actions["SKIP_MEETUP"]["effects_external"] is False
     assert actions["RECONNECT_CONTACT"]["target_type"] == "relationship_signal"
+    lane_c = next(row for row in manifest["lane_coverage"] if row["lane"] == "C")
+    assert lane_c["candidates_admitted"] == (
+        lane_c["candidates_admitted_opportunities"] + lane_c["candidates_admitted_source_intel"]
+    )
+    assert lane_c["candidates_admitted_source_intel"] >= len(networking)
 
 
 def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:

@@ -299,6 +299,14 @@
           "type": "integer",
           "minimum": 0
         },
+        "candidates_admitted_opportunities": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "candidates_admitted_source_intel": {
+          "type": "integer",
+          "minimum": 0
+        },
         "source_receipt_ids": {
           "type": "array",
           "uniqueItems": true,

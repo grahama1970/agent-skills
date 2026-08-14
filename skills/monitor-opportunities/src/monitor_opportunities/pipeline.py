@@ -203,8 +203,15 @@ def _source_receipts(discovery_dir: Path) -> list[dict[str, Any]]:
 def _lane_coverage(discovery_dir: Path, shortlist: list[dict[str, Any]]) -> list[dict[str, Any]]:
     summaries = read_json(discovery_dir / "lane-summaries.json")
     admitted_by_lane: dict[str, int] = {}
+    admitted_opportunities_by_lane: dict[str, int] = {}
+    admitted_source_intel_by_lane: dict[str, int] = {}
     for candidate in shortlist:
-        admitted_by_lane[candidate["lane"]] = admitted_by_lane.get(candidate["lane"], 0) + 1
+        lane = candidate["lane"]
+        admitted_by_lane[lane] = admitted_by_lane.get(lane, 0) + 1
+        if _is_report_opportunity(candidate):
+            admitted_opportunities_by_lane[lane] = admitted_opportunities_by_lane.get(lane, 0) + 1
+        else:
+            admitted_source_intel_by_lane[lane] = admitted_source_intel_by_lane.get(lane, 0) + 1
     return [
         {
             "lane": row["lane"],
@@ -212,6 +219,8 @@ def _lane_coverage(discovery_dir: Path, shortlist: list[dict[str, Any]]) -> list
             "result_status": row["result_status"],
             "candidates_observed": row["candidates_observed"],
             "candidates_admitted": admitted_by_lane.get(row["lane"], 0),
+            "candidates_admitted_opportunities": admitted_opportunities_by_lane.get(row["lane"], 0),
+            "candidates_admitted_source_intel": admitted_source_intel_by_lane.get(row["lane"], 0),
             "source_receipt_ids": row["source_receipt_ids"],
             "limitations": row.get("limitations", []),
         }
