@@ -9,6 +9,7 @@ a live browser.
 from __future__ import annotations
 
 import json
+import subprocess
 import time
 from pathlib import Path
 
@@ -114,3 +115,52 @@ def test_isolated_meetup_capture_terminates_wedged_child(
     assert "isolated timeout 1s" in receipt["error"]
     stored = json.loads((tmp_path / "meetup-capture-receipt.json").read_text(encoding="utf-8"))
     assert stored["status"] == "FAILED"
+
+
+def test_meetup_group_capture_circuit_breaks_repeated_timeouts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: "existing")
+    monkeypatch.setenv("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")
+    group_urls = [
+        f"https://www.meetup.com/group-{idx}/"
+        for idx in range(5)
+    ]
+
+    def fake_surf(_surf_run: Path, *args: str, timeout: int = 90) -> str:
+        del _surf_run, timeout
+        if args[0] == "tab.new":
+            return "123: tab"
+        if args[0] == "wait":
+            return ""
+        if args[0] == "tab.close":
+            return ""
+        if args[0] == "js":
+            script = args[-1]
+            if "find/?source=GROUPS" not in script:
+                raise subprocess.TimeoutExpired(args, 20)
+            return "NAV"
+        raise AssertionError(f"unexpected surf args: {args!r}")
+
+    def fake_snapshot(_surf_run: Path, _tab_id: str) -> dict[str, object]:
+        return {
+            "title": "Search groups",
+            "text": "Buffalo groups",
+            "links": group_urls,
+        }
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *args, **kwargs: None)
+    monkeypatch.setattr(browser_capture, "_meetup_page_snapshot", fake_snapshot)
+
+    receipt = capture_meetup_buffalo(tmp_path, max_group_pages=5)
+
+    assert receipt["group_capture_failed"] == 3
+    assert receipt["group_capture_skipped"] == 2
+    assert receipt["blocked_by_systemic_failure"] is True
+    assert receipt["failure_signature"] == "meetup_group_detail_capture_failed"
+    evidence = json.loads((tmp_path / "meetup-buffalo-evidence.json").read_text(encoding="utf-8"))
+    assert evidence["blocked_by_systemic_failure"] is True
+    assert len(evidence["group_capture_failures"]) == 3
+    assert len(evidence["skipped_group_urls"]) == 2

@@ -692,8 +692,11 @@ def capture_meetup_buffalo(
     }
     tab_id = ""
     groups: list[dict[str, Any]] = []
+    group_capture_failures: list[dict[str, str]] = []
+    skipped_group_urls: list[str] = []
     try:
         wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "180")))
+        max_group_failures = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")))
         with _wall_clock_timeout(wall_timeout, "Meetup Buffalo capture"):
             ensure_browser(surf_run)
             first_url = _MEETUP_CATEGORY_URLS[0][2]
@@ -723,12 +726,27 @@ def capture_meetup_buffalo(
             for seed in _MEETUP_SEED_GROUP_URLS:
                 group_sources.setdefault(seed, {"category_id": "seed", "category_name": "Seed group"})
             for group_url, source in list(group_sources.items())[:max_group_pages]:
+                if len(group_capture_failures) >= max_group_failures:
+                    skipped_group_urls.append(group_url)
+                    continue
                 try:
                     _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
                     _surf_pause(surf_run, "6")
                     snapshot = _meetup_page_snapshot(surf_run, tab_id)
                 except (BrowserCaptureError, subprocess.TimeoutExpired, TimeoutError, ValueError, json.JSONDecodeError) as exc:
                     logger.warning("Meetup group capture skipped for {}: {}", group_url, exc)
+                    group_capture_failures.append(
+                        {
+                            "url": group_url,
+                            "error_type": type(exc).__name__,
+                            "error": str(exc)[:500],
+                        }
+                    )
+                    if len(group_capture_failures) == max_group_failures:
+                        logger.warning(
+                            "Meetup group capture circuit breaker opened after {} failures",
+                            max_group_failures,
+                        )
                     continue
                 text = str(snapshot.get("text") or "")
                 groups.append(
@@ -754,6 +772,14 @@ def capture_meetup_buffalo(
             "category_pages": category_pages,
             "seed_group_urls": _MEETUP_SEED_GROUP_URLS,
             "groups": groups,
+            "group_capture_failures": group_capture_failures,
+            "skipped_group_urls": skipped_group_urls,
+            "blocked_by_systemic_failure": bool(skipped_group_urls),
+            "failure_signature": (
+                "meetup_group_detail_capture_failed"
+                if group_capture_failures
+                else None
+            ),
             "non_claims": [
                 "Meetup evidence is source-intel only, not a job/application source.",
                 "Capture uses visible page text and links only; no Meetup GraphQL call or attendee scraping.",
@@ -765,6 +791,10 @@ def capture_meetup_buffalo(
         receipt["evidence_path"] = str(evidence_path)
         receipt["groups_captured"] = len(groups)
         receipt["category_pages_captured"] = len(category_pages)
+        receipt["group_capture_failed"] = len(group_capture_failures)
+        receipt["group_capture_skipped"] = len(skipped_group_urls)
+        receipt["blocked_by_systemic_failure"] = bool(skipped_group_urls)
+        receipt["failure_signature"] = evidence["failure_signature"]
     except (BrowserCaptureError, TimeoutError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.error("Meetup Buffalo capture failed: {}", exc)
         receipt["status"] = "FAILED"
