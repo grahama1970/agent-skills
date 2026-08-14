@@ -15,6 +15,7 @@ from typer.testing import CliRunner
 from monitor_opportunities.cli import app
 
 runner = CliRunner()
+SKILL_DIR = Path(__file__).resolve().parents[1]
 
 
 def test_empty_candidate_run_exits_zero(tmp_path: Path) -> None:
@@ -30,7 +31,7 @@ def test_empty_candidate_run_exits_zero(tmp_path: Path) -> None:
 
 
 def test_mixed_fixture_gates_before_ranking_and_caps_shortlist(tmp_path: Path) -> None:
-    fixture = Path("skills/monitor-opportunities/tests/fixtures/ranking/mixed_candidates.json")
+    fixture = SKILL_DIR / "tests" / "fixtures" / "ranking" / "mixed_candidates.json"
     out = tmp_path / "ranking"
     result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
     assert result.exit_code == 0, result.output
@@ -54,3 +55,55 @@ def test_mixed_fixture_gates_before_ranking_and_caps_shortlist(tmp_path: Path) -
     assert shortlisted_ids[:3] == ["rank:wny-hybrid", "rank:wny-onsite", "rank:remote"]
     assert "rank:remote-seven" not in shortlisted_ids
     assert not {"rank:relocation", "rank:ambiguous-location", "rank:unknown-clearance"} & set(shortlisted_ids)
+    assert json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8")) == []
+
+
+def test_source_intel_cannot_starve_reportable_opportunity_shortlist(tmp_path: Path) -> None:
+    candidates = [
+        {
+            "candidate_id": f"source-intel:{i}",
+            "lane": "A",
+            "organization": f"LinkedIn Locator {i}",
+            "title": "Principal AI Architect",
+            "workplace_type": "WNY_HYBRID",
+            "location_display": "Buffalo, NY (hybrid)",
+            "fit_score": 0.99,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": f"receipt:linkedin:{i}",
+        }
+        for i in range(8)
+    ]
+    candidates.append(
+        {
+            "candidate_id": "reportable:lower-score",
+            "lane": "A",
+            "organization": "Primary ATS Employer",
+            "title": "AI Platform Architect",
+            "workplace_type": "REMOTE",
+            "location_display": "Remote, US",
+            "fit_score": 0.5,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "greenhouse",
+            "source_receipt_id": "receipt:greenhouse",
+        }
+    )
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    shortlist = json.loads((out / "shortlist.json").read_text(encoding="utf-8"))
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    assert [row["candidate_id"] for row in shortlist] == ["reportable:lower-score"]
+    assert len(source_intel) == 8
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["admitted"] == 9
+    assert receipt["admitted_opportunities"] == 1
+    assert receipt["admitted_source_intel"] == 8
+    assert receipt["shortlisted"] == 1
+    assert receipt["source_intel_shortlisted"] == 8

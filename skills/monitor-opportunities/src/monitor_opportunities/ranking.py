@@ -14,6 +14,11 @@ from dotenv import load_dotenv
 load_dotenv(override=False)
 
 GEO_PRIORITY = {"WNY_HYBRID": 300, "WNY_ONSITE": 200, "REMOTE": 100, "NOT_APPLICABLE": 150}
+SOURCE_INTEL_PROVIDERS = {
+    "human_supplied_linkedin",
+    "ops_linkedin_authorized_read_only",
+    "meetup_surf",
+}
 
 
 def _max_age_days() -> int:
@@ -139,6 +144,12 @@ def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     return {"geo_priority": geo, "role_fit": role, "source_quality": source, "total": total}
 
 
+def _is_source_intel_candidate(candidate: dict[str, Any]) -> bool:
+    """Rows that inform human sourcing must not consume application shortlist slots."""
+
+    return str(candidate.get("source_provider") or "") in SOURCE_INTEL_PROVIDERS
+
+
 def _posting_identity(candidate: dict[str, Any]) -> str:
     """Stable identity for one real-world posting, across sources.
 
@@ -233,17 +244,34 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
             row["candidate_id"],
         )
     )
-    shortlist = admitted[:limit]
+    admitted_opportunities = [row for row in admitted if not _is_source_intel_candidate(row)]
+    admitted_source_intel = [row for row in admitted if _is_source_intel_candidate(row)]
+    shortlist = admitted_opportunities[:limit]
+    source_intel_shortlist = admitted_source_intel[:limit]
     for position, candidate in enumerate(shortlist, start=1):
         ranking_receipts.append(
             {
                 "receipt_id": stable_id("ranking", {"candidate": candidate["candidate_id"], "position": position}),
                 "candidate_id": candidate["candidate_id"],
                 "rank": position,
+                "ranking_context": "opportunity_shortlist",
                 "policy_version": "ranking.v1",
                 "policy_digest": sha256_json({"policy": "ranking.v1", "limit": limit}),
                 "component_scores": candidate["score_components"],
                 "limitations": ["Deterministic score is not employer selection probability."],
+            }
+        )
+    for position, candidate in enumerate(source_intel_shortlist, start=1):
+        ranking_receipts.append(
+            {
+                "receipt_id": stable_id("ranking-source-intel", {"candidate": candidate["candidate_id"], "position": position}),
+                "candidate_id": candidate["candidate_id"],
+                "rank": position,
+                "ranking_context": "source_intel",
+                "policy_version": "ranking.v1",
+                "policy_digest": sha256_json({"policy": "ranking.v1", "limit": limit, "context": "source_intel"}),
+                "component_scores": candidate["score_components"],
+                "limitations": ["Source-intel rows are visible sourcing signals, not application opportunities."],
             }
         )
 
@@ -259,12 +287,16 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
         "duplicates_dropped": duplicates_dropped,
         "duplicates_merged_into": merged_into,
         "admitted": len(admitted),
+        "admitted_opportunities": len(admitted_opportunities),
+        "admitted_source_intel": len(admitted_source_intel),
         "shortlisted": len(shortlist),
+        "source_intel_shortlisted": len(source_intel_shortlist),
         "rejected_or_review": len(rejections),
     }
     write_jsonl(out_dir / "eligibility-receipts.jsonl", eligibility_receipts)
     write_jsonl(out_dir / "ranking-receipts.jsonl", ranking_receipts)
     write_json(out_dir / "shortlist.json", shortlist)
+    write_json(out_dir / "source-intel-shortlist.json", source_intel_shortlist)
     write_json(out_dir / "rejections.json", rejections)
     write_json(out_dir / "ranking-receipt.json", receipt)
     return receipt

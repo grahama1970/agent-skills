@@ -169,9 +169,12 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
     discovered = _read_jsonl(run_dir / "discovery" / "candidates.jsonl")
     receipts = _read_jsonl(run_dir / "discovery" / "source-receipts.jsonl")
     shortlist_p = run_dir / "ranking" / "shortlist.json"
+    source_intel_p = run_dir / "ranking" / "source-intel-shortlist.json"
     rejections_p = run_dir / "ranking" / "rejections.json"
     receipt_p = run_dir / "ranking" / "ranking-receipt.json"
     shortlist = json.loads(shortlist_p.read_text(encoding="utf-8")) if shortlist_p.exists() else []
+    if source_intel_p.exists():
+        shortlist += json.loads(source_intel_p.read_text(encoding="utf-8"))
     rejections = (
         json.loads(rejections_p.read_text(encoding="utf-8")) if rejections_p.exists() else []
     )

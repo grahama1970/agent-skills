@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -43,6 +44,41 @@ REPORT_DIGEST_LIMIT = 8
 SHORTLIST_LIMIT = min(_int_env("MONITOR_SHORTLIST_LIMIT", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
 # How many top jobs get a custom targeted resume + apply-prep packet per run.
 APPLY_PREP_TOP_N = min(_int_env("MONITOR_APPLY_PREP_TOP_N", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
+
+GENERATED_RUN_DIRS = (
+    "application-packets",
+    "discovery",
+    "ranking",
+    "report",
+    "tailoring",
+)
+GENERATED_RUN_FILES = (
+    "claim-snapshot.json",
+    "consulting-research.json",
+    "contact-changes.json",
+    "morning-digest.json",
+    "prepublish-contract.json",
+    "prospect-queue.json",
+    "report-manifest.json",
+    "run-receipt.json",
+    "stage-ledger.json",
+    "trigger-receipt.json",
+)
+
+
+def prepare_run_output(out_dir: Path, *, include_browser_capture: bool = False) -> None:
+    """Remove prior generated children so a reused run dir cannot expose stale artifacts."""
+
+    generated_dirs = (*GENERATED_RUN_DIRS, "browser-capture") if include_browser_capture else GENERATED_RUN_DIRS
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name in generated_dirs:
+        child = out_dir / name
+        if child.exists():
+            shutil.rmtree(child)
+    for name in GENERATED_RUN_FILES:
+        child = out_dir / name
+        if child.exists():
+            child.unlink()
 
 
 def _capability_authority() -> dict[str, str]:
@@ -399,15 +435,19 @@ def _report_from_run(
     outreach_effects: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
+    source_intel_shortlist_path = ranking_dir / "source-intel-shortlist.json"
+    source_intel_shortlist = read_json(source_intel_shortlist_path) if source_intel_shortlist_path.exists() else []
     rejections = read_json(ranking_dir / "rejections.json")
     opportunity_candidates = [candidate for candidate in shortlist if _is_report_opportunity(candidate)]
     opportunities = [_opportunity(candidate) for candidate in opportunity_candidates[:REPORT_DIGEST_LIMIT]]
     source_intel = [
         item
-        for item in (_source_intel(candidate) for candidate in shortlist)
+        for item in (_source_intel(candidate) for candidate in [*source_intel_shortlist, *shortlist])
         if item is not None
     ]
-    relationship_signals = relationship_signals_from_candidates(shortlist[:REPORT_DIGEST_LIMIT])
+    relationship_signals = relationship_signals_from_candidates(
+        [*shortlist[:REPORT_DIGEST_LIMIT], *source_intel_shortlist[:REPORT_DIGEST_LIMIT]]
+    )
     resume_variants = _resume_variants(tailoring_dir, opportunities)
     if len(resume_variants) != len(opportunities):
         missing = sorted(
@@ -497,7 +537,7 @@ def _report_from_run(
         "stage": STAGE,
         "operational_readiness": _operational_readiness(_source_receipts(discovery_dir), opportunities, resume_variants),
         "capability_authority": _capability_authority(),
-        "lane_coverage": _lane_coverage(discovery_dir, shortlist),
+        "lane_coverage": _lane_coverage(discovery_dir, [*shortlist, *source_intel_shortlist]),
         "source_receipts": _source_receipts(discovery_dir),
         "eligibility_rejections": [_rejection(candidate) for candidate in rejections],
         "opportunities": opportunities,
@@ -686,7 +726,7 @@ def run_stage0(
     meetup_evidence: Path | None = None,
     degrade_required_source_failures: bool = False,
 ) -> dict[str, Any]:
-    out_dir.mkdir(parents=True, exist_ok=True)
+    prepare_run_output(out_dir)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
     phases = []
     discovery_dir = out_dir / "discovery"

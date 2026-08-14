@@ -21,13 +21,14 @@ from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel
 from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
+SKILL_DIR = Path(__file__).resolve().parents[1]
 
 
 def test_diagnostic_run_degrades_required_source_gate_without_changing_strict_mode(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    skill_dir = Path("skills/monitor-opportunities")
+    skill_dir = SKILL_DIR
 
     def fake_sweep(*, out_dir: Path, **_: object) -> dict[str, object]:
         out_dir.mkdir(parents=True)
@@ -173,10 +174,31 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     assert "APPLICATION_PACKET_DRIFT" in drifted.stderr
 
 
+def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    stale_files = [
+        out / "tailoring" / "stale-apply-prep.json",
+        out / "application-packets" / "stale-packet.json",
+        out / "report" / "stale-report.json",
+        out / "morning-digest.json",
+    ]
+    for path in stale_files:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('{"stale": true}\n', encoding="utf-8")
+
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    assert all(not path.exists() for path in stale_files)
+    assert (out / "run-receipt.json").exists()
+    assert (out / "report" / "report.json").exists()
+
+
 def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path) -> None:
     fixture = Path(__file__).parent / "fixtures" / "discovery" / "linkedin-top-candidate.json"
     out = tmp_path / "nightly-linkedin"
-    sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
+    sam_ev = SKILL_DIR / "tests" / "fixtures" / "federal" / "sam-website-capture.json"
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 2
     assert "CLAIM_SNAPSHOT_REQUIRED" in result.stderr
@@ -195,7 +217,7 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
 def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevant(tmp_path: Path) -> None:
     fixture = Path(__file__).parent / "fixtures" / "discovery" / "ops-linkedin-jobs-capture.json"
     out = tmp_path / "nightly-ops-linkedin"
-    sam_ev = Path("skills/monitor-opportunities/tests/fixtures/federal/sam-website-capture.json")
+    sam_ev = SKILL_DIR / "tests" / "fixtures" / "federal" / "sam-website-capture.json"
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 2
     assert "CLAIM_SNAPSHOT_REQUIRED" in result.stderr

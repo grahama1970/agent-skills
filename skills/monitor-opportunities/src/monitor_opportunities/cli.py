@@ -22,7 +22,7 @@ from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
-from .pipeline import run_stage0, status_for_run
+from .pipeline import prepare_run_output, run_stage0, status_for_run
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .service import serve as serve_report
@@ -650,6 +650,11 @@ def nightly(
         skip_ats_memory = True
         skip_relationship_memory = True
         require_clean = True
+
+    # `latest/` is intentionally reused by cron. Clear prior generated artifacts
+    # before capture so stale tailoring/application files cannot imply current
+    # run capability when this invocation produced no opportunities.
+    prepare_run_output(out, include_browser_capture=True)
 
     # Deployment attestation must happen before any browser/source capture so a
     # scheduled run cannot silently execute stale or dirty code.
