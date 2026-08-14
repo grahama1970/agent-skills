@@ -8,13 +8,19 @@ a live browser.
 
 from __future__ import annotations
 
+import json
+import time
+from pathlib import Path
+
 import pytest
 
+import monitor_opportunities.browser_capture as browser_capture
 from monitor_opportunities.browser_capture import (
     BrowserCaptureError,
     _ats_field_type,
     _ats_provider_from_url,
     _generic_form_from_dom,
+    capture_meetup_buffalo,
 )
 
 
@@ -65,3 +71,25 @@ def test_generic_form_from_dom_shape() -> None:
 def test_generic_form_from_dom_empty_raises() -> None:
     with pytest.raises(BrowserCaptureError):
         _generic_form_from_dom("unknown", "x", "1", "u", [{"tag": "input", "label": ""}])
+
+
+def test_meetup_capture_wall_clock_timeout_writes_failed_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "1")
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: "existing")
+
+    def slow_surf(*_: object, **__: object) -> str:
+        time.sleep(2)
+        return "123: tab"
+
+    monkeypatch.setattr(browser_capture, "_surf", slow_surf)
+
+    receipt = capture_meetup_buffalo(tmp_path)
+
+    assert receipt["status"] == "FAILED"
+    assert "Meetup Buffalo capture exceeded 1s" in receipt["error"]
+    assert receipt["evidence_path"] is None
+    stored = json.loads((tmp_path / "meetup-capture-receipt.json").read_text(encoding="utf-8"))
+    assert stored["status"] == "FAILED"

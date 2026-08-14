@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -112,6 +114,27 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     if proc.returncode != 0:
         raise BrowserCaptureError(f"surf {args[0]} failed: {proc.stderr[-200:]}")
     return proc.stdout.strip()
+
+
+@contextlib.contextmanager
+def _wall_clock_timeout(seconds: int, label: str):
+    """Bound capture phases even if a lower-level browser helper wedges."""
+
+    if seconds <= 0 or not hasattr(signal, "SIGALRM"):
+        yield
+        return
+    old_handler = signal.getsignal(signal.SIGALRM)
+
+    def _raise_timeout(_signum: int, _frame: Any) -> None:
+        raise TimeoutError(f"{label} exceeded {seconds}s")
+
+    signal.signal(signal.SIGALRM, _raise_timeout)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
 
 
 def ensure_browser(surf_run: Path = SURF_RUN_DEFAULT) -> str:
@@ -669,56 +692,58 @@ def capture_meetup_buffalo(
     tab_id = ""
     groups: list[dict[str, Any]] = []
     try:
-        ensure_browser(surf_run)
-        first_url = _MEETUP_CATEGORY_URLS[0][2]
-        created = _surf(surf_run, "tab.new", first_url, "--json", timeout=40)
-        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
-        if not tab_id:
-            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
-        category_pages: list[dict[str, Any]] = []
-        group_sources: dict[str, dict[str, str]] = {}
-        for idx, (category_id, category_name, url) in enumerate(_MEETUP_CATEGORY_URLS):
-            if idx > 0:
-                _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(url), timeout=20)
-            _surf_pause(surf_run, "7")
-            snapshot = _meetup_page_snapshot(surf_run, tab_id)
-            category_pages.append(
-                {
-                    "category_id": category_id,
-                    "category_name": category_name,
-                    "url": url,
-                    "title": snapshot.get("title"),
-                }
-            )
-            for link in snapshot.get("links") or []:
-                group_url = _meetup_group_url(str(link))
-                if group_url and group_url not in group_sources:
-                    group_sources[group_url] = {"category_id": category_id, "category_name": category_name}
-        for seed in _MEETUP_SEED_GROUP_URLS:
-            group_sources.setdefault(seed, {"category_id": "seed", "category_name": "Seed group"})
-        for group_url, source in list(group_sources.items())[:max_group_pages]:
-            try:
-                _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
-                _surf_pause(surf_run, "6")
+        wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "180")))
+        with _wall_clock_timeout(wall_timeout, "Meetup Buffalo capture"):
+            ensure_browser(surf_run)
+            first_url = _MEETUP_CATEGORY_URLS[0][2]
+            created = _surf(surf_run, "tab.new", first_url, "--json", timeout=40)
+            tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+            if not tab_id:
+                raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+            category_pages: list[dict[str, Any]] = []
+            group_sources: dict[str, dict[str, str]] = {}
+            for idx, (category_id, category_name, url) in enumerate(_MEETUP_CATEGORY_URLS):
+                if idx > 0:
+                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(url), timeout=20)
+                _surf_pause(surf_run, "7")
                 snapshot = _meetup_page_snapshot(surf_run, tab_id)
-            except (BrowserCaptureError, subprocess.TimeoutExpired, ValueError, json.JSONDecodeError) as exc:
-                logger.warning("Meetup group capture skipped for {}: {}", group_url, exc)
-                continue
-            text = str(snapshot.get("text") or "")
-            groups.append(
-                {
-                    "source": "human_authorized_meetup_tab",
-                    "observed_at": utc_now(),
-                    "name": _meetup_name_from_snapshot(snapshot, group_url),
-                    "url": group_url,
-                    "category_id": source["category_id"],
-                    "category_name": source["category_name"],
-                    "location": "Buffalo, NY",
-                    "description": text[:1200],
-                    "page_text": text,
-                    "upcoming_events": _meetup_events_from_text(text),
-                }
-            )
+                category_pages.append(
+                    {
+                        "category_id": category_id,
+                        "category_name": category_name,
+                        "url": url,
+                        "title": snapshot.get("title"),
+                    }
+                )
+                for link in snapshot.get("links") or []:
+                    group_url = _meetup_group_url(str(link))
+                    if group_url and group_url not in group_sources:
+                        group_sources[group_url] = {"category_id": category_id, "category_name": category_name}
+            for seed in _MEETUP_SEED_GROUP_URLS:
+                group_sources.setdefault(seed, {"category_id": "seed", "category_name": "Seed group"})
+            for group_url, source in list(group_sources.items())[:max_group_pages]:
+                try:
+                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
+                    _surf_pause(surf_run, "6")
+                    snapshot = _meetup_page_snapshot(surf_run, tab_id)
+                except (BrowserCaptureError, subprocess.TimeoutExpired, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+                    logger.warning("Meetup group capture skipped for {}: {}", group_url, exc)
+                    continue
+                text = str(snapshot.get("text") or "")
+                groups.append(
+                    {
+                        "source": "human_authorized_meetup_tab",
+                        "observed_at": utc_now(),
+                        "name": _meetup_name_from_snapshot(snapshot, group_url),
+                        "url": group_url,
+                        "category_id": source["category_id"],
+                        "category_name": source["category_name"],
+                        "location": "Buffalo, NY",
+                        "description": text[:1200],
+                        "page_text": text,
+                        "upcoming_events": _meetup_events_from_text(text),
+                    }
+                )
         evidence = {
             "schema_version": "monitor_opportunities.meetup_capture.v1",
             "source": "human_authorized_meetup_tab",
@@ -739,7 +764,7 @@ def capture_meetup_buffalo(
         receipt["evidence_path"] = str(evidence_path)
         receipt["groups_captured"] = len(groups)
         receipt["category_pages_captured"] = len(category_pages)
-    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+    except (BrowserCaptureError, TimeoutError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.error("Meetup Buffalo capture failed: {}", exc)
         receipt["status"] = "FAILED"
         receipt["error"] = str(exc)
