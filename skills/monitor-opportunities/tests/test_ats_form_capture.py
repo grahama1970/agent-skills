@@ -113,8 +113,12 @@ def test_isolated_meetup_capture_terminates_wedged_child(
     assert time.monotonic() - started < 5
     assert receipt["status"] == "FAILED"
     assert "isolated timeout 1s" in receipt["error"]
+    assert receipt["blocked_by_systemic_failure"] is True
+    assert receipt["failure_signature"] == "meetup_isolated_capture_timeout"
+    assert receipt["group_capture_skipped"] == 12
     stored = json.loads((tmp_path / "meetup-capture-receipt.json").read_text(encoding="utf-8"))
     assert stored["status"] == "FAILED"
+    assert stored["blocked_by_systemic_failure"] is True
 
 
 def test_meetup_group_capture_circuit_breaks_repeated_timeouts(

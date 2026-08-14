@@ -695,7 +695,7 @@ def capture_meetup_buffalo(
     group_capture_failures: list[dict[str, str]] = []
     skipped_group_urls: list[str] = []
     try:
-        wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "180")))
+        wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "90")))
         max_group_failures = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")))
         with _wall_clock_timeout(wall_timeout, "Meetup Buffalo capture"):
             ensure_browser(surf_run)
@@ -871,6 +871,10 @@ def capture_meetup_buffalo_isolated(
             "error": f"Meetup Buffalo capture exceeded isolated timeout {timeout_seconds}s",
             "evidence_path": None,
             "groups_captured": 0,
+            "group_capture_failed": 0,
+            "group_capture_skipped": max_group_pages,
+            "blocked_by_systemic_failure": True,
+            "failure_signature": "meetup_isolated_capture_timeout",
         }
         (out_dir / "meetup-capture-receipt.json").write_text(
             json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
