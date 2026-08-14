@@ -1,15 +1,15 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-13
+Updated: 2026-08-14
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
 
-## Current state (2026-08-13): fail-closed Stage 0 repair, live readiness gated
+## Current state (2026-08-14): promoted Stage 0 cron path proven, effects gated
 
 WebGPT review on 2026-08-13 found that current main could produce success-looking reports
 with schema-invalid Meetup values, loose required-source matching, hidden downstream work,
 LinkedIn-only opportunity admission, and test-fixture claim authority. The current repair
-slice makes those paths fail closed:
+line makes those paths fail closed and has live promoted receipts:
 
 - report manifests validate against the committed `schemas/report.schema.json` before
   rendering;
@@ -22,10 +22,35 @@ slice makes those paths fail closed:
 - Meetup source intelligence cannot create resume, outreach, application, or application
   packet artifacts;
 - claim-bearing artifacts bind one run-scoped claim snapshot digest, and live runs cannot
-  use `tests/fixtures` as claim authority.
+  use `tests/fixtures` as claim authority;
+- Indeed and HiddenJobs mandatory browser captures are read-only source-health evidence
+  only and do not admit aggregator rows as opportunities;
+- `apply` is an implemented local gate over report-visible application packets. It checks
+  packet drift, unresolved `human_required` fields, human authorization, and capability
+  authority, then fails closed with `external_effects=false`.
 
 `external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
 LinkedIn platform action.
+
+Latest deterministic receipts on `main`:
+
+- pushed revision: `eaab6e34e3b3ea1193239210750ca931a79d4d74`;
+- full sanity: `294 passed`, `monitor-opportunities sanity: PASS`;
+- live promoted nightly receipt:
+  `skills/monitor-opportunities/local/nightly/latest/nightly-receipt.json`
+  in the 12TB proof worktree, with `status=PASS`, `mocked=false`, `live=true`,
+  `mode=PROMOTED_STAGE_0`, and `external_effects=false`;
+- run status: `operational_readiness=STAGE_0_READY`, source health
+  `degraded_count=0` across 43 receipts, 8 opportunities, 8 resume variants,
+  16 outreach packets, and 57 relationship signals;
+- Memory readback: `readback_found=true`,
+  `relationship_readback_found=true`, `external_effects=false`;
+- Buzz readback: `posted=true`, `live=true`, `external_effects=false`;
+- scheduler receipt:
+  `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
+  cron `0 2 * * *`, enabled, expected revision
+  `eaab6e34e3b3ea1193239210750ca931a79d4d74`, workdir
+  `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`.
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
@@ -43,17 +68,19 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
    solicitations + commercial signals, mandate-filtered).
 6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
 
-Written but NOT yet live-proven (honest gaps):
+Still not complete against the immutable goal (honest gaps):
 - Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
   `opportunity-evaluation-reviewer` contracts in `agents/`, pass best-practices-subagent).
   Blocker to verify: headless tau under OAuth at 2 AM.
 - **Mandate-first ranking** (webgpt P0) — current ranking is still geo-weighted.
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
+- Actual ATS submit remains blocked by stage and policy. Submit requires separate
+  site/provider promotion plus exact per-application human authorization bound to the
+  packet digest. Stage 0 `apply` never submits or prefills.
 
-Live nightly readiness remains gated until the browser-required source captures
-(Indeed/Hidden Jobs and any API fallback), a non-fixture claim snapshot export, and
-delivery/readback receipts are present in a scheduled run.
+Live nightly readiness is no longer gated on Indeed/HiddenJobs, claim authority, or
+delivery/readback for the current Stage 0 cron path; those have receipt-backed coverage.
 
 The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
 run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through
@@ -194,9 +221,10 @@ Required separately per capability:
 
 ## Non-claims
 
-- The nightly pipeline is not currently reliable or operational.
-- The expected fixture and Stage 0 kernel do not prove live discovery, ranking quality,
-  resume correctness, scheduler reliability, Gmail draft creation, or ATS submission.
+- The proven promoted nightly is Stage 0 research/report operation only; it does not
+  prove ATS submission, Gmail send, LinkedIn outbound action, or job/client outcomes.
+- The expected fixture and Stage 0 kernel do not prove ranking quality, resume
+  effectiveness, Gmail draft creation, or ATS submission.
 - A working ATS discovery interface does not prove an application-submit interface.
 - A model or roundtable verdict is advisory and cannot authorize facts or effects.
 - This project does not optimize application volume or promise job/client outcomes.
