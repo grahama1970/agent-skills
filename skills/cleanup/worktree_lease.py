@@ -317,6 +317,165 @@ def assess_unregistered(repo: Path | str = ".", *, min_age_days: int = 14) -> di
     }
 
 
+DEPRECATED_ROOT = Path(
+    os.environ.get("WORKTREE_ARCHIVE_ROOT", "/mnt/storage12tb/worktrees/deprecated")
+)
+
+
+def unmerged_report(repo: Path | str = ".") -> dict[str, Any]:
+    """Every worktree holding commits that never reached origin/main.
+
+    This is the loss mode the reaper does NOT solve. Refusing to delete
+    unmerged work only means it sits there invisibly: 31 worktrees on this
+    machine hold 132 commits nobody has merged, 20 of them also dirty. Nothing
+    surfaces that, so the work is not deleted -- it is simply never found
+    again.
+    """
+    repo_path = Path(repo).resolve()
+    _git(repo_path, "fetch", "-q", "origin", timeout=120)
+    stranded: list[dict[str, Any]] = []
+    for worktree in registered_worktrees(repo_path):
+        if not worktree.is_dir() or worktree.resolve() == repo_path:
+            continue
+        code, out, _ = _git(worktree, "rev-list", "--count", "origin/main..HEAD")
+        if code != 0:
+            continue
+        try:
+            ahead = int(out.strip())
+        except ValueError:
+            continue
+        if ahead <= 0:
+            continue
+        _, branch, _ = _git(worktree, "branch", "--show-current")
+        _, dirty, _ = _git(worktree, "status", "--porcelain")
+        _, subjects, _ = _git(worktree, "log", "--oneline", "-5", "origin/main..HEAD")
+        stranded.append(
+            {
+                "path": str(worktree),
+                "branch": branch.strip() or "(detached)",
+                "unmerged_commits": ahead,
+                "dirty_files": len([l for l in dirty.splitlines() if l.strip()]),
+                "sample": [l.strip() for l in subjects.splitlines()][:5],
+            }
+        )
+    stranded.sort(key=lambda row: -row["unmerged_commits"])
+    return {
+        "schema": "cleanup.unmerged_worktrees.v1",
+        "repo": str(repo_path),
+        "stranded_worktrees": len(stranded),
+        "stranded_commits": sum(row["unmerged_commits"] for row in stranded),
+        "worktrees": stranded,
+    }
+
+
+def archive_worktree(
+    repo: Path | str,
+    worktree: Path | str,
+    *,
+    apply: bool = False,
+    archive_root: Path | None = None,
+) -> dict[str, Any]:
+    """Preserve an undecided worktree's work, then unregister it.
+
+    Moving a directory is not preservation: whoever deletes that folder later
+    deletes the work. The durable artifact is a git bundle, which restores into
+    any clone independently of the directory it came from.
+
+    Uncommitted changes cannot go into a bundle, so a dirty tree gets a WIP
+    commit first -- putting the work in git rather than in a tarball nobody
+    will ever open.
+
+    The worktree is unregistered only after the bundle verifies. Verifying
+    afterwards would mean discovering the bundle was empty once the tree was
+    already gone.
+    """
+    repo_path = Path(repo).resolve()
+    tree = Path(worktree)
+    root = archive_root or DEPRECATED_ROOT
+    receipt: dict[str, Any] = {
+        "schema": "cleanup.worktree_archive.v1",
+        "path": str(tree),
+        "applied": False,
+    }
+
+    if not tree.is_dir():
+        receipt.update(outcome="skipped", reason="directory is gone")
+        return receipt
+
+    _, branch, _ = _git(tree, "branch", "--show-current")
+    branch = branch.strip() or "detached"
+    _, dirty, _ = _git(tree, "status", "--porcelain")
+    dirty_files = [l.strip() for l in dirty.splitlines() if l.strip()]
+    code, out, _ = _git(tree, "rev-list", "--count", "origin/main..HEAD")
+    unmerged = int(out.strip()) if code == 0 and out.strip().isdigit() else 0
+
+    receipt.update(branch=branch, unmerged_commits=unmerged, dirty_files=len(dirty_files))
+
+    if not apply:
+        receipt.update(
+            outcome="planned",
+            archive_dir=str(root / tree.name),
+            note="would WIP-commit dirty files, bundle unmerged commits, verify, then unregister",
+        )
+        return receipt
+
+    root.mkdir(parents=True, exist_ok=True)
+    destination = root / tree.name
+    destination.mkdir(parents=True, exist_ok=True)
+
+    if dirty_files:
+        _git(tree, "add", "-A")
+        code, _, err = _git(tree, "commit", "-m", f"WIP: archived by worktree reaper ({len(dirty_files)} files)")
+        if code != 0 and "nothing to commit" not in err.lower():
+            receipt.update(outcome="failed", reason=f"could not preserve dirty files: {err[:150]}")
+            return receipt
+        receipt["wip_commit_created"] = True
+        code, out, _ = _git(tree, "rev-list", "--count", "origin/main..HEAD")
+        unmerged = int(out.strip()) if code == 0 and out.strip().isdigit() else unmerged
+        receipt["unmerged_commits"] = unmerged
+
+    bundle = destination / f"{tree.name}.bundle"
+    if unmerged > 0:
+        # Bundle the BRANCH, not HEAD. A range ending in HEAD records no named
+        # ref, so the bundle verifies and then cannot be fetched by name -- a
+        # verified archive nobody can restore is worse than no archive.
+        tip = branch if branch != "detached" else "HEAD"
+        code, _, err = _git(tree, "bundle", "create", str(bundle), f"origin/main..{tip}", timeout=300)
+        if code != 0:
+            receipt.update(outcome="failed", reason=f"bundle failed: {err[:150]}")
+            return receipt
+        code, _, err = _git(tree, "bundle", "verify", str(bundle))
+        if code != 0:
+            receipt.update(outcome="failed", reason=f"bundle did not verify: {err[:150]}")
+            return receipt
+        receipt["bundle"] = str(bundle)
+        receipt["bundle_verified"] = True
+
+    manifest = {
+        "schema": "cleanup.worktree_archive_manifest.v1",
+        "original_path": str(tree),
+        "branch": branch,
+        "unmerged_commits": unmerged,
+        "bundle": str(bundle) if unmerged > 0 else None,
+        "archived_at": time.time(),
+        "restore": (
+            f"git -C <repo> fetch {bundle} {branch}:recovered/{branch}"
+            if unmerged > 0 and branch != "detached"
+            else (f"git -C <repo> fetch {bundle} HEAD" if unmerged > 0 else None)
+        ),
+        "restorable_by_name": unmerged > 0 and branch != "detached",
+    }
+    (destination / "MANIFEST.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    code, _, err = _git(repo_path, "worktree", "remove", "--force", str(tree))
+    if code != 0:
+        receipt.update(outcome="archived_not_unregistered", reason=err.strip()[:150], applied=True)
+        return receipt
+    _git(repo_path, "worktree", "prune")
+    receipt.update(outcome="archived", applied=True, archive_dir=str(destination), manifest=manifest)
+    return receipt
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=".")
@@ -327,7 +486,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ttl-seconds", type=int, default=DEFAULT_TTL_SECONDS)
     parser.add_argument("--assess-backlog", action="store_true", help="Classify pre-existing unregistered worktrees.")
     parser.add_argument("--min-age-days", type=int, default=14)
+    parser.add_argument("--unmerged", action="store_true", help="Report worktrees holding unmerged commits.")
+    parser.add_argument("--archive", help="Archive one worktree to the deprecated area.")
     args = parser.parse_args(argv)
+
+    if args.unmerged:
+        report = unmerged_report(args.repo)
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        print(f"{report['stranded_worktrees']} worktrees hold {report['stranded_commits']} unmerged commits")
+        for row in report["worktrees"][:15]:
+            print(f"  {row['unmerged_commits']:>4} commits  {row['branch'][:38]:<40} {row['path'][-46:]}")
+        return 0
+
+    if args.archive:
+        receipt = archive_worktree(args.repo, args.archive, apply=args.apply)
+        print(json.dumps(receipt, indent=2, sort_keys=True) if args.json else
+              f"{receipt['outcome']}: {receipt['path']}")
+        return 0
 
     if args.assess_backlog:
         report = assess_unregistered(args.repo, min_age_days=args.min_age_days)

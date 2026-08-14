@@ -164,3 +164,82 @@ def test_an_unwritable_registry_never_fails_the_caller(tmp_path: Path) -> None:
     """The work that needed the worktree must not die because logging failed."""
     entry = register(tmp_path / "wt", purpose="p", registry=tmp_path / "nope" / "x" / "leases.jsonl")
     assert entry["path"].endswith("/wt")
+
+
+def _push_main(repo: Path) -> None:
+    subprocess.run(["git", "-C", str(repo), "push", "-q", "origin", "HEAD:main"], check=True)
+
+
+def test_unmerged_work_is_surfaced(repo: Path) -> None:
+    """Refusing to delete stranded work is useless if nothing surfaces it."""
+    from worktree_lease import unmerged_report
+
+    wt = _add_worktree(repo, "stranded")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
+    (wt / "work.py").write_text("value\n")
+    subprocess.run(["git", "-C", str(wt), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(wt), "commit", "-qm", "stranded work"], check=True)
+
+    report = unmerged_report(repo)
+    paths = {row["path"] for row in report["worktrees"]}
+    assert str(wt) in paths
+    assert report["stranded_commits"] >= 1
+
+
+def test_archive_recovers_committed_and_uncommitted_work(repo: Path, tmp_path: Path) -> None:
+    """The only question that matters: does the work come back?"""
+    from worktree_lease import archive_worktree
+
+    wt = _add_worktree(repo, "archiveme")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
+    (wt / "committed.py").write_text("kept = 1\n")
+    subprocess.run(["git", "-C", str(wt), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(wt), "commit", "-qm", "committed"], check=True)
+    (wt / "uncommitted.py").write_text("also_kept = 2\n")
+
+    receipt = archive_worktree(repo, wt, apply=True, archive_root=tmp_path / "dep")
+    assert receipt["outcome"] == "archived"
+    assert receipt["bundle_verified"] is True
+    assert receipt["wip_commit_created"] is True
+    assert not wt.exists(), "the worktree should be unregistered after archiving"
+
+    subprocess.run(
+        ["git", "-C", str(repo), "fetch", "-q", receipt["manifest"]["bundle"],
+         "archiveme:recovered/archiveme"],
+        check=True,
+    )
+    assert "kept = 1" in _git(repo, "show", "recovered/archiveme:committed.py")
+    assert "also_kept = 2" in _git(repo, "show", "recovered/archiveme:uncommitted.py")
+
+
+def test_the_bundle_is_restorable_by_branch_name(repo: Path, tmp_path: Path) -> None:
+    """A range ending in HEAD records no ref: it verifies and cannot be fetched."""
+    from worktree_lease import archive_worktree
+
+    wt = _add_worktree(repo, "named")
+    _git(wt, "config", "user.email", "t@t")
+    _git(wt, "config", "user.name", "t")
+    (wt / "x.py").write_text("1\n")
+    subprocess.run(["git", "-C", str(wt), "add", "-A"], check=True)
+    subprocess.run(["git", "-C", str(wt), "commit", "-qm", "c"], check=True)
+
+    receipt = archive_worktree(repo, wt, apply=True, archive_root=tmp_path / "dep")
+    assert receipt["manifest"]["restorable_by_name"] is True
+    out = subprocess.run(
+        ["git", "bundle", "list-heads", receipt["manifest"]["bundle"]],
+        capture_output=True, text=True, check=False,
+    ).stdout
+    assert "named" in out, f"bundle records no named ref: {out!r}"
+
+
+def test_a_preview_archive_moves_nothing(repo: Path, tmp_path: Path) -> None:
+    from worktree_lease import archive_worktree
+
+    wt = _add_worktree(repo, "previewarch")
+    receipt = archive_worktree(repo, wt, apply=False, archive_root=tmp_path / "dep")
+    assert receipt["outcome"] == "planned"
+    assert receipt["applied"] is False
+    assert wt.exists()
+    assert not (tmp_path / "dep").exists()
