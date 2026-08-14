@@ -77,6 +77,38 @@ def test_ask_solution_reads_response_from_run_receipt(tmp_path: Path) -> None:
     assert "target_symbol" in result.sources[0].excerpt
 
 
+def test_ask_solution_does_not_inherit_live_evidence_uv_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", str(tmp_path / "live-evidence-venv"))
+    run_dir = tmp_path / "ask-run"
+    runner = tmp_path / "ask-runner-env-check.sh"
+    runner.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                'if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then',
+                '  echo "inherited UV_PROJECT_ENVIRONMENT" >&2',
+                "  exit 42",
+                "fi",
+                f"mkdir -p {run_dir}/node-artifacts/handler-fixture",
+                f"printf 'Ask env was isolated.\\n' > {run_dir}/node-artifacts/handler-fixture/response.md",
+                f"printf '{{\"run_dir\":\"{run_dir}\"}}\\n'",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    runner.chmod(0o755)
+
+    result = asyncio.run(AskSolutionClient(settings(tmp_path, runner)).solve("How?", []))
+
+    assert result.ok is True
+    assert result.sources[0].path == str(run_dir.resolve())
+    assert "isolated" in result.sources[0].excerpt
+
+
 def test_ask_runner_is_explicit_opt_in(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("LIVE_EVIDENCE_ASK_RUNNER", raising=False)
     monkeypatch.setenv("LIVE_EVIDENCE_PROFILE", str(tmp_path / "profile.yaml"))

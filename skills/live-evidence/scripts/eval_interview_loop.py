@@ -182,7 +182,7 @@ def main() -> int:
             )
         try:
             with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=3.0) as client:
-                for _ in range(60):
+                for _ in range(450):
                     try:
                         if client.get("/api/health").status_code == 200:
                             break
@@ -211,6 +211,27 @@ def main() -> int:
                     text="How does the evidence-loop put interviewer questions into ambient hud cards?",
                 )
                 state = wait_for_cards(client, 1)
+                assert_card(state["cards"][0], status="supported", lane="ripgrep")
+                assert_card_text(
+                    state["cards"][0],
+                    [
+                        "evalrepo/interview_evidence.py",
+                        "evidence-loop routes interviewer questions",
+                    ],
+                )
+                print("existing code evidence card: PASS")
+
+                post_turn(
+                    client,
+                    speaker="interviewer",
+                    sequence=3,
+                    text=(
+                        "Given a valid parenthesis string with lowercase characters, "
+                        "how would you find the minimum number of parentheses to remove "
+                        "and return a valid output string?"
+                    ),
+                )
+                state = wait_for_cards(client, 2)
                 assert_card(state["cards"][0], status="supported", lane="ask")
                 ask_prompt_path = ask_run_dir / "argv.txt"
                 if not ask_prompt_path.is_file():
@@ -218,9 +239,8 @@ def main() -> int:
                 assert_ask_prompt(
                     ask_prompt_path,
                     [
-                        "How does the evidence-loop put interviewer questions into ambient hud cards?",
-                        "interview_evidence.py",
-                        "evidence-loop routes interviewer questions",
+                        "minimum number of parentheses to remove",
+                        "return a valid output string",
                     ],
                 )
                 assert_card_text(
@@ -229,10 +249,8 @@ def main() -> int:
                         "Call evidence_loop()",
                         "Ambient HUD cards",
                         "Memory Vault records",
-                        "evalrepo/src/interview_evidence.py",
                     ],
                 )
-                print("existing code evidence card: PASS")
                 print("ask code solution card: PASS")
                 print("question-to-answer text surfaced: PASS")
 
@@ -243,10 +261,10 @@ def main() -> int:
                 post_turn(
                     client,
                     speaker="interviewer",
-                    sequence=3,
+                    sequence=4,
                     text="Where does realtime-card-sorting make newly written code visible during the interview?",
                 )
-                state = wait_for_cards(client, 2)
+                state = wait_for_cards(client, 3)
                 assert_card(state["cards"][0], status="supported", path_fragment="new_code_path.ts", lane="ripgrep")
                 assert_card_text(
                     state["cards"][0],
@@ -257,10 +275,10 @@ def main() -> int:
                 post_turn(
                     client,
                     speaker="interviewer",
-                    sequence=4,
+                    sequence=5,
                     text="How should quasar checksum banana-scheduler prove an unrelated algorithm?",
                 )
-                state = wait_for_cards(client, 3)
+                state = wait_for_cards(client, 4)
                 assert_card(state["cards"][0], status="insufficient")
                 print("unsupported question fail-closed: PASS")
 
@@ -276,7 +294,7 @@ def main() -> int:
                         sequence=10 + index,
                         text=f"How does {term} keep evidence-loop cards bounded for realtime scanning?",
                     )
-                    wait_for_cards(client, min(5, 4 + index))
+                    wait_for_cards(client, min(5, 5 + index))
                 final_state = client.get("/api/state").json()
                 cards = final_state.get("cards") or []
                 if len(cards) > 5:

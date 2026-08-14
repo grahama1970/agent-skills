@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import subprocess
 from pathlib import Path
 from time import monotonic
@@ -76,11 +77,14 @@ class AskSolutionClient:
         ]
         if self._settings.ask_allow_provider_calls:
             command.append("--allow-provider-calls")
+        env = os.environ.copy()
+        env.pop("UV_PROJECT_ENVIRONMENT", None)
         try:
             result = subprocess.run(
                 command,
                 check=False,
                 capture_output=True,
+                env=env,
                 text=True,
                 timeout=self._settings.ask_timeout_s,
             )
@@ -152,8 +156,9 @@ def _build_prompt(query: str, evidence: list[EvidenceSource]) -> str:
     return "\n\n".join(
         [
             "You are answering a live coding interview question for Graham.",
-            "Use only the supplied source evidence. If it is insufficient, say exactly what is missing.",
-            "Return a concise solution the human can scan in real time: answer, relevant code path, and one caution.",
+            "If the question is a general algorithm prompt, solve it directly from the prompt.",
+            "Use supplied source evidence only for repo-specific claims. If source evidence is insufficient for a repo claim, say exactly what is missing.",
+            "Return a concise solution the human can scan in real time: approach, code sketch or pseudocode, complexity, and one caution.",
             f"Question: {' '.join(query.split())[:1200]}",
             evidence_block,
         ]

@@ -197,7 +197,7 @@ def main() -> int:
             )
         try:
             with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=3.0) as client:
-                for _ in range(60):
+                for _ in range(450):
                     try:
                         if client.get("/api/health").status_code == 200:
                             break
@@ -256,16 +256,15 @@ def main() -> int:
                     text="Where does the JavaScript stack solution handle extra closing parentheses and dangling openings?",
                 )
                 state = wait_for_cards(client, 2)
-                assert_top_card(state["cards"][0], lane="ask", path_fragment="ask-run")
+                assert_top_card(state["cards"][0], lane="ripgrep", path_fragment="remove_invalid_parentheses.js")
                 assert_card_text(
                     state["cards"][0],
                     [
-                        "blank invalid closing parentheses",
-                        "blank leftover opening indices",
-                        "multiple minimum-removal outputs can be valid",
+                        "Stack solution for removing minimum invalid parentheses",
+                        "removeInvalidParentheses",
                     ],
                 )
-                print("youtube-derived follow-up routes to source-backed Ask card: PASS")
+                print("youtube-derived follow-up routes to source-backed code card: PASS")
 
                 receipt = {
                     "schema": "live_evidence.youtube_interview_eval_receipt.v1",

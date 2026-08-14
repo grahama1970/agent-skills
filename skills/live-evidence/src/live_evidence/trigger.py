@@ -66,6 +66,53 @@ STOPWORDS = {
     "with",
     "you",
     "your",
+    "about",
+    "alright",
+    "assume",
+    "correct",
+    "even",
+    "just",
+    "like",
+    "right",
+    "same",
+    "something",
+    "still",
+    "though",
+}
+
+CODE_PROMPT_TERMS = {
+    "algorithm",
+    "array",
+    "binary",
+    "characters",
+    "closing",
+    "complexity",
+    "function",
+    "find",
+    "implement",
+    "input",
+    "lowercase",
+    "minimum",
+    "opening",
+    "output",
+    "parentheses",
+    "parenthesis",
+    "removal",
+    "remove",
+    "return",
+    "stack",
+    "string",
+    "strings",
+    "valid",
+}
+
+CODE_PROMPT_PHRASES = {
+    "valid string",
+    "parentheses string",
+    "parenthesis string",
+    "minimum number",
+    "input string",
+    "return the",
 }
 
 
@@ -77,16 +124,24 @@ class TriggerDecision:
     query: str
     thread: str
     reason: str
+    code_related: bool = False
 
 
 class TriggerEngine:
     """Stateful deduplication and trigger classification."""
 
-    def __init__(self, profile: InterviewProfile, cooldown_s: float = 4.0) -> None:
+    def __init__(
+        self,
+        profile: InterviewProfile,
+        cooldown_s: float = 4.0,
+        code_cooldown_s: float = 90.0,
+    ) -> None:
         self._profile = profile
         self._cooldown_s = cooldown_s
+        self._code_cooldown_s = code_cooldown_s
         self._last_key = ""
         self._last_triggered_at = 0.0
+        self._last_code_triggered_at = 0.0
         self._watch_terms = {
             term.casefold() for term in profile.watch_terms if term.strip()
         }
@@ -110,9 +165,15 @@ class TriggerEngine:
             return None
 
         normalized = " ".join(tokens)
-        key = normalized.casefold()
+        code_related = is_code_prompt(event.text)
         now = monotonic()
+        code_trigger_ready = code_related and _has_code_action(event.text)
+        if code_related and not code_trigger_ready:
+            return None
+        key = _dedupe_key(tokens, code_related=code_trigger_ready)
         if key == self._last_key and now - self._last_triggered_at < self._cooldown_s:
+            return None
+        if code_trigger_ready and now - self._last_code_triggered_at < self._code_cooldown_s:
             return None
 
         first = tokens[0].casefold()
@@ -120,13 +181,19 @@ class TriggerEngine:
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
         is_question = event.text.rstrip().endswith("?") or first in QUESTION_LEADS
-        stabilized_ready = event.kind is TranscriptKind.STABILIZED and len(tokens) >= 12
+        stabilized_ready = (
+            event.kind is TranscriptKind.STABILIZED
+            and len(tokens) >= 18
+            and (is_question or matched_term or matched_alias or code_trigger_ready)
+        )
 
-        if not (is_question or matched_term or matched_alias or stabilized_ready):
+        if not (is_question or matched_term or matched_alias or stabilized_ready or code_trigger_ready):
             return None
 
         reason = "question"
-        if matched_alias:
+        if code_trigger_ready:
+            reason = "code-question"
+        elif matched_alias:
             reason = f"project:{self._aliases[matched_alias]}"
         elif matched_term:
             reason = f"watch-term:{matched_term}"
@@ -135,11 +202,14 @@ class TriggerEngine:
 
         self._last_key = key
         self._last_triggered_at = now
+        if code_trigger_ready:
+            self._last_code_triggered_at = now
         return TriggerDecision(
             event_id=event.event_id,
             query=event.text,
             thread=extract_thread(event.text, self._profile),
             reason=reason,
+            code_related=code_trigger_ready,
         )
 
 
@@ -196,3 +266,33 @@ def search_terms(text: str, limit: int = 8) -> list[str]:
         if len(terms) >= limit:
             break
     return terms
+
+
+def is_code_prompt(text: str) -> bool:
+    """Detect interview-style coding prompts without invoking a model."""
+
+    lower = text.casefold()
+    phrase_hits = sum(1 for phrase in CODE_PROMPT_PHRASES if phrase in lower)
+    term_hits = len({token.casefold() for token in tokenize(text)} & CODE_PROMPT_TERMS)
+    return phrase_hits >= 1 and term_hits >= 5
+
+
+def _dedupe_key(tokens: list[str], *, code_related: bool) -> str:
+    """Use stable high-signal keys so growing STT partials do not card-storm."""
+
+    if code_related:
+        high_signal: list[str] = []
+        for token in tokens:
+            normalized = token.casefold()
+            if normalized not in CODE_PROMPT_TERMS or normalized in high_signal:
+                continue
+            high_signal.append(normalized)
+            if len(high_signal) == 5:
+                break
+        return "code:" + " ".join(high_signal)
+    return " ".join(tokens).casefold()
+
+
+def _has_code_action(text: str) -> bool:
+    tokens = {token.casefold() for token in tokenize(text)}
+    return bool(tokens & {"find", "minimum", "output", "return", "remove", "removal"})

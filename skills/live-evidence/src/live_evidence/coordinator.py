@@ -27,7 +27,7 @@ from .retrieval import (
 )
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
-from .trigger import TriggerDecision, TriggerEngine
+from .trigger import TriggerDecision, TriggerEngine, tokenize
 
 
 class EvidenceCoordinator:
@@ -50,6 +50,10 @@ class EvidenceCoordinator:
         self._ask = AskSolutionClient(settings)
         self._summarizer = ExtractiveSummarizer()
         self._tasks: set[asyncio.Task[None]] = set()
+        self._ask_lock = asyncio.Lock()
+        self._last_auto_ask_key = ""
+        self._last_auto_ask_at = 0.0
+        self._auto_ask_cooldown_s = 120.0
 
     async def accept_transcript(self, event: TranscriptEvent) -> None:
         """Persist and project a transcript event, then schedule retrieval."""
@@ -121,6 +125,14 @@ class EvidenceCoordinator:
         return card
 
     async def _retrieve(self, decision: TriggerDecision) -> None:
+        if decision.code_related and not self._reserve_code_question(decision.query):
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.OK,
+                "Duplicate code-question trigger suppressed",
+            )
+            return
+
         await self._state.set_lane(RetrievalLane.MEMORY, LaneState.RUNNING, decision.reason)
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
@@ -188,9 +200,11 @@ class EvidenceCoordinator:
             sources.extend(ripgrep_result.sources)
 
         ranked = rank_sources(sources, decision.query, self._profile)
-        if _should_solve_with_ask(decision.query, ranked):
+        ask_sources: list[EvidenceSource] = []
+        if decision.code_related:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
-            ask_result = await self._ask.solve(decision.query, ranked[:4])
+            async with self._ask_lock:
+                ask_result = await self._ask.solve(decision.query, ranked[:4])
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if ask_result.ok else LaneState.DEGRADED,
@@ -198,8 +212,10 @@ class EvidenceCoordinator:
                 latency_ms=ask_result.latency_ms,
                 result_count=len(ask_result.sources),
             )
-            ranked = rank_sources([*sources, *ask_result.sources], decision.query, self._profile)
-        card = self._summarizer.build(decision.query, decision.thread, ranked)
+            ask_sources = ask_result.sources
+
+        card_sources = rank_sources(ask_sources, decision.query, self._profile) if decision.code_related else ranked
+        card = self._summarizer.build(decision.query, decision.thread, card_sources)
         snapshot = await self._state.add_card(card)
         await self._journal.append(snapshot.session.session_id, "evidence_card", card)
         logger.info(
@@ -223,14 +239,54 @@ class EvidenceCoordinator:
         self._tasks.discard(task)
         try:
             task.result()
+        except asyncio.CancelledError:
+            return
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
 
+    def _reserve_code_question(self, query: str) -> bool:
+        key = _code_problem_key(query)
+        now = monotonic()
+        if key == self._last_auto_ask_key and now - self._last_auto_ask_at < self._auto_ask_cooldown_s:
+            return False
+        self._last_auto_ask_key = key
+        self._last_auto_ask_at = now
+        return True
 
-def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
-    """Route code-related interviewer questions through Ask after local retrieval."""
+def _code_problem_key(query: str) -> str:
+    """Create a stable live-coding problem key from noisy growing STT text."""
 
-    has_local_code_evidence = any(
-        source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
-    )
-    return has_local_code_evidence
+    canon = {
+        "parentheses": "parenthesis",
+        "strings": "string",
+        "removal": "remove",
+    }
+    terms = [
+        canon.get(token.casefold(), token.casefold())
+        for token in tokenize(query)
+        if canon.get(token.casefold(), token.casefold())
+        in {
+            "minimum",
+            "remove",
+            "parenthesis",
+            "valid",
+            "string",
+            "input",
+            "output",
+            "return",
+            "opening",
+            "closing",
+        }
+    ]
+    term_set = set(terms)
+    if {"valid", "string", "parenthesis", "minimum"} <= term_set:
+        return "code:min-valid-parenthesis-string"
+
+    selected: list[str] = []
+    for term in terms:
+        if term in selected:
+            continue
+        selected.append(term)
+        if len(selected) == 6:
+            break
+    return "code:" + " ".join(selected) if selected else "code:" + " ".join(tokenize(query)[:8]).casefold()
