@@ -10,6 +10,7 @@ LANE_WEIGHT = {
     RetrievalLane.CODE: 0.12,
     RetrievalLane.MEMORY: 0.08,
     RetrievalLane.RIPGREP: 0.10,
+    RetrievalLane.ASK: 0.16,
     RetrievalLane.BRAVE: -0.04,
     RetrievalLane.DOGPILE: -0.02,
 }

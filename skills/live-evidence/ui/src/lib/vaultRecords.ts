@@ -38,7 +38,7 @@ function sourceHref(source?: EvidenceSource): string | undefined {
 }
 
 function recordType(card: EvidenceCard): MemoryRecord["type"] {
-  if (card.lanes.some((lane) => lane === "code" || lane === "ripgrep")) return "code";
+  if (card.lanes.some((lane) => lane === "code" || lane === "ripgrep" || lane === "ask")) return "code";
   if (card.lanes.includes("memory")) return "memory";
   return "fact";
 }

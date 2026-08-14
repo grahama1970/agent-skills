@@ -7,7 +7,16 @@ import sys
 from pathlib import Path
 
 
-SKIP_PARTS = {"node_modules", ".venv", "dist", "build", "__pycache__"}
+SKIP_PARTS = {
+    ".ask_artifacts",
+    ".venv",
+    "__pycache__",
+    "archive",
+    "build",
+    "deprecated",
+    "dist",
+    "node_modules",
+}
 
 
 def iter_files(root: Path):

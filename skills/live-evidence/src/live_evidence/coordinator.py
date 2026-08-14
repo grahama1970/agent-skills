@@ -18,7 +18,13 @@ from .models import (
     TranscriptEvent,
 )
 from .persistence import SessionJournal
-from .retrieval import ExternalSkillClient, MemoryEvidenceClient, RipgrepEvidenceClient, rank_sources
+from .retrieval import (
+    AskSolutionClient,
+    ExternalSkillClient,
+    MemoryEvidenceClient,
+    RipgrepEvidenceClient,
+    rank_sources,
+)
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
 from .trigger import TriggerDecision, TriggerEngine
@@ -41,6 +47,7 @@ class EvidenceCoordinator:
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
         self._external = ExternalSkillClient(settings)
+        self._ask = AskSolutionClient(settings)
         self._summarizer = ExtractiveSummarizer()
         self._tasks: set[asyncio.Task[None]] = set()
 
@@ -80,6 +87,17 @@ class EvidenceCoordinator:
             result = await self._ripgrep.retrieve(request.query)
             await self._state.set_lane(
                 RetrievalLane.RIPGREP,
+                LaneState.OK if result.ok else LaneState.DEGRADED,
+                result.detail,
+                latency_ms=result.latency_ms,
+                result_count=len(result.sources),
+            )
+            sources = rank_sources(result.sources, request.query, self._profile)
+        elif request.lane is RetrievalLane.ASK:
+            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Manual Ask code solution")
+            result = await self._ask.solve(request.query, [])
+            await self._state.set_lane(
+                RetrievalLane.ASK,
                 LaneState.OK if result.ok else LaneState.DEGRADED,
                 result.detail,
                 latency_ms=result.latency_ms,
@@ -170,6 +188,17 @@ class EvidenceCoordinator:
             sources.extend(ripgrep_result.sources)
 
         ranked = rank_sources(sources, decision.query, self._profile)
+        if _should_solve_with_ask(decision.query, ranked):
+            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
+            ask_result = await self._ask.solve(decision.query, ranked[:4])
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.OK if ask_result.ok else LaneState.DEGRADED,
+                ask_result.detail,
+                latency_ms=ask_result.latency_ms,
+                result_count=len(ask_result.sources),
+            )
+            ranked = rank_sources([*sources, *ask_result.sources], decision.query, self._profile)
         card = self._summarizer.build(decision.query, decision.thread, ranked)
         snapshot = await self._state.add_card(card)
         await self._journal.append(snapshot.session.session_id, "evidence_card", card)
@@ -196,3 +225,12 @@ class EvidenceCoordinator:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
+
+
+def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
+    """Route code-related interviewer questions through Ask after local retrieval."""
+
+    has_local_code_evidence = any(
+        source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
+    )
+    return has_local_code_evidence

@@ -22,6 +22,7 @@ provides:
 composes:
   - agentic-evals
   - memory
+  - ask
   - ingest-code
   - brave-search
   - dogpile
@@ -59,13 +60,16 @@ consented audio
   -> bounded trigger decision
   -> Memory/GMO recall + code navigation
   -> current-checkout ripgrep verification
+  -> $ask code-question solver when the turn is code-related
   -> one source-bound evidence card
 ```
 
 The default critical path is local. Graph Memory is the primary retrieval
-boundary. Ripgrep is an exact-current-source verifier and fallback. Brave and
-Dogpile are manual lanes only and receive a derived query, never the complete
-transcript.
+boundary. Ripgrep is an exact-current-source verifier and fallback. Code-related
+interviewer questions are routed through `$ask` only after bounded Memory/code
+evidence has been gathered, and the Ask run directory is preserved as a source
+receipt. Brave and Dogpile are manual lanes only and receive a derived query,
+never the complete transcript.
 
 ## Start
 
@@ -108,8 +112,10 @@ raw audio, unless a future explicitly authorized extension changes that policy.
 1. `memory /intent` and `/recall` using supported HTTP boundaries.
 2. `memory/run.sh code-search` and `code-node` for indexed source with freshness.
 3. `rg --fixed-strings` over explicitly configured repository roots.
-4. Brave Search only from the manual search control.
-5. Dogpile only from an explicit deep-research request.
+4. `$ask tau-dag` for code-related interviewer questions, seeded only with the
+   current question and top bounded Memory/code/ripgrep evidence.
+5. Brave Search only from the manual search control.
+6. Dogpile only from an explicit deep-research request.
 
 Never import ArangoDB or Qdrant clients here. `/memory` owns ArangoDB, BM25,
 Qdrant/Jina semantic retrieval, graph traversal, code-index lifecycle, and
@@ -129,6 +135,8 @@ Runner paths are autodetected from sibling skills and can be overridden with:
 
 ```bash
 export LIVE_EVIDENCE_MEMORY_RUNNER=/path/to/skills/memory/run.sh
+export LIVE_EVIDENCE_ASK_RUNNER=/path/to/skills/ask/run.sh  # explicit opt-in
+export LIVE_EVIDENCE_ASK_HANDLER=gpt-5.5-high
 export LIVE_EVIDENCE_BRAVE_RUNNER=/path/to/skills/brave-search/run.sh
 export LIVE_EVIDENCE_DOGPILE_RUNNER=/path/to/skills/dogpile/run.sh
 ```

@@ -97,6 +97,29 @@ def write_profile(path: Path) -> None:
     )
 
 
+def write_ask_fixture_runner(path: Path) -> Path:
+    runner = path / "ask-fixture-runner.sh"
+    runner.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                'run_dir="${LIVE_EVIDENCE_ASK_FIXTURE_RUN_DIR:?}"',
+                'mkdir -p "$run_dir/node-artifacts/handler-fixture"',
+                'printf "%s\\n" "$*" > "$run_dir/argv.txt"',
+                'cat > "$run_dir/node-artifacts/handler-fixture/response.md" <<\'EOF\'',
+                "Ask solution: Call evidence_loop(); it routes interviewer questions into Ambient HUD cards and Memory Vault records. Code path: evalrepo/src/interview_evidence.py. Caution: keep answer grounded in the cited evidence.",
+                "EOF",
+                'printf \'{"run_dir":"%s"}\\n\' "$run_dir"',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    runner.chmod(0o755)
+    return runner
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     with tempfile.TemporaryDirectory(prefix="live-evidence-interview-eval-") as temp_name:
@@ -111,6 +134,8 @@ def main() -> int:
         )
         profile_path = temp / "profile.yaml"
         write_profile(profile_path)
+        ask_run_dir = temp / "ask-run"
+        ask_runner = write_ask_fixture_runner(temp)
         data_dir = temp / "data"
         port = free_port()
         env = {
@@ -121,6 +146,10 @@ def main() -> int:
             "LIVE_EVIDENCE_HTTP_TIMEOUT": "0.3",
             "LIVE_EVIDENCE_PROCESS_TIMEOUT": "3",
             "LIVE_EVIDENCE_MAX_CARDS": "5",
+            "LIVE_EVIDENCE_ASK_RUNNER": str(ask_runner),
+            "LIVE_EVIDENCE_ASK_HANDLER": "fixture-handler",
+            "LIVE_EVIDENCE_ASK_TIMEOUT": "3",
+            "LIVE_EVIDENCE_ASK_FIXTURE_RUN_DIR": str(ask_run_dir),
             "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
         }
         log_path = temp / "server.log"
@@ -164,8 +193,11 @@ def main() -> int:
                     text="How does the evidence-loop put interviewer questions into ambient hud cards?",
                 )
                 state = wait_for_cards(client, 1)
-                assert_card(state["cards"][0], status="supported", path_fragment="interview_evidence.py", lane="ripgrep")
+                assert_card(state["cards"][0], status="supported", lane="ask")
+                if not (ask_run_dir / "argv.txt").is_file():
+                    raise RuntimeError("Ask fixture runner was not invoked")
                 print("existing code evidence card: PASS")
+                print("ask code solution card: PASS")
 
                 (source_dir / "new_code_path.ts").write_text(
                     "export const realtimeCardSorting = 'realtime-card-sorting keeps new code visible as interview cards';\n",
@@ -218,12 +250,13 @@ def main() -> int:
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "mocked": False,
                     "live": False,
-                    "fixture_backed": False,
+                    "fixture_backed": True,
                     "checks": {
                         "local_http_api": True,
                         "interviewer_question_trigger": True,
                         "graham_turn_suppressed": True,
                         "existing_code_card": True,
+                        "ask_code_solution_card": True,
                         "new_code_card": True,
                         "unsupported_fail_closed": True,
                         "bounded_card_queue": True,

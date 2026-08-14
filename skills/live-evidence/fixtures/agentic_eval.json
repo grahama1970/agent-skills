@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "live-evidence",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, Ask command/card plumbing, and fail-closed contract smoke",
   "claims": {
-    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, reject consentless listener startup, and fail closed on malformed skill contracts",
-    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, route code-related interview questions through the Ask lane when configured, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
   },
   "cases": [
     {
@@ -33,6 +33,7 @@
         "stdout_contains": [
           "graham turns do not trigger retrieval: PASS",
           "existing code evidence card: PASS",
+          "ask code solution card: PASS",
           "new code evidence card: PASS",
           "unsupported question fail-closed: PASS",
           "card queue bounded for realtime scanning: PASS"

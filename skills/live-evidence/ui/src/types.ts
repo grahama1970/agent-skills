@@ -1,7 +1,7 @@
 export type Speaker = "graham" | "interviewer" | "unknown";
 export type TranscriptKind = "interim" | "stabilized" | "final";
 export type SessionStatus = "idle" | "listening" | "paused" | "stopped";
-export type RetrievalLane = "memory" | "code" | "ripgrep" | "brave" | "dogpile";
+export type RetrievalLane = "memory" | "code" | "ripgrep" | "ask" | "brave" | "dogpile";
 export type LaneState = "idle" | "running" | "ok" | "degraded" | "disabled" | "error";
 export type Freshness = "current" | "stale" | "unknown" | "external";
 export type CardStatus = "supported" | "insufficient";

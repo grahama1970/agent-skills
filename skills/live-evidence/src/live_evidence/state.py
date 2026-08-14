@@ -217,15 +217,22 @@ class RuntimeState:
                 if lane is RetrievalLane.BRAVE
                 else self._settings.dogpile_runner is not None
                 if lane is RetrievalLane.DOGPILE
+                else self._settings.ask_runner is not None
+                if lane is RetrievalLane.ASK
                 else True
             )
             is_external = lane in {RetrievalLane.BRAVE, RetrievalLane.DOGPILE}
+            is_ask = lane is RetrievalLane.ASK
             lanes[lane] = LaneActivity(
                 lane=lane,
                 state=(LaneState.IDLE if runner_ready else LaneState.DISABLED),
                 detail=(
                     "Manual only"
                     if is_external and runner_ready
+                    else "Code-question solver"
+                    if is_ask and runner_ready
+                    else "Ask runner not configured"
+                    if is_ask
                     else "Runner not configured"
                     if is_external
                     else "Waiting"

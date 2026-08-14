@@ -19,6 +19,7 @@ technical interview audio playback or meeting audio
   -> Live Evidence transcript API
   -> bounded interviewer-question trigger
   -> Memory /intent and /recall, indexed code, and current-source ripgrep
+  -> $ask code-question solution seeded by bounded local evidence
   -> bounded Brave/Dogpile research from a derived query when local evidence is insufficient
   -> visible Ambient HUD card
   -> searchable/filterable Memory Vault record
@@ -41,6 +42,9 @@ The primary receipt must include fresh local artifacts:
 - Graham/candidate turns do not trigger automatic answer cards.
 - At least one supported card cites Memory, indexed code, or current-source
   evidence with a concrete locator for a relevant code solution.
+- At least one code-related interviewer question creates an `$ask` solution
+  request seeded by bounded Memory/code/ripgrep evidence, and the resulting
+  card cites the Ask run directory or receipt metadata.
 - At least one supported card cites a bounded Brave/Dogpile research result or
   research-derived Memory record for a relevant external solution, without
   sending the complete transcript to external search.
@@ -89,6 +93,8 @@ Do not mark the goal achieved when only these are true:
   back to ripgrep.
 - Research lanes were never exercised for a question that required an external
   solution.
+- A code-related question surfaced only raw local snippets and never attempted
+  the `$ask` solution lane.
 - External search received the complete transcript instead of a bounded derived
   query.
 - The deterministic `$agentic-evals` fixture passed but no live audio path was

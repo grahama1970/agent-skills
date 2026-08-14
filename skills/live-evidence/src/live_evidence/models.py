@@ -62,6 +62,7 @@ class RetrievalLane(StrEnum):
     MEMORY = "memory"
     CODE = "code"
     RIPGREP = "ripgrep"
+    ASK = "ask"
     BRAVE = "brave"
     DOGPILE = "dogpile"
 

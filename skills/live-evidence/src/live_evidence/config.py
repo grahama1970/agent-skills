@@ -101,6 +101,10 @@ class AppSettings(BaseModel):
     repo_roots: list[Path] = Field(default_factory=list)
     memory_url: str = "http://127.0.0.1:8601"
     memory_runner: Path | None = None
+    ask_runner: Path | None = None
+    ask_handler: str = "gpt-5.5-high"
+    ask_allow_provider_calls: bool = False
+    ask_timeout_s: float = Field(default=45.0, gt=1.0, le=600.0)
     brave_runner: Path | None = None
     dogpile_runner: Path | None = None
     allow_remote_bind: bool = False
@@ -137,6 +141,7 @@ class AppSettings(BaseModel):
             "LIVE_EVIDENCE_MEMORY_RUNNER",
             "memory",
         )
+        ask_runner = _runner_from_env_only("LIVE_EVIDENCE_ASK_RUNNER")
         brave_runner = _runner_from_env_or_sibling(
             root,
             "LIVE_EVIDENCE_BRAVE_RUNNER",
@@ -160,6 +165,12 @@ class AppSettings(BaseModel):
                 os.getenv("MEMORY_API_URL", "http://127.0.0.1:8601"),
             ).rstrip("/"),
             memory_runner=memory_runner,
+            ask_runner=ask_runner,
+            ask_handler=os.getenv("LIVE_EVIDENCE_ASK_HANDLER", "gpt-5.5-high"),
+            ask_allow_provider_calls=_truthy(
+                os.getenv("LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS", "false")
+            ),
+            ask_timeout_s=float(os.getenv("LIVE_EVIDENCE_ASK_TIMEOUT", "45")),
             brave_runner=brave_runner,
             dogpile_runner=dogpile_runner,
             allow_remote_bind=_truthy(
@@ -221,6 +232,18 @@ def _runner_from_env_or_sibling(root: Path, env_name: str, sibling: str) -> Path
     return None
 
 
+def _runner_from_env_only(env_name: str) -> Path | None:
+    """Resolve an executable runner only when the operator explicitly enables it."""
+
+    explicit = os.getenv(env_name)
+    if not explicit:
+        return None
+    path = Path(explicit).expanduser().resolve()
+    if path.is_file() and os.access(path, os.X_OK):
+        return path
+    return None
+
+
 def public_settings(settings: AppSettings, profile: InterviewProfile) -> dict[str, Any]:
     """Return non-sensitive settings safe for the browser."""
 
@@ -230,6 +253,7 @@ def public_settings(settings: AppSettings, profile: InterviewProfile) -> dict[st
         "organization": profile.organization,
         "repo_count": len(settings.repo_roots),
         "memory_configured": bool(settings.memory_url),
+        "ask_configured": bool(settings.ask_runner),
         "external_search_enabled": bool(settings.brave_runner or settings.dogpile_runner),
         "remote_bind_allowed": settings.allow_remote_bind,
     }

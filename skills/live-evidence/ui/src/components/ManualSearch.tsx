@@ -82,6 +82,7 @@ export function ManualSearch({ busy, onSearch }: ManualSearchProps) {
             >
               <option value="memory">Graph Memory</option>
               <option value="ripgrep">Current source</option>
+              <option value="ask">Ask code solver</option>
               <option value="brave">Brave</option>
               <option value="dogpile">Dogpile deep research</option>
             </select>

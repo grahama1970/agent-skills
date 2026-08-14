@@ -1,4 +1,4 @@
-import { Binary, Braces, DatabaseZap, Globe2, SearchCode } from "lucide-react";
+import { Binary, Braces, DatabaseZap, Globe2, MessagesSquare, SearchCode } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,6 +9,7 @@ const LANE_META: Record<RetrievalLane, { label: string; icon: typeof DatabaseZap
   memory: { label: "Graph Memory", icon: DatabaseZap },
   code: { label: "Indexed code", icon: Braces },
   ripgrep: { label: "Current source", icon: SearchCode },
+  ask: { label: "Ask solver", icon: MessagesSquare },
   brave: { label: "Brave", icon: Globe2 },
   dogpile: { label: "Dogpile", icon: Binary },
 };
