@@ -27,6 +27,7 @@ from .discovery import sweep as sweep_sources
 from .pipeline import prepare_run_output, run_stage0, status_for_run
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
+from .semantic_addenda import install_semantic_addendum
 from .service import serve as serve_report
 from .tau_semantic_prepare import prepare_tau_semantic_inputs
 from .tau_semantic_provider import run_provider_semantic_eval
@@ -69,6 +70,7 @@ IMPLEMENTED = [
     "apply",
     "tau-semantic-prepare",
     "tau-semantic-provider-eval",
+    "tau-semantic-install",
 ]
 NOT_IMPLEMENTED: list[str] = []
 
@@ -123,6 +125,7 @@ def status_payload() -> dict[str, object]:
             "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
             "tau_semantic_input_materializer": "IMPLEMENTED_LOCAL",
             "tau_semantic_provider_eval": "IMPLEMENTED_MANUAL_SIDECAR",
+            "tau_semantic_report_projection": "IMPLEMENTED_LOCAL",
         },
         "non_claims": [
             "Stage 0 does not prove long-run nightly reliability.",
@@ -206,6 +209,20 @@ def tau_semantic_provider_eval(
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
     if receipt["status"] != "PASS":
         raise typer.Exit(code=1)
+
+
+@app.command("tau-semantic-install")
+def tau_semantic_install(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    provider_receipt: Path = typer.Option(..., "--provider-receipt", exists=True, dir_okay=False, readable=True),
+) -> None:
+    """Install one passed semantic provider sidecar into a run-local projection."""
+    _configure_logging()
+    try:
+        receipt = install_semantic_addendum(run_dir=run, provider_receipt_path=provider_receipt)
+    except (ValueError, RuntimeError, FileNotFoundError) as exc:
+        _fail(ContractError("TAU_SEMANTIC_INSTALL_FAILED", str(exc)))
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
 @app.command()

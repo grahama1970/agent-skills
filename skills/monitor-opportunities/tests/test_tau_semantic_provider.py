@@ -10,8 +10,10 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 import monitor_opportunities.tau_semantic_provider as provider
+from monitor_opportunities import service
 from monitor_opportunities.cli import app
 from monitor_opportunities.contracts import IMMUTABLE_GOAL
+from monitor_opportunities.semantic_addenda import install_semantic_addendum
 from monitor_opportunities.util import write_json
 
 runner = CliRunner()
@@ -173,3 +175,48 @@ def test_tau_semantic_provider_rejects_unparseable_provider_response(
     assert receipt["status"] == "FAIL"
     assert receipt["provider_live"] is True
     assert receipt["parse_errors"]
+
+
+def test_tau_semantic_install_projects_addendum_into_interview_page(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    run_dir = tmp_path / "run"
+    run_result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(run_dir)])
+    assert run_result.exit_code == 0, run_result.output
+    manifest = json.loads((run_dir / "report-manifest.json").read_text(encoding="utf-8"))
+    opportunity_id = manifest["opportunities"][0]["opportunity_id"]
+
+    addendum = {
+        "schema": "monitor_opportunities.semantic_addendum.v1",
+        "opportunity_id": opportunity_id,
+        "verdict": "NEEDS_REVIEW",
+        "semantic_summary": "Provider says human review is required.",
+        "tailoring_guidance": "Use only approved claim-bound wording.",
+        "talking_points": ["Discuss receipt-gated evidence work."],
+        "interview_questions": ["Which evidence is source-bound?"],
+        "evidence_refs": [manifest["opportunities"][0]["source_receipt_ids"][0]],
+        "non_claims": ["Does not authorize application."],
+        "external_effects": False,
+    }
+    addendum_path = tmp_path / "semantic-addendum.json"
+    write_json(addendum_path, addendum)
+    provider_receipt = {
+        "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
+        "status": "PASS",
+        "opportunity_id": opportunity_id,
+        "handler": "webgpt",
+        "semantic_addendum": str(addendum_path),
+        "provider_live": True,
+        "live": True,
+        "mocked": False,
+        "external_effects": False,
+    }
+    receipt_path = tmp_path / "provider-receipt.json"
+    write_json(receipt_path, provider_receipt)
+
+    receipt = install_semantic_addendum(run_dir=run_dir, provider_receipt_path=receipt_path)
+    page = service._render_page(run_dir, "test-token")
+
+    assert receipt["status"] == "PASS"
+    assert "Provider Semantic Addendum" in page
+    assert "Provider says human review is required." in page
+    assert "Does not authorize application." in page

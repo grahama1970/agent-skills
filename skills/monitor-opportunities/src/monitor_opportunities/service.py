@@ -174,7 +174,41 @@ def _application_packet(application: Any, token: str, packets: list[Any]) -> str
     )
 
 
-def _opportunity_cards(manifest: Any, token: str) -> str:
+def _load_semantic_addenda(run_dir: Path) -> dict[str, dict[str, Any]]:
+    index_path = run_dir / "semantic-addenda" / "index.json"
+    if not index_path.exists():
+        return {}
+    index = read_json(index_path)
+    addenda: dict[str, dict[str, Any]] = {}
+    for item in index.get("items", []):
+        if item.get("external_effects") is not False:
+            continue
+        addendum_path = Path(str(item.get("addendum") or ""))
+        if not addendum_path.is_file():
+            continue
+        addendum = read_json(addendum_path)
+        if addendum.get("external_effects") is False and addendum.get("opportunity_id"):
+            addenda[str(addendum["opportunity_id"])] = addendum
+    return addenda
+
+
+def _semantic_addendum_card(addendum: dict[str, Any] | None) -> str:
+    if not addendum:
+        return '<p class="blocker">No provider semantic addendum is installed for this opportunity.</p>'
+    return (
+        '<section class="packet semantic"><h4>Provider Semantic Addendum</h4>'
+        f"<p>{_badge(str(addendum.get('verdict') or 'NEEDS_REVIEW'))} external_effects=false</p>"
+        f"<p>{html.escape(str(addendum.get('semantic_summary') or ''))}</p>"
+        f"<h5>Tailoring guidance</h5><p>{html.escape(str(addendum.get('tailoring_guidance') or ''))}</p>"
+        f"<h5>Talking points</h5>{_list(addendum.get('talking_points') or [], 'No talking points admitted.')}"
+        f"<h5>Interview questions</h5>{_list(addendum.get('interview_questions') or [], 'No interview questions admitted.')}"
+        f"<h5>Evidence refs</h5>{_list(addendum.get('evidence_refs') or [], 'No evidence refs admitted.')}"
+        f"<h5>Non-claims</h5>{_list(addendum.get('non_claims') or [], 'No non-claims admitted.')}"
+        "</section>"
+    )
+
+
+def _opportunity_cards(manifest: Any, token: str, semantic_addenda: dict[str, dict[str, Any]] | None = None) -> str:
     receipts_by_id = {item.receipt_id: item for item in manifest.source_receipts}
     applications: dict[str, list[Any]] = defaultdict(list)
     for item in manifest.applications:
@@ -277,6 +311,7 @@ def _opportunity_cards(manifest: Any, token: str) -> str:
             f"{outreach_html}"
             '<section class="packet"><h4>Interview Preparation</h4>'
             f"{prep_html}</section>"
+            f"{_semantic_addendum_card((semantic_addenda or {}).get(item.opportunity_id))}"
             "</article>"
         )
     return "".join(cards) or '<p class="empty">No opportunity cleared the eligibility and quality bar.</p>'
@@ -310,6 +345,7 @@ def _tailscale_ipv4() -> str | None:
 
 def _render_page(run_dir: Path, token: str) -> str:
     manifest = load_manifest(run_dir / "report-manifest.json")
+    semantic_addenda = _load_semantic_addenda(run_dir)
     projection = _projection(run_dir)
     projection_rows = "".join(
         f"<li>{html.escape(item_id)}: {html.escape(row['last_action'])}</li>"
@@ -325,7 +361,7 @@ def _render_page(run_dir: Path, token: str) -> str:
         "</tr>"
         for lane in manifest.lane_coverage
     )
-    opportunities = _opportunity_cards(manifest, token)
+    opportunities = _opportunity_cards(manifest, token, semantic_addenda)
     return f"""<!doctype html>
 <html lang="en">
 <head>
