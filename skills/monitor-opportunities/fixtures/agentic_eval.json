@@ -26,6 +26,8 @@
           "live_board_candidates=",
           "opportunities=",
           "source_intel=",
+          "relationship_signals=",
+          "relationship_memory=True",
           "recency_max_age_days=",
           "resume_variants=",
           "application_packets="

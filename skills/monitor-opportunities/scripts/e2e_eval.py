@@ -34,6 +34,7 @@ RUN_SH = SKILL_DIR / "run.sh"
 MIN_SAM_WEBSITE_OPPS = 5
 MIN_SHORTLIST = 1
 MIN_LIVE_BOARD_CANDIDATES = 3
+MIN_RELATIONSHIP_SIGNALS = 1
 
 
 def _fail(check: str, detail: str) -> None:
@@ -52,7 +53,8 @@ def main() -> None:
     out = Path(args.out) if args.out else Path("/tmp") / f"mo-e2e-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
 
     # 1. Run the LIVE diagnostic nightly: real capture and ranking, but no
-    # publication, tracker, ATS-memory, relationship-memory, or Buzz effects.
+    # tracker, ATS-memory, or Buzz effects. Relationship memory remains enabled
+    # because monitor-contacts graph recall is part of the product contract.
     proc = subprocess.run(
         [
             str(RUN_SH),
@@ -63,7 +65,6 @@ def main() -> None:
             "--skip-buzz",
             "--skip-tracker",
             "--skip-ats-memory",
-            "--skip-relationship-memory",
         ],
         capture_output=True,
         text=True,
@@ -71,6 +72,10 @@ def main() -> None:
     )
     if proc.returncode != 0:
         _fail("nightly-exit", f"nightly returned {proc.returncode}: {proc.stderr[-400:]}")
+    try:
+        nightly_receipt = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        _fail("nightly-receipt-json", f"nightly stdout was not JSON: {exc}")
 
     # 2. Real SAM website capture must have returned real opportunities.
     sam_receipt_path = out / "browser-capture" / "sam-capture-receipt.json"
@@ -84,6 +89,17 @@ def main() -> None:
 
     # 3. Real report exists, and live ATS boards actually returned candidates.
     report = _load(out / "report" / "report.json")
+    relationship_signals = report.get("relationship_signals", [])
+    if len(relationship_signals) < MIN_RELATIONSHIP_SIGNALS:
+        _fail(
+            "relationship-signals-empty",
+            f"only {len(relationship_signals)} relationship signals (< {MIN_RELATIONSHIP_SIGNALS})",
+        )
+    memory_sync = nightly_receipt.get("steps", {}).get("memory_sync", {})
+    if not nightly_receipt.get("steps", {}).get("memory_healthy"):
+        _fail("memory-unhealthy", f"nightly memory health false: {nightly_receipt.get('steps', {})}")
+    if memory_sync.get("relationship_signals_included") is not True:
+        _fail("relationship-memory-skipped", f"memory_sync receipt={memory_sync}")
     receipts = report.get("source_receipts", [])
     sam_website = [r for r in receipts if r.get("source_class") == "sam.gov_website" and r.get("result_status") == "MATCHES"]
     if not sam_website:
@@ -153,6 +169,8 @@ def main() -> None:
         f"live_board_candidates={live_board_candidates} "
         f"opportunities={len(opportunities)} "
         f"source_intel={len(source_intel)} "
+        f"relationship_signals={len(relationship_signals)} "
+        f"relationship_memory={memory_sync.get('relationship_signals_included')} "
         f"recency_max_age_days={max_age} "
         f"resume_variants={len(resume_variants)} "
         f"application_packets={len(application_packets)} "
