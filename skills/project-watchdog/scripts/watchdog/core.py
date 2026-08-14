@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -98,24 +99,21 @@ def run_cmd(
     env = os.environ.copy()
     uv_parent = str(Path(config.resolve_uv_bin()).parent)
     env["PATH"] = f"{uv_parent}:{env.get('PATH', '')}"
+    proc = subprocess.Popen(
+        command,
+        cwd=str(cwd) if cwd else None,
+        env=env,
+        stdin=subprocess.PIPE if input_text is not None else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
     try:
-        result = subprocess.run(
-            command,
-            cwd=str(cwd) if cwd else None,
-            env=env,
-            input=input_text,
-            text=True,
-            capture_output=True,
-            timeout=timeout_s,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout or ""
-        stderr = exc.stderr or ""
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode(errors="replace")
+        stdout, stderr = proc.communicate(input=input_text, timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        descendants = _process_descendants(proc.pid)
+        stdout, stderr, cleanup = _terminate_process_group(proc, timeout_s=timeout_s)
         return {
             "command": command,
             "cwd": str(cwd) if cwd else None,
@@ -125,15 +123,88 @@ def run_cmd(
             "duration_seconds": (datetime.now(UTC) - started).total_seconds(),
             "timed_out": True,
             "timeout_seconds": timeout_s,
+            "process_group": {
+                "pid": proc.pid,
+                "pgid": proc.pid,
+                "descendants_before_kill": descendants,
+                **cleanup,
+            },
         }
     return {
         "command": command,
         "cwd": str(cwd) if cwd else None,
-        "exit_code": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
+        "exit_code": proc.returncode,
+        "stdout": stdout,
+        "stderr": stderr,
         "duration_seconds": (datetime.now(UTC) - started).total_seconds(),
     }
+
+
+def _terminate_process_group(
+    proc: subprocess.Popen[str],
+    *,
+    timeout_s: int,
+) -> tuple[str, str, dict[str, Any]]:
+    """Terminate the command's whole process group after a timeout."""
+    cleanup: dict[str, Any] = {
+        "terminated": False,
+        "kill_sent": False,
+        "termination_signal": "SIGTERM",
+    }
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+        cleanup["terminated"] = True
+    except ProcessLookupError:
+        pass
+    except OSError as exc:
+        cleanup["termination_error"] = str(exc)
+    try:
+        stdout, stderr = proc.communicate(timeout=5)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+            cleanup["kill_sent"] = True
+        except ProcessLookupError:
+            pass
+        except OSError as exc:
+            cleanup["kill_error"] = str(exc)
+        stdout, stderr = proc.communicate()
+    cleanup["return_code_after_timeout"] = proc.returncode
+    cleanup["timeout_seconds"] = timeout_s
+    return stdout or "", stderr or "", cleanup
+
+
+def _process_descendants(root_pid: int) -> list[dict[str, Any]]:
+    """Best-effort snapshot of descendants before timeout cleanup."""
+    children: dict[int, list[int]] = {}
+    commands: dict[int, str] = {}
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        pid = int(entry.name)
+        try:
+            stat = (entry / "stat").read_text(encoding="utf-8", errors="replace")
+            rparen = stat.rfind(")")
+            ppid = int(stat[rparen + 2 :].split()[1])
+            cmdline = (entry / "cmdline").read_bytes().replace(b"\0", b" ").decode(
+                errors="replace"
+            ).strip()
+        except (OSError, ValueError, IndexError):
+            continue
+        children.setdefault(ppid, []).append(pid)
+        commands[pid] = cmdline or stat[:120]
+
+    found: list[dict[str, Any]] = []
+    stack = list(children.get(root_pid, []))
+    seen: set[int] = set()
+    while stack:
+        pid = stack.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        found.append({"pid": pid, "cmdline": commands.get(pid, "")})
+        stack.extend(children.get(pid, []))
+    return sorted(found, key=lambda item: int(item["pid"]))
 
 
 def load_json(path: Path) -> dict[str, Any]:

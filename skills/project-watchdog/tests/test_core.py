@@ -6,6 +6,7 @@ Inputs/Outputs/Failures: See functions below.
 """
 
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,3 +29,48 @@ def test_run_cmd_returns_timeout_result_instead_of_raising():
     assert result["timed_out"] is True
     assert result["timeout_seconds"] == 1
     assert "started" in result["stdout"]
+
+
+def test_run_cmd_timeout_kills_child_process_group(tmp_path):
+    child_pid_path = tmp_path / "child.pid"
+    result = run_cmd(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import pathlib, subprocess, sys, time\n"
+                "pid_file = pathlib.Path(sys.argv[1])\n"
+                "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])\n"
+                "pid_file.write_text(str(child.pid), encoding='utf-8')\n"
+                "print(f'child {child.pid}', flush=True)\n"
+                "time.sleep(30)\n"
+            ),
+            str(child_pid_path),
+        ],
+        timeout_s=1,
+    )
+
+    child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+    for _ in range(30):
+        if not _pid_exists(child_pid):
+            break
+        time.sleep(0.1)
+
+    assert result["exit_code"] == 124
+    assert result["timed_out"] is True
+    assert result["process_group"]["terminated"] is True
+    assert any(
+        row["pid"] == child_pid
+        for row in result["process_group"]["descendants_before_kill"]
+    )
+    assert not _pid_exists(child_pid)
+
+
+def _pid_exists(pid: int) -> bool:
+    try:
+        Path(f"/proc/{pid}/stat").read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return False
+    except ProcessLookupError:
+        return False
+    return True

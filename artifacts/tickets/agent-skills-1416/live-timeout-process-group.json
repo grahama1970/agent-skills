@@ -1,0 +1,47 @@
+{
+  "assertions": {
+    "child_listed_before_kill": true,
+    "child_not_alive_after_timeout": true,
+    "exit_code_124": true,
+    "process_group_terminated": true,
+    "timed_out": true
+  },
+  "child_alive_after_timeout": false,
+  "child_pid": 3921647,
+  "command_result": {
+    "command": [
+      "/home/graham/workspace/experiments/agent-skills-worktrees/watchdog-timeout-cleanup-1416/skills/project-watchdog/.venv/bin/python3",
+      "-c",
+      "import pathlib, subprocess, sys, time\npid_file = pathlib.Path(sys.argv[1])\nchild = subprocess.Popen([sys.executable, \"-c\", \"import time; time.sleep(60)\"])\npid_file.write_text(str(child.pid), encoding=\"utf-8\")\nprint(f\"child {child.pid}\", flush=True)\ntime.sleep(60)\n",
+      "artifacts/tickets/agent-skills-1416/live-child.pid"
+    ],
+    "cwd": null,
+    "duration_seconds": 1.075862,
+    "exit_code": 124,
+    "process_group": {
+      "descendants_before_kill": [
+        {
+          "cmdline": "/home/graham/workspace/experiments/agent-skills-worktrees/watchdog-timeout-cleanup-1416/skills/project-watchdog/.venv/bin/python3 -c import time; time.sleep(60)",
+          "pid": 3921647
+        }
+      ],
+      "kill_sent": false,
+      "pgid": 3921646,
+      "pid": 3921646,
+      "return_code_after_timeout": -15,
+      "terminated": true,
+      "termination_signal": "SIGTERM",
+      "timeout_seconds": 1
+    },
+    "stderr": "",
+    "stdout": "child 3921647\n",
+    "timed_out": true,
+    "timeout_seconds": 1
+  },
+  "does_not_prove": "This proof does not dispatch a real GitHub issue or resume project-watchdog cron.",
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "schema": "agent_skills.project_watchdog.issue_1416_live_timeout_proof.v1",
+  "what_was_exercised": "watchdog.core.run_cmd launched a real parent process that launched a real child process; the timeout path terminated the command process group."
+}
