@@ -1,0 +1,57 @@
+{
+  "issue": 1417,
+  "repo": "grahama1970/agent-skills",
+  "status": "ready_for_ticket_close",
+  "repair_commit": "60225efb9511c9c38942e00f49d108febe5cc246",
+  "remote_ref": {
+    "command": "git ls-remote origin refs/heads/main",
+    "result": "60225efb9511c9c38942e00f49d108febe5cc246\trefs/heads/main"
+  },
+  "proof_artifacts": [
+    "artifacts/tickets/agent-skills-1417/live-strict-project-proof.json",
+    "artifacts/tickets/agent-skills-1417/proof.md",
+    "artifacts/tickets/agent-skills-1417/closure-results.json"
+  ],
+  "checks": [
+    {
+      "command": "uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_strict_project_tick_does_not_fall_through_to_another_project skills/project-watchdog/tests/test_project_rotation.py::test_all_project_tick_is_the_explicit_fleet_fallback skills/project-watchdog/tests/test_project_watchdog.py::test_the_cron_line_sources_a_shell_init_file",
+      "result": "3 passed in 0.22s"
+    },
+    {
+      "command": "uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests",
+      "result": "167 passed in 2.88s"
+    },
+    {
+      "command": "skills/project-watchdog/sanity.sh",
+      "result": "45 passed, 0 failed; embedded unit tests 167 passed in 2.88s"
+    },
+    {
+      "command": "python3 scripts/check_mock_evidence_claims.py",
+      "result": "OK: checked 647 test file(s); no mock+proof claim violations"
+    }
+  ],
+  "live_receipt": "artifacts/tickets/agent-skills-1417/live-strict-project-proof.json",
+  "live_receipt_summary": {
+    "ok": true,
+    "what_was_exercised": "real project-watchdog install-cron dry-run and real project-watchdog tick dry-run using the operator state root",
+    "does_not_prove": "Does not resume or install cron, and does not perform an applied dispatch."
+  },
+  "worktree_audit": {
+    "command": "skills/best-practices-github-ticket/scripts/audit-worktrees.sh --repo /home/graham/workspace/experiments/agent-skills-worktrees/watchdog-strict-project-1417 --json",
+    "exit_code": 1,
+    "ok": false,
+    "total": 184,
+    "tmp": 1,
+    "detached": 56,
+    "dirty_secondary": 50,
+    "reason_for_skip": "pre-existing retained worktree debt outside the issue 1417 task worktree"
+  },
+  "mocked": true,
+  "live": true,
+  "remaining": [
+    "close issue 1417 with the ticket runtime",
+    "repair issue 1418 before considering cron resume",
+    "run a bounded applied project-watchdog proof before declaring cron readiness"
+  ],
+  "immutable_goal": "NOT_MET"
+}
