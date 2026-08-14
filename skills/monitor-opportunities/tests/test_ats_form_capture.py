@@ -100,31 +100,36 @@ def test_meetup_capture_wall_clock_timeout_writes_failed_receipt(
 def test_surf_pause_reraises_capture_wall_clock_timeout(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def alarm_timeout(*_: object, **__: object) -> str:
+    def alarm_timeout(*_: object, **__: object) -> None:
         raise TimeoutError("Meetup Buffalo capture exceeded 1s")
 
-    monkeypatch.setattr(browser_capture, "_surf", alarm_timeout)
+    monkeypatch.setattr(browser_capture.time, "sleep", alarm_timeout)
 
     with pytest.raises(TimeoutError, match="Meetup Buffalo capture exceeded 1s"):
         browser_capture._surf_pause(Path("surf/run.sh"), "1")
 
 
-def test_surf_pause_records_browser_control_fallback(
+def test_surf_pause_uses_local_sleep_without_surf_wait(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def wait_timeout(*_: object, **__: object) -> str:
-        raise subprocess.TimeoutExpired(["surf", "wait", "1"], 15)
+    calls: list[tuple[str, object]] = []
 
-    monkeypatch.setattr(browser_capture, "_surf", wait_timeout)
-    monkeypatch.setattr(browser_capture.time, "sleep", lambda _seconds: None)
+    def fail_surf(*_: object, **__: object) -> str:
+        raise AssertionError("surf wait should not be called for pacing sleeps")
+
+    def record_sleep(seconds: object) -> None:
+        calls.append(("sleep", seconds))
+
+    monkeypatch.setattr(browser_capture, "_surf", fail_surf)
+    monkeypatch.setattr(browser_capture.time, "sleep", record_sleep)
     browser_capture.reset_browser_control_events()
 
     browser_capture._surf_pause(Path("surf/run.sh"), "1", timeout=15)
 
+    assert calls == [("sleep", 1.0)]
     summary = browser_capture.browser_control_summary()
-    assert summary["status"] == "DEGRADED"
-    assert summary["counts"] == {"surf_wait_fallback": 1}
-    assert summary["recent"][0]["operation"] == "wait"
+    assert summary["status"] == "OK"
+    assert summary["counts"] == {}
 
 
 def test_close_tab_records_browser_control_failure(
@@ -142,6 +147,7 @@ def test_close_tab_records_browser_control_failure(
     assert summary["status"] == "DEGRADED"
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
+    assert summary["recent"][0]["timeout"] == 5
 
 
 def test_isolated_meetup_capture_terminates_wedged_child(

@@ -189,28 +189,20 @@ def _nav_js(url: str) -> str:
     )
 
 
+_TAB_CLOSE_TIMEOUT_SECONDS = 5
+
+
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
-    """Best-effort pacing sleep. A busy surf lease must not kill a capture.
+    """Best-effort pacing sleep that does not consume a surf lease.
 
     On 2026-08-13 a `surf wait 1` timed out under lease contention (many
     captures now run back-to-back) and aborted the whole top-applicant capture.
-    A sleep failing is never a reason to lose already-captured rows; fall back
-    to a local sleep.
+    Live promoted receipts on 2026-08-14 showed the fallback itself had become
+    the common case. Use local sleep directly; TimeoutError is preserved so
+    outer wall-clock capture guards can still interrupt a wedged capture.
     """
-    try:
-        _surf(surf_run, "wait", seconds, timeout=timeout)
-    except TimeoutError:
-        raise
-    except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
-        logger.warning("surf wait {}s unavailable ({}); local sleep instead", seconds, exc)
-        _record_browser_control_event(
-            kind="surf_wait_fallback",
-            operation="wait",
-            seconds=seconds,
-            timeout=timeout,
-            error=exc,
-        )
-        time.sleep(min(float(seconds or 1), 10.0))
+    del surf_run, timeout
+    time.sleep(min(float(seconds or 1), 10.0))
 
 
 def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
@@ -222,14 +214,14 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
 
 def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
     try:
-        _surf(surf_run, "tab.close", tab_id, timeout=30)
+        _surf(surf_run, "tab.close", tab_id, timeout=_TAB_CLOSE_TIMEOUT_SECONDS)
     except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
         logger.warning("could not close {} tab {}: {}", label, tab_id, exc)
         _record_browser_control_event(
             kind="tab_close_failed",
             operation="tab.close",
             tab_id=tab_id,
-            timeout=30,
+            timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
             error=exc,
         )
 
