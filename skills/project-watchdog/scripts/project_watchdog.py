@@ -19,9 +19,8 @@ Failure modes
     non-zero exit.
 
 Usage
-    ./run.sh tick --project all                 # dry-run fleet scan
-    ./run.sh tick --apply --project all         # one bounded fleet dispatch
-    ./run.sh tick --project tau                 # strict scan for tau only
+    ./run.sh tick --project tau                 # dry-run scan
+    ./run.sh tick --apply --project tau         # one bounded dispatch
     ./run.sh status
     ./run.sh set-state global paused --reason "maintenance"
     ./run.sh install-cron --apply
@@ -59,11 +58,7 @@ def _startup(verbose: bool = False) -> None:
 @app.command("tick")
 def tick_command(
     apply: bool = typer.Option(False, "--apply", help="Apply mutations instead of dry-run scan."),
-    project: str = typer.Option(
-        "all",
-        "--project",
-        help="Registered project id, or 'all' for explicit fleet rotation.",
-    ),
+    project: str = typer.Option("tau", "--project", help="Registered project id."),
     max_tickets: int = typer.Option(1, "--max-tickets", min=1, help="Maximum issues to handle."),
     verbose: bool = typer.Option(False, "--verbose", help="Log at DEBUG level to stderr."),
 ) -> None:
@@ -72,14 +67,35 @@ def tick_command(
     raise typer.Exit(commands.tick(apply=apply, project_id=project, max_tickets=max_tickets))
 
 
+@app.command("activate")
+def activate_command(
+    apply: bool = typer.Option(False, "--apply", help="Actually install and activate."),
+    minute: str = typer.Option("*/5", "--minute", help="Cron minute field."),
+) -> None:
+    """Turn automatic issue handling on: schedule plus global active state."""
+    _startup()
+    raise typer.Exit(commands.activate(apply=apply, minute=minute))
+
+
 @app.command("install-cron")
 def install_cron_command(
     apply: bool = typer.Option(False, "--apply", help="Install the crontab entry."),
-    minute: str = typer.Option("*", "--minute", help="Cron minute field."),
+    minute: str = typer.Option(
+        "*/15",
+        "--minute",
+        help="Cron minute field. Default */5; see install_cron for why not '*'.",
+    ),
+    allow_every_minute: bool = typer.Option(
+        False,
+        "--allow-every-minute",
+        help="Permit a bare '*' minute field despite the runaway it caused.",
+    ),
 ) -> None:
     """Install or dry-run the project-watchdog cron line."""
     _startup()
-    raise typer.Exit(commands.install_cron(apply=apply, minute=minute))
+    raise typer.Exit(
+        commands.install_cron(apply=apply, minute=minute, allow_every_minute=allow_every_minute)
+    )
 
 
 @app.command("set-state")

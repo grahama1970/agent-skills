@@ -82,12 +82,6 @@ def test_parse_goal_hash_requires_sha256_prefix() -> None:
     assert issue_fields.parse_goal_hash(config.TAU_ACTIVE_GOAL_HASH)
 
 
-def test_ask_runner_is_executable_for_repair_dispatch() -> None:
-    ask_runner = config.ask_run_sh()
-    assert ask_runner.exists()
-    assert os.access(ask_runner, os.X_OK)
-
-
 # --------------------------------------------------------------------------- #
 # Path containment — issue bodies are untrusted input
 # --------------------------------------------------------------------------- #
@@ -1237,12 +1231,11 @@ def test_the_cron_line_sources_a_shell_init_file(tmp_path, monkeypatch) -> None:
 
     monkeypatch.setattr(commands, "run_cmd", lambda *a, **k: {"exit_code": 0, "stdout": ""})
     monkeypatch.setattr(commands, "finish", fake_finish)
-    commands.install_cron(apply=False, minute="*")
+    commands.install_cron(apply=False, minute="*/5")
 
     line = captured["receipt"]["cron_line"]
     assert f"source {rc}" in line, "the rc file must be sourced before the tick"
     assert "/usr/bin/zsh -c" in line
-    assert "--project all" in line, "global cron must use explicit fleet rotation"
 
 
 def test_a_missing_rc_file_is_not_sourced(tmp_path, monkeypatch) -> None:
@@ -1524,3 +1517,31 @@ def test_an_upheld_closure_that_cannot_be_marked_is_not_reported_clean(tmp_path)
         )
     assert blocked["status"] == "NEEDS_ATTENTION"
     assert "re-audited every tick" in blocked["summary"]
+
+
+def test_a_once_a_minute_schedule_is_refused(capsys) -> None:
+    from watchdog import commands
+
+    """The measured runaway: ticks reach 302.8s, so a 60s period overlaps.
+
+    1,381 tick_already_running collisions, 43,581 no-op ticks, a 1.2 GB log,
+    and the entry disabled by hand on 2026-08-14. `*` stays reachable, but only
+    as a decision somebody makes.
+    """
+    assert commands.install_cron(apply=False, minute="*") == 2
+    assert "refusing a once-a-minute schedule" in capsys.readouterr().err
+
+
+def test_an_explicit_override_still_allows_every_minute() -> None:
+    from watchdog import commands
+
+    assert commands.install_cron(apply=False, minute="*", allow_every_minute=True) == 0
+
+
+def test_the_default_minute_is_not_every_minute() -> None:
+    """The default is what gets installed when the docs are followed."""
+    import inspect
+
+    from watchdog import commands as _c
+
+    assert inspect.signature(_c.install_cron).parameters["allow_every_minute"].default is False

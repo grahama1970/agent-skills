@@ -6,7 +6,8 @@
 # Preview by default. Set WORKTREE_REAP_APPLY=1 to actually remove.
 set -uo pipefail
 
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPTS_DIR")"
 REPO="${1:-$HOME/workspace/experiments/agent-skills}"
 LOG="${WORKTREE_REAP_LOG:-$HOME/.cleanup/worktree-reap.jsonl}"
 mkdir -p "$(dirname "$LOG")"
@@ -14,7 +15,7 @@ mkdir -p "$(dirname "$LOG")"
 APPLY=""
 [ "${WORKTREE_REAP_APPLY:-0}" = "1" ] && APPLY="--apply"
 
-RECEIPT="$(uv run --project "$SKILL_DIR" python "$SKILL_DIR/worktree_lease.py" \
+RECEIPT="$(uv run --project "$SKILL_DIR" python "$SCRIPTS_DIR/worktree_lease.py" \
   --repo "$REPO" $APPLY --json 2>/dev/null)"
 [ -n "$RECEIPT" ] || { echo "reap produced no receipt"; exit 1; }
 

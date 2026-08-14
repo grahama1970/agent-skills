@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(SKILL_ROOT))
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 from worktree_lease import (  # noqa: E402
     DEFAULT_TTL_SECONDS,

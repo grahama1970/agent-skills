@@ -2492,7 +2492,7 @@ def _register_worktree_lease(worktree, *, purpose: str) -> None:
         import sys as _sys
         from pathlib import Path as _Path
 
-        cleanup = _Path(__file__).resolve().parents[1] / "cleanup"
+        cleanup = _Path(__file__).resolve().parents[1] / "ops-worktrees" / "scripts"
         if str(cleanup) not in _sys.path:
             _sys.path.insert(0, str(cleanup))
         from worktree_lease import register as _register

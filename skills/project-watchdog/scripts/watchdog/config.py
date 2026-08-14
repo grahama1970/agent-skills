@@ -388,10 +388,39 @@ CLOSURE_AUDIT_MAX_REOPENS = int(os.environ.get("PROJECT_WATCHDOG_CLOSURE_MAX_REO
 #: minute — the exact disk churn the retention policy removed.
 NOOP_RENOTIFY_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_RENOTIFY_SECONDS", 86_400)
 
-# A repair blocked on an unready worktree must not be retried every tick.
-# Observed 2026-08-11: issue #1361's targets included 3 dirty tracked files in
-# the shared checkout, and the lane retried it every minute while tickets with
-# settled targets never got tried. Dirt clears on human/lane action, not fast.
-REPAIR_DISPATCH_RETRY_COOLDOWN_SECONDS = _env_seconds(
-    "PROJECT_WATCHDOG_REPAIR_RETRY_COOLDOWN_SECONDS", 1_800
-)
+#: Hours (local, 24h) when heavy overnight batch work owns the machine. The
+#: installed crontab runs nightly corpus, security, memory and sparta jobs
+#: between 02:00 and 06:00 -- nightly corpus 02:00, security 03:00, memory
+#: 03:45, sparta 04:17 and 06:00 -- so the window runs to 07:00 to cover the
+#: last one. A repair dispatch landing inside it competes
+#: for the same CPU, disk and provider quota as jobs that cannot be restarted
+#: cheaply. The watchdog defers instead -- the issues are still there at 06:00.
+#: Set PROJECT_WATCHDOG_QUIET_HOURS="" to disable, or "22-07" to widen.
+QUIET_HOURS = os.environ.get("PROJECT_WATCHDOG_QUIET_HOURS", "2-7")
+
+
+def quiet_window() -> tuple[int, int] | None:
+    """Parsed quiet window, or None when disabled or malformed."""
+    raw = (QUIET_HOURS or "").strip()
+    if not raw:
+        return None
+    try:
+        start, end = (int(part) for part in raw.split("-", 1))
+    except (ValueError, TypeError):
+        return None
+    if not (0 <= start <= 23 and 0 <= end <= 23):
+        return None
+    return start, end
+
+
+def in_quiet_hours(now=None) -> bool:
+    """True inside the overnight window, wrapping past midnight correctly."""
+    import datetime as _dt
+
+    window = quiet_window()
+    if window is None:
+        return False
+    start, end = window
+    hour = (now or _dt.datetime.now()).hour
+    # A window like 22-07 crosses midnight, so a plain start <= h < end is wrong.
+    return start <= hour < end if start < end else (hour >= start or hour < end)

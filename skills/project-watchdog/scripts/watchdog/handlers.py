@@ -678,7 +678,6 @@ def handle_ticket_repair(
             {
                 "ok": False,
                 "status": "BLOCKED",
-                "blocked_reason": "worktree_unready",
                 "summary": (
                     f"worktree {worktree} is not safe to author a repair in: "
                     f"{', '.join(readiness.get('reasons') or ['unknown'])}. "

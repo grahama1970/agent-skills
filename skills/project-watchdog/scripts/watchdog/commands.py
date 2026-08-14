@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import shlex
+import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -61,58 +62,6 @@ from .registry import find_project, list_routable_issues
 #: Idle is normal. Idle for too long is the idle-streak escalation's job, not
 #: this one's.
 _SELF_CLEARING_SKIPS = frozenset({"lane_busy", "no_routable_issues"})
-FLEET_PROJECT_ID = "all"
-
-
-def _last_issue_scan_summary(candidate: dict[str, Any]) -> dict[str, Any]:
-    """Return the registry scan side-channel in receipt-ready form."""
-    excluded_issues = {
-        str(reason): [int(number) for number in numbers]
-        for reason, numbers in dict(registry.LAST_SCAN.get("excluded_issues", {})).items()
-    }
-    return {
-        "project_id": str(candidate.get("project_id")),
-        "repo": registry.project_repo(candidate),
-        "scanned": int(registry.LAST_SCAN.get("scanned", 0) or 0),
-        "excluded_counts": {
-            str(reason): int(count)
-            for reason, count in dict(registry.LAST_SCAN.get("excluded", {})).items()
-        },
-        "excluded_issues": excluded_issues,
-        "excluded_issue_refs": {
-            reason: [f"{registry.project_repo(candidate)}#{number}" for number in numbers]
-            for reason, numbers in excluded_issues.items()
-        },
-    }
-
-
-def _record_issue_scan_receipt(
-    receipt: dict[str, Any], issue_scans: list[dict[str, Any]]
-) -> None:
-    """Copy per-scan exclusion details into first-class receipt fields."""
-    excluded_counts: dict[str, int] = {}
-    excluded_issues: dict[str, list[int]] = {}
-    excluded_issue_refs: dict[str, list[str]] = {}
-    for scan in issue_scans:
-        for reason, count in scan.get("excluded_counts", {}).items():
-            excluded_counts[str(reason)] = excluded_counts.get(str(reason), 0) + int(count)
-        for reason, numbers in scan.get("excluded_issues", {}).items():
-            bucket = excluded_issues.setdefault(str(reason), [])
-            bucket.extend(int(number) for number in numbers)
-        for reason, refs in scan.get("excluded_issue_refs", {}).items():
-            bucket = excluded_issue_refs.setdefault(str(reason), [])
-            bucket.extend(str(ref) for ref in refs)
-
-    receipt["issue_scans"] = issue_scans
-    receipt["excluded_counts"] = {
-        reason: excluded_counts[reason] for reason in sorted(excluded_counts)
-    }
-    receipt["excluded_issues"] = {
-        reason: sorted(numbers) for reason, numbers in sorted(excluded_issues.items())
-    }
-    receipt["excluded_issue_refs"] = {
-        reason: sorted(refs) for reason, refs in sorted(excluded_issue_refs.items())
-    }
 
 
 def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
@@ -184,6 +133,26 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
     receipt_dir.mkdir(parents=True, exist_ok=True)
     log_event(run_id, "tick_start", apply=apply, project_id=project_id, max_tickets=max_tickets)
 
+    # Overnight batch work owns the machine between the quiet hours; a repair
+    # dispatch there competes with jobs that cannot be restarted cheaply. The
+    # issues are still there afterwards.
+    if apply and config.in_quiet_hours():
+        receipt = base_receipt(run_id, receipt_dir, apply)
+        window = config.quiet_window()
+        receipt.update(
+            {
+                "ok": True,
+                "status": "SKIPPED",
+                "stop_reason": "quiet_hours",
+                "summary": (
+                    f"deferring to overnight batch work ({window[0]:02d}:00-{window[1]:02d}:00); "
+                    "set PROJECT_WATCHDOG_QUIET_HOURS to change"
+                ),
+            }
+        )
+        log_event(run_id, "tick_skipped_quiet_hours", window=list(window))
+        return finish(run_id, receipt_dir, receipt, 0, persist=False)
+
     if not acquire_lock(run_id):
         receipt = base_receipt(run_id, receipt_dir, apply)
         # Stepping aside for a tick that is genuinely working is not an error.
@@ -214,7 +183,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
 
 #: State keys a tick owns. Everything else in the document belongs to the
 #: operator and must survive a tick that started before they changed it.
-_TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts", "repair_dispatch_attempts",
+_TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts",
                           "completion_attested_at")
 
 
@@ -241,7 +210,6 @@ def _audit_one_closure(
     receipt: dict[str, Any],
     *,
     apply: bool,
-    candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """Review the oldest unchecked closure across active projects, if any.
 
@@ -249,10 +217,7 @@ def _audit_one_closure(
     can never starve the repair lane.
     """
     pending_by_project: list[dict[str, Any]] = []
-    pool = candidates if candidates is not None else registry.rotation_order(
-        load_json(config.projects_path()), state
-    )
-    for candidate in pool:
+    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
         if state.get("projects", {}).get(cid, {}).get("state") != "active":
             continue
@@ -319,7 +284,6 @@ def _attest_completion(
     receipt: dict[str, Any],
     *,
     apply: bool,
-    candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """Ask an independent seat whether a finished-looking project is finished.
 
@@ -333,10 +297,7 @@ def _attest_completion(
     """
     now = time.time()
     attested = state.setdefault("completion_attested_at", {})
-    pool = candidates if candidates is not None else registry.rotation_order(
-        load_json(config.projects_path()), state
-    )
-    for candidate in pool:
+    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
         if state.get("projects", {}).get(cid, {}).get("state") != "active":
             continue
@@ -395,28 +356,23 @@ def _tick_locked(
         log_event(run_id, "tick_skipped", reason=receipt["stop_reason"])
         return finish(run_id, receipt_dir, receipt, 0)
 
-    projects_doc = load_json(config.projects_path())
     try:
-        if project_id == FLEET_PROJECT_ID:
-            selection_mode = "fleet"
-            candidates = registry.rotation_order(projects_doc, state)
-        else:
-            selection_mode = "strict"
-            candidates = [find_project(projects_doc, project_id)]
+        project = find_project(load_json(config.projects_path()), project_id)
     except ValueError as exc:
         receipt.update({"ok": False, "status": "BLOCKED", "errors": [str(exc)]})
         logger.error("{}", exc)
         return finish(run_id, receipt_dir, receipt, 2)
 
-    # Fleet mode tries every active project, best candidate first, until one has
-    # work. Strict mode tries only the named project; it must not fall through to
-    # a different repo while the receipt still says --project tau.
+    # Try every active project, best candidate first, until one has work. The
+    # crontab pins a single project and the tick used to stop there: if that one
+    # was paused, or active with nothing dispatchable, the whole fleet idled
+    # while another project had a ready ticket (#1084).
+    projects_doc = load_json(config.projects_path())
     skipped: list[dict[str, Any]] = []
-    issue_scans: list[dict[str, Any]] = []
     project = None
     issues: list[dict[str, Any]] = []
 
-    for candidate in candidates:
+    for candidate in registry.rotation_order(projects_doc, state, requested=project_id):
         cid = str(candidate.get("project_id"))
         cstate = state.get("projects", {}).get(cid, {}).get("state")
         if cstate != "active":
@@ -455,53 +411,24 @@ def _tick_locked(
             continue
 
         busy = registry.busy_targets(in_flight)
-        # Same shape as the closure-audit cooldown: a repair blocked on an
-        # unready worktree is skipped for a while so the rest of the backlog
-        # gets tried, instead of one dirty target pinning the lane forever.
-        now_ts = time.time()
-        dispatch_attempts = state.setdefault("repair_dispatch_attempts", {})
-        candidate_repo = registry.project_repo(candidate)
-        cooling_repairs = set()
-        for key, last in list(dispatch_attempts.items()):
-            key_repo, _, num = key.rpartition("#")
-            if key_repo != candidate_repo:
-                continue
-            if now_ts - float(last or 0) < config.REPAIR_DISPATCH_RETRY_COOLDOWN_SECONDS:
-                cooling_repairs.add(int(num))
-            else:
-                dispatch_attempts.pop(key, None)  # expired: eligible again
-        skip_issue_reasons: dict[int, str] = {
-            int(entry["issue_number"]): "stale_lease" for entry in stale
-        }
-        skip_issue_reasons.update(
-            {int(entry["issue_number"]): "lease_reclaimed_this_tick" for entry in reclaimed}
-        )
-        skip_issue_reasons.update(
-            {int(issue_number): "repair_dispatch_cooling" for issue_number in cooling_repairs}
-        )
         try:
             found = list_routable_issues(
                 run_id,
                 candidate,
                 busy,
-                skip_issue_numbers=set(skip_issue_reasons),
-                skip_issue_reasons=skip_issue_reasons,
+                skip_issue_numbers={int(e["issue_number"]) for e in reclaimed},
             )
         except (RuntimeError, ValueError) as exc:
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
             logger.error("issue scan failed for project {}: {}", cid, exc)
             continue
-        scan_summary = _last_issue_scan_summary(candidate)
-        issue_scans.append(scan_summary)
         if not found:
             skipped.append(
                 {
                     "project_id": cid,
                     "reason": "no_routable_issues",
-                    "scanned": scan_summary["scanned"],
-                    "excluded": scan_summary["excluded_counts"],
-                    "excluded_counts": scan_summary["excluded_counts"],
-                    "excluded_issues": scan_summary["excluded_issues"],
+                    "scanned": registry.LAST_SCAN.get("scanned", 0),
+                    "excluded": registry.LAST_SCAN.get("excluded", {}),
                 }
             )
             continue
@@ -526,11 +453,8 @@ def _tick_locked(
         }
         break
 
-    _record_issue_scan_receipt(receipt, issue_scans)
-
     receipt["rotation"] = {
         "requested": project_id,
-        "mode": selection_mode,
         "selected": None if project is None else str(project.get("project_id")),
         "skipped": skipped,
     }
@@ -540,9 +464,7 @@ def _tick_locked(
     # is done, and until now nothing verified that claim. Repairs come first --
     # an audit must never delay a ticket that is actually waiting.
     if project is None:
-        audited = _audit_one_closure(
-            run_id, receipt_dir, state, receipt, apply=apply, candidates=candidates
-        )
+        audited = _audit_one_closure(run_id, receipt_dir, state, receipt, apply=apply)
         if audited is not None:
             receipt["handled_issues"].append(audited)
             receipt["handled_count"] = 1
@@ -561,9 +483,7 @@ def _tick_locked(
     # Nothing to repair and nothing to audit: the point where the system would
     # otherwise call itself done. Ask an independent seat whether it actually is.
     if project is None:
-        attested = _attest_completion(
-            run_id, receipt_dir, state, receipt, apply=apply, candidates=candidates
-        )
+        attested = _attest_completion(run_id, receipt_dir, state, receipt, apply=apply)
         if attested is not None:
             receipt["handled_issues"].append(attested)
             receipt["handled_count"] = 1
@@ -614,27 +534,97 @@ def _tick_locked(
     streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
-    receipt["repair_dispatch_cooling"] = sorted(cooling_repairs)
-    repo_for_state = registry.project_repo(project)
     for issue in issues[:max_tickets]:
-        handled = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
-        receipt["handled_issues"].append(handled)
-        if apply:
-            key = f"{repo_for_state}#{issue['number']}"
-            if handled.get("blocked_reason") == "worktree_unready":
-                state.setdefault("repair_dispatch_attempts", {})[key] = time.time()
-                _persist_tick_state(state)
-            elif handled.get("ok"):
-                if state.get("repair_dispatch_attempts", {}).pop(key, None) is not None:
-                    _persist_tick_state(state)
+        receipt["handled_issues"].append(
+            handle_issue(run_id, receipt_dir, project, issue, apply=apply)
+        )
     receipt["handled_count"] = len(receipt["handled_issues"])
     receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"])
     receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
     return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
 
 
-def install_cron(*, apply: bool, minute: str) -> int:
-    """Install or dry-run the crontab line that drives the watchdog."""
+def activate(*, apply: bool, minute: str = "*/5") -> int:
+    """Turn the watchdog on in one call: schedule plus state.
+
+    A project agent should be able to switch automatic issue handling on
+    without a human editing crontab. Activation is two facts that must agree --
+    a schedule exists, and global state is active -- and having them in
+    separate commands is how the cron sat installed while the state was paused,
+    or the reverse.
+
+    It is idempotent and reports what it changed, so calling it when already
+    active is a no-op rather than a duplicate entry.
+    """
+    run_id = f"project-watchdog-activate-{timestamp()}"
+    steps: list[dict[str, Any]] = []
+
+    # install_cron writes its own receipt through the shared finish(). Two JSON
+    # documents on one stream is unparseable by any machine caller -- which is
+    # exactly what the eval caught -- so activate captures it and owns stdout.
+    import contextlib
+    import io
+
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        cron_rc = install_cron(apply=apply, minute=minute)
+    try:
+        steps_cron_receipt = json.loads(buffer.getvalue() or "{}")
+    except ValueError:
+        steps_cron_receipt = {"raw": buffer.getvalue()[:400]}
+    steps.append({
+        "step": "install_cron",
+        "minute": minute,
+        "exit_code": cron_rc,
+        "cron_line": steps_cron_receipt.get("cron_line"),
+    })
+
+    state_rc = 0
+    if cron_rc == 0:
+        with contextlib.redirect_stdout(io.StringIO()):
+            state_rc = set_state("global", "active", project_id="", reason="activated by agent")
+        steps.append({"step": "set_state_global_active", "exit_code": state_rc})
+
+    window = config.quiet_window()
+    receipt = {
+        "schema": "agent_skills.project_watchdog.activate_receipt.v1",
+        "run_id": run_id,
+        "apply": bool(apply),
+        "ok": cron_rc == 0 and state_rc == 0,
+        "steps": steps,
+        "minute": minute,
+        "quiet_hours": f"{window[0]:02d}:00-{window[1]:02d}:00" if window else None,
+        "note": (
+            "automatic issue handling is on; ticks defer during quiet hours and "
+            "whenever another tick or lane is still working"
+        ),
+    }
+    print(json.dumps(receipt, indent=2, sort_keys=True))
+    return 0 if receipt["ok"] else 1
+
+
+def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) -> int:
+    """Install or dry-run the crontab line that drives the watchdog.
+
+    The minute field defaults to ``*/5``. GitHub issues want near-immediate
+    pickup, so the interval is short; it is not shorter because ``*`` produced
+    a measured runaway. A tick whose median is 1.2s has a p90 of 27.5s and a
+    maximum of 302.8s, so a 60s period overlaps constantly while a 300s period
+    overlaps rarely and the lock skips that case cleanly. The result was 1,381 ``tick_already_running`` collisions, 43,581
+    ticks that found nothing, 538 that did work (~1%), and a 1.2 GB log --
+    after which the entry was disabled by hand on 2026-08-14.
+
+    ``*`` is still reachable, but only with an explicit flag, so choosing it is
+    a decision somebody made rather than a default nobody noticed.
+    """
+    if minute.strip() == "*" and not allow_every_minute:
+        print(
+            "refusing a once-a-minute schedule: ticks reach 302.8s, so they overlap "
+            "and stack (1,381 observed collisions). Use --minute '*/5', or pass "
+            "--allow-every-minute to override.",
+            file=sys.stderr,
+        )
+        return 2
     run_id = f"project-watchdog-install-{timestamp()}"
     cron_log = config.cron_log_path()
     # Run through a LOGIN shell. cron starts with a nearly empty environment and
@@ -645,7 +635,7 @@ def install_cron(*, apply: bool, minute: str) -> int:
     # into the crontab or into a file in the repo.
     inner = (
         f"cd {shlex.quote(str(config.SKILL_DIR))} && "
-        f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project all "
+        f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project tau "
         f"--max-tickets 1"
     )
     init_file = config.shell_init_file()

@@ -1292,12 +1292,36 @@ def _prepare_browser_submit_payload(
 
 
 def _local_path_candidates(text: str) -> list[str]:
+    """Absolute paths in the prompt that a browser seat could not open.
+
+    A leading slash is not enough to make something a path. This prompt was
+    corrupted in a live review because `/project-watchdog`, `/ticket` and
+    `/monitor-sparta` are SKILL references and `*/5` is a cron expression --
+    all four were rewritten to "[local-only path not attached: ...]", so the
+    reviewer never saw the interval it was asked to judge.
+
+    Two rules separate the cases without weakening the guard:
+
+    - a single-segment `/word` that does not exist on disk is a skill
+      reference, not a path worth mentioning to a remote model;
+    - a candidate immediately preceded by `*` is a cron field.
+
+    A real path that exists is still sanitized, which is the case the guard was
+    written for: leaking a local path to a browser seat that cannot read it.
+    """
     candidates: list[str] = []
     for candidate in _extract_path_candidates(text):
         if candidate.startswith("//") or "://" in candidate:
             continue
         path = Path(candidate).expanduser()
         if not path.is_absolute():
+            continue
+        # `*/5`, `*/15` -- a cron minute field, not a directory.
+        if re.search(r"\*" + re.escape(candidate) + r"\b", text):
+            continue
+        # `/skill-name`: one segment, nothing on disk. Rewriting it destroys
+        # the reference while protecting nothing.
+        if len(path.parts) <= 2 and not path.exists():
             continue
         if candidate not in candidates:
             candidates.append(candidate)
