@@ -96,7 +96,8 @@ cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
   discovery  → SAM.gov + LinkedIn (read-only, human's own session) + Greenhouse/Ashby + brave-search
              + monitor-contacts relationship graph (direct + adjacent contacts, event co-presence)
   filter     → recency (2wk) · role-type · mandate relevance via /extract-entities vocabulary (not regex)
-  per top-N  → /tau creator-reviewer eval loop [contracts written; evaluator+reviewer subagents in agents/]
+  per top-N  → validated Tau semantic inputs materialized in the nightly run
+             → optional `/ask tau-dag` provider-live addenda only with explicit `--tau-semantic-provider`
   tailor     → claim-bound resume · live ATS form capture (human-gated submit)
   track      → PRIVATE repo grahama1970/opportunities (issue per opp, dedup, lifecycle labels)
                dual queues: track:employment · track:consulting (prospect queue)
@@ -140,6 +141,7 @@ Not a byproduct. One report manifest and one human entry point per completed run
 | ATS application | inspect/prefill/submit state, exact payload binding, blockers | authorize / withhold |
 | Relationship signals | direct/adjacent monitor-contact graph, source provenance, event/company path, channel risk | reconnect / defer |
 | Interview prep | source- and claim-bound talking points | read |
+| Tau semantic addenda | provider addenda installed from validated Tau inputs, when explicitly run | read / ignore |
 | Coverage and health | lanes searched, source receipts, feed failures, unknowns | inspect |
 
 Every action-worthy staged artifact must have `visible_in_report: true`. The manifest
@@ -330,6 +332,9 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh serve --report <run-dir>              # loopback decision entry point
 ./run.sh buzz-summary --run <run-dir> ...      # Buzz-ready report summary via ops-buzz
 ./run.sh buzz-review --run <run-dir> ...       # dry-run Buzz agent review request
+./run.sh tau-semantic-prepare --run <run-dir> --out <dir> --top-n 3
+./run.sh tau-semantic-provider-eval --input <json> --out <dir> --execute
+./run.sh tau-semantic-install --run <run-dir> --provider-receipt <json>
 ./run.sh decision ...                          # append-only human decision event
 ./run.sh replay --run <run-id>                 # rebuild projection from events
 ./run.sh apply --posting <key>                 # separately gated ATS effect only
@@ -360,6 +365,16 @@ Current stage: **`STAGE_0_RESEARCH_ONLY`**.
 | Inspect ATS form | blocked pending site/provider promotion |
 | Prefill ATS form | blocked pending separate promotion |
 | Submit ATS form | blocked pending site/provider promotion and exact human authorization |
+| Materialize Tau semantic inputs | allowed; local deterministic artifact only |
+| Run provider-live Tau semantic addenda | separately gated by explicit `--tau-semantic-provider`; no external site effects |
+
+Nightly runs materialize validated Tau semantic inputs under
+`<run>/tau-semantic/` by default. This is local preparation evidence only:
+`provider_live=false`, `external_effects=false`, and it does not browse, message,
+apply, RSVP, or mutate the report by itself. Provider-live addenda require the
+explicit `--tau-semantic-provider` flag and are admitted to the report only after
+closed-schema parse plus `tau-semantic-install`. Provider addenda never authorize
+ATS submit, Gmail send, LinkedIn action, Meetup RSVP, or claim mutation.
 
 Capability promotion is explicit, capability-specific, scoped, receipt-bearing,
 revocable, and never granted by elapsed time, exit zero, agent agreement, or prior
