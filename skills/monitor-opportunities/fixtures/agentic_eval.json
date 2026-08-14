@@ -175,7 +175,27 @@
         ]
       },
       "timeout_seconds": 60,
-      "proves": "A busy/unavailable surf lease during a pacing sleep no longer aborts a capture that already has rows (the 2026-08-13 top-applicant failure)."
+      "proves": "Pacing sleeps no longer call surf wait, so a busy/unavailable surf lease cannot abort a capture that already has rows (the 2026-08-13 top-applicant failure)."
+    },
+    {
+      "name": "tau-opportunity-evaluator-reviewer-smoke",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/mo-tau-eval-$(date -u +%Y%m%dT%H%M%SZ) && report=\"$repo/skills/monitor-opportunities/local/nightly/latest/report/report.json\" && if [ ! -f \"$report\" ]; then uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/e2e_eval.py --out \"$out/nightly\" && report=\"$out/nightly/report/report.json\"; fi && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/tau_opportunity_eval_smoke.py run --report \"$report\" --out \"$out/tau\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TAU_EVAL_SMOKE PASS",
+          "provider_live=False"
+        ]
+      },
+      "timeout_seconds": 600,
+      "proves": "Tau executes a local monitor-opportunities creator/validator/reviewer artifact transaction over one report-visible opportunity with goal-hash binding and receipts.",
+      "does_not_prove": "Provider/model semantic quality, complete nightly integration, learned relevance, or ATS submission authority."
     },
     {
       "name": "prepublish-truth-contract-blocks-untrustworthy-digest",

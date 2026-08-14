@@ -32,7 +32,8 @@ auto-sending anything.** The human transmits every application and every outreac
 
 Ranking/evaluation follows **`best-practices-opportunities`** (the canonical rubric).
 Behavior is gated by `/agentic-evals` (`fixtures/agentic_eval.json`) — including a live
-nightly real-world case and an adversarial relevance-corpus case.
+nightly real-world case, a Tau local creator/reviewer smoke over report data, and an
+adversarial relevance-corpus case.
 
 ## Usage
 
@@ -46,7 +47,8 @@ python scripts/relevance_eval.py         # adversarial relevance eval
 
 ## Current state & honest gaps
 
-See `docs/PROJECT_KNOWLEDGE.md`. The nightly is **operational and scheduled**. Written but
-not yet live-proven: the per-opportunity `/tau` creator-reviewer evaluation loop,
-mandate-first ranking, and the learned relevance classifier (label flywheel accumulating
-toward the training threshold).
+See `docs/PROJECT_KNOWLEDGE.md`. The nightly is **operational and scheduled**. Current
+proof covers mandate-first ranking and a local Tau creator/reviewer smoke over one
+report-visible opportunity. Not yet live-proven: provider/model semantic evaluation in
+the nightly loop and the learned relevance classifier (label flywheel accumulating toward
+the training threshold).

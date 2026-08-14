@@ -31,7 +31,11 @@ line makes those paths fail closed and has live promoted receipts:
 - ranking is mandate-first before geography, with a regression proving a high-fit remote
   Principal AI role outranks a mediocre local role;
 - browser pacing no longer calls `surf wait`; live promoted receipts show
-  `browser_control.status=OK`, `events=0` after the repair.
+  `browser_control.status=OK`, `events=0` after the repair;
+- a Tau local creator/reviewer smoke runs one report-visible opportunity through a
+  Tau generic artifact transaction with producer, validator, reviewer, goal-hash
+  binding, and receipts (`scripts/tau_opportunity_eval_smoke.py`). This is
+  `provider_live=false` proof of Tau plumbing, not semantic provider evaluation.
 
 `external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
 LinkedIn platform action.
@@ -56,6 +60,10 @@ Latest deterministic receipts on `main`:
 - Memory readback: `readback_found=true`,
   `relationship_readback_found=true`, `external_effects=false`;
 - Buzz readback: `posted=true`, `live=true`, `external_effects=false`;
+- Tau local evaluator smoke:
+  `/tmp/monitor-opportunities-tau-eval-smoke-20260814T2120Z/tau-eval-smoke-receipt.json`,
+  with `status=PASS`, `mocked=false`, `live=true`, `provider_live=false`,
+  `completed_node_count=1`, review verdict `PASS`, and `external_effects=false`;
 - scheduler receipt:
   `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
   cron `0 2 * * *`, enabled, workdir
@@ -79,9 +87,11 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
 
 Still not complete against the immutable goal (honest gaps):
-- Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
-  `opportunity-evaluation-reviewer` contracts in `agents/`, pass best-practices-subagent).
-  Blocker to verify: headless tau under OAuth at 2 AM.
+- Full per-opportunity `/tau` semantic provider evaluation loop in the nightly path
+  (`opportunity-evaluator` + `opportunity-evaluation-reviewer` contracts in `agents/`,
+  pass best-practices-subagent). Current proof is a local Tau artifact-transaction
+  smoke over one report item; it does not prove provider/model semantic quality,
+  all top-N opportunities, or 2 AM OAuth/provider behavior.
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
 - Actual ATS submit remains blocked by stage and policy. Submit requires separate

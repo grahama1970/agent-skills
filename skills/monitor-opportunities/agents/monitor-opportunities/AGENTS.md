@@ -24,10 +24,13 @@ repo `grahama1970/opportunities` (dual queues: `track:employment`, `track:consul
 is auto-sent. Submit is human-authorized (application_plan gate); outreach drafts go to
 `/memory` and the human transmits. `network_access` is TRUE (browser, brave-search, memory).
 
-Written but NOT yet live-proven: the per-opportunity `/tau` creator-reviewer evaluation
-loop (opportunity-evaluator + opportunity-evaluation-reviewer subagent contracts in
-`agents/`), mandate-first ranking, and the learned relevance classifier (label flywheel
-accumulating toward `MIN_LABELS_TO_TRAIN`). The rubric is `best-practices-opportunities`.
+Live-proven locally: mandate-first ranking and a Tau creator/reviewer smoke over one
+report-visible opportunity (`scripts/tau_opportunity_eval_smoke.py`, provider_live=false).
+Written but NOT yet live-proven in the nightly provider/model path: the full
+per-opportunity `/tau` semantic evaluation loop (opportunity-evaluator +
+opportunity-evaluation-reviewer subagent contracts in `agents/`) and the learned relevance
+classifier (label flywheel accumulating toward `MIN_LABELS_TO_TRAIN`). The rubric is
+`best-practices-opportunities`.
 
 ## Post-run requirement
 
