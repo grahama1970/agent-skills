@@ -423,6 +423,112 @@ def test_rotation_order_covers_every_project_exactly_once():
     assert len(ids) == len(set(ids))
 
 
+def test_strict_project_tick_does_not_fall_through_to_another_project(tmp_path, monkeypatch):
+    """`--project tau` must not dispatch agent-skills while claiming tau was requested."""
+    import json as _json
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [
+            {"project_id": "tau", "repo": "o/tau"},
+            {"project_id": "agent-skills", "repo": "o/agent-skills"},
+        ]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"tau": {"state": "active"}, "agent-skills": {"state": "active"}},
+    }))
+    scanned: list[str] = []
+    captured: dict = {}
+
+    class FakeStreak:
+        escalated = False
+        should_persist_receipt = False
+        idle_seconds = 0.0
+        consecutive_ticks = 1
+
+        def as_receipt_block(self):
+            return {"project_id": "tau", "consecutive_ticks": 1}
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None):
+        scanned.append(str(candidate["project_id"]))
+        if candidate["project_id"] == "agent-skills":
+            return [_issue(99, "skills/project-watchdog")]
+        return []
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "_audit_one_closure", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_attest_completion", lambda *a, **k: None)
+    monkeypatch.setattr(commands.streaks, "record_idle", lambda project_id: FakeStreak())
+    monkeypatch.setattr(
+        commands,
+        "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code)
+        or code,
+    )
+
+    commands._tick_locked("run", tmp_path / "receipt", apply=False, project_id="tau",
+                          max_tickets=1)
+
+    assert scanned == ["tau"]
+    assert captured["receipt"]["rotation"]["mode"] == "strict"
+    assert captured["receipt"]["rotation"]["selected"] is None
+
+
+def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
+    import json as _json
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [
+            {"project_id": "tau", "repo": "o/tau"},
+            {"project_id": "agent-skills", "repo": "o/agent-skills"},
+        ]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"tau": {"state": "active"}, "agent-skills": {"state": "active"}},
+    }))
+    scanned: list[str] = []
+    captured: dict = {}
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None):
+        scanned.append(str(candidate["project_id"]))
+        if candidate["project_id"] == "agent-skills":
+            issue = _issue(99, "skills/project-watchdog")
+            issue["watchdog_action"] = "ticket_repair"
+            issue["watchdog_targets"] = ["skills/project-watchdog"]
+            return [issue]
+        return []
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue",
+                        lambda *a, **k: {"ok": True, "status": "DRY_RUN"})
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
+    monkeypatch.setattr(
+        commands,
+        "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code)
+        or code,
+    )
+
+    commands._tick_locked("run", tmp_path / "receipt", apply=False, project_id="all",
+                          max_tickets=1)
+
+    assert scanned == ["tau", "agent-skills"]
+    assert captured["receipt"]["rotation"]["mode"] == "fleet"
+    assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
+
+
 # --- runtime state must not live in the repository ---------------------------
 
 

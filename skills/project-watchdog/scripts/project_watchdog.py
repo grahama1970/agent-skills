@@ -19,8 +19,9 @@ Failure modes
     non-zero exit.
 
 Usage
-    ./run.sh tick --project tau                 # dry-run scan
-    ./run.sh tick --apply --project tau         # one bounded dispatch
+    ./run.sh tick --project all                 # dry-run fleet scan
+    ./run.sh tick --apply --project all         # one bounded fleet dispatch
+    ./run.sh tick --project tau                 # strict scan for tau only
     ./run.sh status
     ./run.sh set-state global paused --reason "maintenance"
     ./run.sh install-cron --apply
@@ -58,7 +59,11 @@ def _startup(verbose: bool = False) -> None:
 @app.command("tick")
 def tick_command(
     apply: bool = typer.Option(False, "--apply", help="Apply mutations instead of dry-run scan."),
-    project: str = typer.Option("tau", "--project", help="Registered project id."),
+    project: str = typer.Option(
+        "all",
+        "--project",
+        help="Registered project id, or 'all' for explicit fleet rotation.",
+    ),
     max_tickets: int = typer.Option(1, "--max-tickets", min=1, help="Maximum issues to handle."),
     verbose: bool = typer.Option(False, "--verbose", help="Log at DEBUG level to stderr."),
 ) -> None:

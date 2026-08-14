@@ -61,8 +61,9 @@ subagents so individual projects do not each invent their own cron loop.
 
 ```bash
 ./run.sh status                                    # registry, state, lock, cron
-./run.sh tick --project tau                        # dry-run scan, no mutation
-./run.sh tick --apply --project tau --max-tickets 1  # one bounded dispatch
+./run.sh tick --project all                        # dry-run fleet scan, no mutation
+./run.sh tick --apply --project all --max-tickets 1  # one bounded fleet dispatch
+./run.sh tick --project tau                        # strict scan of tau only
 ./run.sh set-state global paused --reason "..."    # fail-closed kill switch
 ./run.sh set-state project active --project tau --reason "..."
 ./run.sh install-cron --apply                      # install the crontab line
@@ -89,6 +90,11 @@ first matching route:
 stamps `agent-work` at file time for any ticket with a concrete `route:` whose
 type is not `question` or `triage`; those two are human-first by definition and
 an unknown route has nowhere to be sent.
+
+`--project <id>` is strict. A tick naming `--project tau` may dispatch only Tau
+or report why Tau did not dispatch; it must not fall through to `agent-skills`
+while the receipt still says Tau was requested. Fleet rotation is explicit:
+use `--project all`, and installed global cron lines must render that value.
 
 `runner_kind` does not gate routability. It used to require `tau-command-loop`,
 because the lane hand-authored a contract against Tau's own command-spec tree,

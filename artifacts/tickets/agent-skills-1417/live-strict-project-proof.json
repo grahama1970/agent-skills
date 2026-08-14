@@ -1,0 +1,229 @@
+{
+  "assertions": {
+    "cron_line_uses_all": true,
+    "install_dry_run_succeeded": true,
+    "strict_tick_did_not_select_agent_skills": true,
+    "strict_tick_mode": true,
+    "strict_tick_names_tau": true,
+    "strict_tick_reports_tau_paused": true,
+    "strict_tick_selected_no_project": true
+  },
+  "does_not_prove": "Does not resume or install cron, and does not perform an applied dispatch.",
+  "install_cron": {
+    "command": "skills/project-watchdog/run.sh install-cron --minute */17",
+    "exit_code": 0,
+    "receipt": {
+      "apply": false,
+      "cron_line": "*/17 * * * * /usr/bin/zsh -c 'source /home/graham/.zshrc >/dev/null 2>&1; cd /home/graham/workspace/experiments/agent-skills-worktrees/watchdog-strict-project-1417/skills/project-watchdog && /home/graham/workspace/experiments/agent-skills-worktrees/watchdog-strict-project-1417/skills/project-watchdog/run.sh tick --apply --project all --max-tickets 1' >> /home/graham/.local/state/project-watchdog/logs/cron.log 2>&1 # project-watchdog global issue cron",
+      "cron_log": "/home/graham/.local/state/project-watchdog/logs/cron.log",
+      "live": true,
+      "mocked": false,
+      "ok": true,
+      "previous_had_entry": true,
+      "receipt_path": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-install-20260814T144638Z/receipt.json",
+      "run_id": "project-watchdog-install-20260814T144638Z",
+      "schema": "agent_skills.project_watchdog.cron_install_receipt.v1",
+      "status": "DRY_RUN"
+    },
+    "stderr": "2026-08-14 10:46:38.204 | INFO     | watchdog.core:log_event:87 - tick_finish\n",
+    "stdout": "{\n  \"apply\": false,\n  \"cron_line\": \"*/17 * * * * /usr/bin/zsh -c 'source /home/graham/.zshrc >/dev/null 2>&1; cd /home/graham/workspace/experiments/agent-skills-worktrees/watchdog-strict-project-1417/skills/project-watchdog && /home/graham/workspace/experiments/agent-skills-worktrees/watchdog-strict-project-1417/skills/project-watchdog/run.sh tick --apply --project all --max-tickets 1' >> /home/graham/.local/state/project-watchdog/logs/cron.log 2>&1 # project-watchdog global issue cron\",\n  \"cron_log\": \"/home/graham/.local/state/project-watchdog/logs/cron.log\",\n  \"live\": true,\n  \"mocked\": false,\n  \"ok\": true,\n  \"previous_had_entry\": true,\n  \"receipt_path\": \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-install-20260814T144638Z/receipt.json\",\n  \"run_id\": \"project-watchdog-install-20260814T144638Z\",\n  \"schema\": \"agent_skills.project_watchdog.cron_install_receipt.v1\",\n  \"status\": \"DRY_RUN\"\n}\n"
+  },
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "schema": "agent_skills.project_watchdog.issue_1417_live_strict_project_proof.v1",
+  "strict_tick": {
+    "command": "skills/project-watchdog/run.sh tick --project tau --max-tickets 1",
+    "exit_code": 1,
+    "receipt": {
+      "apply": false,
+      "closure_audit": {
+        "pending_counts": {}
+      },
+      "cron_log_file": "/home/graham/.local/state/project-watchdog/logs/cron.log",
+      "errors": [],
+      "fleet_stall": {
+        "by_reason": {
+          "project_state_paused": 1
+        },
+        "candidates": 1,
+        "needs_human": [
+          "project_state_paused"
+        ],
+        "self_clearing": false,
+        "serviced_projects": 0
+      },
+      "handled_issues": [],
+      "idle_streak": {
+        "consecutive_idle_ticks": 1,
+        "escalated": false,
+        "escalation_threshold_seconds": 86400,
+        "idle_seconds": 0.0,
+        "idle_since": "2026-08-14T14:46:38Z"
+      },
+      "live": true,
+      "log_file": "/home/graham/.local/state/project-watchdog/logs/project-watchdog.log",
+      "mocked": false,
+      "ok": false,
+      "receipt_dir": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T144638Z",
+      "receipt_path": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T144638Z/receipt.json",
+      "rotation": {
+        "mode": "strict",
+        "requested": "tau",
+        "selected": null,
+        "skipped": [
+          {
+            "project_id": "tau",
+            "reason": "project_state_paused"
+          }
+        ]
+      },
+      "run_id": "project-watchdog-20260814T144638Z",
+      "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+      "state_snapshot": {
+        "closure_audit_attempts": {
+          "grahama1970/agent-skills#1231": 1786545365.1459277,
+          "grahama1970/agent-skills#1232": 1786550825.6106622,
+          "grahama1970/agent-skills#1243": 1786623845.8280442,
+          "grahama1970/agent-skills#1245": 1786629005.0198333,
+          "grahama1970/agent-skills#1246": 1786627565.1693177,
+          "grahama1970/agent-skills#1247": 1786626304.5893972,
+          "grahama1970/agent-skills#1252": 1786625886.1759312,
+          "grahama1970/agent-skills#1257": 1786625705.6727972,
+          "grahama1970/agent-skills#1259": 1786626184.9884968,
+          "grahama1970/agent-skills#1260": 1786626545.7139149,
+          "grahama1970/agent-skills#1261": 1786626665.015035,
+          "grahama1970/agent-skills#1263": 1786626785.8984635,
+          "grahama1970/agent-skills#1265": 1786626904.3022244,
+          "grahama1970/agent-skills#1266": 1786690804.6453712,
+          "grahama1970/agent-skills#1267": 1786627144.3874397,
+          "grahama1970/agent-skills#1268": 1786627805.5978327,
+          "grahama1970/agent-skills#1269": 1786627325.3052506,
+          "grahama1970/agent-skills#1274": 1786627986.7315755,
+          "grahama1970/agent-skills#1275": 1786628284.9549446,
+          "grahama1970/agent-skills#1276": 1786628464.6724362,
+          "grahama1970/agent-skills#1288": 1786628105.1064394,
+          "grahama1970/tau#182": 1785533707.567846,
+          "grahama1970/tau#183": 1785533647.1282246,
+          "grahama1970/tau#184": 1785533767.1324015,
+          "grahama1970/tau#185": 1785533887.4284008,
+          "grahama1970/tau#196": 1785533947.847353,
+          "grahama1970/tau#197": 1785534007.468815,
+          "grahama1970/tau#198": 1785534067.3421674,
+          "grahama1970/tau#200": 1785530529.852353,
+          "grahama1970/tau#201": 1785530588.277708,
+          "grahama1970/tau#202": 1785530647.65865,
+          "grahama1970/tau#203": 1785530708.0639524,
+          "grahama1970/tau#204": 1785272767.5938919,
+          "grahama1970/tau#206": 1785532087.6068995,
+          "grahama1970/tau#207": 1785531187.873871,
+          "grahama1970/tau#208": 1785531966.8613613,
+          "grahama1970/tau#209": 1785531247.811181,
+          "grahama1970/tau#210": 1785530826.778395,
+          "grahama1970/tau#211": 1785531727.3727949,
+          "grahama1970/tau#212": 1785530767.4852111,
+          "grahama1970/tau#215": 1785531608.0118513,
+          "grahama1970/tau#216": 1785530947.2701,
+          "grahama1970/tau#217": 1785531487.7355554,
+          "grahama1970/tau#218": 1785531306.9454064,
+          "grahama1970/tau#219": 1785531366.9441135,
+          "grahama1970/tau#220": 1785531847.05113,
+          "grahama1970/tau#222": 1785532266.9313464,
+          "grahama1970/tau#223": 1785532627.7393427,
+          "grahama1970/tau#224": 1785532507.4927318,
+          "grahama1970/tau#225": 1785532387.6431453,
+          "grahama1970/tau#233": 1785532748.2451434,
+          "grahama1970/tau#234": 1785532868.0970364,
+          "grahama1970/tau#235": 1785532988.1033478,
+          "grahama1970/tau#236": 1785533106.8979437,
+          "grahama1970/tau#237": 1785533226.8770807,
+          "grahama1970/tau#238": 1785533287.1355107,
+          "grahama1970/tau#239": 1785533347.151327,
+          "grahama1970/tau#240": 1785533407.557908,
+          "grahama1970/tau#251": 1785533467.5835261,
+          "grahama1970/tau#252": 1785533587.927173,
+          "grahama1970/tau#253": 1785533827.266536
+        },
+        "completion_attested_at": {},
+        "global": {
+          "reason": "maintenance complete: best-practices alignment 2026-07-27",
+          "resume_allowed_by": [
+            "human"
+          ],
+          "resume_requires": [
+            "dispatcher-implementation",
+            "dry-run-scan-receipt",
+            "no-live-mutation-without-apply"
+          ],
+          "state": "active"
+        },
+        "last_served_project": "agent-skills",
+        "projects": {
+          "agent-skills": {
+            "reason": "Readiness is judged per target, so the repository being dirty elsewhere no longer withholds clean skills; repairs are authored in an isolated worktree off origin/main, not in this checkout.",
+            "resume_requires": [
+              "clean-worktree-policy",
+              "valid-github-auth"
+            ],
+            "state": "active"
+          },
+          "chatgpt-lab": {
+            "reason": "Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.",
+            "resume_requires": [
+              "shared-lease-adapter",
+              "valid-github-auth"
+            ],
+            "state": "paused"
+          },
+          "memory": {
+            "reason": "Registered 2026-07-27. No bounded one-issue runner and no routing-label contract yet.",
+            "resume_requires": [
+              "bounded-issue-runner",
+              "routing-label-contract",
+              "valid-github-auth"
+            ],
+            "state": "paused"
+          },
+          "pi-mono": {
+            "reason": "Registered as a reference project; safe bounded issue runner is not confirmed.",
+            "resume_requires": [
+              "safe-bounded-runner",
+              "valid-github-auth"
+            ],
+            "state": "paused"
+          },
+          "scillm": {
+            "reason": "Registered for future issue routing; bounded watchdog command contract is not proven yet.",
+            "resume_requires": [
+              "project-command-contract",
+              "valid-github-auth"
+            ],
+            "state": "paused"
+          },
+          "tau": {
+            "last_operator": "human-approved-development-session",
+            "reason": "Operator ordered stop: closure-audit loop flashing browser windows every minute; durable-label fix f0a760b46 landed but no-verdict audits still churn. Resume after loop verified quiet.",
+            "resume_requires": [
+              "valid-goal-file",
+              "valid-github-auth"
+            ],
+            "state": "paused"
+          },
+          "watchdog-probe": {
+            "reason": "Resumed: re-dispatch guard and unmerged-worktree protection are now live.",
+            "state": "active"
+          }
+        },
+        "repair_dispatch_attempts": {},
+        "schema": "agent_skills.project_watchdog.state.v1",
+        "updated_at": "2026-07-31"
+      },
+      "status": "NEEDS_ATTENTION",
+      "stop_reason": "no_routable_issues",
+      "summary": "no registered project was serviceable and the reasons do not clear on their own (tau: project_state_paused). The watchdog will dispatch nothing until this is resolved."
+    },
+    "stderr": "2026-08-14 10:46:38.335 | INFO     | watchdog.core:log_event:87 - tick_start\n2026-08-14 10:46:38.337 | INFO     | watchdog.core:log_event:87 - no_routable_issues\n2026-08-14 10:46:38.337 | INFO     | watchdog.core:log_event:87 - tick_finish\n",
+    "stdout": "{\n  \"apply\": false,\n  \"closure_audit\": {\n    \"pending_counts\": {}\n  },\n  \"cron_log_file\": \"/home/graham/.local/state/project-watchdog/logs/cron.log\",\n  \"errors\": [],\n  \"fleet_stall\": {\n    \"by_reason\": {\n      \"project_state_paused\": 1\n    },\n    \"candidates\": 1,\n    \"needs_human\": [\n      \"project_state_paused\"\n    ],\n    \"self_clearing\": false,\n    \"serviced_projects\": 0\n  },\n  \"handled_issues\": [],\n  \"idle_streak\": {\n    \"consecutive_idle_ticks\": 1,\n    \"escalated\": false,\n    \"escalation_threshold_seconds\": 86400,\n    \"idle_seconds\": 0.0,\n    \"idle_since\": \"2026-08-14T14:46:38Z\"\n  },\n  \"live\": true,\n  \"log_file\": \"/home/graham/.local/state/project-watchdog/logs/project-watchdog.log\",\n  \"mocked\": false,\n  \"ok\": false,\n  \"receipt_dir\": \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T144638Z\",\n  \"receipt_path\": \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T144638Z/receipt.json\",\n  \"rotation\": {\n    \"mode\": \"strict\",\n    \"requested\": \"tau\",\n    \"selected\": null,\n    \"skipped\": [\n      {\n        \"project_id\": \"tau\",\n        \"reason\": \"project_state_paused\"\n      }\n    ]\n  },\n  \"run_id\": \"project-watchdog-20260814T144638Z\",\n  \"schema\": \"agent_skills.project_watchdog.tick_receipt.v1\",\n  \"state_snapshot\": {\n    \"closure_audit_attempts\": {\n      \"grahama1970/agent-skills#1231\": 1786545365.1459277,\n      \"grahama1970/agent-skills#1232\": 1786550825.6106622,\n      \"grahama1970/agent-skills#1243\": 1786623845.8280442,\n      \"grahama1970/agent-skills#1245\": 1786629005.0198333,\n      \"grahama1970/agent-skills#1246\": 1786627565.1693177,\n      \"grahama1970/agent-skills#1247\": 1786626304.5893972,\n      \"grahama1970/agent-skills#1252\": 1786625886.1759312,\n      \"grahama1970/agent-skills#1257\": 1786625705.6727972,\n      \"grahama1970/agent-skills#1259\": 1786626184.9884968,\n      \"grahama1970/agent-skills#1260\": 1786626545.7139149,\n      \"grahama1970/agent-skills#1261\": 1786626665.015035,\n      \"grahama1970/agent-skills#1263\": 1786626785.8984635,\n      \"grahama1970/agent-skills#1265\": 1786626904.3022244,\n      \"grahama1970/agent-skills#1266\": 1786690804.6453712,\n      \"grahama1970/agent-skills#1267\": 1786627144.3874397,\n      \"grahama1970/agent-skills#1268\": 1786627805.5978327,\n      \"grahama1970/agent-skills#1269\": 1786627325.3052506,\n      \"grahama1970/agent-skills#1274\": 1786627986.7315755,\n      \"grahama1970/agent-skills#1275\": 1786628284.9549446,\n      \"grahama1970/agent-skills#1276\": 1786628464.6724362,\n      \"grahama1970/agent-skills#1288\": 1786628105.1064394,\n      \"grahama1970/tau#182\": 1785533707.567846,\n      \"grahama1970/tau#183\": 1785533647.1282246,\n      \"grahama1970/tau#184\": 1785533767.1324015,\n      \"grahama1970/tau#185\": 1785533887.4284008,\n      \"grahama1970/tau#196\": 1785533947.847353,\n      \"grahama1970/tau#197\": 1785534007.468815,\n      \"grahama1970/tau#198\": 1785534067.3421674,\n      \"grahama1970/tau#200\": 1785530529.852353,\n      \"grahama1970/tau#201\": 1785530588.277708,\n      \"grahama1970/tau#202\": 1785530647.65865,\n      \"grahama1970/tau#203\": 1785530708.0639524,\n      \"grahama1970/tau#204\": 1785272767.5938919,\n      \"grahama1970/tau#206\": 1785532087.6068995,\n      \"grahama1970/tau#207\": 1785531187.873871,\n      \"grahama1970/tau#208\": 1785531966.8613613,\n      \"grahama1970/tau#209\": 1785531247.811181,\n      \"grahama1970/tau#210\": 1785530826.778395,\n      \"grahama1970/tau#211\": 1785531727.3727949,\n      \"grahama1970/tau#212\": 1785530767.4852111,\n      \"grahama1970/tau#215\": 1785531608.0118513,\n      \"grahama1970/tau#216\": 1785530947.2701,\n      \"grahama1970/tau#217\": 1785531487.7355554,\n      \"grahama1970/tau#218\": 1785531306.9454064,\n      \"grahama1970/tau#219\": 1785531366.9441135,\n      \"grahama1970/tau#220\": 1785531847.05113,\n      \"grahama1970/tau#222\": 1785532266.9313464,\n      \"grahama1970/tau#223\": 1785532627.7393427,\n      \"grahama1970/tau#224\": 1785532507.4927318,\n      \"grahama1970/tau#225\": 1785532387.6431453,\n      \"grahama1970/tau#233\": 1785532748.2451434,\n      \"grahama1970/tau#234\": 1785532868.0970364,\n      \"grahama1970/tau#235\": 1785532988.1033478,\n      \"grahama1970/tau#236\": 1785533106.8979437,\n      \"grahama1970/tau#237\": 1785533226.8770807,\n      \"grahama1970/tau#238\": 1785533287.1355107,\n      \"grahama1970/tau#239\": 1785533347.151327,\n      \"grahama1970/tau#240\": 1785533407.557908,\n      \"grahama1970/tau#251\": 1785533467.5835261,\n      \"grahama1970/tau#252\": 1785533587.927173,\n      \"grahama1970/tau#253\": 1785533827.266536\n    },\n    \"completion_attested_at\": {},\n    \"global\": {\n      \"reason\": \"maintenance complete: best-practices alignment 2026-07-27\",\n      \"resume_allowed_by\": [\n        \"human\"\n      ],\n      \"resume_requires\": [\n        \"dispatcher-implementation\",\n        \"dry-run-scan-receipt\",\n        \"no-live-mutation-without-apply\"\n      ],\n      \"state\": \"active\"\n    },\n    \"last_served_project\": \"agent-skills\",\n    \"projects\": {\n      \"agent-skills\": {\n        \"reason\": \"Readiness is judged per target, so the repository being dirty elsewhere no longer withholds clean skills; repairs are authored in an isolated worktree off origin/main, not in this checkout.\",\n        \"resume_requires\": [\n          \"clean-worktree-policy\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"active\"\n      },\n      \"chatgpt-lab\": {\n        \"reason\": \"Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.\",\n        \"resume_requires\": [\n          \"shared-lease-adapter\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"memory\": {\n        \"reason\": \"Registered 2026-07-27. No bounded one-issue runner and no routing-label contract yet.\",\n        \"resume_requires\": [\n          \"bounded-issue-runner\",\n          \"routing-label-contract\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"pi-mono\": {\n        \"reason\": \"Registered as a reference project; safe bounded issue runner is not confirmed.\",\n        \"resume_requires\": [\n          \"safe-bounded-runner\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"scillm\": {\n        \"reason\": \"Registered for future issue routing; bounded watchdog command contract is not proven yet.\",\n        \"resume_requires\": [\n          \"project-command-contract\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"tau\": {\n        \"last_operator\": \"human-approved-development-session\",\n        \"reason\": \"Operator ordered stop: closure-audit loop flashing browser windows every minute; durable-label fix f0a760b46 landed but no-verdict audits still churn. Resume after loop verified quiet.\",\n        \"resume_requires\": [\n          \"valid-goal-file\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"watchdog-probe\": {\n        \"reason\": \"Resumed: re-dispatch guard and unmerged-worktree protection are now live.\",\n        \"state\": \"active\"\n      }\n    },\n    \"repair_dispatch_attempts\": {},\n    \"schema\": \"agent_skills.project_watchdog.state.v1\",\n    \"updated_at\": \"2026-07-31\"\n  },\n  \"status\": \"NEEDS_ATTENTION\",\n  \"stop_reason\": \"no_routable_issues\",\n  \"summary\": \"no registered project was serviceable and the reasons do not clear on their own (tau: project_state_paused). The watchdog will dispatch nothing until this is resolved.\"\n}\n"
+  },
+  "what_was_exercised": "real project-watchdog install-cron dry-run and real project-watchdog tick dry-run using the operator state root"
+}
