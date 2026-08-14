@@ -50,13 +50,13 @@ LinkedIn platform action.
 
 Latest deterministic receipts on `main`:
 
-- pushed runtime-proof revision: `a9aeea5883c458900b62b906b2599b454f4478f8`;
-- full sanity: `295 passed`, `monitor-opportunities sanity: PASS`;
+- pushed runtime-proof revision: `5e5618bf253de4fe21612515c6f0c845c2f8c710`;
+- full sanity: `304 passed`, `monitor-opportunities sanity: PASS`;
 - live promoted nightly receipt:
   `skills/monitor-opportunities/local/nightly/latest/nightly-receipt.json`
-  in the 12TB proof worktree, with `status=PASS`, `mocked=false`, `live=true`,
+  in the cron worktree, with `status=PASS`, `mocked=false`, `live=true`,
   `mode=PROMOTED_STAGE_0`, `external_effects=false`,
-  `expected_revision=a9aeea5883c458900b62b906b2599b454f4478f8`, and
+  `expected_revision=5e5618bf253de4fe21612515c6f0c845c2f8c710`, and
   `browser_control.status=OK`;
 - run status: `operational_readiness=STAGE_0_READY`, source health
   `degraded_count=0` across 43 receipts, 8 opportunities, 8 applications,
@@ -72,11 +72,18 @@ Latest deterministic receipts on `main`:
   `/tmp/monitor-opportunities-tau-eval-smoke-20260814T2120Z/tau-eval-smoke-receipt.json`,
   with `status=PASS`, `mocked=false`, `live=true`, `provider_live=false`,
   `completed_node_count=1`, review verdict `PASS`, and `external_effects=false`;
+- WebGPT Ask/Tau review:
+  local run directory
+  `skills/monitor-opportunities/local/review/ask-webgpt-tau-semantic-eval/...`,
+  with Surf provider result `response_proven`, provider live true, and WebGPT verdict
+  `NEEDS_ATTENTION` for adding provider-live semantic evaluation to the 2 AM cron
+  before slices `MO-TAU-SEM-01` through `MO-TAU-SEM-05` have live receipts;
 - scheduler receipt:
   `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
   cron `0 2 * * *`, enabled, workdir
   `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`
-  (read back after each scheduler update).
+  (read back after each scheduler update), pinned to revision
+  `5e5618bf253de4fe21612515c6f0c845c2f8c710`.
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
