@@ -27,7 +27,7 @@ import pytest
 
 FIXTURE = Path.home() / "workspace/experiments/memory/tests/fixtures/entity_boundary_conformance.json"
 PINNED_VERSION = 1
-PINNED_SHA256 = "82970b972c4d4079c28427bb7cabe67679f649883c676e1a2e1097818016e90c"
+PINNED_SHA256 = "46130040bf8c4ee62add64304aab96985e1d366cf814ef9029ede7c124c1c004"
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from entity_match_policy import is_fragment_of_larger_token  # noqa: E402
