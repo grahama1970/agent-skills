@@ -187,6 +187,36 @@ def test_api_failure_with_website_capture_passes(tmp_path: Path) -> None:
     assert _enforce_api_website_fallback(SKILL_DIR, d)["api_website_fallback_enforced"] is True
 
 
+def test_federal_website_receipt_binds_evidence_hash(tmp_path: Path) -> None:
+    import json
+
+    from monitor_opportunities.required_source_receipts import federal_website_receipt
+
+    evidence = {
+        "schema_version": "monitor_opportunities.federal_capture.v1",
+        "source": "sam_sgs_search_service",
+        "capture_method": "httpx_read_only_sgs",
+        "observed_at": "2026-08-14T22:00:00Z",
+        "opportunities": [
+            {
+                "title": "Artificial intelligence assurance services",
+                "url": "https://sam.gov/opp/hash-test/view",
+                "opp_id": "hash-test",
+            }
+        ],
+    }
+    evidence_path = tmp_path / "sam-website-evidence.json"
+    evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+
+    receipt, candidates = federal_website_receipt(evidence_path)
+
+    assert receipt["source_class"] == "sam.gov_website"
+    assert receipt["content_type"] == "application/json"
+    assert receipt["content_sha256"]
+    assert receipt["response_bytes"] == evidence_path.stat().st_size
+    assert candidates
+
+
 def test_federal_website_receipt_emits_only_relevant_candidates(tmp_path: Path) -> None:
     """SAM website capture: on-mandate notices become lane-B candidates, noise drops.
 

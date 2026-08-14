@@ -174,8 +174,12 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
         receipt["result_status"] = "INVALID_RESPONSE"
         receipt["parser_result"] = "ERROR"
         return finalize_receipt(receipt), []
+    evidence_bytes = evidence_path.read_bytes()
     opps = data.get("opportunities", [])
     receipt["response_status"] = 200
+    receipt["content_type"] = "application/json"
+    receipt["response_bytes"] = len(evidence_bytes)
+    receipt["content_sha256"] = hashlib.sha256(evidence_bytes).hexdigest()
     receipt["parser_result"] = "PARSED"
     # Emit one candidate per RELEVANT SAM notice (was dropped entirely before, so
     # lane B produced 0 candidates even on a successful capture). Off-mandate
