@@ -116,12 +116,15 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         if action == "memory-sync":
             (out / "memory-sync-receipt.json").write_text(
                 json.dumps(
-                    {
-                        "readback_found": True,
-                        "relationship_signals_included": True,
-                        "stored_keys": ["morning_opportunities/test"],
-                        "external_effects": False,
-                    }
+                        {
+                            "readback_found": True,
+                            "relationship_readback_found": True,
+                            "readback_external_effects_false": True,
+                            "readback_missing_keys": [],
+                            "relationship_signals_included": True,
+                            "stored_keys": ["morning_opportunities/test"],
+                            "external_effects": False,
+                        }
                 )
                 + "\n",
                 encoding="utf-8",

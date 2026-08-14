@@ -19,6 +19,7 @@ import httpx
 MEMORY_URL_DEFAULT = "http://127.0.0.1:8601"
 MORNING_COLLECTION = "morning_opportunities"
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=3.0)
+READBACK_BATCH_SIZE = 500
 
 
 class MemorySyncError(ValueError):
@@ -185,6 +186,7 @@ def sync_run_to_memory(
         include_relationship_signals=include_relationship_signals,
     )
     stored: list[str] = []
+    readback_documents: list[dict[str, Any]] = []
     with httpx.Client(timeout=HTTP_TIMEOUT) as client:
         for document in documents:
             response = client.post(
@@ -194,16 +196,39 @@ def sync_run_to_memory(
             if response.status_code != 200 or not response.json().get("stored"):
                 raise MemorySyncError(f"MEMORY_STORE_FAILED:{document['_key']}:{response.status_code}")
             stored.append(document["_key"])
-        readback = client.post(
-            f"{memory_url}/recall",
-            json={"q": documents[-1]["title"], "collections": [MORNING_COLLECTION], "k": 3},
-        )
-    readback_keys = [item.get("_key") for item in readback.json().get("items", [])] if readback.status_code == 200 else []
+        for start in range(0, len(stored), READBACK_BATCH_SIZE):
+            key_batch = stored[start : start + READBACK_BATCH_SIZE]
+            readback = client.post(
+                f"{memory_url}/recall/by-keys",
+                json={
+                    "collection": MORNING_COLLECTION,
+                    "keys": key_batch,
+                    "return_fields": ["_key", "schema", "external_effects"],
+                },
+            )
+            if readback.status_code != 200:
+                raise MemorySyncError(f"MEMORY_READBACK_FAILED:{readback.status_code}")
+            readback_documents.extend(readback.json().get("documents", []) or [])
+    readback_keys = [str(item.get("_key")) for item in readback_documents if item.get("_key")]
+    readback_key_set = set(readback_keys)
+    missing_keys = [key for key in stored if key not in readback_key_set]
+    relationship_keys = [
+        document["_key"]
+        for document in documents
+        if document.get("schema") == "monitor_opportunities.relationship_signal.v1"
+    ]
     return {
         "schema": "monitor_opportunities.memory_sync_receipt.v1",
         "collection": MORNING_COLLECTION,
         "stored_keys": stored,
-        "readback_found": documents[-1]["_key"] in readback_keys,
+        "readback_keys": readback_keys,
+        "readback_missing_keys": missing_keys,
+        "readback_count": len(readback_keys),
+        "readback_found": not missing_keys,
+        "relationship_readback_found": all(key in readback_key_set for key in relationship_keys),
+        "readback_external_effects_false": all(
+            item.get("external_effects") is False for item in readback_documents
+        ),
         "memory_url": memory_url,
         "relationship_signals_included": include_relationship_signals,
         "external_effects": False,

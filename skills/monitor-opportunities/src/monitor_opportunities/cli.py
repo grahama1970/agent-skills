@@ -991,6 +991,9 @@ def nightly(
             steps["memory_sync"].update(
                 {
                     "readback_found": memory_receipt.get("readback_found"),
+                    "relationship_readback_found": memory_receipt.get("relationship_readback_found"),
+                    "readback_external_effects_false": memory_receipt.get("readback_external_effects_false"),
+                    "readback_missing_keys": memory_receipt.get("readback_missing_keys", []),
                     "stored_keys": memory_receipt.get("stored_keys", []),
                     "external_effects": memory_receipt.get("external_effects"),
                 }
@@ -998,6 +1001,8 @@ def nightly(
         if promoted_stage0 and (
             not memory_receipt_path.exists()
             or memory_receipt.get("readback_found") is not True
+            or memory_receipt.get("relationship_readback_found") is not True
+            or memory_receipt.get("readback_external_effects_false") is not True
             or memory_receipt.get("relationship_signals_included") is not True
             or memory_receipt.get("external_effects") is not False
         ):

@@ -9,7 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from monitor_opportunities.memory_sync import MemorySyncError, morning_documents
+from monitor_opportunities.memory_sync import (
+    MORNING_COLLECTION,
+    MemorySyncError,
+    morning_documents,
+    sync_run_to_memory,
+)
 
 FIXTURE = Path("skills/monitor-opportunities/fixtures/reports/stage0_mixed_lanes.json")
 
@@ -100,3 +105,89 @@ def test_missing_run_id_fails_closed() -> None:
     report.pop("run_id", None)
     with pytest.raises(MemorySyncError):
         morning_documents(report, "/tmp/run")
+
+
+class _Response:
+    def __init__(self, status_code: int, payload: dict):
+        self.status_code = status_code
+        self._payload = payload
+
+    def json(self) -> dict:
+        return self._payload
+
+
+class _MemoryClient:
+    def __init__(self) -> None:
+        self.documents: dict[str, dict] = {}
+        self.paths: list[str] = []
+
+    def __enter__(self) -> "_MemoryClient":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+    def post(self, url: str, json: dict) -> _Response:
+        self.paths.append(url.rsplit("/", 1)[-1])
+        if url.endswith("/store"):
+            document = dict(json["document"])
+            self.documents[document["_key"]] = document
+            return _Response(200, {"stored": True})
+        if url.endswith("/recall/by-keys"):
+            assert json["collection"] == MORNING_COLLECTION
+            fields = set(json["return_fields"])
+            return _Response(
+                200,
+                {
+                    "collection": MORNING_COLLECTION,
+                    "count": len(json["keys"]),
+                    "documents": [
+                        {field: self.documents[key][field] for field in fields}
+                        for key in json["keys"]
+                        if key in self.documents
+                    ],
+                },
+            )
+        raise AssertionError(f"unexpected memory endpoint {url}")
+
+
+def test_sync_run_to_memory_reads_back_exact_stored_keys(
+    tmp_path: Path, monkeypatch
+) -> None:
+    report = _report()
+    report["relationship_signals"] = [
+        {
+            "signal_id": "rel-galois-eric",
+            "source_opportunity_id": "opp:c:galois:arcos",
+            "signal_type": "adjacent_contact",
+            "subject": "Eric Mertens",
+            "organization": "Galois, Inc.",
+            "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "provenance": "Adjacent ARCOS/formal-methods contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Corporate email may be blocked after a long gap."],
+        }
+    ]
+    run_dir = tmp_path / "run"
+    (run_dir / "report").mkdir(parents=True)
+    (run_dir / "report" / "report.json").write_text(
+        json.dumps(report), encoding="utf-8"
+    )
+    client = _MemoryClient()
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = sync_run_to_memory(run_dir, memory_url="http://memory.local")
+
+    assert receipt["readback_found"] is True
+    assert receipt["relationship_readback_found"] is True
+    assert receipt["readback_external_effects_false"] is True
+    assert receipt["readback_missing_keys"] == []
+    assert set(receipt["readback_keys"]) == set(receipt["stored_keys"])
+    assert "by-keys" in client.paths
+    assert "recall" not in client.paths
