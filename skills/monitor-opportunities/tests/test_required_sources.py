@@ -11,7 +11,7 @@ import pytest
 from monitor_opportunities.contracts import ContractError
 from monitor_opportunities.pipeline import _enforce_required_sources
 
-SKILL_DIR = Path("skills/monitor-opportunities")
+SKILL_DIR = Path(__file__).resolve().parents[1]
 
 
 def _required_config() -> dict[str, dict[str, object]]:
@@ -214,6 +214,8 @@ def test_federal_website_receipt_emits_only_relevant_candidates(tmp_path: Path) 
     c = cands[0]
     assert c["lane"] == "B" and c["organization"] == "Federal (SAM.gov)"
     assert c["candidate_id"] == "candidate:b:sam:aaaa1111"
+    assert c["source_receipt_id"] == receipt["receipt_id"]
+    assert c["source_receipt_id"]
     assert 0.5 <= c["fit_score"] <= 0.85
 
 

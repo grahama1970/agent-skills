@@ -181,7 +181,6 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
     # lane B produced 0 candidates even on a successful capture). Off-mandate
     # notices are filtered here because lane B is not title-filtered downstream.
     candidates: list[dict[str, Any]] = []
-    receipt_id = receipt["receipt_id"]
     for opp in opps[:40]:
         title = str(opp.get("title") or "").strip()
         url = opp.get("url") or opp.get("href")
@@ -193,7 +192,7 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
         opp_id = str(opp.get("opp_id") or hashlib.sha256(str(url).encode()).hexdigest()[:16])
         candidates.append({
             "lane": "B",
-            "source_receipt_id": receipt_id,
+            "source_receipt_id": "",
             "source_provider": "sam.gov_website",
             "source_class": "sam.gov_website",
             "source_identity": url,
@@ -218,4 +217,7 @@ def federal_website_receipt(evidence_path: Path) -> tuple[dict[str, Any], list[d
     receipt["limitations"].append(
         f"{len(opps)} notices captured; {len(candidates)} on-mandate after relevance gate"
     )
-    return finalize_receipt(receipt), candidates
+    finalized = finalize_receipt(receipt)
+    for candidate in candidates:
+        candidate["source_receipt_id"] = finalized["receipt_id"]
+    return finalized, candidates
