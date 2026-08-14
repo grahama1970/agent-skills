@@ -106,6 +106,38 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         "monitor_opportunities.nightly_digest.lane_health_phase",
         lambda run_dir, steps: steps.setdefault("lane_health", {"status": "PASS"}),
     )
+    semantic_prepare_calls = []
+
+    def fake_semantic_prepare(*, run_dir: Path, out_dir: Path, top_n: int):
+        semantic_prepare_calls.append({"run_dir": run_dir, "out_dir": out_dir, "top_n": top_n})
+        out_dir.mkdir(parents=True, exist_ok=True)
+        receipt = {
+            "schema": "monitor_opportunities.tau_semantic_prepare_receipt.v1",
+            "status": "PASS",
+            "selected_count": 1,
+            "rejected_count": 0,
+            "selected": [
+                {
+                    "rank": 1,
+                    "opportunity_id": "candidate:a:test",
+                    "artifact": str(out_dir / "semantic-inputs" / "01-candidate-a-test.json"),
+                }
+            ],
+            "provider_live": False,
+            "mocked": False,
+            "live": True,
+            "external_effects": False,
+        }
+        (out_dir / "tau-semantic-prepare-receipt.json").write_text(
+            json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return receipt
+
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.prepare_tau_semantic_inputs",
+        fake_semantic_prepare,
+    )
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: _HealthResponse())
 
     def fake_subprocess_run(cmd, **kwargs):
@@ -167,6 +199,13 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert Path(payload["artifacts"]["effect_policy"]).is_file()
     assert Path(payload["artifacts"]["memory"]).is_file()
     assert Path(payload["artifacts"]["buzz"]).is_file()
+    assert Path(payload["artifacts"]["tau_semantic_prepare"]).is_file()
+    assert payload["steps"]["tau_semantic"]["status"] == "PASS"
+    assert payload["steps"]["tau_semantic"]["selected_count"] == 1
+    assert payload["steps"]["tau_semantic"]["provider_live"] is False
+    assert semantic_prepare_calls == [
+        {"run_dir": out, "out_dir": out / "tau-semantic", "top_n": 3}
+    ]
     effect_policy = json.loads(Path(payload["artifacts"]["effect_policy"]).read_text())
     assert effect_policy["publications"]["memory_summary"] == "ENABLED"
     assert effect_policy["publications"]["relationship_graph"] == "ENABLED"

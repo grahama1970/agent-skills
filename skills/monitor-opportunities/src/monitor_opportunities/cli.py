@@ -123,8 +123,8 @@ def status_payload() -> dict[str, object]:
             "ats_prefill": "BLOCKED_STAGE_0",
             "ats_submit": "BLOCKED_STAGE_0",
             "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
-            "tau_semantic_input_materializer": "IMPLEMENTED_LOCAL",
-            "tau_semantic_provider_eval": "IMPLEMENTED_MANUAL_SIDECAR",
+            "tau_semantic_input_materializer": "IMPLEMENTED_NIGHTLY_LOCAL",
+            "tau_semantic_provider_eval": "IMPLEMENTED_NIGHTLY_GATED",
             "tau_semantic_report_projection": "IMPLEMENTED_LOCAL",
         },
         "non_claims": [
@@ -895,6 +895,20 @@ def nightly(
     skip_memory_sync: bool = typer.Option(False, "--skip-memory-sync", help="Do not publish the run summary to Memory."),
     skip_relationship_memory: bool = typer.Option(False, "--skip-relationship-memory", help="Exclude relationship graph docs from Memory sync."),
     skip_buzz: bool = typer.Option(False, "--skip-buzz", help="Skip the Buzz shortlist post."),
+    skip_tau_semantic_prepare: bool = typer.Option(
+        False,
+        "--skip-tau-semantic-prepare",
+        help="Do not materialize Tau semantic inputs for the report run.",
+    ),
+    tau_semantic_top_n: int = typer.Option(3, "--tau-semantic-top-n", min=1, max=8),
+    tau_semantic_provider: bool = typer.Option(
+        False,
+        "--tau-semantic-provider",
+        help="Run/install provider-live semantic addenda through /ask for prepared inputs.",
+    ),
+    tau_semantic_handler: str = typer.Option("webgpt", "--tau-semantic-handler"),
+    tau_semantic_timeout_seconds: int = typer.Option(3600, "--tau-semantic-timeout-seconds", min=60),
+    tau_semantic_browser_lock_timeout: int = typer.Option(1800, "--tau-semantic-browser-lock-timeout", min=60),
 ) -> None:
     """One nightly transaction: run, publish shortlist to memory, post Buzz summary.
 
@@ -903,6 +917,7 @@ def nightly(
     """
     _configure_logging()
     import subprocess
+    import shutil
 
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
@@ -941,6 +956,9 @@ def nightly(
     ):
         if stale_receipt.exists():
             stale_receipt.unlink()
+    for stale_dir in (out / "tau-semantic", out / "semantic-addenda"):
+        if stale_dir.exists():
+            shutil.rmtree(stale_dir)
 
     # Deployment attestation must happen before any browser/source capture so a
     # scheduled run cannot silently execute stale or dirty code.
@@ -1137,6 +1155,87 @@ def nightly(
             _fail(ContractError("PROMOTED_STAGE0_RUN_RECEIPT_INVALID", "Run receipt missing external_effects=false"))
         if not (out / "report" / "report.json").exists() or not (out / "report" / "index.html").exists():
             _fail(ContractError("PROMOTED_STAGE0_REPORT_MISSING", "Stage 0 report artifacts were not written"))
+
+    semantic_prepare_receipt: dict[str, object] | None = None
+    semantic_installs: list[dict[str, object]] = []
+    if skip_tau_semantic_prepare:
+        steps["tau_semantic"] = {"skipped": True}
+    else:
+        tau_out = out / "tau-semantic"
+        try:
+            semantic_prepare_receipt = prepare_tau_semantic_inputs(
+                run_dir=out,
+                out_dir=tau_out,
+                top_n=tau_semantic_top_n,
+            )
+        except (ContractError, FileNotFoundError, ValueError) as exc:
+            if promoted_stage0:
+                _fail(ContractError("PROMOTED_STAGE0_TAU_SEMANTIC_PREPARE_FAILED", str(exc)))
+            steps["tau_semantic"] = {"status": "ERROR", "error": str(exc), "provider_live": False}
+        else:
+            steps["tau_semantic"] = {
+                "status": semantic_prepare_receipt.get("status"),
+                "receipt": str(tau_out / "tau-semantic-prepare-receipt.json"),
+                "selected_count": semantic_prepare_receipt.get("selected_count"),
+                "rejected_count": semantic_prepare_receipt.get("rejected_count"),
+                "provider_live": False,
+                "external_effects": False,
+            }
+            if promoted_stage0 and semantic_prepare_receipt.get("status") != "PASS":
+                _fail(
+                    ContractError(
+                        "PROMOTED_STAGE0_TAU_SEMANTIC_PREPARE_FAILED",
+                        "Tau semantic preparation produced no admissible provider inputs",
+                    )
+                )
+
+        if tau_semantic_provider and semantic_prepare_receipt and semantic_prepare_receipt.get("status") == "PASS":
+            provider_results: list[dict[str, object]] = []
+            for selected in semantic_prepare_receipt.get("selected", []):  # type: ignore[union-attr]
+                input_path = Path(str(selected["artifact"]))
+                provider_dir = tau_out / "providers" / input_path.stem
+                try:
+                    provider_receipt = run_provider_semantic_eval(
+                        input_path=input_path,
+                        out_dir=provider_dir,
+                        handler=tau_semantic_handler,
+                        execute=True,
+                        timeout_seconds=tau_semantic_timeout_seconds,
+                        browser_lock_timeout=tau_semantic_browser_lock_timeout,
+                    )
+                    provider_results.append(
+                        {
+                            "opportunity_id": provider_receipt.get("opportunity_id"),
+                            "status": provider_receipt.get("status"),
+                            "receipt": str(provider_dir / "tau-semantic-provider-receipt.json"),
+                            "provider_live": provider_receipt.get("provider_live"),
+                        }
+                    )
+                    if provider_receipt.get("status") != "PASS":
+                        raise ContractError(
+                            "TAU_SEMANTIC_PROVIDER_FAILED",
+                            f"provider status {provider_receipt.get('status')}",
+                        )
+                    install_receipt = install_semantic_addendum(
+                        run_dir=out,
+                        provider_receipt_path=provider_dir / "tau-semantic-provider-receipt.json",
+                    )
+                    semantic_installs.append(install_receipt)
+                except (ContractError, FileNotFoundError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
+                    if promoted_stage0:
+                        _fail(ContractError("PROMOTED_STAGE0_TAU_SEMANTIC_PROVIDER_FAILED", str(exc)))
+                    provider_results.append(
+                        {
+                            "opportunity_id": str(selected.get("opportunity_id", "")),
+                            "status": "ERROR",
+                            "error": str(exc),
+                            "provider_live": False,
+                        }
+                    )
+                    break
+            steps["tau_semantic"]["provider_results"] = provider_results  # type: ignore[index]
+            steps["tau_semantic"]["installed_addenda"] = len(semantic_installs)  # type: ignore[index]
+            steps["tau_semantic"]["provider_live"] = bool(semantic_installs)  # type: ignore[index]
 
     # Live ATS form capture: for each top job, read-only capture of the
     # application-form schema so a human-promoted site policy can later drive
@@ -1359,6 +1458,12 @@ def nightly(
             "digest": str(out / "morning-digest.json"),
             "memory": str(out / "memory-sync-receipt.json") if not skip_memory_sync else None,
             "buzz": str(out / "buzz-summary" / "buzz-summary-receipt.json") if not skip_buzz else None,
+            "tau_semantic_prepare": str(out / "tau-semantic" / "tau-semantic-prepare-receipt.json")
+            if semantic_prepare_receipt is not None
+            else None,
+            "semantic_addenda_index": str(out / "semantic-addenda" / "index.json")
+            if semantic_installs
+            else None,
         },
         "steps": steps,
     }
