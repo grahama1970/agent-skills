@@ -111,10 +111,12 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     status = runner.invoke(app, ["resume", "--run", str(out)])
     assert status.exit_code == 0, status.output
     assert json.loads(status.stdout)["state"] == "AWAITING_HUMAN"
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
     run_status = runner.invoke(app, ["status", "--run", str(out), "--json"])
     assert run_status.exit_code == 0, run_status.output
     payload = json.loads(run_status.stdout)
     assert payload["state"] == "AWAITING_HUMAN"
+    assert payload["operational_readiness"] == manifest["operational_readiness"]
     assert payload["external_effects"] is False
     assert payload["current_stale"] is False
     assert payload["dependency_readiness"] == {
@@ -124,9 +126,21 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
         "report": "READY",
     }
     assert payload["artifact_accounting"]["hidden_total"] == 0
+    assert payload["artifact_counts"]["opportunities"] == len(manifest["opportunities"])
+    assert payload["artifact_counts"]["resume_variants"] == len(manifest["resume_variants"])
+    assert payload["artifact_counts"]["application_packets"] == len(manifest["application_packets"])
+    assert payload["artifact_counts"]["relationship_signals"] == len(
+        manifest.get("relationship_signals", [])
+    )
+    degraded_receipts = [
+        row
+        for row in manifest["source_receipts"]
+        if row["result_status"] not in {"MATCHES", "NO_MATCHES"}
+    ]
+    assert payload["source_health"]["total_receipts"] == len(manifest["source_receipts"])
+    assert payload["source_health"]["degraded_count"] == len(degraded_receipts)
     assert len(payload["lane_health"]) == 3
     assert payload["budget"]["max"] == 10.0
-    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
     assert manifest["application_packets"]
     packet = manifest["application_packets"][0]
     assert packet["visible_in_report"] is True

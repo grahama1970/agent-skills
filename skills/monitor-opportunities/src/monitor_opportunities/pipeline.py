@@ -879,11 +879,31 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
     accounting = manifest.get("artifact_accounting", {}) if manifest else {}
     action_worthy_total = int(accounting.get("action_worthy_total", 0))
     decided_total = len(projection.get("items", {}))
+    source_receipts = (manifest or {}).get("source_receipts", [])
+    degraded_statuses = {
+        status.value
+        for status in ResultStatus
+        if status not in {ResultStatus.MATCHES, ResultStatus.NO_MATCHES}
+    }
+    degraded_receipts = [
+        {
+            "receipt_id": row.get("receipt_id"),
+            "required_source_id": row.get("required_source_id"),
+            "lane": row.get("lane"),
+            "provider": row.get("provider"),
+            "channel": row.get("channel"),
+            "result_status": row.get("result_status"),
+            "response_status": row.get("response_status"),
+        }
+        for row in source_receipts
+        if row.get("result_status") in degraded_statuses
+    ]
     return {
         "schema": "monitor_opportunities.run_status.v1",
         "run_dir": str(run_dir),
         "run_id": receipt["run_id"],
         "state": receipt["terminal_state"],
+        "operational_readiness": (manifest or {}).get("operational_readiness", "UNKNOWN"),
         "last_attempt": completed_at,
         "last_complete_report": receipt.get("report_html"),
         "current_stale": current_stale,
@@ -905,6 +925,19 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
         },
         "budget": receipt.get("budget", {}),
         "artifact_accounting": accounting,
+        "artifact_counts": {
+            "opportunities": len((manifest or {}).get("opportunities", [])),
+            "resume_variants": len((manifest or {}).get("resume_variants", [])),
+            "outreach_packets": len((manifest or {}).get("outreach_packets", [])),
+            "applications": len((manifest or {}).get("applications", [])),
+            "application_packets": len((manifest or {}).get("application_packets", [])),
+            "relationship_signals": len((manifest or {}).get("relationship_signals", [])),
+        },
+        "source_health": {
+            "total_receipts": len(source_receipts),
+            "degraded_count": len(degraded_receipts),
+            "degraded_receipts": degraded_receipts,
+        },
         "unresolved_decisions": max(action_worthy_total - decided_total, 0),
         "indeterminate_effect_state": False,
         "report_html": receipt["report_html"],
