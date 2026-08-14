@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1402,
+  "unit": {
+    "command": "uv run pytest skills/ask/tests/test_runs_control.py -q",
+    "exit_code": 0,
+    "summary": "21 passed - cancel request vs acknowledgement, resume never reruns accepted work, scope-widening guidance rejected before delivery, watch has no side effects, list is bounded"
+  },
+  "e2e": {
+    "command": "cd skills/ask && ./scripts/runs_control_live_e2e.sh   # live_e2e canary: real tau-dag --execute run",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-reply-with-exactly-the-word-cana-36107dc004ee/node-artifacts/join/node-receipt.json",
+    "summary": "live multi-node run observed through watch --jsonl, steer recorded truthfully, run settled PASS, resume showed already_accepted=[handler,join] would_rerun=[] - no duplicated accepted work"
+  }
+}

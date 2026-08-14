@@ -141,6 +141,7 @@ Commands:
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
   team-plan <request> Plan a role-based multi-agent team and preview/run its Tau DAG
+  runs <verb>       Inspect/control runs (list|latest|show|watch|steer|cancel|resume)
   targets <verb>    Readiness per target kind (list --readiness|doctor kind:sel)
   herdr <verb>      Talk to another agent's Herdr session by name (list|who|send)
   tau-dag <request> Compile a human request into a strict Tau DAG
@@ -386,6 +387,10 @@ case "${1:-help}" in
         handler="$1"
         shift
         run_tau_handler_shortcut "$handler" "$@"
+        ;;
+    runs)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.runs_cli "$@"
         ;;
     targets)
         shift

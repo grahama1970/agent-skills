@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "the three peer target types /ask can address: Herdr sessions via monitor-herdr, model calls via tau, and web models via surf",
   "claims": {
-    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages; and that a provider whose probe timed out or failed is removed before dispatch with its real failure code, so the caller receives a terminal artifact instead of waiting (#1397); and that a compiled request carries the same goal_hash as its DAG, so the terminal join seam cannot fail after provider spend (#1399); and that ask.run_projection.v1 reports every compiled node including those that produced no artifacts at all, deterministically, across the real run corpus (#1401)",
+    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages; and that a provider whose probe timed out or failed is removed before dispatch with its real failure code, so the caller receives a terminal artifact instead of waiting (#1397); and that a compiled request carries the same goal_hash as its DAG, so the terminal join seam cannot fail after provider spend (#1399); and that ask.run_projection.v1 reports every compiled node including those that produced no artifacts at all, deterministically, across the real run corpus (#1401); that readiness is reported per operation per target with no global healthy flag (#1405); and that run control never simulates authority Ask lacks -- a cancel request never projects as CANCELLED and resume never reruns accepted work (#1402)",
     "does_not_prove": "that a targeted agent understood or acted on a delivered message, browser or model semantic correctness, or that a Herdr session works as a roundtable seat (no capture lane exists yet)"
   },
   "cases": [
@@ -399,6 +399,55 @@
         "exit_code": 0,
         "stdout_contains": [
           "default doctor is bounded"
+        ]
+      }
+    },
+    {
+      "name": "run-control-never-simulates-authority",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_runs_control.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "cancel-request-never-projects-as-cancelled",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python -c \"import sys,json,tempfile,pathlib; sys.path.insert(0,'src')\nfrom ask.runs_control import cancel\nfrom ask.run_projection import project_run\nd=pathlib.Path(tempfile.mkdtemp())/'run'; d.mkdir()\n(d/'compile-status.json').write_text(json.dumps({'status':'READY'}))\n(d/'dag.json').write_text(json.dumps({'nodes':[{'id':'a'}]}))\nr=cancel(d)\nassert r['acknowledged'] is False, r\nassert project_run(d)['lifecycle']!='CANCELLED'\nprint('cancel request recorded without asserting cancellation')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "without asserting cancellation"
+        ]
+      }
+    },
+    {
+      "name": "runs-control-live-canary",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 580,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/runs_control_live_e2e.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PROBE_RESULT: OK"
         ]
       }
     }

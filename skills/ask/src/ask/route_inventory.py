@@ -47,6 +47,16 @@ INVENTORY: dict[str, RouteEntry] = {
     # --- Tau-native compile/submit surface -------------------------------
     "tau_dag.py": RouteEntry(TAU_NATIVE_AGENT, "Compiles and submits tau.dag_contract.v1 bundles; Tau owns execution."),
     "tau_dag_cli.py": RouteEntry(TAU_NATIVE_AGENT, "CLI wrapper over tau_dag compile/submit/status."),
+    "runs_control.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Reads run artifacts and records control requests; resume delegates to Tau and it never dispatches a provider itself.",
+        probe_only=True,
+    ),
+    "runs_cli.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "CLI over runs_control; every control outcome is a recorded receipt, not a provider call.",
+        probe_only=True,
+    ),
     "capability_report.py": RouteEntry(
         LOCAL_NON_AGENTIC,
         "Read-only readiness probes over owning subsystems; never generates, submits, or mutates.",
