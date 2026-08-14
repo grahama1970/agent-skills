@@ -83,6 +83,51 @@ class BrowserCaptureError(ValueError):
     """Stable browser-capture error."""
 
 
+_BROWSER_CONTROL_EVENTS: list[dict[str, Any]] = []
+
+
+def reset_browser_control_events() -> None:
+    _BROWSER_CONTROL_EVENTS.clear()
+
+
+def browser_control_summary() -> dict[str, Any]:
+    counts: dict[str, int] = {}
+    for event in _BROWSER_CONTROL_EVENTS:
+        kind = str(event.get("kind") or "unknown")
+        counts[kind] = counts.get(kind, 0) + 1
+    return {
+        "status": "DEGRADED" if _BROWSER_CONTROL_EVENTS else "OK",
+        "events": len(_BROWSER_CONTROL_EVENTS),
+        "counts": counts,
+        "recent": _BROWSER_CONTROL_EVENTS[-10:],
+    }
+
+
+def _record_browser_control_event(
+    *,
+    kind: str,
+    operation: str,
+    error: BaseException,
+    seconds: str | None = None,
+    timeout: int | None = None,
+    tab_id: str | None = None,
+) -> None:
+    event: dict[str, Any] = {
+        "kind": kind,
+        "operation": operation,
+        "error_type": type(error).__name__,
+        "error": str(error)[:500],
+        "observed_at": utc_now(),
+    }
+    if seconds is not None:
+        event["seconds"] = seconds
+    if timeout is not None:
+        event["timeout"] = timeout
+    if tab_id is not None:
+        event["tab_id"] = tab_id
+    _BROWSER_CONTROL_EVENTS.append(event)
+
+
 def _nav_js(url: str) -> str:
     """Fire-and-forget navigation. Assigning location.href synchronously makes
     the surf js call block until load (LinkedIn job pages exceed 20s and timed
@@ -109,6 +154,13 @@ def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
         raise
     except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
         logger.warning("surf wait {}s unavailable ({}); local sleep instead", seconds, exc)
+        _record_browser_control_event(
+            kind="surf_wait_fallback",
+            operation="wait",
+            seconds=seconds,
+            timeout=timeout,
+            error=exc,
+        )
         time.sleep(min(float(seconds or 1), 10.0))
 
 
@@ -117,6 +169,20 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     if proc.returncode != 0:
         raise BrowserCaptureError(f"surf {args[0]} failed: {proc.stderr[-200:]}")
     return proc.stdout.strip()
+
+
+def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
+    try:
+        _surf(surf_run, "tab.close", tab_id, timeout=30)
+    except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+        logger.warning("could not close {} tab {}: {}", label, tab_id, exc)
+        _record_browser_control_event(
+            kind="tab_close_failed",
+            operation="tab.close",
+            tab_id=tab_id,
+            timeout=30,
+            error=exc,
+        )
 
 
 @contextlib.contextmanager
@@ -430,10 +496,7 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close LinkedIn capture tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "LinkedIn capture")
     (out_dir / "linkedin-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -587,10 +650,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close SAM capture tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "SAM capture")
     (out_dir / "sam-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -804,10 +864,7 @@ def capture_meetup_buffalo(
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close Meetup capture tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "Meetup capture")
     (out_dir / "meetup-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -1082,10 +1139,7 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
         receipt["error"] = str(exc)
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close ATS form tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "ATS form")
     return receipt
 
 
@@ -1359,10 +1413,7 @@ def capture_linkedin_premium(
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close premium capture tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "premium capture")
     (out_dir / "linkedin-premium-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -1798,10 +1849,7 @@ def capture_linkedin_advanced_search(
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close LinkedIn search tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "LinkedIn search")
     (out_dir / "linkedin-advanced-search-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -1910,10 +1958,7 @@ def capture_sales_navigator_saved(out_dir: Path, surf_run: Path = SURF_RUN_DEFAU
         receipt["evidence_path"] = None
     finally:
         if tab_id:
-            try:
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
-            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-                logger.warning("could not close Sales Navigator tab {}: {}", tab_id, exc)
+            _close_tab(surf_run, tab_id, "Sales Navigator")
     (out_dir / "sales-navigator-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

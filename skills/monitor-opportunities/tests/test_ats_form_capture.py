@@ -109,6 +109,41 @@ def test_surf_pause_reraises_capture_wall_clock_timeout(
         browser_capture._surf_pause(Path("surf/run.sh"), "1")
 
 
+def test_surf_pause_records_browser_control_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def wait_timeout(*_: object, **__: object) -> str:
+        raise subprocess.TimeoutExpired(["surf", "wait", "1"], 15)
+
+    monkeypatch.setattr(browser_capture, "_surf", wait_timeout)
+    monkeypatch.setattr(browser_capture.time, "sleep", lambda _seconds: None)
+    browser_capture.reset_browser_control_events()
+
+    browser_capture._surf_pause(Path("surf/run.sh"), "1", timeout=15)
+
+    summary = browser_capture.browser_control_summary()
+    assert summary["status"] == "DEGRADED"
+    assert summary["counts"] == {"surf_wait_fallback": 1}
+    assert summary["recent"][0]["operation"] == "wait"
+
+
+def test_close_tab_records_browser_control_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def close_timeout(*_: object, **__: object) -> str:
+        raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 30)
+
+    monkeypatch.setattr(browser_capture, "_surf", close_timeout)
+    browser_capture.reset_browser_control_events()
+
+    browser_capture._close_tab(Path("surf/run.sh"), "123", "test")
+
+    summary = browser_capture.browser_control_summary()
+    assert summary["status"] == "DEGRADED"
+    assert summary["counts"] == {"tab_close_failed": 1}
+    assert summary["recent"][0]["tab_id"] == "123"
+
+
 def test_isolated_meetup_capture_terminates_wedged_child(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

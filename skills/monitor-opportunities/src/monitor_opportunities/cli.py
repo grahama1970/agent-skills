@@ -763,14 +763,17 @@ def nightly(
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
+        browser_control_summary,
         capture_linkedin_advanced_search,
         capture_linkedin_top_applicant,
         capture_sales_navigator_saved,
         capture_sam,
         capture_meetup_buffalo_isolated,
+        reset_browser_control_events,
     )
 
     capture_dir = out / "browser-capture"
+    reset_browser_control_events()
     sam_receipt = capture_sam(capture_dir)
     steps["browser_capture_sam"] = {"status": sam_receipt.get("status"), "captured": sam_receipt.get("opportunities_captured")}
     federal_evidence = sam_receipt.get("evidence_path")
@@ -834,6 +837,7 @@ def nightly(
         "max_group_pages": meetup_max_group_pages,
     }
     meetup_evidence = meetup_receipt.get("evidence_path")
+    steps["browser_control"] = browser_control_summary()
 
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if diagnostic:
