@@ -50,14 +50,13 @@ LinkedIn platform action.
 
 Latest deterministic receipts on `main`:
 
-- pushed runtime-proof revision: `5e5618bf253de4fe21612515c6f0c845c2f8c710`;
+- current remote proof revision: read `refs/heads/main` with `git ls-remote origin refs/heads/main`;
 - full sanity: `304 passed`, `monitor-opportunities sanity: PASS`;
 - live promoted nightly receipt:
   `skills/monitor-opportunities/local/nightly/latest/nightly-receipt.json`
   in the cron worktree, with `status=PASS`, `mocked=false`, `live=true`,
   `mode=PROMOTED_STAGE_0`, `external_effects=false`,
-  `expected_revision=5e5618bf253de4fe21612515c6f0c845c2f8c710`, and
-  `browser_control.status=OK`;
+  `expected_revision_matches=true`, and `browser_control.status=OK`;
 - run status: `operational_readiness=STAGE_0_READY`, source health
   `degraded_count=0` across 43 receipts, 8 opportunities, 8 applications,
   8 application packets, 8 resume variants, 16 outreach packets, 57 relationship
@@ -82,8 +81,8 @@ Latest deterministic receipts on `main`:
   `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
   cron `0 2 * * *`, enabled, workdir
   `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`
-  (read back after each scheduler update), pinned to revision
-  `5e5618bf253de4fe21612515c6f0c845c2f8c710`.
+  (read back after each scheduler update). This receipt is the authority for the
+  current pinned `expected_revision` because doc-only commits change the SHA.
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
