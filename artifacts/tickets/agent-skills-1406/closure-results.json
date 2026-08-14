@@ -1,0 +1,17 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1406,
+  "unit": {
+    "command": "uv run pytest skills/ask/tests/test_local_api.py -q",
+    "exit_code": 0,
+    "summary": "29 passed - CLI/API projection equivalence, stdio/dispatch equivalence, idempotency match and conflict, cursor gap vs replay, symlink and traversal refusal, owner-only socket mode 600, peer uid check, restart preserves run access"
+  },
+  "e2e": {
+    "command": "cd skills/ask && ./run.sh api serve --socket /tmp/ask-api-restart-test.sock --max-connections 1  # then a second process, same query",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-reply-with-exactly-the-word-proj-328e8e7ffed3/node-artifacts/join/node-receipt.json",
+    "summary": "two separate server processes over a real unix socket, socket removed between them, run.show returned byte-identical results (lifecycle PASS both) - state lives in artifacts not the server"
+  }
+}

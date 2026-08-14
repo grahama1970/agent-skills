@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "the three peer target types /ask can address: Herdr sessions via monitor-herdr, model calls via tau, and web models via surf",
   "claims": {
-    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages; and that a provider whose probe timed out or failed is removed before dispatch with its real failure code, so the caller receives a terminal artifact instead of waiting (#1397); and that a compiled request carries the same goal_hash as its DAG, so the terminal join seam cannot fail after provider spend (#1399); and that ask.run_projection.v1 reports every compiled node including those that produced no artifacts at all, deterministically, across the real run corpus (#1401); that readiness is reported per operation per target with no global healthy flag (#1405); and that run control never simulates authority Ask lacks -- a cancel request never projects as CANCELLED and resume never reruns accepted work (#1402)",
+    "proves": "each target type is addressable by name, that a Herdr name collision refuses to guess and surfaces session/model/directory for interview, that dead and busy panes are never typed into, and that compiling a model or web-model seat never goes provider-live without --execute; and that a message sent through `ask herdr send` actually appears in the live target pane, confirmed by an independent read; and that communication is bidirectional -- the target agent replies and the reply is captured; that a pane still redrawing is never sent to; that seat windows land on the reviewer desktop verified by wmctrl rather than by the mover; and that tab age on a cold ledger reports lower bounds rather than claiming exact ages; and that a provider whose probe timed out or failed is removed before dispatch with its real failure code, so the caller receives a terminal artifact instead of waiting (#1397); and that a compiled request carries the same goal_hash as its DAG, so the terminal join seam cannot fail after provider spend (#1399); and that ask.run_projection.v1 reports every compiled node including those that produced no artifacts at all, deterministically, across the real run corpus (#1401); that readiness is reported per operation per target with no global healthy flag (#1405); and that run control never simulates authority Ask lacks -- a cancel request never projects as CANCELLED and resume never reruns accepted work (#1402); that a node's launch ceiling is fixed before execution and can be tightened but never widened (#1403); and that the local API is one implementation behind two transports with idempotent submit, cursor-based reconnect, owner-only socket and path confinement (#1406); and that two writers cannot be scheduled into one tree, overlapping path claims block before execution, a read-only role never gains write capability, and a writer is accepted only on a patch digest with in-scope changed files (#1404)",
     "does_not_prove": "that a targeted agent understood or acted on a delivered message, browser or model semantic correctness, or that a Herdr session works as a roundtable seat (no capture lane exists yet)"
   },
   "cases": [
@@ -448,6 +448,86 @@
         "exit_code": 0,
         "stdout_contains": [
           "PROBE_RESULT: OK"
+        ]
+      }
+    },
+    {
+      "name": "launch-contract-never-widens",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_launch_contract.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "launch-contract-digest-ignores-ephemeral-identity",
+      "type": "adversarial",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python -c \"import sys; sys.path.insert(0,'src')\nfrom ask.launch_contract import compile_contract, contract_digest, verify_runtime\nspec={'node_id':'n','target_kind':'browser_seat','target_selector':'webgpt','adapter':'tau_opaque_compat','tools':['read'],'effects':['provider_call']}\nc=compile_contract(spec)\nassert contract_digest({**c,'tab_id':'999','run_dir':'/tmp/x'})==c['digest'], 'a reassigned tab must not change the contract'\nr=verify_runtime(c,{'tools':['read','write']})\nassert r['accepted'] is False and any('tools widened' in p for p in r['problems'])\nprint('digest ignores ephemeral identity; widening rejected')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "widening rejected"
+        ]
+      }
+    },
+    {
+      "name": "local-api-is-one-implementation-behind-two-transports",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_local_api.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
+      "name": "local-api-stdio-answers-and-confines-paths",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf '%s\\n%s\\n' '{\"method\":\"ping\",\"request_id\":\"a\"}' '{\"method\":\"nope\",\"request_id\":\"b\"}' | ./run.sh api stdio | python3 -c \"import sys,json; rs=[json.loads(l) for l in sys.stdin if l.strip()]; assert rs[0]['ok'] is True; assert rs[1]['error']['code']=='unknown_method'; print('stdio transport answers with typed errors')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "typed errors"
+        ]
+      }
+    },
+    {
+      "name": "writer-isolation-fails-closed-before-execution",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_writer_isolation.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
         ]
       }
     }

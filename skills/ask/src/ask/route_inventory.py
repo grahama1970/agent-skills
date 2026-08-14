@@ -47,6 +47,26 @@ INVENTORY: dict[str, RouteEntry] = {
     # --- Tau-native compile/submit surface -------------------------------
     "tau_dag.py": RouteEntry(TAU_NATIVE_AGENT, "Compiles and submits tau.dag_contract.v1 bundles; Tau owns execution."),
     "tau_dag_cli.py": RouteEntry(TAU_NATIVE_AGENT, "CLI wrapper over tau_dag compile/submit/status."),
+    "writer_isolation.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Compiles writer isolation requirements and verifies writer receipts; proposes only, never touches git or a worktree.",
+        probe_only=True,
+    ),
+    "local_api.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Local request/response API delegating to the projection, control and capability contracts; no dispatch of its own.",
+        probe_only=True,
+    ),
+    "api_cli.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Transport wrapper for local_api; stdio and Unix socket only, never TCP.",
+        probe_only=True,
+    ),
+    "launch_contract.py": RouteEntry(
+        LOCAL_NON_AGENTIC,
+        "Compiles and verifies per-node ceilings; pure dict-in/dict-out with no dispatch path of its own.",
+        probe_only=True,
+    ),
     "runs_control.py": RouteEntry(
         LOCAL_NON_AGENTIC,
         "Reads run artifacts and records control requests; resume delegates to Tau and it never dispatches a provider itself.",
