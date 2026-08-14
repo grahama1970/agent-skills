@@ -279,6 +279,8 @@ class RelationshipSignal(StrictModel):
     evidence_refs: list[str]
     source_receipt_ids: list[str]
     provenance: str
+    memory_recall_found: bool | None = None
+    memory_recall_degraded: bool | None = None
     recommended_action: str
     contact_channel_risk: str
     preferred_human_channels: list[str] = Field(min_length=1)

@@ -21,6 +21,39 @@ def test_valid_fixture_is_accepted() -> None:
     assert manifest.artifact_accounting.hidden_total == 0
 
 
+def test_relationship_signal_recall_degradation_fields_are_accepted() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["relationship_signals"] = [
+        {
+            "signal_id": "rel:test",
+            "source_opportunity_id": "memory:darpa-arcos-contact-network",
+            "signal_type": "direct_contact",
+            "subject": "William Brad Martin",
+            "organization": "DARPA I2O",
+            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "William Brad Martin"],
+            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+            "source_receipt_ids": [],
+            "provenance": "Source-backed direct ARCOS/formal-methods contact path; Memory recall did not return this seed",
+            "memory_recall_found": False,
+            "memory_recall_degraded": True,
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
+            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    manifest = validate_manifest(data)
+
+    assert manifest.relationship_signals[0].memory_recall_found is False
+    assert manifest.relationship_signals[0].memory_recall_degraded is True
+
+
 @pytest.mark.parametrize(
     ("mutate", "code"),
     [

@@ -1510,6 +1510,18 @@
           "type": "string",
           "minLength": 1
         },
+        "memory_recall_found": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "memory_recall_degraded": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "recommended_action": {
           "enum": [
             "human_decide_attend_watch_or_skip",
