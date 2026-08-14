@@ -1120,6 +1120,14 @@ def schedule(
         "--diagnostic/--promoted-stage0",
         help="Register diagnostic mode or the gated Stage 0 publication mode.",
     ),
+    claim_snapshot: Path | None = typer.Option(
+        None,
+        "--claim-snapshot",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Approved non-fixture claim export required by promoted Stage 0.",
+    ),
 ) -> None:
     """Register the single full-run transaction with the scheduler and read it back."""
     _configure_logging()
@@ -1150,12 +1158,36 @@ def schedule(
     if diagnostic:
         nightly_args.extend(["--diagnostic", "--skip-buzz"])
     else:
+        if claim_snapshot is None:
+            default_claim_snapshot = (
+                repo_root
+                / "skills"
+                / "monitor-opportunities"
+                / "local"
+                / "nightly"
+                / "authority"
+                / "claim-snapshot.json"
+            )
+            if not default_claim_snapshot.is_file():
+                _fail(
+                    ContractError(
+                        "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED",
+                        "Pass --claim-snapshot with an approved non-fixture export",
+                    )
+                )
+            claim_snapshot = default_claim_snapshot
+        claim_snapshot = claim_snapshot.resolve()
         nightly_args.append("--promoted-stage0")
     command_parts = [
         "source ~/.zshrc >/dev/null 2>&1",
         "export MONITOR_TRACKER_ENABLED=0",
         "export MONITOR_ATS_MEMORY_ENABLED=0",
         "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
+        *(
+            ["export MONITOR_CLAIM_SNAPSHOT_PATH=" + shlex.quote(str(claim_snapshot))]
+            if claim_snapshot is not None
+            else []
+        ),
         "exec " + " ".join([shlex.quote(str(run_sh)), *[shlex.quote(arg) for arg in nightly_args]]),
     ]
     command = "zsh -lc " + shlex.quote("; ".join(command_parts))
@@ -1201,6 +1233,7 @@ def schedule(
         "diagnostic": diagnostic,
         "promoted_stage0": not diagnostic,
         "expected_revision": revision,
+        "claim_snapshot": str(claim_snapshot) if claim_snapshot is not None else None,
         "workdir": str(repo_root),
         "register_stdout": register.stdout,
         "readback": job,
