@@ -35,6 +35,8 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert '".worktrees"' in source
     assert "--promoted-stage0" in source
     assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
+    assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" in source
+    assert "export BUZZ_BIN=" in source
     assert "monitor-opportunities-nightly-receipt.json" in source
 
 
@@ -83,6 +85,7 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
+    monkeypatch.setattr("shutil.which", lambda name: "/usr/local/bin/buzz" if name == "buzz" else None)
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -105,4 +108,5 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert "--promoted-stage0" in payload["command"]
     assert "--diagnostic" not in payload["command"]
     assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
+    assert "BUZZ_BIN=/usr/local/bin/buzz" in payload["command"]
     assert Path(payload["receipt"]).is_file()

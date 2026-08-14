@@ -1137,6 +1137,7 @@ def schedule(
     """Register the single full-run transaction with the scheduler and read it back."""
     _configure_logging()
     import os
+    import shutil
     import subprocess
 
     repo_root = _canonical_repo_root()
@@ -1162,6 +1163,7 @@ def schedule(
     )
     if diagnostic:
         nightly_args.extend(["--diagnostic", "--skip-buzz"])
+        buzz_bin = None
     else:
         if claim_snapshot is None:
             default_claim_snapshot = (
@@ -1182,12 +1184,21 @@ def schedule(
                 )
             claim_snapshot = default_claim_snapshot
         claim_snapshot = claim_snapshot.resolve()
+        buzz_bin = shutil.which("buzz")
+        if not buzz_bin:
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED",
+                    "Promoted Stage 0 requires buzz-cli on PATH before scheduler registration",
+                )
+            )
         nightly_args.append("--promoted-stage0")
     command_parts = [
         "source ~/.zshrc >/dev/null 2>&1",
         "export MONITOR_TRACKER_ENABLED=0",
         "export MONITOR_ATS_MEMORY_ENABLED=0",
         "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
+        *(["export BUZZ_BIN=" + shlex.quote(str(buzz_bin))] if buzz_bin else []),
         *(
             ["export MONITOR_CLAIM_SNAPSHOT_PATH=" + shlex.quote(str(claim_snapshot))]
             if claim_snapshot is not None
