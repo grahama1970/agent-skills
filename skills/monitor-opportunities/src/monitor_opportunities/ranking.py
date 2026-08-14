@@ -138,10 +138,26 @@ def _load_candidates(input_path: Path) -> list[dict[str, Any]]:
 
 def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     geo = GEO_PRIORITY.get(candidate.get("workplace_type"), 0)
+    mandate = round(float(candidate.get("fit_score", 0.0)) * 1000, 3)
+    seniority = round(float(candidate.get("seniority_score", candidate.get("fit_score", 0.0))) * 100, 3)
     role = round(float(candidate.get("fit_score", 0.0)) * 100, 3)
     source = 20 if candidate.get("source_receipt_id") else 0
-    total = geo + role + source
-    return {"geo_priority": geo, "role_fit": role, "source_quality": source, "total": total}
+    total = (mandate * 1_000_000) + (seniority * 10_000) + (role * 1_000) + geo + source
+    return {
+        "mandate_fit": mandate,
+        "seniority_ownership": seniority,
+        "role_fit": role,
+        "geo_priority": geo,
+        "source_quality": source,
+        "total": round(total, 3),
+        "ranking_order": [
+            "mandate_fit",
+            "seniority_ownership",
+            "role_fit",
+            "geo_priority",
+            "source_quality",
+        ],
+    }
 
 
 def _is_source_intel_candidate(candidate: dict[str, Any]) -> bool:

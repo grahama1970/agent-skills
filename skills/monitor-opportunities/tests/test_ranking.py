@@ -107,3 +107,49 @@ def test_source_intel_cannot_starve_reportable_opportunity_shortlist(tmp_path: P
     assert receipt["admitted_source_intel"] == 8
     assert receipt["shortlisted"] == 1
     assert receipt["source_intel_shortlisted"] == 8
+
+
+def test_mandate_fit_dominates_geography_in_ranking(tmp_path: Path) -> None:
+    candidates = [
+        {
+            "candidate_id": "rank:local-mediocre",
+            "lane": "A",
+            "organization": "Local Generic Systems",
+            "title": "AI Platform Architect",
+            "workplace_type": "WNY_HYBRID",
+            "location_display": "Buffalo, NY (hybrid)",
+            "fit_score": 0.45,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "greenhouse",
+            "source_receipt_id": "receipt:local",
+        },
+        {
+            "candidate_id": "rank:remote-exceptional",
+            "lane": "A",
+            "organization": "Remote Assurance Lab",
+            "title": "Principal AI Architect",
+            "workplace_type": "REMOTE",
+            "location_display": "Remote, US",
+            "fit_score": 0.94,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ashby",
+            "source_receipt_id": "receipt:remote",
+        },
+    ]
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    shortlist = json.loads((out / "shortlist.json").read_text(encoding="utf-8"))
+    assert [row["candidate_id"] for row in shortlist] == [
+        "rank:remote-exceptional",
+        "rank:local-mediocre",
+    ]
+    remote_score = shortlist[0]["score_components"]
+    assert remote_score["ranking_order"][0] == "mandate_fit"
+    assert remote_score["mandate_fit"] > remote_score["geo_priority"]
