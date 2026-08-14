@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import multiprocessing
 import os
 import signal
 import subprocess
@@ -775,6 +776,90 @@ def capture_meetup_buffalo(
                 _surf(surf_run, "tab.close", tab_id, timeout=30)
             except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
                 logger.warning("could not close Meetup capture tab {}: {}", tab_id, exc)
+    (out_dir / "meetup-capture-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def _meetup_capture_worker(
+    out_dir: str,
+    surf_run: str,
+    max_group_pages: int,
+    queue: multiprocessing.Queue,
+) -> None:
+    try:
+        queue.put(capture_meetup_buffalo(Path(out_dir), Path(surf_run), max_group_pages=max_group_pages))
+    except Exception as exc:  # noqa: BLE001 - child process converts all failures to receipt shape
+        queue.put(
+            {
+                "schema": "monitor_opportunities.browser_capture_receipt.v1",
+                "source": "meetup_buffalo",
+                "captured_at": utc_now(),
+                "external_effects": False,
+                "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+                "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
+                "status": "FAILED",
+                "error": str(exc),
+                "evidence_path": None,
+            }
+        )
+
+
+def capture_meetup_buffalo_isolated(
+    out_dir: Path,
+    surf_run: Path = SURF_RUN_DEFAULT,
+    max_group_pages: int = 12,
+    timeout_seconds: int | None = None,
+) -> dict[str, Any]:
+    """Run Meetup capture in a killable child so browser stalls cannot hang cron."""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    timeout_seconds = timeout_seconds or max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "120")))
+    ctx = multiprocessing.get_context("fork")
+    queue: multiprocessing.Queue = ctx.Queue()
+    proc = ctx.Process(
+        target=_meetup_capture_worker,
+        args=(str(out_dir), str(surf_run), max_group_pages, queue),
+    )
+    proc.start()
+    proc.join(timeout_seconds)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(5)
+        if proc.is_alive():
+            proc.kill()
+            proc.join(5)
+        receipt = {
+            "schema": "monitor_opportunities.browser_capture_receipt.v1",
+            "source": "meetup_buffalo",
+            "captured_at": utc_now(),
+            "external_effects": False,
+            "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+            "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
+            "status": "FAILED",
+            "error": f"Meetup Buffalo capture exceeded isolated timeout {timeout_seconds}s",
+            "evidence_path": None,
+            "groups_captured": 0,
+        }
+        (out_dir / "meetup-capture-receipt.json").write_text(
+            json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        return receipt
+    if not queue.empty():
+        return queue.get()
+    receipt = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "meetup_buffalo",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+        "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
+        "status": "FAILED",
+        "error": f"Meetup Buffalo capture exited {proc.exitcode} without a receipt",
+        "evidence_path": None,
+        "groups_captured": 0,
+    }
     (out_dir / "meetup-capture-receipt.json").write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

@@ -705,11 +705,11 @@ def nightly(
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
-        capture_meetup_buffalo,
         capture_linkedin_advanced_search,
         capture_linkedin_top_applicant,
         capture_sales_navigator_saved,
         capture_sam,
+        capture_meetup_buffalo_isolated,
     )
 
     capture_dir = out / "browser-capture"
@@ -764,7 +764,7 @@ def nightly(
     sn_receipt = capture_sales_navigator_saved(capture_dir)
     steps["browser_capture_sales_navigator"] = {"status": sn_receipt.get("status"), "captured": sn_receipt.get("prospects_captured")}
 
-    meetup_receipt = capture_meetup_buffalo(capture_dir / "meetup")
+    meetup_receipt = capture_meetup_buffalo_isolated(capture_dir / "meetup")
     steps["browser_capture_meetup_buffalo"] = {
         "status": meetup_receipt.get("status"),
         "captured": meetup_receipt.get("groups_captured"),

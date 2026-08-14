@@ -21,6 +21,7 @@ from monitor_opportunities.browser_capture import (
     _ats_provider_from_url,
     _generic_form_from_dom,
     capture_meetup_buffalo,
+    capture_meetup_buffalo_isolated,
 )
 
 
@@ -91,5 +92,25 @@ def test_meetup_capture_wall_clock_timeout_writes_failed_receipt(
     assert receipt["status"] == "FAILED"
     assert "Meetup Buffalo capture exceeded 1s" in receipt["error"]
     assert receipt["evidence_path"] is None
+    stored = json.loads((tmp_path / "meetup-capture-receipt.json").read_text(encoding="utf-8"))
+    assert stored["status"] == "FAILED"
+
+
+def test_isolated_meetup_capture_terminates_wedged_child(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def wedged_capture(*_: object, **__: object) -> dict[str, object]:
+        time.sleep(10)
+        return {"status": "OK"}
+
+    monkeypatch.setattr(browser_capture, "capture_meetup_buffalo", wedged_capture)
+
+    started = time.monotonic()
+    receipt = capture_meetup_buffalo_isolated(tmp_path, timeout_seconds=1)
+
+    assert time.monotonic() - started < 5
+    assert receipt["status"] == "FAILED"
+    assert "isolated timeout 1s" in receipt["error"]
     stored = json.loads((tmp_path / "meetup-capture-receipt.json").read_text(encoding="utf-8"))
     assert stored["status"] == "FAILED"
