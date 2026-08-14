@@ -1,0 +1,206 @@
+"""ask.run_projection.v1 must report absence, not hide it (#1401).
+
+The projection exists because Ask's real failures are shaped like nothing:
+a lane that stalls without artifacts (#1397), a join that dies after the
+handler already answered (#1399). A node dropped for lack of evidence is
+indistinguishable from a node that never existed, so every rule below is about
+what happens when an artifact is missing.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL_ROOT / "src"))
+
+from ask.run_projection import SCHEMA, project_run  # noqa: E402
+
+
+def _run(tmp_path: Path, *, dag_nodes: list[dict] | None = None, **artifacts: dict) -> Path:
+    """Materialize a run directory with exactly the named artifacts."""
+    run = tmp_path / "run"
+    run.mkdir(exist_ok=True)
+    if dag_nodes is not None:
+        artifacts.setdefault("dag", {"goal": {"goal_hash": "sha256:abc"}, "nodes": dag_nodes})
+    names = {
+        "request": "request.json",
+        "dag": "dag.json",
+        "compile": "compile-status.json",
+        "execution": "execution-status.json",
+        "interview": "interview-required.json",
+    }
+    for key, payload in artifacts.items():
+        (run / names[key]).write_text(json.dumps(payload), encoding="utf-8")
+    return run
+
+
+def _node_dir(run: Path, node_id: str) -> Path:
+    d = run / "node-artifacts" / node_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def test_a_compiled_node_that_never_ran_still_appears(tmp_path: Path) -> None:
+    """Rule 1. Omitting it hides the exact #1397 stall."""
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    projection = project_run(run)
+
+    assert [n["node_id"] for n in projection["nodes"]] == ["handler-webgpt"]
+    node = projection["nodes"][0]
+    assert node["stage"] == "COMPILED"
+    assert "never created a worker directory" in node["limitation"]
+
+
+def test_a_dispatched_node_with_no_receipt_is_typed_not_dropped(tmp_path: Path) -> None:
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    _node_dir(run, "handler-webgpt")
+
+    node = project_run(run)["nodes"][0]
+    assert node["stage"] == "DISPATCHED"
+    assert node["limitation"] == "dispatched with no node-receipt.json"
+
+
+def test_output_without_a_receipt_is_candidate_never_settled(tmp_path: Path) -> None:
+    """A provider response is not completion authority (rule 3)."""
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    (_node_dir(run, "handler-webgpt") / "response.md").write_text("an answer", encoding="utf-8")
+
+    node = project_run(run)["nodes"][0]
+    assert node["stage"] == "CANDIDATE"
+    assert node["evidence_admitted"] is False
+    assert node["candidate_outputs"] == ["response.md"]
+
+
+def test_a_settled_node_reports_admitted_evidence(tmp_path: Path) -> None:
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    (_node_dir(run, "handler-webgpt") / "node-receipt.json").write_text(
+        json.dumps({"ok": True, "status": "PASS", "provider_live": True}), encoding="utf-8"
+    )
+
+    node = project_run(run)["nodes"][0]
+    assert node["stage"] == "SETTLED"
+    assert node["evidence_admitted"] is True
+
+
+def test_a_failed_receipt_is_acknowledged_not_admitted(tmp_path: Path) -> None:
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    (_node_dir(run, "handler-webgpt") / "node-receipt.json").write_text(
+        json.dumps({"ok": False, "status": "NEEDS_ATTENTION", "failure_code": "browser_provider_probe_timeout"}),
+        encoding="utf-8",
+    )
+
+    node = project_run(run)["nodes"][0]
+    assert node["stage"] == "ACKNOWLEDGED"
+    assert node["evidence_admitted"] is False
+    assert node["failure_code"] == "browser_provider_probe_timeout"
+
+
+def test_nodes_keep_the_dag_order(tmp_path: Path) -> None:
+    run = _run(
+        tmp_path,
+        dag_nodes=[{"id": "handler-a"}, {"id": "handler-b"}, {"id": "join"}],
+        compile={"status": "READY"},
+    )
+    assert [n["node_id"] for n in project_run(run)["nodes"]] == ["handler-a", "handler-b", "join"]
+
+
+def test_targets_are_classified_for_the_operator(tmp_path: Path) -> None:
+    run = _run(
+        tmp_path,
+        dag_nodes=[
+            {"id": "handler-webgpt", "handler": "webgpt"},
+            {"id": "join", "handler": "join"},
+            {"id": "human", "agent": "human"},
+        ],
+        compile={"status": "READY"},
+    )
+    kinds = {n["node_id"]: n["target_kind"] for n in project_run(run)["nodes"]}
+    assert kinds == {"handler-webgpt": "browser_seat", "join": "join", "human": "human"}
+
+
+def test_a_compiled_run_that_never_executed_is_planned(tmp_path: Path) -> None:
+    run = _run(tmp_path, dag_nodes=[{"id": "handler-webgpt"}], compile={"status": "READY"})
+    projection = project_run(run)
+    assert projection["lifecycle"] == "PLANNED"
+    assert "re-run with --execute" in projection["next_action"]
+
+
+def test_an_interview_run_is_waiting_with_the_packet_named(tmp_path: Path) -> None:
+    run = _run(tmp_path, compile={"status": "NEEDS_INTERVIEW"}, interview={"questions": []})
+    projection = project_run(run)
+    assert projection["lifecycle"] == "WAITING"
+    assert "interview-required.json" in projection["next_action"]
+
+
+def test_missing_artifacts_become_stated_limitations(tmp_path: Path) -> None:
+    """Rule 4: a gap is reported, never silently omitted."""
+    run = tmp_path / "empty"
+    run.mkdir()
+    projection = project_run(run)
+    scopes = {limitation["scope"] for limitation in projection["limitations"]}
+    assert {"request", "dag", "compile"} <= scopes
+    assert projection["lifecycle"] == "UNKNOWN"
+
+
+def test_an_unreadable_artifact_does_not_raise(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "dag.json").write_text("{not json", encoding="utf-8")
+    projection = project_run(run)
+    assert any("unreadable" in limitation["reason"] for limitation in projection["limitations"])
+
+
+def test_a_missing_run_directory_is_reported_not_raised(tmp_path: Path) -> None:
+    projection = project_run(tmp_path / "absent")
+    assert projection["lifecycle"] == "UNKNOWN"
+    assert projection["nodes"] == []
+    assert projection["limitations"][0]["reason"] == "run directory does not exist"
+
+
+def test_the_goal_hash_is_surfaced(tmp_path: Path) -> None:
+    """#1399 made the goal hash operator-visible for a reason."""
+    run = _run(
+        tmp_path,
+        dag_nodes=[{"id": "handler-webgpt"}],
+        request={"request": "q", "goal": {"goal_hash": "sha256:deadbeef", "immutable_goal": "g"}},
+        compile={"status": "READY"},
+    )
+    projection = project_run(run)
+    assert projection["goal_hash"] == "sha256:deadbeef"
+    assert projection["immutable_goal"] == "g"
+
+
+def test_the_projection_is_deterministic(tmp_path: Path) -> None:
+    """Rule 7: an unchanged artifact set always projects identically."""
+    run = _run(tmp_path, dag_nodes=[{"id": "a"}, {"id": "b"}], compile={"status": "READY"})
+    first = json.dumps(project_run(run), sort_keys=True)
+    second = json.dumps(project_run(run), sort_keys=True)
+    assert first == second
+
+
+def test_the_schema_is_declared(tmp_path: Path) -> None:
+    run = _run(tmp_path, dag_nodes=[], compile={"status": "READY"})
+    assert project_run(run)["schema"] == SCHEMA
+
+
+@pytest.mark.parametrize(
+    ("execution", "expected"),
+    [
+        ({"status": "PASS", "ok": True}, "PASS"),
+        ({"status": "NEEDS_ATTENTION"}, "NEEDS_ATTENTION"),
+        ({"status": "DEGRADED"}, "DEGRADED"),
+        ({"status": "CANCELLED"}, "CANCELLED"),
+        ({"ok": True}, "PASS"),
+        ({}, "UNKNOWN"),
+    ],
+)
+def test_lifecycle_comes_from_the_execution_artifact(
+    tmp_path: Path, execution: dict, expected: str
+) -> None:
+    run = _run(tmp_path, dag_nodes=[], compile={"status": "READY"}, execution=execution)
+    assert project_run(run)["lifecycle"] == expected

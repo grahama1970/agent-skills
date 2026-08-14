@@ -121,6 +121,43 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+## One Status Shape For Every Run
+
+```bash
+cd skills/ask
+./run.sh status --run <run-dir> --projection          # human readable
+./run.sh status --run <run-dir> --projection --json   # ask.run_projection.v1
+```
+
+One normalized read model over the run's own artifacts, so a roundtable, a
+compete run, a browser lane and a scillm-only DAG all answer "what happened?"
+the same way.
+
+**Absence is reported, never dropped.** Every node in the frozen DAG appears
+even when it produced nothing — that node is the failure worth seeing, not a
+row to omit. Across the current 1695-run corpus the projection surfaces 1290
+nodes that never created a worker directory and 37 that left output behind
+with no receipt; all of them would otherwise be invisible.
+
+Node `stage` is a ladder, not a boolean, because each rung names a different
+real failure:
+
+| stage | meaning |
+| --- | --- |
+| `COMPILED` | in the DAG, nothing else observed |
+| `DISPATCHED` | a worker directory exists |
+| `ACKNOWLEDGED` | terminal receipt, but not `ok` |
+| `CANDIDATE` | output exists that nothing admitted as evidence |
+| `SETTLED` | terminal receipt with admitted evidence |
+
+A provider response, pane text, or a zero exit code is never completion
+authority on its own: `CANDIDATE` exists precisely so an unadmitted answer
+cannot read as success. Generation is read-only and deterministic, so it is
+safe on a live run or in a watch loop.
+
+Not yet unified: the legacy `status --run` path reads a different artifact
+family and still has its own shape.
+
 ## Three Kinds Of Target
 
 `/ask` addresses three peer target types. They differ in transport, not in

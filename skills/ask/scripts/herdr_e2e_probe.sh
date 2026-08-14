@@ -19,6 +19,16 @@
 # pass would be indistinguishable from a silent failure.
 set -uo pipefail
 
+# One stable result line on every exit path. Without it a graceful SKIP (exit 0,
+# no PASS text) is indistinguishable from a failure to an eval asserting on
+# output, which is exactly how three green probes read as red when herdr was
+# simply not running.
+_probe_result() {
+  local rc=$?
+  if [ "$rc" -eq 0 ]; then echo "PROBE_RESULT: OK (pass or skip)"; else echo "PROBE_RESULT: FAIL rc=$rc"; fi
+}
+trap _probe_result EXIT
+
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HERDR="${HERDR_BIN:-$HOME/.local/share/mise/installs/herdr/latest/herdr}"
 MARK="ASKE2E$(date +%s)$$"

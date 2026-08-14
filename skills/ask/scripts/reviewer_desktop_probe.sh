@@ -12,6 +12,16 @@
 # Always cleans up the window it creates, including on failure.
 set -uo pipefail
 
+# One stable result line on every exit path. Without it a graceful SKIP (exit 0,
+# no PASS text) is indistinguishable from a failure to an eval asserting on
+# output, which is exactly how three green probes read as red when herdr was
+# simply not running.
+_probe_result_rc() {
+  if [ "$1" -eq 0 ]; then echo "PROBE_RESULT: OK (pass or skip)"; else echo "PROBE_RESULT: FAIL rc=$1"; fi
+}
+_probe_result() { _probe_result_rc "$?"; }
+trap _probe_result EXIT
+
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SURF="$SKILL_DIR/../surf/run.sh"
 BO="$SKILL_DIR/../browser-oracle/run.sh"
@@ -30,7 +40,12 @@ except Exception:
 [ -n "$BEFORE" ] || { echo "SKIP: could not snapshot chrome windows"; exit 0; }
 
 cleanup() {
+  local rc=$?
+  # Window first: a probe that leaks its window is worse than one that reports
+  # late. Then the result line, since a second `trap ... EXIT` would otherwise
+  # silently replace the earlier handler rather than adding to it.
   [ -n "${TARGET:-}" ] && wmctrl -i -c "$TARGET" 2>/dev/null
+  _probe_result_rc "$rc"
 }
 trap cleanup EXIT
 

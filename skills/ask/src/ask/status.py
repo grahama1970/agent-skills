@@ -253,10 +253,37 @@ def main(
     older_than_days: int = typer.Option(14, "--older-than-days", help="Age threshold for --prune"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview --prune without deleting"),
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Runtime artifact root for --run ids"),
+    projection: bool = typer.Option(False, "--projection", help="Emit ask.run_projection.v1 for a tau-dag run directory"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     if debug:
         log.enable("")
+
+    if projection:
+        # The normalized operator read model (#1401). Deliberately a separate
+        # surface from the legacy --run status path below, which reads a
+        # different artifact family; unifying them is follow-on work rather
+        # than a rewrite smuggled into this change.
+        from .run_projection import project_run
+
+        if not run:
+            print("--projection requires --run <run-directory>", file=sys.stderr)
+            raise typer.Exit(2)
+        payload = project_run(run)
+        if as_json:
+            print(json.dumps(payload, indent=2, default=str))
+            return
+        print(f"{payload['run_id']}  {payload['lifecycle']}  ({payload['lifecycle_source']})")
+        print(f"  goal_hash: {payload.get('goal_hash') or '-'}")
+        print(f"  nodes: {payload['node_count']} | settled: {payload['settled_node_count']} | admitted: {payload['admitted_node_count']}")
+        for node in payload["nodes"]:
+            extra = node.get("limitation") or node.get("failure_code") or ""
+            print(f"    {node['node_id']:<24} {node['stage']:<12} {node['target_kind']:<14} {extra}")
+        for limitation in payload["limitations"]:
+            print(f"  ! {limitation['scope']}: {limitation['reason']}")
+        if payload["next_action"]:
+            print(f"  next: {payload['next_action']}")
+        return
 
     if prune:
         payload = prune_runs(output_root=run_output_root, older_than_days=older_than_days, dry_run=dry_run)
