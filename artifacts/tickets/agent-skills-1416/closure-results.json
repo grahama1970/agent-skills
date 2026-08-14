@@ -1,0 +1,17 @@
+{
+  "e2e": {
+    "artifact": "/home/graham/workspace/experiments/agent-skills-worktrees/watchdog-timeout-cleanup-1416/artifacts/tickets/agent-skills-1416/live-apply-timeout-receipt.json",
+    "command": "project-watchdog tick --apply --project watchdog-timeout-fixture --max-tickets 1",
+    "exit_code": 0,
+    "live": true,
+    "mocked": false,
+    "summary": "Isolated live apply-path proof: clean registered clone on main, local gh shim to avoid real issue mutation, real repair worktree preparation, forced ticket-repair timeout, persisted receipt read back with process_group.terminated=true."
+  },
+  "issue": 1416,
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "unit": {
+    "command": "uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests && skills/project-watchdog/sanity.sh && python3 scripts/check_mock_evidence_claims.py",
+    "exit_code": 0,
+    "summary": "165 project-watchdog tests passed; project-watchdog sanity reported 45 passed, 0 failed; mock evidence wording check reported OK over 647 test files."
+  }
+}
