@@ -1,0 +1,104 @@
+{
+  "buzz": {
+    "attempted_network": true,
+    "dry_run": false,
+    "external_effects": false,
+    "live": true,
+    "posted": true,
+    "receipt": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/buzz-summary/buzz-summary-receipt.json"
+  },
+  "commit": "6e8d281fe7e3a85157967a1be1776d06071f1e15",
+  "deterministic_checks": [
+    {
+      "cmd": "uv run --project skills/monitor-opportunities --extra test pytest -q skills/monitor-opportunities/tests",
+      "result": "285 passed in 50.88s"
+    },
+    {
+      "cmd": "python3 scripts/check_mock_evidence_claims.py",
+      "result": "OK: checked 649 test file(s); no mock+proof claim violations"
+    }
+  ],
+  "effect_policy": {
+    "external_effects": false,
+    "forbidden_effects": {
+      "ats_submit": "FORBIDDEN",
+      "gmail_forward": "FORBIDDEN",
+      "gmail_schedule_send": "FORBIDDEN",
+      "gmail_send": "FORBIDDEN",
+      "linkedin_action": "FORBIDDEN",
+      "meetup_rsvp": "FORBIDDEN"
+    },
+    "mode": "PROMOTED_STAGE_0",
+    "publications": {
+      "buzz_summary": "ENABLED",
+      "digest": "ENABLED",
+      "local_report": "ENABLED",
+      "memory_summary": "ENABLED",
+      "relationship_graph": "ENABLED"
+    },
+    "separately_gated": {
+      "ats_memory": "SKIPPED",
+      "tracker": "SKIPPED"
+    }
+  },
+  "live": true,
+  "live_command": "MONITOR_CLAIM_SNAPSHOT_PATH=/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/local/nightly/latest/tailoring/claim-snapshot.json timeout 1800 skills/monitor-opportunities/run.sh nightly --promoted-stage0 --expected-revision 6e8d281fe7e3a85157967a1be1776d06071f1e15 --out artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof",
+  "meetup": {
+    "blocked_by_systemic_failure": false,
+    "failure_signature": "meetup_group_detail_capture_failed",
+    "group_capture_failed": 1,
+    "group_capture_skipped": 0,
+    "groups_captured": 11,
+    "receipt": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/browser-capture/meetup/meetup-capture-receipt.json",
+    "status": "OK"
+  },
+  "memory": {
+    "external_effects": false,
+    "readback_count": 66,
+    "readback_external_effects_false": true,
+    "readback_found": true,
+    "readback_missing_keys": [],
+    "receipt": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/memory-sync-receipt.json",
+    "relationship_readback_found": true
+  },
+  "mocked": false,
+  "nightly": {
+    "external_effects": false,
+    "live": true,
+    "mocked": false,
+    "mode": "PROMOTED_STAGE_0",
+    "receipt": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/nightly-receipt.json",
+    "status": "PASS"
+  },
+  "report": {
+    "html": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/report/index.html",
+    "manifest": "artifacts/tickets/agent-skills-1415/live-promoted-stage0-run-final-proof/report-manifest.json",
+    "operational_readiness": "DEGRADED",
+    "opportunities": 8,
+    "relationship_signals": 57
+  },
+  "runtime_repair": {
+    "buzz_cli": "/home/graham/.nvm/versions/node/v22.23.2/bin/buzz",
+    "npm_packages_installed": [
+      "buzz-cli@4.1.33",
+      "@babel/plugin-syntax-dynamic-import",
+      "@babel/preset-env",
+      "@babel/plugin-transform-runtime",
+      "@babel/plugin-transform-modules-commonjs",
+      "@babel/plugin-proposal-optional-chaining"
+    ]
+  },
+  "scheduler": {
+    "command_contains_buzz_bin": true,
+    "command_contains_claim_snapshot": true,
+    "cron": "0 2 * * *",
+    "enabled": true,
+    "expected_revision": "6e8d281fe7e3a85157967a1be1776d06071f1e15",
+    "mode": "PROMOTED_STAGE_0",
+    "receipt": "/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json",
+    "status": "PASS",
+    "workdir": "/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-1415-integrate"
+  },
+  "schema": "monitor_opportunities.ticket_1415_proof_summary.v1",
+  "ticket": 1415
+}
