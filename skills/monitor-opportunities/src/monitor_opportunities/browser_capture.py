@@ -185,6 +185,88 @@ def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
         )
 
 
+def _write_surf_diagnostic_bundle(
+    out_dir: Path,
+    *,
+    source: str,
+    surf_run: Path,
+    tab_id: str | None,
+    reason: str,
+    url: str | None = None,
+    error: BaseException | None = None,
+) -> dict[str, Any]:
+    """Preserve live Surf evidence when a source capture degrades.
+
+    This is deliberately best-effort and fail-closed: diagnostics may fail, but
+    diagnostic failure must not hide the original source failure or mutate the
+    page beyond a screenshot/read-only JS probe.
+    """
+
+    safe_source = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in source)
+    bundle_dir = out_dir / "surf-diagnostics" / safe_source
+    bundle_dir.mkdir(parents=True, exist_ok=True)
+    manifest: dict[str, Any] = {
+        "schema": "monitor_opportunities.surf_diagnostic_bundle.v1",
+        "source": source,
+        "observed_at": utc_now(),
+        "reason": reason,
+        "tab_id": tab_id,
+        "url": url,
+        "external_effects": False,
+        "artifacts": {},
+        "errors": [],
+    }
+    if error is not None:
+        manifest["error"] = {
+            "type": type(error).__name__,
+            "message": str(error)[:1000],
+        }
+
+    try:
+        tab_list = _surf(surf_run, "tab.list", "--json", timeout=25)
+        tab_list_path = bundle_dir / "tab-list.json"
+        tab_list_path.write_text(tab_list + "\n", encoding="utf-8")
+        manifest["artifacts"]["tab_list"] = str(tab_list_path)
+    except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
+        manifest["errors"].append({"stage": "tab.list", "type": type(exc).__name__, "message": str(exc)[:500]})
+
+    if tab_id:
+        page_state_js = (
+            "return JSON.stringify({"
+            "url: location.href,"
+            "title: document.title,"
+            "visibility: document.visibilityState,"
+            "text_sample: (document.body && document.body.innerText || '').slice(0, 4000),"
+            "links: Array.from(document.querySelectorAll('a[href]')).slice(0,80).map(a => ({text:(a.innerText||'').trim().slice(0,120), href:a.href}))"
+            "}, null, 2)"
+        )
+        try:
+            page_state = _surf(surf_run, "js", "--tab-id", tab_id, page_state_js, timeout=30)
+            page_state_path = bundle_dir / "page-state.json"
+            page_state_path.write_text(page_state + "\n", encoding="utf-8")
+            manifest["artifacts"]["page_state"] = str(page_state_path)
+        except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
+            manifest["errors"].append({"stage": "page_state", "type": type(exc).__name__, "message": str(exc)[:500]})
+
+        screenshot_path = bundle_dir / "screenshot.png"
+        try:
+            _surf(surf_run, "snap", "--tab-id", tab_id, "--output", str(screenshot_path), timeout=60)
+            if screenshot_path.exists():
+                manifest["artifacts"]["screenshot"] = str(screenshot_path)
+        except (BrowserCaptureError, subprocess.TimeoutExpired, OSError) as exc:
+            manifest["errors"].append({"stage": "screenshot", "type": type(exc).__name__, "message": str(exc)[:500]})
+
+    manifest_path = bundle_dir / "manifest.json"
+    manifest["manifest_path"] = str(manifest_path)
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return {
+        "path": str(bundle_dir),
+        "manifest": str(manifest_path),
+        "reason": reason,
+        "errors": len(manifest["errors"]),
+    }
+
+
 @contextlib.contextmanager
 def _wall_clock_timeout(seconds: int, label: str):
     """Bound capture phases even if a lower-level browser helper wedges."""
@@ -888,21 +970,42 @@ def capture_meetup_buffalo(
                 "Capture uses visible page text and links only; no Meetup GraphQL call or attendee scraping.",
             ],
         }
-        evidence_path = out_dir / "meetup-buffalo-evidence.json"
-        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
         receipt["status"] = "OK" if groups else "EMPTY"
-        receipt["evidence_path"] = str(evidence_path)
         receipt["groups_captured"] = len(groups)
         receipt["category_pages_captured"] = len(category_pages)
         receipt["group_capture_failed"] = len(group_capture_failures)
         receipt["group_capture_skipped"] = len(skipped_group_urls)
         receipt["blocked_by_systemic_failure"] = bool(skipped_group_urls)
         receipt["failure_signature"] = evidence["failure_signature"]
+        if receipt["status"] != "OK" or group_capture_failures or skipped_group_urls:
+            diagnostic = _write_surf_diagnostic_bundle(
+                out_dir,
+                source="meetup_buffalo",
+                surf_run=surf_run,
+                tab_id=tab_id,
+                reason=str(receipt["failure_signature"] or "meetup_capture_empty"),
+                url=str(category_pages[-1].get("url") if category_pages else _MEETUP_CATEGORY_URLS[0][2]),
+            )
+            receipt["diagnostic_bundle"] = diagnostic
+            evidence["diagnostic_bundle"] = diagnostic
+            evidence["site_recovery_status"] = "DIAGNOSTIC_BUNDLE_WRITTEN"
+        evidence_path = out_dir / "meetup-buffalo-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["evidence_path"] = str(evidence_path)
     except (BrowserCaptureError, TimeoutError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.error("Meetup Buffalo capture failed: {}", exc)
         receipt["status"] = "FAILED"
         receipt["error"] = str(exc)
         receipt["evidence_path"] = None
+        receipt["diagnostic_bundle"] = _write_surf_diagnostic_bundle(
+            out_dir,
+            source="meetup_buffalo",
+            surf_run=surf_run,
+            tab_id=tab_id or None,
+            reason="meetup_capture_failed",
+            url=_MEETUP_CATEGORY_URLS[0][2],
+            error=exc,
+        )
     finally:
         if tab_id:
             _close_tab(surf_run, tab_id, "Meetup capture")

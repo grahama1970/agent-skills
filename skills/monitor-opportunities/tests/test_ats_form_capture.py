@@ -187,6 +187,12 @@ def test_meetup_group_capture_circuit_breaks_repeated_timeouts(
             return ""
         if args[0] == "tab.close":
             return ""
+        if args[0] == "tab.list":
+            return '[{"id":123,"title":"Meetup","url":"https://www.meetup.com/find/"}]'
+        if args[0] == "snap":
+            output = Path(args[args.index("--output") + 1])
+            output.write_bytes(b"png")
+            return str(output)
         if args[0] == "js":
             script = args[-1]
             if "find/?source=GROUPS" not in script:
@@ -215,6 +221,16 @@ def test_meetup_group_capture_circuit_breaks_repeated_timeouts(
     assert evidence["blocked_by_systemic_failure"] is True
     assert len(evidence["group_capture_failures"]) == 3
     assert len(evidence["skipped_group_urls"]) == 2
+    assert evidence["site_recovery_status"] == "DIAGNOSTIC_BUNDLE_WRITTEN"
+    diagnostic = receipt["diagnostic_bundle"]
+    assert diagnostic["reason"] == "meetup_group_detail_capture_failed"
+    manifest = json.loads(Path(diagnostic["manifest"]).read_text(encoding="utf-8"))
+    assert manifest["schema"] == "monitor_opportunities.surf_diagnostic_bundle.v1"
+    assert manifest["source"] == "meetup_buffalo"
+    assert manifest["tab_id"] == "123"
+    assert manifest["external_effects"] is False
+    assert "tab_list" in manifest["artifacts"]
+    assert "screenshot" in manifest["artifacts"]
 
 
 def test_meetup_capture_uses_bounded_waits_and_eight_group_budget(
