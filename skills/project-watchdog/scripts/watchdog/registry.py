@@ -222,6 +222,7 @@ def list_routable_issues(
     busy: set[str] | None = None,
     *,
     skip_issue_numbers: set[int] | None = None,
+    skip_issue_reasons: dict[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Return open issues this watchdog is permitted to route, in listing order.
 
@@ -257,17 +258,20 @@ def list_routable_issues(
     has_lane = project_has_repair_lane(project)
     busy_now = set(busy or ())
     skip_now = set(skip_issue_numbers or ())
+    skip_reasons = dict(skip_issue_reasons or {})
     for issue in issues:
-        if int(issue["number"]) in skip_now:
-            excluded.setdefault("lease_reclaimed_this_tick", []).append(int(issue["number"]))
+        number = int(issue["number"])
+        if number in skip_now:
+            reason = skip_reasons.get(number, "lease_reclaimed_this_tick")
+            excluded.setdefault(reason, []).append(number)
             continue
         action, reason = classify_issue_with_reason(issue)
         if action is None:
-            excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
+            excluded.setdefault(reason or "unknown", []).append(number)
             continue
         targets = issue_targets(issue)
         if targets_are_blocked(targets, busy_now):
-            excluded.setdefault("target_busy", []).append(int(issue["number"]))
+            excluded.setdefault("target_busy", []).append(number)
             continue
         if action == "ticket_repair" and not has_lane:
             # The project exposes no Tau DAG repair lane, so this issue is not
@@ -735,7 +739,7 @@ def select_next_project(
 
 #: Side-channel for the last scan's non-routable tally, so ``tick`` can report
 #: WHY nothing was routable without re-listing.
-LAST_SCAN: dict[str, int] = {}
+LAST_SCAN: dict[str, Any] = {}
 
 #: Side-channel for receipt construction, parallel to ``LAST_SCAN`` above.
 #: ``lane_busy_issues`` stays backward-compatible as a list-returning function.

@@ -1,0 +1,981 @@
+{
+  "assertions": {
+    "has_first_class_excluded_counts": true,
+    "has_first_class_excluded_issues": true,
+    "receipt_parsed": true,
+    "scan_names_agent_skills": true,
+    "target_busy_count_positive": true,
+    "target_busy_names_1411": true
+  },
+  "command": "skills/project-watchdog/run.sh tick --project agent-skills --max-tickets 10",
+  "does_not_prove": "Does not apply or resume the global cron and does not mutate GitHub.",
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "parse_error": null,
+  "receipt": {
+    "apply": false,
+    "cron_log_file": "/home/graham/.local/state/project-watchdog/logs/cron.log",
+    "errors": [],
+    "excluded_counts": {
+      "blocked": 31,
+      "human_hold": 7,
+      "leased": 3,
+      "target_busy": 1
+    },
+    "excluded_issue_refs": {
+      "blocked": [
+        "grahama1970/agent-skills#1085",
+        "grahama1970/agent-skills#1086",
+        "grahama1970/agent-skills#1090",
+        "grahama1970/agent-skills#1128",
+        "grahama1970/agent-skills#1129",
+        "grahama1970/agent-skills#1130",
+        "grahama1970/agent-skills#1133",
+        "grahama1970/agent-skills#1140",
+        "grahama1970/agent-skills#1179",
+        "grahama1970/agent-skills#1182",
+        "grahama1970/agent-skills#1183",
+        "grahama1970/agent-skills#1195",
+        "grahama1970/agent-skills#1196",
+        "grahama1970/agent-skills#1197",
+        "grahama1970/agent-skills#1198",
+        "grahama1970/agent-skills#1249",
+        "grahama1970/agent-skills#1250",
+        "grahama1970/agent-skills#1253",
+        "grahama1970/agent-skills#1317",
+        "grahama1970/agent-skills#1318",
+        "grahama1970/agent-skills#1319",
+        "grahama1970/agent-skills#1320",
+        "grahama1970/agent-skills#1321",
+        "grahama1970/agent-skills#1327",
+        "grahama1970/agent-skills#1356",
+        "grahama1970/agent-skills#1357",
+        "grahama1970/agent-skills#1358",
+        "grahama1970/agent-skills#1361",
+        "grahama1970/agent-skills#1388",
+        "grahama1970/agent-skills#1398",
+        "grahama1970/agent-skills#1407"
+      ],
+      "human_hold": [
+        "grahama1970/agent-skills#1008",
+        "grahama1970/agent-skills#1058",
+        "grahama1970/agent-skills#1151",
+        "grahama1970/agent-skills#1173",
+        "grahama1970/agent-skills#1207",
+        "grahama1970/agent-skills#1211",
+        "grahama1970/agent-skills#1344"
+      ],
+      "leased": [
+        "grahama1970/agent-skills#1403",
+        "grahama1970/agent-skills#1404",
+        "grahama1970/agent-skills#1418"
+      ],
+      "target_busy": [
+        "grahama1970/agent-skills#1411"
+      ]
+    },
+    "excluded_issues": {
+      "blocked": [
+        1085,
+        1086,
+        1090,
+        1128,
+        1129,
+        1130,
+        1133,
+        1140,
+        1179,
+        1182,
+        1183,
+        1195,
+        1196,
+        1197,
+        1198,
+        1249,
+        1250,
+        1253,
+        1317,
+        1318,
+        1319,
+        1320,
+        1321,
+        1327,
+        1356,
+        1357,
+        1358,
+        1361,
+        1388,
+        1398,
+        1407
+      ],
+      "human_hold": [
+        1008,
+        1058,
+        1151,
+        1173,
+        1207,
+        1211,
+        1344
+      ],
+      "leased": [
+        1403,
+        1404,
+        1418
+      ],
+      "target_busy": [
+        1411
+      ]
+    },
+    "handled_count": 6,
+    "handled_issues": [
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:ae0060eacc77fb72fe4c3f913b78e6790471c9fd66cea1d18c71c395dc2ff725",
+        "issue_number": 1415,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1415",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1415 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/cli.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/cli.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/cli.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      },
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:163eb44fee9704793d81bb256d26dd3348018039dbcc73ac1a5f6b062a34ad7d",
+        "issue_number": 1414,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1414",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1414 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/pipeline.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/pipeline.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/pipeline.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      },
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:7a22b013b5e7e3187fcb25921ded186570b310b788f9e29366254bf456f3ba9a",
+        "issue_number": 1413,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1413",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1413 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      },
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:40dbe4ca8f890baa97039dc176416741c2146e9c2add41229427f72af7ae692a",
+        "issue_number": 1412,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1412",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1412 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/discovery.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/discovery.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/discovery.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      },
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:c75ae3b95fee6118f722791327fce95aac448c8a99f58f68af38d44084284024",
+        "issue_number": 1409,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1409",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1409 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      },
+      {
+        "action": "ticket_repair",
+        "artifacts": [
+          "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md"
+        ],
+        "commands": [],
+        "goal_hash": "sha256:1de643ebecb73442507d06e42ce5fc68bf9c3e370c4cc9bd5dadc7acdb12083c",
+        "issue_number": 1408,
+        "issue_url": "https://github.com/grahama1970/agent-skills/issues/1408",
+        "ok": true,
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "runner_kind": "project-local",
+        "seats": {
+          "creator": "codex",
+          "reviewer": "webgpt"
+        },
+        "selected_agent": "coder",
+        "status": "DRY_RUN",
+        "summary": "would author grahama1970/agent-skills#1408 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py']",
+        "targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py"
+        ],
+        "worktree_readiness": {
+          "branch": "main",
+          "dirty_paths": [],
+          "dirty_tracked": 0,
+          "exists": true,
+          "ready": true,
+          "reasons": [],
+          "scope": [
+            "skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py"
+          ],
+          "untracked": 0,
+          "worktree": "/home/graham/workspace/experiments/agent-skills"
+        }
+      }
+    ],
+    "in_flight": {
+      "issues": [
+        1403,
+        1404,
+        1418
+      ],
+      "leases": [
+        {
+          "issue_number": 1403,
+          "leases": [
+            {
+              "acquired_at": "2026-08-14T13:38:26Z",
+              "age_seconds": 4717,
+              "label": "maintainer-active",
+              "reason": "lease_active",
+              "stale_after_seconds": 86400,
+              "timestamp_source": "github_label_event"
+            }
+          ]
+        },
+        {
+          "issue_number": 1404,
+          "leases": [
+            {
+              "acquired_at": "2026-08-14T14:01:54Z",
+              "age_seconds": 3309,
+              "label": "maintainer-active",
+              "reason": "lease_active",
+              "stale_after_seconds": 86400,
+              "timestamp_source": "github_label_event"
+            }
+          ]
+        },
+        {
+          "issue_number": 1418,
+          "leases": [
+            {
+              "acquired_at": "2026-08-14T14:52:45Z",
+              "age_seconds": 258,
+              "label": "maintainer-active",
+              "reason": "lease_active",
+              "stale_after_seconds": 86400,
+              "timestamp_source": "github_label_event"
+            }
+          ]
+        }
+      ],
+      "targets": [
+        "skills/ask/src/ask/node_launch_contract.py,skills/ask/src/ask/project_plan.py,skills/ask/src/ask/project_plan_to_tau.py,skills/ask/src/ask/tau_harness.py",
+        "skills/ask/src/ask/project_plan.py,skills/ask/src/ask/project_plan_to_tau.py,skills/ask/src/ask/team_plan_cli.py,skills/ask/src/ask/worktree_policy.py",
+        "skills/project-watchdog/scripts/watchdog/commands.py"
+      ]
+    },
+    "issue_scans": [
+      {
+        "excluded_counts": {
+          "blocked": 31,
+          "human_hold": 7,
+          "leased": 3,
+          "target_busy": 1
+        },
+        "excluded_issue_refs": {
+          "blocked": [
+            "grahama1970/agent-skills#1407",
+            "grahama1970/agent-skills#1398",
+            "grahama1970/agent-skills#1388",
+            "grahama1970/agent-skills#1361",
+            "grahama1970/agent-skills#1358",
+            "grahama1970/agent-skills#1357",
+            "grahama1970/agent-skills#1356",
+            "grahama1970/agent-skills#1327",
+            "grahama1970/agent-skills#1321",
+            "grahama1970/agent-skills#1320",
+            "grahama1970/agent-skills#1319",
+            "grahama1970/agent-skills#1318",
+            "grahama1970/agent-skills#1317",
+            "grahama1970/agent-skills#1253",
+            "grahama1970/agent-skills#1250",
+            "grahama1970/agent-skills#1249",
+            "grahama1970/agent-skills#1198",
+            "grahama1970/agent-skills#1197",
+            "grahama1970/agent-skills#1196",
+            "grahama1970/agent-skills#1195",
+            "grahama1970/agent-skills#1183",
+            "grahama1970/agent-skills#1182",
+            "grahama1970/agent-skills#1179",
+            "grahama1970/agent-skills#1140",
+            "grahama1970/agent-skills#1133",
+            "grahama1970/agent-skills#1130",
+            "grahama1970/agent-skills#1129",
+            "grahama1970/agent-skills#1128",
+            "grahama1970/agent-skills#1090",
+            "grahama1970/agent-skills#1086",
+            "grahama1970/agent-skills#1085"
+          ],
+          "human_hold": [
+            "grahama1970/agent-skills#1344",
+            "grahama1970/agent-skills#1211",
+            "grahama1970/agent-skills#1207",
+            "grahama1970/agent-skills#1173",
+            "grahama1970/agent-skills#1151",
+            "grahama1970/agent-skills#1058",
+            "grahama1970/agent-skills#1008"
+          ],
+          "leased": [
+            "grahama1970/agent-skills#1418",
+            "grahama1970/agent-skills#1404",
+            "grahama1970/agent-skills#1403"
+          ],
+          "target_busy": [
+            "grahama1970/agent-skills#1411"
+          ]
+        },
+        "excluded_issues": {
+          "blocked": [
+            1407,
+            1398,
+            1388,
+            1361,
+            1358,
+            1357,
+            1356,
+            1327,
+            1321,
+            1320,
+            1319,
+            1318,
+            1317,
+            1253,
+            1250,
+            1249,
+            1198,
+            1197,
+            1196,
+            1195,
+            1183,
+            1182,
+            1179,
+            1140,
+            1133,
+            1130,
+            1129,
+            1128,
+            1090,
+            1086,
+            1085
+          ],
+          "human_hold": [
+            1344,
+            1211,
+            1207,
+            1173,
+            1151,
+            1058,
+            1008
+          ],
+          "leased": [
+            1418,
+            1404,
+            1403
+          ],
+          "target_busy": [
+            1411
+          ]
+        },
+        "project_id": "agent-skills",
+        "repo": "grahama1970/agent-skills",
+        "scanned": 48
+      }
+    ],
+    "lease_staleness": {
+      "stale": [],
+      "stale_after_seconds": 86400,
+      "unknown_acquisition_time": []
+    },
+    "live": true,
+    "log_file": "/home/graham/.local/state/project-watchdog/logs/project-watchdog.log",
+    "mocked": false,
+    "ok": true,
+    "project_id": "agent-skills",
+    "receipt_dir": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z",
+    "receipt_path": "/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/receipt.json",
+    "reclaimed_leases": [],
+    "repair_dispatch_cooling": [],
+    "rotation": {
+      "mode": "strict",
+      "requested": "agent-skills",
+      "selected": "agent-skills",
+      "skipped": []
+    },
+    "run_id": "project-watchdog-20260814T145701Z",
+    "scanned_issues": [
+      {
+        "body": "## Type\n\nfeature\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/cli.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/cli.py\n\n## Current state\n\nThe 02:00 job currently runs diagnostic mode and explicitly skips tracker, Buzz, and ATS memory. That is safer, but it means the scheduled product stops short of the intended memory/Buzz/report delivery workflow.\n\n## Requested outcome\n\nAdd a promoted Stage 0 cron mode that publishes the report to allowed local/Memory/Buzz surfaces while preserving no-send/no-submit external-effect gates and exact receipts.\n\n## Required proof\n\nDeterministic: focused CLI/scheduler tests for promoted mode and effect-policy receipts. Live E2E: register/run the promoted cron command once, then read back scheduler logs plus report/memory/Buzz receipts showing Stage 0 publication succeeded with external_effects=false.\n\n## Route\n\nops_or_scheduler\n\n## Maintainer route\n\nops_or_scheduler\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Current limitation:** The 02:00 job currently runs diagnostic mode and explicitly skips tracker, Buzz, and ATS memory. That is safer, but it means the scheduled product stops short of the intended memory/Buzz/report delivery workflow.\n- **Proposed capability:** Add a promoted Stage 0 cron mode that publishes the report to allowed local/Memory/Buzz surfaces while preserving no-send/no-submit external-effect gates and exact receipts.\n- **User workflow unlocked:** Scheduler runs one safe production Stage 0 transaction; report, Memory summary, relationship graph, and Buzz summary are published with readback receipts; tracker/ATS effects remain separately gated or explicitly skipped with operator-visible reasons.\n- **Acceptance criteria:** A scheduled or manually triggered promoted cron run exits 0, reads back scheduler state, writes report, memory, digest, and Buzz receipts, and the effect policy proves no Gmail send, LinkedIn action, RSVP, or ATS submit occurred.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/cli.py`\n- `skills/monitor-opportunities/fixtures/agentic_eval.json`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n- `scheduler`\n\n<!-- ticket-skill\ntype: feature\ntarget: skills/monitor-opportunities/src/monitor_opportunities/cli.py\nroute: ops_or_scheduler\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/cli.py,skills/monitor-opportunities/fixtures/agentic_eval.json\nrequired_skills: monitor-opportunities,scheduler\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "fbca04",
+            "description": "Measurable skill improvement",
+            "id": "LA_kwDOQ31KU88AAAACnH8u6A",
+            "name": "skill-optimization"
+          },
+          {
+            "color": "0e8a16",
+            "description": "New capability or changed behavior request",
+            "id": "LA_kwDOQ31KU88AAAACnH8vkw",
+            "name": "type:feature"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: ops or scheduler",
+            "id": "LA_kwDOQ31KU88AAAACttIU-A",
+            "name": "route:ops_or_scheduler"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: ops",
+            "id": "LA_kwDOQ31KU88AAAACttIW7A",
+            "name": "lane:ops"
+          }
+        ],
+        "number": 1415,
+        "title": "monitor-opportunities: promote nightly from diagnostic-only to gated Stage 0 publication",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1415",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/cli.py"
+        ]
+      },
+      {
+        "body": "## Type\n\nbug\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/pipeline.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\n\n## Current state\n\nThe 2026-08-14 report-manifest.json had operational_readiness=DEGRADED, while run-receipt.json had degraded_contracts=[] and no machine-readable readiness cause list. Operators must infer causes from scattered artifacts.\n\n## Requested outcome\n\nWhenever operational_readiness is DEGRADED, the report and run receipt should include machine-readable readiness_causes with source artifact paths, codes, and human-actionable next steps.\n\n## Required proof\n\nDeterministic: schema/runtime test that DEGRADED readiness requires non-empty readiness_causes. Live E2E: run nightly diagnostic and read back report-manifest.json plus run-receipt.json showing every DEGRADED state has actionable cause records.\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Observed failure:** The 2026-08-14 report-manifest.json had operational_readiness=DEGRADED, while run-receipt.json had degraded_contracts=[] and no machine-readable readiness cause list. Operators must infer causes from scattered artifacts.\n- **Expected behavior:** Whenever operational_readiness is DEGRADED, the report and run receipt should include machine-readable readiness_causes with source artifact paths, codes, and human-actionable next steps.\n- **Reproduction or artifact:** Inspect skills/monitor-opportunities/local/nightly/latest/report-manifest.json operational_readiness and skills/monitor-opportunities/local/nightly/latest/run-receipt.json degraded_contracts after the 02:00 cron run.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/pipeline.py`\n- `skills/monitor-opportunities/schemas/report.schema.json`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n\n<!-- ticket-skill\ntype: bug\ntarget: skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/pipeline.py,skills/monitor-opportunities/schemas/report.schema.json\nrequired_skills: monitor-opportunities\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "0e8a16",
+            "description": "Skill behavior or validation failure",
+            "id": "LA_kwDOQ31KU88AAAACnH8uVw",
+            "name": "skill-bug"
+          },
+          {
+            "color": "d73a4a",
+            "description": "Defect or regression",
+            "id": "LA_kwDOQ31KU88AAAACnH8vOA",
+            "name": "type:bug"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: backend Python or skill runtime",
+            "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+            "name": "route:backend_python_or_skill_runtime"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: backend",
+            "id": "LA_kwDOQ31KU88AAAACttIWMg",
+            "name": "lane:be"
+          }
+        ],
+        "number": 1414,
+        "title": "monitor-opportunities: report marks DEGRADED without actionable readiness causes",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1414",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/pipeline.py"
+        ]
+      },
+      {
+        "body": "## Type\n\nbug\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\n\n## Current state\n\nThe 2026-08-14 cron receipt recorded job_insights jobs_checked=0 enriched=0 even though LinkedIn advanced captured 47 rows and premium captured 33 rows with 23 warm paths.\n\n## Requested outcome\n\nWhen LinkedIn captures job rows, the job insights phase should either inspect a bounded top set or record per-row exclusion reasons explaining why jobs_checked is zero.\n\n## Required proof\n\nDeterministic: focused test for job-insights candidate selection from LinkedIn evidence. Live E2E: run nightly diagnostic and read back receipt showing jobs_checked > 0 when LinkedIn rows exist, or a non-silent exclusion ledger for every skipped row.\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Observed failure:** The 2026-08-14 cron receipt recorded job_insights jobs_checked=0 enriched=0 even though LinkedIn advanced captured 47 rows and premium captured 33 rows with 23 warm paths.\n- **Expected behavior:** When LinkedIn captures job rows, the job insights phase should either inspect a bounded top set or record per-row exclusion reasons explaining why jobs_checked is zero.\n- **Reproduction or artifact:** Run nightly diagnostic and inspect scheduler log or receipt fields browser_capture_linkedin_advanced.captured=47, browser_capture_linkedin_premium.captured=33, job_insights.jobs_checked=0.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n\n<!-- ticket-skill\ntype: bug\ntarget: skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\nrequired_skills: monitor-opportunities\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "0e8a16",
+            "description": "Skill behavior or validation failure",
+            "id": "LA_kwDOQ31KU88AAAACnH8uVw",
+            "name": "skill-bug"
+          },
+          {
+            "color": "d73a4a",
+            "description": "Defect or regression",
+            "id": "LA_kwDOQ31KU88AAAACnH8vOA",
+            "name": "type:bug"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: backend Python or skill runtime",
+            "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+            "name": "route:backend_python_or_skill_runtime"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: backend",
+            "id": "LA_kwDOQ31KU88AAAACttIWMg",
+            "name": "lane:be"
+          }
+        ],
+        "number": 1413,
+        "title": "monitor-opportunities: LinkedIn job insights phase skips captured jobs",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1413",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py"
+        ]
+      },
+      {
+        "body": "## Type\n\nbug\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/discovery.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/discovery.py\n\n## Current state\n\nThe 2026-08-14 run emitted human_supplied_indeed AUTH_REQUIRED and human_supplied_hiddenjobs AUTH_REQUIRED receipts: no human/browser evidence supplied for Indeed jobs or Hidden Jobs, even though these are mandatory read-only browser-capture sources.\n\n## Requested outcome\n\nThe nightly should attempt the configured read-only browser capture for Indeed and HiddenJobs, then emit MATCHES, NO_MATCHES, AUTH_REQUIRED with browser evidence, or a precise capture failure; it should not depend on pre-supplied evidence without an attempted autonomous read-only capture.\n\n## Required proof\n\nDeterministic: required-source test proves missing human evidence triggers an attempted browser capture receipt. Live E2E: run nightly diagnostic and read back source_receipts showing Indeed/HiddenJobs have current-run browser attempt evidence and no silent human-supplied-only gap.\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Observed failure:** The 2026-08-14 run emitted human_supplied_indeed AUTH_REQUIRED and human_supplied_hiddenjobs AUTH_REQUIRED receipts: no human/browser evidence supplied for Indeed jobs or Hidden Jobs, even though these are mandatory read-only browser-capture sources.\n- **Expected behavior:** The nightly should attempt the configured read-only browser capture for Indeed and HiddenJobs, then emit MATCHES, NO_MATCHES, AUTH_REQUIRED with browser evidence, or a precise capture failure; it should not depend on pre-supplied evidence without an attempted autonomous read-only capture.\n- **Reproduction or artifact:** Run nightly diagnostic and inspect report-manifest.json source_receipts for providers indeed and hiddenjobs.dev with source_class human_supplied_* and result_status AUTH_REQUIRED.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/discovery.py`\n- `skills/monitor-opportunities/config/required_sources.json`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n\n<!-- ticket-skill\ntype: bug\ntarget: skills/monitor-opportunities/src/monitor_opportunities/discovery.py\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/discovery.py,skills/monitor-opportunities/config/required_sources.json\nrequired_skills: monitor-opportunities\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "0e8a16",
+            "description": "Skill behavior or validation failure",
+            "id": "LA_kwDOQ31KU88AAAACnH8uVw",
+            "name": "skill-bug"
+          },
+          {
+            "color": "d73a4a",
+            "description": "Defect or regression",
+            "id": "LA_kwDOQ31KU88AAAACnH8vOA",
+            "name": "type:bug"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: backend Python or skill runtime",
+            "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+            "name": "route:backend_python_or_skill_runtime"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: backend",
+            "id": "LA_kwDOQ31KU88AAAACttIWMg",
+            "name": "lane:be"
+          }
+        ],
+        "number": 1412,
+        "title": "monitor-opportunities: Indeed and HiddenJobs required sources remain AUTH_REQUIRED in cron",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1412",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/discovery.py"
+        ]
+      },
+      {
+        "body": "## Type\n\nbug\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\n\n## Current state\n\nThe 2026-08-14 report lane coverage admitted 8 lane A candidates, but morning-digest.json counted employment=0 and consulting=12; all top digest rows were consulting/service actions.\n\n## Requested outcome\n\nWhen lane A has eligible admitted candidates, the morning digest must either include employment entries or record explicit per-candidate exclusion reasons so employment does not silently disappear.\n\n## Required proof\n\nDeterministic: digest construction test with admitted lane A rows proves employment rows are included or excluded with reason codes. Live E2E: run nightly diagnostic and read back report-manifest.json plus morning-digest.json showing employment accounting is non-silent.\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Observed failure:** The 2026-08-14 report lane coverage admitted 8 lane A candidates, but morning-digest.json counted employment=0 and consulting=12; all top digest rows were consulting/service actions.\n- **Expected behavior:** When lane A has eligible admitted candidates, the morning digest must either include employment entries or record explicit per-candidate exclusion reasons so employment does not silently disappear.\n- **Reproduction or artifact:** Inspect skills/monitor-opportunities/local/nightly/latest/report-manifest.json lane_coverage for lane A candidates_admitted=8, then inspect skills/monitor-opportunities/local/nightly/latest/morning-digest.json counts employment=0.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py`\n- `skills/monitor-opportunities/local/nightly/latest/morning-digest.json`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n\n<!-- ticket-skill\ntype: bug\ntarget: skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py,skills/monitor-opportunities/local/nightly/latest/morning-digest.json\nrequired_skills: monitor-opportunities\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "0e8a16",
+            "description": "Skill behavior or validation failure",
+            "id": "LA_kwDOQ31KU88AAAACnH8uVw",
+            "name": "skill-bug"
+          },
+          {
+            "color": "d73a4a",
+            "description": "Defect or regression",
+            "id": "LA_kwDOQ31KU88AAAACnH8vOA",
+            "name": "type:bug"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: backend Python or skill runtime",
+            "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+            "name": "route:backend_python_or_skill_runtime"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: backend",
+            "id": "LA_kwDOQ31KU88AAAACttIWMg",
+            "name": "lane:be"
+          }
+        ],
+        "number": 1409,
+        "title": "monitor-opportunities: morning digest is consulting-only despite admitted employment lane",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1409",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py"
+        ]
+      },
+      {
+        "body": "## Type\n\nbug\n\n## Target\n\nskills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\n\n## Target paths\n\n- skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\n\n## Current state\n\nThe 2026-08-14 report contained 57 relationship_signals from Memory/monitor-contacts, but prospect-queue.json reported relationship=0 and no relationship/reconnect prospects.\n\n## Requested outcome\n\nEvery action-worthy report-visible relationship_signal should either become a prospect_queue relationship/reconnect entry or be counted with a documented exclusion reason in the queue receipt.\n\n## Required proof\n\nDeterministic: focused prospect_queue test where relationship_signals produce reconnect prospects with evidence refs and no external effects. Live E2E: run nightly diagnostic and read back report-manifest.json and prospect-queue.json showing relationship queue count matches included actionable relationship signals or documented exclusions.\n\n## Route\n\nbackend_python_or_skill_runtime\n\n## Maintainer route\n\nbackend_python_or_skill_runtime\n\n## Requested repair agent\n\nagent-skill-maintainer\n\n## Non-goals\n\nNo unrelated refactors or scope expansion.\n\n## Ticket type details\n\n- **Observed failure:** The 2026-08-14 report contained 57 relationship_signals from Memory/monitor-contacts, but prospect-queue.json reported relationship=0 and no relationship/reconnect prospects.\n- **Expected behavior:** Every action-worthy report-visible relationship_signal should either become a prospect_queue relationship/reconnect entry or be counted with a documented exclusion reason in the queue receipt.\n- **Reproduction or artifact:** After the 02:00 cron run, compare jq '.relationship_signals | length' skills/monitor-opportunities/local/nightly/latest/report-manifest.json with jq '.relationship' skills/monitor-opportunities/local/nightly/latest/prospect-queue.json.\n\n## Orientation for a stateless agent\n\nYou are running from cron with no prior context. Build context in this order\nbefore changing anything. Do not start by grepping the repository.\n\n1. **Recall first.** `skills/memory/run.sh recall --q \"<target or symptom>\"`\n   Prior work on this exact problem may already exist. This is cheapest and\n   most often decisive.\n2. **Project state.** `skills/project-state/run.sh --json`\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\n   command.\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\n   repo when present. It records open blockers and decisions that the code does\n   not.\n\nThen use the narrowest tool for the actual question:\n\n| Need | Use |\n| --- | --- |\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\n| Find prior art in other repos | `skills/github-search/run.sh` |\n| External research on a load-bearing claim | `skills/dogpile/run.sh \"<claim>\"`, else `skills/brave-search/run.sh web \"<query>\"` |\n| Diagnose a failing test or traceback | load the `debugger` skill |\n| Run the target's suites | `skills/test/run.sh` |\n\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\nRecord what you actually ran. A tool's success response is not proof \u2014 read\nback the artifact it claims to have produced.\n\n## Required repository context\n\nRead these before diagnosing or changing code:\n\n- `skills/monitor-opportunities/SKILL.md`\n- `skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py`\n- `skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py`\n\n## Required skills\n\nLoad these skills; do not rely on discovering them:\n\n- `monitor-opportunities`\n- `memory`\n\n<!-- ticket-skill\ntype: bug\ntarget: skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\nroute: backend_python_or_skill_runtime\nagent: agent-skill-maintainer\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py,skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py\nrequired_skills: monitor-opportunities,memory\n-->\n\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\n",
+        "labels": [
+          {
+            "color": "0e8a16",
+            "description": "Skill behavior or validation failure",
+            "id": "LA_kwDOQ31KU88AAAACnH8uVw",
+            "name": "skill-bug"
+          },
+          {
+            "color": "d73a4a",
+            "description": "Defect or regression",
+            "id": "LA_kwDOQ31KU88AAAACnH8vOA",
+            "name": "type:bug"
+          },
+          {
+            "color": "1d76db",
+            "description": "Maintainer route: backend Python or skill runtime",
+            "id": "LA_kwDOQ31KU88AAAACnUXPHQ",
+            "name": "route:backend_python_or_skill_runtime"
+          },
+          {
+            "color": "5319e7",
+            "description": "Requested repair agent: agent-skill-maintainer",
+            "id": "LA_kwDOQ31KU88AAAACpjcCYA",
+            "name": "agent:agent-skill-maintainer"
+          },
+          {
+            "color": "0052cc",
+            "description": "Ticket is routable to a cron-dispatched repair agent",
+            "id": "LA_kwDOQ31KU88AAAACtgLzxw",
+            "name": "agent-work"
+          },
+          {
+            "color": "c2e0c6",
+            "description": "Concurrency lane: backend",
+            "id": "LA_kwDOQ31KU88AAAACttIWMg",
+            "name": "lane:be"
+          }
+        ],
+        "number": 1408,
+        "title": "monitor-opportunities: relationship signals are absent from prospect queue",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1408",
+        "watchdog_action": "ticket_repair",
+        "watchdog_targets": [
+          "skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py"
+        ]
+      }
+    ],
+    "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+    "state_snapshot": {
+      "closure_audit_attempts": {
+        "grahama1970/agent-skills#1231": 1786545365.1459277,
+        "grahama1970/agent-skills#1232": 1786550825.6106622,
+        "grahama1970/agent-skills#1243": 1786623845.8280442,
+        "grahama1970/agent-skills#1245": 1786629005.0198333,
+        "grahama1970/agent-skills#1246": 1786627565.1693177,
+        "grahama1970/agent-skills#1247": 1786626304.5893972,
+        "grahama1970/agent-skills#1252": 1786625886.1759312,
+        "grahama1970/agent-skills#1257": 1786625705.6727972,
+        "grahama1970/agent-skills#1259": 1786626184.9884968,
+        "grahama1970/agent-skills#1260": 1786626545.7139149,
+        "grahama1970/agent-skills#1261": 1786626665.015035,
+        "grahama1970/agent-skills#1263": 1786626785.8984635,
+        "grahama1970/agent-skills#1265": 1786626904.3022244,
+        "grahama1970/agent-skills#1266": 1786690804.6453712,
+        "grahama1970/agent-skills#1267": 1786627144.3874397,
+        "grahama1970/agent-skills#1268": 1786627805.5978327,
+        "grahama1970/agent-skills#1269": 1786627325.3052506,
+        "grahama1970/agent-skills#1274": 1786627986.7315755,
+        "grahama1970/agent-skills#1275": 1786628284.9549446,
+        "grahama1970/agent-skills#1276": 1786628464.6724362,
+        "grahama1970/agent-skills#1288": 1786628105.1064394,
+        "grahama1970/tau#182": 1785533707.567846,
+        "grahama1970/tau#183": 1785533647.1282246,
+        "grahama1970/tau#184": 1785533767.1324015,
+        "grahama1970/tau#185": 1785533887.4284008,
+        "grahama1970/tau#196": 1785533947.847353,
+        "grahama1970/tau#197": 1785534007.468815,
+        "grahama1970/tau#198": 1785534067.3421674,
+        "grahama1970/tau#200": 1785530529.852353,
+        "grahama1970/tau#201": 1785530588.277708,
+        "grahama1970/tau#202": 1785530647.65865,
+        "grahama1970/tau#203": 1785530708.0639524,
+        "grahama1970/tau#204": 1785272767.5938919,
+        "grahama1970/tau#206": 1785532087.6068995,
+        "grahama1970/tau#207": 1785531187.873871,
+        "grahama1970/tau#208": 1785531966.8613613,
+        "grahama1970/tau#209": 1785531247.811181,
+        "grahama1970/tau#210": 1785530826.778395,
+        "grahama1970/tau#211": 1785531727.3727949,
+        "grahama1970/tau#212": 1785530767.4852111,
+        "grahama1970/tau#215": 1785531608.0118513,
+        "grahama1970/tau#216": 1785530947.2701,
+        "grahama1970/tau#217": 1785531487.7355554,
+        "grahama1970/tau#218": 1785531306.9454064,
+        "grahama1970/tau#219": 1785531366.9441135,
+        "grahama1970/tau#220": 1785531847.05113,
+        "grahama1970/tau#222": 1785532266.9313464,
+        "grahama1970/tau#223": 1785532627.7393427,
+        "grahama1970/tau#224": 1785532507.4927318,
+        "grahama1970/tau#225": 1785532387.6431453,
+        "grahama1970/tau#233": 1785532748.2451434,
+        "grahama1970/tau#234": 1785532868.0970364,
+        "grahama1970/tau#235": 1785532988.1033478,
+        "grahama1970/tau#236": 1785533106.8979437,
+        "grahama1970/tau#237": 1785533226.8770807,
+        "grahama1970/tau#238": 1785533287.1355107,
+        "grahama1970/tau#239": 1785533347.151327,
+        "grahama1970/tau#240": 1785533407.557908,
+        "grahama1970/tau#251": 1785533467.5835261,
+        "grahama1970/tau#252": 1785533587.927173,
+        "grahama1970/tau#253": 1785533827.266536
+      },
+      "global": {
+        "reason": "activated by agent",
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "dispatcher-implementation",
+          "dry-run-scan-receipt",
+          "no-live-mutation-without-apply"
+        ],
+        "state": "active"
+      },
+      "last_served_project": "agent-skills",
+      "projects": {
+        "agent-skills": {
+          "reason": "Readiness is judged per target, so the repository being dirty elsewhere no longer withholds clean skills; repairs are authored in an isolated worktree off origin/main, not in this checkout.",
+          "resume_requires": [
+            "clean-worktree-policy",
+            "valid-github-auth"
+          ],
+          "state": "active"
+        },
+        "chatgpt-lab": {
+          "reason": "Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.",
+          "resume_requires": [
+            "shared-lease-adapter",
+            "valid-github-auth"
+          ],
+          "state": "paused"
+        },
+        "memory": {
+          "reason": "Registered 2026-07-27. No bounded one-issue runner and no routing-label contract yet.",
+          "resume_requires": [
+            "bounded-issue-runner",
+            "routing-label-contract",
+            "valid-github-auth"
+          ],
+          "state": "paused"
+        },
+        "pi-mono": {
+          "reason": "Registered as a reference project; safe bounded issue runner is not confirmed.",
+          "resume_requires": [
+            "safe-bounded-runner",
+            "valid-github-auth"
+          ],
+          "state": "paused"
+        },
+        "scillm": {
+          "reason": "Registered for future issue routing; bounded watchdog command contract is not proven yet.",
+          "resume_requires": [
+            "project-command-contract",
+            "valid-github-auth"
+          ],
+          "state": "paused"
+        },
+        "tau": {
+          "last_operator": "human-approved-development-session",
+          "reason": "Operator ordered stop: closure-audit loop flashing browser windows every minute; durable-label fix f0a760b46 landed but no-verdict audits still churn. Resume after loop verified quiet.",
+          "resume_requires": [
+            "valid-goal-file",
+            "valid-github-auth"
+          ],
+          "state": "paused"
+        },
+        "watchdog-probe": {
+          "reason": "Resumed: re-dispatch guard and unmerged-worktree protection are now live.",
+          "state": "active"
+        }
+      },
+      "repair_dispatch_attempts": {},
+      "schema": "agent_skills.project_watchdog.state.v1",
+      "updated_at": "2026-08-14"
+    },
+    "status": "COMPLETED"
+  },
+  "schema": "agent_skills.project_watchdog.issue_1418_live_receipt_readback.v1",
+  "stderr": "2026-08-14 10:57:01.489 | INFO     | watchdog.core:log_event:87 - tick_start\n2026-08-14 10:57:03.683 | INFO     | watchdog.core:log_event:87 - github_lease_event_scan\n2026-08-14 10:57:04.187 | INFO     | watchdog.core:log_event:87 - github_lease_event_scan\n2026-08-14 10:57:04.589 | INFO     | watchdog.core:log_event:87 - github_lease_event_scan\n2026-08-14 10:57:05.308 | INFO     | watchdog.core:log_event:87 - github_issue_scan\n2026-08-14 10:57:05.311 | INFO     | watchdog.core:log_event:87 - issues_excluded_from_dispatch\n2026-08-14 10:57:05.311 | INFO     | watchdog.core:log_event:87 - project_selected\n2026-08-14 10:57:05.313 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.363 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.414 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.461 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.511 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.561 | INFO     | watchdog.core:log_event:87 - handle_ticket_repair_start\n2026-08-14 10:57:05.613 | INFO     | watchdog.core:log_event:87 - tick_finish\n",
+  "stdout": "{\n  \"apply\": false,\n  \"cron_log_file\": \"/home/graham/.local/state/project-watchdog/logs/cron.log\",\n  \"errors\": [],\n  \"excluded_counts\": {\n    \"blocked\": 31,\n    \"human_hold\": 7,\n    \"leased\": 3,\n    \"target_busy\": 1\n  },\n  \"excluded_issue_refs\": {\n    \"blocked\": [\n      \"grahama1970/agent-skills#1085\",\n      \"grahama1970/agent-skills#1086\",\n      \"grahama1970/agent-skills#1090\",\n      \"grahama1970/agent-skills#1128\",\n      \"grahama1970/agent-skills#1129\",\n      \"grahama1970/agent-skills#1130\",\n      \"grahama1970/agent-skills#1133\",\n      \"grahama1970/agent-skills#1140\",\n      \"grahama1970/agent-skills#1179\",\n      \"grahama1970/agent-skills#1182\",\n      \"grahama1970/agent-skills#1183\",\n      \"grahama1970/agent-skills#1195\",\n      \"grahama1970/agent-skills#1196\",\n      \"grahama1970/agent-skills#1197\",\n      \"grahama1970/agent-skills#1198\",\n      \"grahama1970/agent-skills#1249\",\n      \"grahama1970/agent-skills#1250\",\n      \"grahama1970/agent-skills#1253\",\n      \"grahama1970/agent-skills#1317\",\n      \"grahama1970/agent-skills#1318\",\n      \"grahama1970/agent-skills#1319\",\n      \"grahama1970/agent-skills#1320\",\n      \"grahama1970/agent-skills#1321\",\n      \"grahama1970/agent-skills#1327\",\n      \"grahama1970/agent-skills#1356\",\n      \"grahama1970/agent-skills#1357\",\n      \"grahama1970/agent-skills#1358\",\n      \"grahama1970/agent-skills#1361\",\n      \"grahama1970/agent-skills#1388\",\n      \"grahama1970/agent-skills#1398\",\n      \"grahama1970/agent-skills#1407\"\n    ],\n    \"human_hold\": [\n      \"grahama1970/agent-skills#1008\",\n      \"grahama1970/agent-skills#1058\",\n      \"grahama1970/agent-skills#1151\",\n      \"grahama1970/agent-skills#1173\",\n      \"grahama1970/agent-skills#1207\",\n      \"grahama1970/agent-skills#1211\",\n      \"grahama1970/agent-skills#1344\"\n    ],\n    \"leased\": [\n      \"grahama1970/agent-skills#1403\",\n      \"grahama1970/agent-skills#1404\",\n      \"grahama1970/agent-skills#1418\"\n    ],\n    \"target_busy\": [\n      \"grahama1970/agent-skills#1411\"\n    ]\n  },\n  \"excluded_issues\": {\n    \"blocked\": [\n      1085,\n      1086,\n      1090,\n      1128,\n      1129,\n      1130,\n      1133,\n      1140,\n      1179,\n      1182,\n      1183,\n      1195,\n      1196,\n      1197,\n      1198,\n      1249,\n      1250,\n      1253,\n      1317,\n      1318,\n      1319,\n      1320,\n      1321,\n      1327,\n      1356,\n      1357,\n      1358,\n      1361,\n      1388,\n      1398,\n      1407\n    ],\n    \"human_hold\": [\n      1008,\n      1058,\n      1151,\n      1173,\n      1207,\n      1211,\n      1344\n    ],\n    \"leased\": [\n      1403,\n      1404,\n      1418\n    ],\n    \"target_busy\": [\n      1411\n    ]\n  },\n  \"handled_count\": 6,\n  \"handled_issues\": [\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:ae0060eacc77fb72fe4c3f913b78e6790471c9fd66cea1d18c71c395dc2ff725\",\n      \"issue_number\": 1415,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1415\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1415 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/cli.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/cli.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/cli.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    },\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:163eb44fee9704793d81bb256d26dd3348018039dbcc73ac1a5f6b062a34ad7d\",\n      \"issue_number\": 1414,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1414\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1414 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/pipeline.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    },\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:7a22b013b5e7e3187fcb25921ded186570b310b788f9e29366254bf456f3ba9a\",\n      \"issue_number\": 1413,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1413\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1413 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    },\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:40dbe4ca8f890baa97039dc176416741c2146e9c2add41229427f72af7ae692a\",\n      \"issue_number\": 1412,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1412\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1412 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/discovery.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/discovery.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/discovery.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    },\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:c75ae3b95fee6118f722791327fce95aac448c8a99f58f68af38d44084284024\",\n      \"issue_number\": 1409,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1409\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1409 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    },\n    {\n      \"action\": \"ticket_repair\",\n      \"artifacts\": [\n        \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/repair-task.md\"\n      ],\n      \"commands\": [],\n      \"goal_hash\": \"sha256:1de643ebecb73442507d06e42ce5fc68bf9c3e370c4cc9bd5dadc7acdb12083c\",\n      \"issue_number\": 1408,\n      \"issue_url\": \"https://github.com/grahama1970/agent-skills/issues/1408\",\n      \"ok\": true,\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"runner_kind\": \"project-local\",\n      \"seats\": {\n        \"creator\": \"codex\",\n        \"reviewer\": \"webgpt\"\n      },\n      \"selected_agent\": \"coder\",\n      \"status\": \"DRY_RUN\",\n      \"summary\": \"would author grahama1970/agent-skills#1408 in a fresh worktree off origin/main and run $ask tau-dag over ['skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py']\",\n      \"targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\"\n      ],\n      \"worktree_readiness\": {\n        \"branch\": \"main\",\n        \"dirty_paths\": [],\n        \"dirty_tracked\": 0,\n        \"exists\": true,\n        \"ready\": true,\n        \"reasons\": [],\n        \"scope\": [\n          \"skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\"\n        ],\n        \"untracked\": 0,\n        \"worktree\": \"/home/graham/workspace/experiments/agent-skills\"\n      }\n    }\n  ],\n  \"in_flight\": {\n    \"issues\": [\n      1403,\n      1404,\n      1418\n    ],\n    \"leases\": [\n      {\n        \"issue_number\": 1403,\n        \"leases\": [\n          {\n            \"acquired_at\": \"2026-08-14T13:38:26Z\",\n            \"age_seconds\": 4717,\n            \"label\": \"maintainer-active\",\n            \"reason\": \"lease_active\",\n            \"stale_after_seconds\": 86400,\n            \"timestamp_source\": \"github_label_event\"\n          }\n        ]\n      },\n      {\n        \"issue_number\": 1404,\n        \"leases\": [\n          {\n            \"acquired_at\": \"2026-08-14T14:01:54Z\",\n            \"age_seconds\": 3309,\n            \"label\": \"maintainer-active\",\n            \"reason\": \"lease_active\",\n            \"stale_after_seconds\": 86400,\n            \"timestamp_source\": \"github_label_event\"\n          }\n        ]\n      },\n      {\n        \"issue_number\": 1418,\n        \"leases\": [\n          {\n            \"acquired_at\": \"2026-08-14T14:52:45Z\",\n            \"age_seconds\": 258,\n            \"label\": \"maintainer-active\",\n            \"reason\": \"lease_active\",\n            \"stale_after_seconds\": 86400,\n            \"timestamp_source\": \"github_label_event\"\n          }\n        ]\n      }\n    ],\n    \"targets\": [\n      \"skills/ask/src/ask/node_launch_contract.py,skills/ask/src/ask/project_plan.py,skills/ask/src/ask/project_plan_to_tau.py,skills/ask/src/ask/tau_harness.py\",\n      \"skills/ask/src/ask/project_plan.py,skills/ask/src/ask/project_plan_to_tau.py,skills/ask/src/ask/team_plan_cli.py,skills/ask/src/ask/worktree_policy.py\",\n      \"skills/project-watchdog/scripts/watchdog/commands.py\"\n    ]\n  },\n  \"issue_scans\": [\n    {\n      \"excluded_counts\": {\n        \"blocked\": 31,\n        \"human_hold\": 7,\n        \"leased\": 3,\n        \"target_busy\": 1\n      },\n      \"excluded_issue_refs\": {\n        \"blocked\": [\n          \"grahama1970/agent-skills#1407\",\n          \"grahama1970/agent-skills#1398\",\n          \"grahama1970/agent-skills#1388\",\n          \"grahama1970/agent-skills#1361\",\n          \"grahama1970/agent-skills#1358\",\n          \"grahama1970/agent-skills#1357\",\n          \"grahama1970/agent-skills#1356\",\n          \"grahama1970/agent-skills#1327\",\n          \"grahama1970/agent-skills#1321\",\n          \"grahama1970/agent-skills#1320\",\n          \"grahama1970/agent-skills#1319\",\n          \"grahama1970/agent-skills#1318\",\n          \"grahama1970/agent-skills#1317\",\n          \"grahama1970/agent-skills#1253\",\n          \"grahama1970/agent-skills#1250\",\n          \"grahama1970/agent-skills#1249\",\n          \"grahama1970/agent-skills#1198\",\n          \"grahama1970/agent-skills#1197\",\n          \"grahama1970/agent-skills#1196\",\n          \"grahama1970/agent-skills#1195\",\n          \"grahama1970/agent-skills#1183\",\n          \"grahama1970/agent-skills#1182\",\n          \"grahama1970/agent-skills#1179\",\n          \"grahama1970/agent-skills#1140\",\n          \"grahama1970/agent-skills#1133\",\n          \"grahama1970/agent-skills#1130\",\n          \"grahama1970/agent-skills#1129\",\n          \"grahama1970/agent-skills#1128\",\n          \"grahama1970/agent-skills#1090\",\n          \"grahama1970/agent-skills#1086\",\n          \"grahama1970/agent-skills#1085\"\n        ],\n        \"human_hold\": [\n          \"grahama1970/agent-skills#1344\",\n          \"grahama1970/agent-skills#1211\",\n          \"grahama1970/agent-skills#1207\",\n          \"grahama1970/agent-skills#1173\",\n          \"grahama1970/agent-skills#1151\",\n          \"grahama1970/agent-skills#1058\",\n          \"grahama1970/agent-skills#1008\"\n        ],\n        \"leased\": [\n          \"grahama1970/agent-skills#1418\",\n          \"grahama1970/agent-skills#1404\",\n          \"grahama1970/agent-skills#1403\"\n        ],\n        \"target_busy\": [\n          \"grahama1970/agent-skills#1411\"\n        ]\n      },\n      \"excluded_issues\": {\n        \"blocked\": [\n          1407,\n          1398,\n          1388,\n          1361,\n          1358,\n          1357,\n          1356,\n          1327,\n          1321,\n          1320,\n          1319,\n          1318,\n          1317,\n          1253,\n          1250,\n          1249,\n          1198,\n          1197,\n          1196,\n          1195,\n          1183,\n          1182,\n          1179,\n          1140,\n          1133,\n          1130,\n          1129,\n          1128,\n          1090,\n          1086,\n          1085\n        ],\n        \"human_hold\": [\n          1344,\n          1211,\n          1207,\n          1173,\n          1151,\n          1058,\n          1008\n        ],\n        \"leased\": [\n          1418,\n          1404,\n          1403\n        ],\n        \"target_busy\": [\n          1411\n        ]\n      },\n      \"project_id\": \"agent-skills\",\n      \"repo\": \"grahama1970/agent-skills\",\n      \"scanned\": 48\n    }\n  ],\n  \"lease_staleness\": {\n    \"stale\": [],\n    \"stale_after_seconds\": 86400,\n    \"unknown_acquisition_time\": []\n  },\n  \"live\": true,\n  \"log_file\": \"/home/graham/.local/state/project-watchdog/logs/project-watchdog.log\",\n  \"mocked\": false,\n  \"ok\": true,\n  \"project_id\": \"agent-skills\",\n  \"receipt_dir\": \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z\",\n  \"receipt_path\": \"/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260814T145701Z/receipt.json\",\n  \"reclaimed_leases\": [],\n  \"repair_dispatch_cooling\": [],\n  \"rotation\": {\n    \"mode\": \"strict\",\n    \"requested\": \"agent-skills\",\n    \"selected\": \"agent-skills\",\n    \"skipped\": []\n  },\n  \"run_id\": \"project-watchdog-20260814T145701Z\",\n  \"scanned_issues\": [\n    {\n      \"body\": \"## Type\\n\\nfeature\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/cli.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/cli.py\\n\\n## Current state\\n\\nThe 02:00 job currently runs diagnostic mode and explicitly skips tracker, Buzz, and ATS memory. That is safer, but it means the scheduled product stops short of the intended memory/Buzz/report delivery workflow.\\n\\n## Requested outcome\\n\\nAdd a promoted Stage 0 cron mode that publishes the report to allowed local/Memory/Buzz surfaces while preserving no-send/no-submit external-effect gates and exact receipts.\\n\\n## Required proof\\n\\nDeterministic: focused CLI/scheduler tests for promoted mode and effect-policy receipts. Live E2E: register/run the promoted cron command once, then read back scheduler logs plus report/memory/Buzz receipts showing Stage 0 publication succeeded with external_effects=false.\\n\\n## Route\\n\\nops_or_scheduler\\n\\n## Maintainer route\\n\\nops_or_scheduler\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Current limitation:** The 02:00 job currently runs diagnostic mode and explicitly skips tracker, Buzz, and ATS memory. That is safer, but it means the scheduled product stops short of the intended memory/Buzz/report delivery workflow.\\n- **Proposed capability:** Add a promoted Stage 0 cron mode that publishes the report to allowed local/Memory/Buzz surfaces while preserving no-send/no-submit external-effect gates and exact receipts.\\n- **User workflow unlocked:** Scheduler runs one safe production Stage 0 transaction; report, Memory summary, relationship graph, and Buzz summary are published with readback receipts; tracker/ATS effects remain separately gated or explicitly skipped with operator-visible reasons.\\n- **Acceptance criteria:** A scheduled or manually triggered promoted cron run exits 0, reads back scheduler state, writes report, memory, digest, and Buzz receipts, and the effect policy proves no Gmail send, LinkedIn action, RSVP, or ATS submit occurred.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/cli.py`\\n- `skills/monitor-opportunities/fixtures/agentic_eval.json`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n- `scheduler`\\n\\n<!-- ticket-skill\\ntype: feature\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/cli.py\\nroute: ops_or_scheduler\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/cli.py,skills/monitor-opportunities/fixtures/agentic_eval.json\\nrequired_skills: monitor-opportunities,scheduler\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"fbca04\",\n          \"description\": \"Measurable skill improvement\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8u6A\",\n          \"name\": \"skill-optimization\"\n        },\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"New capability or changed behavior request\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vkw\",\n          \"name\": \"type:feature\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: ops or scheduler\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIU-A\",\n          \"name\": \"route:ops_or_scheduler\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: ops\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIW7A\",\n          \"name\": \"lane:ops\"\n        }\n      ],\n      \"number\": 1415,\n      \"title\": \"monitor-opportunities: promote nightly from diagnostic-only to gated Stage 0 publication\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1415\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/cli.py\"\n      ]\n    },\n    {\n      \"body\": \"## Type\\n\\nbug\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/pipeline.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\\n\\n## Current state\\n\\nThe 2026-08-14 report-manifest.json had operational_readiness=DEGRADED, while run-receipt.json had degraded_contracts=[] and no machine-readable readiness cause list. Operators must infer causes from scattered artifacts.\\n\\n## Requested outcome\\n\\nWhenever operational_readiness is DEGRADED, the report and run receipt should include machine-readable readiness_causes with source artifact paths, codes, and human-actionable next steps.\\n\\n## Required proof\\n\\nDeterministic: schema/runtime test that DEGRADED readiness requires non-empty readiness_causes. Live E2E: run nightly diagnostic and read back report-manifest.json plus run-receipt.json showing every DEGRADED state has actionable cause records.\\n\\n## Route\\n\\nbackend_python_or_skill_runtime\\n\\n## Maintainer route\\n\\nbackend_python_or_skill_runtime\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Observed failure:** The 2026-08-14 report-manifest.json had operational_readiness=DEGRADED, while run-receipt.json had degraded_contracts=[] and no machine-readable readiness cause list. Operators must infer causes from scattered artifacts.\\n- **Expected behavior:** Whenever operational_readiness is DEGRADED, the report and run receipt should include machine-readable readiness_causes with source artifact paths, codes, and human-actionable next steps.\\n- **Reproduction or artifact:** Inspect skills/monitor-opportunities/local/nightly/latest/report-manifest.json operational_readiness and skills/monitor-opportunities/local/nightly/latest/run-receipt.json degraded_contracts after the 02:00 cron run.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/pipeline.py`\\n- `skills/monitor-opportunities/schemas/report.schema.json`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n\\n<!-- ticket-skill\\ntype: bug\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\\nroute: backend_python_or_skill_runtime\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/pipeline.py,skills/monitor-opportunities/schemas/report.schema.json\\nrequired_skills: monitor-opportunities\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"Skill behavior or validation failure\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8uVw\",\n          \"name\": \"skill-bug\"\n        },\n        {\n          \"color\": \"d73a4a\",\n          \"description\": \"Defect or regression\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vOA\",\n          \"name\": \"type:bug\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: backend Python or skill runtime\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnUXPHQ\",\n          \"name\": \"route:backend_python_or_skill_runtime\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: backend\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIWMg\",\n          \"name\": \"lane:be\"\n        }\n      ],\n      \"number\": 1414,\n      \"title\": \"monitor-opportunities: report marks DEGRADED without actionable readiness causes\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1414\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/pipeline.py\"\n      ]\n    },\n    {\n      \"body\": \"## Type\\n\\nbug\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\\n\\n## Current state\\n\\nThe 2026-08-14 cron receipt recorded job_insights jobs_checked=0 enriched=0 even though LinkedIn advanced captured 47 rows and premium captured 33 rows with 23 warm paths.\\n\\n## Requested outcome\\n\\nWhen LinkedIn captures job rows, the job insights phase should either inspect a bounded top set or record per-row exclusion reasons explaining why jobs_checked is zero.\\n\\n## Required proof\\n\\nDeterministic: focused test for job-insights candidate selection from LinkedIn evidence. Live E2E: run nightly diagnostic and read back receipt showing jobs_checked > 0 when LinkedIn rows exist, or a non-silent exclusion ledger for every skipped row.\\n\\n## Route\\n\\nbackend_python_or_skill_runtime\\n\\n## Maintainer route\\n\\nbackend_python_or_skill_runtime\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Observed failure:** The 2026-08-14 cron receipt recorded job_insights jobs_checked=0 enriched=0 even though LinkedIn advanced captured 47 rows and premium captured 33 rows with 23 warm paths.\\n- **Expected behavior:** When LinkedIn captures job rows, the job insights phase should either inspect a bounded top set or record per-row exclusion reasons explaining why jobs_checked is zero.\\n- **Reproduction or artifact:** Run nightly diagnostic and inspect scheduler log or receipt fields browser_capture_linkedin_advanced.captured=47, browser_capture_linkedin_premium.captured=33, job_insights.jobs_checked=0.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n\\n<!-- ticket-skill\\ntype: bug\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\\nroute: backend_python_or_skill_runtime\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\\nrequired_skills: monitor-opportunities\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"Skill behavior or validation failure\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8uVw\",\n          \"name\": \"skill-bug\"\n        },\n        {\n          \"color\": \"d73a4a\",\n          \"description\": \"Defect or regression\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vOA\",\n          \"name\": \"type:bug\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: backend Python or skill runtime\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnUXPHQ\",\n          \"name\": \"route:backend_python_or_skill_runtime\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: backend\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIWMg\",\n          \"name\": \"lane:be\"\n        }\n      ],\n      \"number\": 1413,\n      \"title\": \"monitor-opportunities: LinkedIn job insights phase skips captured jobs\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1413\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py\"\n      ]\n    },\n    {\n      \"body\": \"## Type\\n\\nbug\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/discovery.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/discovery.py\\n\\n## Current state\\n\\nThe 2026-08-14 run emitted human_supplied_indeed AUTH_REQUIRED and human_supplied_hiddenjobs AUTH_REQUIRED receipts: no human/browser evidence supplied for Indeed jobs or Hidden Jobs, even though these are mandatory read-only browser-capture sources.\\n\\n## Requested outcome\\n\\nThe nightly should attempt the configured read-only browser capture for Indeed and HiddenJobs, then emit MATCHES, NO_MATCHES, AUTH_REQUIRED with browser evidence, or a precise capture failure; it should not depend on pre-supplied evidence without an attempted autonomous read-only capture.\\n\\n## Required proof\\n\\nDeterministic: required-source test proves missing human evidence triggers an attempted browser capture receipt. Live E2E: run nightly diagnostic and read back source_receipts showing Indeed/HiddenJobs have current-run browser attempt evidence and no silent human-supplied-only gap.\\n\\n## Route\\n\\nbackend_python_or_skill_runtime\\n\\n## Maintainer route\\n\\nbackend_python_or_skill_runtime\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Observed failure:** The 2026-08-14 run emitted human_supplied_indeed AUTH_REQUIRED and human_supplied_hiddenjobs AUTH_REQUIRED receipts: no human/browser evidence supplied for Indeed jobs or Hidden Jobs, even though these are mandatory read-only browser-capture sources.\\n- **Expected behavior:** The nightly should attempt the configured read-only browser capture for Indeed and HiddenJobs, then emit MATCHES, NO_MATCHES, AUTH_REQUIRED with browser evidence, or a precise capture failure; it should not depend on pre-supplied evidence without an attempted autonomous read-only capture.\\n- **Reproduction or artifact:** Run nightly diagnostic and inspect report-manifest.json source_receipts for providers indeed and hiddenjobs.dev with source_class human_supplied_* and result_status AUTH_REQUIRED.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/discovery.py`\\n- `skills/monitor-opportunities/config/required_sources.json`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n\\n<!-- ticket-skill\\ntype: bug\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/discovery.py\\nroute: backend_python_or_skill_runtime\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/discovery.py,skills/monitor-opportunities/config/required_sources.json\\nrequired_skills: monitor-opportunities\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"Skill behavior or validation failure\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8uVw\",\n          \"name\": \"skill-bug\"\n        },\n        {\n          \"color\": \"d73a4a\",\n          \"description\": \"Defect or regression\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vOA\",\n          \"name\": \"type:bug\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: backend Python or skill runtime\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnUXPHQ\",\n          \"name\": \"route:backend_python_or_skill_runtime\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: backend\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIWMg\",\n          \"name\": \"lane:be\"\n        }\n      ],\n      \"number\": 1412,\n      \"title\": \"monitor-opportunities: Indeed and HiddenJobs required sources remain AUTH_REQUIRED in cron\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1412\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/discovery.py\"\n      ]\n    },\n    {\n      \"body\": \"## Type\\n\\nbug\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\\n\\n## Current state\\n\\nThe 2026-08-14 report lane coverage admitted 8 lane A candidates, but morning-digest.json counted employment=0 and consulting=12; all top digest rows were consulting/service actions.\\n\\n## Requested outcome\\n\\nWhen lane A has eligible admitted candidates, the morning digest must either include employment entries or record explicit per-candidate exclusion reasons so employment does not silently disappear.\\n\\n## Required proof\\n\\nDeterministic: digest construction test with admitted lane A rows proves employment rows are included or excluded with reason codes. Live E2E: run nightly diagnostic and read back report-manifest.json plus morning-digest.json showing employment accounting is non-silent.\\n\\n## Route\\n\\nbackend_python_or_skill_runtime\\n\\n## Maintainer route\\n\\nbackend_python_or_skill_runtime\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Observed failure:** The 2026-08-14 report lane coverage admitted 8 lane A candidates, but morning-digest.json counted employment=0 and consulting=12; all top digest rows were consulting/service actions.\\n- **Expected behavior:** When lane A has eligible admitted candidates, the morning digest must either include employment entries or record explicit per-candidate exclusion reasons so employment does not silently disappear.\\n- **Reproduction or artifact:** Inspect skills/monitor-opportunities/local/nightly/latest/report-manifest.json lane_coverage for lane A candidates_admitted=8, then inspect skills/monitor-opportunities/local/nightly/latest/morning-digest.json counts employment=0.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py`\\n- `skills/monitor-opportunities/local/nightly/latest/morning-digest.json`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n\\n<!-- ticket-skill\\ntype: bug\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\\nroute: backend_python_or_skill_runtime\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py,skills/monitor-opportunities/local/nightly/latest/morning-digest.json\\nrequired_skills: monitor-opportunities\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"Skill behavior or validation failure\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8uVw\",\n          \"name\": \"skill-bug\"\n        },\n        {\n          \"color\": \"d73a4a\",\n          \"description\": \"Defect or regression\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vOA\",\n          \"name\": \"type:bug\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: backend Python or skill runtime\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnUXPHQ\",\n          \"name\": \"route:backend_python_or_skill_runtime\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: backend\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIWMg\",\n          \"name\": \"lane:be\"\n        }\n      ],\n      \"number\": 1409,\n      \"title\": \"monitor-opportunities: morning digest is consulting-only despite admitted employment lane\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1409\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/morning_digest.py\"\n      ]\n    },\n    {\n      \"body\": \"## Type\\n\\nbug\\n\\n## Target\\n\\nskills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\\n\\n## Target paths\\n\\n- skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\\n\\n## Current state\\n\\nThe 2026-08-14 report contained 57 relationship_signals from Memory/monitor-contacts, but prospect-queue.json reported relationship=0 and no relationship/reconnect prospects.\\n\\n## Requested outcome\\n\\nEvery action-worthy report-visible relationship_signal should either become a prospect_queue relationship/reconnect entry or be counted with a documented exclusion reason in the queue receipt.\\n\\n## Required proof\\n\\nDeterministic: focused prospect_queue test where relationship_signals produce reconnect prospects with evidence refs and no external effects. Live E2E: run nightly diagnostic and read back report-manifest.json and prospect-queue.json showing relationship queue count matches included actionable relationship signals or documented exclusions.\\n\\n## Route\\n\\nbackend_python_or_skill_runtime\\n\\n## Maintainer route\\n\\nbackend_python_or_skill_runtime\\n\\n## Requested repair agent\\n\\nagent-skill-maintainer\\n\\n## Non-goals\\n\\nNo unrelated refactors or scope expansion.\\n\\n## Ticket type details\\n\\n- **Observed failure:** The 2026-08-14 report contained 57 relationship_signals from Memory/monitor-contacts, but prospect-queue.json reported relationship=0 and no relationship/reconnect prospects.\\n- **Expected behavior:** Every action-worthy report-visible relationship_signal should either become a prospect_queue relationship/reconnect entry or be counted with a documented exclusion reason in the queue receipt.\\n- **Reproduction or artifact:** After the 02:00 cron run, compare jq '.relationship_signals | length' skills/monitor-opportunities/local/nightly/latest/report-manifest.json with jq '.relationship' skills/monitor-opportunities/local/nightly/latest/prospect-queue.json.\\n\\n## Orientation for a stateless agent\\n\\nYou are running from cron with no prior context. Build context in this order\\nbefore changing anything. Do not start by grepping the repository.\\n\\n1. **Recall first.** `skills/memory/run.sh recall --q \\\"<target or symptom>\\\"`\\n   Prior work on this exact problem may already exist. This is cheapest and\\n   most often decisive.\\n2. **Project state.** `skills/project-state/run.sh --json`\\n   Readiness, infrastructure health, doc-code drift, and known gaps in one\\n   command.\\n3. **Curated current state.** Read `PROJECT_KNOWLEDGE.md` in the target skill or\\n   repo when present. It records open blockers and decisions that the code does\\n   not.\\n\\nThen use the narrowest tool for the actual question:\\n\\n| Need | Use |\\n| --- | --- |\\n| Locate code by symbol or structure | `skills/treesitter/run.sh` |\\n| Find prior art in other repos | `skills/github-search/run.sh` |\\n| External research on a load-bearing claim | `skills/dogpile/run.sh \\\"<claim>\\\"`, else `skills/brave-search/run.sh web \\\"<query>\\\"` |\\n| Diagnose a failing test or traceback | load the `debugger` skill |\\n| Run the target's suites | `skills/test/run.sh` |\\n\\nLoad the skill's own `SKILL.md` before using it; do not infer its interface.\\nRecord what you actually ran. A tool's success response is not proof \\u2014 read\\nback the artifact it claims to have produced.\\n\\n## Required repository context\\n\\nRead these before diagnosing or changing code:\\n\\n- `skills/monitor-opportunities/SKILL.md`\\n- `skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py`\\n- `skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py`\\n\\n## Required skills\\n\\nLoad these skills; do not rely on discovering them:\\n\\n- `monitor-opportunities`\\n- `memory`\\n\\n<!-- ticket-skill\\ntype: bug\\ntarget: skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\\nroute: backend_python_or_skill_runtime\\nagent: agent-skill-maintainer\\ncontext_files: skills/monitor-opportunities/SKILL.md,skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py,skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py\\nrequired_skills: monitor-opportunities,memory\\n-->\\n\\nThis ticket must be resolved under `best-practices-github-ticket`. Closure requires deterministic proof; WebGPT review or CI green alone is not closure proof.\\n\",\n      \"labels\": [\n        {\n          \"color\": \"0e8a16\",\n          \"description\": \"Skill behavior or validation failure\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8uVw\",\n          \"name\": \"skill-bug\"\n        },\n        {\n          \"color\": \"d73a4a\",\n          \"description\": \"Defect or regression\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnH8vOA\",\n          \"name\": \"type:bug\"\n        },\n        {\n          \"color\": \"1d76db\",\n          \"description\": \"Maintainer route: backend Python or skill runtime\",\n          \"id\": \"LA_kwDOQ31KU88AAAACnUXPHQ\",\n          \"name\": \"route:backend_python_or_skill_runtime\"\n        },\n        {\n          \"color\": \"5319e7\",\n          \"description\": \"Requested repair agent: agent-skill-maintainer\",\n          \"id\": \"LA_kwDOQ31KU88AAAACpjcCYA\",\n          \"name\": \"agent:agent-skill-maintainer\"\n        },\n        {\n          \"color\": \"0052cc\",\n          \"description\": \"Ticket is routable to a cron-dispatched repair agent\",\n          \"id\": \"LA_kwDOQ31KU88AAAACtgLzxw\",\n          \"name\": \"agent-work\"\n        },\n        {\n          \"color\": \"c2e0c6\",\n          \"description\": \"Concurrency lane: backend\",\n          \"id\": \"LA_kwDOQ31KU88AAAACttIWMg\",\n          \"name\": \"lane:be\"\n        }\n      ],\n      \"number\": 1408,\n      \"title\": \"monitor-opportunities: relationship signals are absent from prospect queue\",\n      \"url\": \"https://github.com/grahama1970/agent-skills/issues/1408\",\n      \"watchdog_action\": \"ticket_repair\",\n      \"watchdog_targets\": [\n        \"skills/monitor-opportunities/src/monitor_opportunities/prospect_queue.py\"\n      ]\n    }\n  ],\n  \"schema\": \"agent_skills.project_watchdog.tick_receipt.v1\",\n  \"state_snapshot\": {\n    \"closure_audit_attempts\": {\n      \"grahama1970/agent-skills#1231\": 1786545365.1459277,\n      \"grahama1970/agent-skills#1232\": 1786550825.6106622,\n      \"grahama1970/agent-skills#1243\": 1786623845.8280442,\n      \"grahama1970/agent-skills#1245\": 1786629005.0198333,\n      \"grahama1970/agent-skills#1246\": 1786627565.1693177,\n      \"grahama1970/agent-skills#1247\": 1786626304.5893972,\n      \"grahama1970/agent-skills#1252\": 1786625886.1759312,\n      \"grahama1970/agent-skills#1257\": 1786625705.6727972,\n      \"grahama1970/agent-skills#1259\": 1786626184.9884968,\n      \"grahama1970/agent-skills#1260\": 1786626545.7139149,\n      \"grahama1970/agent-skills#1261\": 1786626665.015035,\n      \"grahama1970/agent-skills#1263\": 1786626785.8984635,\n      \"grahama1970/agent-skills#1265\": 1786626904.3022244,\n      \"grahama1970/agent-skills#1266\": 1786690804.6453712,\n      \"grahama1970/agent-skills#1267\": 1786627144.3874397,\n      \"grahama1970/agent-skills#1268\": 1786627805.5978327,\n      \"grahama1970/agent-skills#1269\": 1786627325.3052506,\n      \"grahama1970/agent-skills#1274\": 1786627986.7315755,\n      \"grahama1970/agent-skills#1275\": 1786628284.9549446,\n      \"grahama1970/agent-skills#1276\": 1786628464.6724362,\n      \"grahama1970/agent-skills#1288\": 1786628105.1064394,\n      \"grahama1970/tau#182\": 1785533707.567846,\n      \"grahama1970/tau#183\": 1785533647.1282246,\n      \"grahama1970/tau#184\": 1785533767.1324015,\n      \"grahama1970/tau#185\": 1785533887.4284008,\n      \"grahama1970/tau#196\": 1785533947.847353,\n      \"grahama1970/tau#197\": 1785534007.468815,\n      \"grahama1970/tau#198\": 1785534067.3421674,\n      \"grahama1970/tau#200\": 1785530529.852353,\n      \"grahama1970/tau#201\": 1785530588.277708,\n      \"grahama1970/tau#202\": 1785530647.65865,\n      \"grahama1970/tau#203\": 1785530708.0639524,\n      \"grahama1970/tau#204\": 1785272767.5938919,\n      \"grahama1970/tau#206\": 1785532087.6068995,\n      \"grahama1970/tau#207\": 1785531187.873871,\n      \"grahama1970/tau#208\": 1785531966.8613613,\n      \"grahama1970/tau#209\": 1785531247.811181,\n      \"grahama1970/tau#210\": 1785530826.778395,\n      \"grahama1970/tau#211\": 1785531727.3727949,\n      \"grahama1970/tau#212\": 1785530767.4852111,\n      \"grahama1970/tau#215\": 1785531608.0118513,\n      \"grahama1970/tau#216\": 1785530947.2701,\n      \"grahama1970/tau#217\": 1785531487.7355554,\n      \"grahama1970/tau#218\": 1785531306.9454064,\n      \"grahama1970/tau#219\": 1785531366.9441135,\n      \"grahama1970/tau#220\": 1785531847.05113,\n      \"grahama1970/tau#222\": 1785532266.9313464,\n      \"grahama1970/tau#223\": 1785532627.7393427,\n      \"grahama1970/tau#224\": 1785532507.4927318,\n      \"grahama1970/tau#225\": 1785532387.6431453,\n      \"grahama1970/tau#233\": 1785532748.2451434,\n      \"grahama1970/tau#234\": 1785532868.0970364,\n      \"grahama1970/tau#235\": 1785532988.1033478,\n      \"grahama1970/tau#236\": 1785533106.8979437,\n      \"grahama1970/tau#237\": 1785533226.8770807,\n      \"grahama1970/tau#238\": 1785533287.1355107,\n      \"grahama1970/tau#239\": 1785533347.151327,\n      \"grahama1970/tau#240\": 1785533407.557908,\n      \"grahama1970/tau#251\": 1785533467.5835261,\n      \"grahama1970/tau#252\": 1785533587.927173,\n      \"grahama1970/tau#253\": 1785533827.266536\n    },\n    \"global\": {\n      \"reason\": \"activated by agent\",\n      \"resume_allowed_by\": [\n        \"human\"\n      ],\n      \"resume_requires\": [\n        \"dispatcher-implementation\",\n        \"dry-run-scan-receipt\",\n        \"no-live-mutation-without-apply\"\n      ],\n      \"state\": \"active\"\n    },\n    \"last_served_project\": \"agent-skills\",\n    \"projects\": {\n      \"agent-skills\": {\n        \"reason\": \"Readiness is judged per target, so the repository being dirty elsewhere no longer withholds clean skills; repairs are authored in an isolated worktree off origin/main, not in this checkout.\",\n        \"resume_requires\": [\n          \"clean-worktree-policy\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"active\"\n      },\n      \"chatgpt-lab\": {\n        \"reason\": \"Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.\",\n        \"resume_requires\": [\n          \"shared-lease-adapter\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"memory\": {\n        \"reason\": \"Registered 2026-07-27. No bounded one-issue runner and no routing-label contract yet.\",\n        \"resume_requires\": [\n          \"bounded-issue-runner\",\n          \"routing-label-contract\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"pi-mono\": {\n        \"reason\": \"Registered as a reference project; safe bounded issue runner is not confirmed.\",\n        \"resume_requires\": [\n          \"safe-bounded-runner\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"scillm\": {\n        \"reason\": \"Registered for future issue routing; bounded watchdog command contract is not proven yet.\",\n        \"resume_requires\": [\n          \"project-command-contract\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"tau\": {\n        \"last_operator\": \"human-approved-development-session\",\n        \"reason\": \"Operator ordered stop: closure-audit loop flashing browser windows every minute; durable-label fix f0a760b46 landed but no-verdict audits still churn. Resume after loop verified quiet.\",\n        \"resume_requires\": [\n          \"valid-goal-file\",\n          \"valid-github-auth\"\n        ],\n        \"state\": \"paused\"\n      },\n      \"watchdog-probe\": {\n        \"reason\": \"Resumed: re-dispatch guard and unmerged-worktree protection are now live.\",\n        \"state\": \"active\"\n      }\n    },\n    \"repair_dispatch_attempts\": {},\n    \"schema\": \"agent_skills.project_watchdog.state.v1\",\n    \"updated_at\": \"2026-08-14\"\n  },\n  \"status\": \"COMPLETED\"\n}\n",
+  "tick_exit": 0,
+  "what_was_exercised": "real project-watchdog dry-run tick against live GitHub issue listing for grahama1970/agent-skills, then receipt readback for excluded_issues.target_busy"
+}

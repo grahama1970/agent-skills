@@ -337,6 +337,27 @@ def test_reclaimed_issue_is_not_redispatched_in_the_same_tick(monkeypatch):
     assert registry.LAST_SCAN["excluded_issues"]["lease_reclaimed_this_tick"] == [7]
 
 
+def test_stale_lease_skip_reason_is_machine_readable(monkeypatch):
+    issue = _live_shaped_lease()
+    issue["labels"] = [{"name": "agent-work"}, {"name": "maintainer-active"}]
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps([issue]), "stderr": ""}
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+    routable = registry.list_routable_issues(
+        "t",
+        {"repo": "o/agent-skills", "worktree": "/tmp/worktree"},
+        skip_issue_numbers={7},
+        skip_issue_reasons={7: "stale_lease"},
+    )
+
+    assert routable == []
+    assert registry.LAST_SCAN["excluded"]["stale_lease"] == 1
+    assert registry.LAST_SCAN["excluded_issues"]["stale_lease"] == [7]
+
+
 # --- a silent no-op tick is the failure this watchdog exists to prevent -------
 #
 # Both no-project-serviceable paths reported ok:True / exit 0, so a fleet where
@@ -451,8 +472,15 @@ def test_strict_project_tick_does_not_fall_through_to_another_project(tmp_path, 
         def as_receipt_block(self):
             return {"project_id": "tau", "consecutive_ticks": 1}
 
-    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None):
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
         scanned.append(str(candidate["project_id"]))
+        registry.LAST_SCAN.clear()
+        registry.LAST_SCAN.update({
+            "scanned": 0,
+            "excluded": {},
+            "excluded_issues": {},
+            "unroutable_no_repair_lane": 0,
+        })
         if candidate["project_id"] == "agent-skills":
             return [_issue(99, "skills/project-watchdog")]
         return []
@@ -497,8 +525,15 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     scanned: list[str] = []
     captured: dict = {}
 
-    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None):
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
         scanned.append(str(candidate["project_id"]))
+        registry.LAST_SCAN.clear()
+        registry.LAST_SCAN.update({
+            "scanned": 0,
+            "excluded": {},
+            "excluded_issues": {},
+            "unroutable_no_repair_lane": 0,
+        })
         if candidate["project_id"] == "agent-skills":
             issue = _issue(99, "skills/project-watchdog")
             issue["watchdog_action"] = "ticket_repair"
@@ -527,6 +562,77 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     assert scanned == ["tau", "agent-skills"]
     assert captured["receipt"]["rotation"]["mode"] == "fleet"
     assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
+
+
+def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkeypatch):
+    import json as _json
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [{"project_id": "agent-skills", "repo": "o/agent-skills"}]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"agent-skills": {"state": "active"}},
+    }))
+    captured: dict = {}
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
+        registry.LAST_SCAN.clear()
+        registry.LAST_SCAN.update({
+            "scanned": 5,
+            "excluded": {
+                "blocked": 1,
+                "human_hold": 1,
+                "leased": 1,
+                "stale_lease": 1,
+                "target_busy": 1,
+            },
+            "excluded_issues": {
+                "blocked": [1402],
+                "human_hold": [1403],
+                "leased": [1404],
+                "stale_lease": [1405],
+                "target_busy": [1411],
+            },
+            "unroutable_no_repair_lane": 0,
+        })
+        issue = _issue(1418, "skills/project-watchdog")
+        issue["watchdog_action"] = "ticket_repair"
+        issue["watchdog_targets"] = ["skills/project-watchdog"]
+        return [issue]
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue",
+                        lambda *a, **k: {"ok": True, "status": "DRY_RUN"})
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
+    monkeypatch.setattr(
+        commands,
+        "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code)
+        or code,
+    )
+
+    commands._tick_locked(
+        "run", tmp_path / "receipt", apply=False, project_id="agent-skills",
+        max_tickets=1
+    )
+
+    receipt = captured["receipt"]
+    assert receipt["excluded_counts"]["target_busy"] == 1
+    assert receipt["excluded_issues"]["target_busy"] == [1411]
+    assert receipt["excluded_issues"]["blocked"] == [1402]
+    assert receipt["excluded_issues"]["human_hold"] == [1403]
+    assert receipt["excluded_issues"]["leased"] == [1404]
+    assert receipt["excluded_issues"]["stale_lease"] == [1405]
+    assert receipt["excluded_issue_refs"]["target_busy"] == ["o/agent-skills#1411"]
+    assert receipt["issue_scans"][0]["project_id"] == "agent-skills"
+    assert receipt["issue_scans"][0]["excluded_issues"]["target_busy"] == [1411]
 
 
 # --- runtime state must not live in the repository ---------------------------

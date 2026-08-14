@@ -64,6 +64,57 @@ _SELF_CLEARING_SKIPS = frozenset({"lane_busy", "no_routable_issues"})
 FLEET_PROJECT_ID = "all"
 
 
+def _last_issue_scan_summary(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Return the registry scan side-channel in receipt-ready form."""
+    excluded_issues = {
+        str(reason): [int(number) for number in numbers]
+        for reason, numbers in dict(registry.LAST_SCAN.get("excluded_issues", {})).items()
+    }
+    return {
+        "project_id": str(candidate.get("project_id")),
+        "repo": registry.project_repo(candidate),
+        "scanned": int(registry.LAST_SCAN.get("scanned", 0) or 0),
+        "excluded_counts": {
+            str(reason): int(count)
+            for reason, count in dict(registry.LAST_SCAN.get("excluded", {})).items()
+        },
+        "excluded_issues": excluded_issues,
+        "excluded_issue_refs": {
+            reason: [f"{registry.project_repo(candidate)}#{number}" for number in numbers]
+            for reason, numbers in excluded_issues.items()
+        },
+    }
+
+
+def _record_issue_scan_receipt(
+    receipt: dict[str, Any], issue_scans: list[dict[str, Any]]
+) -> None:
+    """Copy per-scan exclusion details into first-class receipt fields."""
+    excluded_counts: dict[str, int] = {}
+    excluded_issues: dict[str, list[int]] = {}
+    excluded_issue_refs: dict[str, list[str]] = {}
+    for scan in issue_scans:
+        for reason, count in scan.get("excluded_counts", {}).items():
+            excluded_counts[str(reason)] = excluded_counts.get(str(reason), 0) + int(count)
+        for reason, numbers in scan.get("excluded_issues", {}).items():
+            bucket = excluded_issues.setdefault(str(reason), [])
+            bucket.extend(int(number) for number in numbers)
+        for reason, refs in scan.get("excluded_issue_refs", {}).items():
+            bucket = excluded_issue_refs.setdefault(str(reason), [])
+            bucket.extend(str(ref) for ref in refs)
+
+    receipt["issue_scans"] = issue_scans
+    receipt["excluded_counts"] = {
+        reason: excluded_counts[reason] for reason in sorted(excluded_counts)
+    }
+    receipt["excluded_issues"] = {
+        reason: sorted(numbers) for reason, numbers in sorted(excluded_issues.items())
+    }
+    receipt["excluded_issue_refs"] = {
+        reason: sorted(refs) for reason, refs in sorted(excluded_issue_refs.items())
+    }
+
+
 def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
     """Mark a tick that serviced no project, and say whether it can recover.
 
@@ -361,6 +412,7 @@ def _tick_locked(
     # work. Strict mode tries only the named project; it must not fall through to
     # a different repo while the receipt still says --project tau.
     skipped: list[dict[str, Any]] = []
+    issue_scans: list[dict[str, Any]] = []
     project = None
     issues: list[dict[str, Any]] = []
 
@@ -418,26 +470,38 @@ def _tick_locked(
                 cooling_repairs.add(int(num))
             else:
                 dispatch_attempts.pop(key, None)  # expired: eligible again
+        skip_issue_reasons: dict[int, str] = {
+            int(entry["issue_number"]): "stale_lease" for entry in stale
+        }
+        skip_issue_reasons.update(
+            {int(entry["issue_number"]): "lease_reclaimed_this_tick" for entry in reclaimed}
+        )
+        skip_issue_reasons.update(
+            {int(issue_number): "repair_dispatch_cooling" for issue_number in cooling_repairs}
+        )
         try:
             found = list_routable_issues(
                 run_id,
                 candidate,
                 busy,
-                skip_issue_numbers=(
-                    {int(e["issue_number"]) for e in reclaimed} | cooling_repairs
-                ),
+                skip_issue_numbers=set(skip_issue_reasons),
+                skip_issue_reasons=skip_issue_reasons,
             )
         except (RuntimeError, ValueError) as exc:
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
             logger.error("issue scan failed for project {}: {}", cid, exc)
             continue
+        scan_summary = _last_issue_scan_summary(candidate)
+        issue_scans.append(scan_summary)
         if not found:
             skipped.append(
                 {
                     "project_id": cid,
                     "reason": "no_routable_issues",
-                    "scanned": registry.LAST_SCAN.get("scanned", 0),
-                    "excluded": registry.LAST_SCAN.get("excluded", {}),
+                    "scanned": scan_summary["scanned"],
+                    "excluded": scan_summary["excluded_counts"],
+                    "excluded_counts": scan_summary["excluded_counts"],
+                    "excluded_issues": scan_summary["excluded_issues"],
                 }
             )
             continue
@@ -461,6 +525,8 @@ def _tick_locked(
             "leases": registry.LAST_LEASE_SCAN.get("active", []),
         }
         break
+
+    _record_issue_scan_receipt(receipt, issue_scans)
 
     receipt["rotation"] = {
         "requested": project_id,
