@@ -74,6 +74,14 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         lambda capture_dir: {"status": "NO_MATCHES", "opportunities_captured": 0},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_indeed_jobs",
+        lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_hiddenjobs",
+        lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_sales_navigator_saved",
         lambda capture_dir: {"status": "NO_MATCHES", "prospects_captured": 0},
     )

@@ -733,6 +733,8 @@ def run_stage0(
     out_dir: Path,
     fixture_dir: Path | None = None,
     linkedin_evidence: Path | None = None,
+    indeed_evidence: Path | None = None,
+    hiddenjobs_evidence: Path | None = None,
     roundtable_receipts_path: Path | None = None,
     outreach_effects_path: Path | None = None,
     federal_evidence: Path | None = None,
@@ -754,6 +756,8 @@ def run_stage0(
         out_dir=discovery_dir,
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
+        indeed_evidence=indeed_evidence,
+        hiddenjobs_evidence=hiddenjobs_evidence,
         federal_evidence=federal_evidence,
         meetup_evidence=meetup_evidence,
     )

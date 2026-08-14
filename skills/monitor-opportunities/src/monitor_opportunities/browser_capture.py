@@ -78,6 +78,55 @@ _MEETUP_PAGE_EXTRACT_JS = (
     "})()"
 )
 
+_HIDDENJOBS_URL = "https://hiddenjobs.dev/"
+_INDEED_AI_BUFFALO_URL = "https://www.indeed.com/jobs?q=AI&l=Buffalo%2C%20NY"
+
+_HIDDENJOBS_EXTRACT_JS = (
+    "(function(){"
+    "var out=[],seen={};"
+    "var anchors=[].slice.call(document.querySelectorAll('a[href]'));"
+    "for(var i=0;i<anchors.length;i++){"
+    "var a=anchors[i], h=a.href||'', t=(a.innerText||'').trim();"
+    "if(!h || seen[h]) continue;"
+    "var card=a.closest('article,li,section,div');"
+    "var text=((card&&card.innerText)||t||'').replace(/\\s+/g,' ').trim();"
+    "if(text.length<20) continue;"
+    "if(!/job|apply|engineer|developer|data|ai|software|remote/i.test(text)) continue;"
+    "seen[h]=1; out.push({title:t.slice(0,140)||text.slice(0,140), url:h, text:text.slice(0,1400)});"
+    "}"
+    "return JSON.stringify({url:location.href,title:document.title,"
+    "text:(document.body.innerText||'').slice(0,12000),records:out.slice(0,80)});"
+    "})()"
+)
+
+_INDEED_EXTRACT_JS = (
+    "(function(){"
+    "var data=window._initialData||{};"
+    "var results=((((data.hostQueryExecutionResult||{}).data||{}).jobData||{}).results)||[];"
+    "var out=[];"
+    "for(var i=0;i<results.length;i++){"
+    "var job=results[i]&&results[i].job||{};"
+    "if(!job.title) continue;"
+    "out.push({title:job.title,organization:job.sourceEmployerName||((job.source||{}).name)||'',"
+    "location:(((job.location||{}).formatted||{}).long)||((job.location||{}).fullAddress)||'',"
+    "url:job.url||'',job_key:job.key||'',date_on_indeed:job.dateOnIndeed||null,"
+    "text:(((job.description||{}).html)||'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim().slice(0,1800)});"
+    "}"
+    "if(!out.length){"
+    "var cards=[].slice.call(document.querySelectorAll('[data-jk], a[href*=\"/rc/clk\"], a[href*=\"/viewjob\"]'));"
+    "var seen={};"
+    "for(var j=0;j<cards.length;j++){"
+    "var el=cards[j], h=el.href||'', key=el.getAttribute('data-jk')||h;"
+    "if(!key||seen[key]) continue; seen[key]=1;"
+    "var card=el.closest('li,div'); var txt=((card&&card.innerText)||el.innerText||'').replace(/\\s+/g,' ').trim();"
+    "if(txt.length>20) out.push({title:txt.slice(0,140),organization:'',location:'',url:h,text:txt.slice(0,1800)});"
+    "}"
+    "}"
+    "return JSON.stringify({url:location.href,title:document.title,"
+    "text:(document.body.innerText||'').slice(0,12000),records:out.slice(0,80)});"
+    "})()"
+)
+
 
 class BrowserCaptureError(ValueError):
     """Stable browser-capture error."""
@@ -318,6 +367,102 @@ def ensure_browser(surf_run: Path = SURF_RUN_DEFAULT) -> str:
             "(chrome://extensions -> Load unpacked -> surf/vendor/surf-cli/dist); "
             "a CDP/headless Chrome cannot bind the extension."
         ) from exc
+
+
+def _capture_required_job_source(
+    *,
+    out_dir: Path,
+    surf_run: Path,
+    source: str,
+    url: str,
+    extract_js: str,
+    wait_seconds: str = "5",
+) -> dict[str, Any]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": source,
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "read_only_browser_capture_no_apply_no_message",
+        "url": url,
+    }
+    tab_id = ""
+    try:
+        ensure_browser(surf_run)
+        created = _surf(surf_run, "tab.new", url, "--json")
+        tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+        if not tab_id:
+            raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
+        _surf_pause(surf_run, wait_seconds)
+        raw = _surf(surf_run, "js", "--tab-id", tab_id, extract_js, timeout=45)
+        snapshot = json.loads(json.loads(raw))
+        records = [row for row in snapshot.get("records") or [] if isinstance(row, dict)]
+        evidence = {
+            "schema_version": "monitor_opportunities.required_browser_source_capture.v1",
+            "source": source,
+            "capture_method": "surf_read_only_visible_page",
+            "automation_policy": receipt["automation_policy"],
+            "external_effects": False,
+            "observed_at": utc_now(),
+            "url": snapshot.get("url") or url,
+            "title": snapshot.get("title"),
+            "text": snapshot.get("text"),
+            "records": records,
+            "non_claims": [
+                "This evidence satisfies source-health coverage only.",
+                "Aggregator or locator rows are not independently admitted as ranked opportunities.",
+                "No apply, save, login, message, connection, RSVP, or submit action was taken.",
+            ],
+        }
+        evidence_path = out_dir / f"{source}-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if records or str(snapshot.get("text") or "").strip() else "EMPTY"
+        receipt["records_captured"] = len(records)
+        receipt["evidence_path"] = str(evidence_path)
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.error("{} capture failed: {}", source, exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["evidence_path"] = None
+        receipt["diagnostic_bundle"] = _write_surf_diagnostic_bundle(
+            out_dir,
+            source=source,
+            surf_run=surf_run,
+            tab_id=tab_id or None,
+            reason=f"{source}_capture_failed",
+            url=url,
+            error=exc,
+        )
+    finally:
+        if tab_id:
+            _close_tab(surf_run, tab_id, source)
+    (out_dir / f"{source}-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return receipt
+
+
+def capture_hiddenjobs(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    return _capture_required_job_source(
+        out_dir=out_dir,
+        surf_run=surf_run,
+        source="hiddenjobs",
+        url=_HIDDENJOBS_URL,
+        extract_js=_HIDDENJOBS_EXTRACT_JS,
+        wait_seconds="4",
+    )
+
+
+def capture_indeed_jobs(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    return _capture_required_job_source(
+        out_dir=out_dir,
+        surf_run=surf_run,
+        source="indeed",
+        url=_INDEED_AI_BUFFALO_URL,
+        extract_js=_INDEED_EXTRACT_JS,
+        wait_seconds="5",
+    )
 
 
 _LINKEDIN_TOP_APPLICANT_URL = "https://www.linkedin.com/jobs/collections/top-applicant/"

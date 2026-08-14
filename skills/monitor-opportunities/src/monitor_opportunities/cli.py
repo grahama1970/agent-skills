@@ -211,6 +211,22 @@ def sweep(
         readable=True,
         help="Local read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
     ),
+    indeed_evidence: Path | None = typer.Option(
+        None,
+        "--indeed-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Indeed browser capture; source-health only, no apply.",
+    ),
+    hiddenjobs_evidence: Path | None = typer.Option(
+        None,
+        "--hiddenjobs-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only HiddenJobs browser capture; source-health only.",
+    ),
 ) -> None:
     """Run read-only source discovery and write local receipts."""
     _configure_logging()
@@ -223,6 +239,8 @@ def sweep(
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
         meetup_evidence=meetup_evidence,
+        indeed_evidence=indeed_evidence,
+        hiddenjobs_evidence=hiddenjobs_evidence,
     )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
@@ -360,6 +378,22 @@ def run_command(
         readable=True,
         help="Read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
     ),
+    indeed_evidence: Path | None = typer.Option(
+        None,
+        "--indeed-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Indeed browser capture; source-health only, no apply.",
+    ),
+    hiddenjobs_evidence: Path | None = typer.Option(
+        None,
+        "--hiddenjobs-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only HiddenJobs browser capture; source-health only.",
+    ),
     outreach_effects: Path | None = typer.Option(
         None,
         "--outreach-effects",
@@ -390,14 +424,16 @@ def run_command(
         os.environ["MONITOR_RELATIONSHIP_SIGNALS_ENABLED"] = "0"
     try:
         receipt = run_stage0(
-            skill_dir,
-            out,
-            fixture_dir,
-            linkedin_evidence,
-            roundtable_receipts,
-            outreach_effects,
+            skill_dir=skill_dir,
+            out_dir=out,
+            fixture_dir=fixture_dir,
+            linkedin_evidence=linkedin_evidence,
+            roundtable_receipts_path=roundtable_receipts,
+            outreach_effects_path=outreach_effects,
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
+            indeed_evidence=indeed_evidence,
+            hiddenjobs_evidence=hiddenjobs_evidence,
             memory_url=memory_url,
             degrade_required_source_failures=degrade_required_sources,
         )
@@ -766,6 +802,8 @@ def nightly(
         browser_control_summary,
         capture_linkedin_advanced_search,
         capture_linkedin_top_applicant,
+        capture_hiddenjobs,
+        capture_indeed_jobs,
         capture_sales_navigator_saved,
         capture_sam,
         capture_meetup_buffalo_isolated,
@@ -819,6 +857,22 @@ def nightly(
     elif prem_receipt.get("evidence_path") and not linkedin_evidence:
         linkedin_evidence = prem_receipt["evidence_path"]
 
+    # Required aggregator/locator sources: capture visible browser evidence to
+    # satisfy source-health contracts without admitting these rows as ranked
+    # opportunities or performing any site action.
+    indeed_receipt = capture_indeed_jobs(capture_dir)
+    steps["browser_capture_indeed"] = {
+        "status": indeed_receipt.get("status"),
+        "captured": indeed_receipt.get("records_captured"),
+    }
+    indeed_evidence = indeed_receipt.get("evidence_path")
+    hiddenjobs_receipt = capture_hiddenjobs(capture_dir)
+    steps["browser_capture_hiddenjobs"] = {
+        "status": hiddenjobs_receipt.get("status"),
+        "captured": hiddenjobs_receipt.get("records_captured"),
+    }
+    hiddenjobs_evidence = hiddenjobs_receipt.get("evidence_path")
+
     # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
     # strictly read-only. Best-effort; captured to its own evidence, not fed to the
     # jobs run. Graham transmits every outreach himself.
@@ -848,6 +902,10 @@ def nightly(
         run_cmd += ["--linkedin-evidence", str(linkedin_evidence)]
     if meetup_evidence:
         run_cmd += ["--meetup-evidence", str(meetup_evidence)]
+    if indeed_evidence:
+        run_cmd += ["--indeed-evidence", str(indeed_evidence)]
+    if hiddenjobs_evidence:
+        run_cmd += ["--hiddenjobs-evidence", str(hiddenjobs_evidence)]
     run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:

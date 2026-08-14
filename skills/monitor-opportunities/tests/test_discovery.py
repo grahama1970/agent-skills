@@ -129,6 +129,110 @@ def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
     assert {required["indeed"]["result_status"], required["hiddenjobs"]["result_status"]} == {"AUTH_REQUIRED"}
 
 
+def test_sweep_uses_browser_required_source_evidence_for_source_health_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        discovery,
+        "_load_targets",
+        lambda _skill_dir: {
+            "source_locators": [
+                {"lane": "A", "name": "Hidden Jobs", "provider": "hiddenjobs.dev", "url": "https://hiddenjobs.dev/"},
+                {"lane": "A", "name": "Indeed", "provider": "indeed", "url": "https://www.indeed.com/jobs"},
+            ],
+            "employment": [],
+        },
+    )
+    monkeypatch.setattr(
+        discovery,
+        "_source_locator_receipt",
+        lambda _client, target: {
+            "receipt_id": f"locator-{target['provider']}",
+            "lane": "A",
+            "provider": target["provider"],
+            "target": target["name"],
+            "required_source_id": "hiddenjobs" if target["provider"] == "hiddenjobs.dev" else "indeed",
+            "channel": "source_locator",
+            "source_class": "source_locator",
+            "result_status": "NO_MATCHES",
+            "observed_at": "2026-08-13T00:00:00Z",
+            "request_summary": "locator only",
+            "response_status": 200,
+            "content_type": None,
+            "response_bytes": 1,
+            "content_sha256": "a" * 64,
+            "evidence_refs": [target["url"]],
+            "limitations": ["hint-only"],
+        },
+    )
+    indeed_evidence = tmp_path / "indeed-evidence.json"
+    hiddenjobs_evidence = tmp_path / "hiddenjobs-evidence.json"
+    indeed_evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.required_browser_source_capture.v1",
+                "source": "indeed",
+                "url": "https://www.indeed.com/jobs?q=AI&l=Buffalo%2C%20NY",
+                "text": "Indeed visible AI job search results.",
+                "records": [{"title": "AI Engineer", "organization": "Example"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    hiddenjobs_evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.required_browser_source_capture.v1",
+                "source": "hiddenjobs",
+                "url": "https://hiddenjobs.dev/",
+                "text": "HiddenJobs visible remote technology listings.",
+                "records": [{"title": "Technical Account Manager", "organization": "n8n"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    out = tmp_path / "discovery"
+    result = runner.invoke(
+        app,
+        [
+            "sweep",
+            "--lane",
+            "A",
+            "--out",
+            str(out),
+            "--indeed-evidence",
+            str(indeed_evidence),
+            "--hiddenjobs-evidence",
+            str(hiddenjobs_evidence),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    receipts = [
+        json.loads(line)
+        for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    required = {
+        row.get("required_source_id"): row
+        for row in receipts
+        if row.get("required_source_id") in {"indeed", "hiddenjobs"} and row.get("channel") == "browser_human_supplied"
+    }
+    assert required["indeed"]["result_status"] == "MATCHES"
+    assert required["hiddenjobs"]["result_status"] == "MATCHES"
+    assert required["indeed"]["parser_result"] == "PARSED"
+    assert required["hiddenjobs"]["parser_result"] == "PARSED"
+    assert required["indeed"]["automation_policy"] == "read_only_browser_capture_no_apply_no_message"
+    assert required["hiddenjobs"]["automation_policy"] == "read_only_browser_capture_no_apply_no_message"
+    candidates = [
+        json.loads(line)
+        for line in (out / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert all(row.get("source_provider") not in {"indeed", "hiddenjobs.dev"} for row in candidates)
+
+
 def test_employment_dispatch_rejects_unknown_provider() -> None:
     target = {"provider": "unknown-board", "name": "Example", "slug": "example"}
     receipt, rows = _employment_candidates(httpx.Client(), target)

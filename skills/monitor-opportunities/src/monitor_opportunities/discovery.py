@@ -247,6 +247,55 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
     return receipt, candidates
 
 
+def _required_browser_evidence_receipt(
+    path: Path,
+    *,
+    provider: str,
+    required_source_id: str,
+    target: str,
+    source_class: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    raw = path.read_bytes()
+    receipt = _base_receipt("A", provider, target, source_class)
+    receipt["required_source_id"] = required_source_id
+    receipt["channel"] = "browser_human_supplied"
+    receipt["automation_policy"] = "read_only_browser_capture_no_apply_no_message"
+    receipt["request_summary"] = (
+        f"Read local browser evidence artifact {path.name}; source-health coverage only, "
+        "no apply, save, login, message, or submit action"
+    )
+    receipt["response_status"] = None
+    receipt["content_type"] = "application/json" if path.suffix.lower() == ".json" else "text/plain"
+    receipt["response_bytes"] = len(raw)
+    receipt["content_sha256"] = sha256_bytes(raw)
+    receipt["evidence_refs"] = [_local_file_ref(path)]
+    receipt["limitations"].extend(
+        [
+            "Browser evidence satisfies required-source coverage only.",
+            "Aggregator/locator rows are hint-only and are not independently admitted as ranked opportunities.",
+            f"Automation policy: {receipt['automation_policy']}.",
+        ]
+    )
+    try:
+        payload = read_json(path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Browser source artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+    records = payload.get("records") if isinstance(payload, dict) else []
+    records = [row for row in records if isinstance(row, dict)] if isinstance(records, list) else []
+    text = str(payload.get("text") or "") if isinstance(payload, dict) else ""
+    receipt["parser_result"] = "PARSED"
+    receipt["result_status"] = "MATCHES" if records or text.strip() else "NO_MATCHES"
+    if isinstance(payload, dict) and payload.get("url"):
+        receipt["evidence_refs"].append(str(payload["url"]))
+    receipt["limitations"].append(
+        f"{len(records)} browser records observed; 0 candidates admitted from {provider} without primary-source readback."
+    )
+    return _finalize_receipt(receipt), []
+
+
 def _as_str_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
@@ -1102,6 +1151,8 @@ def sweep(
     out_dir: Path,
     fixture_dir: Path | None = None,
     linkedin_evidence: Path | None = None,
+    indeed_evidence: Path | None = None,
+    hiddenjobs_evidence: Path | None = None,
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
 ) -> dict[str, Any]:
@@ -1124,24 +1175,46 @@ def sweep(
                 else:
                     # No human capture supplied: honest AUTH_REQUIRED, never a silent skip.
                     receipts.append(_linkedin_required_receipt(False))
-                receipts.append(
-                    _human_browser_required_receipt(
+                if indeed_evidence is not None:
+                    receipt, rows = _required_browser_evidence_receipt(
+                        indeed_evidence,
                         provider="indeed",
                         required_source_id="indeed",
                         target="Indeed jobs",
                         source_class="human_supplied_indeed",
-                        website_fallback="https://www.indeed.com/jobs",
                     )
-                )
-                receipts.append(
-                    _human_browser_required_receipt(
+                    receipts.append(receipt)
+                    candidates.extend(rows)
+                else:
+                    receipts.append(
+                        _human_browser_required_receipt(
+                            provider="indeed",
+                            required_source_id="indeed",
+                            target="Indeed jobs",
+                            source_class="human_supplied_indeed",
+                            website_fallback="https://www.indeed.com/jobs",
+                        )
+                    )
+                if hiddenjobs_evidence is not None:
+                    receipt, rows = _required_browser_evidence_receipt(
+                        hiddenjobs_evidence,
                         provider="hiddenjobs.dev",
                         required_source_id="hiddenjobs",
                         target="Hidden Jobs",
                         source_class="human_supplied_hiddenjobs",
-                        website_fallback="https://hiddenjobs.dev/",
                     )
-                )
+                    receipts.append(receipt)
+                    candidates.extend(rows)
+                else:
+                    receipts.append(
+                        _human_browser_required_receipt(
+                            provider="hiddenjobs.dev",
+                            required_source_id="hiddenjobs",
+                            target="Hidden Jobs",
+                            source_class="human_supplied_hiddenjobs",
+                            website_fallback="https://hiddenjobs.dev/",
+                        )
+                    )
                 for target in targets.get("employment", []):
                     receipt, rows = _employment_candidates(client, target)
                     receipts.append(receipt)
