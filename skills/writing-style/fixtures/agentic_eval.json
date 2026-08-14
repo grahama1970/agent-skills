@@ -1,0 +1,48 @@
+{
+  "schema": "agentic_eval.v1",
+  "skill": "writing-style",
+  "proof_scope": "canonical output contract and its broadcast runtime, exercised through the real run.sh against the real provider instruction files on this host, plus controlled live provider-discovery tests",
+  "mocked": false,
+  "live": true,
+  "readiness": "USABLE_WITH_GAPS",
+  "claims": {
+    "proves": "one edit to output-contract.md reaches all five targets and reverts cleanly with no residue; check mode is the default and mutates nothing (md5 stable across a check run); repeated applies leave exactly one managed block per target, never appending a second; provider-specific content outside the block is byte-preserved, verified by diffing pre-block content against the pre-write backup for both CLAUDE.md (203 lines) and AGENTS.md (1004 lines); output styles are discovered by glob so a new style file needs no code edit; the Claude output style keeps parseable frontmatter on line 1 after the block is installed; the installed style loads and its content reaches the model, verified by a live session quoting its own contract heading; Claude Code reads CLAUDE.md and ignores a sibling AGENTS.md, verified by a controlled two-file test with distinct sentinels; backups are written outside every directory a provider scans so a timestamped copy can never load as a style or rule",
+    "does_not_prove": "that any model actually obeys the contract's rules in practice — installation is not obedience, and only a live session under the installed instructions can demonstrate it; that Gemini CLI and Cursor load their target files at all, since only the file writes were verified and no live probe was run against either provider; that a running session picks up an edit, since provider instructions load at session start and were never tested across a restart; that the contract's wording measurably reduces commit-status-over-results reporting, which is unmeasured"
+  },
+  "cases": [
+    {"id": "single-edit-reaches-every-target", "case_type": "positive-control", "execution_status": "pass", "assertion_status": "pass",
+     "input": "append a probe token to output-contract.md, run apply",
+     "assert": ["probe present in all 5 targets", "grep -c returns 1 per target"]},
+    {"id": "revert-removes-everywhere", "case_type": "positive-control", "execution_status": "pass", "assertion_status": "pass",
+     "input": "restore canonical, run apply",
+     "assert": ["probe absent from all 5 targets"]},
+    {"id": "check-mode-is-non-destructive", "case_type": "safety-boundary", "execution_status": "pass", "assertion_status": "pass",
+     "input": "run.sh check against drifted and converged targets",
+     "assert": ["md5 of CLAUDE.md unchanged", "exit 1 on drift", "exit 0 when converged"]},
+    {"id": "repeated-apply-never-duplicates-block", "case_type": "adversarial", "execution_status": "pass", "assertion_status": "pass",
+     "input": "run apply three times consecutively",
+     "assert": ["exactly one BEGIN marker per target"]},
+    {"id": "provider-content-byte-preserved", "case_type": "adversarial", "execution_status": "pass", "assertion_status": "pass",
+     "input": "diff pre-block content against pre-write backup for CLAUDE.md and AGENTS.md",
+     "assert": ["PRESERVED for both", "Codex keeps '# Global Codex Agent Instructions' as line 1"]},
+    {"id": "style-frontmatter-survives-block-install", "case_type": "adversarial", "execution_status": "pass", "assertion_status": "pass",
+     "input": "apply into output-styles/clear-technical.md",
+     "assert": ["line 1 is ---", "frontmatter above the managed block"]},
+    {"id": "style-content-reaches-the-model", "case_type": "positive-control", "execution_status": "pass", "assertion_status": "pass",
+     "input": "live claude -p under --settings outputStyle 'Clear technical', asked to quote its own contract heading",
+     "assert": ["returns '## Lead with the result, not the process'"]},
+    {"id": "claude-ignores-agents-md", "case_type": "negative-control", "execution_status": "pass", "assertion_status": "pass",
+     "input": "clean dir with AGENTS.md sentinel only, then AGENTS.md plus CLAUDE.md with distinct sentinels",
+     "assert": ["AGENTS.md-only run emits no sentinel", "with both present only the CLAUDE.md sentinel appears", "every provider therefore needs its own copy"]},
+    {"id": "new-style-needs-no-code-edit", "case_type": "positive-control", "execution_status": "pass", "assertion_status": "pass",
+     "input": "add a second style file, run apply",
+     "assert": ["new file receives the block", "TARGETS not edited"]},
+    {"id": "backups-land-outside-scanned-dirs", "case_type": "safety-boundary", "execution_status": "pass", "assertion_status": "pass",
+     "input": "apply over a non-empty target",
+     "assert": ["backup written to ~/.local/state/agent-skills/output-contract-backups", "no .bak file inside output-styles or .cursor/rules"]}
+  ],
+  "commands": [
+    "skills/writing-style/sanity.sh",
+    "skills/writing-style/run.sh check"
+  ]
+}
