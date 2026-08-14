@@ -28,7 +28,7 @@ from .report import load_manifest, render_report
 from .service import serve as serve_report
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
-from .util import read_json
+from .util import read_json, write_json
 from .verification import run_verification
 
 from dotenv import load_dotenv
@@ -616,7 +616,15 @@ def memory_sync(
         _fail(ContractError("MEMORY_SYNC_REJECTED", str(exc)))
     except Exception as exc:
         _fail(ContractError("MEMORY_SYNC_TRANSPORT_FAILED", repr(exc)))
-    typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+    receipt_path = run / "memory-sync-receipt.json"
+    write_json(receipt_path, receipt)
+    typer.echo(
+        json.dumps(
+            {"status": "PASS", "receipt_path": str(receipt_path), **receipt},
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 @app.command()
@@ -624,6 +632,11 @@ def nightly(
     out: Path | None = typer.Option(None, "--out", file_okay=False),
     memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
     diagnostic: bool = typer.Option(False, "--diagnostic", help="Run with external publication effects disabled."),
+    promoted_stage0: bool = typer.Option(
+        False,
+        "--promoted-stage0",
+        help="Publish the gated Stage 0 report, digest, Memory graph, and Buzz summary.",
+    ),
     require_clean: bool = typer.Option(False, "--require-clean", help="Fail before capture if this skill tree is dirty."),
     expected_revision: str | None = typer.Option(None, "--expected-revision", help="Fail unless the running commit matches."),
     skip_tracker: bool = typer.Option(False, "--skip-tracker", help="Do not create or update tracker issues."),
@@ -646,8 +659,21 @@ def nightly(
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
 
+    if diagnostic and promoted_stage0:
+        _fail(ContractError("NIGHTLY_MODE_CONFLICT", "Choose diagnostic or promoted Stage 0, not both"))
     if diagnostic:
         skip_buzz = True
+        skip_tracker = True
+        skip_ats_memory = True
+        require_clean = True
+    elif promoted_stage0:
+        if skip_memory_sync or skip_relationship_memory or skip_buzz:
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_PUBLICATION_DISABLED",
+                    "Promoted Stage 0 requires Memory, relationship graph, and Buzz publication",
+                )
+            )
         skip_tracker = True
         skip_ats_memory = True
         require_clean = True
@@ -656,6 +682,14 @@ def nightly(
     # before capture so stale tailoring/application files cannot imply current
     # run capability when this invocation produced no opportunities.
     prepare_run_output(out, include_browser_capture=True)
+    for stale_receipt in (
+        out / "effect-policy-receipt.json",
+        out / "memory-sync-receipt.json",
+        out / "nightly-receipt.json",
+        out / "buzz-summary" / "buzz-summary-receipt.json",
+    ):
+        if stale_receipt.exists():
+            stale_receipt.unlink()
 
     # Deployment attestation must happen before any browser/source capture so a
     # scheduled run cannot silently execute stale or dirty code.
@@ -694,14 +728,36 @@ def nightly(
             "this is a deployment failure, not an empty market.",
             attestation["credentials"]["missing_required"],
         )
-    steps["effect_policy"] = {
+    publication_mode = "PROMOTED_STAGE_0" if promoted_stage0 else ("DIAGNOSTIC" if diagnostic else "MANUAL")
+    effect_policy_path = out / "effect-policy-receipt.json"
+    effect_policy = {
+        "schema": "monitor_opportunities.effect_policy_receipt.v1",
+        "mode": publication_mode,
         "diagnostic": diagnostic,
-        "tracker": "SKIPPED" if skip_tracker else "ENABLED",
-        "ats_memory": "SKIPPED" if skip_ats_memory else "ENABLED",
-        "memory_sync": "SKIPPED" if skip_memory_sync else "ENABLED",
-        "relationship_memory": "SKIPPED" if skip_relationship_memory else "ENABLED",
-        "buzz": "SKIPPED" if skip_buzz else "ENABLED",
+        "promoted_stage0": promoted_stage0,
+        "external_effects": False,
+        "publications": {
+            "local_report": "ENABLED",
+            "digest": "ENABLED",
+            "memory_summary": "SKIPPED" if skip_memory_sync else "ENABLED",
+            "relationship_graph": "SKIPPED" if skip_relationship_memory else "ENABLED",
+            "buzz_summary": "SKIPPED" if skip_buzz else "ENABLED",
+        },
+        "separately_gated": {
+            "tracker": "SKIPPED" if skip_tracker else "ENABLED",
+            "ats_memory": "SKIPPED" if skip_ats_memory else "ENABLED",
+        },
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
     }
+    write_json(effect_policy_path, effect_policy)
+    steps["effect_policy"] = {**effect_policy, "receipt": str(effect_policy_path)}
 
     # Browser-capture no-API / broken-API sources (SAM.gov API 404s) so the run
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
@@ -790,8 +846,15 @@ def nightly(
     if run_receipt_path.exists():
         run_receipt = read_json(run_receipt_path)
         degraded_contracts = run_receipt.get("degraded_contracts") or []
+        steps["run"]["receipt"] = str(run_receipt_path)
+        steps["run"]["external_effects"] = run_receipt.get("external_effects")
         steps["run"]["degraded_contracts"] = degraded_contracts
         steps["run"]["degraded_contract_codes"] = [str(item.get("code")) for item in degraded_contracts if item.get("code")]
+    if promoted_stage0:
+        if not run_receipt_path.exists() or read_json(run_receipt_path).get("external_effects") is not False:
+            _fail(ContractError("PROMOTED_STAGE0_RUN_RECEIPT_INVALID", "Run receipt missing external_effects=false"))
+        if not (out / "report" / "report.json").exists() or not (out / "report" / "index.html").exists():
+            _fail(ContractError("PROMOTED_STAGE0_REPORT_MISSING", "Stage 0 report artifacts were not written"))
 
     # Live ATS form capture: for each top job, read-only capture of the
     # application-form schema so a human-promoted site policy can later drive
@@ -878,6 +941,8 @@ def nightly(
     except ContractError as exc:
         _fail(exc)
     lane_health_phase(out, steps)
+    if promoted_stage0 and not (out / "morning-digest.json").exists():
+        _fail(ContractError("PROMOTED_STAGE0_DIGEST_MISSING", "Validated morning digest was not written"))
 
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a
@@ -904,6 +969,7 @@ def nightly(
     if skip_memory_sync:
         steps["memory_sync"] = {"skipped": True}
     else:
+        memory_receipt_path = out / "memory-sync-receipt.json"
         sync_cmd = [str(run_sh), "memory-sync", "--run", str(out), "--memory-url", memory_url]
         if skip_relationship_memory:
             sync_cmd.append("--skip-relationship-signals")
@@ -916,13 +982,36 @@ def nightly(
         steps["memory_sync"] = {
             "exit_code": sync_proc.returncode,
             "relationship_signals_included": not skip_relationship_memory,
+            "receipt": str(memory_receipt_path),
         }
         if sync_proc.returncode != 0:
             _fail(ContractError("NIGHTLY_MEMORY_SYNC_FAILED", sync_proc.stderr[-2000:]))
+        if memory_receipt_path.exists():
+            memory_receipt = read_json(memory_receipt_path)
+            steps["memory_sync"].update(
+                {
+                    "readback_found": memory_receipt.get("readback_found"),
+                    "stored_keys": memory_receipt.get("stored_keys", []),
+                    "external_effects": memory_receipt.get("external_effects"),
+                }
+            )
+        if promoted_stage0 and (
+            not memory_receipt_path.exists()
+            or memory_receipt.get("readback_found") is not True
+            or memory_receipt.get("relationship_signals_included") is not True
+            or memory_receipt.get("external_effects") is not False
+        ):
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_MEMORY_READBACK_FAILED",
+                    "Memory summary and relationship graph did not read back with external_effects=false",
+                )
+            )
 
     if skip_buzz:
         steps["buzz"] = {"skipped": True}
     else:
+        buzz_receipt_path = out / "buzz-summary" / "buzz-summary-receipt.json"
         notifications = read_json(skill_dir / "config" / "notifications.json")
         buzz_proc = subprocess.run(
             [
@@ -940,17 +1029,55 @@ def nightly(
             text=True,
             timeout=600,
         )
-        # Buzz outage must not lose the run; record the failure loudly instead.
-        steps["buzz"] = {"exit_code": buzz_proc.returncode}
+        steps["buzz"] = {"exit_code": buzz_proc.returncode, "receipt": str(buzz_receipt_path)}
         if buzz_proc.returncode != 0:
             steps["buzz"]["error_tail"] = buzz_proc.stderr[-800:]
-    typer.echo(
-        json.dumps(
-            {"status": "PASS", "schema": "monitor_opportunities.nightly_receipt.v1", "out": str(out), "steps": steps},
-            indent=2,
-            sort_keys=True,
-        )
-    )
+            if promoted_stage0:
+                _fail(ContractError("PROMOTED_STAGE0_BUZZ_FAILED", buzz_proc.stderr[-2000:]))
+        if buzz_receipt_path.exists():
+            buzz_receipt = read_json(buzz_receipt_path)
+            steps["buzz"].update(
+                {
+                    "posted": buzz_receipt.get("posted"),
+                    "live": buzz_receipt.get("live"),
+                    "external_effects": buzz_receipt.get("external_effects"),
+                }
+            )
+        if promoted_stage0 and (
+            not buzz_receipt_path.exists()
+            or buzz_receipt.get("posted") is not True
+            or buzz_receipt.get("live") is not True
+            or buzz_receipt.get("dry_run") is not False
+            or buzz_receipt.get("external_effects") is not False
+        ):
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_BUZZ_READBACK_FAILED",
+                    "Buzz post receipt did not prove a live post with external_effects=false",
+                )
+            )
+
+    nightly_receipt = {
+        "status": "PASS",
+        "schema": "monitor_opportunities.nightly_receipt.v1",
+        "mode": publication_mode,
+        "mocked": False,
+        "live": True,
+        "external_effects": False,
+        "out": str(out),
+        "artifacts": {
+            "effect_policy": str(effect_policy_path),
+            "run": str(run_receipt_path),
+            "report": str(out / "report" / "report.json"),
+            "digest": str(out / "morning-digest.json"),
+            "memory": str(out / "memory-sync-receipt.json") if not skip_memory_sync else None,
+            "buzz": str(out / "buzz-summary" / "buzz-summary-receipt.json") if not skip_buzz else None,
+        },
+        "steps": steps,
+    }
+    nightly_receipt_path = out / "nightly-receipt.json"
+    write_json(nightly_receipt_path, nightly_receipt)
+    typer.echo(json.dumps({**nightly_receipt, "receipt": str(nightly_receipt_path)}, indent=2, sort_keys=True))
 
 
 @app.command("ats-inspect")
@@ -988,7 +1115,11 @@ def ats_inspect(
 @app.command()
 def schedule(
     cron: str = typer.Option("0 2 * * *", "--cron"),
-    diagnostic: bool = typer.Option(True, "--diagnostic/--full-effects", help="Register the safe diagnostic 2 AM command."),
+    diagnostic: bool = typer.Option(
+        True,
+        "--diagnostic/--promoted-stage0",
+        help="Register diagnostic mode or the gated Stage 0 publication mode.",
+    ),
 ) -> None:
     """Register the single full-run transaction with the scheduler and read it back."""
     _configure_logging()
@@ -1006,17 +1137,19 @@ def schedule(
         timeout=20,
     ).stdout.strip()
     nightly_args = ["nightly"]
+    nightly_args.extend(
+        [
+            "--expected-revision",
+            revision,
+            "--require-clean",
+            "--skip-tracker",
+            "--skip-ats-memory",
+        ]
+    )
     if diagnostic:
-        nightly_args.extend(
-            [
-                "--diagnostic",
-                "--expected-revision",
-                revision,
-                "--skip-buzz",
-                "--skip-tracker",
-                "--skip-ats-memory",
-            ]
-        )
+        nightly_args.extend(["--diagnostic", "--skip-buzz"])
+    else:
+        nightly_args.append("--promoted-stage0")
     command_parts = [
         "source ~/.zshrc >/dev/null 2>&1",
         "export MONITOR_TRACKER_ENABLED=0",
@@ -1038,7 +1171,7 @@ def schedule(
             "--workdir",
             str(repo_root),
             "--description",
-            "Nightly Stage 0 opportunity report",
+            "Nightly Stage 0 opportunity publication" if not diagnostic else "Nightly Stage 0 diagnostic report",
         ],
         check=True,
         capture_output=True,
@@ -1056,21 +1189,41 @@ def schedule(
     job = jobs.get("monitor-opportunities-nightly")
     if not job or job.get("cron") != cron or job.get("command") != command or job.get("workdir") != str(repo_root) or not job.get("enabled", True):
         _fail(ContractError("SCHEDULER_READBACK_FAILED", "Registered job did not read back"))
+    schedule_receipt = {
+        "status": "PASS",
+        "schema": "monitor_opportunities.scheduler_receipt.v1",
+        "mode": "DIAGNOSTIC" if diagnostic else "PROMOTED_STAGE_0",
+        "external_effects": False,
+        "name": "monitor-opportunities-nightly",
+        "cron": cron,
+        "command": command,
+        "diagnostic": diagnostic,
+        "promoted_stage0": not diagnostic,
+        "expected_revision": revision,
+        "workdir": str(repo_root),
+        "register_stdout": register.stdout,
+        "readback": job,
+        "effect_policy": {
+            "tracker": "SKIPPED",
+            "ats_memory": "SKIPPED",
+            "gmail_send": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
+    }
+    schedule_receipt_path = (
+        repo_root
+        / "skills"
+        / "monitor-opportunities"
+        / "local"
+        / "scheduler"
+        / "monitor-opportunities-nightly-receipt.json"
+    )
+    write_json(schedule_receipt_path, schedule_receipt)
     typer.echo(
         json.dumps(
-            {
-                "status": "PASS",
-                "schema": "monitor_opportunities.scheduler_receipt.v1",
-                "external_effects": False,
-                "name": "monitor-opportunities-nightly",
-                "cron": cron,
-                "command": command,
-                "diagnostic": diagnostic,
-                "expected_revision": revision,
-                "workdir": str(repo_root),
-                "register_stdout": register.stdout,
-                "readback": job,
-            },
+            {**schedule_receipt, "receipt": str(schedule_receipt_path)},
             indent=2,
             sort_keys=True,
         )
