@@ -220,6 +220,7 @@
    ],
    "repair_creator": "codex",
    "repair_reviewer": "webgpt",
+   "ticket_repair_timeout_s": 10800,
    "service": {
     "kind": "none",
     "note": "skills run from source; individual skill services (if any) restart per their own contract",
