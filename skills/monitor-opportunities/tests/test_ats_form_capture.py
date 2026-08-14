@@ -135,10 +135,13 @@ def test_surf_pause_uses_local_sleep_without_surf_wait(
 def test_close_tab_records_browser_control_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    sleeps: list[float] = []
+
     def close_timeout(*_: object, **__: object) -> str:
         raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 30)
 
     monkeypatch.setattr(browser_capture, "_surf", close_timeout)
+    monkeypatch.setattr(browser_capture.time, "sleep", lambda seconds: sleeps.append(seconds))
     browser_capture.reset_browser_control_events()
 
     browser_capture._close_tab(Path("surf/run.sh"), "123", "test")
@@ -148,6 +151,31 @@ def test_close_tab_records_browser_control_failure(
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
     assert summary["recent"][0]["timeout"] == 5
+    assert sleeps == [1.0, 1.0]
+
+
+def test_close_tab_does_not_degrade_after_retry_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = 0
+
+    def close_after_retry(*_: object, **__: object) -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 30)
+        return ""
+
+    monkeypatch.setattr(browser_capture, "_surf", close_after_retry)
+    monkeypatch.setattr(browser_capture.time, "sleep", lambda _seconds: None)
+    browser_capture.reset_browser_control_events()
+
+    browser_capture._close_tab(Path("surf/run.sh"), "123", "test")
+
+    summary = browser_capture.browser_control_summary()
+    assert calls == 2
+    assert summary["status"] == "OK"
+    assert summary["counts"] == {}
 
 
 def test_isolated_meetup_capture_terminates_wedged_child(

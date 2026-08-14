@@ -190,6 +190,7 @@ def _nav_js(url: str) -> str:
 
 
 _TAB_CLOSE_TIMEOUT_SECONDS = 5
+_TAB_CLOSE_ATTEMPTS = 3
 
 
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
@@ -213,17 +214,26 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
 
 
 def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
-    try:
-        _surf(surf_run, "tab.close", tab_id, timeout=_TAB_CLOSE_TIMEOUT_SECONDS)
-    except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
-        logger.warning("could not close {} tab {}: {}", label, tab_id, exc)
-        _record_browser_control_event(
-            kind="tab_close_failed",
-            operation="tab.close",
-            tab_id=tab_id,
-            timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
-            error=exc,
-        )
+    last_error: BrowserCaptureError | subprocess.TimeoutExpired | None = None
+    for attempt in range(1, _TAB_CLOSE_ATTEMPTS + 1):
+        try:
+            _surf(surf_run, "tab.close", tab_id, timeout=_TAB_CLOSE_TIMEOUT_SECONDS)
+            return
+        except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+            last_error = exc
+            if attempt < _TAB_CLOSE_ATTEMPTS:
+                time.sleep(1.0)
+                continue
+    if last_error is None:
+        return
+    logger.warning("could not close {} tab {} after {} attempts: {}", label, tab_id, _TAB_CLOSE_ATTEMPTS, last_error)
+    _record_browser_control_event(
+        kind="tab_close_failed",
+        operation="tab.close",
+        tab_id=tab_id,
+        timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
+        error=last_error,
+    )
 
 
 def _write_surf_diagnostic_bundle(
