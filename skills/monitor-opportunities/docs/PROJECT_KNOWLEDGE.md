@@ -27,30 +27,40 @@ line makes those paths fail closed and has live promoted receipts:
   only and do not admit aggregator rows as opportunities;
 - `apply` is an implemented local gate over report-visible application packets. It checks
   packet drift, unresolved `human_required` fields, human authorization, and capability
-  authority, then fails closed with `external_effects=false`.
+  authority, then fails closed with `external_effects=false`;
+- ranking is mandate-first before geography, with a regression proving a high-fit remote
+  Principal AI role outranks a mediocre local role;
+- browser pacing no longer calls `surf wait`; live promoted receipts show
+  `browser_control.status=OK`, `events=0` after the repair.
 
 `external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
 LinkedIn platform action.
 
 Latest deterministic receipts on `main`:
 
-- pushed revision: `eaab6e34e3b3ea1193239210750ca931a79d4d74`;
-- full sanity: `294 passed`, `monitor-opportunities sanity: PASS`;
+- pushed runtime-proof revision: `a9aeea5883c458900b62b906b2599b454f4478f8`;
+- full sanity: `295 passed`, `monitor-opportunities sanity: PASS`;
 - live promoted nightly receipt:
   `skills/monitor-opportunities/local/nightly/latest/nightly-receipt.json`
   in the 12TB proof worktree, with `status=PASS`, `mocked=false`, `live=true`,
-  `mode=PROMOTED_STAGE_0`, and `external_effects=false`;
+  `mode=PROMOTED_STAGE_0`, `external_effects=false`,
+  `expected_revision=a9aeea5883c458900b62b906b2599b454f4478f8`, and
+  `browser_control.status=OK`;
 - run status: `operational_readiness=STAGE_0_READY`, source health
-  `degraded_count=0` across 43 receipts, 8 opportunities, 8 resume variants,
-  16 outreach packets, and 57 relationship signals;
+  `degraded_count=0` across 43 receipts, 8 opportunities, 8 applications,
+  8 application packets, 8 resume variants, 16 outreach packets, 57 relationship
+  signals, 105 visible action-worthy artifacts, and `hidden_total=0`;
+- digest counts: 8 employment items and 4 consulting signals;
+- prospect queue: 74 prospects, including 57 relationship signals and 13 federal
+  entries;
 - Memory readback: `readback_found=true`,
   `relationship_readback_found=true`, `external_effects=false`;
 - Buzz readback: `posted=true`, `live=true`, `external_effects=false`;
 - scheduler receipt:
   `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
-  cron `0 2 * * *`, enabled, expected revision
-  `eaab6e34e3b3ea1193239210750ca931a79d4d74`, workdir
-  `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`.
+  cron `0 2 * * *`, enabled, workdir
+  `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`
+  (read back after each scheduler update).
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
@@ -72,7 +82,6 @@ Still not complete against the immutable goal (honest gaps):
 - Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
   `opportunity-evaluation-reviewer` contracts in `agents/`, pass best-practices-subagent).
   Blocker to verify: headless tau under OAuth at 2 AM.
-- **Mandate-first ranking** (webgpt P0) — current ranking is still geo-weighted.
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
 - Actual ATS submit remains blocked by stage and policy. Submit requires separate
