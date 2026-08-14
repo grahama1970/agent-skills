@@ -7,7 +7,16 @@ Inputs/Outputs/Failures: See functions below.
 
 from __future__ import annotations
 
+import json
+import subprocess
 from pathlib import Path
+
+from typer.testing import CliRunner
+
+from monitor_opportunities.cli import app
+
+
+runner = CliRunner()
 
 
 def test_scheduler_command_is_full_run_transaction() -> None:
@@ -24,3 +33,76 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "scheduler" in source
     assert "_canonical_repo_root" in source
     assert '".worktrees"' in source
+    assert "--promoted-stage0" in source
+    assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
+    assert "monitor-opportunities-nightly-receipt.json" in source
+
+
+def test_promoted_stage0_schedule_registers_claim_bound_publication(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    scheduler = repo / "skills" / "scheduler" / "run.sh"
+    run_sh = repo / "skills" / "monitor-opportunities" / "run.sh"
+    scheduler.parent.mkdir(parents=True)
+    run_sh.parent.mkdir(parents=True)
+    scheduler.write_text("#!/bin/sh\n", encoding="utf-8")
+    run_sh.write_text("#!/bin/sh\n", encoding="utf-8")
+    claim_snapshot = tmp_path / "claim-snapshot.json"
+    claim_snapshot.write_text('{"approved": true}\n', encoding="utf-8")
+    scheduler_data = tmp_path / "scheduler-state"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd[:3] == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd[1] == "register":
+            command = cmd[cmd.index("--command") + 1]
+            captured["command"] = command
+            captured["cron"] = cmd[cmd.index("--cron") + 1]
+            captured["workdir"] = cmd[cmd.index("--workdir") + 1]
+            return subprocess.CompletedProcess(cmd, 0, stdout="registered\n", stderr="")
+        if cmd[1] == "list":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
+                    {
+                        "monitor-opportunities-nightly": {
+                            "cron": captured["cron"],
+                            "command": captured["command"],
+                            "workdir": captured["workdir"],
+                            "enabled": True,
+                        }
+                    }
+                ),
+                stderr="",
+            )
+        raise AssertionError(f"unexpected subprocess command: {cmd!r}")
+
+    monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
+    monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "schedule",
+            "--promoted-stage0",
+            "--claim-snapshot",
+            str(claim_snapshot),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["mode"] == "PROMOTED_STAGE_0"
+    assert payload["promoted_stage0"] is True
+    assert payload["external_effects"] is False
+    assert payload["expected_revision"] == "abc123"
+    assert payload["claim_snapshot"] == str(claim_snapshot.resolve())
+    assert "--promoted-stage0" in payload["command"]
+    assert "--diagnostic" not in payload["command"]
+    assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
+    assert Path(payload["receipt"]).is_file()
