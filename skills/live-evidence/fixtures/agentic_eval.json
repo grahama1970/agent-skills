@@ -41,6 +41,21 @@
       }
     },
     {
+      "name": "youtube-derived-coding-interview-ask-cards",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-youtube-interview"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "youtube-derived prompt routes to Ask solution: PASS",
+          "candidate explanation suppressed: PASS",
+          "youtube-derived follow-up routes to source-backed Ask card: PASS"
+        ]
+      }
+    },
+    {
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,

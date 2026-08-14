@@ -45,6 +45,10 @@ The primary receipt must include fresh local artifacts:
 - At least one code-related interviewer question creates an `$ask` solution
   request seeded by bounded Memory/code/ripgrep evidence, and the resulting
   card cites the Ask run directory or receipt metadata.
+- At least one deterministic `$agentic-evals` case uses a distilled
+  transcript-derived live-coding interview fixture from an ingested YouTube
+  source to exercise interviewer-question cards without depending on YouTube at
+  eval runtime.
 - At least one supported card cites a bounded Brave/Dogpile research result or
   research-derived Memory record for a relevant external solution, without
   sending the complete transcript to external search.

@@ -130,6 +130,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_interview_loop.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-youtube-interview)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_youtube_interview.py" "$SCRIPT_DIR" "$@"
+    ;;
 esac
 
 if [[ $# -eq 0 ]]; then
