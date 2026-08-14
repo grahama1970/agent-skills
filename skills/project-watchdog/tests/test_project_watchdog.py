@@ -1590,3 +1590,58 @@ def test_a_tick_starting_before_the_batch_window_is_deferred() -> None:
 
     assert config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, 1, 59))
     assert not config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, 15, 0))
+
+
+def test_the_tick_deadline_is_derived_from_the_installed_period(monkeypatch) -> None:
+    """A deadline longer than the period is the overlap it exists to prevent."""
+    from watchdog import commands
+
+    monkeypatch.delenv("PROJECT_WATCHDOG_TICK_DEADLINE_SECONDS", raising=False)
+    monkeypatch.setattr(commands, "installed_cron_minute", lambda: "*/5")
+    assert commands.tick_deadline_seconds() == 240
+
+    monkeypatch.setattr(commands, "installed_cron_minute", lambda: "*/15")
+    assert commands.tick_deadline_seconds() == 720
+
+
+def test_the_tick_deadline_falls_back_when_no_cron_is_installed(monkeypatch) -> None:
+    from watchdog import commands
+
+    monkeypatch.delenv("PROJECT_WATCHDOG_TICK_DEADLINE_SECONDS", raising=False)
+    monkeypatch.setattr(commands, "installed_cron_minute", lambda: None)
+    assert commands.tick_deadline_seconds() == commands.DEFAULT_TICK_DEADLINE_SECONDS
+
+
+def test_the_installed_minute_is_read_from_the_marked_line(monkeypatch) -> None:
+    from watchdog import commands, config
+
+    crontab = f"0 3 * * * something-else\n{config.CRON_MARKER}\n*/5 * * * * watchdog tick\n"
+    monkeypatch.setattr(
+        commands, "run_cmd", lambda *a, **k: {"exit_code": 0, "stdout": crontab}
+    )
+    assert commands.installed_cron_minute() == "*/5"
+
+
+def test_the_first_issue_is_never_deferred_by_the_deadline() -> None:
+    """A deadline that starves the queue is not a safety property."""
+    from watchdog import commands
+
+    assert commands.defer_for_deadline(0, elapsed=10_000.0, deadline=240) is False
+
+
+def test_later_issues_are_deferred_once_the_deadline_passes() -> None:
+    from watchdog import commands
+
+    assert commands.defer_for_deadline(1, elapsed=241.0, deadline=240) is True
+    assert commands.defer_for_deadline(1, elapsed=1.0, deadline=240) is False
+
+
+def test_the_deadline_is_always_shorter_than_the_period(monkeypatch) -> None:
+    """The invariant the deadline exists for: it must not span a firing."""
+    from watchdog import commands
+
+    monkeypatch.delenv("PROJECT_WATCHDOG_TICK_DEADLINE_SECONDS", raising=False)
+    for field in ("*/2", "*/5", "*/15", "0,30"):
+        monkeypatch.setattr(commands, "installed_cron_minute", lambda f=field: f)
+        period = commands.minute_field_period_seconds(field)
+        assert commands.tick_deadline_seconds() < period

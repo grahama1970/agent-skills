@@ -453,6 +453,22 @@
           "deferred, daytime is not"
         ]
       }
+    },
+    {
+      "name": "tick-deadline-cannot-span-a-firing",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/eval_probes.sh deadline-shorter-than-period"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "stays inside the period"
+        ]
+      }
     }
   ]
 }

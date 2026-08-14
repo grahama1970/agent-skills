@@ -25,6 +25,7 @@ Failure modes
 from __future__ import annotations
 
 import json
+import os
 import shlex
 import sys
 import time
@@ -534,7 +535,21 @@ def _tick_locked(
     streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
-    for issue in issues[:max_tickets]:
+    # A period wider than the observed maximum tick makes overlap unlikely; a
+    # deadline below the period makes it structural. Without one the lock is
+    # the only thing standing between a slow tick and a queue of skipped ones,
+    # and the 302.8s maximum is a measurement, not a bound.
+    deadline = tick_deadline_seconds()
+    started = time.monotonic()
+    for index, issue in enumerate(issues[:max_tickets]):
+        if defer_for_deadline(index, time.monotonic() - started, deadline):
+            receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:max_tickets]]
+            receipt["stop_reason"] = "tick_deadline"
+            log_event(
+                run_id, "tick_deadline_reached",
+                deadline_seconds=deadline, deferred=receipt["deadline_deferred"],
+            )
+            break
         receipt["handled_issues"].append(
             handle_issue(run_id, receipt_dir, project, issue, apply=apply)
         )
@@ -612,6 +627,59 @@ def activate(*, apply: bool, minute: str = "*/5") -> int:
 #: below the period, tracked separately.
 OBSERVED_MAX_TICK_SECONDS = 302.8
 MIN_SAFE_PERIOD_SECONDS = 120
+
+#: Fraction of the installed period a tick may consume before it stops taking
+#: new work. Leaves room for the current issue to finish and for the receipt to
+#: be written before the next firing.
+TICK_DEADLINE_FRACTION = 0.8
+DEFAULT_TICK_DEADLINE_SECONDS = 240
+
+
+def installed_cron_minute() -> str | None:
+    """The minute field of the installed watchdog crontab line, if any."""
+    result = run_cmd(["crontab", "-l"], timeout_s=30)
+    if result.get("exit_code") != 0:
+        return None
+    lines = str(result.get("stdout") or "").splitlines()
+    for index, line in enumerate(lines):
+        # The marker sits on its own comment line above the schedule.
+        if config.CRON_MARKER not in line:
+            continue
+        for following in lines[index:]:
+            stripped = following.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            return stripped.split()[0]
+    return None
+
+
+def defer_for_deadline(index: int, elapsed: float, deadline: float) -> bool:
+    """Whether the tick should stop taking new work.
+
+    Two rules, both deliberate. The check happens BETWEEN issues, never inside
+    one: a half-dispatched repair is worse than one deferred to the next tick,
+    which is only a period away. And the first issue is always attempted, or a
+    tick that is already late would defer forever and no issue would ever be
+    served -- a deadline that starves the queue is not a safety property.
+    """
+    return index > 0 and elapsed >= deadline
+
+
+def tick_deadline_seconds() -> int:
+    """How long a tick may keep taking new work, from the installed schedule.
+
+    Derived rather than configured so the two cannot drift apart: a deadline
+    longer than the period is the overlap it exists to prevent. Falls back to a
+    bound below the `*/5` default when the crontab cannot be read.
+    """
+    override = os.environ.get("PROJECT_WATCHDOG_TICK_DEADLINE_SECONDS")
+    if override and override.isdigit() and int(override) > 0:
+        return int(override)
+    minute = installed_cron_minute()
+    period = minute_field_period_seconds(minute) if minute else None
+    if not period:
+        return DEFAULT_TICK_DEADLINE_SECONDS
+    return max(30, int(period * TICK_DEADLINE_FRACTION))
 
 
 def minute_field_period_seconds(minute: str) -> int | None:

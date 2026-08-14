@@ -57,6 +57,23 @@ for t in ("08:00", "15:00", "21:00"):
 print("a tick starting before the window is deferred, daytime is not")
 '
     ;;
+  deadline-shorter-than-period)
+    uv run --project . python -c '
+import os, sys; sys.path.insert(0, "scripts")
+os.environ.pop("PROJECT_WATCHDOG_TICK_DEADLINE_SECONDS", None)
+from watchdog import commands
+# A deadline at or beyond the period is the overlap it exists to prevent.
+for field in ("*/2", "*/5", "*/15", "0,30"):
+    commands.installed_cron_minute = (lambda f: (lambda: f))(field)
+    period = commands.minute_field_period_seconds(field)
+    deadline = commands.tick_deadline_seconds()
+    assert deadline < period, (field, deadline, period)
+# The first issue is always attempted; a deadline must not starve the queue.
+assert not commands.defer_for_deadline(0, 10_000.0, 240)
+assert commands.defer_for_deadline(1, 241.0, 240)
+print("the tick deadline stays inside the period and never starves the first issue")
+'
+    ;;
   *)
     echo "unknown probe: ${1:-}" >&2; exit 2 ;;
 esac
