@@ -1123,6 +1123,7 @@ def schedule(
 ) -> None:
     """Register the single full-run transaction with the scheduler and read it back."""
     _configure_logging()
+    import os
     import subprocess
 
     repo_root = _canonical_repo_root()
@@ -1212,13 +1213,11 @@ def schedule(
             "ats_submit": "FORBIDDEN",
         },
     }
+    scheduler_data_dir = Path(
+        os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))
+    )
     schedule_receipt_path = (
-        repo_root
-        / "skills"
-        / "monitor-opportunities"
-        / "local"
-        / "scheduler"
-        / "monitor-opportunities-nightly-receipt.json"
+        scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-receipt.json"
     )
     write_json(schedule_receipt_path, schedule_receipt)
     typer.echo(
