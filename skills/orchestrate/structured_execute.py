@@ -558,6 +558,9 @@ async def _setup_worktree(task_cwd: Path, task_id: str) -> tuple[Path, str]:
     _, stderr = await proc.communicate()
     if proc.returncode != 0:
         raise RuntimeError(f"git worktree add failed: {stderr.decode()[:300]}")
+    # Register the lease so an abandoned orchestrate run leaves a reclaimable
+    # worktree rather than a permanent one.
+    _register_worktree_lease(worktree_dir, purpose=f"orchestrate:{task_id}")
     logger.info("  Worktree: {} (branch: {})", worktree_dir, branch)
     return worktree_dir, branch
 
@@ -2481,3 +2484,19 @@ def status(plan_file: Path = typer.Argument(None)) -> None:
 
 if __name__ == "__main__":
     app()
+
+
+def _register_worktree_lease(worktree, *, purpose: str) -> None:
+    """Record a worktree lease; never fail the run because logging did."""
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        cleanup = _Path(__file__).resolve().parents[1] / "cleanup"
+        if str(cleanup) not in _sys.path:
+            _sys.path.insert(0, str(cleanup))
+        from worktree_lease import register as _register
+
+        _register(worktree, purpose=purpose)
+    except Exception:
+        pass

@@ -142,6 +142,11 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
 
     worktree.parent.mkdir(parents=True, exist_ok=True)
     added = git("worktree", "add", "-B", branch, str(worktree), "origin/main", cwd=repo_dir)
+    if added.get("returncode") == 0:
+        # Register the lease at creation. The watchdog owns 58 of this repo's
+        # worktrees and has never removed one; without an owner recorded here
+        # the reaper can only report them, never reclaim them.
+        _register_worktree_lease(worktree, purpose=f"watchdog:{branch}")
     if added.get("exit_code") != 0:
         return {"ok": False, "error": f"worktree add failed: {added.get('stderr')}", "steps": steps}
     return {"ok": True, "branch": branch, "worktree": str(worktree), "steps": steps}
@@ -803,3 +808,19 @@ def classify_issue_with_reason(issue: dict[str, Any]) -> tuple[str | None, str |
     if "executor:local" in labels and config.TAU_HANDOFF_DISPATCH_MARKER in body:
         return "tau_handoff_dispatch", None
     return "ticket_repair", None
+
+
+def _register_worktree_lease(worktree, *, purpose: str) -> None:
+    """Record a worktree lease; never fail the repair because logging did."""
+    try:
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        cleanup = _Path(__file__).resolve().parents[3] / "cleanup"
+        if str(cleanup) not in _sys.path:
+            _sys.path.insert(0, str(cleanup))
+        from worktree_lease import register as _register
+
+        _register(worktree, purpose=purpose)
+    except Exception:
+        pass
