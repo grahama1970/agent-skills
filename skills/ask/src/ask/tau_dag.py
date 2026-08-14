@@ -3078,13 +3078,8 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
             model="gpt-5.5",
             provider="openai",
             auth="scillm_proxy_bearer",
-            reasoning_effort="high" if requested_effort == "xhigh" else requested_effort,
+            reasoning_effort=requested_effort,
             requested_reasoning_effort=requested_effort,
-            reasoning_downgrade_reason=(
-                "SciLLM currently accepts none/low/medium/high reasoning effort; xhigh is preserved as the requested selector and dispatched as high."
-                if requested_effort == "xhigh"
-                else None
-            ),
         )
     if lower.startswith("claude"):
         # effort-suffix selectors (claude-fable-low|medium|high|xhigh) split
@@ -3095,18 +3090,13 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
                 base = lower[: -(len(effort) + 1)]
                 requested_effort = "medium" if effort == "med" else effort
                 break
-        dispatched = "high" if requested_effort == "xhigh" else requested_effort
         return ScillmModelRoute(
             requested_model=requested,
             model=_CLAUDE_SCILLM_ALIASES.get(base, base),
             provider="anthropic",
             auth="scillm_claude_code_credentials",
-            reasoning_effort=dispatched,
+            reasoning_effort=requested_effort,
             requested_reasoning_effort=requested_effort,
-            reasoning_downgrade_reason=(
-                "SciLLM accepts none/low/medium/high; xhigh dispatched as high."
-                if requested_effort == "xhigh" else None
-            ),
         )
     # Generic effort-suffix selectors (gpt-5.5-high, gpt-5.5-medium, ...):
     # the deployed router has routes for base model names, not suffixed
@@ -3114,19 +3104,13 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
     for effort in ("xhigh", "high", "medium", "low"):
         if lower.endswith(f"-{effort}"):
             base = requested[: -(len(effort) + 1)]
-            dispatched = "high" if effort == "xhigh" else effort
             return ScillmModelRoute(
                 requested_model=requested,
                 model=base,
                 provider="openai",
                 auth="scillm_proxy_bearer",
-                reasoning_effort=dispatched,
+                reasoning_effort=effort,
                 requested_reasoning_effort=effort,
-                reasoning_downgrade_reason=(
-                    "SciLLM accepts none/low/medium/high; xhigh dispatched as high."
-                    if effort == "xhigh"
-                    else None
-                ),
             )
     return ScillmModelRoute(
         requested_model=requested,
