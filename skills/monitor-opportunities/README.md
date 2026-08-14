@@ -35,6 +35,12 @@ Behavior is gated by `/agentic-evals` (`fixtures/agentic_eval.json`) — includi
 nightly real-world case, a Tau local creator/reviewer smoke over report data, and an
 adversarial relevance-corpus case.
 
+The provider-live semantic evaluation path is being added as a gated sidecar. The
+current committed slice freezes `monitor_opportunities.tau_semantic_input.v1` in
+`schemas/tau-semantic-input.schema.json` and validates that semantic-eval inputs bind the
+immutable goal, primary source evidence, redacted relationship evidence, Meetup as
+supplemental-only, and `external_effects=false`.
+
 ## Usage
 
 ```bash

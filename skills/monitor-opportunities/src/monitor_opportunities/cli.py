@@ -115,10 +115,13 @@ def status_payload() -> dict[str, object]:
             "ats_inspect": "BLOCKED_STAGE_0",
             "ats_prefill": "BLOCKED_STAGE_0",
             "ats_submit": "BLOCKED_STAGE_0",
+            "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
+            "tau_semantic_provider_eval": "NOT_IMPLEMENTED",
         },
         "non_claims": [
             "Stage 0 does not prove long-run nightly reliability.",
             "No Gmail, LinkedIn, ATS, Memory, or scheduler effect is hidden behind report rendering.",
+            "The Tau semantic input contract does not prove provider/model semantic quality.",
         ],
     }
 

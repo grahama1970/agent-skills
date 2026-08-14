@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from enum import StrEnum
 from pathlib import Path
@@ -288,6 +289,62 @@ class RelationshipSignal(StrictModel):
     external_effects: bool
     action_worthy: bool
     visible_in_report: bool
+
+
+class TauSemanticRelationshipStatus(StrEnum):
+    HAS_RELATIONSHIP_EVIDENCE = "HAS_RELATIONSHIP_EVIDENCE"
+    NO_RELATIONSHIP_EVIDENCE = "NO_RELATIONSHIP_EVIDENCE"
+
+
+class TauSemanticOutputType(StrEnum):
+    SEMANTIC_ADDENDUM = "semantic_addendum"
+    INTERVIEW_ADDENDUM = "interview_addendum"
+
+
+class TauSemanticRelationshipEvidence(StrictModel):
+    signal_id: str
+    redacted_contact_ref: str
+    relationship_type: str
+    strength_confidence: float = Field(ge=0, le=1)
+    observed_at: str
+    source_receipt_hash: str
+    permitted_fact: str
+
+
+class TauSemanticPolicy(StrictModel):
+    external_effects: bool
+    allowed_output_types: list[TauSemanticOutputType] = Field(min_length=1)
+    timeout_seconds: int = Field(gt=0, le=3600)
+    max_concurrency: int = Field(gt=0, le=4)
+    max_attempts: int = Field(gt=0, le=3)
+    max_cost_usd: float = Field(ge=0, le=25)
+
+
+class TauSemanticInput(StrictModel):
+    schema_name: str = Field(alias="schema")
+    run_id: str
+    source_run_receipt_ref: str
+    source_run_sha256: str
+    opportunity_id: str
+    rank: int = Field(ge=1)
+    selected_at: str
+    immutable_goal: ImmutableGoal
+    goal_hash: str
+    candidate_profile_version: str
+    candidate_profile_sha256: str
+    allowed_fact_ledger: list[str] = Field(min_length=1)
+    primary_opportunity_evidence_present: bool
+    primary_opportunity_evidence_ids: list[str] = Field(min_length=1)
+    primary_source_classes: list[str] = Field(min_length=1)
+    retained_artifact_hashes: list[str] = Field(min_length=1)
+    source_receipt_hashes: list[str] = Field(min_length=1)
+    fetched_at: str
+    source_health_state: str
+    relationship_status: TauSemanticRelationshipStatus
+    relationship_evidence: list[TauSemanticRelationshipEvidence] = Field(default_factory=list)
+    meetup_evidence_present: bool = False
+    meetup_policy: str = "SUPPLEMENTAL_ONLY"
+    policy: TauSemanticPolicy
 
 
 class TalkingPoint(StrictModel):
@@ -581,6 +638,81 @@ def _validate_against_committed_schema(raw: dict[str, Any]) -> None:
     except JsonSchemaValidationError as exc:
         path = ".".join(str(part) for part in exc.absolute_path) or "$"
         raise ContractError("REPORT_SCHEMA_INVALID", f"{path}: {exc.message}") from exc
+
+
+def _immutable_goal_hash() -> str:
+    return "sha256:" + hashlib.sha256(IMMUTABLE_GOAL.encode("utf-8")).hexdigest()
+
+
+def validate_tau_semantic_input(raw: dict[str, Any]) -> TauSemanticInput:
+    """Parse and fail-closed validate one provider-live Tau semantic input."""
+
+    try:
+        payload = TauSemanticInput.model_validate(raw)
+    except ValidationError as exc:
+        raise ContractError("TAU_SEMANTIC_INPUT_SCHEMA_INVALID", str(exc)) from exc
+
+    if payload.schema_name != "monitor_opportunities.tau_semantic_input.v1":
+        raise ContractError("TAU_SEMANTIC_INPUT_SCHEMA_UNSUPPORTED", payload.schema_name)
+    if payload.immutable_goal.text != IMMUTABLE_GOAL:
+        raise ContractError(
+            "TAU_SEMANTIC_GOAL_MISMATCH",
+            "Semantic input is not bound to the immutable goal",
+        )
+    if payload.goal_hash != _immutable_goal_hash():
+        raise ContractError(
+            "TAU_SEMANTIC_GOAL_HASH_MISMATCH",
+            "Semantic input goal hash does not match the immutable goal",
+        )
+    if payload.policy.external_effects is not False:
+        raise ContractError(
+            "TAU_SEMANTIC_EXTERNAL_EFFECT",
+            "Semantic evaluation must not cause external effects",
+        )
+    if payload.primary_opportunity_evidence_present is not True:
+        raise ContractError(
+            "TAU_SEMANTIC_PRIMARY_EVIDENCE_REQUIRED",
+            "Primary opportunity evidence is required",
+        )
+
+    primary_classes = {source_class.lower() for source_class in payload.primary_source_classes}
+    if any("meetup" in source_class for source_class in primary_classes):
+        raise ContractError(
+            "TAU_SEMANTIC_MEETUP_PRIMARY_FORBIDDEN",
+            "Meetup evidence is supplemental only",
+        )
+    if payload.meetup_evidence_present and payload.meetup_policy != "SUPPLEMENTAL_ONLY":
+        raise ContractError(
+            "TAU_SEMANTIC_MEETUP_POLICY_INVALID",
+            "Meetup evidence must remain supplemental",
+        )
+
+    has_relationships = bool(payload.relationship_evidence)
+    if (
+        has_relationships
+        and payload.relationship_status
+        != TauSemanticRelationshipStatus.HAS_RELATIONSHIP_EVIDENCE
+    ):
+        raise ContractError(
+            "TAU_SEMANTIC_RELATIONSHIP_STATUS_MISMATCH",
+            "Relationship evidence requires HAS_RELATIONSHIP_EVIDENCE",
+        )
+    if (
+        not has_relationships
+        and payload.relationship_status != TauSemanticRelationshipStatus.NO_RELATIONSHIP_EVIDENCE
+    ):
+        raise ContractError(
+            "TAU_SEMANTIC_RELATIONSHIP_STATUS_MISMATCH",
+            "Missing relationship evidence must be explicit",
+        )
+    for evidence in payload.relationship_evidence:
+        if "@" in evidence.redacted_contact_ref:
+            raise ContractError(
+                "TAU_SEMANTIC_CONTACT_NOT_REDACTED",
+                "Provider inputs cannot expose raw contact addresses",
+            )
+
+    return payload
 
 
 def validate_manifest(raw: dict[str, Any]) -> ReportManifest:

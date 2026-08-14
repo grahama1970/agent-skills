@@ -1,0 +1,128 @@
+"""Semantic Tau input contract tests."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+from pathlib import Path
+
+import pytest
+from jsonschema import Draft202012Validator
+
+from monitor_opportunities.contracts import IMMUTABLE_GOAL, ContractError, validate_tau_semantic_input
+
+
+def _goal_hash() -> str:
+    return "sha256:" + hashlib.sha256(IMMUTABLE_GOAL.encode("utf-8")).hexdigest()
+
+
+def _valid_input() -> dict[str, object]:
+    return {
+        "schema": "monitor_opportunities.tau_semantic_input.v1",
+        "run_id": "run:2026-08-14",
+        "source_run_receipt_ref": "nightly-receipt:sha256:run",
+        "source_run_sha256": "sha256:source-run",
+        "opportunity_id": "candidate:a:123",
+        "rank": 1,
+        "selected_at": "2026-08-14T21:45:00Z",
+        "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": _goal_hash()},
+        "goal_hash": _goal_hash(),
+        "candidate_profile_version": "candidate-profile.v1",
+        "candidate_profile_sha256": "sha256:candidate-profile",
+        "allowed_fact_ledger": ["claim:agentic-compliance"],
+        "primary_opportunity_evidence_present": True,
+        "primary_opportunity_evidence_ids": ["source:sam:award-notice"],
+        "primary_source_classes": ["official_posting"],
+        "retained_artifact_hashes": ["sha256:artifact"],
+        "source_receipt_hashes": ["sha256:source-receipt"],
+        "fetched_at": "2026-08-14T21:44:00Z",
+        "source_health_state": "OK",
+        "relationship_status": "HAS_RELATIONSHIP_EVIDENCE",
+        "relationship_evidence": [
+            {
+                "signal_id": "rel:arc-os",
+                "redacted_contact_ref": "contact:william-brad-martin",
+                "relationship_type": "prior_program_network",
+                "strength_confidence": 0.74,
+                "observed_at": "2026-08-14T21:40:00Z",
+                "source_receipt_hash": "sha256:relationship-receipt",
+                "permitted_fact": "Prior DARPA ARCOS-adjacent relationship path exists.",
+            }
+        ],
+        "meetup_evidence_present": True,
+        "meetup_policy": "SUPPLEMENTAL_ONLY",
+        "policy": {
+            "external_effects": False,
+            "allowed_output_types": ["semantic_addendum", "interview_addendum"],
+            "timeout_seconds": 600,
+            "max_concurrency": 1,
+            "max_attempts": 1,
+            "max_cost_usd": 2.5,
+        },
+    }
+
+
+def test_tau_semantic_input_accepts_minimal_safe_payload() -> None:
+    payload = validate_tau_semantic_input(_valid_input())
+
+    assert payload.schema_name == "monitor_opportunities.tau_semantic_input.v1"
+    assert payload.policy.external_effects is False
+    assert payload.relationship_evidence[0].redacted_contact_ref == "contact:william-brad-martin"
+
+
+def test_tau_semantic_input_committed_json_schema_accepts_safe_payload() -> None:
+    schema_path = Path(__file__).resolve().parents[1] / "schemas" / "tau-semantic-input.schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+    Draft202012Validator(schema).validate(_valid_input())
+
+
+@pytest.mark.parametrize(
+    ("mutate", "code"),
+    [
+        (
+            lambda data: data.update(primary_opportunity_evidence_present=False),
+            "TAU_SEMANTIC_PRIMARY_EVIDENCE_REQUIRED",
+        ),
+        (
+            lambda data: data.update(primary_source_classes=["meetup"]),
+            "TAU_SEMANTIC_MEETUP_PRIMARY_FORBIDDEN",
+        ),
+        (
+            lambda data: data.update(goal_hash="sha256:wrong"),
+            "TAU_SEMANTIC_GOAL_HASH_MISMATCH",
+        ),
+        (
+            lambda data: data["policy"].update(external_effects=True),
+            "TAU_SEMANTIC_EXTERNAL_EFFECT",
+        ),
+        (
+            lambda data: data["relationship_evidence"][0].update(redacted_contact_ref="person@example.com"),
+            "TAU_SEMANTIC_CONTACT_NOT_REDACTED",
+        ),
+        (
+            lambda data: data.update(relationship_status="NO_RELATIONSHIP_EVIDENCE"),
+            "TAU_SEMANTIC_RELATIONSHIP_STATUS_MISMATCH",
+        ),
+    ],
+)
+def test_tau_semantic_input_rejects_unsafe_or_unbound_fields(mutate, code: str) -> None:  # type: ignore[no-untyped-def]
+    data = copy.deepcopy(_valid_input())
+    mutate(data)
+
+    with pytest.raises(ContractError) as exc:
+        validate_tau_semantic_input(data)
+
+    assert exc.value.code == code
+
+
+def test_tau_semantic_input_requires_explicit_no_relationship_status() -> None:
+    data = copy.deepcopy(_valid_input())
+    data["relationship_evidence"] = []
+    data["relationship_status"] = "NO_RELATIONSHIP_EVIDENCE"
+
+    payload = validate_tau_semantic_input(data)
+
+    assert payload.relationship_evidence == []
+    assert payload.relationship_status == "NO_RELATIONSHIP_EVIDENCE"

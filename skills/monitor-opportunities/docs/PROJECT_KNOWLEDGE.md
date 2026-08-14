@@ -36,6 +36,14 @@ line makes those paths fail closed and has live promoted receipts:
   Tau generic artifact transaction with producer, validator, reviewer, goal-hash
   binding, and receipts (`scripts/tau_opportunity_eval_smoke.py`). This is
   `provider_live=false` proof of Tau plumbing, not semantic provider evaluation.
+- WebGPT review on 2026-08-14 returned `NEEDS_ATTENTION` for enabling provider-live
+  Tau semantic evaluation in the 2 AM cron. The accepted next slice is a non-blocking
+  sidecar path. Slice `MO-TAU-SEM-01` now freezes
+  `monitor_opportunities.tau_semantic_input.v1` through
+  `schemas/tau-semantic-input.schema.json` and `validate_tau_semantic_input()`.
+  It requires immutable-goal hash binding, primary non-Meetup opportunity evidence,
+  retained source/artifact hashes, redacted relationship facts, Meetup supplemental-only
+  policy, and `external_effects=false`.
 
 `external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
 LinkedIn platform action.
@@ -90,8 +98,9 @@ Still not complete against the immutable goal (honest gaps):
 - Full per-opportunity `/tau` semantic provider evaluation loop in the nightly path
   (`opportunity-evaluator` + `opportunity-evaluation-reviewer` contracts in `agents/`,
   pass best-practices-subagent). Current proof is a local Tau artifact-transaction
-  smoke over one report item; it does not prove provider/model semantic quality,
-  all top-N opportunities, or 2 AM OAuth/provider behavior.
+  smoke over one report item plus a committed input contract; it does not prove
+  provider/model semantic quality, all top-N opportunities, or 2 AM OAuth/provider
+  behavior.
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
 - Actual ATS submit remains blocked by stage and policy. Submit requires separate

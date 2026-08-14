@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/monitor-opportunities/tau-semantic-input.schema.json",
+  "title": "monitor-opportunities Tau semantic input",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "source_run_receipt_ref",
+    "source_run_sha256",
+    "opportunity_id",
+    "rank",
+    "selected_at",
+    "immutable_goal",
+    "goal_hash",
+    "candidate_profile_version",
+    "candidate_profile_sha256",
+    "allowed_fact_ledger",
+    "primary_opportunity_evidence_present",
+    "primary_opportunity_evidence_ids",
+    "primary_source_classes",
+    "retained_artifact_hashes",
+    "source_receipt_hashes",
+    "fetched_at",
+    "source_health_state",
+    "relationship_status",
+    "relationship_evidence",
+    "policy"
+  ],
+  "properties": {
+    "schema": {"const": "monitor_opportunities.tau_semantic_input.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "source_run_receipt_ref": {"type": "string", "minLength": 1},
+    "source_run_sha256": {"type": "string", "pattern": "^sha256:"},
+    "opportunity_id": {"type": "string", "minLength": 1},
+    "rank": {"type": "integer", "minimum": 1},
+    "selected_at": {"type": "string", "minLength": 1},
+    "immutable_goal": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string", "minLength": 40},
+        "goal_hash": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "goal_hash": {"type": "string", "pattern": "^sha256:"},
+    "candidate_profile_version": {"type": "string", "minLength": 1},
+    "candidate_profile_sha256": {"type": "string", "pattern": "^sha256:"},
+    "allowed_fact_ledger": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "primary_opportunity_evidence_present": {"type": "boolean"},
+    "primary_opportunity_evidence_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "primary_source_classes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "retained_artifact_hashes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^sha256:"}},
+    "source_receipt_hashes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^sha256:"}},
+    "fetched_at": {"type": "string", "minLength": 1},
+    "source_health_state": {"type": "string", "minLength": 1},
+    "relationship_status": {"enum": ["HAS_RELATIONSHIP_EVIDENCE", "NO_RELATIONSHIP_EVIDENCE"]},
+    "relationship_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "signal_id",
+          "redacted_contact_ref",
+          "relationship_type",
+          "strength_confidence",
+          "observed_at",
+          "source_receipt_hash",
+          "permitted_fact"
+        ],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "redacted_contact_ref": {"type": "string", "minLength": 1},
+          "relationship_type": {"type": "string", "minLength": 1},
+          "strength_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "source_receipt_hash": {"type": "string", "pattern": "^sha256:"},
+          "permitted_fact": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "meetup_evidence_present": {"type": "boolean"},
+    "meetup_policy": {"const": "SUPPLEMENTAL_ONLY"},
+    "policy": {
+      "type": "object",
+      "required": [
+        "external_effects",
+        "allowed_output_types",
+        "timeout_seconds",
+        "max_concurrency",
+        "max_attempts",
+        "max_cost_usd"
+      ],
+      "properties": {
+        "external_effects": {"const": false},
+        "allowed_output_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"enum": ["semantic_addendum", "interview_addendum"]}
+        },
+        "timeout_seconds": {"type": "integer", "exclusiveMinimum": 0, "maximum": 3600},
+        "max_concurrency": {"type": "integer", "exclusiveMinimum": 0, "maximum": 4},
+        "max_attempts": {"type": "integer", "exclusiveMinimum": 0, "maximum": 3},
+        "max_cost_usd": {"type": "number", "minimum": 0, "maximum": 25}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
