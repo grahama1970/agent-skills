@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import subprocess
 import sys
 from pathlib import Path
 from typing import NoReturn
@@ -28,6 +29,7 @@ from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .service import serve as serve_report
 from .tau_semantic_prepare import prepare_tau_semantic_inputs
+from .tau_semantic_provider import run_provider_semantic_eval
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
 from .util import read_json, write_json
@@ -66,6 +68,7 @@ IMPLEMENTED = [
     "nightly",
     "apply",
     "tau-semantic-prepare",
+    "tau-semantic-provider-eval",
 ]
 NOT_IMPLEMENTED: list[str] = []
 
@@ -119,7 +122,7 @@ def status_payload() -> dict[str, object]:
             "ats_submit": "BLOCKED_STAGE_0",
             "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
             "tau_semantic_input_materializer": "IMPLEMENTED_LOCAL",
-            "tau_semantic_provider_eval": "NOT_IMPLEMENTED",
+            "tau_semantic_provider_eval": "IMPLEMENTED_MANUAL_SIDECAR",
         },
         "non_claims": [
             "Stage 0 does not prove long-run nightly reliability.",
@@ -171,6 +174,35 @@ def tau_semantic_prepare(
         _fail(exc)
     except FileNotFoundError as exc:
         _fail(ContractError("TAU_SEMANTIC_PREPARE_FAILED", str(exc)))
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt["status"] != "PASS":
+        raise typer.Exit(code=1)
+
+
+@app.command("tau-semantic-provider-eval")
+def tau_semantic_provider_eval(
+    input_path: Path = typer.Option(..., "--input", exists=True, dir_okay=False, readable=True),
+    out: Path = typer.Option(..., "--out", file_okay=False),
+    handler: str = typer.Option("webgpt", "--handler"),
+    execute: bool = typer.Option(False, "--execute", help="Required acknowledgement for a real provider call."),
+    timeout_seconds: int = typer.Option(3600, "--timeout-seconds", min=60),
+    browser_lock_timeout: int = typer.Option(1800, "--browser-lock-timeout", min=60),
+) -> None:
+    """Run one provider-live semantic addendum sidecar through /ask Tau DAG."""
+    _configure_logging()
+    try:
+        receipt = run_provider_semantic_eval(
+            input_path=input_path,
+            out_dir=out,
+            handler=handler,
+            execute=execute,
+            timeout_seconds=timeout_seconds,
+            browser_lock_timeout=browser_lock_timeout,
+        )
+    except (ContractError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        if isinstance(exc, ContractError):
+            _fail(exc)
+        _fail(ContractError("TAU_SEMANTIC_PROVIDER_FAILED", str(exc)))
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
     if receipt["status"] != "PASS":
         raise typer.Exit(code=1)
