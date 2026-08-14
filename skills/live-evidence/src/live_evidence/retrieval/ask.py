@@ -77,14 +77,12 @@ class AskSolutionClient:
         ]
         if self._settings.ask_allow_provider_calls:
             command.append("--allow-provider-calls")
-        env = os.environ.copy()
-        env.pop("UV_PROJECT_ENVIRONMENT", None)
         try:
             result = subprocess.run(
                 command,
                 check=False,
                 capture_output=True,
-                env=env,
+                env=_subprocess_env(),
                 text=True,
                 timeout=self._settings.ask_timeout_s,
             )
@@ -173,6 +171,21 @@ def _safe_locator(source: EvidenceSource) -> str:
     if source.url:
         return source.url[:500]
     return source.label[:500]
+
+
+def _subprocess_env() -> dict[str, str]:
+    """Run sibling skill tools without inheriting this skill's virtualenv."""
+
+    env = os.environ.copy()
+    for key in (
+        "VIRTUAL_ENV",
+        "UV_PROJECT_ENVIRONMENT",
+        "PYTHONHOME",
+        "PYTHONPATH",
+    ):
+        env.pop(key, None)
+    env.setdefault("UV_LINK_MODE", "copy")
+    return env
 
 
 def _parse_json_output(stdout: str) -> Any:

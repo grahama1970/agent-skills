@@ -81,7 +81,10 @@ def test_ask_solution_does_not_inherit_live_evidence_uv_environment(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setenv("VIRTUAL_ENV", str(tmp_path / "live-evidence-active-venv"))
     monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", str(tmp_path / "live-evidence-venv"))
+    monkeypatch.setenv("PYTHONHOME", str(tmp_path / "python-home"))
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path / "python-path"))
     run_dir = tmp_path / "ask-run"
     runner = tmp_path / "ask-runner-env-check.sh"
     runner.write_text(
@@ -89,9 +92,15 @@ def test_ask_solution_does_not_inherit_live_evidence_uv_environment(
             [
                 "#!/usr/bin/env bash",
                 "set -euo pipefail",
-                'if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then',
-                '  echo "inherited UV_PROJECT_ENVIRONMENT" >&2',
-                "  exit 42",
+                'for key in VIRTUAL_ENV UV_PROJECT_ENVIRONMENT PYTHONHOME PYTHONPATH; do',
+                '  if [[ -n "${!key:-}" ]]; then',
+                '    echo "inherited $key" >&2',
+                "    exit 42",
+                "  fi",
+                "done",
+                'if [[ "${UV_LINK_MODE:-}" != "copy" ]]; then',
+                '  echo "missing UV_LINK_MODE=copy" >&2',
+                "  exit 43",
                 "fi",
                 f"mkdir -p {run_dir}/node-artifacts/handler-fixture",
                 f"printf 'Ask env was isolated.\\n' > {run_dir}/node-artifacts/handler-fixture/response.md",
