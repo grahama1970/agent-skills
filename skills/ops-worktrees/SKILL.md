@@ -40,6 +40,51 @@ merged — commits sitting in a worktree that no branch name leads back to. The
 second is the expensive one, and refusing to delete it does not fix it: the
 work is not deleted, it is simply never found again.
 
+## A dirty tree is not a finding
+
+Stop re-deriving this. In `~/workspace/experiments/agent-skills`, the primary
+checkout, `git status` is expected to be dirty and local `main` is expected to
+be diverged. Measured 2026-08-14: 192 ahead / 332 behind `origin/main`, 375
+files differing from local `HEAD`. That is the normal steady state, not damage
+and not something to reconcile.
+
+The reason: work lands on `origin/main` by plumbing (`read-tree` ->
+`update-index` -> `write-tree` -> `commit-tree` -> `push <sha>:main`) because
+several cron lanes write tracked files in this same checkout mid-run. Local
+`HEAD` is therefore stale by design, and every file that moved on the remote
+shows as modified or deleted locally.
+
+So a bare `git status` answers a question nobody asked. The only question that
+matters is whether the files YOU touched differ from the remote:
+
+```bash
+git fetch -q origin main
+git diff --stat origin/main -- <the paths you edited>
+git log --oneline origin/main..HEAD -- <the paths you edited>   # must be empty
+```
+
+Rules:
+
+- Do not `git add -A`, `git commit -a`, `git stash`, `git checkout .`, or
+  `git reset --hard` in this checkout. Another lane's uncommitted state is in
+  there, and a running job may be mid-write.
+- Do not "clean up" untracked files. `sparta_metrics.py` was untracked, a
+  cleanup swept it away, and ArangoDB health checks failed for five days.
+- Do not report tree dirtiness as a problem, a blocker, or a finding. Report it
+  only if a file you were asked to change is unexpectedly modified by something
+  else.
+- Generated bulk is ignored, not deleted: `skills/dogpile/local/search-runs/`
+  (62,265 files), `skills.pre-symlink-*/`, `site/.next.stale-*/`. That cut the
+  untracked count from 67,807 to 475. An agent reading a 67,807-line status
+  learns nothing and starts guessing.
+
+If the tree looks alarming, run the audit and read its verdict instead of
+inferring one:
+
+```bash
+skills/ops-worktrees/run.sh audit --json
+```
+
 ## Commands
 
 ```bash

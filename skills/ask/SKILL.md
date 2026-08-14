@@ -374,6 +374,43 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Who owns a window Ask opened
+
+Every window Ask causes to exist is recorded in `~/.ask/browser-windows.jsonl`
+with the owning pid and a creation time. That ledger, not the lifecycle
+receipt, is what makes a window closable later: closing was never the broken
+part, ownership was. Measured 2026-08-14, 9 provider windows were open and none
+appeared in any of 351 `browser-tab-lifecycle.json` receipts, because the
+roundtable worker's recovery paths (`--create-tab`, `open-bind`) create windows
+below the lifecycle layer. They now register through `ask.browser_windows` at
+the transport choke point, so a window is claimed the moment it exists.
+
+Three things close a window, in order of preference:
+
+1. **In-run teardown.** A `fresh-temporary` run closes its own seat windows when
+   Tau finishes. This works and always did.
+2. **Provisioning-time reap.** The next Ask run reclaims windows whose owning
+   process is gone and whose TTL has passed.
+3. **The cron backstop**, for when there is no next run:
+
+   ```bash
+   skills/ask/run.sh reap-windows           # dry-run
+   skills/ask/run.sh reap-windows --apply
+   ```
+
+   Installed at `*/30`. It closes only ledger-owned windows, and only when the
+   owner is dead AND the TTL has passed -- both conditions, never either. A live
+   owner means a run is still using the window; a young entry means a run may
+   have died holding output that exists only in-tab.
+
+TTLs by mode: `fresh-temporary` 15 min, `fresh-keep` 4 h, `pending-recovery`
+12 h. Retention is an obligation with a clock, not an exemption -- 28 of those
+351 receipts sat at `cleanup_status: skipped_pending_recovery`, keeping a window
+open for a recovery nobody ever performed.
+
+For tabs bound through `~/.pi/<backend>-projects/ask-*.json` rather than
+windows, `skills/ask/run.sh close-stale-tabs` is the matching reaper.
+
 Ask-created browser seat windows land on **Desktop 2** (wmctrl index 1). They
 are reviewer windows Ask provisioned, not windows the human asked for, so they
 belong on the reviewer desktop rather than on top of current work. Override with

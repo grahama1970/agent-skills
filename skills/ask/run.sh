@@ -464,6 +464,10 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/close_stale_ask_tabs.py" "$@"
         ;;
+    reap-windows)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/reap_ask_windows.py" "$@"
+        ;;
     webgpt-project)
         shift
         echo "The 'webgpt-project' direct-oracle subcommand was removed. WebGPT itself is still supported: use './run.sh webgpt <question>', which executes through the Tau harness as a single-call DAG." >&2

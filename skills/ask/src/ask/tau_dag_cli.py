@@ -14,6 +14,7 @@ from typing import Annotated, Any
 
 import typer
 
+from . import browser_windows
 from .env import load_dotenv_once
 from .tau_dag import (
     BROWSER_COMMAND_GRACE_SECONDS,
@@ -1644,76 +1645,34 @@ def _verify_created_tabs(
 # on 2026-07-27 -- a permanent leak, because a skipped cleanup had no expiry
 # and no second chance. The registry makes ownership durable so a later run
 # can reclaim what an earlier one abandoned.
-ASK_WINDOW_REGISTRY = Path.home() / ".ask" / "browser-windows.jsonl"
-# fresh-keep exists so a human can inspect the tabs. Four hours is long past
-# the end of any session that would have looked.
-FRESH_KEEP_TTL_SECONDS = 4 * 3600
-FRESH_TEMPORARY_TTL_SECONDS = 900
+# The ledger itself lives in ask.browser_windows: the roundtable worker has to
+# write the same file from a different process, and two implementations of one
+# registry is how the worker's windows came to be owned by nobody.
+ASK_WINDOW_REGISTRY = browser_windows.REGISTRY
+FRESH_KEEP_TTL_SECONDS = browser_windows.FRESH_KEEP_TTL_SECONDS
+FRESH_TEMPORARY_TTL_SECONDS = browser_windows.FRESH_TEMPORARY_TTL_SECONDS
 
 
 def _register_ask_windows(lifecycle: dict[str, Any]) -> None:
     """Record window ownership durably, before the run can be killed."""
-    windows = [
-        str(tab.get("window_id"))
-        for tab in lifecycle.get("created_tabs", [])
-        if isinstance(tab, dict) and tab.get("window_id")
-    ]
-    if not windows:
-        return
-    try:
-        ASK_WINDOW_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
-        with ASK_WINDOW_REGISTRY.open("a", encoding="utf-8") as handle:
-            for window_id in dict.fromkeys(windows):
-                handle.write(
-                    json.dumps(
-                        {
-                            "window_id": window_id,
-                            "mode": str(lifecycle.get("mode") or ""),
-                            "run_dir": str(lifecycle.get("run_dir") or ""),
-                            "pid": os.getpid(),
-                            "created_at": time.time(),
-                        },
-                        sort_keys=True,
-                    )
-                    + "\n"
-                )
-    except OSError:
-        # A registry write must never take the run down; the worst case is
-        # the pre-existing leak, not a failed roundtable.
-        pass
+    browser_windows.register(
+        [
+            str(tab.get("window_id"))
+            for tab in lifecycle.get("created_tabs", [])
+            if isinstance(tab, dict) and tab.get("window_id")
+        ],
+        mode=str(lifecycle.get("mode") or ""),
+        run_dir=str(lifecycle.get("run_dir") or ""),
+        source="tau_dag_cli",
+    )
 
 
 def _deregister_ask_windows(window_ids: set[str]) -> None:
-    if not window_ids or not ASK_WINDOW_REGISTRY.is_file():
-        return
-    try:
-        kept: list[str] = []
-        for line in ASK_WINDOW_REGISTRY.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            try:
-                entry = json.loads(line)
-            except ValueError:
-                continue
-            if str((entry or {}).get("window_id") or "") not in window_ids:
-                kept.append(line)
-        ASK_WINDOW_REGISTRY.write_text(
-            "".join(line + "\n" for line in kept), encoding="utf-8"
-        )
-    except OSError:
-        pass
+    browser_windows.deregister(window_ids)
 
 
 def _pid_alive(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    except OSError:
-        return True
-    return True
+    return browser_windows.pid_alive(pid)
 
 
 def _reap_stale_ask_windows(surf_run: Path, *, timeout_seconds: int = 60) -> dict[str, Any]:
@@ -1753,11 +1712,7 @@ def _reap_stale_ask_windows(surf_run: Path, *, timeout_seconds: int = 60) -> dic
             continue
         pid = entry.get("pid")
         age = now - float(entry.get("created_at") or 0)
-        ttl = (
-            FRESH_KEEP_TTL_SECONDS
-            if str(entry.get("mode") or "") == "fresh-keep"
-            else FRESH_TEMPORARY_TTL_SECONDS
-        )
+        ttl = browser_windows.ttl_for_mode(str(entry.get("mode") or ""))
         owner_alive = _pid_alive(int(pid)) if isinstance(pid, int) else False
         if owner_alive or age < ttl:
             receipt["kept"].append(
@@ -1852,6 +1807,20 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
             lifecycle["cleanup"] = []
             lifecycle["cleanup_status"] = "skipped_pending_recovery"
             lifecycle["pending_recovery_lanes"] = pending
+            # Retention is an obligation with a clock, not an exemption. 28 of
+            # 351 receipts sat here with windows kept for a recovery nobody ever
+            # performed, so the ledger re-marks them at the longer
+            # pending-recovery TTL and the reaper closes them eventually.
+            browser_windows.register(
+                [
+                    str(tab.get("window_id"))
+                    for tab in lifecycle.get("created_tabs", [])
+                    if isinstance(tab, dict) and tab.get("window_id")
+                ],
+                mode="pending-recovery",
+                run_dir=str(lifecycle.get("run_dir") or ""),
+                source="pending_recovery_retention",
+            )
             lifecycle["cleanup_policy_note"] = (
                 "Created window/tabs were kept open: one or more lanes failed in a "
                 "state whose response may only exist in-tab. Run each lane's "

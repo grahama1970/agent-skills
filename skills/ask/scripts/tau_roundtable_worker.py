@@ -24,6 +24,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from ask import browser_windows  # noqa: E402
 from ask.seam_models import enforce  # noqa: E402
 
 
@@ -5637,7 +5638,7 @@ def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
         return CmdResult(command, 124, stdout or "", stderr, time.time() - started)
 
 
-def _run_browser_transport_cmd(
+def _run_browser_transport_cmd_inner(
     command: list[str],
     *,
     cwd: Path,
@@ -5744,6 +5745,77 @@ def _run_browser_transport_cmd(
             + f"\n[tau-worker] waited {waited:.3f}s for Ask browser transport lock at {lock_path}\n"
         )
     return CmdResult(result.command, result.returncode, result.stdout, stderr, result.duration + waited)
+
+
+def _claimed_tab_ids(command: list[str], result: "CmdResult") -> list[str]:
+    """Tab ids this command caused to exist, so their windows can be claimed.
+
+    Two shapes create a window below the lifecycle layer, and neither returns a
+    window id: a provider submit with `--create-tab`, whose tab lands in the
+    meta receipt as `controlled_tab_id`, and `browser-oracle open-bind`, whose
+    tab id is in its own JSON on stdout. Anything else reuses a window somebody
+    already owns.
+    """
+    if "--create-tab" in command:
+        meta_path = ""
+        for index, item in enumerate(command):
+            if item == "--meta-output" and index + 1 < len(command):
+                meta_path = command[index + 1]
+        if meta_path:
+            try:
+                meta = json.loads(Path(meta_path).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                return []
+            tab = str((meta or {}).get("controlled_tab_id") or "").strip()
+            return [tab] if tab else []
+        return []
+    if "open-bind" in command:
+        try:
+            payload = json.loads(result.stdout)
+        except (ValueError, TypeError):
+            return []
+        if not isinstance(payload, dict):
+            return []
+        tab = str(payload.get("tab_id") or payload.get("tabId") or "").strip()
+        return [tab] if tab else []
+    return []
+
+
+def _run_browser_transport_cmd(command: list[str], **kwargs: Any) -> "CmdResult":
+    """Run a browser transport command and claim any window it created.
+
+    Registration happens here, at the single choke point every worker browser
+    command passes through, rather than where a lifecycle is compiled. A window
+    created by a recovery path was previously owned by nobody: measured
+    2026-08-14, 9 provider windows were open and none appeared in any of 351
+    lifecycle receipts, so neither reaper could ever close them.
+
+    Claiming must never fail the transport: a lost claim reproduces the old
+    leak, while a raised exception would lose a provider response.
+    """
+    result = _run_browser_transport_cmd_inner(command, **kwargs)
+    try:
+        tabs = _claimed_tab_ids(list(command), result)
+        if tabs:
+            surf_run = Path(command[0])
+            if surf_run.name != "run.sh":
+                surf_run = Path(__file__).resolve().parents[2] / "surf" / "run.sh"
+            claimed = browser_windows.register_tabs(
+                tabs,
+                surf_run=surf_run,
+                mode="fresh-temporary",
+                run_dir=str(kwargs.get("artifact_dir") or ""),
+                source="tau_roundtable_worker",
+            )
+            if claimed:
+                print(
+                    f"[tau-worker] claimed browser window(s) {','.join(claimed)} "
+                    f"for tab(s) {','.join(tabs)}",
+                    file=sys.stderr,
+                )
+    except Exception:
+        pass
+    return result
 
 
 def _browser_transport_wait_limit(*, browser_lock_timeout: int, timeout: int) -> int:

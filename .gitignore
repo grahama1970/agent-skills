@@ -117,3 +117,11 @@ site/design-roundtable/font-receipt*.json
 site/design-roundtable/*rater*.json
 site/design-roundtable/*rater*.md
 site/design-roundtable/live-collaboration-ledger.html
+
+# Generated bulk that made `git status` unreadable (2026-08-14).
+# Each of these had ZERO tracked files, so ignoring hides no real change --
+# it only stops 64k untracked artifacts from burying the ~400 that matter.
+# An agent reading a 67,807-line status learns nothing and starts guessing.
+skills/dogpile/local/search-runs/
+skills.pre-symlink-*/
+site/.next.stale-*/
