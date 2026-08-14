@@ -23,6 +23,7 @@ yields zero leads and an honest receipt — never a fabricated change.
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import os
@@ -287,6 +288,136 @@ DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE = [
     "Use an authorized persona Gmail address only when it is owned/approved, non-deceptive, and human-transmitted.",
     "Do not automate outreach, RSVP, LinkedIn messaging, or email sending from this signal.",
 ]
+ARCOS_CONTACT_RECALL_QUERY = (
+    "DARPA ARCOS contact network monitor-contacts LinkedIn reconnect persona Gmail "
+    "corporate email blocked Galois GE SRI Lockheed STR Vanderbilt"
+)
+ARCOS_CONTACT_PATH = Path("/mnt/storage12tb/media/personas/references/darpa_arcos_contacts.csv")
+PERSONAL_ARCOS_CONTACTS = {
+    "kit siu",
+    "noah evans",
+    "denis gopan",
+    "rob armstrong",
+    "william brad martin",
+    "eric harrell",
+}
+
+
+def _memory_recall(memory_url: str, query: str, k: int = 5) -> dict[str, Any]:
+    try:
+        return _memory_post(memory_url, "/recall", {"q": query, "k": k}, timeout=10)
+    except Exception as exc:  # noqa: BLE001 - relationship recall must fail soft
+        logger.warning("memory relationship recall skipped: {}", exc)
+        return {"found": False, "items": [], "errors": [str(exc)]}
+
+
+def _memory_evidence_refs(recall: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in recall.get("items") or []:
+        key = item.get("_key")
+        if key:
+            refs.append(f"memory://{key}")
+        for field in ("source_refs", "evidence_refs"):
+            values = item.get(field) or []
+            if isinstance(values, list):
+                refs.extend(str(v) for v in values if v)
+    if ARCOS_CONTACT_PATH.exists():
+        refs.append(ARCOS_CONTACT_PATH.as_uri())
+    # de-dup while preserving order
+    seen: set[str] = set()
+    out: list[str] = []
+    for ref in refs:
+        if ref not in seen:
+            seen.add(ref)
+            out.append(ref)
+    return out
+
+
+def arcos_contact_rows(path: Path | None = None) -> list[dict[str, str]]:
+    """Load the memory-recalled ARCOS contact seed file without broad DB scans."""
+
+    path = path or ARCOS_CONTACT_PATH
+    if not path.exists():
+        return []
+    rows: list[dict[str, str]] = []
+    try:
+        with path.open(newline="", encoding="utf-8") as fh:
+            for row in csv.DictReader(fh):
+                first = str(row.get("first_name") or "").strip()
+                last = str(row.get("last_name") or "").strip()
+                org = str(row.get("organization") or "").strip()
+                status = str(row.get("status") or "").strip().lower()
+                if not first or not last or status == "deceased":
+                    continue
+                rows.append(
+                    {
+                        "name": f"{first} {last}".strip(),
+                        "organization": org,
+                        "status": status or "active_or_unverified",
+                    }
+                )
+    except OSError as exc:
+        logger.warning("ARCOS contact CSV unavailable: {}", exc)
+    return rows
+
+
+def relationship_signals_from_memory(
+    memory_url: str,
+    *,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Recall monitor-contacts graph seeds and emit LinkedIn-first reconnect signals.
+
+    This uses Memory's `/recall` as the front door, then materializes the
+    source-backed ARCOS CSV recalled by Memory. It never lists memory
+    collections, scans Arango, writes raw graph fields, or sends outreach.
+    """
+
+    if not memory_url or os.environ.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "1") == "0":
+        return []
+    try:
+        limit = limit or max(1, int(os.environ.get("MONITOR_MEMORY_CONTACT_LIMIT", "75")))
+    except ValueError:
+        limit = 75
+    recall = _memory_recall(memory_url, ARCOS_CONTACT_RECALL_QUERY, k=5)
+    if not recall.get("found"):
+        return []
+    evidence_refs = _memory_evidence_refs(recall)
+    if not evidence_refs:
+        return []
+    signals: list[dict[str, Any]] = []
+    for row in arcos_contact_rows()[:limit]:
+        subject = row["name"]
+        org = row["organization"] or "DARPA ARCOS network"
+        key = relationship_signal_key("memory:darpa-arcos-contact-network", subject, org)
+        low = subject.lower()
+        signal_type = "direct_contact" if low in PERSONAL_ARCOS_CONTACTS else "adjacent_contact"
+        provenance = (
+            "Memory-recalled direct ARCOS/formal-methods contact path"
+            if signal_type == "direct_contact"
+            else "Memory-recalled adjacent ARCOS/formal-methods contact path"
+        )
+        signals.append(
+            {
+                "signal_id": key,
+                "source_opportunity_id": "memory:darpa-arcos-contact-network",
+                "signal_type": signal_type,
+                "subject": subject,
+                "organization": org,
+                "relationship_path": ["Graham Anderson", "DARPA ARCOS network", subject, org],
+                "evidence_refs": evidence_refs,
+                "source_receipt_ids": [],
+                "provenance": provenance,
+                "recommended_action": "human_decide_reconnect_or_defer",
+                "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+                "preferred_human_channels": list(DEFAULT_RELATIONSHIP_CHANNELS),
+                "channel_guidance": list(DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE),
+                "external_effects": False,
+                "action_worthy": True,
+                "visible_in_report": True,
+            }
+        )
+    return signals
 
 
 def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:

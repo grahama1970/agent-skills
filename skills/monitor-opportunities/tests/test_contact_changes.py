@@ -4,6 +4,43 @@ from __future__ import annotations
 from monitor_opportunities import contact_changes as cc
 
 
+def test_memory_recall_arcos_contacts_become_linkedin_first_relationship_signals(
+    tmp_path, monkeypatch
+) -> None:
+    csv_path = tmp_path / "darpa_arcos_contacts.csv"
+    csv_path.write_text(
+        "\n".join(
+            [
+                "first_name,last_name,organization,email,status",
+                "William Brad,Martin,DARPA I2O,william@example.com,",
+                "David,Archer,Galois Inc.,dwa@galois.com,",
+                "Paul,Cuddihy,GE Research,paul@example.com,deceased",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cc, "ARCOS_CONTACT_PATH", csv_path)
+    monkeypatch.setattr(
+        cc,
+        "_memory_recall",
+        lambda *_args, **_kwargs: {"found": True, "items": [{"_key": "arcos-network"}]},
+    )
+
+    signals = cc.relationship_signals_from_memory("http://memory", limit=10)
+
+    assert [signal["subject"] for signal in signals] == ["William Brad Martin", "David Archer"]
+    assert signals[0]["signal_type"] == "direct_contact"
+    assert signals[1]["signal_type"] == "adjacent_contact"
+    assert all(signal["external_effects"] is False for signal in signals)
+    assert all(signal["visible_in_report"] is True for signal in signals)
+    assert all(signal["recommended_action"] == "human_decide_reconnect_or_defer" for signal in signals)
+    assert all("LINKEDIN_HUMAN_HANDOFF" in signal["preferred_human_channels"] for signal in signals)
+    assert all("AUTHORIZED_PERSONA_GMAIL" in signal["preferred_human_channels"] for signal in signals)
+    assert all("memory://arcos-network" in signal["evidence_refs"] for signal in signals)
+    assert all(csv_path.as_uri() in signal["evidence_refs"] for signal in signals)
+
+
 def test_contact_key_is_stable_across_org_moves() -> None:
     # The whole point is recognising the same person at a DIFFERENT company,
     # so org must not participate in the identity.

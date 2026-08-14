@@ -18,8 +18,9 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert 'nightly_args = ["nightly"]' in source
     assert "--diagnostic" in source
     assert "--expected-revision" in source
-    assert "--skip-relationship-memory" in source
-    assert "MONITOR_RELATIONSHIP_SIGNALS_ENABLED=0" in source
+    registered_args = source.split("nightly_args.extend(", 1)[1].split("command_parts", 1)[0]
+    assert "--skip-relationship-memory" not in registered_args
+    assert "MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1" in source
     assert "scheduler" in source
     assert "_canonical_repo_root" in source
     assert '".worktrees"' in source

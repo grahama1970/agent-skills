@@ -10,7 +10,7 @@ from typing import Any
 from loguru import logger
 
 from .application_packets import build_application_packets
-from .contact_changes import relationship_signals_from_candidates
+from .contact_changes import relationship_signals_from_candidates, relationship_signals_from_memory
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError, ResultStatus
 from .discovery import sweep
 from .outreach import build_outreach_packets
@@ -433,6 +433,7 @@ def _report_from_run(
     claim_snapshot: dict[str, Any] | None,
     roundtable_receipts: dict[str, dict[str, Any]] | None = None,
     outreach_effects: dict[str, dict[str, Any]] | None = None,
+    memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     source_intel_shortlist_path = ranking_dir / "source-intel-shortlist.json"
@@ -448,6 +449,9 @@ def _report_from_run(
     relationship_signals = relationship_signals_from_candidates(
         [*shortlist[:REPORT_DIGEST_LIMIT], *source_intel_shortlist[:REPORT_DIGEST_LIMIT]]
     )
+    for signal in relationship_signals_from_memory(memory_url):
+        if signal["signal_id"] not in {row["signal_id"] for row in relationship_signals}:
+            relationship_signals.append(signal)
     resume_variants = _resume_variants(tailoring_dir, opportunities)
     if len(resume_variants) != len(opportunities):
         missing = sorted(
@@ -725,6 +729,7 @@ def run_stage0(
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
     degrade_required_source_failures: bool = False,
+    memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
     prepare_run_output(out_dir)
     run_id = "mo_" + stable_id("run", {"out": str(out_dir), "started": utc_now()}).split(":", 1)[1]
@@ -821,6 +826,7 @@ def run_stage0(
         claim_snapshot,
         _load_receipt_map(roundtable_receipts_path, key_field="receipt_key"),
         _load_receipt_map(outreach_effects_path, key_field="packet_id"),
+        memory_url if fixture_dir is None else "",
     )
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)

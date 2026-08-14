@@ -325,6 +325,7 @@ def serve(
 @app.command("run")
 def run_command(
     out: Path | None = typer.Option(None, "--out", file_okay=False),
+    memory_url: str = typer.Option("http://127.0.0.1:8601", "--memory-url"),
     fixture_dir: Path | None = typer.Option(None, "--fixture-dir", file_okay=False),
     linkedin_evidence: Path | None = typer.Option(
         None,
@@ -396,6 +397,7 @@ def run_command(
             outreach_effects,
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
+            memory_url=memory_url,
             degrade_required_source_failures=degrade_required_sources,
         )
     except ContractError as exc:
@@ -648,7 +650,6 @@ def nightly(
         skip_buzz = True
         skip_tracker = True
         skip_ats_memory = True
-        skip_relationship_memory = True
         require_clean = True
 
     # `latest/` is intentionally reused by cron. Clear prior generated artifacts
@@ -774,7 +775,7 @@ def nightly(
 
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if diagnostic:
-        run_cmd.extend(["--disable-relationship-signals", "--degrade-required-sources"])
+        run_cmd.extend(["--memory-url", memory_url, "--degrade-required-sources"])
     if federal_evidence:
         run_cmd += ["--federal-evidence", str(federal_evidence)]
     if linkedin_evidence:
@@ -1014,14 +1015,13 @@ def schedule(
                 "--skip-buzz",
                 "--skip-tracker",
                 "--skip-ats-memory",
-                "--skip-relationship-memory",
             ]
         )
     command_parts = [
         "source ~/.zshrc >/dev/null 2>&1",
         "export MONITOR_TRACKER_ENABLED=0",
         "export MONITOR_ATS_MEMORY_ENABLED=0",
-        "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=0" if diagnostic else "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
+        "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
         "exec " + " ".join([shlex.quote(str(run_sh)), *[shlex.quote(arg) for arg in nightly_args]]),
     ]
     command = "zsh -lc " + shlex.quote("; ".join(command_parts))
