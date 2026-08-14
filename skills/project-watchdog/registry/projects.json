@@ -218,7 +218,7 @@
    "notes": [
     "The repository is currently very dirty; watchdog mutation should require a clean-worktree policy or explicit dirty-worktree handling."
    ],
-   "repair_creator": "gpt-5.5-high",
+   "repair_creator": "codex",
    "repair_reviewer": "webgpt",
    "service": {
     "kind": "none",
