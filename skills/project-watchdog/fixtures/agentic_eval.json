@@ -421,6 +421,38 @@
         ]
       },
       "real_world": true
+    },
+    {
+      "name": "every-once-a-minute-spelling-is-refused",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/eval_probes.sh frequency-not-spelling"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "every once-a-minute spelling refused"
+        ]
+      }
+    },
+    {
+      "name": "a-tick-cannot-start-just-before-the-batch-window",
+      "type": "adversarial",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/eval_probes.sh quiet-hours-not-invaded"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "deferred, daytime is not"
+        ]
+      }
     }
   ]
 }

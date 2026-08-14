@@ -29,6 +29,34 @@ assert text.strip().startswith("{"), "output does not start with the receipt"
 print("activate emits one parseable document")
 '
     ;;
+  frequency-not-spelling)
+    uv run --project . python -c '
+import sys; sys.path.insert(0, "scripts")
+from watchdog import commands as c
+# Four spellings of the same once-a-minute schedule. Matching only a bare "*"
+# was bypassable by all three of the others.
+for spelling in ("*", "*/1", "0-59", ",".join(str(i) for i in range(60))):
+    assert c.install_cron(apply=False, minute=spelling) == 2, spelling
+assert c.install_cron(apply=False, minute="bogus") == 2, "unparseable must fail closed"
+for ok in ("*/2", "*/5", "*/15", "0", "0,30"):
+    assert c.install_cron(apply=False, minute=ok) == 0, ok
+print("every once-a-minute spelling refused; safe intervals accepted")
+'
+    ;;
+  quiet-hours-not-invaded)
+    uv run --project . python -c '
+import datetime, sys; sys.path.insert(0, "scripts")
+from watchdog import config
+# A tick begun at 01:59:59 must not run into the 02:00 batch window.
+for t in ("01:50", "01:59", "02:30", "06:55"):
+    h, m = map(int, t.split(":"))
+    assert config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, h, m)), t
+for t in ("08:00", "15:00", "21:00"):
+    h, m = map(int, t.split(":"))
+    assert not config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, h, m)), t
+print("a tick starting before the window is deferred, daytime is not")
+'
+    ;;
   *)
     echo "unknown probe: ${1:-}" >&2; exit 2 ;;
 esac

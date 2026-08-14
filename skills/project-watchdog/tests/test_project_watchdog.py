@@ -1529,7 +1529,9 @@ def test_a_once_a_minute_schedule_is_refused(capsys) -> None:
     as a decision somebody makes.
     """
     assert commands.install_cron(apply=False, minute="*") == 2
-    assert "refusing a once-a-minute schedule" in capsys.readouterr().err
+    # The message now names the measured period rather than a spelling, because
+    # the check counts firings instead of matching "*".
+    assert "refusing a schedule that fires every 60s" in capsys.readouterr().err
 
 
 def test_an_explicit_override_still_allows_every_minute() -> None:
@@ -1545,3 +1547,46 @@ def test_the_default_minute_is_not_every_minute() -> None:
     from watchdog import commands as _c
 
     assert inspect.signature(_c.install_cron).parameters["allow_every_minute"].default is False
+
+
+@pytest.mark.parametrize("spelling", ["*", "*/1", "0-59"])
+def test_every_spelling_of_once_a_minute_is_refused(spelling: str) -> None:
+    """Matching a bare '*' was bypassable by three other spellings.
+
+    Adversarial review predicted this and it reproduced: */1, 0-59 and an
+    enumerated 0,1,...,59 all installed the same once-a-minute job the runaway
+    came from.
+    """
+    from watchdog import commands
+
+    assert commands.install_cron(apply=False, minute=spelling) == 2
+
+
+def test_an_enumerated_every_minute_list_is_refused() -> None:
+    from watchdog import commands
+
+    assert commands.install_cron(apply=False, minute=",".join(str(i) for i in range(60))) == 2
+
+
+def test_an_unparseable_minute_field_fails_closed() -> None:
+    """A field nobody has reasoned about must not be installed verbatim."""
+    from watchdog import commands
+
+    assert commands.install_cron(apply=False, minute="bogus") == 2
+
+
+@pytest.mark.parametrize(("field", "period"), [("*", 60), ("*/5", 300), ("0", 3600), ("0,30", 1800)])
+def test_the_period_is_computed_from_expansion_not_spelling(field: str, period: int) -> None:
+    from watchdog import commands
+
+    assert commands.minute_field_period_seconds(field) == period
+
+
+def test_a_tick_starting_before_the_batch_window_is_deferred() -> None:
+    """A start-time-only check let work begun at 01:59:59 invade 02:00."""
+    import datetime
+
+    from watchdog import config
+
+    assert config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, 1, 59))
+    assert not config.tick_would_enter_quiet_hours(datetime.datetime(2026, 1, 1, 15, 0))

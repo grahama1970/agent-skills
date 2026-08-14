@@ -136,7 +136,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
     # Overnight batch work owns the machine between the quiet hours; a repair
     # dispatch there competes with jobs that cannot be restarted cheaply. The
     # issues are still there afterwards.
-    if apply and config.in_quiet_hours():
+    if apply and config.tick_would_enter_quiet_hours():
         receipt = base_receipt(run_id, receipt_dir, apply)
         window = config.quiet_window()
         receipt.update(
@@ -603,6 +603,64 @@ def activate(*, apply: bool, minute: str = "*/5") -> int:
     return 0 if receipt["ok"] else 1
 
 
+
+#: A tick has been observed at 302.8s. A period at or under that guarantees the
+#: next invocation lands on a still-running one, which is the stacking the
+#: runaway was made of. 300s is deliberately NOT treated as safe: the review
+#: pointed out that 300 < 302.8, so */5 bounds log growth and empty scans but
+#: does not by itself guarantee non-overlap -- the real fix is a tick deadline
+#: below the period, tracked separately.
+OBSERVED_MAX_TICK_SECONDS = 302.8
+MIN_SAFE_PERIOD_SECONDS = 120
+
+
+def minute_field_period_seconds(minute: str) -> int | None:
+    """Shortest gap in seconds between firings of a cron minute field.
+
+    Expands the field rather than matching its spelling, because `*`, `*/1`,
+    `0-59` and an enumerated `0,1,...,59` are the same schedule written four
+    ways. Returns None when the field cannot be parsed, so an unparseable value
+    is never silently treated as safe.
+    """
+    text = (minute or "").strip()
+    if not text:
+        return None
+    fired: set[int] = set()
+    for part in text.split(","):
+        part = part.strip()
+        if not part:
+            return None
+        step = 1
+        if "/" in part:
+            part, _, raw_step = part.partition("/")
+            if not raw_step.isdigit() or int(raw_step) < 1:
+                return None
+            step = int(raw_step)
+            part = part or "*"
+        if part == "*":
+            start, end = 0, 59
+        elif "-" in part:
+            lo, _, hi = part.partition("-")
+            if not (lo.isdigit() and hi.isdigit()):
+                return None
+            start, end = int(lo), int(hi)
+        elif part.isdigit():
+            start = end = int(part)
+        else:
+            return None
+        if not (0 <= start <= 59 and 0 <= end <= 59 and start <= end):
+            return None
+        fired.update(range(start, end + 1, step))
+    if not fired:
+        return None
+    if len(fired) == 1:
+        return 3600
+    ordered = sorted(fired)
+    gaps = [(b - a) * 60 for a, b in zip(ordered, ordered[1:])]
+    gaps.append((60 - ordered[-1] + ordered[0]) * 60)  # wrap to the next hour
+    return min(gaps)
+
+
 def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) -> int:
     """Install or dry-run the crontab line that drives the watchdog.
 
@@ -617,10 +675,26 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     ``*`` is still reachable, but only with an explicit flag, so choosing it is
     a decision somebody made rather than a default nobody noticed.
     """
-    if minute.strip() == "*" and not allow_every_minute:
+    # Reject by EFFECTIVE FREQUENCY, not spelling. Matching only a bare "*"
+    # was bypassable by */1, 0-59, or an enumerated 0,1,2,...,59 -- all of which
+    # install the same once-a-minute job the runaway came from. Adversarial
+    # review caught this; the check now expands the field and counts.
+    period = minute_field_period_seconds(minute)
+    if period is None:
+        # Fail closed. An unparseable field installed verbatim is a schedule
+        # nobody has reasoned about, and cron may interpret it differently than
+        # we would guess.
         print(
-            "refusing a once-a-minute schedule: ticks reach 302.8s, so they overlap "
-            "and stack (1,381 observed collisions). Use --minute '*/5', or pass "
+            f"refusing an unparseable cron minute field {minute!r}; "
+            "use a plain field such as '*/5'.",
+            file=sys.stderr,
+        )
+        return 2
+    if period < MIN_SAFE_PERIOD_SECONDS and not allow_every_minute:
+        print(
+            f"refusing a schedule that fires every {period}s: ticks have been observed "
+            f"at 302.8s, so anything under {MIN_SAFE_PERIOD_SECONDS}s overlaps and stacks "
+            f"(1,381 observed collisions). Use --minute '*/5', or pass "
             "--allow-every-minute to override.",
             file=sys.stderr,
         )

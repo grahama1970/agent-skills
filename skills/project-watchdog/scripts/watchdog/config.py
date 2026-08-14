@@ -413,6 +413,22 @@ def quiet_window() -> tuple[int, int] | None:
     return start, end
 
 
+def tick_would_enter_quiet_hours(now=None, projected_seconds: int = 600) -> bool:
+    """True when a tick starting now could still be running inside the window.
+
+    A start-time-only check lets work begun at 01:59:59 run straight into the
+    02:00 batch window -- the exact invasion the quiet hours exist to prevent.
+    Adversarial review caught this; the gate now considers where the tick ends,
+    not only where it starts.
+    """
+    import datetime as _dt
+
+    if quiet_window() is None:
+        return False
+    start = now or _dt.datetime.now()
+    return in_quiet_hours(start) or in_quiet_hours(start + _dt.timedelta(seconds=projected_seconds))
+
+
 def in_quiet_hours(now=None) -> bool:
     """True inside the overnight window, wrapping past midnight correctly."""
     import datetime as _dt
