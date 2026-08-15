@@ -41,6 +41,7 @@ from .pipeline import (
 )
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
+from .report_acceptance import validate_report_acceptance
 from .semantic_addenda import install_semantic_addendum
 from .service import serve as serve_report
 from .tau_semantic_prepare import prepare_tau_semantic_inputs
@@ -86,6 +87,7 @@ IMPLEMENTED = [
     "tau-semantic-prepare",
     "tau-semantic-provider-eval",
     "tau-semantic-install",
+    "report-acceptance",
 ]
 NOT_IMPLEMENTED: list[str] = []
 
@@ -354,6 +356,26 @@ def report(
     except ContractError as exc:
         _fail(exc)
     typer.echo(json.dumps({"status": "PASS", **artifacts}, indent=2, sort_keys=True))
+
+
+@app.command("report-acceptance")
+def report_acceptance(
+    run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
+    allow_missing_zero_effect_replay: bool = typer.Option(
+        False,
+        "--allow-missing-zero-effect-replay",
+        help="Allow run-only receipts that were not produced by nightly.",
+    ),
+) -> None:
+    """Validate report-visible claims, provenance, degradation, and zero effects."""
+    _configure_logging()
+    receipt = validate_report_acceptance(
+        run,
+        require_zero_effect_replay=not allow_missing_zero_effect_replay,
+    )
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt["status"] != "PASS":
+        raise typer.Exit(code=1)
 
 
 @app.command()
