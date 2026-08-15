@@ -2,8 +2,10 @@
 """Tests for live audio listener command construction."""
 
 import httpx
+import ssl
 
 from live_evidence.listener import (
+    ListenerOptions,
     _backend_client,
     _pipewire_record_command,
     _stt_final_boundary_kwargs,
@@ -38,6 +40,29 @@ def test_backend_client_ignores_host_proxy_and_ca_environment() -> None:
         assert client.trust_env is False
     finally:
         client.close()
+
+
+def test_backend_client_ignores_broken_ca_file_for_plain_http(monkeypatch) -> None:
+    def fail_default_context(*_args: object, **_kwargs: object) -> ssl.SSLContext:
+        raise FileNotFoundError("missing test CA")
+
+    monkeypatch.setattr(ssl, "create_default_context", fail_default_context)
+    timeout = httpx.Timeout(connect=1.0, read=1.0, write=1.0, pool=1.0)
+
+    client = _backend_client("http://127.0.0.1:8787/", timeout=timeout)
+    try:
+        assert client.base_url == "http://127.0.0.1:8787"
+    finally:
+        client.close()
+
+
+def test_listener_default_compute_type_matches_workstation_safe_gpu_mode() -> None:
+    assert ListenerOptions(
+        backend_url="http://127.0.0.1:8787",
+        mode="pipewire",
+        consent_confirmed=True,
+        pipewire_source="sink:alsa_output.test",
+    ).compute_type == "int8"
 
 
 def test_stt_final_boundary_enables_vad_without_clip_timestamps() -> None:

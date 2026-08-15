@@ -44,7 +44,7 @@ class ListenerOptions:
     model: str = "small.en"
     realtime_model: str = "tiny.en"
     device: str = "cuda"
-    compute_type: str = "float16"
+    compute_type: str = "int8"
     input_device_index: int | None = None
 
 
@@ -56,6 +56,7 @@ class TranscriptPublisher:
             base_url=backend_url.rstrip("/"),
             timeout=httpx.Timeout(connect=2.0, read=5.0, write=5.0, pool=2.0),
             trust_env=False,
+            verify=_verify_tls_for_url(backend_url),
         )
         self._source = source
         self._speaker = speaker
@@ -321,7 +322,18 @@ def _read_backend_session_status(backend_url: str) -> str | None:
 def _backend_client(backend_url: str, *, timeout: httpx.Timeout) -> httpx.Client:
     """Create a loopback API client isolated from host proxy and CA env vars."""
 
-    return httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout, trust_env=False)
+    return httpx.Client(
+        base_url=backend_url.rstrip("/"),
+        timeout=timeout,
+        trust_env=False,
+        verify=_verify_tls_for_url(backend_url),
+    )
+
+
+def _verify_tls_for_url(url: str) -> bool:
+    """Avoid host CA setup for local plain-HTTP API clients."""
+
+    return not url.casefold().startswith("http://")
 
 
 def _stt_final_boundary_kwargs() -> dict[str, object]:

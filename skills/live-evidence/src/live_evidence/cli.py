@@ -75,7 +75,7 @@ def listen(
     model: Annotated[str, typer.Option(help="RealtimeSTT final model.")] = "small.en",
     realtime_model: Annotated[str, typer.Option(help="RealtimeSTT interim model.")] = "tiny.en",
     device: Annotated[str, typer.Option(help="cuda or cpu.")] = "cuda",
-    compute_type: Annotated[str, typer.Option(help="CTranslate2 compute type.")] = "float16",
+    compute_type: Annotated[str, typer.Option(help="CTranslate2 compute type.")] = "int8",
     input_device_index: Annotated[int | None, typer.Option(help="Optional PyAudio input index.")] = None,
 ) -> None:
     """Start consent-gated live transcription."""
