@@ -1788,15 +1788,20 @@ def schedule(
     )
     jobs = json.loads(listing.stdout)
     job = jobs.get("monitor-opportunities-nightly")
-    if not job or job.get("cron") != cron or job.get("command") != command or job.get("workdir") != str(repo_root) or not job.get("enabled", True):
-        _fail(ContractError("SCHEDULER_READBACK_FAILED", "Registered job did not read back"))
+    scheduler_data_dir = Path(
+        os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))
+    )
+    scheduler_equivalence_path = (
+        scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-equivalence.json"
+    )
     scheduler_equivalence = _scheduler_equivalence_receipt(
         cron=cron,
         command=command,
         repo_root=repo_root,
         intent=scheduler_intent,
-        readback=job,
+        readback=job or {},
     )
+    write_json(scheduler_equivalence_path, scheduler_equivalence)
     if scheduler_equivalence["status"] != "PASS":
         _fail(
             ContractError(
@@ -1823,13 +1828,6 @@ def schedule(
         "scheduler_intent": scheduler_intent,
         "scheduler_equivalence": scheduler_equivalence,
     }
-    scheduler_data_dir = Path(
-        os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))
-    )
-    scheduler_equivalence_path = (
-        scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-equivalence.json"
-    )
-    write_json(scheduler_equivalence_path, scheduler_equivalence)
     schedule_receipt["scheduler_equivalence_receipt"] = str(scheduler_equivalence_path)
     schedule_receipt_path = (
         scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-receipt.json"

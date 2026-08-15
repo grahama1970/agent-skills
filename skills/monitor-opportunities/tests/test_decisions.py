@@ -8,6 +8,7 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -105,3 +106,44 @@ def test_human_sent_markers_require_explicit_human_actor(tmp_path: Path) -> None
     assert len(ledger_rows) == 1
     assert ledger_rows[0]["actor"] == "human"
     assert ledger_rows[0]["external_effects"] is False
+
+
+def test_replay_rejects_external_effect_ledger_row(tmp_path: Path, monkeypatch) -> None:
+    run_dir = tmp_path / "run"
+    run_dir.mkdir(parents=True)
+    (run_dir / "decision-ledger.jsonl").write_text(
+        json.dumps(
+            {
+                "schema": "monitor_opportunities.decision_event.v1",
+                "event_id": "decision:poisoned",
+                "run_id": str(run_dir),
+                "run_dir": str(run_dir),
+                "item_id": "opp:poisoned",
+                "action": "KEEP",
+                "actor": "agent",
+                "created_at": "2026-08-15T00:00:00Z",
+                "payload_digest": "digest",
+                "resulting_state": "KEPT",
+                "external_effects": True,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def fail_on_subprocess(*_args, **_kwargs):
+        raise AssertionError("replay must not call external subprocess adapters")
+
+    monkeypatch.setattr(subprocess, "run", fail_on_subprocess)
+
+    replay = runner.invoke(app, ["replay", "--run", str(run_dir)])
+
+    assert replay.exit_code == 2
+    assert "ZERO_EFFECT_REPLAY_FAILED" in replay.stderr
+    replay_receipt = json.loads(
+        (run_dir / "zero-effect-replay-receipt.json").read_text(encoding="utf-8")
+    )
+    assert replay_receipt["status"] == "FAIL"
+    assert replay_receipt["checks"]["decision_events_external_effects_false"] is False
+    assert replay_receipt["violations"]["decision_event_external_effects"] == ["decision:poisoned"]

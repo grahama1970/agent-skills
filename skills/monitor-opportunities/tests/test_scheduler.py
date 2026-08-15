@@ -143,6 +143,73 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
 
 
+def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    scheduler = repo / "skills" / "scheduler" / "run.sh"
+    run_sh = repo / "skills" / "monitor-opportunities" / "run.sh"
+    scheduler.parent.mkdir(parents=True)
+    run_sh.parent.mkdir(parents=True)
+    scheduler.write_text("#!/bin/sh\n", encoding="utf-8")
+    run_sh.write_text("#!/bin/sh\n", encoding="utf-8")
+    claim_snapshot = tmp_path / "claim-snapshot.json"
+    claim_snapshot.write_text('{"approved": true}\n', encoding="utf-8")
+    scheduler_data = tmp_path / "scheduler-state"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd[:3] == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd[1] == "register":
+            captured["command"] = cmd[cmd.index("--command") + 1]
+            captured["cron"] = cmd[cmd.index("--cron") + 1]
+            captured["workdir"] = cmd[cmd.index("--workdir") + 1]
+            return subprocess.CompletedProcess(cmd, 0, stdout="registered\n", stderr="")
+        if cmd[1] == "list":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
+                    {
+                        "monitor-opportunities-nightly": {
+                            "cron": captured["cron"],
+                            "command": str(captured["command"]) + " --unexpected-drift",
+                            "workdir": str(repo / "wrong-workdir"),
+                            "enabled": True,
+                        }
+                    }
+                ),
+                stderr="",
+            )
+        raise AssertionError(f"unexpected subprocess command: {cmd!r}")
+
+    monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
+    monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
+    monkeypatch.setattr("shutil.which", lambda name: "/usr/local/bin/buzz" if name == "buzz" else None)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "schedule",
+            "--promoted-stage0",
+            "--claim-snapshot",
+            str(claim_snapshot),
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "SCHEDULER_EQUIVALENCE_FAILED" in result.stderr
+    equivalence_path = scheduler_data / "receipts" / "monitor-opportunities-nightly-equivalence.json"
+    assert equivalence_path.is_file()
+    equivalence = json.loads(equivalence_path.read_text(encoding="utf-8"))
+    assert equivalence["status"] == "FAIL"
+    assert equivalence["checks"]["command_matches"] is False
+    assert equivalence["checks"]["workdir_matches"] is False
+
+
 def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
     tmp_path: Path, monkeypatch
 ) -> None:
