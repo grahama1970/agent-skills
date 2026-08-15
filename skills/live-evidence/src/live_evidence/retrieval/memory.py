@@ -30,6 +30,8 @@ class FlexibleMemoryResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     found: bool | None = None
+    should_scan: bool | None = None
+    confidence: float | None = None
     items: list[dict[str, Any]] = Field(default_factory=list)
     results: list[dict[str, Any]] = Field(default_factory=list)
 
@@ -348,6 +350,8 @@ def _memory_items_to_sources(
     profile: str,
     interview_profile: InterviewProfile,
 ) -> list[EvidenceSource]:
+    if not _memory_payload_has_usable_evidence(payload):
+        return []
     candidates = payload.get("items") or payload.get("results") or payload.get("memories") or []
     if not isinstance(candidates, list):
         return []
@@ -382,6 +386,22 @@ def _memory_items_to_sources(
             )
         )
     return sources
+
+
+def _memory_payload_has_usable_evidence(payload: dict[str, Any]) -> bool:
+    """Treat Memory recall as fast optional context, not a required answer lane."""
+
+    found = payload.get("found")
+    if found is False:
+        return False
+    confidence = payload.get("confidence")
+    if confidence is None:
+        return found is not False
+    try:
+        score = float(confidence)
+    except (TypeError, ValueError):
+        return found is not False
+    return score >= 0.5
 
 
 def _memory_item_allowed(item: dict[str, Any], profile: InterviewProfile) -> bool:

@@ -13,6 +13,7 @@ from live_evidence.retrieval.memory import MemoryEvidenceClient
 from live_evidence.retrieval.memory import _code_item_allowed, _memory_item_allowed
 from live_evidence.retrieval.memory import _code_queries
 from live_evidence.retrieval.memory import _dedupe_sources
+from live_evidence.retrieval.memory import _memory_items_to_sources
 from live_evidence.retrieval.memory import _select_code_items
 from live_evidence.retrieval.memory import _subprocess_env
 
@@ -216,3 +217,71 @@ def test_memory_subprocess_env_does_not_inherit_live_evidence_venv(
     assert "UV_PROJECT_ENVIRONMENT" not in env
     assert "PYTHONPATH" not in env
     assert env["UV_LINK_MODE"] == "copy"
+
+
+def test_memory_recall_found_false_is_optional_no_evidence() -> None:
+    sources = _memory_items_to_sources(
+        {
+            "found": False,
+            "should_scan": True,
+            "confidence": 0.0,
+            "items": [
+                {
+                    "_key": "lesson-unrelated",
+                    "problem": "Unrelated result",
+                    "solution": "This should not become a visible evidence source.",
+                    "score": 1.0,
+                }
+            ],
+        },
+        "procedural_memory",
+        profile(),
+    )
+
+    assert sources == []
+
+
+def test_memory_recall_low_confidence_is_optional_no_evidence() -> None:
+    sources = _memory_items_to_sources(
+        {
+            "found": True,
+            "should_scan": True,
+            "confidence": 0.21,
+            "items": [
+                {
+                    "_key": "lesson-weak",
+                    "problem": "Weak result",
+                    "solution": "Low-confidence Memory is optional context, not support.",
+                    "score": 0.9,
+                }
+            ],
+        },
+        "procedural_memory",
+        profile(),
+    )
+
+    assert sources == []
+
+
+def test_memory_recall_confident_hit_can_be_evidence() -> None:
+    sources = _memory_items_to_sources(
+        {
+            "found": True,
+            "should_scan": False,
+            "confidence": 0.83,
+            "items": [
+                {
+                    "_key": "lesson-live-evidence-memory-optional",
+                    "problem": "Live Evidence Memory fallback",
+                    "solution": "Treat Memory recall as deterministic optional context.",
+                    "score": 0.83,
+                    "tags": ["live-evidence"],
+                }
+            ],
+        },
+        "procedural_memory",
+        profile(),
+    )
+
+    assert len(sources) == 1
+    assert sources[0].metadata["_key"] == "lesson-live-evidence-memory-optional"
