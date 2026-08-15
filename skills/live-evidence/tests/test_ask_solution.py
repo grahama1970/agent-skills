@@ -77,6 +77,38 @@ def test_ask_solution_reads_response_from_run_receipt(tmp_path: Path) -> None:
     assert "target_symbol" in result.sources[0].excerpt
 
 
+def test_ask_solution_reads_pretty_json_after_dag_preview(tmp_path: Path) -> None:
+    run_dir = tmp_path / "ask-run-pretty"
+    runner = tmp_path / "ask-runner-pretty-json.sh"
+    runner.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                f"mkdir -p {run_dir}/node-artifacts/handler-gpt-5-5-high",
+                (
+                    f"printf 'Use countMinimumInvalidParentheses to count left/right removals.\\n' "
+                    f"> {run_dir}/node-artifacts/handler-gpt-5-5-high/response.md"
+                ),
+                "printf 'DAG (about to EXECUTE via Tau):\\n\\n[handler] handler\\n\\n'",
+                "python3 - <<'PY'",
+                "import json",
+                f"print(json.dumps({{'run_dir': '{run_dir}', 'ok': True}}, indent=2))",
+                "PY",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    runner.chmod(0o755)
+    client = AskSolutionClient(settings(tmp_path, runner))
+
+    result = asyncio.run(client.solve("How do I remove invalid parentheses?", []))
+
+    assert result.ok is True
+    assert result.sources[0].path == str(run_dir.resolve())
+    assert "countMinimumInvalidParentheses" in result.sources[0].excerpt
+
+
 def test_ask_solution_does_not_inherit_live_evidence_uv_environment(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

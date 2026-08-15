@@ -195,11 +195,25 @@ def _parse_json_output(stdout: str) -> Any:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
+        decoder = json.JSONDecoder()
+        best_payload: Any = None
+        for index, char in enumerate(text):
+            if char not in "[{":
+                continue
+            try:
+                payload, _ = decoder.raw_decode(text[index:])
+            except json.JSONDecodeError:
+                continue
+            best_payload = payload
+            if _find_run_dir(payload):
+                return payload
         for line in reversed(text.splitlines()):
             try:
                 return json.loads(line)
             except json.JSONDecodeError:
                 continue
+        if best_payload is not None:
+            return best_payload
     return {"response": text}
 
 
