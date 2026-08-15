@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from datetime import datetime, timezone
@@ -479,6 +480,84 @@ def _operational_readiness(
     return "STAGE_0_READY"
 
 
+def _memory_recall_source_receipt(
+    run_dir: Path,
+    recall_receipt: dict[str, Any],
+    relationship_signals: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    memory_signals = [
+        signal
+        for signal in relationship_signals
+        if str(signal.get("source_opportunity_id") or "").startswith("memory:")
+        and signal.get("visible_in_report") is True
+    ]
+    if not memory_signals:
+        return None
+    evidence_refs = list(
+        dict.fromkeys(
+            str(ref)
+            for signal in memory_signals
+            for ref in signal.get("evidence_refs", [])
+            if str(ref).strip()
+        )
+    )
+    if not evidence_refs:
+        return None
+    receipt_id = "src:c:memory-recall:" + sha256_json(
+        {
+            "schema": recall_receipt.get("schema"),
+            "signals": [signal.get("signal_id") for signal in memory_signals],
+            "evidence_refs": evidence_refs,
+        }
+    )[:16]
+    recall_path = run_dir / "memory-recall-receipt.json"
+    if recall_path.exists():
+        evidence_refs.append(recall_path.as_uri())
+        evidence_refs = list(dict.fromkeys(evidence_refs))
+    limitations = list(recall_receipt.get("degradation_reasons") or [])
+    if recall_receipt.get("degraded") and not limitations:
+        limitations.append("Governed Memory recall degraded; no raw database fallback attempted.")
+    payload_bytes = json.dumps(recall_receipt, sort_keys=True).encode("utf-8")
+    return {
+        "receipt_id": receipt_id,
+        "lane": "C",
+        "provider": "memory",
+        "target": "monitor-contacts relationship recall",
+        "source_class": "governed_memory_recall",
+        "result_status": ResultStatus.MATCHES.value,
+        "observed_at": utc_now(),
+        "request_summary": (
+            "Bounded Memory /recall plus approved ARCOS contact source file; "
+            "no /list, raw Arango/Qdrant, outreach, or mutation."
+        ),
+        "response_status": 200 if int(recall_receipt.get("attempted") or 0) else None,
+        "content_type": "application/json",
+        "response_bytes": len(payload_bytes),
+        "content_sha256": sha256_json(recall_receipt),
+        "evidence_refs": evidence_refs,
+        "limitations": limitations,
+        "automation_policy": "READ_ONLY_RECALL_NO_OUTREACH",
+        "required_source_id": "memory_contact_recall",
+        "channel": "relationship_memory",
+    }
+
+
+def _attach_source_receipt_to_memory_relationship_signals(
+    relationship_signals: list[dict[str, Any]],
+    receipt_id: str,
+) -> None:
+    for signal in relationship_signals:
+        if not str(signal.get("source_opportunity_id") or "").startswith("memory:"):
+            continue
+        signal["source_receipt_ids"] = list(
+            dict.fromkeys([*(signal.get("source_receipt_ids") or []), receipt_id])
+        )
+        for edge in signal.get("contact_path") or []:
+            edge["source_receipt_ids"] = list(
+                dict.fromkeys([*(edge.get("source_receipt_ids") or []), receipt_id])
+            )
+
+
 def _report_from_run(
     run_id: str,
     run_dir: Path,
@@ -516,6 +595,18 @@ def _report_from_run(
     )
     write_json(run_dir / "memory-recall-receipt.json", memory_recall_receipt)
     attach_memory_recall_provenance(opportunities, relationship_signals, memory_recall_receipt)
+    source_receipts = _source_receipts(discovery_dir)
+    memory_source_receipt = _memory_recall_source_receipt(
+        run_dir,
+        memory_recall_receipt,
+        relationship_signals,
+    )
+    if memory_source_receipt is not None:
+        _attach_source_receipt_to_memory_relationship_signals(
+            relationship_signals,
+            str(memory_source_receipt["receipt_id"]),
+        )
+        source_receipts.append(memory_source_receipt)
     relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
         opportunities, relationship_signals
     )
@@ -607,14 +698,14 @@ def _report_from_run(
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
         "operational_readiness": _operational_readiness(
-            _source_receipts(discovery_dir),
+            source_receipts,
             opportunities,
             resume_variants,
             degraded_contracts,
         ),
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, [*shortlist, *source_intel_shortlist]),
-        "source_receipts": _source_receipts(discovery_dir),
+        "source_receipts": source_receipts,
         "eligibility_rejections": [_rejection(candidate) for candidate in rejections],
         "opportunities": opportunities,
         "source_intel": source_intel,

@@ -17,7 +17,13 @@ import monitor_opportunities.pipeline as pipeline
 from monitor_opportunities.cli import app
 from monitor_opportunities.contracts import IMMUTABLE_GOAL, ContractError
 from monitor_opportunities.discovery import _linkedin_evidence_candidates
-from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel, run_stage0
+from monitor_opportunities.pipeline import (
+    _attach_source_receipt_to_memory_relationship_signals,
+    _is_report_opportunity,
+    _memory_recall_source_receipt,
+    _source_intel,
+    run_stage0,
+)
 from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
@@ -513,6 +519,64 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
         lane_c["candidates_admitted_opportunities"] + lane_c["candidates_admitted_source_intel"]
     )
     assert lane_c["candidates_admitted_source_intel"] >= len(networking)
+
+
+def test_memory_relationship_signals_are_bound_to_source_receipts(tmp_path: Path) -> None:
+    recall = {
+        "schema": "monitor_opportunities.governed_memory_recall.v1",
+        "attempted": 2,
+        "succeeded": 2,
+        "degraded": False,
+        "degradation_reasons": [],
+        "queries": [
+            {
+                "query_id": "memory-recall-01-known_contacts-david-archer",
+                "status": "MATCHES",
+                "found": True,
+            }
+        ],
+        "external_effects": False,
+    }
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "memory-recall-receipt.json").write_text(
+        json.dumps(recall, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    signal = {
+        "signal_id": "rel-memory",
+        "source_opportunity_id": "memory:darpa-arcos-contact-network",
+        "visible_in_report": True,
+        "evidence_refs": [
+            "memory://38485632",
+            "file:///mnt/storage12tb/media/personas/references/darpa_arcos_contacts.csv",
+        ],
+        "source_receipt_ids": [],
+        "contact_path": [
+            {
+                "from": "Graham Anderson",
+                "to": "David Archer",
+                "relationship": "adjacent_contact",
+                "evidence_status": "MATCHES",
+                "evidence_refs": ["memory://38485632"],
+                "source_receipt_ids": [],
+                "limitations": [],
+            }
+        ],
+    }
+
+    receipt = _memory_recall_source_receipt(run_dir, recall, [signal])
+    assert receipt is not None
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["provider"] == "memory"
+    assert "memory://38485632" in receipt["evidence_refs"]
+    _attach_source_receipt_to_memory_relationship_signals(
+        [signal],
+        str(receipt["receipt_id"]),
+    )
+
+    assert signal["source_receipt_ids"] == [receipt["receipt_id"]]
+    assert signal["contact_path"][0]["source_receipt_ids"] == [receipt["receipt_id"]]
 
 
 def test_run_renders_reviewed_gmail_draft_receipt(tmp_path: Path) -> None:
