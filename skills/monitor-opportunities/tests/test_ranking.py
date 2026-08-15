@@ -109,6 +109,55 @@ def test_source_intel_cannot_starve_reportable_opportunity_shortlist(tmp_path: P
     assert receipt["source_intel_shortlisted"] == 8
 
 
+def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> None:
+    candidates = [
+        {
+            "candidate_id": f"linkedin-source:{i}",
+            "lane": "A",
+            "organization": f"LinkedIn Locator {i}",
+            "title": "Principal AI Architect",
+            "workplace_type": "WNY_HYBRID",
+            "location_display": "Buffalo, NY (hybrid)",
+            "fit_score": 0.99,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": f"receipt:linkedin:{i}",
+        }
+        for i in range(8)
+    ]
+    candidates.extend(
+        {
+            "candidate_id": f"github-source:{i}",
+            "lane": "C",
+            "organization": "GitHub Repo Intel",
+            "title": f"GitHub repository intelligence {i}",
+            "workplace_type": "NOT_APPLICABLE",
+            "location_display": "GitHub source-intel; delivery model not applicable",
+            "fit_score": 0.58,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "github_repo_intelligence",
+            "source_receipt_id": f"receipt:github:{i}",
+        }
+        for i in range(2)
+    )
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    source_ids = [row["candidate_id"] for row in source_intel]
+    assert len(source_intel) == 8
+    assert "github-source:0" in source_ids
+    assert "github-source:1" in source_ids
+    assert sum(row["source_provider"] == "github_repo_intelligence" for row in source_intel) == 2
+    assert sum(row["source_provider"] == "ops_linkedin_authorized_read_only" for row in source_intel) == 6
+
+
 def test_mandate_fit_dominates_geography_in_ranking(tmp_path: Path) -> None:
     candidates = [
         {

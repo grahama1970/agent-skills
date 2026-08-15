@@ -16,6 +16,7 @@ load_dotenv(override=False)
 
 GEO_PRIORITY = {"WNY_HYBRID": 300, "WNY_ONSITE": 200, "REMOTE": 100, "NOT_APPLICABLE": 150}
 SOURCE_INTEL_PROVIDERS = {
+    "github_repo_intelligence",
     "human_supplied_linkedin",
     "ops_linkedin_authorized_read_only",
     "meetup_surf",
@@ -181,6 +182,36 @@ def _is_source_intel_candidate(candidate: dict[str, Any]) -> bool:
     return str(candidate.get("source_provider") or "") in SOURCE_INTEL_PROVIDERS
 
 
+def _source_intel_provider(candidate: dict[str, Any]) -> str:
+    return str(candidate.get("source_provider") or candidate.get("source_class") or "unknown")
+
+
+def _diverse_source_intel_shortlist(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Round-robin source-intel providers so one locator cannot hide another."""
+
+    if limit <= 0:
+        return []
+    groups: dict[str, list[dict[str, Any]]] = {}
+    provider_order: list[str] = []
+    for candidate in candidates:
+        provider = _source_intel_provider(candidate)
+        if provider not in groups:
+            groups[provider] = []
+            provider_order.append(provider)
+        groups[provider].append(candidate)
+
+    selected: list[dict[str, Any]] = []
+    while len(selected) < limit and any(groups.values()):
+        for provider in provider_order:
+            rows = groups.get(provider) or []
+            if not rows:
+                continue
+            selected.append(rows.pop(0))
+            if len(selected) >= limit:
+                break
+    return selected
+
+
 def _posting_identity(candidate: dict[str, Any]) -> str:
     """Stable identity for one real-world posting, across sources.
 
@@ -327,7 +358,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
     admitted_opportunities = [row for row in admitted if not _is_source_intel_candidate(row)]
     admitted_source_intel = [row for row in admitted if _is_source_intel_candidate(row)]
     shortlist = admitted_opportunities[:limit]
-    source_intel_shortlist = admitted_source_intel[:limit]
+    source_intel_shortlist = _diverse_source_intel_shortlist(admitted_source_intel, limit)
     for position, candidate in enumerate(shortlist, start=1):
         ranking_receipts.append(
             {
