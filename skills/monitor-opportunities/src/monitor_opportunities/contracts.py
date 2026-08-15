@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 IMMUTABLE_GOAL = (
     "Daily top opportunities that are highly targeted, delivered in an interactive "
-    "report/interview, with auto-apply using a custom targeted resume given the algorithm "
+    "report/interview, with human-authorized application preparation using a custom targeted resume given the algorithm "
     "likely employed by the employer or client."
 )
 CONTRACT_VERSION = "0.2.0"

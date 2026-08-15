@@ -190,7 +190,7 @@ and tests, but it is still Stage 0 and does not meet the immutable goal.
 - **Immutable goal**:
 
   > Daily top opportunities that are highly targeted, delivered in an
-  > interactive report/interview, with auto-apply using a custom targeted resume
+  > interactive report/interview, with human-authorized application preparation using a custom targeted resume
   > given the algorithm likely employed by the employer or client.
 
 - **Current stage**: `STAGE_0_RESEARCH_ONLY`.
@@ -248,8 +248,8 @@ Doc-code drift to preserve:
 - `SKILL.md` correctly says `run.sh status --json` and
   `docs/PROJECT_KNOWLEDGE.md` are authoritative for current implementation
   state, and `status` currently says `apply` is still not implemented.
-- The immutable goal includes auto-apply, but current code intentionally fails
-  that command closed.
+- The immutable goal now excludes autonomous apply. Application submission remains
+  human-authorized per exact opportunity and payload.
 
 ## 3. What is Working Well
 
@@ -276,7 +276,7 @@ Doc-code drift to preserve:
 ## 4. What is Currently Broken
 
 - **Immutable goal is not met.** The current product is a Stage 0 read-only
-  local report, not a complete daily auto-apply workflow.
+  local report, not a complete daily application-preparation workflow.
 - **`apply` is not implemented.** The CLI registers it as an unsupported command
   that fails closed with `NOT_IMPLEMENTED`.
 - **Gmail mailbox draft creation is not promoted.** Gmail send remains

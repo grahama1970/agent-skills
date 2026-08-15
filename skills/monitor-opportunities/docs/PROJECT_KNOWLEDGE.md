@@ -45,8 +45,8 @@ line makes those paths fail closed and has live promoted receipts:
   retained source/artifact hashes, redacted relationship facts, Meetup supplemental-only
   policy, and `external_effects=false`.
 
-`external_effects` remains FALSE by design: no auto-submit, no InMail/Gmail send, and no
-LinkedIn platform action.
+`external_effects` remains FALSE by design: no auto-apply, no auto-submit,
+no InMail/Gmail send, and no LinkedIn platform action.
 
 Latest deterministic receipts on `main`:
 
@@ -144,7 +144,7 @@ report stays in the run directory as the frozen audit artifact and no longer
 requires Tailscale serving or remote readback. Scheduler registration
 (`monitor-opportunities-nightly`, cron 0 2 * * *) is live.
 
-The report is the product. The first working-value milestone is not auto-apply; it is a
+The report is the product. The first working-value milestone is not autonomous apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,
 write a verification receipt, and prove Gmail, LinkedIn, and ATS effects are unreachable.
 
@@ -189,7 +189,7 @@ correct for every capability not explicitly reported as implemented by `status`.
 | 6 | #1170 | Append-only local decision loop | actual interactive morning product |
 | 7 | #1171 | Resumable nightly run and scheduler readback | daily Stage 0 operation |
 | 8 | #1172 | Draft-only Gmail and local LinkedIn handoffs | human-transmitted outreach workflow |
-| 9 | #1173 | Site-specific ATS inspect/prefill/submit gates | bounded auto-apply after human authorization |
+| 9 | #1173 | Site-specific ATS inspect/prefill/submit gates | bounded application prep plus exact human authorization |
 
 Do not collapse these into one implementation PR. The first seven slices establish useful
 Stage 0 operation without external effects. Issues #1172 and #1173 are promotion work and

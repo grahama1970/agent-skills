@@ -1,6 +1,6 @@
 {
   "schema": "monitor_opportunities.answer_bank.v1",
-  "note": "Graham's standing, TRUTHFUL answers for autonomous application filling. Authorized once; reused across applications. Identity + EEO are seeded from candidate_profile.json. Screening answers grow: a novel question is queued for one human answer, then added here so it auto-fills next time. NEVER fabricate \u2014 a field with no truthful answer here is queued, not guessed.",
+  "note": "Graham's standing, TRUTHFUL answers for application preparation. These answers support prefill and review, but never authorize submission. Identity + EEO are seeded from candidate_profile.json. Screening answers grow: a novel question is queued for one human answer, then added here so it auto-fills next time. NEVER fabricate \u2014 a field with no truthful answer here is queued, not guessed.",
   "identity": {
     "name": "Graham Anderson",
     "first_name": "Graham",

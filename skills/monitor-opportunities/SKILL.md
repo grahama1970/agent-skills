@@ -74,8 +74,8 @@ disciplines:
 ## Immutable goal
 
 > **Daily top opportunities that are highly targeted, delivered in an interactive
-> report/interview, with auto-apply using a custom targeted resume given the algorithm
-> likely employed by the employer or client.**
+> report/interview, with human-authorized application preparation using a custom
+> targeted resume given the algorithm likely employed by the employer or client.**
 
 Operationally, “algorithm likely employed” means an evidence-backed
 `screening_interface_profile`: observed ATS/provider host, observed form fields and file
@@ -87,7 +87,9 @@ algorithm.
 Each morning the candidate opens **one entry point** backed by one source-of-truth report
 manifest. It exposes a small ranked set of real opportunities, every associated artifact,
 every blocker, and every available decision. Every message to another human is
-transmitted **by the candidate**.
+transmitted **by the candidate**. Every application is submitted only when the human gives
+explicit permission for that exact opportunity and payload; this skill must never
+autonomously apply.
 
 ## Architecture (2026-08-08 — see docs/PROJECT_KNOWLEDGE.md for current state)
 
@@ -108,7 +110,7 @@ cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
 Ranking/evaluation rubric: **best-practices-opportunities** (evaluator scores against it,
 reviewer reviews against it, ranker orders by it — no bespoke top-N). GitHub `/ticket`
 (public agent-skills) is for the skill's own code defects only; opportunities are private.
-Effects are human-gated: **no auto-submit, no auto-send**.
+Effects are human-gated: **no auto-apply, no auto-submit, no auto-send**.
 
 `monitor-contacts` is a standard composition, not an optional side quest. Every
 run should preserve direct contacts, adjacent ARCOS/formal-methods contacts,
@@ -382,7 +384,8 @@ success. It does not authorize future unknown application payloads.
 
 Every ATS submission additionally requires a per-application human authorization bound
 to the exact posting, form schema, resume, attachments, answer set, policy, and payload
-digest. Any change invalidates authorization.
+digest. Any change invalidates authorization. Permission for one opportunity never
+authorizes any other application, outreach, platform action, retry, or future payload.
 
 External ATS effects use:
 
@@ -395,7 +398,8 @@ occurred.
 
 ## Who transmits
 
-**The human. Always.** Gmail is draft-only after a separate promotion; Gmail send,
+**The human. Always.** Applications are human-submitted only after explicit
+per-opportunity permission. Gmail is draft-only after a separate promotion; Gmail send,
 schedule-send, and forwarding are forbidden. LinkedIn output is a local human handoff
 packet; this skill never logs in, drives the platform, posts, comments, connects, or
 messages.

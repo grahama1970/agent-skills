@@ -23,7 +23,7 @@ VERDICTS = {"KEEP", "REJECT", "ADJACENT", "CLIENT_SIGNAL", "NEEDS_REVIEW"}
 SCRIPT = Path(__file__).resolve()
 IMMUTABLE_GOAL = (
     "Daily top opportunities that are highly targeted, delivered in an interactive "
-    "report/interview, with auto-apply using a custom targeted resume given the "
+    "report/interview, with human-authorized application preparation using a custom targeted resume given the "
     "algorithm likely employed by the employer or client."
 )
 

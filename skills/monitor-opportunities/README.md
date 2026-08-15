@@ -3,8 +3,9 @@
 A nightly, human-in-the-loop pipeline that finds highly-targeted **jobs and consulting
 prospects** for Graham Anderson (Principal AI Architect, Buffalo NY), tailors a
 claim-bound resume for the top ones, learns each employer's application form, and tracks
-the full opportunity lifecycle on a private board — **without ever auto-applying or
-auto-sending anything.** The human transmits every application and every outreach.
+the full opportunity lifecycle on a private board — **without ever submitting an
+application or sending outreach without explicit human permission.** The human transmits
+every application and every outreach.
 
 ## What it does each night (2 AM, via the scheduler)
 
@@ -22,8 +23,8 @@ auto-sending anything.** The human transmits every application and every outreac
 
 ## Guarantees (by design, enforced in code)
 
-- **No auto-submit, no auto-send.** Applications are human-authorized; outreach drafts go
-  to `/memory` and you transmit them.
+- **No auto-apply, no auto-submit, no auto-send.** Applications require explicit
+  per-opportunity human permission; outreach drafts go to `/memory` and you transmit them.
 - **Dead API → website fallback**, always (enforced + tested).
 - **No fabricated claims** — resumes use only approved-claim wordings (test-enforced).
 - **Private** — job-search data never touches the public repo.

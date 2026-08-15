@@ -3,8 +3,8 @@
 ## Immutable goal
 
 Daily top opportunities that are highly targeted, delivered in an interactive
-report/interview, with auto-apply using a custom targeted resume given the algorithm
-likely employed by the employer or client.
+report/interview, with human-authorized application preparation using a custom
+targeted resume given the algorithm likely employed by the employer or client.
 
 “Algorithm likely employed” is operationalized as an evidence-backed screening-interface
 profile with explicit unknowns, not a claim about proprietary ranking weights.
@@ -20,9 +20,10 @@ mandate-tailored resumes for the top jobs, live ATS application-form capture, a
 memory-backed morning report, and per-opportunity tracking as issues in the PRIVATE
 repo `grahama1970/opportunities` (dual queues: `track:employment`, `track:consulting`).
 
-`external_effects` remains FALSE by design: nothing is auto-submitted and no InMail/Gmail
-is auto-sent. Submit is human-authorized (application_plan gate); outreach drafts go to
-`/memory` and the human transmits. `network_access` is TRUE (browser, brave-search, memory).
+`external_effects` remains FALSE by design: nothing is auto-applied, auto-submitted, or
+auto-sent. Submit is per-opportunity human-authorized (application_plan gate); outreach
+drafts go to `/memory` and the human transmits. `network_access` is TRUE (browser,
+brave-search, memory).
 
 Live-proven locally: mandate-first ranking and a Tau creator/reviewer smoke over one
 report-visible opportunity (`scripts/tau_opportunity_eval_smoke.py`, provider_live=false).

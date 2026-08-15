@@ -1,11 +1,11 @@
-"""Resolve a learned ATS form against Graham's answer bank for autonomous apply.
+"""Resolve a learned ATS form against Graham's answer bank for human review.
 
 For each form field, return a TRUTHFUL value from the answer bank / approved
 profile, or queue it for one human answer. A field is auto-filled only from a
 concrete standing answer — PLACEHOLDER/GENERATED entries and unmatched fields are
-queued, never guessed. A questionnaire whose REQUIRED fields all resolve is
-auto-submittable; otherwise it queues (and the human's answer grows the bank so
-it auto-fills next time).
+queued, never guessed. A questionnaire whose REQUIRED fields all resolve is ready
+for explicit human authorization; otherwise it queues (and the human's answer grows
+the bank so it auto-fills next time).
 
 No network, no submit here — this is the decision layer the apply executor and
 application_plan gate consume.
@@ -89,7 +89,7 @@ def resolve_field(field: dict[str, Any], bank: dict[str, Any], resume_path: str 
 
 
 def resolve_application(form: dict[str, Any], resume_path: str | None, bank: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Resolve every field; report auto-fill coverage and whether it can auto-submit."""
+    """Resolve every field; report fill coverage and human-authorization readiness."""
     bank = bank if bank is not None else _load_bank()
     resolved = [resolve_field(f, bank, resume_path) for f in form.get("fields", [])]
     auto = [r for r in resolved if r["disposition"] == "auto_fill"]
@@ -105,7 +105,7 @@ def resolve_application(form: dict[str, Any], resume_path: str | None, bank: dic
         "omitted_optional_pii": [r["name"] for r in omitted],
         "required_queued": [r["name"] for r in required_queued],
         "coverage": round(len(auto) / total, 2),
-        "auto_submittable": len(required_queued) == 0,
+        "ready_for_human_authorization": len(required_queued) == 0,
         "filled": {r["name"]: r["value"] for r in auto},
         "queue": [r["name"] for r in queued],
     }
