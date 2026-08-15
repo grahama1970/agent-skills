@@ -234,9 +234,10 @@ def dedupe_postings(
         # Keep the row carrying more usable signal (real apply/posting url wins,
         # then more populated fields) so dedup never loses the clickable one.
         def _richness(row: dict[str, Any]) -> tuple[int, int]:
-            url = str(row.get("posting_url") or "")
-            clickable = 1 if ("/jobs/view/" in url or url.rstrip("/").count("/") > 3) else 0
-            return (clickable, sum(1 for v in row.values() if v not in (None, "", [], {})))
+            urls = " ".join(str(row.get(key) or "") for key in ("posting_url", "apply_url"))
+            detail_url = 2 if "/jobs/view/" in urls else 0
+            clickable = 1 if urls.strip() else 0
+            return (detail_url + clickable, sum(1 for v in row.values() if v not in (None, "", [], {})))
 
         if _richness(c) > _richness(prior):
             # the incoming row wins; the prior one is now the duplicate
@@ -251,7 +252,40 @@ def dedupe_postings(
         for dropped_id in dropped_ids:
             if dropped_id and dropped_id != canonical_id:
                 merged_into[dropped_id] = canonical_id
+    _propagate_duplicate_history(best, candidates)
     return deduped, len(candidates) - len(deduped), merged_into
+
+
+def _propagate_duplicate_history(best: dict[str, dict[str, Any]], candidates: list[dict[str, Any]]) -> None:
+    """Carry prior-action evidence from dropped aliases to the survivor."""
+
+    originals_by_key: dict[str, list[dict[str, Any]]] = {}
+    for candidate in candidates:
+        key = _posting_identity(candidate)
+        if key and key != "|":
+            originals_by_key.setdefault(key, []).append(candidate)
+
+    for key, survivor in best.items():
+        rows = originals_by_key.get(key, [])
+        actioned = [row for row in rows if row.get("already_applied") is True]
+        if not actioned:
+            continue
+        survivor["already_applied"] = True
+        keys = [
+            str(row.get("application_history_key") or "")
+            for row in actioned
+            if row.get("application_history_key")
+        ]
+        states = [
+            str(row.get("application_history_state") or "")
+            for row in actioned
+            if row.get("application_history_state")
+        ]
+        if keys:
+            survivor["application_history_key"] = keys[0]
+            survivor["application_history_keys"] = list(dict.fromkeys(keys))
+        if states:
+            survivor["application_history_state"] = states[0]
 
 
 def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:

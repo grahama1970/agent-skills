@@ -8,6 +8,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
+from monitor_opportunities.stage_ledger import build_ledger_for_run
 
 runner = CliRunner()
 
@@ -44,3 +45,97 @@ def test_authoritative_shortlist_cap_prevents_hidden_downstream_ids(tmp_path: Pa
     assert downstream_ids <= visible_ids
     assert manifest["artifact_accounting"]["hidden_total"] == 0
     assert manifest["artifact_accounting"]["action_worthy_total"] == manifest["artifact_accounting"]["visible_total"]
+
+
+def test_prior_applied_alias_dedupe_suppresses_downstream_artifacts(tmp_path: Path) -> None:
+    source = Path(__file__).parent / "fixtures" / "discovery" / "discovery-run.json"
+    payload = json.loads(source.read_text())
+    control = {
+        **payload["candidates"][0],
+        "candidate_id": "candidate:a:visible-control",
+        "organization": "Control Aerospace",
+        "title": "Principal AI Architect",
+        "fit_score": 0.8,
+    }
+    old_alias = {
+        **payload["candidates"][0],
+        "candidate_id": "candidate:a:ge-old",
+        "organization": "GE Aviation",
+        "title": "AI Assurance Architect",
+        "fit_score": 0.99,
+        "posting_url": "https://boards.example/ge/old",
+        "apply_url": "https://boards.example/ge/old/apply",
+        "already_applied": True,
+        "application_history_key": "sub-ge-old",
+        "application_history_state": "submitted",
+    }
+    final_alias = {
+        **payload["candidates"][0],
+        "candidate_id": "candidate:a:ge-final",
+        "organization": "GE Aerospace",
+        "title": "AI Assurance Architect",
+        "fit_score": 0.99,
+        "posting_url": "https://boards.example/jobs/view/ge-final",
+        "apply_url": "https://boards.example/jobs/view/ge-final/apply",
+    }
+    payload["candidates"] = [old_alias, final_alias, control]
+    payload["source_receipts"] = [
+        {
+            **receipt,
+            "result_status": "NO_MATCHES",
+            "content_sha256": None,
+            "response_bytes": 0,
+            "limitations": [*receipt.get("limitations", []), "Replay fixture omits lane C candidates."],
+        }
+        if receipt["lane"] == "C"
+        else receipt
+        for receipt in payload["source_receipts"]
+    ]
+    fixture_dir = tmp_path / "fixture"
+    fixture_dir.mkdir()
+    (fixture_dir / "discovery-run.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    out = tmp_path / "run"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+
+    manifest = json.loads((out / "report-manifest.json").read_text())
+    ledger_ok, ledger = build_ledger_for_run(out)
+    rejections = json.loads((out / "ranking" / "rejections.json").read_text())
+    ranking_receipt = json.loads((out / "ranking" / "ranking-receipt.json").read_text())
+
+    assert ranking_receipt["duplicates_merged_into"] == {
+        "candidate:a:ge-old": "candidate:a:ge-final"
+    }
+    assert ledger_ok is True
+    assert ledger["ok"] is True
+    assert ledger["counts"] == {
+        "discovered": 3,
+        "accepted": 1,
+        "rejected": 1,
+        "deduplicated": 1,
+        "eligible_not_shortlisted": 0,
+        "unaccounted": 0,
+    }
+    ge_rejection = next(row for row in rejections if row["candidate_id"] == "candidate:a:ge-final")
+    assert ge_rejection["eligibility_state"] == "REJECT_DUPLICATE_OR_ALREADY_APPLIED"
+    assert ge_rejection["already_applied"] is True
+    assert ge_rejection["application_history_key"] == "sub-ge-old"
+
+    visible_ids = {row["opportunity_id"] for row in manifest["opportunities"]}
+    downstream_ids = {
+        row["opportunity_id"]
+        for section in (
+            "resume_variants",
+            "outreach_packets",
+            "applications",
+            "application_packets",
+            "interview_prep",
+        )
+        for row in manifest[section]
+    }
+    assert "candidate:a:ge-final" not in visible_ids
+    assert "candidate:a:ge-final" not in downstream_ids
+    assert visible_ids == {"candidate:a:visible-control"}
+    assert downstream_ids <= visible_ids
+    assert manifest["artifact_accounting"]["hidden_total"] == 0

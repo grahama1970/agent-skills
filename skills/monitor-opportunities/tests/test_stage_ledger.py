@@ -118,7 +118,6 @@ def test_dedupe_uses_explicit_organization_canonical_key() -> None:
             **base,
             "candidate_id": "ge-final",
             "organization": "GE Aerospace",
-            "organization_canonical": "GE Aerospace",
             "posting_url": "https://boards.example/jobs/view/ge",
         },
     ]
@@ -128,3 +127,57 @@ def test_dedupe_uses_explicit_organization_canonical_key() -> None:
     assert dropped == 1
     assert [row["candidate_id"] for row in deduped] == ["ge-final"]
     assert merged_into == {"ge-old": "ge-final"}
+
+
+def test_dedupe_propagates_prior_application_from_dropped_alias() -> None:
+    base = {
+        "lane": "A",
+        "title": "AI Assurance Architect",
+        "workplace_type": "REMOTE",
+        "fit_score": 0.9,
+    }
+    rows = [
+        {
+            **base,
+            "candidate_id": "ge-old",
+            "organization": "GE Aviation",
+            "already_applied": True,
+            "application_history_key": "sub-ge-old",
+            "application_history_state": "submitted",
+        },
+        {
+            **base,
+            "candidate_id": "ge-final",
+            "organization": "GE Aerospace",
+            "posting_url": "https://boards.example/jobs/view/ge",
+            "apply_url": "https://boards.example/jobs/view/ge/apply",
+        },
+    ]
+
+    deduped, _, merged_into = dedupe_postings(rows)
+
+    assert [row["candidate_id"] for row in deduped] == ["ge-final"]
+    assert merged_into == {"ge-old": "ge-final"}
+    assert deduped[0]["already_applied"] is True
+    assert deduped[0]["application_history_key"] == "sub-ge-old"
+    assert deduped[0]["application_history_keys"] == ["sub-ge-old"]
+    assert deduped[0]["application_history_state"] == "submitted"
+
+
+def test_dedupe_does_not_merge_similarly_tokenized_unrelated_organizations() -> None:
+    base = {
+        "lane": "A",
+        "title": "AI Assurance Architect",
+        "workplace_type": "REMOTE",
+        "fit_score": 0.9,
+    }
+    rows = [
+        {**base, "candidate_id": "galois-lab", "organization": "Galois Labs"},
+        {**base, "candidate_id": "galois-capital", "organization": "Galois Capital"},
+    ]
+
+    deduped, dropped, merged_into = dedupe_postings(rows)
+
+    assert dropped == 0
+    assert [row["candidate_id"] for row in deduped] == ["galois-lab", "galois-capital"]
+    assert merged_into == {}
