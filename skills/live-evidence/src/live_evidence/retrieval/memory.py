@@ -189,12 +189,21 @@ class MemoryEvidenceClient:
             term_sources, term_symbol_ids = result
             sources.extend(term_sources)
             symbol_ids.extend(term_symbol_ids)
-        sources = _dedupe_sources(sources)
         if symbol_ids:
-            node = await asyncio.to_thread(self._code_node_sync, runner, symbol_ids[0])
-            if node is not None:
-                sources.insert(0, node)
-                sources = _dedupe_sources(sources)
+            node_results = await asyncio.gather(
+                *(
+                    asyncio.to_thread(self._code_node_sync, runner, symbol_id)
+                    for symbol_id in _unique_text(symbol_ids)[:4]
+                ),
+                return_exceptions=True,
+            )
+            nodes = [
+                node
+                for node in node_results
+                if isinstance(node, EvidenceSource)
+            ]
+            sources = [*nodes, *sources]
+        sources = _dedupe_sources(sources)
         if not sources:
             detail = "Indexed code returned no exact source"
             if errors:
@@ -226,9 +235,7 @@ class MemoryEvidenceClient:
         items = payload.get("items", []) if isinstance(payload, dict) else []
         sources: list[EvidenceSource] = []
         symbol_ids: list[str] = []
-        for item in items[:4]:
-            if not isinstance(item, dict) or not _code_item_allowed(item, self._profile):
-                continue
+        for item in _select_code_items(items, self._profile, limit=4):
             source = _code_item_to_source(item)
             if source is not None:
                 sources.append(source)
@@ -259,7 +266,8 @@ class MemoryEvidenceClient:
         source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
         freshness_payload = payload.get("freshness") if isinstance(payload.get("freshness"), dict) else {}
         excerpt = str(source.get("text") or symbol.get("qualified_name") or "").strip()
-        path = str(source.get("path") or symbol.get("path") or "").strip()
+        source_path = str(source.get("path") or "").strip()
+        path = str(symbol.get("path") or source_path).strip()
         if not excerpt or not path:
             return None
         freshness = (
@@ -284,6 +292,7 @@ class MemoryEvidenceClient:
                 "symbol_id": symbol.get("symbol_id"),
                 "indexed_hash": freshness_payload.get("indexed_hash"),
                 "current_hash": freshness_payload.get("current_hash"),
+                "source_path": source_path or None,
             },
         )
 
@@ -406,6 +415,45 @@ def _code_item_allowed(item: dict[str, Any], profile: InterviewProfile) -> bool:
     return repository in allowed or repository.rsplit("/", 1)[-1] in allowed
 
 
+def _select_code_items(
+    items: list[Any],
+    profile: InterviewProfile,
+    *,
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Prefer complete-projection code records and suppress legacy duplicates."""
+
+    candidates = [
+        item
+        for item in items
+        if isinstance(item, dict) and _code_item_allowed(item, profile)
+    ]
+    candidates.sort(key=_code_item_rank)
+    selected: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for item in candidates:
+        key = (
+            _first_text(item, "repository", "repo", "project").casefold(),
+            _first_text(item, "path", "file_path").casefold(),
+            _first_text(item, "qualified_name", "symbol_name", "name").casefold(),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        selected.append(item)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def _code_item_rank(item: dict[str, Any]) -> tuple[int, int, int]:
+    return (
+        0 if item.get("code_index_id") and item.get("file_id") else 1,
+        0 if item.get("coverage_complete") is True else 1,
+        0 if _first_text(item, "branch") and _first_text(item, "branch") != "unknown" else 1,
+    )
+
+
 def _code_item_to_source(item: dict[str, Any]) -> EvidenceSource | None:
     path = _first_text(item, "path", "file_path")
     qualified = _first_text(item, "qualified_name", "symbol_name", "name")
@@ -485,11 +533,18 @@ def _dedupe_sources(sources: list[EvidenceSource]) -> list[EvidenceSource]:
     seen: set[tuple[str, str, str]] = set()
     result: list[EvidenceSource] = []
     for source in sorted(sources, key=lambda item: item.score, reverse=True):
-        key = (
-            source.repository or "",
-            source.path or source.url or str(source.metadata.get("_key") or ""),
-            source.excerpt[:120].casefold(),
-        )
+        if source.lane is RetrievalLane.CODE:
+            key = (
+                source.repository or "",
+                source.path or "",
+                source.label.casefold(),
+            )
+        else:
+            key = (
+                source.repository or "",
+                source.path or source.url or str(source.metadata.get("_key") or ""),
+                source.excerpt[:120].casefold(),
+            )
         if key in seen:
             continue
         seen.add(key)

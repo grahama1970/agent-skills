@@ -12,6 +12,8 @@ from live_evidence.retrieval import memory as memory_retrieval
 from live_evidence.retrieval.memory import MemoryEvidenceClient
 from live_evidence.retrieval.memory import _code_item_allowed, _memory_item_allowed
 from live_evidence.retrieval.memory import _code_queries
+from live_evidence.retrieval.memory import _dedupe_sources
+from live_evidence.retrieval.memory import _select_code_items
 from live_evidence.retrieval.memory import _subprocess_env
 
 
@@ -55,6 +57,70 @@ def test_code_queries_keep_exact_identifier_before_profile_phrases() -> None:
     )
 
     assert queries == ["removeInvalidParentheses", "invalid", "parentheses"]
+
+
+def test_current_code_source_suppresses_legacy_duplicate() -> None:
+    current = EvidenceSource(
+        lane=RetrievalLane.CODE,
+        label="removeInvalidParentheses",
+        excerpt="export function removeInvalidParentheses(input) { return input; }",
+        score=0.94,
+        freshness=Freshness.CURRENT,
+        repository="youtube-eval",
+        path="remove_invalid_parentheses.js",
+        metadata={"symbol_id": "canonical"},
+    )
+    legacy = EvidenceSource(
+        lane=RetrievalLane.CODE,
+        label="removeInvalidParentheses",
+        excerpt="Indexed symbol removeInvalidParentheses in remove_invalid_parentheses.js",
+        score=0.74,
+        freshness=Freshness.UNKNOWN,
+        repository="youtube-eval",
+        path="remove_invalid_parentheses.js",
+        metadata={"symbol_id": "legacy"},
+    )
+
+    assert _dedupe_sources([legacy, current]) == [current]
+
+
+def test_code_item_selection_prefers_canonical_rows_before_legacy_budget() -> None:
+    canonical = {
+        "repository": "youtube-eval",
+        "path": "newly_written_solution.js",
+        "qualified_name": "liveEvidenceNewlyWrittenRemoveInvalidParentheses",
+        "symbol_id": "canonical-main",
+        "code_index_id": "ci_current",
+        "file_id": "cf_current",
+        "coverage_complete": True,
+        "branch": "main",
+    }
+    legacy = {
+        **canonical,
+        "symbol_id": "legacy",
+        "code_index_id": None,
+        "file_id": None,
+        "coverage_complete": None,
+        "branch": "unknown",
+    }
+    helper = {
+        "repository": "youtube-eval",
+        "path": "newly_written_solution.js",
+        "qualified_name": "countMinimumInvalidParentheses",
+        "symbol_id": "helper",
+        "code_index_id": "ci_current",
+        "file_id": "cf_current",
+        "coverage_complete": True,
+        "branch": "main",
+    }
+
+    selected = _select_code_items(
+        [legacy, canonical, helper],
+        InterviewProfile(name="youtube-eval", repo_priorities=["youtube-eval"]),
+        limit=2,
+    )
+
+    assert [item["symbol_id"] for item in selected] == ["canonical-main", "helper"]
 
 
 def test_memory_http_clients_ignore_proxy_environment(monkeypatch: pytest.MonkeyPatch) -> None:
