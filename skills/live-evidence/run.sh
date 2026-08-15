@@ -117,6 +117,17 @@ PY
     ;;
   listen)
     shift || true
+    consent_seen="false"
+    for arg in "$@"; do
+      if [[ "$arg" == "--consent-confirmed" ]]; then
+        consent_seen="true"
+        break
+      fi
+    done
+    if [[ "$consent_seen" != "true" ]]; then
+      echo "Invalid value: live modes require --consent-confirmed" >&2
+      exit 2
+    fi
     prepare_python_environment
     stt_extra_args=(--extra dev --extra stt)
     consent_confirmed="false"
