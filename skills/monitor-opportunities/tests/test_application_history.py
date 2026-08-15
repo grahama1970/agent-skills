@@ -1,0 +1,74 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from monitor_opportunities import application_history as history
+from monitor_opportunities.util import read_jsonl, write_jsonl
+
+
+def test_prior_application_history_marks_exact_keyed_candidates(tmp_path: Path, monkeypatch) -> None:
+    discovery = tmp_path / "discovery"
+    discovery.mkdir()
+    candidates = [
+        {
+            "candidate_id": "candidate:a:seen",
+            "title": "Principal AI Architect",
+            "organization": "Galois",
+            "apply_url": "https://jobs.example/apply/seen",
+        },
+        {
+            "candidate_id": "candidate:a:new",
+            "title": "Staff ML Engineer",
+            "organization": "Other Systems",
+            "apply_url": "https://jobs.example/apply/new",
+        },
+    ]
+    write_jsonl(discovery / "candidates.jsonl", candidates)
+    seen_key = history.submission_key("candidate:a:seen", "https://jobs.example/apply/seen")
+
+    def fake_memory_post(_memory_url: str, path: str, payload: dict[str, Any], timeout: int = 10) -> dict[str, Any]:
+        assert path == "/recall/by-keys"
+        assert payload["collection"] == "application_submissions"
+        assert seen_key in payload["keys"]
+        return {"documents": [{"document": {"_key": seen_key, "state": "submitted"}}]}
+
+    monkeypatch.setattr(history, "_memory_post", fake_memory_post)
+
+    receipt = history.annotate_candidates_with_prior_applications(discovery, "http://memory")
+    annotated = read_jsonl(discovery / "candidates.jsonl")
+
+    assert receipt["status"] == "OK"
+    assert receipt["history_matches"] == 1
+    assert receipt["marked_already_applied"] == 1
+    assert annotated[0]["already_applied"] is True
+    assert annotated[0]["application_history_key"] == seen_key
+    assert annotated[0]["application_history_state"] == "submitted"
+    assert "already_applied" not in annotated[1]
+
+
+def test_prior_application_history_unknown_does_not_fabricate_matches(tmp_path: Path, monkeypatch) -> None:
+    discovery = tmp_path / "discovery"
+    discovery.mkdir()
+    candidates = [
+        {
+            "candidate_id": "candidate:a:seen",
+            "title": "Principal AI Architect",
+            "organization": "Galois",
+            "apply_url": "https://jobs.example/apply/seen",
+        }
+    ]
+    write_jsonl(discovery / "candidates.jsonl", candidates)
+
+    def fail_memory_post(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        raise OSError("memory unavailable")
+
+    monkeypatch.setattr(history, "_memory_post", fail_memory_post)
+
+    receipt = history.annotate_candidates_with_prior_applications(discovery, "http://memory")
+    annotated = read_jsonl(discovery / "candidates.jsonl")
+
+    assert receipt["status"] == "UNKNOWN"
+    assert receipt["marked_already_applied"] == 0
+    assert "already_applied" not in annotated[0]
+    assert "Application history read unavailable" in receipt["limitations"][0]

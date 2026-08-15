@@ -1012,9 +1012,12 @@ def nightly(
             "relationship_graph": "SKIPPED" if skip_relationship_memory else "ENABLED",
             "buzz_summary": "SKIPPED" if skip_buzz else "ENABLED",
         },
+        "read_only_checks": {
+            "prior_application_history": "ENABLED",
+        },
         "separately_gated": {
             "tracker": "SKIPPED" if skip_tracker else "ENABLED",
-            "ats_memory": "SKIPPED" if skip_ats_memory else "ENABLED",
+            "ats_selector_memory_write": "SKIPPED" if skip_ats_memory else "ENABLED",
         },
         "forbidden_effects": {
             "gmail_send": "FORBIDDEN",
@@ -1642,7 +1645,8 @@ def schedule(
         "readback": job,
         "effect_policy": {
             "tracker": "SKIPPED",
-            "ats_memory": "SKIPPED",
+            "prior_application_history": "ENABLED",
+            "ats_selector_memory_write": "SKIPPED",
             "gmail_send": "FORBIDDEN",
             "linkedin_action": "FORBIDDEN",
             "meetup_rsvp": "FORBIDDEN",

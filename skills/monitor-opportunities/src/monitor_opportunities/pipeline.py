@@ -427,8 +427,15 @@ def _application_ats_provider(opportunity: dict[str, Any]) -> str | None:
     return None
 
 
-def _operational_readiness(source_receipts: list[dict[str, Any]], opportunities: list[dict[str, Any]], resume_variants: list[dict[str, Any]]) -> str:
+def _operational_readiness(
+    source_receipts: list[dict[str, Any]],
+    opportunities: list[dict[str, Any]],
+    resume_variants: list[dict[str, Any]],
+    degraded_contracts: list[dict[str, str]] | None = None,
+) -> str:
     degraded = {status.value for status in ResultStatus if status not in {ResultStatus.MATCHES, ResultStatus.NO_MATCHES}}
+    if degraded_contracts:
+        return "DEGRADED"
     if any(row["result_status"] in degraded for row in source_receipts):
         return "DEGRADED"
     if opportunities and len(resume_variants) != len(opportunities):
@@ -447,6 +454,7 @@ def _report_from_run(
     roundtable_receipts: dict[str, dict[str, Any]] | None = None,
     outreach_effects: dict[str, dict[str, Any]] | None = None,
     memory_url: str = "http://127.0.0.1:8601",
+    degraded_contracts: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     shortlist = read_json(ranking_dir / "shortlist.json")
     source_intel_shortlist_path = ranking_dir / "source-intel-shortlist.json"
@@ -555,7 +563,12 @@ def _report_from_run(
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
-        "operational_readiness": _operational_readiness(_source_receipts(discovery_dir), opportunities, resume_variants),
+        "operational_readiness": _operational_readiness(
+            _source_receipts(discovery_dir),
+            opportunities,
+            resume_variants,
+            degraded_contracts,
+        ),
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, [*shortlist, *source_intel_shortlist]),
         "source_receipts": _source_receipts(discovery_dir),
@@ -791,6 +804,26 @@ def run_stage0(
             phases.append({"phase": "API_WEBSITE_FALLBACK_DEGRADED", "code": exc.code, "message": exc.message})
         else:
             phases.append({"phase": "API_WEBSITE_FALLBACK_ENFORCED"})
+        from .application_history import annotate_candidates_with_prior_applications
+
+        application_history_receipt = annotate_candidates_with_prior_applications(discovery_dir, memory_url)
+        write_json(discovery_dir / "application-history-receipt.json", application_history_receipt)
+        phases.append(
+            {
+                "phase": "APPLICATION_HISTORY_READ",
+                "artifact": str(discovery_dir / "application-history-receipt.json"),
+                "status": application_history_receipt["status"],
+                "marked_already_applied": application_history_receipt["marked_already_applied"],
+            }
+        )
+        if application_history_receipt["status"] != "OK":
+            degraded_contracts.append(
+                {
+                    "code": "APPLICATION_HISTORY_UNKNOWN",
+                    "message": "; ".join(application_history_receipt.get("limitations", []))
+                    or "Prior application history was not available.",
+                }
+            )
     ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     tailoring_receipt = None
@@ -848,6 +881,7 @@ def run_stage0(
         _load_receipt_map(roundtable_receipts_path, key_field="receipt_key"),
         _load_receipt_map(outreach_effects_path, key_field="packet_id"),
         memory_url if fixture_dir is None else "",
+        degraded_contracts,
     )
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
