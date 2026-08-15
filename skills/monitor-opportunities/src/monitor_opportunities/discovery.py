@@ -33,6 +33,7 @@ SOURCE_LOCATOR_TERMS = ("greenhouse", "lever", "ashby", "workday", "workable")
 LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
 LINKEDIN_AUTHORIZED_READ_ONLY_POLICY = "linkedin_authorized_read_only_no_actions"
 MEETUP_AUTOMATION_POLICY = "meetup_authorized_read_only_no_rsvp_no_message"
+GITHUB_INTELLIGENCE_POLICY = "github_read_only_no_mutation_no_outreach"
 
 _MEETUP_RELEVANT_TERMS = (
     "ai",
@@ -508,6 +509,217 @@ def _meetup_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
     )
     if skipped:
         receipt["limitations"].append("Skipped Meetup groups: " + ", ".join(skipped[:12]))
+    finalized = _finalize_receipt(receipt)
+    for candidate in candidates:
+        candidate["source_receipt_id"] = finalized["receipt_id"]
+    return finalized, candidates
+
+
+def _load_github_repo_records(path: Path) -> list[dict[str, Any]]:
+    payload = read_json(path)
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    if isinstance(payload, dict):
+        for key in ("repositories", "repos", "records", "items"):
+            rows = payload.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+        return [payload]
+    return []
+
+
+def _github_repo_url(record: dict[str, Any]) -> str | None:
+    value = str(
+        record.get("repo_url")
+        or record.get("html_url")
+        or record.get("url")
+        or ""
+    ).strip()
+    if value:
+        return value
+    repo = str(record.get("repo") or record.get("full_name") or "").strip()
+    if "/" in repo:
+        return f"https://github.com/{repo}"
+    return None
+
+
+def _github_contacts(record: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for key, default_role in (
+        ("contacts", "repository_participant"),
+        ("owners", "repository_owner"),
+        ("maintainers", "repository_maintainer"),
+        ("contributors", "repository_contributor"),
+        ("commit_authors", "commit_author"),
+        ("issue_participants", "issue_participant"),
+        ("pr_participants", "pull_request_participant"),
+        ("mentioned_contacts", "mentioned_contact"),
+    ):
+        value = record.get(key)
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    rows.append({"role": default_role, **item})
+                elif isinstance(item, str) and item.strip():
+                    rows.append({"role": default_role, "handle": item.strip()})
+        elif isinstance(value, str) and value.strip():
+            rows.append({"role": default_role, "handle": value.strip()})
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows:
+        name = str(row.get("name") or "").strip()
+        handle = str(row.get("handle") or row.get("login") or row.get("username") or "").strip().lstrip("@")
+        key = (name.lower(), handle.lower())
+        if key in seen or not (name or handle):
+            continue
+        seen.add(key)
+        row["handle"] = handle
+        deduped.append(row)
+    return deduped
+
+
+def _github_contact_subject(contact: dict[str, Any]) -> str:
+    name = str(contact.get("name") or "").strip()
+    handle = str(contact.get("handle") or "").strip().lstrip("@")
+    if name and handle:
+        return f"{name} (@{handle})"
+    if name:
+        return name
+    return f"GitHub @{handle}"
+
+
+def _github_contact_evidence_refs(
+    contact: dict[str, Any], repo_url: str | None
+) -> list[str]:
+    refs: list[str] = []
+    for key in ("evidence_url", "profile_url", "commit_url", "issue_url", "pull_request_url", "discussion_url"):
+        value = str(contact.get(key) or "").strip()
+        if value:
+            refs.append(value)
+    refs.extend(_as_str_list(contact.get("evidence_refs")))
+    if repo_url:
+        refs.append(repo_url)
+    return list(dict.fromkeys(refs))
+
+
+def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    raw = path.read_bytes()
+    receipt = _base_receipt("C", "github", "GitHub repository contact intelligence", "github_repo_intelligence")
+    receipt["automation_policy"] = GITHUB_INTELLIGENCE_POLICY
+    receipt["channel"] = "read_only_local_artifact"
+    receipt["request_summary"] = (
+        f"Read local GitHub repository intelligence artifact {path.name}; no clone execution, issue mutation, "
+        "star, fork, follow, connection, message, or application action"
+    )
+    receipt["content_type"] = "application/json"
+    receipt["response_bytes"] = len(raw)
+    receipt["content_sha256"] = sha256_bytes(raw)
+    receipt["evidence_refs"] = [_local_file_ref(path)]
+    receipt["limitations"].extend(
+        [
+            "GitHub repository intelligence is contact/source intelligence, not outreach authority.",
+            "Handle-to-person mappings remain hypotheses unless the artifact supplies corroborating evidence.",
+            f"Automation policy: {GITHUB_INTELLIGENCE_POLICY}.",
+        ]
+    )
+    try:
+        records = _load_github_repo_records(path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Local GitHub artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    candidates: list[dict[str, Any]] = []
+    for record in records:
+        repo = str(record.get("repo") or record.get("full_name") or record.get("name") or "").strip()
+        repo_url = _github_repo_url(record)
+        if not repo and repo_url:
+            repo = repo_url.rstrip("/").removeprefix("https://github.com/")
+        contacts = _github_contacts(record)
+        if not repo or not repo_url or not contacts:
+            continue
+        org = str(
+            record.get("organization")
+            or record.get("company")
+            or record.get("owner")
+            or repo.split("/", 1)[0]
+        ).strip()
+        repo_refs = [repo_url, *_as_str_list(record.get("evidence_refs"))]
+        github_contact_hypotheses = []
+        for contact in contacts:
+            subject = _github_contact_subject(contact)
+            evidence_refs = _github_contact_evidence_refs(contact, repo_url)
+            receipt["evidence_refs"].extend(evidence_refs)
+            role = str(contact.get("role") or "repository_participant").strip()
+            handle = str(contact.get("handle") or "").strip().lstrip("@")
+            name = str(contact.get("name") or "").strip()
+            corroboration = _as_str_list(contact.get("corroboration") or contact.get("corroboration_refs"))
+            github_contact_hypotheses.append(
+                {
+                    "subject": subject,
+                    "name": name,
+                    "handle": handle,
+                    "role": role,
+                    "relationship": str(contact.get("relationship") or "adjacent_contact"),
+                    "evidence_refs": evidence_refs,
+                    "corroboration": corroboration,
+                    "mapping_status": "corroborated" if name and handle and corroboration else "hypothesis",
+                }
+            )
+        posting_text = "\n".join(
+            [
+                f"GitHub repo intelligence: {repo}",
+                f"Repository URL: {repo_url}",
+                f"Organization/context: {org}",
+                "Description: " + str(record.get("description") or "")[:1000],
+                "Topics: " + ", ".join(_as_str_list(record.get("topics"))[:12]),
+                "Contacts: " + "; ".join(row["subject"] for row in github_contact_hypotheses[:12]),
+                "No external effects are authorized.",
+            ]
+        ).strip()
+        payload = {
+            "lane": "C",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "github_repo_intelligence",
+            "source_class": "github_repo_intelligence",
+            "source_identity": repo_url,
+            "automation_policy": GITHUB_INTELLIGENCE_POLICY,
+            "organization": org or repo,
+            "title": f"{repo} GitHub repository intelligence",
+            "location_display": "GitHub source-intel; delivery model not applicable",
+            "workplace_type": "NOT_APPLICABLE",
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": repo_url,
+            "apply_url": None,
+            "primary_evidence_url": repo_url,
+            "published_at": record.get("created_at"),
+            "updated_at": record.get("pushed_at") or record.get("updated_at"),
+            "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
+            "posting_text": posting_text[:4000],
+            "fit_score": float(record.get("fit_score") or 0.58),
+            "contact_state": "CONTACT_PRESENT",
+            "github_repo": repo,
+            "github_repo_url": repo_url,
+            "github_contact_hypotheses": github_contact_hypotheses,
+            "adjacent_contacts": [row["subject"] for row in github_contact_hypotheses],
+            "github_evidence_refs": list(dict.fromkeys(repo_refs)),
+            "external_effects": False,
+            "unresolved_assumptions": [
+                "GitHub participation does not prove current employment, availability, or willingness to reconnect.",
+                "Handle-to-person mappings require corroboration before human outreach.",
+                "No GitHub, LinkedIn, email, or application action is authorized by this source-intel candidate.",
+            ],
+        }
+        payload["candidate_id"] = _candidate_id("candidate:c:github", payload)
+        candidates.append(payload)
+    receipt["evidence_refs"] = list(dict.fromkeys(receipt["evidence_refs"]))
+    receipt["result_status"] = "MATCHES" if candidates else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["limitations"].append(
+        f"{len(records)} GitHub repository records inspected; {len(candidates)} source-intel candidates emitted."
+    )
     finalized = _finalize_receipt(receipt)
     for candidate in candidates:
         candidate["source_receipt_id"] = finalized["receipt_id"]
@@ -1155,6 +1367,7 @@ def sweep(
     hiddenjobs_evidence: Path | None = None,
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
+    github_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -1247,6 +1460,10 @@ def sweep(
                 candidates.extend(rows)
     if "C" in lanes and meetup_evidence is not None:
         receipt, rows = _meetup_evidence_candidates(meetup_evidence)
+        receipts.append(receipt)
+        candidates.extend(rows)
+    if "C" in lanes and github_evidence is not None:
+        receipt, rows = _github_evidence_candidates(github_evidence)
         receipts.append(receipt)
         candidates.extend(rows)
 

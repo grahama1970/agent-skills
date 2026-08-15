@@ -586,6 +586,9 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
         contacts = _as_str_list(c.get("known_monitor_contacts") or c.get("monitor_contacts"))
         adjacent = _as_str_list(c.get("adjacent_contacts"))
         sponsors = _as_str_list(c.get("company_sponsors") or c.get("sponsors"))
+        github_hypotheses = [
+            row for row in c.get("github_contact_hypotheses") or [] if isinstance(row, dict)
+        ]
         warm_via = str(c.get("warm_path_via") or "").strip()
         if warm_via:
             contacts.append(warm_via)
@@ -596,8 +599,84 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
         rows.extend(("direct_contact", name, "Known monitor-contact path") for name in contacts)
         rows.extend(("adjacent_contact", name, "Adjacent ARCOS/formal-methods contact path") for name in adjacent)
         rows.extend(("organization_sponsor", name, "Company/venue sponsor path") for name in sponsors)
-        if not rows:
+        if not rows and not github_hypotheses:
             continue
+        for hypothesis in github_hypotheses:
+            subject = str(
+                hypothesis.get("subject")
+                or hypothesis.get("name")
+                or (
+                    f"GitHub @{str(hypothesis.get('handle')).lstrip('@')}"
+                    if hypothesis.get("handle")
+                    else ""
+                )
+            ).strip()
+            if not subject:
+                continue
+            signal_type = str(hypothesis.get("relationship") or "adjacent_contact")
+            if signal_type not in {"direct_contact", "adjacent_contact", "organization_sponsor", "event_copresence"}:
+                signal_type = "adjacent_contact"
+            key = relationship_signal_key(source_id, subject, org)
+            if key in seen:
+                continue
+            seen.add(key)
+            evidence = (
+                _as_str_list(hypothesis.get("evidence_refs"))
+                or _as_str_list(c.get("github_evidence_refs"))
+                or list(dict.fromkeys(evidence_refs))
+            )
+            repo = str(c.get("github_repo") or c.get("source_identity") or org or "GitHub repository").strip()
+            role = str(hypothesis.get("role") or "repository_participant").strip()
+            mapping_status = str(hypothesis.get("mapping_status") or "hypothesis").strip()
+            if signal_type == "direct_contact":
+                path = ["Graham Anderson", subject]
+            else:
+                path = ["Graham Anderson", f"GitHub repo {repo}", subject]
+                signal_type = "adjacent_contact"
+            contact_path = _contact_path_edges(
+                path,
+                relationship=signal_type,
+                evidence_refs=evidence,
+                source_receipt_ids=source_receipt_ids,
+                limitations=[
+                    "GitHub participation does not prove current employment, availability, or outreach consent.",
+                    "Handle-to-person mapping is corroboration-dependent and must be checked by the human.",
+                ],
+            )
+            provenance = (
+                f"GitHub repository intelligence: {role} observed in {repo}; "
+                f"handle mapping status: {mapping_status}"
+            )
+            signals.append(
+                {
+                    "signal_id": key,
+                    "source_opportunity_id": source_id,
+                    "signal_type": signal_type,
+                    "subject": subject,
+                    "organization": org or repo,
+                    "relationship_path": path,
+                    "contact_path": contact_path,
+                    "evidence_refs": evidence,
+                    "source_receipt_ids": source_receipt_ids,
+                    "provenance": provenance,
+                    "recommended_action": "human_decide_reconnect_or_defer",
+                    "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+                    "preferred_human_channels": preferred_channels,
+                    "channel_guidance": [
+                        *channel_guidance,
+                        "GitHub evidence is read-only source intelligence; confirm identity and current role before outreach.",
+                    ],
+                    **_channel_guidance_fields(preferred_channels, evidence),
+                    "external_effects": False,
+                    "action_worthy": True,
+                    "visible_in_report": True,
+                    **_relationship_candidate_fields(
+                        signal_type=signal_type,
+                        contact_path=contact_path,
+                        evidence_refs=evidence,
+                    ),
+                }
+            )
         for signal_type, subject, provenance in rows:
             key = relationship_signal_key(source_id, subject, org)
             if key in seen:

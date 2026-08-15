@@ -370,6 +370,14 @@ def sweep(
         readable=True,
         help="Local read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
     ),
+    github_evidence: Path | None = typer.Option(
+        None,
+        "--github-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only GitHub repository intelligence artifact; no GitHub mutation or outreach.",
+    ),
     indeed_evidence: Path | None = typer.Option(
         None,
         "--indeed-evidence",
@@ -398,6 +406,7 @@ def sweep(
         fixture_dir=fixture_dir,
         linkedin_evidence=linkedin_evidence,
         meetup_evidence=meetup_evidence,
+        github_evidence=github_evidence,
         indeed_evidence=indeed_evidence,
         hiddenjobs_evidence=hiddenjobs_evidence,
     )
@@ -558,6 +567,14 @@ def run_command(
         readable=True,
         help="Read-only Meetup source-intel capture; no RSVP, join, message, or GraphQL action.",
     ),
+    github_evidence: Path | None = typer.Option(
+        None,
+        "--github-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Read-only GitHub repository intelligence artifact; no GitHub mutation or outreach.",
+    ),
     indeed_evidence: Path | None = typer.Option(
         None,
         "--indeed-evidence",
@@ -612,6 +629,7 @@ def run_command(
             outreach_effects_path=outreach_effects,
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
+            github_evidence=github_evidence,
             indeed_evidence=indeed_evidence,
             hiddenjobs_evidence=hiddenjobs_evidence,
             memory_url=memory_url,

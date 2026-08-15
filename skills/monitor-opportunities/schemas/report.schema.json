@@ -419,6 +419,7 @@
             "job_board",
             "sam.gov_website",
             "meetup_surf_capture",
+            "github_repo_intelligence",
             "human_supplied_indeed",
             "human_supplied_hiddenjobs"
           ]
@@ -481,6 +482,7 @@
             "linkedin_authorized_read_only_no_actions",
             "linkedin_no_automation",
             "meetup_authorized_read_only_no_rsvp_no_message",
+            "github_read_only_no_mutation_no_outreach",
             "read_only_browser_capture_no_apply_no_message"
           ]
         },
@@ -1410,7 +1412,8 @@
         "signal_type": {
           "enum": [
             "LINKEDIN_LOCATOR",
-            "MEETUP_NETWORKING"
+            "MEETUP_NETWORKING",
+            "GITHUB_REPO_INTELLIGENCE"
           ]
         },
         "title": {
@@ -1440,7 +1443,8 @@
             "LOCATOR_ONLY",
             "ATTEND_MEETUP",
             "WATCH_MEETUP",
-            "SKIP_MEETUP"
+            "SKIP_MEETUP",
+            "CONTACT_INTELLIGENCE_ONLY"
           ]
         },
         "reasons": {

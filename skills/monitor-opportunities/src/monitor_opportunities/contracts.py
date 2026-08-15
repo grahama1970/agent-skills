@@ -582,6 +582,8 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported Meetup decision: {decision}")
         if signal_type == "LINKEDIN_LOCATOR" and item.get("action_worthy") is not False:
             raise ContractError("LINKEDIN_LOCATOR_ACTIONABLE", "LinkedIn locator evidence is not action-worthy")
+        if signal_type == "GITHUB_REPO_INTELLIGENCE" and decision != "CONTACT_INTELLIGENCE_ONLY":
+            raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported GitHub decision: {decision}")
 
     for signal in raw.get("relationship_signals", []):
         if signal.get("external_effects") is not False:

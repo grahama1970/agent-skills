@@ -254,8 +254,16 @@ def _is_networking_signal(candidate: dict[str, Any]) -> bool:
     return candidate.get("source_provider") == "meetup_surf"
 
 
+def _is_github_intelligence(candidate: dict[str, Any]) -> bool:
+    return candidate.get("source_provider") == "github_repo_intelligence"
+
+
 def _is_report_opportunity(candidate: dict[str, Any]) -> bool:
-    return not _is_linkedin_locator(candidate) and not _is_networking_signal(candidate)
+    return (
+        not _is_linkedin_locator(candidate)
+        and not _is_networking_signal(candidate)
+        and not _is_github_intelligence(candidate)
+    )
 
 
 def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
@@ -294,6 +302,25 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
                 "Primary employer/client source readback is required before opportunity admission.",
             ],
             "action_worthy": False,
+            "visible_in_report": True,
+        }
+    if _is_github_intelligence(candidate):
+        contacts = candidate.get("github_contact_hypotheses") or []
+        return {
+            "signal_id": stable_id("source-intel", candidate["candidate_id"]),
+            "lane": candidate["lane"],
+            "signal_type": "GITHUB_REPO_INTELLIGENCE",
+            "title": candidate["title"],
+            "organization": candidate["organization"],
+            "source_receipt_ids": [source_id],
+            "primary_evidence_url": evidence_url,
+            "decision": "CONTACT_INTELLIGENCE_ONLY",
+            "reasons": [
+                f"GitHub repository analyzed for contact and adjacent-contact intelligence; contacts observed: {len(contacts)}.",
+                "Repository ownership, commits, issues, PRs, docs, and mentions are source-intel signals only.",
+                "No GitHub mutation, LinkedIn connection, email, application, or outreach is authorized.",
+            ],
+            "action_worthy": bool(contacts),
             "visible_in_report": True,
         }
     return None
@@ -778,6 +805,7 @@ def run_stage0(
     outreach_effects_path: Path | None = None,
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
+    github_evidence: Path | None = None,
     degrade_required_source_failures: bool = False,
     memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
@@ -799,6 +827,7 @@ def run_stage0(
         hiddenjobs_evidence=hiddenjobs_evidence,
         federal_evidence=federal_evidence,
         meetup_evidence=meetup_evidence,
+        github_evidence=github_evidence,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
     degraded_contracts: list[dict[str, str]] = []
