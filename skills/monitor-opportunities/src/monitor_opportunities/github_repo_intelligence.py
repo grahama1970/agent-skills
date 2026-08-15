@@ -119,6 +119,41 @@ def _matching_terms(text: str, terms: list[str]) -> list[str]:
     return [term for term in terms if term.lower() in lowered]
 
 
+def _repo_metadata_text(row: dict[str, Any]) -> str:
+    owner = row.get("owner") if isinstance(row.get("owner"), dict) else {}
+    return "\n".join(
+        [
+            _repo_full_name(row),
+            str(row.get("description") or ""),
+            " ".join(str(item) for item in row.get("topics") or []),
+            str(owner.get("login") or ""),
+        ]
+    )
+
+
+def _repo_selection_score(
+    row: dict[str, Any],
+    observed_via: list[str],
+    *,
+    config: GitHubRepoIntelligenceConfig,
+) -> tuple[int, str, str]:
+    """Rank bounded repo candidates before spending deeper API calls."""
+
+    metadata_text = _repo_metadata_text(row)
+    matched_terms = _matching_terms(metadata_text, _terms_for_analysis(config))
+    query_hits = sum(1 for source in observed_via if source.startswith("query:"))
+    explicit_hits = sum(1 for source in observed_via if source.startswith("repo:"))
+    owner_hits = sum(1 for source in observed_via if source.startswith("owner:"))
+    activity_stamp = str(row.get("pushed_at") or row.get("updated_at") or row.get("created_at") or "")
+    score = (
+        explicit_hits * 1000
+        + query_hits * 220
+        + len(matched_terms) * 35
+        + owner_hits * 10
+    )
+    return (score, activity_stamp, _repo_full_name(row))
+
+
 def _term_snippets(text: str, terms: list[str], *, limit: int) -> list[dict[str, str]]:
     normalized = re.sub(r"\s+", " ", text).strip()
     lowered = normalized.lower()
@@ -580,14 +615,11 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
         if isinstance(payload, dict):
             repo_rows[_repo_full_name(payload) or repo_name] = (payload, [f"repo:{repo_name}"])
 
-    remaining = max(0, config.max_repos - len(repo_rows))
     for owner in config.owners:
-        if remaining <= 0:
-            break
         try:
             payload = _gh_json(
                 "api",
-                f"/users/{owner}/repos?per_page={remaining}&sort=updated",
+                f"/users/{owner}/repos?per_page={config.max_repos}&sort=updated",
                 timeout=config.timeout_seconds,
             )
         except (GitHubRepoIntelligenceError, subprocess.TimeoutExpired) as exc:
@@ -603,19 +635,13 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
                 repo_rows[full_name][1].append(f"owner:{owner}")
             else:
                 repo_rows[full_name] = (row, [f"owner:{owner}"])
-                remaining -= 1
-            if remaining <= 0:
-                break
 
-    remaining = max(0, config.max_repos - len(repo_rows))
     for query in config.queries:
-        if remaining <= 0:
-            break
         try:
             payload = _gh_json(
                 "api",
                 "/search/repositories?"
-                f"q={quote_plus(query)}&per_page={remaining}&sort=updated&order=desc",
+                f"q={quote_plus(query)}&per_page={config.max_repos}&sort=updated&order=desc",
                 timeout=config.timeout_seconds,
             )
         except (GitHubRepoIntelligenceError, subprocess.TimeoutExpired) as exc:
@@ -629,12 +655,14 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
                 repo_rows[full_name][1].append(f"query:{query}")
             else:
                 repo_rows[full_name] = (row, [f"query:{query}"])
-                remaining -= 1
-            if remaining <= 0:
-                break
 
     records: list[dict[str, Any]] = []
-    for repo, observed_via in list(repo_rows.values())[: config.max_repos]:
+    selected_repo_rows = sorted(
+        repo_rows.values(),
+        key=lambda item: _repo_selection_score(item[0], item[1], config=config),
+        reverse=True,
+    )[: config.max_repos]
+    for repo, observed_via in selected_repo_rows:
         record = _collect_repo_record(
             repo,
             config=config,

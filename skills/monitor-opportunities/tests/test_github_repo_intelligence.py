@@ -629,6 +629,38 @@ def test_github_intelligence_producer_accepts_owner_handles(
     assert "GitHub @readmeEve" in candidates[0]["adjacent_contacts"]
 
 
+def test_github_intelligence_query_repos_do_not_get_starved_by_owner_repos(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "monitor_opportunities.github_repo_intelligence._gh_json",
+        _fake_gh_json,
+    )
+    artifact = tmp_path / "github-query-selected.json"
+
+    producer_receipt = collect_github_repo_intelligence(
+        GitHubRepoIntelligenceConfig(
+            out=artifact,
+            queries=("Galois ARCOS",),
+            repos=(),
+            owners=("rtinney1",),
+            max_repos=1,
+            max_contributors=0,
+            max_issues=0,
+            max_pull_requests=0,
+            max_commits=0,
+        )
+    )
+    receipt, candidates = _github_evidence_candidates(artifact)
+    artifact_payload = json.loads(artifact.read_text(encoding="utf-8"))
+
+    assert producer_receipt["status"] == "PASS"
+    assert receipt["result_status"] == "MATCHES"
+    assert artifact_payload["repositories"][0]["repo"] == "galoisinc/arcos-notes"
+    assert artifact_payload["repositories"][0]["observed_via"] == ["query:Galois ARCOS"]
+    assert candidates[0]["github_repo"] == "galoisinc/arcos-notes"
+
+
 def test_github_intelligence_cli_writes_artifact(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(
         "monitor_opportunities.github_repo_intelligence._gh_json",
