@@ -686,13 +686,15 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             error = str(item.get("error") or item.get("message") or "unspecified degradation")
             messages.append(f"{stage}: {error[:220]}")
         receipt["limitations"].append("GitHub producer degraded: " + "; ".join(messages))
-        receipt["parser_result"] = "DEGRADED"
         lowered = " ".join(messages).lower()
         if "rate limit" in lowered or "rate_limit" in lowered or "http 429" in lowered:
+            receipt["parser_result"] = "DEGRADED"
             receipt["result_status"] = "RATE_LIMITED"
-        else:
+            return _finalize_receipt(receipt), []
+        if not records:
+            receipt["parser_result"] = "DEGRADED"
             receipt["result_status"] = "INVALID_RESPONSE"
-        return _finalize_receipt(receipt), []
+            return _finalize_receipt(receipt), []
 
     candidates: list[dict[str, Any]] = []
     for record in records:

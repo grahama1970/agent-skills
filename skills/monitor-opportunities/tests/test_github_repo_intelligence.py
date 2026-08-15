@@ -371,6 +371,20 @@ def test_github_degraded_artifact_stays_degraded_through_sweep(tmp_path: Path) -
     assert any("GitHub producer degraded" in item for item in github_receipts[0]["limitations"])
 
 
+def test_github_nonfatal_readme_degradation_keeps_repo_candidates(tmp_path: Path) -> None:
+    artifact = tmp_path / "github-nonfatal-readme.json"
+    payload = json.loads(_github_fixture(artifact).read_text(encoding="utf-8"))
+    payload["degradations"] = [{"stage": "readme", "repo": "rtinney1/arcos-tools", "error": "HTTP 404"}]
+    artifact.write_text(json.dumps(payload), encoding="utf-8")
+
+    receipt, candidates = _github_evidence_candidates(artifact)
+
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED"
+    assert candidates
+    assert any("GitHub producer degraded" in item for item in receipt["limitations"])
+
+
 def test_github_rate_limit_from_api_becomes_degraded_sweep_receipt(
     tmp_path: Path, monkeypatch
 ) -> None:
