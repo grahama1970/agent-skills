@@ -139,3 +139,31 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
         validate_manifest(data)
 
     assert exc.value.code == "REPORT_VISIBLE_SOURCE_RECEIPT_MISSING"
+
+
+def test_visible_derived_artifact_must_reference_visible_source_backed_opportunity() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["resume_variants"][0]["opportunity_id"] = "opp:missing"
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "DERIVED_ARTIFACT_OPPORTUNITY_MISSING"
+
+
+def test_interview_talking_point_must_cite_accepted_source_receipt() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["source_receipts"].append(
+        {
+            **data["source_receipts"][0],
+            "receipt_id": "src:no-matches",
+            "result_status": "NO_MATCHES",
+            "limitations": [],
+        }
+    )
+    data["interview_prep"][0]["talking_points"][0]["source_refs"] = ["src:no-matches"]
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "REPORT_VISIBLE_SOURCE_NOT_ACCEPTED"

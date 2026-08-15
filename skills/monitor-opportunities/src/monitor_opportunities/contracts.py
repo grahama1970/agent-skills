@@ -689,6 +689,41 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
                 allow_degraded=True,
             )
 
+    visible_opportunity_ids = {
+        opportunity.opportunity_id
+        for opportunity in manifest.opportunities
+        if opportunity.visible_in_report
+    }
+
+    def require_visible_opportunity(item_kind: str, item_id: str, opportunity_id: str) -> None:
+        if opportunity_id not in visible_opportunity_ids:
+            raise ContractError(
+                "DERIVED_ARTIFACT_OPPORTUNITY_MISSING",
+                f"{item_kind} {item_id} references non-visible or missing opportunity {opportunity_id}",
+            )
+
+    for variant in manifest.resume_variants:
+        if variant.visible_in_report:
+            require_visible_opportunity("resume_variant", variant.variant_id, variant.opportunity_id)
+    for packet in manifest.outreach_packets:
+        if packet.visible_in_report:
+            require_visible_opportunity("outreach_packet", packet.packet_id, packet.opportunity_id)
+    for application in manifest.applications:
+        if application.visible_in_report:
+            require_visible_opportunity("application", application.application_id, application.opportunity_id)
+    for packet in manifest.application_packets:
+        if packet.visible_in_report:
+            require_visible_opportunity("application_packet", packet.packet_id, packet.opportunity_id)
+    for prep in manifest.interview_prep:
+        require_visible_opportunity("interview_prep", prep.opportunity_id, prep.opportunity_id)
+        for index, point in enumerate(prep.talking_points):
+            validate_source_backing(
+                item_kind="interview_talking_point",
+                item_id=f"{prep.opportunity_id}:{index}",
+                source_receipt_ids=point.source_refs,
+                allow_degraded=False,
+            )
+
     rows = _artifact_rows(manifest)
     action_worthy = [row for row in rows if row[1]]
     hidden = [artifact_id for artifact_id, _, visible in action_worthy if not visible]
