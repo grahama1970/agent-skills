@@ -569,6 +569,7 @@ def test_memory_relationship_signals_are_bound_to_source_receipts(tmp_path: Path
     assert receipt is not None
     assert receipt["result_status"] == "MATCHES"
     assert receipt["provider"] == "memory"
+    assert receipt["source_class"] == "governed_memory_recall"
     assert "memory://38485632" in receipt["evidence_refs"]
     _attach_source_receipt_to_memory_relationship_signals(
         [signal],
