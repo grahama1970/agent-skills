@@ -34,6 +34,13 @@ LINKEDIN_AUTOMATION_POLICY = "linkedin_no_automation"
 LINKEDIN_AUTHORIZED_READ_ONLY_POLICY = "linkedin_authorized_read_only_no_actions"
 MEETUP_AUTOMATION_POLICY = "meetup_authorized_read_only_no_rsvp_no_message"
 GITHUB_INTELLIGENCE_POLICY = "github_read_only_no_mutation_no_outreach"
+GITHUB_CORROBORATION_TYPES = {
+    "profile_name_match",
+    "linked_site_match",
+    "organization_affiliation",
+    "project_history_match",
+    "human_confirmation",
+}
 
 _MEETUP_RELEVANT_TERMS = (
     "ai",
@@ -578,14 +585,16 @@ def _github_contacts(record: dict[str, Any]) -> list[dict[str, Any]]:
     return deduped
 
 
-def _github_contact_subject(contact: dict[str, Any]) -> str:
+def _github_contact_subject(contact: dict[str, Any], *, mapping_status: str = "hypothesis") -> str:
     name = str(contact.get("name") or "").strip()
     handle = str(contact.get("handle") or "").strip().lstrip("@")
-    if name and handle:
+    if name and handle and mapping_status == "corroborated":
         return f"{name} (@{handle})"
+    if handle:
+        return f"GitHub @{handle}"
     if name:
         return name
-    return f"GitHub @{handle}"
+    return "GitHub @unknown"
 
 
 def _github_contact_evidence_refs(
@@ -600,6 +609,42 @@ def _github_contact_evidence_refs(
     if repo_url:
         refs.append(repo_url)
     return list(dict.fromkeys(refs))
+
+
+def _github_contact_corroboration(
+    contact: dict[str, Any], *, contact_evidence_refs: list[str]
+) -> list[dict[str, Any]]:
+    raw = contact.get("corroboration")
+    if raw is None:
+        raw = contact.get("corroboration_refs")
+    if raw is None:
+        return []
+    rows = raw if isinstance(raw, list) else [raw]
+    allowed_refs = set(contact_evidence_refs)
+    out: list[dict[str, Any]] = []
+    for item in rows:
+        if isinstance(item, dict):
+            kind = str(item.get("type") or item.get("kind") or "").strip()
+            refs = _as_str_list(item.get("evidence_refs"))
+            for key in ("evidence_url", "profile_url", "source_url"):
+                value = str(item.get(key) or "").strip()
+                if value:
+                    refs.append(value)
+            refs = list(dict.fromkeys(refs))
+            note = str(item.get("note") or item.get("description") or "").strip()
+        else:
+            kind = "untyped"
+            refs = []
+            note = str(item).strip()
+        out.append(
+            {
+                "type": kind,
+                "evidence_refs": refs,
+                "note": note,
+                "resolved": bool(kind in GITHUB_CORROBORATION_TYPES and refs and set(refs) <= allowed_refs),
+            }
+        )
+    return out
 
 
 def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -648,13 +693,17 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
         repo_refs = [repo_url, *_as_str_list(record.get("evidence_refs"))]
         github_contact_hypotheses = []
         for contact in contacts:
-            subject = _github_contact_subject(contact)
             evidence_refs = _github_contact_evidence_refs(contact, repo_url)
             receipt["evidence_refs"].extend(evidence_refs)
             role = str(contact.get("role") or "repository_participant").strip()
             handle = str(contact.get("handle") or "").strip().lstrip("@")
             name = str(contact.get("name") or "").strip()
-            corroboration = _as_str_list(contact.get("corroboration") or contact.get("corroboration_refs"))
+            corroboration = _github_contact_corroboration(
+                contact,
+                contact_evidence_refs=evidence_refs,
+            )
+            mapping_status = "corroborated" if name and handle and any(row["resolved"] for row in corroboration) else "hypothesis"
+            subject = _github_contact_subject(contact, mapping_status=mapping_status)
             github_contact_hypotheses.append(
                 {
                     "subject": subject,
@@ -664,7 +713,7 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
                     "relationship": str(contact.get("relationship") or "adjacent_contact"),
                     "evidence_refs": evidence_refs,
                     "corroboration": corroboration,
-                    "mapping_status": "corroborated" if name and handle and corroboration else "hypothesis",
+                    "mapping_status": mapping_status,
                 }
             )
         posting_text = "\n".join(

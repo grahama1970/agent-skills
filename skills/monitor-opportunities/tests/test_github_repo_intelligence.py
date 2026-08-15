@@ -66,7 +66,13 @@ def _github_fixture(path: Path) -> Path:
                                 "role": "repository_owner",
                                 "profile_url": "https://github.com/rtinney1",
                                 "evidence_url": "https://github.com/rtinney1/arcos-tools",
-                                "corroboration": ["Human-supplied handle-to-person mapping from monitor-contacts research."],
+                                "corroboration": [
+                                    {
+                                        "type": "profile_name_match",
+                                        "evidence_refs": ["https://github.com/rtinney1"],
+                                        "note": "Profile evidence supports the handle-to-person mapping.",
+                                    }
+                                ],
                             }
                         ],
                     }
@@ -89,6 +95,7 @@ def test_github_evidence_candidates_preserve_repo_contact_receipts(tmp_path: Pat
     assert candidates[0]["source_receipt_id"] == receipt["receipt_id"]
     assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
     assert candidates[0]["github_contact_hypotheses"][0]["mapping_status"] == "corroborated"
+    assert candidates[0]["github_contact_hypotheses"][0]["corroboration"][0]["resolved"] is True
     assert candidates[0]["external_effects"] is False
     assert "No GitHub, LinkedIn, email, or application action" in candidates[0]["unresolved_assumptions"][2]
 
@@ -138,3 +145,111 @@ def test_github_source_intel_and_relationship_signal_validate_in_report(tmp_path
 
     assert loaded.source_intel[-1].signal_type == "GITHUB_REPO_INTELLIGENCE"
     assert loaded.relationship_signals[-1].subject == "Randi Tinney (@rtinney1)"
+
+
+def test_github_untyped_corroboration_stays_handle_only_hypothesis(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "rtinney1/arcos-tools",
+                        "repo_url": "https://github.com/rtinney1/arcos-tools",
+                        "organization": "DARPA ARCOS network",
+                        "contacts": [
+                            {
+                                "name": "Randi Tinney",
+                                "handle": "rtinney1",
+                                "profile_url": "https://github.com/rtinney1",
+                                "corroboration": "confirmed",
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    hypothesis = candidates[0]["github_contact_hypotheses"][0]
+    signal = cc.relationship_signals_from_candidates(candidates)[0]
+
+    assert hypothesis["mapping_status"] == "hypothesis"
+    assert hypothesis["corroboration"][0]["type"] == "untyped"
+    assert hypothesis["corroboration"][0]["resolved"] is False
+    assert candidates[0]["adjacent_contacts"] == ["GitHub @rtinney1"]
+    assert signal["subject"] == "GitHub @rtinney1"
+    assert "Randi Tinney (@" not in signal["subject"]
+
+
+def test_github_corroboration_refs_must_resolve_to_contact_evidence(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "rtinney1/arcos-tools",
+                        "repo_url": "https://github.com/rtinney1/arcos-tools",
+                        "organization": "DARPA ARCOS network",
+                        "contacts": [
+                            {
+                                "name": "Randi Tinney",
+                                "handle": "rtinney1",
+                                "profile_url": "https://github.com/rtinney1",
+                                "corroboration": [
+                                    {
+                                        "type": "profile_name_match",
+                                        "evidence_refs": ["https://example.invalid/not-in-receipt"],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    hypothesis = candidates[0]["github_contact_hypotheses"][0]
+    signal = cc.relationship_signals_from_candidates(candidates)[0]
+
+    assert hypothesis["mapping_status"] == "hypothesis"
+    assert hypothesis["corroboration"][0]["resolved"] is False
+    assert signal["subject"] == "GitHub @rtinney1"
+
+
+def test_github_name_and_handle_without_corroboration_stays_hypothesis(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "rtinney1/arcos-tools",
+                        "repo_url": "https://github.com/rtinney1/arcos-tools",
+                        "organization": "DARPA ARCOS network",
+                        "contacts": [
+                            {
+                                "name": "Randi Tinney",
+                                "handle": "rtinney1",
+                                "profile_url": "https://github.com/rtinney1",
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    hypothesis = candidates[0]["github_contact_hypotheses"][0]
+    signal = cc.relationship_signals_from_candidates(candidates)[0]
+
+    assert hypothesis["mapping_status"] == "hypothesis"
+    assert signal["subject"] == "GitHub @rtinney1"
