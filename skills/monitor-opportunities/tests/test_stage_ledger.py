@@ -1,6 +1,7 @@
 """Stage conservation: no discovered record may vanish without a disposition."""
 from __future__ import annotations
 
+from monitor_opportunities.ranking import dedupe_postings
 from monitor_opportunities.stage_ledger import build_ledger
 
 
@@ -72,3 +73,58 @@ def test_lane_reporting_no_matches_need_not_emit() -> None:
     receipts = [{"lane": "C", "result_status": "NO_MATCHES"}]
     ok, _ = build_ledger([_c("a")], [_c("a")], [], {}, source_receipts=receipts)
     assert ok
+
+
+def test_dedupe_rewrites_all_aliases_to_final_canonical_survivor() -> None:
+    base = {
+        "lane": "A",
+        "title": "Principal AI Architect",
+        "workplace_type": "REMOTE",
+        "fit_score": 0.9,
+    }
+    rows = [
+        {**base, "candidate_id": "old", "organization": "Galois Inc."},
+        {**base, "candidate_id": "middle", "organization": "Galois LLC", "posting_url": "https://jobs.example/galois"},
+        {
+            **base,
+            "candidate_id": "final",
+            "organization": "Galois",
+            "posting_url": "https://boards.example/jobs/view/123",
+            "apply_url": "https://boards.example/jobs/view/123/apply",
+        },
+    ]
+
+    deduped, dropped, merged_into = dedupe_postings(rows)
+
+    assert dropped == 2
+    assert [row["candidate_id"] for row in deduped] == ["final"]
+    assert merged_into == {"old": "final", "middle": "final"}
+
+    ok, ledger = build_ledger(rows, deduped, [], merged_into, admitted_count=1)
+    assert ok, ledger["violations"]
+    assert ledger["counts"]["deduplicated"] == 2
+
+
+def test_dedupe_uses_explicit_organization_canonical_key() -> None:
+    base = {
+        "lane": "A",
+        "title": "AI Assurance Architect",
+        "workplace_type": "REMOTE",
+        "fit_score": 0.9,
+    }
+    rows = [
+        {**base, "candidate_id": "ge-old", "organization": "General Electric Aerospace"},
+        {
+            **base,
+            "candidate_id": "ge-final",
+            "organization": "GE Aerospace",
+            "organization_canonical": "GE Aerospace",
+            "posting_url": "https://boards.example/jobs/view/ge",
+        },
+    ]
+
+    deduped, dropped, merged_into = dedupe_postings(rows)
+
+    assert dropped == 1
+    assert [row["candidate_id"] for row in deduped] == ["ge-final"]
+    assert merged_into == {"ge-old": "ge-final"}

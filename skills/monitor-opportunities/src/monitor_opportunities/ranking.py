@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,20 @@ SOURCE_INTEL_PROVIDERS = {
     "human_supplied_linkedin",
     "ops_linkedin_authorized_read_only",
     "meetup_surf",
+}
+ORG_SUFFIXES = {
+    "co",
+    "company",
+    "corp",
+    "corporation",
+    "inc",
+    "incorporated",
+    "llc",
+    "ltd",
+}
+ORG_ALIASES = {
+    "ge aviation": "ge aerospace",
+    "general electric aerospace": "ge aerospace",
 }
 
 
@@ -174,9 +189,18 @@ def _posting_identity(candidate: dict[str, Any]) -> str:
     6x on 2026-08-13), and the same role arrives from both LinkedIn lanes. Key
     on the durable pair instead: normalized organization + title.
     """
-    org = " ".join(str(candidate.get("organization") or "").lower().split())
+    org = _organization_identity(candidate)
     title = " ".join(str(candidate.get("title") or "").lower().split())
     return f"{org}|{title}"
+
+
+def _organization_identity(candidate: dict[str, Any]) -> str:
+    """Canonical organization key used only for same-posting dedupe."""
+
+    raw = str(candidate.get("organization_canonical") or candidate.get("organization") or "")
+    words = re.findall(r"[a-z0-9]+", raw.lower())
+    key = " ".join(word for word in words if word not in ORG_SUFFIXES)
+    return ORG_ALIASES.get(key, key)
 
 
 def dedupe_postings(
@@ -191,7 +215,7 @@ def dedupe_postings(
     """
     best: dict[str, dict[str, Any]] = {}
     order: list[str] = []
-    merged_into: dict[str, str] = {}
+    duplicates_by_key: dict[str, list[str]] = {}
 
     def _cid(row: dict[str, Any]) -> str:
         return str(row.get("candidate_id") or "")
@@ -217,10 +241,16 @@ def dedupe_postings(
         if _richness(c) > _richness(prior):
             # the incoming row wins; the prior one is now the duplicate
             best[key] = c
-            merged_into[_cid(prior)] = _cid(c)
+            duplicates_by_key.setdefault(key, []).append(_cid(prior))
         else:
-            merged_into[_cid(c)] = _cid(prior)
+            duplicates_by_key.setdefault(key, []).append(_cid(c))
     deduped = [best[k] for k in order]
+    merged_into: dict[str, str] = {}
+    for key, dropped_ids in duplicates_by_key.items():
+        canonical_id = _cid(best[key])
+        for dropped_id in dropped_ids:
+            if dropped_id and dropped_id != canonical_id:
+                merged_into[dropped_id] = canonical_id
     return deduped, len(candidates) - len(deduped), merged_into
 
 
