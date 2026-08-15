@@ -312,6 +312,7 @@ ORG_SUFFIXES = {
     "llc",
     "ltd",
 }
+STALE_RELATIONSHIP_FRESHNESS = {"stale", "unknown", "unverified", "historical"}
 
 
 def _memory_recall(memory_url: str, query: str, k: int = 5) -> dict[str, Any]:
@@ -524,18 +525,11 @@ def _org_key(value: Any) -> str:
     return " ".join(word for word in words if word not in ORG_SUFFIXES)
 
 
-def _same_org(left: Any, right: Any) -> bool:
-    left_key = _org_key(left)
-    right_key = _org_key(right)
-    if not left_key or not right_key:
+def _fresh_enough_to_bind(signal: dict[str, Any]) -> bool:
+    if signal.get("current_role_verified") is False:
         return False
-    if left_key == right_key:
-        return True
-    # Allow "Galois" <-> "Galois Inc" style matches after suffix stripping,
-    # but avoid matching single generic tokens such as "AI" or "Research".
-    if min(len(left_key), len(right_key)) < 4:
-        return False
-    return left_key in right_key or right_key in left_key
+    freshness = str(signal.get("relationship_freshness") or "").strip().lower()
+    return freshness not in STALE_RELATIONSHIP_FRESHNESS
 
 
 def relationship_signal_matches_opportunity(
@@ -550,7 +544,31 @@ def relationship_signal_matches_opportunity(
     opportunity_id = str(opportunity.get("opportunity_id") or opportunity.get("candidate_id") or "")
     if opportunity_id and str(signal.get("source_opportunity_id") or "") == opportunity_id:
         return True
-    return _same_org(signal.get("organization"), opportunity.get("organization"))
+    return _fresh_enough_to_bind(signal) and _org_key(signal.get("organization")) == _org_key(
+        opportunity.get("organization")
+    )
+
+
+def _relationship_binding_diagnostic(
+    signal: dict[str, Any],
+    *,
+    reason_code: str,
+    detail: str,
+    opportunity_id: str | None = None,
+    organization_key: str = "",
+) -> dict[str, Any]:
+    signal_id = str(signal.get("signal_id") or "missing-signal-id")
+    payload = "|".join([signal_id, opportunity_id or "", organization_key, reason_code, detail])
+    return {
+        "diagnostic_id": "relbind-" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16],
+        "signal_id": signal_id,
+        "opportunity_id": opportunity_id,
+        "organization_key": organization_key,
+        "reason_code": reason_code,
+        "detail": detail,
+        "external_effects": False,
+        "visible_in_report": True,
+    }
 
 
 def attach_relationship_signals_to_opportunities(
@@ -558,16 +576,101 @@ def attach_relationship_signals_to_opportunities(
 ) -> list[dict[str, Any]]:
     """Attach report-visible relationship signal ids to matching opportunities."""
 
-    for opportunity in opportunities:
-        ids = [
-            str(signal["signal_id"])
-            for signal in relationship_signals
-            if signal.get("signal_id") and relationship_signal_matches_opportunity(signal, opportunity)
-        ]
-        # stable de-duplication without hiding the full graph in relationship_signals
-        opportunity["relationship_signal_ids"] = list(dict.fromkeys(ids))
-        opportunity["relationship_signal_count"] = len(opportunity["relationship_signal_ids"])
+    bind_relationship_signals_to_opportunities(opportunities, relationship_signals)
     return opportunities
+
+
+def bind_relationship_signals_to_opportunities(
+    opportunities: list[dict[str, Any]], relationship_signals: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Attach relationship ids and return visible diagnostics for non-attachments.
+
+    Exact source-opportunity ids are authoritative. Organization-only matches are
+    allowed only when canonicalization yields one shortlisted opportunity. This
+    prevents warm-path inflation from parent/subsidiary names, acronyms, or
+    same-name collisions.
+    """
+
+    diagnostics: list[dict[str, Any]] = []
+    opportunities_by_id = {
+        str(opportunity.get("opportunity_id") or opportunity.get("candidate_id") or ""): opportunity
+        for opportunity in opportunities
+    }
+    opportunities_by_org_key: dict[str, list[dict[str, Any]]] = {}
+    for opportunity in opportunities:
+        org_key = _org_key(opportunity.get("organization"))
+        if org_key:
+            opportunities_by_org_key.setdefault(org_key, []).append(opportunity)
+
+    for opportunity in opportunities:
+        opportunity["relationship_signal_ids"] = []
+
+    for signal in relationship_signals:
+        signal_id = signal.get("signal_id")
+        if not signal_id:
+            diagnostics.append(
+                _relationship_binding_diagnostic(
+                    signal,
+                    reason_code="SIGNAL_ID_MISSING",
+                    detail="Relationship signal cannot attach without signal_id.",
+                )
+            )
+            continue
+        source_opportunity_id = str(signal.get("source_opportunity_id") or "")
+        exact = opportunities_by_id.get(source_opportunity_id)
+        if exact is not None:
+            exact.setdefault("relationship_signal_ids", []).append(str(signal_id))
+            continue
+        if not _fresh_enough_to_bind(signal):
+            diagnostics.append(
+                _relationship_binding_diagnostic(
+                    signal,
+                    reason_code="RELATIONSHIP_FRESHNESS_UNVERIFIED",
+                    detail="Signal was not attached because current role or relationship freshness is stale or unverified.",
+                )
+            )
+            continue
+        org_key = _org_key(signal.get("organization"))
+        if not org_key:
+            diagnostics.append(
+                _relationship_binding_diagnostic(
+                    signal,
+                    reason_code="ORGANIZATION_KEY_MISSING",
+                    detail="Signal was not attached because it has no canonical organization key.",
+                )
+            )
+            continue
+        matches = opportunities_by_org_key.get(org_key, [])
+        if len(matches) == 1:
+            matches[0].setdefault("relationship_signal_ids", []).append(str(signal_id))
+            continue
+        if len(matches) > 1:
+            diagnostics.append(
+                _relationship_binding_diagnostic(
+                    signal,
+                    reason_code="AMBIGUOUS_ORGANIZATION_ALIAS",
+                    detail=(
+                        "Signal organization canonicalized to multiple shortlisted opportunities; "
+                        "left unattached for human review."
+                    ),
+                    organization_key=org_key,
+                )
+            )
+            continue
+        diagnostics.append(
+            _relationship_binding_diagnostic(
+                signal,
+                reason_code="NO_ORGANIZATION_MATCH",
+                detail="Signal organization did not uniquely match a shortlisted opportunity.",
+                organization_key=org_key,
+            )
+        )
+
+    for opportunity in opportunities:
+        # stable de-duplication without hiding the full graph in relationship_signals
+        opportunity["relationship_signal_ids"] = list(dict.fromkeys(opportunity["relationship_signal_ids"]))
+        opportunity["relationship_signal_count"] = len(opportunity["relationship_signal_ids"])
+    return diagnostics
 
 
 def detect(

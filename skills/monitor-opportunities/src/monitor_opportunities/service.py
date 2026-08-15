@@ -398,6 +398,16 @@ def _render_page(run_dir: Path, token: str) -> str:
         for lane in manifest.lane_coverage
     )
     opportunities = _opportunity_cards(manifest, token, semantic_addenda)
+    relationship_diagnostics = "".join(
+        "<tr>"
+        f"<td><code>{html.escape(item.signal_id)}</code></td>"
+        f"<td>{html.escape(item.opportunity_id or '')}</td>"
+        f"<td><code>{html.escape(item.organization_key)}</code></td>"
+        f"<td>{_badge(item.reason_code)}</td>"
+        f"<td>{html.escape(item.detail)}</td>"
+        "</tr>"
+        for item in manifest.relationship_binding_diagnostics
+    ) or '<tr><td colspan="5">None</td></tr>'
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -447,6 +457,7 @@ code {{ overflow-wrap: anywhere; }}
 <main>
 <section id="opportunities"><h2>Shortlisted opportunities</h2>{opportunities}</section>
 <section id="coverage"><h2>Coverage And Source Health</h2><p>Hidden action-worthy artifacts: {manifest.artifact_accounting.hidden_total}</p><table><thead><tr><th>Lane</th><th>Status</th><th>Observed</th><th>Admitted</th><th>Limitations</th></tr></thead><tbody>{lanes}</tbody></table></section>
+<section><h2>Relationship Binding Diagnostics</h2><table><thead><tr><th>Signal</th><th>Opportunity</th><th>Organization key</th><th>Reason</th><th>Detail</th></tr></thead><tbody>{relationship_diagnostics}</tbody></table></section>
 <section><h2>Current projection</h2><ul>{projection_rows}</ul></section>
 </main>
 <footer><p class="muted">Read-only local service. Decisions append local events only; no Gmail, LinkedIn, ATS, or application submission effect is available here.</p></footer>

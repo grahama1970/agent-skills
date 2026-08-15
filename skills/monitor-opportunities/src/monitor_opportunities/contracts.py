@@ -293,6 +293,17 @@ class RelationshipSignal(StrictModel):
     visible_in_report: bool
 
 
+class RelationshipBindingDiagnostic(StrictModel):
+    diagnostic_id: str
+    signal_id: str
+    opportunity_id: str | None = None
+    organization_key: str
+    reason_code: str
+    detail: str
+    external_effects: bool
+    visible_in_report: bool
+
+
 class TauSemanticRelationshipStatus(StrEnum):
     HAS_RELATIONSHIP_EVIDENCE = "HAS_RELATIONSHIP_EVIDENCE"
     NO_RELATIONSHIP_EVIDENCE = "NO_RELATIONSHIP_EVIDENCE"
@@ -393,6 +404,7 @@ class ReportManifest(StrictModel):
     applications: list[Application]
     application_packets: list[ApplicationPacket] = []
     relationship_signals: list[RelationshipSignal] = []
+    relationship_binding_diagnostics: list[RelationshipBindingDiagnostic] = []
     interview_prep: list[InterviewPrep]
     decision_actions: list[DecisionAction]
     artifact_accounting: ArtifactAccounting
@@ -468,6 +480,23 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("RELATIONSHIP_SIGNAL_HIDDEN", "Relationship signals must be report-visible")
 
     relationship_ids = {signal.get("signal_id") for signal in raw.get("relationship_signals", [])}
+    for diagnostic in raw.get("relationship_binding_diagnostics", []):
+        if diagnostic.get("external_effects") is not False:
+            raise ContractError(
+                "RELATIONSHIP_BINDING_DIAGNOSTIC_EXTERNAL_EFFECT",
+                "Relationship binding diagnostics are local-only",
+            )
+        if diagnostic.get("visible_in_report") is not True:
+            raise ContractError(
+                "RELATIONSHIP_BINDING_DIAGNOSTIC_HIDDEN",
+                "Relationship binding diagnostics must be report-visible",
+            )
+        signal_id = diagnostic.get("signal_id")
+        if signal_id not in relationship_ids:
+            raise ContractError(
+                "RELATIONSHIP_BINDING_DIAGNOSTIC_SIGNAL_MISSING",
+                f"Relationship binding diagnostic references missing signal: {signal_id}",
+            )
     for opportunity in opportunities:
         attached = opportunity.get("relationship_signal_ids") or []
         if opportunity.get("relationship_signal_count", 0) != len(attached):

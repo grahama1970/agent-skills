@@ -143,6 +143,17 @@ def render_html(manifest: ReportManifest) -> str:
         for item in manifest.relationship_signals
     ) or "<p>None</p>"
 
+    relationship_diagnostics = "".join(
+        "<tr>"
+        f"<td><code>{html.escape(item.signal_id)}</code></td>"
+        f"<td>{html.escape(item.opportunity_id or '')}</td>"
+        f"<td><code>{html.escape(item.organization_key)}</code></td>"
+        f"<td>{_badge(item.reason_code)}</td>"
+        f"<td>{html.escape(item.detail)}</td>"
+        "</tr>"
+        for item in manifest.relationship_binding_diagnostics
+    ) or '<tr><td colspan="5">None</td></tr>'
+
     rejections = "".join(
         f"<li><strong>{html.escape(item.title)}</strong> — {html.escape(item.organization)} "
         f"{_badge(item.reason_code)}</li>"
@@ -273,6 +284,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <section><h2>ATS application state</h2>{applications}</section>
 <section><h2>Application packets</h2>{application_packets}</section>
 <section><h2>Relationship signals</h2>{relationships}</section>
+<section><h2>Relationship binding diagnostics</h2><table><thead><tr><th>Signal</th><th>Opportunity</th><th>Organization key</th><th>Reason</th><th>Detail</th></tr></thead><tbody>{relationship_diagnostics}</tbody></table></section>
 <section><h2>Interview preparation</h2>{interview}</section>
 <section><h2>Source receipts</h2><table><thead><tr><th>Lane</th><th>Provider</th><th>Target</th><th>Source class</th><th>Automation policy</th><th>Status</th><th>Evidence</th><th>Limitations</th></tr></thead><tbody>{sources}</tbody></table></section>
 <section><h2>Available local decisions</h2><ul>{decisions}</ul></section>

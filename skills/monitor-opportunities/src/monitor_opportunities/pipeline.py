@@ -11,7 +11,7 @@ from loguru import logger
 
 from .application_packets import build_application_packets
 from .contact_changes import (
-    attach_relationship_signals_to_opportunities,
+    bind_relationship_signals_to_opportunities,
     relationship_signals_from_candidates,
     relationship_signals_from_memory,
 )
@@ -465,7 +465,9 @@ def _report_from_run(
     for signal in relationship_signals_from_memory(memory_url):
         if signal["signal_id"] not in {row["signal_id"] for row in relationship_signals}:
             relationship_signals.append(signal)
-    attach_relationship_signals_to_opportunities(opportunities, relationship_signals)
+    relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
+        opportunities, relationship_signals
+    )
     resume_variants = _resume_variants(tailoring_dir, opportunities)
     if len(resume_variants) != len(opportunities):
         missing = sorted(
@@ -565,6 +567,7 @@ def _report_from_run(
         "applications": applications,
         "application_packets": application_packets,
         "relationship_signals": relationship_signals,
+        "relationship_binding_diagnostics": relationship_binding_diagnostics,
         "interview_prep": interview_prep,
         "decision_actions": [
             {"action": "KEEP", "target_type": "opportunity", "enabled": True, "effects_external": False},

@@ -174,7 +174,7 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert all(any("Corporate email may be blocked" in item for item in row["channel_guidance"]) for row in signals)
 
 
-def test_relationship_signals_attach_to_opportunities_by_exact_id_and_org() -> None:
+def test_relationship_signals_attach_to_opportunities_by_exact_id_and_unique_org() -> None:
     opportunities = [
         {"opportunity_id": "candidate:a:galois", "organization": "Galois, Inc."},
         {"opportunity_id": "candidate:a:other", "organization": "Other Systems"},
@@ -203,6 +203,58 @@ def test_relationship_signals_attach_to_opportunities_by_exact_id_and_org() -> N
     assert attached[0]["relationship_signal_count"] == 2
     assert attached[1]["relationship_signal_ids"] == []
     assert attached[1]["relationship_signal_count"] == 0
+
+
+def test_relationship_signal_binding_quarantines_ambiguous_and_unsafe_org_matches() -> None:
+    opportunities = [
+        {"opportunity_id": "candidate:a:galois-1", "organization": "Galois, Inc."},
+        {"opportunity_id": "candidate:a:galois-2", "organization": "Galois LLC"},
+        {"opportunity_id": "candidate:a:galois-federal", "organization": "Galois Federal"},
+        {"opportunity_id": "candidate:a:unique", "organization": "Unique Research"},
+    ]
+    signals = [
+        {
+            "signal_id": "rel-exact-stale-ok",
+            "source_opportunity_id": "candidate:a:galois-1",
+            "organization": "Different Org",
+            "relationship_freshness": "stale",
+        },
+        {
+            "signal_id": "rel-ambiguous",
+            "source_opportunity_id": "memory:arcos",
+            "organization": "Galois Inc",
+        },
+        {
+            "signal_id": "rel-parent-subsidiary",
+            "source_opportunity_id": "memory:arcos",
+            "organization": "Galois Federal Research",
+        },
+        {
+            "signal_id": "rel-stale",
+            "source_opportunity_id": "memory:arcos",
+            "organization": "Unique Research Inc",
+            "current_role_verified": False,
+        },
+        {
+            "signal_id": "rel-unique",
+            "source_opportunity_id": "memory:arcos",
+            "organization": "Unique Research Inc",
+        },
+    ]
+
+    diagnostics = cc.bind_relationship_signals_to_opportunities(opportunities, signals)
+
+    assert opportunities[0]["relationship_signal_ids"] == ["rel-exact-stale-ok"]
+    assert opportunities[1]["relationship_signal_ids"] == []
+    assert opportunities[2]["relationship_signal_ids"] == []
+    assert opportunities[3]["relationship_signal_ids"] == ["rel-unique"]
+    assert {row["reason_code"] for row in diagnostics} == {
+        "AMBIGUOUS_ORGANIZATION_ALIAS",
+        "NO_ORGANIZATION_MATCH",
+        "RELATIONSHIP_FRESHNESS_UNVERIFIED",
+    }
+    assert all(row["external_effects"] is False for row in diagnostics)
+    assert all(row["visible_in_report"] is True for row in diagnostics)
 
 
 def test_relationship_signals_can_be_disabled_for_scheduler_diagnostic(monkeypatch) -> None:

@@ -76,6 +76,69 @@ def test_opportunity_relationship_signal_count_must_match_ids() -> None:
     assert exc.value.code == "RELATIONSHIP_SIGNAL_COUNT_MISMATCH"
 
 
+def test_relationship_binding_diagnostics_are_local_visible_and_reference_signals() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["relationship_signals"] = [
+        {
+            "signal_id": "rel:test",
+            "source_opportunity_id": "memory:darpa-arcos-contact-network",
+            "signal_type": "direct_contact",
+            "subject": "William Brad Martin",
+            "organization": "DARPA I2O",
+            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "William Brad Martin"],
+            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+            "source_receipt_ids": [],
+            "provenance": "Source-backed direct ARCOS/formal-methods contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["relationship_binding_diagnostics"] = [
+        {
+            "diagnostic_id": "relbind:test",
+            "signal_id": "rel:test",
+            "opportunity_id": None,
+            "organization_key": "darpa i2o",
+            "reason_code": "NO_ORGANIZATION_MATCH",
+            "detail": "Signal organization did not uniquely match a shortlisted opportunity.",
+            "external_effects": False,
+            "visible_in_report": True,
+        }
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    manifest = validate_manifest(data)
+
+    assert manifest.relationship_binding_diagnostics[0].reason_code == "NO_ORGANIZATION_MATCH"
+
+
+def test_relationship_binding_diagnostic_missing_signal_is_rejected() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["relationship_binding_diagnostics"] = [
+        {
+            "diagnostic_id": "relbind:test",
+            "signal_id": "rel:missing",
+            "opportunity_id": None,
+            "organization_key": "darpa i2o",
+            "reason_code": "NO_ORGANIZATION_MATCH",
+            "detail": "Signal organization did not uniquely match a shortlisted opportunity.",
+            "external_effects": False,
+            "visible_in_report": True,
+        }
+    ]
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "RELATIONSHIP_BINDING_DIAGNOSTIC_SIGNAL_MISSING"
+
+
 @pytest.mark.parametrize(
     ("mutate", "code"),
     [

@@ -84,6 +84,57 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     assert "Relationship signals</h2>" in html
 
 
+def test_reports_render_relationship_binding_diagnostics(tmp_path: Path) -> None:
+    data = built_in_fixture()
+    data["relationship_signals"] = [
+        {
+            "signal_id": "rel:ambiguous",
+            "source_opportunity_id": "memory:darpa-arcos-contact-network",
+            "signal_type": "adjacent_contact",
+            "subject": "David Archer",
+            "organization": "Galois Inc",
+            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "David Archer"],
+            "evidence_refs": ["memory://arcos-network"],
+            "source_receipt_ids": [],
+            "provenance": "Adjacent ARCOS/formal-methods contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["relationship_binding_diagnostics"] = [
+        {
+            "diagnostic_id": "relbind:ambiguous",
+            "signal_id": "rel:ambiguous",
+            "opportunity_id": None,
+            "organization_key": "galois",
+            "reason_code": "AMBIGUOUS_ORGANIZATION_ALIAS",
+            "detail": "Signal organization canonicalized to multiple shortlisted opportunities; left unattached for human review.",
+            "external_effects": False,
+            "visible_in_report": True,
+        }
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+    manifest = validate_manifest(data)
+
+    static_html = render_html(manifest)
+
+    assert "Relationship binding diagnostics" in static_html
+    assert "AMBIGUOUS_ORGANIZATION_ALIAS" in static_html
+    run_dir = tmp_path / "run"
+    (run_dir / "report").mkdir(parents=True)
+    (run_dir / "report-manifest.json").write_text(json.dumps(data), encoding="utf-8")
+    (run_dir / "report" / "index.html").write_text("report", encoding="utf-8")
+    interactive_html = _render_page(run_dir, "token")
+    assert "Relationship Binding Diagnostics" in interactive_html
+    assert "rel:ambiguous" in interactive_html
+
+
 def test_interactive_service_renders_attached_relationship_decisions(tmp_path: Path) -> None:
     data = built_in_fixture()
     opportunity_id = data["opportunities"][0]["opportunity_id"]

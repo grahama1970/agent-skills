@@ -246,6 +246,12 @@
       "items": {
         "$ref": "#/$defs/relationshipSignal"
       }
+    },
+    "relationship_binding_diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationshipBindingDiagnostic"
+      }
     }
   },
   "$defs": {
@@ -1447,6 +1453,57 @@
         },
         "action_worthy": {
           "type": "boolean"
+        },
+        "visible_in_report": {
+          "const": true
+        }
+      }
+    },
+    "relationshipBindingDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diagnostic_id",
+        "signal_id",
+        "organization_key",
+        "reason_code",
+        "detail",
+        "external_effects",
+        "visible_in_report"
+      ],
+      "properties": {
+        "diagnostic_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "opportunity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "organization_key": {
+          "type": "string"
+        },
+        "reason_code": {
+          "enum": [
+            "AMBIGUOUS_ORGANIZATION_ALIAS",
+            "NO_ORGANIZATION_MATCH",
+            "ORGANIZATION_KEY_MISSING",
+            "RELATIONSHIP_FRESHNESS_UNVERIFIED",
+            "SIGNAL_ID_MISSING"
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "external_effects": {
+          "const": false
         },
         "visible_in_report": {
           "const": true
