@@ -1,5 +1,5 @@
 {
-  "verified_at": "2026-08-15T12:25:36.248464+00:00",
+  "verified_at": "2026-08-15T12:33:55.993139+00:00",
   "cwd": "/mnt/storage12tb/tmp/live-evidence-ask-env-fix-20260814",
   "root": "/mnt/storage12tb/tmp/live-evidence-ask-env-fix-20260814",
   "output_root": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814",
@@ -7,6 +7,6 @@
   "name": "live-evidence-e2e-interview",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T122501Z.png",
-  "read_json": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T122501Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T123321Z.png",
+  "read_json": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T123321Z.read.json"
 }
