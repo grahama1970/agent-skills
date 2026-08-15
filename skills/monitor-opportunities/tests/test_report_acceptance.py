@@ -76,3 +76,139 @@ def test_report_acceptance_fails_degraded_receipt_without_limitations(tmp_path: 
     assert payload["status"] == "FAIL"
     assert payload["checks"]["degraded_source_limitations_present"] is False
     assert any(row["check"] == "degraded_source_limitations" for row in payload["failures"])
+
+
+def test_report_acceptance_fails_failed_zero_effect_replay(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    replay_path = out / "zero-effect-replay-receipt.json"
+    replay_receipt = json.loads(replay_path.read_text(encoding="utf-8"))
+    replay_receipt["status"] = "FAIL"
+    replay_path.write_text(json.dumps(replay_receipt, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["status"] == "FAIL"
+    assert any(row["check"] == "zero_effect_replay" for row in payload["failures"])
+
+
+def test_report_acceptance_fails_foreign_zero_effect_replay(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path / "one")
+    other = _run_fixture(tmp_path / "two")
+    replay = runner.invoke(app, ["replay", "--run", str(other)])
+    assert replay.exit_code == 0, replay.output
+    (out / "zero-effect-replay-receipt.json").write_text(
+        (other / "zero-effect-replay-receipt.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["status"] == "FAIL"
+    failure_checks = {row["check"] for row in payload["failures"]}
+    assert "zero_effect_replay_run_dir_bound" in failure_checks
+    assert "zero_effect_replay_artifacts_bound" in failure_checks
+    assert "zero_effect_replay_binding_current" in failure_checks
+
+
+def test_report_acceptance_fails_hash_mismatched_replay(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    manifest_path = out / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["relationship_signals"].append(
+        {
+            "schema": "monitor_opportunities.relationship_signal.v1",
+            "signal_id": "relationship:test-stale",
+            "source": "test",
+            "person_name": "Stale Replay",
+            "organization": "Example",
+            "relationship_type": "adjacent_contact",
+            "confidence": 0.1,
+            "evidence_url": "https://example.test",
+            "external_effects": False,
+            "visible_in_report": True,
+            "action_worthy": True,
+        }
+    )
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["status"] == "FAIL"
+    failure_checks = {row["check"] for row in payload["failures"]}
+    assert "zero_effect_replay_binding_current" in failure_checks
+    assert "run_manifest_hash_bound" in failure_checks
+
+
+def test_report_acceptance_fails_effect_bearing_replay_receipt(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    replay_path = out / "zero-effect-replay-receipt.json"
+    replay_receipt = json.loads(replay_path.read_text(encoding="utf-8"))
+    replay_receipt["external_effects"] = True
+    replay_receipt["checks"]["projection_external_effects_false"] = False
+    replay_path.write_text(json.dumps(replay_receipt, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["checks"]["zero_effect_replay_external_effects_false"] is False
+    assert payload["checks"]["zero_effect_replay_required_checks_true"] is False
+
+
+def test_report_acceptance_fails_shortlist_overflow(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    manifest_path = out / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    template = manifest["opportunities"][0]
+    while len(manifest["opportunities"]) <= 8:
+        manifest["opportunities"].append(
+            {
+                **template,
+                "opportunity_id": f"candidate:overflow:{len(manifest['opportunities'])}",
+            }
+        )
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["checks"]["shortlist_bound"] is False
+    assert any(row["check"] == "shortlist_bound" for row in payload["failures"])
+
+
+def test_report_acceptance_fails_authorized_or_effectful_application_packet(
+    tmp_path: Path,
+) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    manifest_path = out / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["application_packets"][0]["approval_status"] = "AUTHORIZED"
+    manifest["application_packets"][0]["external_effects"] = True
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["checks"]["application_packets_human_authorized_only"] is False
+    assert any(
+        row["check"] == "application_packets_human_authorized_only"
+        for row in payload["failures"]
+    )

@@ -7,7 +7,157 @@ from typing import Any
 
 from .contracts import ContractError, ResultStatus, validate_manifest
 from .pipeline import build_receipt_consistency
-from .util import read_json, write_json
+from .util import read_json, sha256_json, write_json
+
+REQUIRED_ZERO_EFFECT_CHECKS = (
+    "projection_external_effects_false",
+    "decision_events_external_effects_false",
+    "run_receipt_external_effects_false",
+    "receipt_consistency_pass",
+    "effect_policy_external_effects_false",
+)
+
+
+def _same_path(value: object, expected: Path) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    try:
+        return Path(value).resolve() == expected.resolve()
+    except OSError:
+        return False
+
+
+def _json_sha256(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    return sha256_json(read_json(path))
+
+
+def _validate_zero_effect_replay_binding(
+    *,
+    run_dir: Path,
+    zero_effect: dict[str, Any],
+    run_receipt: dict[str, Any],
+    manifest: dict[str, Any],
+    fail: Any,
+) -> dict[str, bool]:
+    projection_path = run_dir / "decision-projection.json"
+    ledger_path = run_dir / "decision-ledger.jsonl"
+    run_receipt_path = run_dir / "run-receipt.json"
+    consistency_path = run_dir / "receipt-consistency.json"
+    effect_policy_path = run_dir / "effect-policy-receipt.json"
+    attestation_path = run_dir / "run-attestation.json"
+
+    checks: dict[str, bool] = {
+        "zero_effect_replay_schema": zero_effect.get("schema")
+        == "monitor_opportunities.zero_effect_replay_receipt.v1",
+        "zero_effect_replay_external_effects_false": zero_effect.get("external_effects")
+        is False,
+        "zero_effect_replay_run_dir_bound": _same_path(zero_effect.get("run_dir"), run_dir),
+    }
+    for key, ok in checks.items():
+        if not ok:
+            fail(key, f"zero-effect replay receipt failed {key}")
+
+    replay_checks = zero_effect.get("checks") or {}
+    failed_replay_checks = [
+        key for key in REQUIRED_ZERO_EFFECT_CHECKS if replay_checks.get(key) is not True
+    ]
+    if failed_replay_checks:
+        checks["zero_effect_replay_required_checks_true"] = False
+        fail(
+            "zero_effect_replay_required_checks_true",
+            "zero-effect replay checks are not true: "
+            + ", ".join(failed_replay_checks),
+        )
+    else:
+        checks["zero_effect_replay_required_checks_true"] = True
+
+    artifacts = zero_effect.get("artifacts") or {}
+    expected_artifacts = {
+        "decision_projection": projection_path,
+        "run_receipt": run_receipt_path,
+        "receipt_consistency": consistency_path,
+    }
+    if ledger_path.exists():
+        expected_artifacts["decision_ledger"] = ledger_path
+    if effect_policy_path.exists():
+        expected_artifacts["effect_policy"] = effect_policy_path
+    if attestation_path.exists():
+        expected_artifacts["run_attestation"] = attestation_path
+
+    bad_artifacts = [
+        key
+        for key, path in expected_artifacts.items()
+        if not path.exists() or not _same_path(artifacts.get(key), path)
+    ]
+    if bad_artifacts:
+        checks["zero_effect_replay_artifacts_bound"] = False
+        fail(
+            "zero_effect_replay_artifacts_bound",
+            "zero-effect replay artifacts are missing or stale: "
+            + ", ".join(bad_artifacts),
+        )
+    else:
+        checks["zero_effect_replay_artifacts_bound"] = True
+
+    manifest_sha = sha256_json(manifest) if manifest else None
+    projection = read_json(projection_path) if projection_path.exists() else {}
+    consistency = read_json(consistency_path) if consistency_path.exists() else {}
+    effect_policy = read_json(effect_policy_path) if effect_policy_path.exists() else {}
+    attestation = read_json(attestation_path) if attestation_path.exists() else {}
+    attestation_code = attestation.get("code") or {}
+    binding = zero_effect.get("binding") or {}
+    expected_binding = {
+        "run_id": run_receipt.get("run_id"),
+        "manifest_run_id": manifest.get("run_id"),
+        "report_manifest_sha256": manifest_sha,
+        "run_receipt_report_manifest_sha256": run_receipt.get("report_manifest_sha256"),
+        "run_receipt_sha256": _json_sha256(run_receipt_path),
+        "decision_projection_sha256": _json_sha256(projection_path),
+        "projection_digest": projection.get("projection_digest"),
+        "receipt_consistency_sha256": _json_sha256(consistency_path),
+        "receipt_consistency_status": consistency.get("status"),
+        "effect_policy_sha256": _json_sha256(effect_policy_path),
+        "effect_policy_mode": effect_policy.get("mode") if effect_policy else None,
+        "run_attestation_sha256": _json_sha256(attestation_path),
+        "source_revision": attestation_code.get("git_revision") if attestation else None,
+        "source_revision_full": attestation_code.get("git_revision_full")
+        if attestation
+        else None,
+    }
+    mismatches = [
+        key
+        for key, expected in expected_binding.items()
+        if expected is not None and binding.get(key) != expected
+    ]
+    if mismatches:
+        checks["zero_effect_replay_binding_current"] = False
+        fail(
+            "zero_effect_replay_binding_current",
+            "zero-effect replay binding does not match current run artifacts: "
+            + ", ".join(mismatches),
+        )
+    else:
+        checks["zero_effect_replay_binding_current"] = True
+
+    if (
+        run_receipt.get("run_id")
+        and manifest.get("run_id")
+        and run_receipt.get("run_id") != manifest.get("run_id")
+    ):
+        checks["run_manifest_ids_match"] = False
+        fail("run_manifest_ids_match", "run receipt and manifest run_id differ")
+    else:
+        checks["run_manifest_ids_match"] = True
+
+    if run_receipt.get("report_manifest_sha256") != manifest_sha:
+        checks["run_manifest_hash_bound"] = False
+        fail("run_manifest_hash_bound", "run receipt manifest hash differs from manifest")
+    else:
+        checks["run_manifest_hash_bound"] = True
+
+    return checks
 
 
 def validate_report_acceptance(
@@ -55,8 +205,17 @@ def validate_report_acceptance(
     zero_effect = read_json(zero_effect_path) if zero_effect_path.exists() else None
     if require_zero_effect_replay and zero_effect is None:
         fail("zero_effect_replay_present", "zero-effect-replay-receipt.json is missing")
+    replay_binding_checks: dict[str, bool] = {}
     if zero_effect is not None and zero_effect.get("status") != "PASS":
         fail("zero_effect_replay", "zero-effect replay status is not PASS")
+    if zero_effect is not None:
+        replay_binding_checks = _validate_zero_effect_replay_binding(
+            run_dir=run_dir,
+            zero_effect=zero_effect,
+            run_receipt=run_receipt,
+            manifest=manifest_raw,
+            fail=fail,
+        )
 
     if run_receipt and run_receipt.get("external_effects") is not False:
         fail("run_external_effects", "run receipt external_effects is not false")
@@ -117,6 +276,7 @@ def validate_report_acceptance(
             "zero_effect_replay_pass": (
                 zero_effect.get("status") == "PASS" if zero_effect is not None else False
             ),
+            **replay_binding_checks,
             "run_external_effects_false": run_receipt.get("external_effects") is False,
             "shortlist_bound": opportunity_count <= 8,
             "application_packets_human_authorized_only": not authorized_packets,

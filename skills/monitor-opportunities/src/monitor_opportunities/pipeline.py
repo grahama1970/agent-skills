@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from loguru import logger
 
 from .application_packets import build_application_packets
@@ -21,13 +23,8 @@ from .memory_sync import attach_memory_recall_provenance, governed_memory_recall
 from .outreach import build_outreach_packets
 from .ranking import rank
 from .report import load_manifest, render_report
-from .tailoring import tailor, tailor_candidate
+from .tailoring import tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
-
-
-import os
-
-from dotenv import load_dotenv
 
 load_dotenv(override=False)
 
@@ -1064,12 +1061,19 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
 def build_zero_effect_replay_receipt(run_dir: Path, projection: dict[str, Any]) -> dict[str, Any]:
     """Bind replayed local decisions to the run's no-effect receipts."""
     rows = read_jsonl(run_dir / "decision-ledger.jsonl")
+    manifest_path = run_dir / "report-manifest.json"
+    projection_path = run_dir / "decision-projection.json"
     run_receipt_path = run_dir / "run-receipt.json"
     consistency_path = run_dir / "receipt-consistency.json"
     effect_policy_path = run_dir / "effect-policy-receipt.json"
+    attestation_path = run_dir / "run-attestation.json"
+    manifest = read_json(manifest_path) if manifest_path.exists() else {}
     run_receipt = read_json(run_receipt_path) if run_receipt_path.exists() else {}
     consistency = read_json(consistency_path) if consistency_path.exists() else {}
     effect_policy = read_json(effect_policy_path) if effect_policy_path.exists() else {}
+    attestation = read_json(attestation_path) if attestation_path.exists() else {}
+    attestation_code = attestation.get("code") or {}
+    projection_for_hash = read_json(projection_path) if projection_path.exists() else projection
     event_effect_violations = [
         str(row.get("event_id") or row.get("idempotency_key") or index)
         for index, row in enumerate(rows)
@@ -1096,19 +1100,40 @@ def build_zero_effect_replay_receipt(run_dir: Path, projection: dict[str, Any]) 
         "mode": effect_policy.get("mode", "UNAVAILABLE"),
         "event_count": len(rows),
         "projection_digest": projection.get("projection_digest"),
+        "binding": {
+            "run_id": run_receipt.get("run_id"),
+            "manifest_run_id": manifest.get("run_id"),
+            "report_manifest_sha256": sha256_json(manifest) if manifest else None,
+            "run_receipt_report_manifest_sha256": run_receipt.get("report_manifest_sha256"),
+            "run_receipt_sha256": sha256_json(run_receipt) if run_receipt else None,
+            "decision_projection_sha256": sha256_json(projection_for_hash)
+            if projection_for_hash
+            else None,
+            "projection_digest": projection.get("projection_digest"),
+            "receipt_consistency_sha256": sha256_json(consistency) if consistency else None,
+            "receipt_consistency_status": consistency.get("status") if consistency else None,
+            "effect_policy_sha256": sha256_json(effect_policy) if effect_policy else None,
+            "effect_policy_mode": effect_policy.get("mode") if effect_policy else None,
+            "run_attestation_sha256": sha256_json(attestation) if attestation else None,
+            "source_revision": attestation_code.get("git_revision") if attestation else None,
+            "source_revision_full": attestation_code.get("git_revision_full")
+            if attestation
+            else None,
+        },
         "external_effects": False,
         "checks": checks,
         "violations": {
             "decision_event_external_effects": event_effect_violations,
         },
         "artifacts": {
-            "decision_projection": str(run_dir / "decision-projection.json"),
+            "decision_projection": str(projection_path),
             "decision_ledger": str(run_dir / "decision-ledger.jsonl")
             if (run_dir / "decision-ledger.jsonl").exists()
             else None,
             "run_receipt": str(run_receipt_path) if run_receipt_path.exists() else None,
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
             "effect_policy": str(effect_policy_path) if effect_policy_path.exists() else None,
+            "run_attestation": str(attestation_path) if attestation_path.exists() else None,
         },
         "mocked": False,
         "live": bool(run_receipt.get("live", False)),
