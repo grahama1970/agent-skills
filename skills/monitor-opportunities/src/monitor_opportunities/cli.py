@@ -94,6 +94,19 @@ def _fail(exc: ContractError) -> NoReturn:
     raise typer.Exit(code=2)
 
 
+def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
+    return {
+        "tracker": "SKIPPED",
+        "prior_application_history": "ENABLED",
+        "ats_selector_memory_write": "SKIPPED",
+        "gmail_send": "FORBIDDEN",
+        "linkedin_action": "FORBIDDEN",
+        "meetup_rsvp": "FORBIDDEN",
+        "ats_submit": "FORBIDDEN",
+        "buzz_summary": "SKIPPED" if diagnostic else "ENABLED",
+    }
+
+
 def status_payload() -> dict[str, object]:
     return {
         "schema": "monitor_opportunities.status.v1",
@@ -1646,15 +1659,7 @@ def schedule(
         "workdir": str(repo_root),
         "register_stdout": register.stdout,
         "readback": job,
-        "effect_policy": {
-            "tracker": "SKIPPED",
-            "prior_application_history": "ENABLED",
-            "ats_selector_memory_write": "SKIPPED",
-            "gmail_send": "FORBIDDEN",
-            "linkedin_action": "FORBIDDEN",
-            "meetup_rsvp": "FORBIDDEN",
-            "ats_submit": "FORBIDDEN",
-        },
+        "effect_policy": _scheduler_effect_policy(diagnostic=diagnostic),
     }
     scheduler_data_dir = Path(
         os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))

@@ -109,6 +109,16 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert "--diagnostic" not in payload["command"]
     assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
     assert "BUZZ_BIN=/usr/local/bin/buzz" in payload["command"]
+    assert payload["effect_policy"] == {
+        "tracker": "SKIPPED",
+        "prior_application_history": "ENABLED",
+        "ats_selector_memory_write": "SKIPPED",
+        "gmail_send": "FORBIDDEN",
+        "linkedin_action": "FORBIDDEN",
+        "meetup_rsvp": "FORBIDDEN",
+        "ats_submit": "FORBIDDEN",
+        "buzz_summary": "ENABLED",
+    }
     assert Path(payload["receipt"]).is_file()
 
 
@@ -177,3 +187,13 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
     assert "--promoted-stage0" not in payload["command"]
     assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
     assert "BUZZ_BIN=" not in payload["command"]
+    assert payload["effect_policy"] == {
+        "tracker": "SKIPPED",
+        "prior_application_history": "ENABLED",
+        "ats_selector_memory_write": "SKIPPED",
+        "gmail_send": "FORBIDDEN",
+        "linkedin_action": "FORBIDDEN",
+        "meetup_rsvp": "FORBIDDEN",
+        "ats_submit": "FORBIDDEN",
+        "buzz_summary": "SKIPPED",
+    }
