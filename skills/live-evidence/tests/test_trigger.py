@@ -122,6 +122,25 @@ def test_coding_problem_setup_question_waits_for_actionable_prompt() -> None:
     assert engine.decide(event) is None
 
 
+def test_real_stt_valid_parentheses_question_is_actionable() -> None:
+    engine = TriggerEngine(PROFILE, cooldown_s=0)
+    event = TranscriptEvent(
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.FINAL,
+        text=(
+            "What makes a parentheses string valid? A opening parentheses always has to come "
+            "before closing, right? So if we sort of iterate to our string, each closing "
+            "parenthesis needs a previous opening parenthesis."
+        ),
+    )
+
+    decision = engine.decide(event)
+
+    assert decision is not None
+    assert decision.reason == "code-question"
+    assert decision.code_related is True
+
+
 def test_search_terms_are_bounded_and_not_question_words() -> None:
     terms = search_terms("How do agents use receipts and knowledge graphs in production?", limit=4)
     assert "How" not in terms
