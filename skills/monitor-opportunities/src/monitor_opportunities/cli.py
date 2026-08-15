@@ -24,7 +24,7 @@ from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
-from .pipeline import prepare_run_output, run_stage0, status_for_run
+from .pipeline import build_receipt_consistency, prepare_run_output, run_stage0, status_for_run
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .semantic_addenda import install_semantic_addendum
@@ -1459,6 +1459,24 @@ def nightly(
                 )
             )
 
+    consistency_path = out / "receipt-consistency.json"
+    if run_receipt_path.exists() and (out / "report-manifest.json").exists():
+        consistency = build_receipt_consistency(
+            run_dir=out,
+            receipt=read_json(run_receipt_path),
+            manifest=read_json(out / "report-manifest.json"),
+        )
+        write_json(consistency_path, consistency)
+        if promoted_stage0 and consistency.get("status") != "PASS":
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_RECEIPT_CONSISTENCY_FAILED",
+                    f"Receipt consistency failed: {consistency}",
+                )
+            )
+    else:
+        consistency = None
+
     nightly_receipt = {
         "status": "PASS",
         "schema": "monitor_opportunities.nightly_receipt.v1",
@@ -1480,7 +1498,9 @@ def nightly(
             "semantic_addenda_index": str(out / "semantic-addenda" / "index.json")
             if semantic_installs
             else None,
+            "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
         },
+        "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
         "steps": steps,
     }
     nightly_receipt_path = out / "nightly-receipt.json"

@@ -48,6 +48,12 @@ REPORT_DIGEST_LIMIT = 8
 SHORTLIST_LIMIT = min(_int_env("MONITOR_SHORTLIST_LIMIT", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
 # How many top jobs get a custom targeted resume + apply-prep packet per run.
 APPLY_PREP_TOP_N = min(_int_env("MONITOR_APPLY_PREP_TOP_N", REPORT_DIGEST_LIMIT), REPORT_DIGEST_LIMIT)
+PUBLICATION_EFFECT_CLASSES = (
+    "LOCAL_ARTIFACT_WRITTEN",
+    "INTERNAL_DESTINATION_WRITTEN",
+    "HUMAN_TRANSMITTED",
+    "EXTERNAL_SITE_MUTATED",
+)
 
 GENERATED_RUN_DIRS = (
     "application-packets",
@@ -908,6 +914,14 @@ def run_stage0(
         "report_json": render_artifacts["report_json"],
     }
     write_json(out_dir / "run-receipt.json", receipt)
+    write_json(
+        out_dir / "receipt-consistency.json",
+        build_receipt_consistency(
+            run_dir=out_dir,
+            receipt=receipt,
+            manifest=report_manifest,
+        ),
+    )
     return receipt
 
 
@@ -925,6 +939,12 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
     accounting = manifest.get("artifact_accounting", {}) if manifest else {}
     artifact_reconciliation = _artifact_reconciliation(manifest or {})
     publication = _publication_status(run_dir, receipt)
+    receipt_consistency = build_receipt_consistency(
+        run_dir=run_dir,
+        receipt=receipt,
+        manifest=manifest or {},
+        publication=publication,
+    )
     action_worthy_total = int(accounting.get("action_worthy_total", 0))
     decided_total = len(projection.get("items", {}))
     source_receipts = (manifest or {}).get("source_receipts", [])
@@ -991,6 +1011,10 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
         "unresolved_decisions": max(action_worthy_total - decided_total, 0),
         "indeterminate_effect_state": False,
         "publication": publication,
+        "receipt_consistency": receipt_consistency,
+        "receipt_consistency_path": str(run_dir / "receipt-consistency.json")
+        if (run_dir / "receipt-consistency.json").exists()
+        else None,
         "report_html": receipt["report_html"],
         "external_effects": receipt["external_effects"],
     }
@@ -1091,6 +1115,221 @@ def _publication_status(run_dir: Path, receipt: dict[str, Any]) -> dict[str, Any
             "meetup_rsvp": "FORBIDDEN",
             "ats_submit": "FORBIDDEN",
         },
+    }
+
+
+def _publication_policy_value(publication: dict[str, Any], section: str, name: str) -> str:
+    value = publication.get(section, {}).get(name)
+    if value is None:
+        return "UNAVAILABLE"
+    return str(value)
+
+
+def _publication_state(
+    *,
+    destination: str,
+    policy: str,
+    effect_class: str,
+    status: str,
+    evidence_path: str = "",
+    evidence_field: str = "",
+    note: str = "",
+) -> dict[str, str]:
+    if effect_class not in PUBLICATION_EFFECT_CLASSES:
+        raise ValueError(f"invalid publication effect class: {effect_class}")
+    return {
+        "destination": destination,
+        "policy": policy,
+        "effect_class": effect_class,
+        "status": status,
+        "evidence_path": evidence_path,
+        "evidence_field": evidence_field,
+        "note": note,
+    }
+
+
+def _canonical_publication_states(
+    run_dir: Path, receipt: dict[str, Any], publication: dict[str, Any]
+) -> list[dict[str, str]]:
+    report_value = str(receipt.get("report_html") or "")
+    report_path = Path(report_value) if report_value else None
+    digest_path = run_dir / "morning-digest.json"
+    memory_path = run_dir / "memory-sync-receipt.json"
+    buzz_path = run_dir / "buzz-summary" / "buzz-summary-receipt.json"
+    tracker_policy = _publication_policy_value(publication, "separately_gated", "tracker")
+    ats_policy = _publication_policy_value(
+        publication, "separately_gated", "ats_selector_memory_write"
+    )
+    states = [
+        _publication_state(
+            destination="local_report",
+            policy=_publication_policy_value(publication, "publications", "local_report"),
+            effect_class="LOCAL_ARTIFACT_WRITTEN",
+            status="WRITTEN" if report_path and report_path.exists() else "MISSING",
+            evidence_path=str(report_path) if report_path and report_path.exists() else "",
+            evidence_field="receipt.report_html",
+            note="Local report artifact only; no external transmission.",
+        ),
+        _publication_state(
+            destination="digest",
+            policy=_publication_policy_value(publication, "publications", "digest"),
+            effect_class="LOCAL_ARTIFACT_WRITTEN",
+            status="WRITTEN" if digest_path.exists() else "NOT_ATTEMPTED",
+            evidence_path=str(digest_path) if digest_path.exists() else "",
+            evidence_field="morning-digest.json",
+            note="Local digest artifact, not a send/apply effect.",
+        ),
+        _publication_state(
+            destination="memory_summary",
+            policy=_publication_policy_value(publication, "publications", "memory_summary"),
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="WRITTEN" if memory_path.exists() else "NOT_ATTEMPTED",
+            evidence_path=str(memory_path) if memory_path.exists() else "",
+            evidence_field="memory-sync-receipt.json",
+            note="Internal Memory destination; external_effects remains false.",
+        ),
+        _publication_state(
+            destination="relationship_graph",
+            policy=_publication_policy_value(publication, "publications", "relationship_graph"),
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="WRITTEN" if memory_path.exists() else "NOT_ATTEMPTED",
+            evidence_path=str(memory_path) if memory_path.exists() else "",
+            evidence_field="memory-sync-receipt.relationship_readback_found",
+            note="Relationship graph is an internal Memory projection.",
+        ),
+        _publication_state(
+            destination="buzz_summary",
+            policy=_publication_policy_value(publication, "publications", "buzz_summary"),
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="WRITTEN" if buzz_path.exists() else "NOT_ATTEMPTED",
+            evidence_path=str(buzz_path) if buzz_path.exists() else "",
+            evidence_field="buzz-summary-receipt.posted",
+            note="Buzz uses legacy posted=true readback, classified here as an internal destination write.",
+        ),
+        _publication_state(
+            destination="prior_application_history",
+            policy=_publication_policy_value(
+                publication, "read_only_checks", "prior_application_history"
+            ),
+            effect_class="LOCAL_ARTIFACT_WRITTEN",
+            status="READ_ONLY_CHECK" if (run_dir / "discovery" / "application-history-receipt.json").exists() else "NOT_ATTEMPTED",
+            evidence_path=str(run_dir / "discovery" / "application-history-receipt.json")
+            if (run_dir / "discovery" / "application-history-receipt.json").exists()
+            else "",
+            evidence_field="application-history-receipt.json",
+            note="Read-only recall/check, not an application effect.",
+        ),
+        _publication_state(
+            destination="tracker",
+            policy=tracker_policy,
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="NOT_ATTEMPTED" if tracker_policy in {"SKIPPED", "UNAVAILABLE"} else "POLICY_ENABLED",
+            note="Private tracker writes are separately gated and skipped in Stage 0 cron.",
+        ),
+        _publication_state(
+            destination="ats_selector_memory_write",
+            policy=ats_policy,
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="NOT_ATTEMPTED" if ats_policy in {"SKIPPED", "UNAVAILABLE"} else "POLICY_ENABLED",
+            note="Selector memory writes are separately gated and skipped in Stage 0 cron.",
+        ),
+    ]
+    for destination in (
+        "gmail_send",
+        "gmail_schedule_send",
+        "gmail_forward",
+        "linkedin_action",
+        "meetup_rsvp",
+        "ats_submit",
+    ):
+        states.append(
+            _publication_state(
+                destination=destination,
+                policy=_publication_policy_value(publication, "forbidden_effects", destination),
+                effect_class=(
+                    "HUMAN_TRANSMITTED"
+                    if destination.startswith("gmail")
+                    else "EXTERNAL_SITE_MUTATED"
+                ),
+                status="FORBIDDEN",
+                note="Forbidden or human-only effect; monitor-opportunities did not perform it.",
+            )
+        )
+    return states
+
+
+def _count_required_nulls(value: Any) -> int:
+    if value is None:
+        return 1
+    if isinstance(value, dict):
+        return sum(_count_required_nulls(item) for item in value.values())
+    if isinstance(value, list):
+        return sum(_count_required_nulls(item) for item in value)
+    return 0
+
+
+def build_receipt_consistency(
+    *,
+    run_dir: Path,
+    receipt: dict[str, Any],
+    manifest: dict[str, Any],
+    publication: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    publication = publication or _publication_status(run_dir, receipt)
+    artifact_reconciliation = _artifact_reconciliation(manifest)
+    publication_states = _canonical_publication_states(run_dir, receipt, publication)
+    count_mismatches: list[dict[str, Any]] = []
+    if not artifact_reconciliation["ok"]:
+        count_mismatches.append(
+            {
+                "kind": "artifact_accounting",
+                "declared_action_worthy_total": artifact_reconciliation[
+                    "declared_action_worthy_total"
+                ],
+                "calculated_action_worthy_total": artifact_reconciliation[
+                    "calculated_action_worthy_total"
+                ],
+                "declared_visible_total": artifact_reconciliation["declared_visible_total"],
+                "calculated_visible_total": artifact_reconciliation["calculated_visible_total"],
+                "declared_hidden_total": artifact_reconciliation["declared_hidden_total"],
+                "calculated_hidden_total": artifact_reconciliation["calculated_hidden_total"],
+            }
+        )
+    required_payload = {
+        "run_id": receipt.get("run_id"),
+        "terminal_state": receipt.get("terminal_state"),
+        "external_effects": receipt.get("external_effects"),
+        "publication_mode": publication.get("mode"),
+        "artifact_accounting": {
+            "action_worthy_total": (manifest.get("artifact_accounting") or {}).get(
+                "action_worthy_total"
+            ),
+            "visible_total": (manifest.get("artifact_accounting") or {}).get("visible_total"),
+            "hidden_total": (manifest.get("artifact_accounting") or {}).get("hidden_total"),
+        },
+        "publication_states": publication_states,
+    }
+    required_nulls = _count_required_nulls(required_payload)
+    ambiguous_posted_fields = [
+        state["destination"]
+        for state in publication_states
+        if state["evidence_field"].endswith(".posted") and not state["effect_class"]
+    ]
+    status = "PASS" if required_nulls == 0 and not count_mismatches and not ambiguous_posted_fields else "FAIL"
+    return {
+        "schema": "monitor_opportunities.receipt_consistency.v1",
+        "status": status,
+        "run_id": receipt.get("run_id", ""),
+        "artifact_reconciliation": artifact_reconciliation,
+        "required_nulls": required_nulls,
+        "count_mismatches": len(count_mismatches),
+        "count_mismatch_details": count_mismatches,
+        "publication_state_vocabulary": list(PUBLICATION_EFFECT_CLASSES),
+        "publication_states": publication_states,
+        "ambiguous_posted_fields": ambiguous_posted_fields,
+        "external_effects": bool(receipt.get("external_effects", False)),
+        "mocked": False,
+        "live": bool(receipt.get("live", False)),
     }
 
 

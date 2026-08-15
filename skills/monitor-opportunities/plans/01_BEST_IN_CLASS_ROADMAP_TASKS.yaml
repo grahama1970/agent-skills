@@ -34,6 +34,21 @@ execution:
   max_concurrency: 1
   wave_barrier: true
   scheduling_policy: dependency_only
+  per_slice_review:
+    required: true
+    handler: webgpt
+    skill: ask
+    purpose: >
+      After each implementation slice passes its deterministic local command,
+      attach the slice diff, proof output, and updated project-state summary to a
+      real /ask Tau webgpt run. Treat the review as advisory drift detection;
+      local deterministic receipts remain the closure authority.
+    required_artifacts:
+      - slice_review_bundle.md
+      - ask run_dir
+      - node-artifacts/handler-webgpt/node-receipt.json
+      - node-artifacts/handler-webgpt/response.md
+      - node-artifacts/join/node-receipt.json when present
   operator_note: >
     These tasks are ordered acceptance gates for project-agent implementation. The
     project agent edits the named monitor-opportunities files between gates; the local
@@ -134,6 +149,14 @@ tasks:
       - Reconcile run-status wrapper counts with the report manifest counts and artifact_accounting.
       - Make nullable publication fields explicit when Stage 0 is diagnostic or publication is unavailable.
       - Preserve the invariant that action_worthy_total equals visible_total and hidden_total is zero.
+      - Emit monitor_opportunities.receipt_consistency.v1 with required_nulls, count_mismatches, and classified publication states.
+    post_slice_review:
+      required: true
+      command_shape: >
+        cd skills/ask && ./run.sh tau-dag "<MO-ROAD-01 review request>" --repo grahama1970/agent-skills
+        --target monitor-opportunities-mo-road-01-drift --immutable-goal
+        "Check MO-ROAD-01 implementation evidence and project drift; return PASS, FAIL, or NEEDS_ATTENTION with concrete blockers."
+        --handler webgpt --execute --json --attach-file <slice_review_bundle.md>
     read_context:
       - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
       - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py

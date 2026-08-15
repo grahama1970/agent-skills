@@ -149,8 +149,39 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
                 '{"schema":"report","opportunities":[]}\n', encoding="utf-8"
             )
             (out / "report" / "index.html").write_text("<html></html>\n", encoding="utf-8")
+            (out / "report-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "artifact_accounting": {
+                            "action_worthy_total": 0,
+                            "visible_total": 0,
+                            "hidden_total": 0,
+                        },
+                        "opportunities": [],
+                        "source_intel": [],
+                        "resume_variants": [],
+                        "outreach_packets": [],
+                        "applications": [],
+                        "application_packets": [],
+                        "relationship_signals": [],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             (out / "run-receipt.json").write_text(
-                '{"external_effects":false,"degraded_contracts":[]}\n', encoding="utf-8"
+                json.dumps(
+                    {
+                        "run_id": "test-run",
+                        "terminal_state": "AWAITING_HUMAN",
+                        "external_effects": False,
+                        "degraded_contracts": [],
+                        "live": True,
+                        "report_html": str(out / "report" / "index.html"),
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         if action == "memory-sync":
@@ -200,6 +231,18 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert Path(payload["artifacts"]["memory"]).is_file()
     assert Path(payload["artifacts"]["buzz"]).is_file()
     assert Path(payload["artifacts"]["tau_semantic_prepare"]).is_file()
+    assert Path(payload["artifacts"]["receipt_consistency"]).is_file()
+    assert payload["receipt_consistency_status"] == "PASS"
+    consistency = json.loads(Path(payload["artifacts"]["receipt_consistency"]).read_text())
+    assert consistency["schema"] == "monitor_opportunities.receipt_consistency.v1"
+    assert consistency["required_nulls"] == 0
+    assert consistency["count_mismatches"] == 0
+    states = {row["destination"]: row for row in consistency["publication_states"]}
+    assert states["memory_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
+    assert states["memory_summary"]["status"] == "WRITTEN"
+    assert states["buzz_summary"]["evidence_field"] == "buzz-summary-receipt.posted"
+    assert states["buzz_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
+    assert states["buzz_summary"]["status"] == "WRITTEN"
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
     assert payload["steps"]["tau_semantic"]["selected_count"] == 1
     assert payload["steps"]["tau_semantic"]["provider_live"] is False

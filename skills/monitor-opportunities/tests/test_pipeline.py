@@ -130,6 +130,20 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     assert payload["artifact_reconciliation"]["declared_action_worthy_total"] == (
         payload["artifact_reconciliation"]["calculated_action_worthy_total"]
     )
+    assert payload["receipt_consistency"]["schema"] == "monitor_opportunities.receipt_consistency.v1"
+    assert payload["receipt_consistency"]["status"] == "PASS"
+    assert payload["receipt_consistency"]["required_nulls"] == 0
+    assert payload["receipt_consistency"]["count_mismatches"] == 0
+    assert payload["receipt_consistency"]["ambiguous_posted_fields"] == []
+    assert Path(payload["receipt_consistency_path"]).is_file()
+    publication_states = {
+        row["destination"]: row for row in payload["receipt_consistency"]["publication_states"]
+    }
+    assert publication_states["local_report"]["effect_class"] == "LOCAL_ARTIFACT_WRITTEN"
+    assert publication_states["local_report"]["status"] == "WRITTEN"
+    assert publication_states["memory_summary"]["policy"] == "UNAVAILABLE"
+    assert publication_states["buzz_summary"]["status"] == "NOT_ATTEMPTED"
+    assert publication_states["meetup_rsvp"]["policy"] == "FORBIDDEN"
     assert payload["artifact_counts"]["opportunities"] == len(manifest["opportunities"])
     assert payload["artifact_counts"]["source_intel"] == len(manifest["source_intel"])
     assert payload["artifact_counts"]["resume_variants"] == len(manifest["resume_variants"])
@@ -269,6 +283,35 @@ def test_status_exposes_diagnostic_publication_receipt(tmp_path: Path) -> None:
     assert payload["publication"]["publications"]["buzz_summary"] == "SKIPPED"
     assert payload["publication"]["separately_gated"]["tracker"] == "SKIPPED"
     assert payload["publication"]["separately_gated"]["ats_selector_memory_write"] == "SKIPPED"
+    states = {row["destination"]: row for row in payload["receipt_consistency"]["publication_states"]}
+    assert states["buzz_summary"]["policy"] == "SKIPPED"
+    assert states["tracker"]["policy"] == "SKIPPED"
+    assert states["ats_selector_memory_write"]["status"] == "NOT_ATTEMPTED"
+    assert payload["receipt_consistency"]["required_nulls"] == 0
+    assert payload["receipt_consistency"]["count_mismatches"] == 0
+
+
+def test_status_receipt_consistency_detects_manifest_count_mismatch(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    manifest_path = out / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artifact_accounting"]["action_worthy_total"] += 1
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    status = runner.invoke(app, ["status", "--run", str(out), "--json"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.stdout)
+    assert payload["receipt_consistency"]["status"] == "FAIL"
+    assert payload["receipt_consistency"]["count_mismatches"] == 1
+    mismatch = payload["receipt_consistency"]["count_mismatch_details"][0]
+    assert mismatch["kind"] == "artifact_accounting"
+    assert mismatch["declared_action_worthy_total"] == (
+        mismatch["calculated_action_worthy_total"] + 1
+    )
 
 
 def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path: Path) -> None:
