@@ -273,12 +273,17 @@ class ApplicationPacket(StrictModel):
 
 
 class RelationshipSignal(StrictModel):
+    schema_name: str = Field(default="monitor_opportunities.relationship_candidate.v1", alias="schema")
     signal_id: str
     source_opportunity_id: str
     signal_type: str
     subject: str
     organization: str
     relationship_path: list[str] = Field(min_length=2)
+    relationship_degree: int = Field(default=2, ge=1, le=3)
+    degree_label: str = "second_degree"
+    confidence: float = Field(default=0.5, ge=0, le=1)
+    confidence_reasons: list[str] = Field(default_factory=lambda: ["relationship candidate confidence not supplied"])
     evidence_refs: list[str]
     source_receipt_ids: list[str]
     provenance: str
@@ -288,6 +293,10 @@ class RelationshipSignal(StrictModel):
     contact_channel_risk: str
     preferred_human_channels: list[str] = Field(min_length=1)
     channel_guidance: list[str] = Field(min_length=1)
+    human_decision_options: list[str] = Field(
+        default_factory=lambda: ["RECONNECT", "DEFER", "ATTEND", "WATCH", "SKIP"],
+        min_length=1,
+    )
     external_effects: bool
     action_worthy: bool
     visible_in_report: bool

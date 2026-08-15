@@ -1,7 +1,16 @@
 """Contact-change detection: role/org moves and project wins become vendor leads."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+from jsonschema import Draft202012Validator
+
 from monitor_opportunities import contact_changes as cc
+
+RELATIONSHIP_CANDIDATE_SCHEMA = Path(
+    "skills/monitor-opportunities/schemas/relationship-candidate.schema.json"
+)
 
 
 def test_memory_recall_arcos_contacts_become_linkedin_first_relationship_signals(
@@ -41,6 +50,11 @@ def test_memory_recall_arcos_contacts_become_linkedin_first_relationship_signals
     assert all(csv_path.as_uri() in signal["evidence_refs"] for signal in signals)
     assert all(signal["memory_recall_found"] is True for signal in signals)
     assert all(signal["memory_recall_degraded"] is False for signal in signals)
+    assert signals[0]["schema"] == "monitor_opportunities.relationship_candidate.v1"
+    assert signals[0]["relationship_degree"] == 1
+    assert signals[0]["degree_label"] == "direct"
+    assert 0 < signals[0]["confidence"] <= 1
+    assert "RECONNECT" in signals[0]["human_decision_options"]
 
 
 def test_arcos_contact_csv_keeps_relationship_signals_when_memory_recall_misses(
@@ -76,6 +90,7 @@ def test_arcos_contact_csv_keeps_relationship_signals_when_memory_recall_misses(
     assert all(csv_path.as_uri() in signal["evidence_refs"] for signal in signals)
     assert all("Memory recall did not return this seed" in signal["provenance"] for signal in signals)
     assert all(signal["external_effects"] is False for signal in signals)
+    assert all(signal["confidence"] < 0.85 for signal in signals)
 
 
 def test_contact_key_is_stable_across_org_moves() -> None:
@@ -172,6 +187,15 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert all("LINKEDIN_HUMAN_HANDOFF" in row["preferred_human_channels"] for row in signals)
     assert all("AUTHORIZED_PERSONA_GMAIL" in row["preferred_human_channels"] for row in signals)
     assert all(any("Corporate email may be blocked" in item for item in row["channel_guidance"]) for row in signals)
+    validator = Draft202012Validator(json.loads(RELATIONSHIP_CANDIDATE_SCHEMA.read_text()))
+    for signal in signals:
+        validator.validate(signal)
+    direct = next(row for row in signals if row["subject"] == "William Brad Martin")
+    adjacent = next(row for row in signals if row["subject"] == "Eric Mertens")
+    assert direct["relationship_degree"] == 1
+    assert direct["degree_label"] == "direct"
+    assert adjacent["relationship_degree"] == 2
+    assert adjacent["degree_label"] == "second_degree"
 
 
 def test_relationship_signals_attach_to_opportunities_by_exact_id_and_unique_org() -> None:

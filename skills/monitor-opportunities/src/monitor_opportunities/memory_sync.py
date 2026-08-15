@@ -87,6 +87,8 @@ def morning_documents(
             [
                 f"Relationship signal for {subject} at {org}.",
                 f"Type: {signal.get('signal_type')}.",
+                f"Degree: {signal.get('degree_label')} ({signal.get('relationship_degree')}).",
+                f"Confidence: {signal.get('confidence')}.",
                 "Path: " + " -> ".join(str(item) for item in path),
                 f"Provenance: {signal.get('provenance')}.",
                 f"Recommended local action: {signal.get('recommended_action')}.",
@@ -114,9 +116,14 @@ def morning_documents(
                 "organization": org,
                 "signal_type": signal.get("signal_type"),
                 "relationship_path": path,
+                "relationship_degree": signal.get("relationship_degree"),
+                "degree_label": signal.get("degree_label"),
+                "confidence": signal.get("confidence"),
+                "confidence_reasons": signal.get("confidence_reasons", []),
                 "contact_channel_risk": signal.get("contact_channel_risk"),
                 "preferred_human_channels": signal.get("preferred_human_channels", []),
                 "channel_guidance": signal.get("channel_guidance", []),
+                "human_decision_options": signal.get("human_decision_options", []),
                 "relationship_graph": {
                     "nodes": [
                         {"id": str(node).lower().replace(" ", "-"), "label": str(node)}

@@ -49,6 +49,10 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
             "subject": "Eric Mertens",
             "organization": "Galois, Inc.",
             "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+            "relationship_degree": 2,
+            "degree_label": "second_degree",
+            "confidence": 0.65,
+            "confidence_reasons": ["adjacent_contact path", "source evidence present"],
             "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
             "source_receipt_ids": ["src:galois:team"],
             "provenance": "Adjacent ARCOS/formal-methods contact path",
@@ -56,6 +60,7 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
             "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
             "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
             "channel_guidance": ["Corporate email may be blocked after a long gap."],
+            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
             "external_effects": False,
             "action_worthy": True,
             "visible_in_report": True,
@@ -67,6 +72,12 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
     assert "monitor-contacts" in graph_doc["tags"]
     assert graph_doc["relationship_graph"]["nodes"]
     assert graph_doc["relationship_graph"]["edges"]
+    assert graph_doc["relationship_degree"] == 2
+    assert graph_doc["degree_label"] == "second_degree"
+    assert graph_doc["confidence"] == 0.65
+    assert "source evidence present" in graph_doc["confidence_reasons"]
+    assert "RECONNECT" in graph_doc["human_decision_options"]
+    assert "Degree: second_degree (2)." in graph_doc["text"]
     assert graph_doc["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap"
     assert "AUTHORIZED_PERSONA_GMAIL" in graph_doc["preferred_human_channels"]
     assert "Eric Mertens" in graph_doc["text"]
@@ -83,6 +94,10 @@ def test_relationship_signals_can_be_excluded_from_memory_documents() -> None:
             "subject": "Eric Mertens",
             "organization": "Galois, Inc.",
             "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
+            "relationship_degree": 2,
+            "degree_label": "second_degree",
+            "confidence": 0.65,
+            "confidence_reasons": ["adjacent_contact path", "source evidence present"],
             "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
             "source_receipt_ids": ["src:galois:team"],
             "provenance": "Adjacent ARCOS/formal-methods contact path",
@@ -90,6 +105,7 @@ def test_relationship_signals_can_be_excluded_from_memory_documents() -> None:
             "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
             "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
             "channel_guidance": ["Corporate email may be blocked after a long gap."],
+            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
             "external_effects": False,
             "action_worthy": True,
             "visible_in_report": True,

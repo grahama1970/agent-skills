@@ -288,6 +288,13 @@ DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE = [
     "Use an authorized persona Gmail address only when it is owned/approved, non-deceptive, and human-transmitted.",
     "Do not automate outreach, RSVP, LinkedIn messaging, or email sending from this signal.",
 ]
+HUMAN_RELATIONSHIP_DECISIONS = [
+    "RECONNECT",
+    "DEFER",
+    "ATTEND",
+    "WATCH",
+    "SKIP",
+]
 ARCOS_CONTACT_RECALL_QUERY = (
     "DARPA ARCOS contact network monitor-contacts LinkedIn reconnect persona Gmail "
     "corporate email blocked Galois GE SRI Lockheed STR Vanderbilt"
@@ -343,6 +350,43 @@ def _memory_evidence_refs(recall: dict[str, Any]) -> list[str]:
             seen.add(ref)
             out.append(ref)
     return out
+
+
+def _relationship_candidate_fields(
+    *,
+    signal_type: str,
+    relationship_path: list[str],
+    evidence_refs: list[str],
+    memory_recall_degraded: bool | None = None,
+) -> dict[str, Any]:
+    if signal_type == "direct_contact":
+        degree = 1
+        base_confidence = 0.85
+        reasons = ["direct monitor-contact relationship"]
+    elif signal_type in {"adjacent_contact", "organization_sponsor", "event_copresence"}:
+        degree = min(3, max(2, len(relationship_path) - 1))
+        base_confidence = 0.65 if signal_type == "adjacent_contact" else 0.55
+        reasons = [f"{signal_type} path"]
+    else:
+        degree = min(3, max(2, len(relationship_path) - 1))
+        base_confidence = 0.45
+        reasons = ["unrecognized relationship path type; kept for human review"]
+    if evidence_refs:
+        reasons.append("source evidence present")
+    else:
+        base_confidence -= 0.2
+        reasons.append("source evidence missing")
+    if memory_recall_degraded:
+        base_confidence -= 0.1
+        reasons.append("memory recall degraded")
+    return {
+        "schema": "monitor_opportunities.relationship_candidate.v1",
+        "relationship_degree": degree,
+        "degree_label": {1: "direct", 2: "second_degree", 3: "third_degree"}[degree],
+        "confidence": round(max(0.0, min(1.0, base_confidence)), 2),
+        "confidence_reasons": reasons,
+        "human_decision_options": list(HUMAN_RELATIONSHIP_DECISIONS),
+    }
 
 
 def arcos_contact_rows(path: Path | None = None) -> list[dict[str, str]]:
@@ -439,6 +483,12 @@ def relationship_signals_from_memory(
                 "external_effects": False,
                 "action_worthy": True,
                 "visible_in_report": True,
+                **_relationship_candidate_fields(
+                    signal_type=signal_type,
+                    relationship_path=["Graham Anderson", "DARPA ARCOS network", subject, org],
+                    evidence_refs=evidence_refs,
+                    memory_recall_degraded=not memory_recall_found,
+                ),
             }
         )
     return signals
@@ -497,6 +547,7 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                 recommended = "human_decide_attend_watch_or_skip"
             else:
                 recommended = "human_decide_reconnect_or_defer"
+            evidence = list(dict.fromkeys(evidence_refs))
             signals.append(
                 {
                     "signal_id": key,
@@ -505,7 +556,7 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                     "subject": subject,
                     "organization": org or subject,
                     "relationship_path": path,
-                    "evidence_refs": evidence_refs,
+                    "evidence_refs": evidence,
                     "source_receipt_ids": [source_receipt] if source_receipt else [],
                     "provenance": provenance,
                     "recommended_action": recommended,
@@ -515,6 +566,11 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                     "external_effects": False,
                     "action_worthy": True,
                     "visible_in_report": True,
+                    **_relationship_candidate_fields(
+                        signal_type=signal_type,
+                        relationship_path=path,
+                        evidence_refs=evidence,
+                    ),
                 }
             )
     return signals

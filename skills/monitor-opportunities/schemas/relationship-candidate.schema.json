@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama.co/schemas/monitor-opportunities/relationship-candidate-v1.json",
+  "title": "monitor-opportunities relationship candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "signal_id",
+    "source_opportunity_id",
+    "signal_type",
+    "subject",
+    "organization",
+    "relationship_path",
+    "relationship_degree",
+    "degree_label",
+    "confidence",
+    "confidence_reasons",
+    "evidence_refs",
+    "source_receipt_ids",
+    "provenance",
+    "recommended_action",
+    "contact_channel_risk",
+    "preferred_human_channels",
+    "channel_guidance",
+    "human_decision_options",
+    "external_effects",
+    "action_worthy",
+    "visible_in_report"
+  ],
+  "properties": {
+    "schema": { "const": "monitor_opportunities.relationship_candidate.v1" },
+    "signal_id": { "type": "string", "minLength": 1 },
+    "source_opportunity_id": { "type": "string", "minLength": 1 },
+    "signal_type": {
+      "enum": ["direct_contact", "adjacent_contact", "organization_sponsor", "event_copresence"]
+    },
+    "subject": { "type": "string", "minLength": 1 },
+    "organization": { "type": "string", "minLength": 1 },
+    "relationship_path": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "relationship_degree": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "degree_label": { "enum": ["direct", "second_degree", "third_degree"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "confidence_reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "source_receipt_ids": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "string", "minLength": 1 },
+    "memory_recall_found": { "type": ["boolean", "null"] },
+    "memory_recall_degraded": { "type": ["boolean", "null"] },
+    "recommended_action": {
+      "enum": ["human_decide_attend_watch_or_skip", "human_decide_reconnect_or_defer"]
+    },
+    "contact_channel_risk": {
+      "enum": ["corporate_email_may_be_blocked_after_long_gap"]
+    },
+    "preferred_human_channels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL", "VERIFIED_CURRENT_EMAIL"]
+      }
+    },
+    "channel_guidance": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "human_decision_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["RECONNECT", "DEFER", "ATTEND", "WATCH", "SKIP"] }
+    },
+    "external_effects": { "const": false },
+    "action_worthy": { "const": true },
+    "visible_in_report": { "const": true }
+  }
+}
