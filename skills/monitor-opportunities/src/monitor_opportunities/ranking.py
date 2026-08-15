@@ -109,7 +109,8 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     # date is NOT rejected (many boards omit dates — do not silently drop them).
     age = _posting_age_days(candidate)
     max_age = _max_age_days()
-    if age is not None and age > max_age:
+    github_source_intel = candidate.get("source_provider") == "github_repo_intelligence"
+    if age is not None and age > max_age and not github_source_intel:
         return "REJECT_STALE_AGE", [f"published {age:.0f}d ago (> {max_age}d window)"]
     # Role-type targeting: drop off-mandate roles (sales, admin, founder,
     # creative, below-floor) for real job postings. Federal (B) and commercial

@@ -158,6 +158,45 @@ def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> 
     assert sum(row["source_provider"] == "ops_linkedin_authorized_read_only" for row in source_intel) == 6
 
 
+def test_github_source_intel_is_not_rejected_by_job_posting_staleness(tmp_path: Path) -> None:
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "candidate_id": "github-source:old-repo",
+                        "lane": "C",
+                        "organization": "GitHub Repo Intel",
+                        "title": "rtinney1/OpenC3_Cosmos_cFS_CFDP GitHub repository intelligence",
+                        "workplace_type": "NOT_APPLICABLE",
+                        "location_display": "GitHub source-intel; delivery model not applicable",
+                        "fit_score": 0.58,
+                        "relocation_required": False,
+                        "clearance_required": False,
+                        "source_provider": "github_repo_intelligence",
+                        "source_receipt_id": "receipt:github",
+                        "published_at": "2024-01-01T00:00:00Z",
+                        "updated_at": "2024-01-02T00:00:00Z",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    rejections = json.loads((out / "rejections.json").read_text(encoding="utf-8"))
+    assert [row["candidate_id"] for row in source_intel] == ["github-source:old-repo"]
+    assert rejections == []
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["admitted_source_intel"] == 1
+
+
 def test_mandate_fit_dominates_geography_in_ranking(tmp_path: Path) -> None:
     candidates = [
         {
