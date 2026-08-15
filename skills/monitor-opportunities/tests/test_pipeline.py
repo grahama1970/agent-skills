@@ -126,12 +126,45 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
         "report": "READY",
     }
     assert payload["artifact_accounting"]["hidden_total"] == 0
+    assert payload["artifact_reconciliation"]["ok"] is True
+    assert payload["artifact_reconciliation"]["declared_action_worthy_total"] == (
+        payload["artifact_reconciliation"]["calculated_action_worthy_total"]
+    )
     assert payload["artifact_counts"]["opportunities"] == len(manifest["opportunities"])
+    assert payload["artifact_counts"]["source_intel"] == len(manifest["source_intel"])
     assert payload["artifact_counts"]["resume_variants"] == len(manifest["resume_variants"])
+    assert payload["artifact_counts"]["outreach_packets"] == len(manifest["outreach_packets"])
     assert payload["artifact_counts"]["application_packets"] == len(manifest["application_packets"])
     assert payload["artifact_counts"]["relationship_signals"] == len(
         manifest.get("relationship_signals", [])
     )
+    assert payload["publication"] == {
+        "mode": "UNAVAILABLE",
+        "effect_policy_receipt": None,
+        "external_effects": False,
+        "publications": {
+            "local_report": "ENABLED",
+            "digest": None,
+            "memory_summary": None,
+            "relationship_graph": None,
+            "buzz_summary": None,
+        },
+        "read_only_checks": {
+            "prior_application_history": None,
+        },
+        "separately_gated": {
+            "tracker": None,
+            "ats_selector_memory_write": None,
+        },
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
+    }
     degraded_receipts = [
         row
         for row in manifest["source_receipts"]
@@ -186,6 +219,56 @@ def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     )
     assert drifted.exit_code == 2
     assert "APPLICATION_PACKET_DRIFT" in drifted.stderr
+
+
+def test_status_exposes_diagnostic_publication_receipt(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    effect_policy = {
+        "schema": "monitor_opportunities.effect_policy_receipt.v1",
+        "mode": "DIAGNOSTIC",
+        "diagnostic": True,
+        "promoted_stage0": False,
+        "external_effects": False,
+        "publications": {
+            "local_report": "ENABLED",
+            "digest": "ENABLED",
+            "memory_summary": "ENABLED",
+            "relationship_graph": "ENABLED",
+            "buzz_summary": "SKIPPED",
+        },
+        "read_only_checks": {
+            "prior_application_history": "ENABLED",
+        },
+        "separately_gated": {
+            "tracker": "SKIPPED",
+            "ats_selector_memory_write": "SKIPPED",
+        },
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
+    }
+    (out / "effect-policy-receipt.json").write_text(json.dumps(effect_policy), encoding="utf-8")
+
+    status = runner.invoke(app, ["status", "--run", str(out), "--json"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.stdout)
+    assert payload["publication"]["mode"] == "DIAGNOSTIC"
+    assert payload["publication"]["effect_policy_receipt"] == str(
+        out / "effect-policy-receipt.json"
+    )
+    assert payload["publication"]["external_effects"] is False
+    assert payload["publication"]["publications"]["buzz_summary"] == "SKIPPED"
+    assert payload["publication"]["separately_gated"]["tracker"] == "SKIPPED"
+    assert payload["publication"]["separately_gated"]["ats_selector_memory_write"] == "SKIPPED"
 
 
 def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path: Path) -> None:

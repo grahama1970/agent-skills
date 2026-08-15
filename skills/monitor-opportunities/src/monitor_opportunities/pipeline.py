@@ -923,6 +923,8 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
     completed_at = receipt.get("completed_at")
     current_stale = _is_stale(completed_at)
     accounting = manifest.get("artifact_accounting", {}) if manifest else {}
+    artifact_reconciliation = _artifact_reconciliation(manifest or {})
+    publication = _publication_status(run_dir, receipt)
     action_worthy_total = int(accounting.get("action_worthy_total", 0))
     decided_total = len(projection.get("items", {}))
     source_receipts = (manifest or {}).get("source_receipts", [])
@@ -971,8 +973,10 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
         },
         "budget": receipt.get("budget", {}),
         "artifact_accounting": accounting,
+        "artifact_reconciliation": artifact_reconciliation,
         "artifact_counts": {
             "opportunities": len((manifest or {}).get("opportunities", [])),
+            "source_intel": len((manifest or {}).get("source_intel", [])),
             "resume_variants": len((manifest or {}).get("resume_variants", [])),
             "outreach_packets": len((manifest or {}).get("outreach_packets", [])),
             "applications": len((manifest or {}).get("applications", [])),
@@ -986,8 +990,107 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
         },
         "unresolved_decisions": max(action_worthy_total - decided_total, 0),
         "indeterminate_effect_state": False,
+        "publication": publication,
         "report_html": receipt["report_html"],
         "external_effects": receipt["external_effects"],
+    }
+
+
+def _raw_artifact_rows(manifest: dict[str, Any]) -> list[tuple[str, bool, bool]]:
+    rows: list[tuple[str, bool, bool]] = []
+    sections = (
+        ("opportunities", "opportunity_id"),
+        ("source_intel", "signal_id"),
+        ("resume_variants", "variant_id"),
+        ("outreach_packets", "packet_id"),
+        ("applications", "application_id"),
+        ("application_packets", "packet_id"),
+        ("relationship_signals", "signal_id"),
+    )
+    for section, id_field in sections:
+        for item in manifest.get(section, []):
+            if not isinstance(item, dict):
+                continue
+            rows.append(
+                (
+                    str(item.get(id_field, "unknown")),
+                    bool(item.get("action_worthy", False)),
+                    bool(item.get("visible_in_report", False)),
+                )
+            )
+    return rows
+
+
+def _artifact_reconciliation(manifest: dict[str, Any]) -> dict[str, Any]:
+    accounting = manifest.get("artifact_accounting", {}) if manifest else {}
+    rows = _raw_artifact_rows(manifest)
+    action_worthy_rows = [row for row in rows if row[1]]
+    visible_action_worthy_rows = [row for row in action_worthy_rows if row[2]]
+    hidden_ids = [artifact_id for artifact_id, _, visible in action_worthy_rows if not visible]
+    declared_action_worthy = int(accounting.get("action_worthy_total", 0))
+    declared_visible = int(accounting.get("visible_total", 0))
+    declared_hidden = int(accounting.get("hidden_total", 0))
+    return {
+        "semantics": (
+            "visible_total counts action-worthy report-visible artifacts, not all visible rows"
+        ),
+        "declared_action_worthy_total": declared_action_worthy,
+        "calculated_action_worthy_total": len(action_worthy_rows),
+        "declared_visible_total": declared_visible,
+        "calculated_visible_total": len(visible_action_worthy_rows),
+        "declared_hidden_total": declared_hidden,
+        "calculated_hidden_total": len(hidden_ids),
+        "hidden_ids": hidden_ids,
+        "ok": (
+            declared_action_worthy == len(action_worthy_rows)
+            and declared_visible == len(visible_action_worthy_rows)
+            and declared_hidden == 0
+            and not hidden_ids
+        ),
+    }
+
+
+def _publication_status(run_dir: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    effect_policy_path = run_dir / "effect-policy-receipt.json"
+    if effect_policy_path.exists():
+        policy = read_json(effect_policy_path)
+        return {
+            "mode": policy.get("mode", "UNKNOWN"),
+            "effect_policy_receipt": str(effect_policy_path),
+            "external_effects": bool(
+                policy.get("external_effects", receipt.get("external_effects", False))
+            ),
+            "publications": policy.get("publications", {}),
+            "read_only_checks": policy.get("read_only_checks", {}),
+            "separately_gated": policy.get("separately_gated", {}),
+            "forbidden_effects": policy.get("forbidden_effects", {}),
+        }
+    return {
+        "mode": "UNAVAILABLE",
+        "effect_policy_receipt": None,
+        "external_effects": bool(receipt.get("external_effects", False)),
+        "publications": {
+            "local_report": "ENABLED" if receipt.get("report_html") else "MISSING",
+            "digest": None,
+            "memory_summary": None,
+            "relationship_graph": None,
+            "buzz_summary": None,
+        },
+        "read_only_checks": {
+            "prior_application_history": None,
+        },
+        "separately_gated": {
+            "tracker": None,
+            "ats_selector_memory_write": None,
+        },
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
     }
 
 
