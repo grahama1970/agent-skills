@@ -1,0 +1,587 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main
+
+metadata:
+  title: Monitor Opportunities Best-In-Class Roadmap
+  created: "2026-08-15"
+  owner: monitor-opportunities
+  plan_type: code
+  primary_persona:
+    name: Graham Anderson
+    role: Candidate, consultant, and human approver for opportunity actions
+    source: skills/monitor-opportunities/SKILL.md
+  goal: >
+    Turn monitor-opportunities into a dependable Stage 0 leads and opportunity generator
+    for human-agent collaboration: small ranked opportunity sets, source-grounded
+    relationship paths, claim-bound resume variants, no external effects without exact
+    human authorization, and a morning report that is the single source of truth.
+  immutable_goal: >
+    Daily top opportunities that are highly targeted, delivered in an interactive
+    report/interview, with human-authorized application preparation using a custom
+    targeted resume given the algorithm likely employed by the employer or client.
+  roadmap_source:
+    webgpt_response: /mnt/storage12tb/skills/ask/outputs/monitor-opportunities-best-in-class-roadmap-20260815/ask-tau-review-the-attached-monitor-oppo-5b371f8d40e3/node-artifacts/handler-webgpt/response.md
+    governance_report: /mnt/storage12tb/skills/governance/reports/8e561829c30c47a3/20260815T150702Z/report.json
+  readiness_definition: >
+    Stage 0 readiness means the cron path can run without external effects, produces a
+    validated report manifest and HTML report, truthfully reports degraded or skipped
+    sources, exposes all action-worthy artifacts in the report, preserves relationship
+    evidence for human LinkedIn/Gmail handoff decisions, and emits deterministic receipts
+    that create-report or another project agent can consume.
+
+execution:
+  max_concurrency: 1
+  wave_barrier: true
+  scheduling_policy: dependency_only
+  operator_note: >
+    These tasks are ordered acceptance gates for project-agent implementation. The
+    project agent edits the named monitor-opportunities files between gates; the local
+    commands prove each slice. Promotion gates are intentionally excluded from automatic
+    execution because Stage 0 forbids external effects without human authorization.
+
+capability_overlap:
+  memory_recall:
+    command: >
+      ./skills/memory/run.sh recall --q "create full YAML plan and implement WebGPT
+      roadmap recommendations for monitor-opportunities best-in-class human-agent
+      opportunity generator" --brief
+    result: >
+      Attempted on 2026-08-15 and timed out after 30 seconds against 127.0.0.1:8601.
+      The plan therefore records Memory integration requirements from the current
+      skill contract and WebGPT review rather than claiming fresh recall evidence.
+  existing_skills:
+    memory: CALL for governed BM25, semantic, and graph recall; do not use raw ArangoDB.
+    monitor-contacts: CALL for direct and adjacent relationship evidence.
+    brave-search: CALL for primary source and company/event discovery.
+    surf: CALL for read-only browser capture when APIs fail or human-supplied tabs exist.
+    ask: CALL for WebGPT and roundtable review artifacts.
+    scheduler: CALL only after deterministic pre-cron gates pass.
+    agentic-evals: CALL for deterministic admission checks before cron.
+    create-report: CALL by downstream agents against the report manifest; this skill must emit stable report artifacts.
+  extend_existing:
+    - skills/monitor-opportunities/src/monitor_opportunities
+    - skills/monitor-opportunities/tests
+    - skills/monitor-opportunities/schemas
+    - skills/monitor-opportunities/config
+  create_only_when_needed:
+    - relationship_candidate.v1 schema or fixture if the existing report schema cannot express degree-grounded contact paths.
+    - screening_interface_profile.v1 fixture additions if existing profile fields lack required evidence and limitations.
+
+questions_blockers: []
+
+non_negotiable_constraints:
+  - No auto-apply, no auto-submit, no auto-send, no LinkedIn automation, no Meetup RSVP automation.
+  - Every action-worthy artifact must have visible_in_report true and hidden_total must be zero.
+  - Meetup evidence is supplemental only; it must not admit an opportunity by itself.
+  - Corporate email may be stale or blocked; prefer human LinkedIn handoff when source evidence supports it.
+  - A source API failure must fall back to read-only website capture or fail with an explicit degraded receipt.
+  - A model or reviewer claim is not proof; local schema, tests, receipts, and run artifacts are proof.
+  - Capability promotions are separate, explicit, receipt-bound, revocable, and human-authorized.
+
+lanes:
+  - id: "0"
+    label: Planning and baseline
+  - id: "1"
+    label: Cron-safe source-of-truth report
+  - id: "2"
+    label: Relationship and memory intelligence
+  - id: "3"
+    label: Meetup, screening, and human decisions
+  - id: "4"
+    label: Pre-cron admission
+
+tasks:
+  - id: MO-ROAD-00
+    title: Preserve the accepted roadmap and baseline receipts
+    lane: "0"
+    runner: local
+    gate: Roadmap YAML, governance report, and WebGPT response receipt are present and non-empty.
+    depends_on: []
+    skills:
+      - monitor-opportunities
+      - governance
+      - ask
+    implementation:
+      - Keep this YAML plan, the WebGPT response receipt, and governance report path together as the roadmap baseline.
+      - Do not alter capability policy or promotion gates while implementing Stage 0 repair slices.
+    command: >
+      test -s skills/monitor-opportunities/plans/01_BEST_IN_CLASS_ROADMAP_TASKS.yaml &&
+      test -s /mnt/storage12tb/skills/governance/reports/8e561829c30c47a3/20260815T150702Z/report.json &&
+      test -s /mnt/storage12tb/skills/ask/outputs/monitor-opportunities-best-in-class-roadmap-20260815/ask-tau-review-the-attached-monitor-oppo-5b371f8d40e3/node-artifacts/handler-webgpt/response.md
+    tests:
+      - >
+        test -s skills/monitor-opportunities/plans/01_BEST_IN_CLASS_ROADMAP_TASKS.yaml &&
+        test -s /mnt/storage12tb/skills/governance/reports/8e561829c30c47a3/20260815T150702Z/report.json &&
+        test -s /mnt/storage12tb/skills/ask/outputs/monitor-opportunities-best-in-class-roadmap-20260815/ask-tau-review-the-attached-monitor-oppo-5b371f8d40e3/node-artifacts/handler-webgpt/response.md
+    definition_of_done:
+      command: >
+        test -s skills/monitor-opportunities/plans/01_BEST_IN_CLASS_ROADMAP_TASKS.yaml &&
+        test -s /mnt/storage12tb/skills/governance/reports/8e561829c30c47a3/20260815T150702Z/report.json &&
+        test -s /mnt/storage12tb/skills/ask/outputs/monitor-opportunities-best-in-class-roadmap-20260815/ask-tau-review-the-attached-monitor-oppo-5b371f8d40e3/node-artifacts/handler-webgpt/response.md
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-01
+    title: Normalize wrapper counts, nullability, and publication semantics
+    lane: "1"
+    runner: local
+    gate: Run-status wrapper counts and publication fields reconcile with manifest artifact accounting.
+    depends_on:
+      - MO-ROAD-00
+    skills:
+      - monitor-opportunities
+    implementation:
+      - Reconcile run-status wrapper counts with the report manifest counts and artifact_accounting.
+      - Make nullable publication fields explicit when Stage 0 is diagnostic or publication is unavailable.
+      - Preserve the invariant that action_worthy_total equals visible_total and hidden_total is zero.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/tests/test_visibility_accounting.py
+      - skills/monitor-opportunities/tests/test_pipeline.py
+      - skills/monitor-opportunities/tests/test_scheduler.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/tests/test_visibility_accounting.py
+      - skills/monitor-opportunities/tests/test_pipeline.py
+      - skills/monitor-opportunities/tests/test_scheduler.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_visibility_accounting.py skills/monitor-opportunities/tests/test_pipeline.py skills/monitor-opportunities/tests/test_scheduler.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_visibility_accounting.py skills/monitor-opportunities/tests/test_pipeline.py skills/monitor-opportunities/tests/test_scheduler.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_visibility_accounting.py skills/monitor-opportunities/tests/test_pipeline.py skills/monitor-opportunities/tests/test_scheduler.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-02
+    title: Add pinned scheduler equivalence and zero-effect replay
+    lane: "1"
+    runner: local
+    gate: Scheduler command, promoted Stage 0 run, and replay path prove zero external effects.
+    depends_on:
+      - MO-ROAD-01
+    skills:
+      - monitor-opportunities
+      - scheduler
+    implementation:
+      - Prove the 2am cron command is equivalent to the promoted Stage 0 run path.
+      - Add replay checks that rebuild the projection without external effects.
+      - Ensure diagnostic mode and promoted Stage 0 mode are distinguishable in receipts.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/src/monitor_opportunities/run_attestation.py
+      - skills/monitor-opportunities/tests/test_scheduler.py
+      - skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py
+      - skills/monitor-opportunities/tests/test_decisions.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/src/monitor_opportunities/run_attestation.py
+      - skills/monitor-opportunities/tests/test_scheduler.py
+      - skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py
+      - skills/monitor-opportunities/tests/test_decisions.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_scheduler.py skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py skills/monitor-opportunities/tests/test_decisions.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_scheduler.py skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py skills/monitor-opportunities/tests/test_decisions.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_scheduler.py skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py skills/monitor-opportunities/tests/test_decisions.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-03
+    title: Gate every visible proposition on accepted source evidence
+    lane: "1"
+    runner: local
+    gate: Every report-visible proposition cites accepted source evidence or a visible degraded-source receipt.
+    depends_on:
+      - MO-ROAD-02
+    skills:
+      - monitor-opportunities
+      - brave-search
+      - surf
+    implementation:
+      - Require admitted opportunities, relationship signals, and report-visible claims to cite accepted source receipts.
+      - Keep degraded source states visible and distinct from no-match states.
+      - Preserve website fallback enforcement for required API failures.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/prepublish_contract.py
+      - skills/monitor-opportunities/src/monitor_opportunities/discovery.py
+      - skills/monitor-opportunities/src/monitor_opportunities/required_source_receipts.py
+      - skills/monitor-opportunities/tests/test_source_admission.py
+      - skills/monitor-opportunities/tests/test_required_sources.py
+      - skills/monitor-opportunities/tests/test_content_trust.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/prepublish_contract.py
+      - skills/monitor-opportunities/src/monitor_opportunities/discovery.py
+      - skills/monitor-opportunities/src/monitor_opportunities/required_source_receipts.py
+      - skills/monitor-opportunities/tests/test_source_admission.py
+      - skills/monitor-opportunities/tests/test_required_sources.py
+      - skills/monitor-opportunities/tests/test_content_trust.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_source_admission.py skills/monitor-opportunities/tests/test_required_sources.py skills/monitor-opportunities/tests/test_content_trust.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_source_admission.py skills/monitor-opportunities/tests/test_required_sources.py skills/monitor-opportunities/tests/test_content_trust.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_source_admission.py skills/monitor-opportunities/tests/test_required_sources.py skills/monitor-opportunities/tests/test_content_trust.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-04
+    title: Replay prior-application, alias dedup, ledger, and visibility invariants
+    lane: "1"
+    runner: local
+    gate: Prior applications, aliases, ledger counts, and downstream artifact visibility replay deterministically.
+    depends_on:
+      - MO-ROAD-03
+    skills:
+      - monitor-opportunities
+    implementation:
+      - Make prior application state, organization aliases, and canonical candidate IDs deterministic during ranking.
+      - Ensure rejected, accepted, deduplicated, and eligible-not-shortlisted ledger counts reconcile.
+      - Keep downstream artifacts bound only to report-visible opportunities.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/application_history.py
+      - skills/monitor-opportunities/src/monitor_opportunities/stage_ledger.py
+      - skills/monitor-opportunities/src/monitor_opportunities/ranking.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/tests/test_application_history.py
+      - skills/monitor-opportunities/tests/test_stage_ledger.py
+      - skills/monitor-opportunities/tests/test_visibility_accounting.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/application_history.py
+      - skills/monitor-opportunities/src/monitor_opportunities/stage_ledger.py
+      - skills/monitor-opportunities/src/monitor_opportunities/ranking.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/tests/test_application_history.py
+      - skills/monitor-opportunities/tests/test_stage_ledger.py
+      - skills/monitor-opportunities/tests/test_visibility_accounting.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_application_history.py skills/monitor-opportunities/tests/test_stage_ledger.py skills/monitor-opportunities/tests/test_visibility_accounting.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_application_history.py skills/monitor-opportunities/tests/test_stage_ledger.py skills/monitor-opportunities/tests/test_visibility_accounting.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_application_history.py skills/monitor-opportunities/tests/test_stage_ledger.py skills/monitor-opportunities/tests/test_visibility_accounting.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-05
+    title: Define relationship_candidate.v1 and degree-grounded contact paths
+    lane: "2"
+    runner: local
+    gate: Relationship candidates expose degree-grounded contact paths with evidence, confidence, and channel guidance.
+    depends_on:
+      - MO-ROAD-04
+    skills:
+      - monitor-opportunities
+      - monitor-contacts
+    implementation:
+      - Represent direct, second-degree, and third-degree contact paths with source evidence, confidence, and channel guidance.
+      - Preserve ARCOS, formal-methods, DARPA, company sponsor, role move, and event co-presence signals.
+      - Keep relationship candidates report-visible and non-authorizing for outreach.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py
+      - skills/monitor-opportunities/src/monitor_opportunities/memory_sync.py
+      - skills/monitor-opportunities/schemas/report.schema.json
+      - skills/monitor-opportunities/tests/test_contact_changes.py
+      - skills/monitor-opportunities/tests/test_contracts.py
+      - skills/monitor-opportunities/tests/test_memory_sync.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py
+      - skills/monitor-opportunities/src/monitor_opportunities/memory_sync.py
+      - skills/monitor-opportunities/schemas/report.schema.json
+      - skills/monitor-opportunities/schemas/relationship-candidate.schema.json
+      - skills/monitor-opportunities/tests/test_contact_changes.py
+      - skills/monitor-opportunities/tests/test_contracts.py
+      - skills/monitor-opportunities/tests/test_memory_sync.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_contact_changes.py skills/monitor-opportunities/tests/test_contracts.py skills/monitor-opportunities/tests/test_memory_sync.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_contact_changes.py skills/monitor-opportunities/tests/test_contracts.py skills/monitor-opportunities/tests/test_memory_sync.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_contact_changes.py skills/monitor-opportunities/tests/test_contracts.py skills/monitor-opportunities/tests/test_memory_sync.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-06
+    title: Add batched governed BM25, graph, and semantic Memory recall
+    lane: "2"
+    runner: local
+    gate: Memory recall is batched and governed, with timeout degradation recorded instead of raw database fallback.
+    depends_on:
+      - MO-ROAD-05
+    skills:
+      - monitor-opportunities
+      - memory
+      - monitor-contacts
+    implementation:
+      - Batch Memory recall requests for target organizations, prior projects, known contacts, and relationship candidates.
+      - Record degraded Memory state when recall times out, without falling back to raw database reads.
+      - Attach recall provenance to report-visible relationship and opportunity signals.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/memory_sync.py
+      - skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/tests/test_memory_sync.py
+      - skills/monitor-opportunities/tests/test_contact_changes.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/memory_sync.py
+      - skills/monitor-opportunities/src/monitor_opportunities/contact_changes.py
+      - skills/monitor-opportunities/src/monitor_opportunities/pipeline.py
+      - skills/monitor-opportunities/tests/test_memory_sync.py
+      - skills/monitor-opportunities/tests/test_contact_changes.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_memory_sync.py skills/monitor-opportunities/tests/test_contact_changes.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_memory_sync.py skills/monitor-opportunities/tests/test_contact_changes.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_memory_sync.py skills/monitor-opportunities/tests/test_contact_changes.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-07
+    title: Repair Meetup reader counts and implement rare-signal admission
+    lane: "3"
+    runner: local
+    gate: Meetup capture emits observed, admitted, rejected, and limitation counts and remains supplemental-only.
+    depends_on:
+      - MO-ROAD-06
+    skills:
+      - monitor-opportunities
+      - surf
+    implementation:
+      - Treat Meetup category 405 and 546 Buffalo groups as supplemental event and company-contact evidence.
+      - Count observed groups, admitted rare signals, rejected generic meetups, and limitations separately.
+      - Forbid Meetup GraphQL or attendee scraping unless a later human-approved source contract allows it.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py
+      - skills/monitor-opportunities/src/monitor_opportunities/discovery.py
+      - skills/monitor-opportunities/tests/test_discovery.py
+      - skills/monitor-opportunities/tests/fixtures/discovery/meetup-buffalo-capture.json
+      - skills/monitor-opportunities/tests/fixtures/discovery/discovery-run.json
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/browser_capture.py
+      - skills/monitor-opportunities/src/monitor_opportunities/discovery.py
+      - skills/monitor-opportunities/tests/test_discovery.py
+      - skills/monitor-opportunities/tests/fixtures/discovery/meetup-buffalo-capture.json
+      - skills/monitor-opportunities/tests/fixtures/discovery/discovery-run.json
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q skills/monitor-opportunities/tests/test_discovery.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q skills/monitor-opportunities/tests/test_discovery.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q skills/monitor-opportunities/tests/test_discovery.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-08
+    title: Add screening_interface_profile.v1 and claim-bound resume diffs
+    lane: "3"
+    runner: local
+    gate: Screening profiles and resume variants stay claim-bound and reject proprietary or factual-delta claims.
+    depends_on:
+      - MO-ROAD-07
+    skills:
+      - monitor-opportunities
+    implementation:
+      - Ensure each opportunity carries observed ATS or screening-interface evidence, bounded inferences, limitations, and unknowns.
+      - Bind resume variants to approved claim snapshots and presentation-only diffs.
+      - Reject hidden algorithm claims, proprietary scoring claims, and factual resume deltas.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/tailoring.py
+      - skills/monitor-opportunities/src/monitor_opportunities/resume_artifact.py
+      - skills/monitor-opportunities/schemas/report.schema.json
+      - skills/monitor-opportunities/tests/test_tailoring.py
+      - skills/monitor-opportunities/tests/test_resume_artifact.py
+      - skills/monitor-opportunities/tests/test_claim_snapshot_binding.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/contracts.py
+      - skills/monitor-opportunities/src/monitor_opportunities/tailoring.py
+      - skills/monitor-opportunities/src/monitor_opportunities/resume_artifact.py
+      - skills/monitor-opportunities/schemas/report.schema.json
+      - skills/monitor-opportunities/tests/test_tailoring.py
+      - skills/monitor-opportunities/tests/test_resume_artifact.py
+      - skills/monitor-opportunities/tests/test_claim_snapshot_binding.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_tailoring.py skills/monitor-opportunities/tests/test_resume_artifact.py skills/monitor-opportunities/tests/test_claim_snapshot_binding.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_tailoring.py skills/monitor-opportunities/tests/test_resume_artifact.py skills/monitor-opportunities/tests/test_claim_snapshot_binding.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_tailoring.py skills/monitor-opportunities/tests/test_resume_artifact.py skills/monitor-opportunities/tests/test_claim_snapshot_binding.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-09
+    title: Build the no-effects morning decision interview
+    lane: "3"
+    runner: local
+    gate: Morning decisions are append-only local events, visible in the report, and cause no external effect.
+    depends_on:
+      - MO-ROAD-08
+    skills:
+      - monitor-opportunities
+      - interview
+      - create-report
+    implementation:
+      - Make the morning entry point expose keep, reject, defer, reconnect, and authorize-withhold decisions as append-only local events.
+      - Ensure the interview/report can be consumed by a project agent or create-report without hidden state.
+      - Keep all human handoff text local and non-sendable unless later promotion gates authorize drafts.
+    read_context:
+      - skills/monitor-opportunities/src/monitor_opportunities/decisions.py
+      - skills/monitor-opportunities/src/monitor_opportunities/service.py
+      - skills/monitor-opportunities/src/monitor_opportunities/report.py
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/schemas/decision-event.schema.json
+      - skills/monitor-opportunities/tests/test_decisions.py
+      - skills/monitor-opportunities/tests/test_cli.py
+      - skills/monitor-opportunities/tests/test_report_visibility.py
+    allowlist:
+      - skills/monitor-opportunities/src/monitor_opportunities/decisions.py
+      - skills/monitor-opportunities/src/monitor_opportunities/service.py
+      - skills/monitor-opportunities/src/monitor_opportunities/report.py
+      - skills/monitor-opportunities/src/monitor_opportunities/cli.py
+      - skills/monitor-opportunities/schemas/decision-event.schema.json
+      - skills/monitor-opportunities/tests/test_decisions.py
+      - skills/monitor-opportunities/tests/test_cli.py
+      - skills/monitor-opportunities/tests/test_report_visibility.py
+    command: >
+      uv run --project skills/monitor-opportunities --extra test pytest -q
+      skills/monitor-opportunities/tests/test_decisions.py skills/monitor-opportunities/tests/test_cli.py skills/monitor-opportunities/tests/test_report_visibility.py
+    tests:
+      - >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_decisions.py skills/monitor-opportunities/tests/test_cli.py skills/monitor-opportunities/tests/test_report_visibility.py
+    definition_of_done:
+      command: >
+        uv run --project skills/monitor-opportunities --extra test pytest -q
+        skills/monitor-opportunities/tests/test_decisions.py skills/monitor-opportunities/tests/test_cli.py skills/monitor-opportunities/tests/test_report_visibility.py
+      assertion: exit_code == 0
+
+  - id: MO-ROAD-10
+    title: Make deterministic agentic evals a pre-cron admission gate
+    lane: "4"
+    runner: local
+    gate: Deterministic agentic evals and sanity checks pass before any cron admission or scheduler registration.
+    depends_on:
+      - MO-ROAD-09
+    skills:
+      - monitor-opportunities
+      - agentic-evals
+      - scheduler
+    implementation:
+      - Add deterministic eval coverage for the WebGPT roadmap invariants and prior cron failure families.
+      - Ensure cron registration is refused or reported degraded unless the admission gate artifacts exist.
+      - Keep provider-live Tau, tracker writes, ATS selector writes, Gmail drafts, and LinkedIn actions outside the Stage 0 cron gate.
+    read_context:
+      - skills/monitor-opportunities/fixtures/agentic_eval.json
+      - skills/monitor-opportunities/scripts/e2e_eval.py
+      - skills/monitor-opportunities/sanity.sh
+      - skills/monitor-opportunities/sanity-e2e.sh
+      - skills/monitor-opportunities/run.sh
+      - skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py
+      - skills/monitor-opportunities/tests/test_cli.py
+    allowlist:
+      - skills/monitor-opportunities/fixtures/agentic_eval.json
+      - skills/monitor-opportunities/scripts/e2e_eval.py
+      - skills/monitor-opportunities/sanity.sh
+      - skills/monitor-opportunities/sanity-e2e.sh
+      - skills/monitor-opportunities/run.sh
+      - skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py
+      - skills/monitor-opportunities/tests/test_cli.py
+    command: >
+      cd skills/monitor-opportunities &&
+      ./sanity.sh
+    tests:
+      - >
+        cd skills/monitor-opportunities &&
+        ./sanity.sh
+    definition_of_done:
+      command: >
+        cd skills/monitor-opportunities &&
+        ./sanity.sh
+      assertion: exit_code == 0
+
+promotion_gates:
+  - id: MO-PROMOTE-11
+    title: Promote private tracker writes only after zero-effect replay proof
+    depends_on:
+      - MO-ROAD-10
+    required_human_authorization: true
+    must_not_run_in_stage0_cron: true
+    proof_required:
+      - exact repository target
+      - dry-run issue payloads
+      - dedup and alias replay receipts
+      - rollback path
+  - id: MO-PROMOTE-12
+    title: Promote ATS selector memory writes only after selector read receipts stabilize
+    depends_on:
+      - MO-ROAD-10
+    required_human_authorization: true
+    must_not_run_in_stage0_cron: true
+    proof_required:
+      - accepted selector schema
+      - write-noop replay
+      - stale selector rejection fixture
+      - source URL and digest binding
+  - id: MO-PROMOTE-13
+    title: Promote provider-live Tau canary only as an explicit addendum
+    depends_on:
+      - MO-ROAD-10
+    required_human_authorization: true
+    must_not_run_in_stage0_cron: true
+    proof_required:
+      - provider_live true receipt
+      - closed-schema parser
+      - no external site effects
+      - install receipt bound to a report manifest
+  - id: MO-PROMOTE-14
+    title: Promote exact-payload local draft workflow only after separate draft authorization
+    depends_on:
+      - MO-ROAD-10
+    required_human_authorization: true
+    must_not_run_in_stage0_cron: true
+    proof_required:
+      - exact payload digest
+      - recipient and channel evidence
+      - roundtable SEND_AS_IS or SEND_WITH_REVISIONS receipt
+      - draft-only effect receipt
