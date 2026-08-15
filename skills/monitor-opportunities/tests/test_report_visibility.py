@@ -22,6 +22,57 @@ from monitor_opportunities.service import _render_page
 from monitor_opportunities.verification import built_in_fixture
 
 
+def _relationship_signal(
+    *,
+    signal_id: str,
+    source_opportunity_id: str,
+    signal_type: str,
+    subject: str,
+    organization: str,
+    relationship_path: list[str],
+    provenance: str,
+) -> dict[str, object]:
+    return {
+        "schema": "monitor_opportunities.relationship_candidate.v1",
+        "signal_id": signal_id,
+        "source_opportunity_id": source_opportunity_id,
+        "signal_type": signal_type,
+        "subject": subject,
+        "organization": organization,
+        "relationship_path": relationship_path,
+        "contact_path": [
+            {
+                "from": relationship_path[idx],
+                "to": relationship_path[idx + 1],
+                "relationship": signal_type,
+                "evidence_status": "MATCHES",
+                "evidence_refs": ["memory://arcos-network"],
+                "source_receipt_ids": ["src:a"],
+                "limitations": [],
+            }
+            for idx in range(len(relationship_path) - 1)
+        ],
+        "relationship_degree": len(relationship_path) - 1,
+        "degree_label": {1: "direct", 2: "second_degree", 3: "third_degree"}[len(relationship_path) - 1],
+        "confidence": 0.75,
+        "confidence_reasons": [f"{signal_type} path", "source evidence present"],
+        "evidence_refs": ["memory://arcos-network"],
+        "source_receipt_ids": ["src:a"],
+        "provenance": provenance,
+        "recommended_action": "human_decide_reconnect_or_defer",
+        "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+        "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+        "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+        "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+        "channel_rationale": "LinkedIn handoff is human-transmitted and avoids stale corporate email.",
+        "channel_limitations": ["No automated outreach is authorized."],
+        "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
+        "external_effects": False,
+        "action_worthy": True,
+        "visible_in_report": True,
+    }
+
+
 def _free_port() -> int:
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
@@ -52,24 +103,15 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     data = built_in_fixture()
     opportunity_id = data["opportunities"][0]["opportunity_id"]
     data["relationship_signals"] = [
-        {
-            "signal_id": "rel:galois",
-            "source_opportunity_id": opportunity_id,
-            "signal_type": "direct_contact",
-            "subject": "Eric Mertens",
-            "organization": data["opportunities"][0]["organization"],
-            "relationship_path": ["Graham Anderson", "Eric Mertens", data["opportunities"][0]["organization"]],
-            "evidence_refs": ["memory://arcos-network"],
-            "source_receipt_ids": ["src:a"],
-            "provenance": "Known monitor-contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
-            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
+        _relationship_signal(
+            signal_id="rel:galois",
+            source_opportunity_id=opportunity_id,
+            signal_type="direct_contact",
+            subject="Eric Mertens",
+            organization=data["opportunities"][0]["organization"],
+            relationship_path=["Graham Anderson", "Eric Mertens"],
+            provenance="Known monitor-contact path",
+        )
     ]
     data["opportunities"][0]["relationship_signal_ids"] = ["rel:galois"]
     data["opportunities"][0]["relationship_signal_count"] = 1
@@ -87,24 +129,15 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
 def test_reports_render_relationship_binding_diagnostics(tmp_path: Path) -> None:
     data = built_in_fixture()
     data["relationship_signals"] = [
-        {
-            "signal_id": "rel:ambiguous",
-            "source_opportunity_id": "memory:darpa-arcos-contact-network",
-            "signal_type": "adjacent_contact",
-            "subject": "David Archer",
-            "organization": "Galois Inc",
-            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "David Archer"],
-            "evidence_refs": ["memory://arcos-network"],
-            "source_receipt_ids": ["src:a"],
-            "provenance": "Adjacent ARCOS/formal-methods contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
-            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
+        _relationship_signal(
+            signal_id="rel:ambiguous",
+            source_opportunity_id="memory:darpa-arcos-contact-network",
+            signal_type="adjacent_contact",
+            subject="David Archer",
+            organization="Galois Inc",
+            relationship_path=["Graham Anderson", "DARPA ARCOS network", "David Archer"],
+            provenance="Adjacent ARCOS/formal-methods contact path",
+        )
     ]
     data["relationship_binding_diagnostics"] = [
         {
@@ -139,24 +172,15 @@ def test_interactive_service_renders_attached_relationship_decisions(tmp_path: P
     data = built_in_fixture()
     opportunity_id = data["opportunities"][0]["opportunity_id"]
     data["relationship_signals"] = [
-        {
-            "signal_id": "rel:galois",
-            "source_opportunity_id": opportunity_id,
-            "signal_type": "direct_contact",
-            "subject": "Eric Mertens",
-            "organization": data["opportunities"][0]["organization"],
-            "relationship_path": ["Graham Anderson", "Eric Mertens", data["opportunities"][0]["organization"]],
-            "evidence_refs": ["memory://arcos-network"],
-            "source_receipt_ids": ["src:a"],
-            "provenance": "Known monitor-contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
-            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
+        _relationship_signal(
+            signal_id="rel:galois",
+            source_opportunity_id=opportunity_id,
+            signal_type="direct_contact",
+            subject="Eric Mertens",
+            organization=data["opportunities"][0]["organization"],
+            relationship_path=["Graham Anderson", "Eric Mertens"],
+            provenance="Known monitor-contact path",
+        )
     ]
     data["opportunities"][0]["relationship_signal_ids"] = ["rel:galois"]
     data["opportunities"][0]["relationship_signal_count"] = 1

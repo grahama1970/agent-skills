@@ -1523,7 +1523,16 @@
         "preferred_human_channels",
         "provenance",
         "recommended_action",
+        "recommended_human_channel",
+        "channel_rationale",
+        "channel_limitations",
         "relationship_path",
+        "contact_path",
+        "relationship_degree",
+        "degree_label",
+        "confidence",
+        "confidence_reasons",
+        "human_decision_options",
         "signal_id",
         "signal_type",
         "source_opportunity_id",
@@ -1565,6 +1574,65 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        },
+        "contact_path": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "relationship",
+              "evidence_status",
+              "evidence_refs"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "relationship": {
+                "enum": [
+                  "direct_contact",
+                  "adjacent_contact",
+                  "organization_sponsor",
+                  "event_copresence"
+                ]
+              },
+              "evidence_status": {
+                "const": "MATCHES"
+              },
+              "evidence_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "source_receipt_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "limitations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
           }
         },
         "relationship_degree": {
@@ -1652,6 +1720,25 @@
           }
         },
         "channel_guidance": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "recommended_human_channel": {
+          "enum": [
+            "LINKEDIN_HUMAN_HANDOFF",
+            "AUTHORIZED_PERSONA_GMAIL",
+            "VERIFIED_CURRENT_EMAIL"
+          ]
+        },
+        "channel_rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel_limitations": {
           "type": "array",
           "minItems": 1,
           "items": {

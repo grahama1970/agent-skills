@@ -114,12 +114,28 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
     data = copy.deepcopy(built_in_fixture())
     data["relationship_signals"] = [
         {
+            "schema": "monitor_opportunities.relationship_candidate.v1",
             "signal_id": "rel:missing-source",
             "source_opportunity_id": data["opportunities"][0]["opportunity_id"],
             "signal_type": "direct_contact",
             "subject": "Known contact",
             "organization": data["opportunities"][0]["organization"],
             "relationship_path": ["Graham Anderson", "Known contact"],
+            "contact_path": [
+                {
+                    "from": "Graham Anderson",
+                    "to": "Known contact",
+                    "relationship": "direct_contact",
+                    "evidence_status": "MATCHES",
+                    "evidence_refs": ["memory://relationship"],
+                    "source_receipt_ids": [],
+                    "limitations": [],
+                }
+            ],
+            "relationship_degree": 1,
+            "degree_label": "direct",
+            "confidence": 0.75,
+            "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
             "evidence_refs": ["memory://relationship"],
             "source_receipt_ids": [],
             "provenance": "Relationship claim without source receipt should fail.",
@@ -127,6 +143,10 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
             "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
             "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
             "channel_guidance": ["Use a human-authorized channel."],
+            "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+            "channel_rationale": "LinkedIn handoff is human-transmitted and avoids stale corporate email.",
+            "channel_limitations": ["No automated outreach is authorized."],
+            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
             "external_effects": False,
             "action_worthy": True,
             "visible_in_report": True,

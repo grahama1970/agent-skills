@@ -15,6 +15,60 @@ from monitor_opportunities.contracts import ContractError, validate_manifest
 from monitor_opportunities.verification import built_in_fixture
 
 
+def _contact_path(
+    nodes: list[str],
+    *,
+    relationship: str = "direct_contact",
+    evidence_status: str = "MATCHES",
+) -> list[dict[str, object]]:
+    return [
+        {
+            "from": nodes[idx],
+            "to": nodes[idx + 1],
+            "relationship": relationship,
+            "evidence_status": evidence_status,
+            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+            "source_receipt_ids": ["src:a"],
+            "limitations": [],
+        }
+        for idx in range(len(nodes) - 1)
+    ]
+
+
+def _relationship_signal(**overrides: object) -> dict[str, object]:
+    path = ["Graham Anderson", "William Brad Martin"]
+    signal: dict[str, object] = {
+        "schema": "monitor_opportunities.relationship_candidate.v1",
+        "signal_id": "rel:test",
+        "source_opportunity_id": "memory:darpa-arcos-contact-network",
+        "signal_type": "direct_contact",
+        "subject": "William Brad Martin",
+        "organization": "DARPA I2O",
+        "relationship_path": path,
+        "contact_path": _contact_path(path),
+        "relationship_degree": 1,
+        "degree_label": "direct",
+        "confidence": 0.75,
+        "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
+        "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+        "source_receipt_ids": ["src:a"],
+        "provenance": "Source-backed direct ARCOS/formal-methods contact path",
+        "recommended_action": "human_decide_reconnect_or_defer",
+        "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+        "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
+        "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+        "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+        "channel_rationale": "LinkedIn handoff is human-transmitted and avoids stale corporate email.",
+        "channel_limitations": ["No automated outreach is authorized."],
+        "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
+        "external_effects": False,
+        "action_worthy": True,
+        "visible_in_report": True,
+    }
+    signal.update(overrides)
+    return signal
+
+
 def test_valid_fixture_is_accepted() -> None:
     manifest = validate_manifest(built_in_fixture())
     assert manifest.stage == "STAGE_0_RESEARCH_ONLY"
@@ -24,26 +78,14 @@ def test_valid_fixture_is_accepted() -> None:
 def test_relationship_signal_recall_degradation_fields_are_accepted() -> None:
     data = copy.deepcopy(built_in_fixture())
     data["relationship_signals"] = [
-        {
-            "signal_id": "rel:test",
-            "source_opportunity_id": "memory:darpa-arcos-contact-network",
-            "signal_type": "direct_contact",
-            "subject": "William Brad Martin",
-            "organization": "DARPA I2O",
-            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "William Brad Martin"],
-            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
-            "source_receipt_ids": ["src:a"],
-            "provenance": "Source-backed direct ARCOS/formal-methods contact path; Memory recall did not return this seed",
-            "memory_recall_found": False,
-            "memory_recall_degraded": True,
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
-            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
+        _relationship_signal(
+            provenance=(
+                "Source-backed direct ARCOS/formal-methods contact path; "
+                "Memory recall did not return this seed"
+            ),
+            memory_recall_found=False,
+            memory_recall_degraded=True,
+        )
     ]
     data["artifact_accounting"]["action_worthy_total"] += 1
     data["artifact_accounting"]["visible_total"] += 1
@@ -78,26 +120,7 @@ def test_opportunity_relationship_signal_count_must_match_ids() -> None:
 
 def test_relationship_binding_diagnostics_are_local_visible_and_reference_signals() -> None:
     data = copy.deepcopy(built_in_fixture())
-    data["relationship_signals"] = [
-        {
-            "signal_id": "rel:test",
-            "source_opportunity_id": "memory:darpa-arcos-contact-network",
-            "signal_type": "direct_contact",
-            "subject": "William Brad Martin",
-            "organization": "DARPA I2O",
-            "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "William Brad Martin"],
-            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
-            "source_receipt_ids": ["src:a"],
-            "provenance": "Source-backed direct ARCOS/formal-methods contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
-            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
-    ]
+    data["relationship_signals"] = [_relationship_signal(preferred_human_channels=["LINKEDIN_HUMAN_HANDOFF"])]
     data["relationship_binding_diagnostics"] = [
         {
             "diagnostic_id": "relbind:test",
@@ -116,6 +139,42 @@ def test_relationship_binding_diagnostics_are_local_visible_and_reference_signal
     manifest = validate_manifest(data)
 
     assert manifest.relationship_binding_diagnostics[0].reason_code == "NO_ORGANIZATION_MATCH"
+
+
+@pytest.mark.parametrize(
+    ("mutate", "code"),
+    [
+        (lambda signal: signal.pop("contact_path"), "RELATIONSHIP_CONTACT_PATH_MISSING"),
+        (lambda signal: signal.update(relationship_degree=2), "RELATIONSHIP_DEGREE_PATH_MISMATCH"),
+        (lambda signal: signal.update(degree_label="second_degree"), "RELATIONSHIP_DEGREE_LABEL_MISMATCH"),
+        (
+            lambda signal: signal["contact_path"][0].update(evidence_refs=[]),  # type: ignore[index]
+            "RELATIONSHIP_CONTACT_PATH_EVIDENCE_MISSING",
+        ),
+        (
+            lambda signal: signal["contact_path"][0].update(evidence_status="NO_MATCHES"),  # type: ignore[index]
+            "RELATIONSHIP_CONTACT_PATH_EVIDENCE_INADMISSIBLE",
+        ),
+        (
+            lambda signal: signal.update(relationship_path=["Graham Anderson", "Different Person"]),
+            "RELATIONSHIP_PATH_EDGE_MISMATCH",
+        ),
+        (lambda signal: signal.pop("recommended_human_channel"), "RELATIONSHIP_CHANNEL_GUIDANCE_MISSING"),
+        (lambda signal: signal.update(external_effects=True), "RELATIONSHIP_SIGNAL_EXTERNAL_EFFECT"),
+    ],
+)
+def test_relationship_candidate_path_invariants_are_enforced(mutate, code: str) -> None:  # type: ignore[no-untyped-def]
+    data = copy.deepcopy(built_in_fixture())
+    signal = _relationship_signal()
+    mutate(signal)
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == code
 
 
 def test_relationship_binding_diagnostic_missing_signal_is_rejected() -> None:

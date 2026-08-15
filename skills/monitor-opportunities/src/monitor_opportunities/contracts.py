@@ -27,6 +27,7 @@ SENSITIVE_FIELD_TYPES = {
     "work_authorization",
     "legal",
 }
+RELATIONSHIP_DEGREE_LABELS = {1: "direct", 2: "second_degree", 3: "third_degree"}
 
 
 class ResultStatus(StrEnum):
@@ -41,6 +42,9 @@ class ResultStatus(StrEnum):
     INVALID_REQUEST = "INVALID_REQUEST"
     INVALID_RESPONSE = "INVALID_RESPONSE"
     NOT_SEARCHED = "NOT_SEARCHED"
+
+
+RELATIONSHIP_EDGE_ACCEPTED_STATUSES = {ResultStatus.MATCHES.value}
 
 
 DEGRADED_RESULT_STATUSES = {
@@ -280,6 +284,7 @@ class RelationshipSignal(StrictModel):
     subject: str
     organization: str
     relationship_path: list[str] = Field(min_length=2)
+    contact_path: list["ContactPathEdge"] = Field(min_length=1)
     relationship_degree: int = Field(default=2, ge=1, le=3)
     degree_label: str = "second_degree"
     confidence: float = Field(default=0.5, ge=0, le=1)
@@ -293,6 +298,9 @@ class RelationshipSignal(StrictModel):
     contact_channel_risk: str
     preferred_human_channels: list[str] = Field(min_length=1)
     channel_guidance: list[str] = Field(min_length=1)
+    recommended_human_channel: str
+    channel_rationale: str
+    channel_limitations: list[str] = Field(min_length=1)
     human_decision_options: list[str] = Field(
         default_factory=lambda: ["RECONNECT", "DEFER", "ATTEND", "WATCH", "SKIP"],
         min_length=1,
@@ -300,6 +308,16 @@ class RelationshipSignal(StrictModel):
     external_effects: bool
     action_worthy: bool
     visible_in_report: bool
+
+
+class ContactPathEdge(StrictModel):
+    from_node: str = Field(alias="from", min_length=1)
+    to_node: str = Field(alias="to", min_length=1)
+    relationship: str = Field(min_length=1)
+    evidence_status: str
+    evidence_refs: list[str] = Field(min_length=1)
+    source_receipt_ids: list[str] = []
+    limitations: list[str] = []
 
 
 class RelationshipBindingDiagnostic(StrictModel):
@@ -426,6 +444,89 @@ def _require(raw: dict[str, Any], key: str) -> Any:
     return raw[key]
 
 
+def _relationship_nodes_from_edges(contact_path: list[dict[str, Any]]) -> list[str]:
+    if not contact_path:
+        return []
+    nodes = [str(contact_path[0].get("from") or "").strip()]
+    for edge in contact_path:
+        nodes.append(str(edge.get("to") or "").strip())
+    return nodes
+
+
+def _validate_relationship_signal_path(signal: dict[str, Any]) -> None:
+    signal_id = str(signal.get("signal_id") or "missing-signal-id")
+    contact_path = signal.get("contact_path")
+    if not isinstance(contact_path, list) or not contact_path:
+        raise ContractError(
+            "RELATIONSHIP_CONTACT_PATH_MISSING",
+            f"Relationship signal {signal_id} must include explicit contact_path edges.",
+        )
+    if len(contact_path) > 3:
+        raise ContractError(
+            "RELATIONSHIP_CONTACT_PATH_TOO_LONG",
+            f"Relationship signal {signal_id} cannot exceed third-degree paths.",
+        )
+    prior_to: str | None = None
+    for idx, edge in enumerate(contact_path):
+        if not isinstance(edge, dict):
+            raise ContractError(
+                "RELATIONSHIP_CONTACT_PATH_EDGE_INVALID",
+                f"Relationship signal {signal_id} contact_path edge {idx} must be an object.",
+            )
+        from_node = str(edge.get("from") or "").strip()
+        to_node = str(edge.get("to") or "").strip()
+        if not from_node or not to_node:
+            raise ContractError(
+                "RELATIONSHIP_CONTACT_PATH_EDGE_INVALID",
+                f"Relationship signal {signal_id} contact_path edge {idx} must include from/to.",
+            )
+        if prior_to is not None and from_node != prior_to:
+            raise ContractError(
+                "RELATIONSHIP_CONTACT_PATH_BROKEN",
+                f"Relationship signal {signal_id} contact_path edge {idx} does not continue the prior edge.",
+            )
+        prior_to = to_node
+        evidence_refs = edge.get("evidence_refs")
+        if not isinstance(evidence_refs, list) or not any(str(ref).strip() for ref in evidence_refs):
+            raise ContractError(
+                "RELATIONSHIP_CONTACT_PATH_EVIDENCE_MISSING",
+                f"Relationship signal {signal_id} contact_path edge {idx} lacks admissible evidence_refs.",
+            )
+        evidence_status = str(edge.get("evidence_status") or "").strip()
+        if evidence_status not in RELATIONSHIP_EDGE_ACCEPTED_STATUSES:
+            raise ContractError(
+                "RELATIONSHIP_CONTACT_PATH_EVIDENCE_INADMISSIBLE",
+                f"Relationship signal {signal_id} contact_path edge {idx} has inadmissible evidence_status: {evidence_status or 'missing'}.",
+            )
+    degree = signal.get("relationship_degree")
+    if degree != len(contact_path):
+        raise ContractError(
+            "RELATIONSHIP_DEGREE_PATH_MISMATCH",
+            f"Relationship signal {signal_id} relationship_degree must equal contact_path hop count.",
+        )
+    if signal.get("degree_label") != RELATIONSHIP_DEGREE_LABELS.get(degree):
+        raise ContractError(
+            "RELATIONSHIP_DEGREE_LABEL_MISMATCH",
+            f"Relationship signal {signal_id} degree_label must agree with relationship_degree.",
+        )
+    relationship_path = signal.get("relationship_path")
+    if relationship_path != _relationship_nodes_from_edges(contact_path):
+        raise ContractError(
+            "RELATIONSHIP_PATH_EDGE_MISMATCH",
+            f"Relationship signal {signal_id} relationship_path must match ordered contact_path nodes.",
+        )
+    if not signal.get("recommended_human_channel") or not signal.get("channel_rationale"):
+        raise ContractError(
+            "RELATIONSHIP_CHANNEL_GUIDANCE_MISSING",
+            f"Relationship signal {signal_id} must include explicit channel guidance.",
+        )
+    if not isinstance(signal.get("channel_limitations"), list) or not signal.get("channel_limitations"):
+        raise ContractError(
+            "RELATIONSHIP_CHANNEL_GUIDANCE_MISSING",
+            f"Relationship signal {signal_id} must include channel limitations.",
+        )
+
+
 def _validate_raw_semantics(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ContractError("SCHEMA_INVALID", "Report manifest must be a JSON object")
@@ -487,6 +588,7 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("RELATIONSHIP_SIGNAL_EXTERNAL_EFFECT", "Relationship signals are local-only")
         if signal.get("visible_in_report") is not True:
             raise ContractError("RELATIONSHIP_SIGNAL_HIDDEN", "Relationship signals must be report-visible")
+        _validate_relationship_signal_path(signal)
 
     relationship_ids = {signal.get("signal_id") for signal in raw.get("relationship_signals", [])}
     for diagnostic in raw.get("relationship_binding_diagnostics", []):

@@ -53,6 +53,14 @@ def test_memory_recall_arcos_contacts_become_linkedin_first_relationship_signals
     assert signals[0]["schema"] == "monitor_opportunities.relationship_candidate.v1"
     assert signals[0]["relationship_degree"] == 1
     assert signals[0]["degree_label"] == "direct"
+    assert signals[0]["relationship_degree"] == len(signals[0]["contact_path"])
+    assert signals[0]["contact_path"][0]["from"] == "Graham Anderson"
+    assert signals[0]["contact_path"][0]["to"] == "William Brad Martin"
+    assert signals[0]["contact_path"][0]["evidence_status"] == "MATCHES"
+    assert signals[0]["contact_path"][0]["evidence_refs"]
+    assert signals[0]["recommended_human_channel"] == "LINKEDIN_HUMAN_HANDOFF"
+    assert signals[0]["channel_rationale"]
+    assert signals[0]["channel_limitations"]
     assert 0 < signals[0]["confidence"] <= 1
     assert "RECONNECT" in signals[0]["human_decision_options"]
 
@@ -194,8 +202,16 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     adjacent = next(row for row in signals if row["subject"] == "Eric Mertens")
     assert direct["relationship_degree"] == 1
     assert direct["degree_label"] == "direct"
+    assert direct["relationship_degree"] == len(direct["contact_path"])
+    assert direct["relationship_path"] == ["Graham Anderson", "William Brad Martin"]
     assert adjacent["relationship_degree"] == 2
     assert adjacent["degree_label"] == "second_degree"
+    assert adjacent["relationship_degree"] == len(adjacent["contact_path"])
+    assert adjacent["contact_path"][0]["from"] == "Graham Anderson"
+    assert adjacent["contact_path"][0]["to"] == "ARCOS/formal-methods network"
+    assert adjacent["contact_path"][1]["to"] == "Eric Mertens"
+    assert adjacent["contact_path"][0]["evidence_refs"] == ["https://sos-vo.org/user/91"]
+    assert adjacent["recommended_human_channel"] == "LINKEDIN_HUMAN_HANDOFF"
 
 
 def test_relationship_signals_attach_to_opportunities_by_exact_id_and_unique_org() -> None:

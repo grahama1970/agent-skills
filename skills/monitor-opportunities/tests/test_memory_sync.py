@@ -23,6 +23,60 @@ def _report() -> dict:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 
+def _galois_contact_path() -> list[dict[str, object]]:
+    return [
+        {
+            "from": "Graham Anderson",
+            "to": "ARCOS/formal-methods network",
+            "relationship": "adjacent_contact",
+            "evidence_status": "MATCHES",
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "source_receipt_ids": ["src:galois:team"],
+            "limitations": [],
+        },
+        {
+            "from": "ARCOS/formal-methods network",
+            "to": "Eric Mertens",
+            "relationship": "adjacent_contact",
+            "evidence_status": "MATCHES",
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "source_receipt_ids": ["src:galois:team"],
+            "limitations": [],
+        },
+    ]
+
+
+def _galois_relationship_signal() -> dict[str, object]:
+    return {
+        "schema": "monitor_opportunities.relationship_candidate.v1",
+        "signal_id": "rel-galois-eric",
+        "source_opportunity_id": "opp:c:galois:arcos",
+        "signal_type": "adjacent_contact",
+        "subject": "Eric Mertens",
+        "organization": "Galois, Inc.",
+        "relationship_path": ["Graham Anderson", "ARCOS/formal-methods network", "Eric Mertens"],
+        "contact_path": _galois_contact_path(),
+        "relationship_degree": 2,
+        "degree_label": "second_degree",
+        "confidence": 0.65,
+        "confidence_reasons": ["adjacent_contact path", "source evidence present"],
+        "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+        "source_receipt_ids": ["src:galois:team"],
+        "provenance": "Adjacent ARCOS/formal-methods contact path",
+        "recommended_action": "human_decide_reconnect_or_defer",
+        "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+        "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
+        "channel_guidance": ["Corporate email may be blocked after a long gap."],
+        "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+        "channel_rationale": "LinkedIn handoff is human-transmitted and avoids stale corporate email.",
+        "channel_limitations": ["No automated outreach is authorized."],
+        "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
+        "external_effects": False,
+        "action_worthy": True,
+        "visible_in_report": True,
+    }
+
+
 def test_one_document_per_opportunity_plus_summary() -> None:
     report = _report()
     documents = morning_documents(report, "/tmp/run")
@@ -41,37 +95,15 @@ def test_documents_are_keyed_and_recall_shaped() -> None:
 
 def test_relationship_signals_publish_recallable_graph_documents() -> None:
     report = _report()
-    report["relationship_signals"] = [
-        {
-            "signal_id": "rel-galois-eric",
-            "source_opportunity_id": "opp:c:galois:arcos",
-            "signal_type": "adjacent_contact",
-            "subject": "Eric Mertens",
-            "organization": "Galois, Inc.",
-            "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
-            "relationship_degree": 2,
-            "degree_label": "second_degree",
-            "confidence": 0.65,
-            "confidence_reasons": ["adjacent_contact path", "source evidence present"],
-            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
-            "source_receipt_ids": ["src:galois:team"],
-            "provenance": "Adjacent ARCOS/formal-methods contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF", "AUTHORIZED_PERSONA_GMAIL"],
-            "channel_guidance": ["Corporate email may be blocked after a long gap."],
-            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
-    ]
+    report["relationship_signals"] = [_galois_relationship_signal()]
     documents = morning_documents(report, "/tmp/run")
     graph_doc = next(doc for doc in documents if doc["schema"] == "monitor_opportunities.relationship_signal.v1")
     assert "relationship-signal" in graph_doc["tags"]
     assert "monitor-contacts" in graph_doc["tags"]
     assert graph_doc["relationship_graph"]["nodes"]
     assert graph_doc["relationship_graph"]["edges"]
+    assert graph_doc["contact_path"] == _galois_contact_path()
+    assert graph_doc["relationship_graph"]["edges"][0]["evidence_status"] == "MATCHES"
     assert graph_doc["relationship_degree"] == 2
     assert graph_doc["degree_label"] == "second_degree"
     assert graph_doc["confidence"] == 0.65
@@ -79,6 +111,8 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
     assert "RECONNECT" in graph_doc["human_decision_options"]
     assert "Degree: second_degree (2)." in graph_doc["text"]
     assert graph_doc["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap"
+    assert graph_doc["recommended_human_channel"] == "LINKEDIN_HUMAN_HANDOFF"
+    assert graph_doc["channel_limitations"] == ["No automated outreach is authorized."]
     assert "AUTHORIZED_PERSONA_GMAIL" in graph_doc["preferred_human_channels"]
     assert "Eric Mertens" in graph_doc["text"]
     assert "Corporate email may be blocked" in graph_doc["text"]
@@ -86,31 +120,7 @@ def test_relationship_signals_publish_recallable_graph_documents() -> None:
 
 def test_relationship_signals_can_be_excluded_from_memory_documents() -> None:
     report = _report()
-    report["relationship_signals"] = [
-        {
-            "signal_id": "rel-galois-eric",
-            "source_opportunity_id": "opp:c:galois:arcos",
-            "signal_type": "adjacent_contact",
-            "subject": "Eric Mertens",
-            "organization": "Galois, Inc.",
-            "relationship_path": ["Graham Anderson", "Eric Mertens", "Galois, Inc."],
-            "relationship_degree": 2,
-            "degree_label": "second_degree",
-            "confidence": 0.65,
-            "confidence_reasons": ["adjacent_contact path", "source evidence present"],
-            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
-            "source_receipt_ids": ["src:galois:team"],
-            "provenance": "Adjacent ARCOS/formal-methods contact path",
-            "recommended_action": "human_decide_reconnect_or_defer",
-            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
-            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
-            "channel_guidance": ["Corporate email may be blocked after a long gap."],
-            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
-            "external_effects": False,
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
-    ]
+    report["relationship_signals"] = [_galois_relationship_signal()]
     documents = morning_documents(report, "/tmp/run", include_relationship_signals=False)
     assert all(doc["schema"] != "monitor_opportunities.relationship_signal.v1" for doc in documents)
     assert documents[-1]["schema"] == "monitor_opportunities.morning_summary.v1"

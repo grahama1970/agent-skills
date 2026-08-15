@@ -56,12 +56,28 @@ def test_tau_semantic_prepare_includes_direct_relationship_evidence(tmp_path: Pa
     receipt_id = manifest["opportunities"][0]["source_receipt_ids"][0]
     manifest["relationship_signals"].append(
         {
+            "schema": "monitor_opportunities.relationship_candidate.v1",
             "signal_id": "rel-direct-test",
             "source_opportunity_id": opportunity_id,
             "signal_type": "direct_contact",
             "subject": "Redacted direct contact",
             "organization": manifest["opportunities"][0]["organization"],
             "relationship_path": ["Graham Anderson", "redacted contact"],
+            "contact_path": [
+                {
+                    "from": "Graham Anderson",
+                    "to": "redacted contact",
+                    "relationship": "direct_contact",
+                    "evidence_status": "MATCHES",
+                    "evidence_refs": ["memory://redacted-direct-test"],
+                    "source_receipt_ids": [receipt_id],
+                    "limitations": [],
+                }
+            ],
+            "relationship_degree": 1,
+            "degree_label": "direct",
+            "confidence": 0.85,
+            "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
             "evidence_refs": ["memory://redacted-direct-test"],
             "source_receipt_ids": [receipt_id],
             "provenance": "Direct report-visible relationship path exists.",
@@ -71,6 +87,10 @@ def test_tau_semantic_prepare_includes_direct_relationship_evidence(tmp_path: Pa
             "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
             "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
             "channel_guidance": ["Human-transmitted reconnect only."],
+            "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+            "channel_rationale": "LinkedIn handoff is human-transmitted and avoids stale corporate email.",
+            "channel_limitations": ["No automated outreach is authorized."],
+            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
             "external_effects": False,
             "action_worthy": True,
             "visible_in_report": True,

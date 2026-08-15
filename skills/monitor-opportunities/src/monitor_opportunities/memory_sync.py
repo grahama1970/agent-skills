@@ -83,6 +83,7 @@ def morning_documents(
         org = str(signal.get("organization") or "").strip()
         subject = str(signal.get("subject") or "").strip()
         path = signal.get("relationship_path") or []
+        contact_path = signal.get("contact_path") or []
         text = "\n".join(
             [
                 f"Relationship signal for {subject} at {org}.",
@@ -93,10 +94,19 @@ def morning_documents(
                 f"Provenance: {signal.get('provenance')}.",
                 f"Recommended local action: {signal.get('recommended_action')}.",
                 f"Contact channel risk: {signal.get('contact_channel_risk')}.",
+                f"Recommended human channel: {signal.get('recommended_human_channel')}.",
+                f"Channel rationale: {signal.get('channel_rationale')}.",
                 "Preferred human channels: "
                 + ", ".join(str(item) for item in signal.get("preferred_human_channels", []) or ["n/a"]),
                 "Channel guidance: "
                 + " ".join(str(item) for item in signal.get("channel_guidance", []) or ["n/a"]),
+                "Channel limitations: "
+                + " ".join(str(item) for item in signal.get("channel_limitations", []) or ["n/a"]),
+                "Contact path evidence: "
+                + " | ".join(
+                    f"{edge.get('from')} -> {edge.get('to')} ({edge.get('relationship')}, {edge.get('evidence_status')})"
+                    for edge in contact_path
+                ),
                 "External effects: false; the human decides whether to reconnect, attend, watch, skip, or defer.",
                 "Evidence: " + ", ".join(str(ref) for ref in signal.get("evidence_refs", []) or ["n/a"]),
             ]
@@ -116,6 +126,7 @@ def morning_documents(
                 "organization": org,
                 "signal_type": signal.get("signal_type"),
                 "relationship_path": path,
+                "contact_path": contact_path,
                 "relationship_degree": signal.get("relationship_degree"),
                 "degree_label": signal.get("degree_label"),
                 "confidence": signal.get("confidence"),
@@ -123,6 +134,9 @@ def morning_documents(
                 "contact_channel_risk": signal.get("contact_channel_risk"),
                 "preferred_human_channels": signal.get("preferred_human_channels", []),
                 "channel_guidance": signal.get("channel_guidance", []),
+                "recommended_human_channel": signal.get("recommended_human_channel"),
+                "channel_rationale": signal.get("channel_rationale"),
+                "channel_limitations": signal.get("channel_limitations", []),
                 "human_decision_options": signal.get("human_decision_options", []),
                 "relationship_graph": {
                     "nodes": [
@@ -131,11 +145,13 @@ def morning_documents(
                     ],
                     "edges": [
                         {
-                            "from": str(path[idx]).lower().replace(" ", "-"),
-                            "to": str(path[idx + 1]).lower().replace(" ", "-"),
-                            "relationship": signal.get("signal_type"),
+                            "from": str(edge.get("from")).lower().replace(" ", "-"),
+                            "to": str(edge.get("to")).lower().replace(" ", "-"),
+                            "relationship": edge.get("relationship"),
+                            "evidence_status": edge.get("evidence_status"),
+                            "evidence_refs": edge.get("evidence_refs", []),
                         }
-                        for idx in range(max(0, len(path) - 1))
+                        for edge in contact_path
                     ],
                 },
                 "evidence_refs": signal.get("evidence_refs", []),

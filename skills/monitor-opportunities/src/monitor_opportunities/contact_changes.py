@@ -295,6 +295,7 @@ HUMAN_RELATIONSHIP_DECISIONS = [
     "WATCH",
     "SKIP",
 ]
+ACCEPTED_RELATIONSHIP_EDGE_STATUS = "MATCHES"
 ARCOS_CONTACT_RECALL_QUERY = (
     "DARPA ARCOS contact network monitor-contacts LinkedIn reconnect persona Gmail "
     "corporate email blocked Galois GE SRI Lockheed STR Vanderbilt"
@@ -355,20 +356,18 @@ def _memory_evidence_refs(recall: dict[str, Any]) -> list[str]:
 def _relationship_candidate_fields(
     *,
     signal_type: str,
-    relationship_path: list[str],
+    contact_path: list[dict[str, Any]],
     evidence_refs: list[str],
     memory_recall_degraded: bool | None = None,
 ) -> dict[str, Any]:
+    degree = len(contact_path)
     if signal_type == "direct_contact":
-        degree = 1
         base_confidence = 0.85
         reasons = ["direct monitor-contact relationship"]
     elif signal_type in {"adjacent_contact", "organization_sponsor", "event_copresence"}:
-        degree = min(3, max(2, len(relationship_path) - 1))
         base_confidence = 0.65 if signal_type == "adjacent_contact" else 0.55
         reasons = [f"{signal_type} path"]
     else:
-        degree = min(3, max(2, len(relationship_path) - 1))
         base_confidence = 0.45
         reasons = ["unrecognized relationship path type; kept for human review"]
     if evidence_refs:
@@ -386,6 +385,55 @@ def _relationship_candidate_fields(
         "confidence": round(max(0.0, min(1.0, base_confidence)), 2),
         "confidence_reasons": reasons,
         "human_decision_options": list(HUMAN_RELATIONSHIP_DECISIONS),
+    }
+
+
+def _contact_path_edges(
+    nodes: list[str],
+    *,
+    relationship: str,
+    evidence_refs: list[str],
+    source_receipt_ids: list[str] | None = None,
+    limitations: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    clean_nodes = [str(node).strip() for node in nodes if str(node).strip()]
+    if len(clean_nodes) < 2:
+        return []
+    edge_evidence = list(dict.fromkeys(str(ref) for ref in evidence_refs if str(ref).strip()))
+    receipt_ids = list(dict.fromkeys(str(ref) for ref in (source_receipt_ids or []) if str(ref).strip()))
+    edge_limitations = list(dict.fromkeys(str(item) for item in (limitations or []) if str(item).strip()))
+    return [
+        {
+            "from": clean_nodes[idx],
+            "to": clean_nodes[idx + 1],
+            "relationship": relationship,
+            "evidence_status": ACCEPTED_RELATIONSHIP_EDGE_STATUS,
+            "evidence_refs": edge_evidence,
+            "source_receipt_ids": receipt_ids,
+            "limitations": edge_limitations,
+        }
+        for idx in range(len(clean_nodes) - 1)
+    ]
+
+
+def _channel_guidance_fields(preferred_channels: list[str], evidence_refs: list[str]) -> dict[str, Any]:
+    recommended_channel = (
+        "LINKEDIN_HUMAN_HANDOFF"
+        if "LINKEDIN_HUMAN_HANDOFF" in preferred_channels
+        else preferred_channels[0]
+    )
+    evidence_note = "source-backed relationship evidence is present" if evidence_refs else "source evidence missing"
+    return {
+        "recommended_human_channel": recommended_channel,
+        "channel_rationale": (
+            f"{recommended_channel} is the preferred human-transmitted channel because "
+            f"{evidence_note} and corporate email may reject unknown senders after a long gap."
+        ),
+        "channel_limitations": [
+            "No automated LinkedIn, RSVP, or email action is authorized by this signal.",
+            "Use corporate email only when the address is current and human-approved.",
+            "Use persona Gmail only when the account is owned/approved and the message is non-deceptive.",
+        ],
     }
 
 
@@ -463,6 +511,18 @@ def relationship_signals_from_memory(
                 else "Source-backed adjacent ARCOS/formal-methods contact path; "
                 "Memory recall did not return this seed"
             )
+        if signal_type == "direct_contact":
+            relationship_path = ["Graham Anderson", subject]
+        else:
+            relationship_path = ["Graham Anderson", "DARPA ARCOS network", subject]
+        contact_path = _contact_path_edges(
+            relationship_path,
+            relationship=signal_type,
+            evidence_refs=evidence_refs,
+            limitations=["Memory recall degraded; bounded ARCOS source file retained as evidence"]
+            if not memory_recall_found
+            else [],
+        )
         signals.append(
             {
                 "signal_id": key,
@@ -470,7 +530,8 @@ def relationship_signals_from_memory(
                 "signal_type": signal_type,
                 "subject": subject,
                 "organization": org,
-                "relationship_path": ["Graham Anderson", "DARPA ARCOS network", subject, org],
+                "relationship_path": relationship_path,
+                "contact_path": contact_path,
                 "evidence_refs": evidence_refs,
                 "source_receipt_ids": [],
                 "provenance": provenance,
@@ -480,12 +541,13 @@ def relationship_signals_from_memory(
                 "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
                 "preferred_human_channels": list(DEFAULT_RELATIONSHIP_CHANNELS),
                 "channel_guidance": list(DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE),
+                **_channel_guidance_fields(list(DEFAULT_RELATIONSHIP_CHANNELS), evidence_refs),
                 "external_effects": False,
                 "action_worthy": True,
                 "visible_in_report": True,
                 **_relationship_candidate_fields(
                     signal_type=signal_type,
-                    relationship_path=["Graham Anderson", "DARPA ARCOS network", subject, org],
+                    contact_path=contact_path,
                     evidence_refs=evidence_refs,
                     memory_recall_degraded=not memory_recall_found,
                 ),
@@ -510,6 +572,7 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
         source_id = str(c.get("candidate_id") or c.get("source_identity") or c.get("title") or "")
         org = str(c.get("organization") or "").strip()
         source_receipt = str(c.get("source_receipt_id") or "")
+        source_receipt_ids = [source_receipt] if source_receipt else []
         evidence_refs = [
             ref
             for ref in [
@@ -548,6 +611,20 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
             else:
                 recommended = "human_decide_reconnect_or_defer"
             evidence = list(dict.fromkeys(evidence_refs))
+            if signal_type == "direct_contact":
+                path = ["Graham Anderson", subject]
+            elif signal_type == "adjacent_contact":
+                path = ["Graham Anderson", "ARCOS/formal-methods network", subject]
+            elif signal_type == "organization_sponsor":
+                path = ["Graham Anderson", org or "sponsored opportunity", subject]
+            else:
+                path = ["Graham Anderson", org or "event", subject]
+            contact_path = _contact_path_edges(
+                path,
+                relationship=signal_type,
+                evidence_refs=evidence,
+                source_receipt_ids=source_receipt_ids,
+            )
             signals.append(
                 {
                     "signal_id": key,
@@ -556,19 +633,21 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                     "subject": subject,
                     "organization": org or subject,
                     "relationship_path": path,
+                    "contact_path": contact_path,
                     "evidence_refs": evidence,
-                    "source_receipt_ids": [source_receipt] if source_receipt else [],
+                    "source_receipt_ids": source_receipt_ids,
                     "provenance": provenance,
                     "recommended_action": recommended,
                     "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
                     "preferred_human_channels": preferred_channels,
                     "channel_guidance": channel_guidance,
+                    **_channel_guidance_fields(preferred_channels, evidence),
                     "external_effects": False,
                     "action_worthy": True,
                     "visible_in_report": True,
                     **_relationship_candidate_fields(
                         signal_type=signal_type,
-                        relationship_path=path,
+                        contact_path=contact_path,
                         evidence_refs=evidence,
                     ),
                 }
