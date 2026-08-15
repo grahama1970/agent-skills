@@ -136,8 +136,10 @@ def test_close_tab_records_browser_control_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     sleeps: list[float] = []
+    close_calls: list[tuple[object, ...]] = []
 
-    def close_timeout(*_: object, **__: object) -> str:
+    def close_timeout(*args: object, **__: object) -> str:
+        close_calls.append(args)
         raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 30)
 
     monkeypatch.setattr(browser_capture, "_surf", close_timeout)
@@ -150,7 +152,8 @@ def test_close_tab_records_browser_control_failure(
     assert summary["status"] == "DEGRADED"
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
-    assert summary["recent"][0]["timeout"] == 20
+    assert summary["recent"][0]["timeout"] == 75
+    assert close_calls[0][1:] == ("tab.close", "123", "--lock-timeout", "15")
     assert sleeps == [1.0, 1.0]
 
 

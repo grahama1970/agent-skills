@@ -66,7 +66,8 @@ class HostSessionManager {
 
   leaseKeyFromRequest(msg, tool) {
     const args = msg?.params?.args || {};
-    const tabId = msg?.tabId || args["target-tab-id"] || args["tab-id"];
+    const tabId = msg?.tabId || args["target-tab-id"] || args["tab-id"]
+      || (tool === "tab.close" || tool === "close_tab" || tool === "tab.switch" || tool === "switch_tab" ? args.id || args.tab_id : undefined);
     if (tabId) return `tab:${tabId}`;
     const windowId = msg?.windowId || args["window-id"];
     if (windowId) return `window:${windowId}`;

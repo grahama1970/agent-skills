@@ -189,7 +189,8 @@ def _nav_js(url: str) -> str:
     )
 
 
-_TAB_CLOSE_TIMEOUT_SECONDS = 20
+_TAB_CLOSE_TIMEOUT_SECONDS = 75
+_TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 15
 _TAB_CLOSE_ATTEMPTS = 3
 
 
@@ -217,7 +218,14 @@ def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
     last_error: BrowserCaptureError | subprocess.TimeoutExpired | None = None
     for attempt in range(1, _TAB_CLOSE_ATTEMPTS + 1):
         try:
-            _surf(surf_run, "tab.close", tab_id, timeout=_TAB_CLOSE_TIMEOUT_SECONDS)
+            _surf(
+                surf_run,
+                "tab.close",
+                tab_id,
+                "--lock-timeout",
+                str(_TAB_CLOSE_LOCK_TIMEOUT_SECONDS),
+                timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
+            )
             return
         except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
             last_error = exc

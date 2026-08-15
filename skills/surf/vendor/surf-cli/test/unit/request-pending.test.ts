@@ -11,6 +11,11 @@ const { RequestPendingMap } = require("../../native/request-pending.cjs") as {
     clear(): void;
   };
 };
+const { HostSessionManager } = require("../../native/host-sessions.cjs") as {
+  HostSessionManager: new () => {
+    leaseKeyFromRequest(msg: Record<string, unknown>, tool: string): string;
+  };
+};
 
 function request() {
   const controller = new AbortController();
@@ -104,5 +109,15 @@ describe("request-owned pending operations", () => {
     vi.advanceTimersByTime(2000);
     expect(reject).toHaveBeenCalledOnce();
     vi.useRealTimers();
+  });
+});
+
+describe("native host browser leases", () => {
+  it("scopes positional tab.close to the target tab instead of the global lease", () => {
+    const manager = new HostSessionManager();
+
+    expect(manager.leaseKeyFromRequest({ params: { args: { id: "837394573" } } }, "tab.close")).toBe(
+      "tab:837394573",
+    );
   });
 });

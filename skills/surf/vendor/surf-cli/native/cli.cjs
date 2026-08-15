@@ -48,8 +48,9 @@ function parseBrowserLockTimeoutMs(value, fallbackMs) {
   return seconds * 1000;
 }
 
-function lockScopeForRequest(endpoint, globalOpts = {}, toolArgs = {}) {
-  const targetTabId = globalOpts.tabId || toolArgs["target-tab-id"];
+function lockScopeForRequest(endpoint, globalOpts = {}, toolArgs = {}, tool = "") {
+  const targetTabId = globalOpts.tabId || toolArgs["target-tab-id"]
+    || (tool === "tab.close" || tool === "close_tab" || tool === "tab.switch" || tool === "switch_tab" ? toolArgs.id || toolArgs.tab_id : undefined);
   if (targetTabId) {
     return {
       ...endpoint,
@@ -3509,7 +3510,7 @@ if (finalTool === "record") {
     console.error(`Error: record is not supported with remote endpoint ${endpoint.display}`);
     process.exit(1);
   }
-  installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs));
+  installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs, finalTool));
   runRecord()
     .then(() => process.exit(0))
     .catch((error) => {
@@ -3519,7 +3520,7 @@ if (finalTool === "record") {
   return;
 }
 
-installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs));
+installBrowserLock(lockOptions, endpoint, lockScopeForRequest(endpoint, globalOpts, toolArgs, finalTool));
 let socket;
 let timeout;
 let responseFinished = false;
@@ -3619,6 +3620,19 @@ async function handleResponse(response) {
 
   if (response.error) {
     const errContent = response.error.content?.[0]?.text || JSON.stringify(response.error);
+    if ((tool === "tab.close" || tool === "close_tab") && /Invalid tab ID:\s*\d+/.test(errContent)) {
+      const requestedId = toolArgs.id || toolArgs.tab_id || toolArgs.tabId || globalOpts.tabId;
+      const parsedId = Number(requestedId);
+      const tabId = Number.isSafeInteger(parsedId) && parsedId > 0 ? parsedId : requestedId;
+      if (wantJson) {
+        await writeStdout(`${JSON.stringify({ success: true, tabId, alreadyClosed: true }, null, 2)}\n`);
+      } else {
+        await writeStdout(`Closed tab ${tabId} (already closed)\n`);
+      }
+      socket.end();
+      process.exitCode = 0;
+      return;
+    }
     if (softFail) {
       console.warn("Warning:", errContent);
       socket.end();

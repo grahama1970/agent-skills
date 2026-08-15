@@ -13,6 +13,17 @@ async function loadHandleMessage() {
   return mod.handleMessage;
 }
 
+async function loadNativeMessageHandler() {
+  vi.resetModules();
+  (globalThis as any).chrome = createChromeMock();
+  const portManager = await import("../../../src/native/port-manager");
+  const initNativeMessaging = vi.mocked(portManager.initNativeMessaging);
+  await import("../../../src/service-worker/index");
+  const handler = initNativeMessaging.mock.calls.at(-1)?.[0];
+  if (!handler) throw new Error("initNativeMessaging handler was not registered");
+  return handler;
+}
+
 describe("tab handlers", () => {
   beforeEach(() => {
     resetChromeMock();
@@ -103,5 +114,40 @@ describe("tab handlers", () => {
       destinationWindowId: 456,
       index: 0,
     });
+  });
+
+  it("closes numeric tab ids parsed from strings", async () => {
+    const handleMessage = await loadHandleMessage();
+    const chrome = (globalThis as any).chrome;
+    chrome.tabs.query.mockResolvedValue([{ id: 123, url: "https://example.com/", windowId: 1 }]);
+
+    const result = await handleMessage({ type: "CLOSE_TAB", tabId: "123" }, {});
+
+    expect(chrome.tabs.remove).toHaveBeenCalledWith([123]);
+    expect(result).toEqual({ success: true, tabId: 123, alreadyClosed: false });
+  });
+
+  it("treats an already closed tab as successful cleanup", async () => {
+    const handleMessage = await loadHandleMessage();
+    const chrome = (globalThis as any).chrome;
+    chrome.tabs.query.mockResolvedValue([]);
+
+    const result = await handleMessage({ type: "CLOSE_TAB", tabId: "123" }, {});
+
+    expect(chrome.tabs.remove).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: true, tabId: 123, alreadyClosed: true });
+  });
+
+  it("lets native CLOSE_TAB requests clean up already closed targets", async () => {
+    const handleNativeMessage = await loadNativeMessageHandler();
+    const chrome = (globalThis as any).chrome;
+    chrome.tabs.get.mockRejectedValue(new Error("No tab with id: 123"));
+    chrome.tabs.query.mockResolvedValue([]);
+
+    const result = await handleNativeMessage({ type: "CLOSE_TAB", tabId: 123 });
+
+    expect(chrome.tabs.get).not.toHaveBeenCalled();
+    expect(chrome.tabs.remove).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ success: true, tabId: 123, alreadyClosed: true });
   });
 });

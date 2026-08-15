@@ -2716,13 +2716,21 @@ export async function handleMessage(
     }
 
     case "CLOSE_TAB": {
-      const tabIds = message.tabIds || (message.tabId ? [message.tabId] : []);
+      const rawTabIds = message.tabIds || (message.tabId ? [message.tabId] : []);
+      const tabIds = (Array.isArray(rawTabIds) ? rawTabIds : String(rawTabIds).split(","))
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0);
       if (tabIds.length === 0) throw new Error("No tabId(s) provided");
-      await chrome.tabs.remove(tabIds);
-      if (tabIds.length === 1) {
-        return { success: true, tabId: tabIds[0] };
+      const liveTabs = await chrome.tabs.query({});
+      const liveIds = new Set(liveTabs.map((tab) => tab.id).filter((id): id is number => typeof id === "number"));
+      const closeIds = tabIds.filter((id) => liveIds.has(id));
+      if (closeIds.length > 0) {
+        await chrome.tabs.remove(closeIds);
       }
-      return { success: true, closed: tabIds };
+      if (tabIds.length === 1) {
+        return { success: true, tabId: tabIds[0], alreadyClosed: closeIds.length === 0 };
+      }
+      return { success: true, closed: closeIds, alreadyClosed: tabIds.filter((id) => !liveIds.has(id)) };
     }
 
     case "TAB_MOVE": {
@@ -3853,6 +3861,10 @@ const COMMANDS_WITHOUT_TAB = new Set([
   "EMULATE_DEVICE_LIST"
 ]);
 
+const COMMANDS_ALLOW_MISSING_TARGET_TAB = new Set([
+  "CLOSE_TAB"
+]);
+
 initNativeMessaging(async (msg) => {
   let tabId = msg.tabId;
   const windowId = msg.windowId;
@@ -3860,7 +3872,7 @@ initNativeMessaging(async (msg) => {
   const needsTab = !COMMANDS_WITHOUT_TAB.has(msg.type);
   let autoCreatedTab = false;
 
-  if (tabId && !isDialogCommand) {
+  if (tabId && !isDialogCommand && !COMMANDS_ALLOW_MISSING_TARGET_TAB.has(msg.type)) {
     try {
       await chrome.tabs.get(tabId);
     } catch {
