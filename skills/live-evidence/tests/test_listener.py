@@ -9,6 +9,7 @@ from live_evidence.listener import (
     _backend_client,
     _pipewire_record_command,
     _stt_final_boundary_kwargs,
+    _stop_backend_session,
 )
 
 
@@ -54,6 +55,35 @@ def test_backend_client_ignores_broken_ca_file_for_plain_http(monkeypatch) -> No
         assert client.base_url == "http://127.0.0.1:8787"
     finally:
         client.close()
+
+
+def test_stop_backend_session_posts_stop(monkeypatch) -> None:
+    posted_paths: list[str] = []
+
+    class Response:
+        def raise_for_status(self) -> None:
+            return None
+
+    class Client:
+        def __enter__(self) -> "Client":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def post(self, path: str) -> Response:
+            posted_paths.append(path)
+            return Response()
+
+    def fake_backend_client(_url: str, *, timeout: httpx.Timeout) -> Client:
+        assert timeout.connect == 1.0
+        return Client()
+
+    monkeypatch.setattr("live_evidence.listener._backend_client", fake_backend_client)
+
+    _stop_backend_session("http://127.0.0.1:8787")
+
+    assert posted_paths == ["/api/session/stop"]
 
 
 def test_listener_default_compute_type_matches_workstation_safe_gpu_mode() -> None:

@@ -135,59 +135,62 @@ class LiveListener:
 
         _install_signal_handlers(self._stop)
         _start_backend_session(self._options.backend_url, self._options.consent_confirmed)
-        if self._options.mode in {ListenMode.MICROPHONE, ListenMode.DUAL}:
-            self._threads.append(
-                threading.Thread(
-                    target=self._guarded_channel,
-                    args=(self._run_microphone,),
-                    name="live-evidence-mic",
-                    daemon=True,
+        try:
+            if self._options.mode in {ListenMode.MICROPHONE, ListenMode.DUAL}:
+                self._threads.append(
+                    threading.Thread(
+                        target=self._guarded_channel,
+                        args=(self._run_microphone,),
+                        name="live-evidence-mic",
+                        daemon=True,
+                    )
                 )
-            )
-        if self._options.mode in {ListenMode.PIPEWIRE, ListenMode.DUAL}:
-            self._threads.append(
-                threading.Thread(
-                    target=self._guarded_channel,
-                    args=(self._run_pipewire,),
-                    name="live-evidence-pipewire",
-                    daemon=True,
+            if self._options.mode in {ListenMode.PIPEWIRE, ListenMode.DUAL}:
+                self._threads.append(
+                    threading.Thread(
+                        target=self._guarded_channel,
+                        args=(self._run_pipewire,),
+                        name="live-evidence-pipewire",
+                        daemon=True,
+                    )
                 )
-            )
-        if not self._threads:
-            raise RuntimeError("no listener channels selected")
-        for thread in self._threads:
-            thread.start()
-        logger.info("live listener started mode={}", self._options.mode.value)
-        next_status_poll = time.monotonic()
-        backend_failures = 0
-        while not self._stop.wait(0.25):
-            try:
+            if not self._threads:
+                raise RuntimeError("no listener channels selected")
+            for thread in self._threads:
+                thread.start()
+            logger.info("live listener started mode={}", self._options.mode.value)
+            next_status_poll = time.monotonic()
+            backend_failures = 0
+            while not self._stop.wait(0.25):
+                try:
+                    error = self._errors.get_nowait()
+                except queue.Empty:
+                    error = None
+                if error is not None:
+                    raise RuntimeError(f"listener channel failed: {error}") from error
+                if not any(thread.is_alive() for thread in self._threads):
+                    raise RuntimeError("all listener channels stopped unexpectedly")
+                if time.monotonic() >= next_status_poll:
+                    next_status_poll = time.monotonic() + 0.75
+                    status = _read_backend_session_status(self._options.backend_url)
+                    if status == "stopped":
+                        logger.info("backend session stopped; ending audio capture")
+                        self._stop.set()
+                        break
+                    if status is None:
+                        backend_failures += 1
+                        if backend_failures >= 8:
+                            raise RuntimeError("backend state monitor failed repeatedly")
+                    else:
+                        backend_failures = 0
+            for thread in self._threads:
+                thread.join(timeout=5.0)
+            if not self._errors.empty():
                 error = self._errors.get_nowait()
-            except queue.Empty:
-                error = None
-            if error is not None:
                 raise RuntimeError(f"listener channel failed: {error}") from error
-            if not any(thread.is_alive() for thread in self._threads):
-                raise RuntimeError("all listener channels stopped unexpectedly")
-            if time.monotonic() >= next_status_poll:
-                next_status_poll = time.monotonic() + 0.75
-                status = _read_backend_session_status(self._options.backend_url)
-                if status == "stopped":
-                    logger.info("backend session stopped; ending audio capture")
-                    self._stop.set()
-                    break
-                if status is None:
-                    backend_failures += 1
-                    if backend_failures >= 8:
-                        raise RuntimeError("backend state monitor failed repeatedly")
-                else:
-                    backend_failures = 0
-        for thread in self._threads:
-            thread.join(timeout=5.0)
-        if not self._errors.empty():
-            error = self._errors.get_nowait()
-            raise RuntimeError(f"listener channel failed: {error}") from error
-        logger.info("live listener stopped")
+            logger.info("live listener stopped")
+        finally:
+            _stop_backend_session(self._options.backend_url)
 
     def _guarded_channel(self, target: Callable[[], None]) -> None:
         try:
@@ -297,6 +300,18 @@ def _start_backend_session(backend_url: str, consent_confirmed: bool) -> None:
             json={"consent_confirmed": consent_confirmed},
         )
         response.raise_for_status()
+
+
+def _stop_backend_session(backend_url: str) -> None:
+    """Stop the backend session when the local listener exits."""
+
+    timeout = httpx.Timeout(connect=1.0, read=2.0, write=1.0, pool=1.0)
+    try:
+        with _backend_client(backend_url, timeout=timeout) as client:
+            response = client.post("/api/session/stop")
+            response.raise_for_status()
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.warning("could not stop backend session after listener shutdown: {}", exc)
 
 
 def _read_backend_session_status(backend_url: str) -> str | None:
