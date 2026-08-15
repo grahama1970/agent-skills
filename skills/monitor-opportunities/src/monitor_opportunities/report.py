@@ -58,6 +58,28 @@ def _link(label: str, url: str | None) -> str:
     return f'<p><strong>{safe_label}:</strong> <a href="{safe_url}">{html.escape(url)}</a></p>'
 
 
+def _relationship_summary(item: Any, signals_by_id: dict[str, Any]) -> str:
+    ids = list(getattr(item, "relationship_signal_ids", []) or [])
+    if not ids:
+        return '<p class="muted">No relationship signal attached to this opportunity.</p>'
+    rows = []
+    for signal_id in ids:
+        signal = signals_by_id.get(signal_id)
+        if signal is None:
+            rows.append(f"<li><code>{html.escape(signal_id)}</code>: missing from manifest</li>")
+            continue
+        rows.append(
+            "<li>"
+            f"<strong>{html.escape(signal.subject)}</strong> — {html.escape(signal.organization)} "
+            f"({_badge(signal.signal_type)})"
+            f"<div>{html.escape(signal.provenance)}</div>"
+            f"<div>Action: {html.escape(signal.recommended_action)}</div>"
+            f"<div>Channels: {html.escape(', '.join(signal.preferred_human_channels))}</div>"
+            "</li>"
+        )
+    return f"<ul>{''.join(rows)}</ul>"
+
+
 def _draft_readback(item: Any) -> str:
     if not item.draft_id and not item.mailbox_draft_ref and not item.effect_receipt_digest:
         return ""
@@ -78,6 +100,7 @@ def _revision_note(item: Any) -> str:
 
 
 def render_html(manifest: ReportManifest) -> str:
+    signals_by_id = {signal.signal_id: signal for signal in manifest.relationship_signals}
     lanes = "".join(
         "<tr>"
         f"<td>{html.escape(lane.lane)}</td>"
@@ -100,9 +123,25 @@ def render_html(manifest: ReportManifest) -> str:
         f"<h4>Claim keys</h4>{_list(item.claim_keys)}"
         f"<h4>Observed screening evidence</h4>{_list(item.screening_interface_profile.observed)}"
         f"<h4>Bounded inferences</h4>{_list(item.screening_interface_profile.inferred)}"
-        f"<h4>Unknowns</h4>{_list(item.screening_interface_profile.unknowns)}</article>"
+        f"<h4>Unknowns</h4>{_list(item.screening_interface_profile.unknowns)}"
+        f"<h4>Relationship signals ({item.relationship_signal_count})</h4>"
+        f"{_relationship_summary(item, signals_by_id)}</article>"
         for item in manifest.opportunities
     ) or '<p class="empty">No opportunity cleared the eligibility and quality bar.</p>'
+
+    relationships = "".join(
+        f"<article><h3>{html.escape(item.subject)} — {html.escape(item.organization)}</h3>"
+        f"<p>{_badge(item.signal_type)} action_worthy={str(item.action_worthy).lower()} "
+        f"external_effects=false</p>"
+        f"<p><strong>Recommended:</strong> {html.escape(item.recommended_action)}</p>"
+        f"<p><strong>Channel risk:</strong> {html.escape(item.contact_channel_risk)}</p>"
+        f"<h4>Path</h4>{_list(item.relationship_path)}"
+        f"<h4>Preferred human channels</h4>{_list(item.preferred_human_channels)}"
+        f"<h4>Guidance</h4>{_list(item.channel_guidance)}"
+        f"<h4>Evidence</h4>{_list(item.evidence_refs)}"
+        f"<p><strong>Provenance:</strong> {html.escape(item.provenance)}</p></article>"
+        for item in manifest.relationship_signals
+    ) or "<p>None</p>"
 
     rejections = "".join(
         f"<li><strong>{html.escape(item.title)}</strong> — {html.escape(item.organization)} "
@@ -233,6 +272,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <section><h2>Human-transmitted outreach</h2><p><strong>The human transmits. Stage 0 packets are not sendable.</strong></p>{outreach}</section>
 <section><h2>ATS application state</h2>{applications}</section>
 <section><h2>Application packets</h2>{application_packets}</section>
+<section><h2>Relationship signals</h2>{relationships}</section>
 <section><h2>Interview preparation</h2>{interview}</section>
 <section><h2>Source receipts</h2><table><thead><tr><th>Lane</th><th>Provider</th><th>Target</th><th>Source class</th><th>Automation policy</th><th>Status</th><th>Evidence</th><th>Limitations</th></tr></thead><tbody>{sources}</tbody></table></section>
 <section><h2>Available local decisions</h2><ul>{decisions}</ul></section>

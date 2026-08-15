@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from monitor_contacts.freshness import PROJECT_WIN, ROLE_CHANGE, detect_changes, stale_contacts
+from monitor_contacts.relationship_graph import reconnect_signals_from_observations
 from monitor_contacts.store import contact_key
 
 NOW = datetime(2026, 8, 13, tzinfo=UTC)
@@ -53,3 +54,27 @@ def test_signal_regexes_match_announcements_not_prose() -> None:
     assert PROJECT_WIN.search("Acme awarded $4M contract")
     assert ROLE_CHANGE.search("Jane joins Acme as VP")
     assert not PROJECT_WIN.search("Acme blogs about contracts")
+
+
+def test_reconnect_graph_export_is_local_only_and_channel_aware() -> None:
+    signals = reconnect_signals_from_observations(
+        [
+            {
+                "name": "William Brad Martin",
+                "organization": "DARPA I2O",
+                "source_url": "https://sos-vo.org/user/91",
+                "relationship_type": "direct_contact",
+                "relationship_path": ["Graham Anderson", "DARPA ARCOS network", "William Brad Martin"],
+            }
+        ],
+        source_id="memory:darpa-arcos-contact-network",
+    )
+
+    assert signals[0]["subject"] == "William Brad Martin"
+    assert signals[0]["signal_type"] == "direct_contact"
+    assert signals[0]["organization"] == "DARPA I2O"
+    assert signals[0]["external_effects"] is False
+    assert signals[0]["visible_in_report"] is True
+    assert "LINKEDIN_HUMAN_HANDOFF" in signals[0]["preferred_human_channels"]
+    assert "AUTHORIZED_PERSONA_GMAIL" in signals[0]["preferred_human_channels"]
+    assert "https://sos-vo.org/user/91" in signals[0]["evidence_refs"]

@@ -15,6 +15,8 @@ ALLOWED_ACTIONS = {
     "ATTEND_MEETUP",
     "WATCH_MEETUP",
     "SKIP_MEETUP",
+    "RECONNECT_CONTACT",
+    "DEFER_CONTACT",
     "ACCEPT_RESUME_VARIANT",
     "PROPOSE_CLAIM_AMENDMENT",
     "WITHHOLD_APPLICATION",
@@ -44,6 +46,7 @@ def _manifest_item(manifest: dict[str, Any] | None, item_id: str) -> dict[str, A
         "outreach_packets": "packet_id",
         "applications": "application_id",
         "application_packets": "packet_id",
+        "relationship_signals": "signal_id",
     }
     for collection, id_field in id_fields.items():
         for row in manifest.get(collection, []):
@@ -125,6 +128,8 @@ def _resulting_state(action: str) -> str:
         "ATTEND_MEETUP": "MEETUP_ATTEND_SELECTED_LOCAL_ONLY",
         "WATCH_MEETUP": "MEETUP_WATCH_SELECTED_LOCAL_ONLY",
         "SKIP_MEETUP": "MEETUP_SKIPPED_LOCAL_ONLY",
+        "RECONNECT_CONTACT": "CONTACT_RECONNECT_SELECTED_LOCAL_ONLY",
+        "DEFER_CONTACT": "CONTACT_DEFERRED_LOCAL_ONLY",
         "ACCEPT_RESUME_VARIANT": "RESUME_VARIANT_ACCEPTED",
         "PROPOSE_CLAIM_AMENDMENT": "CLAIM_AMENDMENT_PENDING",
         "WITHHOLD_APPLICATION": "APPLICATION_WITHHELD",

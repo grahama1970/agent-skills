@@ -717,6 +717,17 @@
         "screening_interface_profile": {
           "$ref": "#/$defs/screeningProfile"
         },
+        "relationship_signal_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "relationship_signal_count": {
+          "type": "integer",
+          "minimum": 0
+        },
         "status": {
           "const": "SHORTLISTED"
         },

@@ -174,6 +174,37 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert all(any("Corporate email may be blocked" in item for item in row["channel_guidance"]) for row in signals)
 
 
+def test_relationship_signals_attach_to_opportunities_by_exact_id_and_org() -> None:
+    opportunities = [
+        {"opportunity_id": "candidate:a:galois", "organization": "Galois, Inc."},
+        {"opportunity_id": "candidate:a:other", "organization": "Other Systems"},
+    ]
+    signals = [
+        {
+            "signal_id": "rel-exact",
+            "source_opportunity_id": "candidate:a:galois",
+            "organization": "Unrelated Org",
+        },
+        {
+            "signal_id": "rel-org",
+            "source_opportunity_id": "memory:darpa-arcos-contact-network",
+            "organization": "Galois Inc",
+        },
+        {
+            "signal_id": "rel-other",
+            "source_opportunity_id": "memory:darpa-arcos-contact-network",
+            "organization": "SRI International",
+        },
+    ]
+
+    attached = cc.attach_relationship_signals_to_opportunities(opportunities, signals)
+
+    assert attached[0]["relationship_signal_ids"] == ["rel-exact", "rel-org"]
+    assert attached[0]["relationship_signal_count"] == 2
+    assert attached[1]["relationship_signal_ids"] == []
+    assert attached[1]["relationship_signal_count"] == 0
+
+
 def test_relationship_signals_can_be_disabled_for_scheduler_diagnostic(monkeypatch) -> None:
     monkeypatch.setenv("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "0")
     candidates = [

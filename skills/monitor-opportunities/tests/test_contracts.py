@@ -54,6 +54,28 @@ def test_relationship_signal_recall_degradation_fields_are_accepted() -> None:
     assert manifest.relationship_signals[0].memory_recall_degraded is True
 
 
+def test_opportunity_relationship_signal_attachments_must_reference_manifest_signals() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["opportunities"][0]["relationship_signal_ids"] = ["rel:missing"]
+    data["opportunities"][0]["relationship_signal_count"] = 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "RELATIONSHIP_SIGNAL_ATTACHMENT_MISSING"
+
+
+def test_opportunity_relationship_signal_count_must_match_ids() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["opportunities"][0]["relationship_signal_ids"] = []
+    data["opportunities"][0]["relationship_signal_count"] = 2
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "RELATIONSHIP_SIGNAL_COUNT_MISMATCH"
+
+
 @pytest.mark.parametrize(
     ("mutate", "code"),
     [

@@ -16,6 +16,11 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from monitor_opportunities.contracts import validate_manifest
+from monitor_opportunities.report import render_html
+from monitor_opportunities.service import _render_page
+from monitor_opportunities.verification import built_in_fixture
+
 
 def _free_port() -> int:
     with socket.socket() as sock:
@@ -41,6 +46,82 @@ def _post_expect_error(base: str, token: str, item: str, action: str, key: str) 
     except urllib.error.HTTPError as exc:
         return int(exc.code)
     raise AssertionError("expected HTTP error")
+
+
+def test_static_report_renders_relationship_signal_attachments() -> None:
+    data = built_in_fixture()
+    opportunity_id = data["opportunities"][0]["opportunity_id"]
+    data["relationship_signals"] = [
+        {
+            "signal_id": "rel:galois",
+            "source_opportunity_id": opportunity_id,
+            "signal_type": "direct_contact",
+            "subject": "Eric Mertens",
+            "organization": data["opportunities"][0]["organization"],
+            "relationship_path": ["Graham Anderson", "Eric Mertens", data["opportunities"][0]["organization"]],
+            "evidence_refs": ["memory://arcos-network"],
+            "source_receipt_ids": [],
+            "provenance": "Known monitor-contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["opportunities"][0]["relationship_signal_ids"] = ["rel:galois"]
+    data["opportunities"][0]["relationship_signal_count"] = 1
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    html = render_html(validate_manifest(data))
+
+    assert "Relationship signals (1)" in html
+    assert "Eric Mertens" in html
+    assert "LINKEDIN_HUMAN_HANDOFF" in html
+    assert "Relationship signals</h2>" in html
+
+
+def test_interactive_service_renders_attached_relationship_decisions(tmp_path: Path) -> None:
+    data = built_in_fixture()
+    opportunity_id = data["opportunities"][0]["opportunity_id"]
+    data["relationship_signals"] = [
+        {
+            "signal_id": "rel:galois",
+            "source_opportunity_id": opportunity_id,
+            "signal_type": "direct_contact",
+            "subject": "Eric Mertens",
+            "organization": data["opportunities"][0]["organization"],
+            "relationship_path": ["Graham Anderson", "Eric Mertens", data["opportunities"][0]["organization"]],
+            "evidence_refs": ["memory://arcos-network"],
+            "source_receipt_ids": [],
+            "provenance": "Known monitor-contact path",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Corporate email may be blocked or stale after a long contact gap."],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["opportunities"][0]["relationship_signal_ids"] = ["rel:galois"]
+    data["opportunities"][0]["relationship_signal_count"] = 1
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+    run_dir = tmp_path / "run"
+    (run_dir / "report").mkdir(parents=True)
+    (run_dir / "report-manifest.json").write_text(json.dumps(data), encoding="utf-8")
+    (run_dir / "report" / "index.html").write_text("report", encoding="utf-8")
+
+    page = _render_page(run_dir, "token")
+
+    assert "Relationship Signal" in page
+    assert "Eric Mertens" in page
+    assert "RECONNECT_CONTACT" in page
+    assert "DEFER_CONTACT" in page
 
 
 def test_remote_bind_requires_explicit_allow_remote(tmp_path: Path) -> None:

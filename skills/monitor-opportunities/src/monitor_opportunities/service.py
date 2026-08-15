@@ -135,6 +135,39 @@ def _source_evidence(source_ids: list[str], receipts_by_id: dict[str, Any]) -> s
     return f"<ul>{''.join(rows)}</ul>" if rows else '<p class="blocker">No source receipt IDs.</p>'
 
 
+def _relationship_signal_packet(signal: Any, token: str) -> str:
+    return (
+        '<section class="packet relationship"><h4>Relationship Signal</h4>'
+        f"<p>{_badge(signal.signal_type)} external_effects=false</p>"
+        f"<p><strong>Subject:</strong> {html.escape(signal.subject)}</p>"
+        f"<p><strong>Organization:</strong> {html.escape(signal.organization)}</p>"
+        f"<p><strong>Recommended:</strong> {html.escape(signal.recommended_action)}</p>"
+        f"<p><strong>Channel risk:</strong> {html.escape(signal.contact_channel_risk)}</p>"
+        f"<h5>Path</h5>{_list(signal.relationship_path, 'No relationship path retained.')}"
+        f"<h5>Preferred human channels</h5>{_list(signal.preferred_human_channels, 'No channel guidance retained.')}"
+        f"<h5>Guidance</h5>{_list(signal.channel_guidance, 'No channel guidance retained.')}"
+        f"<h5>Evidence refs</h5>{_list(signal.evidence_refs, 'No relationship evidence refs retained.')}"
+        f"<p><strong>Provenance:</strong> {html.escape(signal.provenance)}</p>"
+        + _decision_form(
+            token,
+            signal.signal_id,
+            "Relationship decision",
+            ["RECONNECT_CONTACT", "DEFER_CONTACT"],
+        )
+        + "</section>"
+    )
+
+
+def _relationship_packets_for_opportunity(manifest: Any, item: Any, token: str) -> str:
+    signals_by_id = {signal.signal_id: signal for signal in manifest.relationship_signals}
+    packets = [
+        _relationship_signal_packet(signals_by_id[signal_id], token)
+        for signal_id in getattr(item, "relationship_signal_ids", []) or []
+        if signal_id in signals_by_id
+    ]
+    return "".join(packets) or '<p class="blocker">No relationship signal is attached to this opportunity.</p>'
+
+
 def _application_packet(application: Any, token: str, packets: list[Any]) -> str:
     field_rows = "".join(
         "<tr>"
@@ -286,6 +319,7 @@ def _opportunity_cards(manifest: Any, token: str, semantic_addenda: dict[str, di
             f"<div><dt>Lane</dt><dd>{html.escape(item.lane)}</dd></div>"
             f"<div><dt>Fit</dt><dd>{item.fit_score:.2f}</dd></div>"
             f"<div><dt>Eligibility</dt><dd>{_badge(item.eligibility_state)}</dd></div>"
+            f"<div><dt>Relationship Signals</dt><dd>{item.relationship_signal_count}</dd></div>"
             f"<div><dt>Location</dt><dd>{html.escape(item.location.display)}</dd></div>"
             f"<div><dt>Type</dt><dd>{_badge(item.opportunity_type)}</dd></div>"
             f"<div><dt>Relocation Required</dt><dd>{str(item.location.relocation_required).lower()}</dd></div>"
@@ -309,6 +343,8 @@ def _opportunity_cards(manifest: Any, token: str, semantic_addenda: dict[str, di
             f"{variant_html}"
             f"{application_html}"
             f"{outreach_html}"
+            '<section class="packet"><h4>Relationship Signals</h4>'
+            f"{_relationship_packets_for_opportunity(manifest, item, token)}</section>"
             '<section class="packet"><h4>Interview Preparation</h4>'
             f"{prep_html}</section>"
             f"{_semantic_addendum_card((semantic_addenda or {}).get(item.opportunity_id))}"

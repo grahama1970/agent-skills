@@ -160,6 +160,8 @@ class Opportunity(StrictModel):
     claim_keys: list[str] = Field(min_length=1)
     why_candidate: list[str] = Field(min_length=1)
     screening_interface_profile: ScreeningInterfaceProfile
+    relationship_signal_ids: list[str] = []
+    relationship_signal_count: int = Field(default=0, ge=0)
     status: str
     action_worthy: bool
     visible_in_report: bool
@@ -464,6 +466,21 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("RELATIONSHIP_SIGNAL_EXTERNAL_EFFECT", "Relationship signals are local-only")
         if signal.get("visible_in_report") is not True:
             raise ContractError("RELATIONSHIP_SIGNAL_HIDDEN", "Relationship signals must be report-visible")
+
+    relationship_ids = {signal.get("signal_id") for signal in raw.get("relationship_signals", [])}
+    for opportunity in opportunities:
+        attached = opportunity.get("relationship_signal_ids") or []
+        if opportunity.get("relationship_signal_count", 0) != len(attached):
+            raise ContractError(
+                "RELATIONSHIP_SIGNAL_COUNT_MISMATCH",
+                "Opportunity relationship_signal_count must equal relationship_signal_ids length",
+            )
+        missing = [signal_id for signal_id in attached if signal_id not in relationship_ids]
+        if missing:
+            raise ContractError(
+                "RELATIONSHIP_SIGNAL_ATTACHMENT_MISSING",
+                f"Opportunity references missing relationship signals: {missing}",
+            )
 
     for packet in _require(raw, "outreach_packets"):
         if packet.get("sendable") is not False:

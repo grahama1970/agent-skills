@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import typer
 from loguru import logger
 
 from .freshness import detect_changes, stale_contacts
+from .relationship_graph import reconnect_signals_from_observations
 from .store import COLLECTION, DEFAULT_MEMORY_URL, count, load, save
 
 app = typer.Typer(name="monitor-contacts", help="Contact freshness monitoring.",
@@ -105,6 +107,26 @@ def changes(memory_url: str = typer.Option(DEFAULT_MEMORY_URL, "--memory-url"),
         "note": ("Change history is emitted per cycle. Run `cycle --input <file> "
                  "--commit` on a fresh observation set; this command does not "
                  "invent history it does not have."),
+    }, indent=2, sort_keys=True))
+
+
+@app.command("relationship-graph")
+def relationship_graph(
+    input_file: Path = typer.Option(..., "--input", exists=True, dir_okay=False),
+    source_id: str = typer.Option("monitor-contacts:observations", "--source-id"),
+) -> None:
+    """Export local-only reconnect relationship signals for consumers."""
+    observations = json.loads(input_file.read_text(encoding="utf-8"))
+    if not isinstance(observations, list):
+        raise typer.BadParameter("--input must be a JSON list of contact observations")
+    signals = reconnect_signals_from_observations(observations, source_id=source_id)
+    typer.echo(json.dumps({
+        "schema": "monitor_contacts.relationship_graph.v1",
+        "source_id": source_id,
+        "observed": len(observations),
+        "relationship_signals": signals,
+        "external_effects": False,
+        "note": "Human-decision records only; no email, LinkedIn, Meetup, or ATS effect is authorized.",
     }, indent=2, sort_keys=True))
 
 

@@ -51,6 +51,9 @@ case "$CMD" in
     changes)
         .venv/bin/python -m monitor_contacts changes "$@"
         ;;
+    relationship-graph)
+        .venv/bin/python -m monitor_contacts relationship-graph "$@"
+        ;;
     config)
         .venv/bin/python -m monitor_contacts config "$@"
         ;;
@@ -65,6 +68,7 @@ case "$CMD" in
         echo "  cycle              Run one monitoring cycle manually"
         echo "  report             Show contact freshness report"
         echo "  changes [--since]  Show recent changes"
+        echo "  relationship-graph --input contacts.json  Export local reconnect graph records"
         echo "  config [--key val] Configure monitoring"
         echo ""
         echo "Options:"
@@ -73,7 +77,7 @@ case "$CMD" in
         echo "  --alert-channel NAME  Discord channel for alerts"
         ;;
     *)
-        echo "Unknown command: $CMD (try: monitor, start, stop, status, cycle, report, changes)"
+        echo "Unknown command: $CMD (try: monitor, start, stop, status, cycle, report, changes, relationship-graph)"
         exit 1
         ;;
 esac

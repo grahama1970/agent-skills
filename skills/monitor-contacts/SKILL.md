@@ -98,6 +98,9 @@ This skill is **always-on**. It:
 # Show recent changes
 ./run.sh changes --since 7d
 
+# Export local-only reconnect relationship records for opportunity consumers
+./run.sh relationship-graph --input observed-contacts.json --source-id linkedin:actively-hiring
+
 # Configure monitoring
 ./run.sh config --interval weekly --budget 10 --alert-channel contacts
 ```
@@ -259,6 +262,21 @@ effects. When published to Memory, the opportunity monitor stores recallable
 graph-shaped documents through `/store` or `/upsert`; it does not write raw
 ArangoDB or vector fields.
 
+The executable boundary for that composition is:
+
+```bash
+./run.sh relationship-graph --input observed-contacts.json --source-id <bounded-source-id>
+```
+
+Input is a JSON list of observed contacts. Useful fields are `name`, `org` or
+`organization`, `profile`, `source_url`, `meetup_url`, `relationship_type`,
+`relationship_path`, `evidence_refs`, `preferred_human_channels`, and
+`channel_guidance`. Output schema is `monitor_contacts.relationship_graph.v1`
+with `relationship_signals[]` shaped for opportunity reports. Every exported
+signal has `external_effects=false`, `visible_in_report=true`, and a human-only
+recommended action. This command does not scan all Memory records, write raw
+ArangoDB, message anyone, RSVP, or send email.
+
 Contact-route freshness is part of the observation. Corporate email often fails
 after a long gap because the contact changed employers, the company blocks
 external mail, or aliases have gone stale. Relationship observations should
@@ -275,6 +293,7 @@ monitor-contacts/
   sanity.sh                  # Sanity checks
   config.py                  # Paths, constants, skill references
   memory_integration.py      # Memory + Taxonomy hooks
+  monitor_contacts/relationship_graph.py # Reconnect graph export
 ```
 
 ## Storage

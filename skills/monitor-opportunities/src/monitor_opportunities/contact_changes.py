@@ -302,6 +302,17 @@ PERSONAL_ARCOS_CONTACTS = {
     "eric harrell",
 }
 
+ORG_SUFFIXES = {
+    "co",
+    "company",
+    "corp",
+    "corporation",
+    "inc",
+    "incorporated",
+    "llc",
+    "ltd",
+}
+
 
 def _memory_recall(memory_url: str, query: str, k: int = 5) -> dict[str, Any]:
     try:
@@ -506,6 +517,57 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                 }
             )
     return signals
+
+
+def _org_key(value: Any) -> str:
+    words = re.findall(r"[a-z0-9]+", str(value or "").lower())
+    return " ".join(word for word in words if word not in ORG_SUFFIXES)
+
+
+def _same_org(left: Any, right: Any) -> bool:
+    left_key = _org_key(left)
+    right_key = _org_key(right)
+    if not left_key or not right_key:
+        return False
+    if left_key == right_key:
+        return True
+    # Allow "Galois" <-> "Galois Inc" style matches after suffix stripping,
+    # but avoid matching single generic tokens such as "AI" or "Research".
+    if min(len(left_key), len(right_key)) < 4:
+        return False
+    return left_key in right_key or right_key in left_key
+
+
+def relationship_signal_matches_opportunity(
+    signal: dict[str, Any], opportunity: dict[str, Any]
+) -> bool:
+    """Conservatively bind relationship evidence to a shortlisted opportunity.
+
+    Exact source-opportunity links are direct. Organization matches are adjacent
+    warm-path links; they remain human-decision records, not outreach authority.
+    """
+
+    opportunity_id = str(opportunity.get("opportunity_id") or opportunity.get("candidate_id") or "")
+    if opportunity_id and str(signal.get("source_opportunity_id") or "") == opportunity_id:
+        return True
+    return _same_org(signal.get("organization"), opportunity.get("organization"))
+
+
+def attach_relationship_signals_to_opportunities(
+    opportunities: list[dict[str, Any]], relationship_signals: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Attach report-visible relationship signal ids to matching opportunities."""
+
+    for opportunity in opportunities:
+        ids = [
+            str(signal["signal_id"])
+            for signal in relationship_signals
+            if signal.get("signal_id") and relationship_signal_matches_opportunity(signal, opportunity)
+        ]
+        # stable de-duplication without hiding the full graph in relationship_signals
+        opportunity["relationship_signal_ids"] = list(dict.fromkeys(ids))
+        opportunity["relationship_signal_count"] = len(opportunity["relationship_signal_ids"])
+    return opportunities
 
 
 def detect(

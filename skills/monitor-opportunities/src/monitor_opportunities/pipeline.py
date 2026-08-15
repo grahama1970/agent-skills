@@ -10,7 +10,11 @@ from typing import Any
 from loguru import logger
 
 from .application_packets import build_application_packets
-from .contact_changes import relationship_signals_from_candidates, relationship_signals_from_memory
+from .contact_changes import (
+    attach_relationship_signals_to_opportunities,
+    relationship_signals_from_candidates,
+    relationship_signals_from_memory,
+)
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError, ResultStatus
 from .discovery import sweep
 from .outreach import build_outreach_packets
@@ -461,6 +465,7 @@ def _report_from_run(
     for signal in relationship_signals_from_memory(memory_url):
         if signal["signal_id"] not in {row["signal_id"] for row in relationship_signals}:
             relationship_signals.append(signal)
+    attach_relationship_signals_to_opportunities(opportunities, relationship_signals)
     resume_variants = _resume_variants(tailoring_dir, opportunities)
     if len(resume_variants) != len(opportunities):
         missing = sorted(
