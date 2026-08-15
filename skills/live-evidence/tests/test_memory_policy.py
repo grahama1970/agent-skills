@@ -13,6 +13,7 @@ from live_evidence.retrieval.memory import MemoryEvidenceClient
 from live_evidence.retrieval.memory import _code_item_allowed, _memory_item_allowed
 from live_evidence.retrieval.memory import _code_queries
 from live_evidence.retrieval.memory import _dedupe_sources
+from live_evidence.retrieval.memory import _filtered_code_repositories
 from live_evidence.retrieval.memory import _memory_items_to_sources
 from live_evidence.retrieval.memory import _select_code_items
 from live_evidence.retrieval.memory import _subprocess_env
@@ -285,3 +286,48 @@ def test_memory_recall_confident_hit_can_be_evidence() -> None:
 
     assert len(sources) == 1
     assert sources[0].metadata["_key"] == "lesson-live-evidence-memory-optional"
+
+
+def test_memory_code_symbol_items_become_code_sources_when_repo_allowed() -> None:
+    sources = _memory_items_to_sources(
+        {
+            "found": True,
+            "should_scan": False,
+            "confidence": 0.91,
+            "items": [
+                {
+                    "_key": "cs-remove-invalid-parens",
+                    "type": "code_context",
+                    "symbol_id": "cs-remove-invalid-parens",
+                    "qualified_name": "removeInvalidParentheses",
+                    "symbol_kind": "function",
+                    "repo": "youtube-eval",
+                    "branch": "main",
+                    "path": "remove_invalid_parentheses.js",
+                    "start_line": 1,
+                    "end_line": 11,
+                    "retrieval_text": "Repository: youtube-eval\nQualified name: removeInvalidParentheses",
+                }
+            ],
+        },
+        "temporal_project_state",
+        InterviewProfile(name="youtube-eval", repo_priorities=["youtube-eval"]),
+    )
+
+    assert len(sources) == 1
+    assert sources[0].lane is RetrievalLane.CODE
+    assert sources[0].repository == "youtube-eval"
+    assert sources[0].label == "removeInvalidParentheses"
+    assert "Repository: youtube-eval" in sources[0].excerpt
+
+
+def test_filtered_code_repositories_reports_profile_mismatch() -> None:
+    rejected = _filtered_code_repositories(
+        [
+            {"repository": "youtube-eval", "qualified_name": "removeInvalidParentheses"},
+            {"repository": "agent-skills", "qualified_name": "LiveEvidence"},
+        ],
+        InterviewProfile(name="youtube-live", repo_priorities=["youtube-live", "agent-skills"]),
+    )
+
+    assert rejected == {"youtube-eval"}

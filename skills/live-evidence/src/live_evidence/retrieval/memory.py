@@ -183,14 +183,16 @@ class MemoryEvidenceClient:
         )
         sources: list[EvidenceSource] = []
         symbol_ids: list[str] = []
+        filtered_repositories: set[str] = set()
         errors = 0
         for result in results:
             if isinstance(result, Exception):
                 errors += 1
                 continue
-            term_sources, term_symbol_ids = result
+            term_sources, term_symbol_ids, term_filtered_repositories = result
             sources.extend(term_sources)
             symbol_ids.extend(term_symbol_ids)
+            filtered_repositories.update(term_filtered_repositories)
         if symbol_ids:
             node_results = await asyncio.gather(
                 *(
@@ -208,6 +210,9 @@ class MemoryEvidenceClient:
         sources = _dedupe_sources(sources)
         if not sources:
             detail = "Indexed code returned no exact source"
+            if filtered_repositories:
+                repos = ", ".join(sorted(filtered_repositories)[:5])
+                detail += f"; filtered repositories outside profile repo_priorities: {repos}"
             if errors:
                 detail += f"; {errors} query error(s)"
             return [], detail
@@ -217,7 +222,7 @@ class MemoryEvidenceClient:
         self,
         runner: Path,
         query: str,
-    ) -> tuple[list[EvidenceSource], list[str]]:
+    ) -> tuple[list[EvidenceSource], list[str], set[str]]:
         command = [str(runner), "code-search", "--q", query, "--limit", "4"]
         try:
             result = subprocess.run(
@@ -230,11 +235,12 @@ class MemoryEvidenceClient:
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             logger.warning("memory code search degraded: {}", type(exc).__name__)
-            return [], []
+            return [], [], set()
         if result.returncode != 0:
-            return [], []
+            return [], [], set()
         payload = _parse_json_output(result.stdout)
         items = payload.get("items", []) if isinstance(payload, dict) else []
+        filtered_repositories = _filtered_code_repositories(items, self._profile)
         sources: list[EvidenceSource] = []
         symbol_ids: list[str] = []
         for item in _select_code_items(items, self._profile, limit=4):
@@ -244,7 +250,7 @@ class MemoryEvidenceClient:
             symbol_id = str(item.get("symbol_id") or item.get("stable_id") or "").strip()
             if symbol_id:
                 symbol_ids.append(symbol_id)
-        return sources, symbol_ids
+        return sources, symbol_ids, filtered_repositories
 
     def _code_node_sync(self, runner: Path, symbol_id: str) -> EvidenceSource | None:
         command = [str(runner), "code-node", "--symbol-id", symbol_id, "--source"]
@@ -359,6 +365,13 @@ def _memory_items_to_sources(
     for item in candidates[:8]:
         if not isinstance(item, dict) or not _memory_item_allowed(item, interview_profile):
             continue
+        if _is_code_symbol_item(item):
+            if not _code_item_allowed(item, interview_profile):
+                continue
+            source = _code_item_to_source(item)
+            if source is not None:
+                sources.append(source)
+            continue
         excerpt = _first_text(item, "solution", "text", "answer", "content", "problem")
         path = _first_text(item, "path", "source_path", "file_path")
         repository = _first_text(item, "repo", "repository", "project")
@@ -435,6 +448,31 @@ def _code_item_allowed(item: dict[str, Any], profile: InterviewProfile) -> bool:
     return repository in allowed or repository.rsplit("/", 1)[-1] in allowed
 
 
+def _filtered_code_repositories(items: list[Any], profile: InterviewProfile) -> set[str]:
+    """Return indexed-code repositories rejected by the profile allowlist."""
+
+    if not profile.repo_priorities:
+        return set()
+    return {
+        repository
+        for item in items
+        if isinstance(item, dict)
+        for repository in [_first_text(item, "repository", "repo", "project")]
+        if repository and not _code_item_allowed(item, profile)
+    }
+
+
+def _is_code_symbol_item(item: dict[str, Any]) -> bool:
+    """Detect Memory code-symbol rows without depending on one schema version."""
+
+    item_type = _first_text(item, "type").casefold()
+    return (
+        item_type == "code_context"
+        or bool(item.get("symbol_id"))
+        or bool(item.get("qualified_name") and item.get("symbol_kind"))
+    )
+
+
 def _select_code_items(
     items: list[Any],
     profile: InterviewProfile,
@@ -479,10 +517,11 @@ def _code_item_to_source(item: dict[str, Any]) -> EvidenceSource | None:
     qualified = _first_text(item, "qualified_name", "symbol_name", "name")
     if not path or not qualified:
         return None
+    excerpt = _first_text(item, "retrieval_text", "signature")
     return EvidenceSource(
         lane=RetrievalLane.CODE,
         label=qualified,
-        excerpt=f"Indexed symbol {qualified} in {path}",
+        excerpt=(excerpt[:4_000] if excerpt else f"Indexed symbol {qualified} in {path}"),
         score=0.74,
         freshness=Freshness.UNKNOWN,
         repository=_first_text(item, "repository", "repo") or None,
