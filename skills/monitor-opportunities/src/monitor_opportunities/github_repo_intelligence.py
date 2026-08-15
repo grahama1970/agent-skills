@@ -245,6 +245,73 @@ def _repository_content_analysis(
     return analysis
 
 
+def _repository_activity_snippet(
+    *,
+    kind: str,
+    text: str,
+    url: str,
+    terms: list[str],
+    limit: int = 2,
+) -> dict[str, Any] | None:
+    matched_terms = _matching_terms(text, terms)
+    if not matched_terms:
+        return None
+    snippets = _term_snippets(text, matched_terms, limit=limit)
+    if not snippets:
+        return None
+    return {
+        "kind": kind,
+        "url": url,
+        "matched_terms": matched_terms,
+        "snippets": snippets,
+    }
+
+
+def _add_activity_analysis(
+    analysis: dict[str, Any],
+    *,
+    repo_url: str,
+    issues: list[dict[str, Any]],
+    pulls: list[dict[str, Any]],
+    commits: list[dict[str, Any]],
+    config: GitHubRepoIntelligenceConfig,
+) -> None:
+    terms = _terms_for_analysis(config)
+    activity: list[dict[str, Any]] = []
+    for issue in issues[: config.max_issues]:
+        if issue.get("pull_request"):
+            continue
+        url = str(issue.get("html_url") or repo_url)
+        text = "\n".join([str(issue.get("title") or ""), str(issue.get("body") or "")])
+        item = _repository_activity_snippet(kind="issue", text=text, url=url, terms=terms)
+        if item:
+            activity.append(item)
+    for pr in pulls[: config.max_pull_requests]:
+        url = str(pr.get("html_url") or repo_url)
+        text = "\n".join([str(pr.get("title") or ""), str(pr.get("body") or "")])
+        item = _repository_activity_snippet(kind="pull_request", text=text, url=url, terms=terms)
+        if item:
+            activity.append(item)
+    for commit in commits[: config.max_commits]:
+        url = str(commit.get("html_url") or repo_url)
+        commit_payload = commit.get("commit") if isinstance(commit.get("commit"), dict) else {}
+        message = str(commit_payload.get("message") or commit.get("message") or "")
+        item = _repository_activity_snippet(kind="commit", text=message, url=url, terms=terms)
+        if item:
+            activity.append(item)
+
+    activity_refs = [str(item["url"]) for item in activity if item.get("url")]
+    matched_terms = [
+        term
+        for item in activity
+        for term in item.get("matched_terms", [])
+        if isinstance(term, str)
+    ]
+    analysis["activity_snippets"] = activity
+    analysis["matched_terms"] = list(dict.fromkeys([*analysis.get("matched_terms", []), *matched_terms]))
+    analysis["evidence_refs"] = list(dict.fromkeys([*analysis.get("evidence_refs", []), *activity_refs]))
+
+
 def _contact_from_user(
     user: dict[str, Any],
     *,
@@ -398,6 +465,8 @@ def _collect_repo_record(
         )
         issues = []
     for issue in issues[: config.max_issues]:
+        if issue.get("pull_request"):
+            continue
         user = _compact_user(issue.get("user"))
         if user:
             issue_participants.append({**user, "issue_url": str(issue.get("html_url") or repo_url)})
@@ -439,6 +508,15 @@ def _collect_repo_record(
         author = _compact_user(commit.get("author"))
         if author:
             commit_authors.append({**author, "commit_url": str(commit.get("html_url") or repo_url)})
+
+    _add_activity_analysis(
+        repository_analysis,
+        repo_url=repo_url,
+        issues=issues,
+        pulls=pulls,
+        commits=commits,
+        config=config,
+    )
 
     return {
         "repo": full_name,

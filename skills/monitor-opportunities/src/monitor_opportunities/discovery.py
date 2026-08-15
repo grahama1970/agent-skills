@@ -727,6 +727,15 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
                 for row in repository_analysis["readme_snippets"]
                 if isinstance(row, dict) and str(row.get("snippet") or "").strip()
             ]
+        activity_snippets = []
+        if isinstance(repository_analysis, dict) and isinstance(repository_analysis.get("activity_snippets"), list):
+            for item in repository_analysis["activity_snippets"]:
+                if not isinstance(item, dict):
+                    continue
+                kind = str(item.get("kind") or "activity")
+                for snippet in item.get("snippets") or []:
+                    if isinstance(snippet, dict) and str(snippet.get("snippet") or "").strip():
+                        activity_snippets.append(f"{kind}: {str(snippet['snippet']).strip()}")
         repo_refs = [repo_url, *_as_str_list(record.get("evidence_refs")), *analysis_refs]
         receipt["evidence_refs"].extend(repo_refs)
         github_contact_hypotheses = []
@@ -763,6 +772,7 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
                 "Topics: " + ", ".join(_as_str_list(record.get("topics"))[:12]),
                 "Matched repository terms: " + ", ".join(matched_terms[:12]),
                 "README evidence snippets: " + " | ".join(snippets[:4])[:1200],
+                "Recent activity snippets: " + " | ".join(activity_snippets[:4])[:1200],
                 "Contacts: " + "; ".join(row["subject"] for row in github_contact_hypotheses[:12]),
                 "No external effects are authorized.",
             ]

@@ -484,7 +484,18 @@ def _fake_gh_json(*args: str, timeout: int = 45) -> Any:
                 "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
                     "/issues", "/issues/7"
                 ),
+                "title": "DARPA ARCOS assurance issue",
+                "body": "Track formal methods evidence for aerospace verification.",
                 "user": {"login": "issueBob"},
+            },
+            {
+                "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
+                    "/issues", "/pull/99"
+                ),
+                "title": "PR masquerading as issue with ARCOS text",
+                "body": "GitHub issues API returns pull requests too.",
+                "pull_request": {"url": "https://api.github.com/repos/example/example/pulls/99"},
+                "user": {"login": "duplicatePrUser"},
             }
         ]
     if endpoint.endswith("/pulls"):
@@ -493,6 +504,8 @@ def _fake_gh_json(*args: str, timeout: int = 45) -> Any:
                 "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
                     "/pulls", "/pull/3"
                 ),
+                "title": "Galois ARCOS RACK update",
+                "body": "Adds security evidence for RACK source intelligence.",
                 "user": {"login": "prCarol"},
             }
         ]
@@ -502,6 +515,7 @@ def _fake_gh_json(*args: str, timeout: int = 45) -> Any:
                 "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
                     "/commits", "/commit/abc"
                 ),
+                "commit": {"message": "ARCOS CFDP verification maintenance"},
                 "author": {"login": "commitDave"},
             }
         ]
@@ -546,6 +560,13 @@ def test_live_github_intelligence_producer_writes_ingestable_artifact(
     assert "formal methods" in analysis["matched_terms"]
     assert analysis["readme"]["path"] == "README.md"
     assert analysis["readme_snippets"]
+    assert {row["kind"] for row in analysis["activity_snippets"]} == {
+        "issue",
+        "pull_request",
+        "commit",
+    }
+    assert any("DARPA ARCOS assurance issue" in row["snippets"][0]["snippet"] for row in analysis["activity_snippets"])
+    assert not any("masquerading" in row["snippets"][0]["snippet"] for row in analysis["activity_snippets"])
     assert "https://github.com/readmeEve" in first_record["evidence_refs"]
     assert any(contact["handle"] == "readmeEve" for contact in first_record["mentioned_contacts"])
     assert {row["github_repo"] for row in candidates} == {
@@ -553,6 +574,8 @@ def test_live_github_intelligence_producer_writes_ingestable_artifact(
         "galoisinc/arcos-notes",
     }
     assert any("README evidence snippets" in row["posting_text"] for row in candidates)
+    assert any("Recent activity snippets" in row["posting_text"] for row in candidates)
+    assert any("DARPA ARCOS assurance issue" in row["posting_text"] for row in candidates)
     assert any("DARPA ARCOS repository intelligence" in row["posting_text"] for row in candidates)
     assert any(row["subject"] == "Randi Tinney (@rtinney1)" for row in signals)
     assert any(row["subject"] == "GitHub @readmeEve" for row in signals)
