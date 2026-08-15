@@ -126,7 +126,8 @@ class MemoryEvidenceClient:
                     return None
                 response.raise_for_status()
                 payload = response.json()
-        except (httpx.HTTPError, ValueError):
+        except (httpx.HTTPError, OSError, ValueError) as exc:
+            logger.warning("memory intent profile degraded: {}", _exception_summary(exc))
             return None
         if not isinstance(payload, dict):
             return None
@@ -435,7 +436,7 @@ def _code_queries(query: str, profile: InterviewProfile) -> list[str]:
         if any(alias.casefold() in lower for alias in [project, *aliases])
     ]
     matched_watch = [term for term in profile.watch_terms if term.casefold() in lower]
-    return _unique_text([*matched_projects, *matched_watch, *search_terms(query, limit=5)])[:3]
+    return _unique_text([*search_terms(query, limit=5), *matched_watch, *matched_projects])[:3]
 
 
 def _unique_text(values: list[str]) -> list[str]:
