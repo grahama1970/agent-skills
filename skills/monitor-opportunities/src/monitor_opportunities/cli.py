@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 import typer
+from dotenv import load_dotenv
 from loguru import logger
 
 from . import __version__
@@ -26,8 +27,14 @@ from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
 from .github_repo_intelligence import (
     DEFAULT_OWNER_NAMES as DEFAULT_GITHUB_INTELLIGENCE_OWNER_NAMES,
+)
+from .github_repo_intelligence import (
     DEFAULT_OWNERS as DEFAULT_GITHUB_INTELLIGENCE_OWNERS,
+)
+from .github_repo_intelligence import (
     DEFAULT_QUERIES as DEFAULT_GITHUB_INTELLIGENCE_QUERIES,
+)
+from .github_repo_intelligence import (
     GitHubRepoIntelligenceConfig,
     collect_github_repo_intelligence,
     write_degraded_github_repo_intelligence,
@@ -44,14 +51,12 @@ from .report import load_manifest, render_report
 from .report_acceptance import validate_report_acceptance
 from .semantic_addenda import install_semantic_addendum
 from .service import serve as serve_report
-from .tau_semantic_prepare import prepare_tau_semantic_inputs
-from .tau_semantic_provider import run_provider_semantic_eval
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
+from .tau_semantic_prepare import prepare_tau_semantic_inputs
+from .tau_semantic_provider import run_provider_semantic_eval
 from .util import read_json, sha256_json, write_json
 from .verification import run_verification
-
-from dotenv import load_dotenv
 
 load_dotenv(override=False)
 
@@ -1158,8 +1163,8 @@ def nightly(
     memory collection and Buzz post are the interaction surface.
     """
     _configure_logging()
-    import subprocess
     import shutil
+    import subprocess
 
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
@@ -1277,13 +1282,13 @@ def nightly(
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
         browser_control_summary,
-        capture_linkedin_advanced_search,
-        capture_linkedin_top_applicant,
         capture_hiddenjobs,
         capture_indeed_jobs,
+        capture_linkedin_advanced_search,
+        capture_linkedin_top_applicant,
+        capture_meetup_buffalo_isolated,
         capture_sales_navigator_saved,
         capture_sam,
-        capture_meetup_buffalo_isolated,
         reset_browser_control_events,
     )
 
@@ -1542,12 +1547,12 @@ def nightly(
     # Live ATS form capture: for each top job, read-only capture of the
     # application-form schema so a human-promoted site policy can later drive
     # inspect -> plan -> authorize -> commit. Best-effort, read-only, no submit.
-    from .browser_capture import capture_ats_form
-
     # Resumes are tailored for all top jobs (cheap, local). Browser-DOM ATS form
     # capture is ~30s each, so bound it to the top-K; the rest are captured on
     # human demand when a job is greenlit. Env-overridable.
     import os as _os
+
+    from .browser_capture import capture_ats_form
 
     try:
         ats_capture_top_k = max(0, int(_os.environ.get("MONITOR_ATS_CAPTURE_TOP_K", "12")))
@@ -1746,6 +1751,13 @@ def nightly(
             )
 
     consistency_path = out / "receipt-consistency.json"
+    report_acceptance_path = out / "report-acceptance-receipt.json"
+    if promoted_stage0 and run_receipt_path.exists():
+        run_receipt = read_json(run_receipt_path)
+        run_receipt["report_acceptance_required"] = True
+        run_receipt["report_acceptance_receipt"] = str(report_acceptance_path)
+        run_receipt["promoted_stage0_final_gate"] = "report_acceptance"
+        write_json(run_receipt_path, run_receipt)
     if run_receipt_path.exists() and (out / "report-manifest.json").exists():
         consistency = build_receipt_consistency(
             run_dir=out,
@@ -1782,6 +1794,26 @@ def nightly(
             )
         )
 
+    report_acceptance_receipt = validate_report_acceptance(
+        out,
+        require_zero_effect_replay=True,
+    )
+    report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
+    steps["report_acceptance"] = {
+        "status": report_acceptance_receipt.get("status"),
+        "receipt": str(report_acceptance_path),
+        "sha256": report_acceptance_sha256,
+        "external_effects": report_acceptance_receipt.get("external_effects"),
+        "failure_count": len(report_acceptance_receipt.get("failures") or []),
+    }
+    if promoted_stage0 and report_acceptance_receipt.get("status") != "PASS":
+        _fail(
+            ContractError(
+                "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED",
+                f"Report acceptance failed: {report_acceptance_receipt}",
+            )
+        )
+
     nightly_receipt = {
         "status": "PASS",
         "schema": "monitor_opportunities.nightly_receipt.v1",
@@ -1805,8 +1837,13 @@ def nightly(
             else None,
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
             "zero_effect_replay": str(replay_receipt_path),
+            "report_acceptance": str(report_acceptance_path),
+        },
+        "artifact_hashes": {
+            "report_acceptance": report_acceptance_sha256,
         },
         "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
+        "report_acceptance_status": report_acceptance_receipt.get("status"),
         "steps": steps,
     }
     nightly_receipt_path = out / "nightly-receipt.json"

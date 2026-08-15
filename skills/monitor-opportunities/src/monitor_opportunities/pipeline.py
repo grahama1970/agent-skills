@@ -71,6 +71,7 @@ GENERATED_RUN_FILES = (
     "report-manifest.json",
     "memory-recall-receipt.json",
     "receipt-consistency.json",
+    "report-acceptance-receipt.json",
     "run-receipt.json",
     "stage-ledger.json",
     "trigger-receipt.json",

@@ -7,7 +7,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
-
+from monitor_opportunities.pipeline import run_stage0
 
 runner = CliRunner()
 
@@ -144,44 +144,10 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         del kwargs
         action = cmd[1]
         if action == "run":
-            (out / "report").mkdir(parents=True, exist_ok=True)
-            (out / "report" / "report.json").write_text(
-                '{"schema":"report","opportunities":[]}\n', encoding="utf-8"
-            )
-            (out / "report" / "index.html").write_text("<html></html>\n", encoding="utf-8")
-            (out / "report-manifest.json").write_text(
-                json.dumps(
-                    {
-                        "artifact_accounting": {
-                            "action_worthy_total": 0,
-                            "visible_total": 0,
-                            "hidden_total": 0,
-                        },
-                        "opportunities": [],
-                        "source_intel": [],
-                        "resume_variants": [],
-                        "outreach_packets": [],
-                        "applications": [],
-                        "application_packets": [],
-                        "relationship_signals": [],
-                    }
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            (out / "run-receipt.json").write_text(
-                json.dumps(
-                    {
-                        "run_id": "test-run",
-                        "terminal_state": "AWAITING_HUMAN",
-                        "external_effects": False,
-                        "degraded_contracts": [],
-                        "live": True,
-                        "report_html": str(out / "report" / "index.html"),
-                    }
-                )
-                + "\n",
-                encoding="utf-8",
+            run_stage0(
+                Path(__file__).parents[1],
+                out,
+                fixture_dir=Path(__file__).parent / "fixtures" / "discovery",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         if action == "memory-sync":
@@ -233,7 +199,10 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert Path(payload["artifacts"]["tau_semantic_prepare"]).is_file()
     assert Path(payload["artifacts"]["receipt_consistency"]).is_file()
     assert Path(payload["artifacts"]["zero_effect_replay"]).is_file()
+    assert Path(payload["artifacts"]["report_acceptance"]).is_file()
     assert payload["receipt_consistency_status"] == "PASS"
+    assert payload["report_acceptance_status"] == "PASS"
+    assert payload["artifact_hashes"]["report_acceptance"]
     consistency = json.loads(Path(payload["artifacts"]["receipt_consistency"]).read_text())
     assert consistency["schema"] == "monitor_opportunities.receipt_consistency.v1"
     assert consistency["required_nulls"] == 0
@@ -256,6 +225,13 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert zero_effect_replay["checks"]["run_receipt_external_effects_false"] is True
     assert zero_effect_replay["checks"]["receipt_consistency_pass"] is True
     assert zero_effect_replay["external_effects"] is False
+    report_acceptance = json.loads(Path(payload["artifacts"]["report_acceptance"]).read_text())
+    assert report_acceptance["schema"] == "monitor_opportunities.report_acceptance_receipt.v1"
+    assert report_acceptance["status"] == "PASS"
+    assert report_acceptance["checks"]["zero_effect_replay_binding_current"] is True
+    run_receipt = json.loads((out / "run-receipt.json").read_text(encoding="utf-8"))
+    assert run_receipt["report_acceptance_required"] is True
+    assert run_receipt["promoted_stage0_final_gate"] == "report_acceptance"
     assert semantic_prepare_calls == [
         {"run_dir": out, "out_dir": out / "tau-semantic", "top_n": 3}
     ]
@@ -312,7 +288,10 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
             "evidence_path": str(evidence) if evidence else None,
         }
 
-    monkeypatch.setattr("monitor_opportunities.browser_capture.capture_sam", lambda capture_dir: capture_ok(capture_dir))
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_sam",
+        lambda capture_dir: capture_ok(capture_dir),
+    )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_linkedin_advanced_search",
         lambda capture_dir: capture_ok(capture_dir),
@@ -379,7 +358,10 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
         )
         return receipt
 
-    monkeypatch.setattr("monitor_opportunities.cli.prepare_tau_semantic_inputs", fake_semantic_prepare)
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.prepare_tau_semantic_inputs",
+        fake_semantic_prepare,
+    )
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: _HealthResponse())
     monkeypatch.setattr(
         "monitor_opportunities.cli.replay_decisions",
@@ -397,44 +379,10 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
         del kwargs
         action = cmd[1]
         if action == "run":
-            (out / "report").mkdir(parents=True, exist_ok=True)
-            (out / "report" / "report.json").write_text(
-                '{"schema":"report","opportunities":[]}\n', encoding="utf-8"
-            )
-            (out / "report" / "index.html").write_text("<html></html>\n", encoding="utf-8")
-            (out / "report-manifest.json").write_text(
-                json.dumps(
-                    {
-                        "artifact_accounting": {
-                            "action_worthy_total": 0,
-                            "visible_total": 0,
-                            "hidden_total": 0,
-                        },
-                        "opportunities": [],
-                        "source_intel": [],
-                        "resume_variants": [],
-                        "outreach_packets": [],
-                        "applications": [],
-                        "application_packets": [],
-                        "relationship_signals": [],
-                    }
-                )
-                + "\n",
-                encoding="utf-8",
-            )
-            (out / "run-receipt.json").write_text(
-                json.dumps(
-                    {
-                        "run_id": "test-run",
-                        "terminal_state": "AWAITING_HUMAN",
-                        "external_effects": False,
-                        "degraded_contracts": [],
-                        "live": True,
-                        "report_html": str(out / "report" / "index.html"),
-                    }
-                )
-                + "\n",
-                encoding="utf-8",
+            run_stage0(
+                Path(__file__).parents[1],
+                out,
+                fixture_dir=Path(__file__).parent / "fixtures" / "discovery",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         if action == "memory-sync":

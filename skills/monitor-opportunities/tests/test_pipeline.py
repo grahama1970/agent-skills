@@ -425,6 +425,7 @@ def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path
         out / "application-packets" / "stale-packet.json",
         out / "report" / "stale-report.json",
         out / "morning-digest.json",
+        out / "report-acceptance-receipt.json",
     ]
     for path in stale_files:
         path.parent.mkdir(parents=True, exist_ok=True)
