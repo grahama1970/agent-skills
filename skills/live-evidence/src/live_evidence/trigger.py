@@ -157,7 +157,7 @@ class TriggerEngine:
 
         if event.speaker is not Speaker.INTERVIEWER:
             return None
-        if event.kind not in {TranscriptKind.STABILIZED, TranscriptKind.FINAL}:
+        if event.kind is not TranscriptKind.FINAL:
             return None
 
         tokens = tokenize(event.text)
@@ -181,13 +181,7 @@ class TriggerEngine:
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
         is_question = event.text.rstrip().endswith("?") or first in QUESTION_LEADS
-        stabilized_ready = (
-            event.kind is TranscriptKind.STABILIZED
-            and len(tokens) >= 18
-            and (is_question or matched_term or matched_alias or code_trigger_ready)
-        )
-
-        if not (is_question or matched_term or matched_alias or stabilized_ready or code_trigger_ready):
+        if not (is_question or matched_term or matched_alias or code_trigger_ready):
             return None
 
         reason = "question"
@@ -197,8 +191,6 @@ class TriggerEngine:
             reason = f"project:{self._aliases[matched_alias]}"
         elif matched_term:
             reason = f"watch-term:{matched_term}"
-        elif stabilized_ready and not is_question:
-            reason = "substantive-stabilized-turn"
 
         self._last_key = key
         self._last_triggered_at = now

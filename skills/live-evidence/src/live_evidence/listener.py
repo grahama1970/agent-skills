@@ -211,6 +211,7 @@ class LiveListener:
             input_device_index=self._options.input_device_index,
             language="en",
             enable_realtime_transcription=True,
+            **_stt_final_boundary_kwargs(),
             initial_prompt=", ".join(self._profile.stt_prompt_terms),
             initial_prompt_realtime=", ".join(self._profile.stt_prompt_terms),
             on_realtime_transcription_update=publisher.interim,
@@ -240,6 +241,7 @@ class LiveListener:
             compute_type=self._options.compute_type,
             language="en",
             enable_realtime_transcription=True,
+            **_stt_final_boundary_kwargs(),
             initial_prompt=", ".join(self._profile.stt_prompt_terms),
             initial_prompt_realtime=", ".join(self._profile.stt_prompt_terms),
             on_realtime_transcription_update=publisher.interim,
@@ -320,6 +322,15 @@ def _backend_client(backend_url: str, *, timeout: httpx.Timeout) -> httpx.Client
     """Create a loopback API client isolated from host proxy and CA env vars."""
 
     return httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout, trust_env=False)
+
+
+def _stt_final_boundary_kwargs() -> dict[str, object]:
+    """Return STT settings required before final transcript events are trusted."""
+
+    return {
+        "faster_whisper_vad_filter": True,
+        "ensure_sentence_ends_with_period": False,
+    }
 
 
 def _load_recorder() -> Any:
