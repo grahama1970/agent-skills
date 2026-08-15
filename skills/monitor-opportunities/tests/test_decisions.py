@@ -51,6 +51,15 @@ def test_decision_idempotency_and_replay(tmp_path: Path) -> None:
     assert projection["items"]["opp:a"]["last_action"] == "KEEP"
     assert projection["items"]["opp:a"]["resulting_state"] == "KEPT"
     assert projection["external_effects"] is False
+    replay_payload = json.loads(replay.output)
+    replay_receipt_path = Path(replay_payload["zero_effect_replay_path"])
+    assert replay_receipt_path.is_file()
+    replay_receipt = json.loads(replay_receipt_path.read_text(encoding="utf-8"))
+    assert replay_receipt["schema"] == "monitor_opportunities.zero_effect_replay_receipt.v1"
+    assert replay_receipt["status"] == "PASS"
+    assert replay_receipt["checks"]["projection_external_effects_false"] is True
+    assert replay_receipt["checks"]["decision_events_external_effects_false"] is True
+    assert replay_receipt["external_effects"] is False
 
 
 def test_human_sent_markers_require_explicit_human_actor(tmp_path: Path) -> None:

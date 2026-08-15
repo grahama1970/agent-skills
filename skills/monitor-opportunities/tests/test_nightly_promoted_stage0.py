@@ -232,6 +232,7 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert Path(payload["artifacts"]["buzz"]).is_file()
     assert Path(payload["artifacts"]["tau_semantic_prepare"]).is_file()
     assert Path(payload["artifacts"]["receipt_consistency"]).is_file()
+    assert Path(payload["artifacts"]["zero_effect_replay"]).is_file()
     assert payload["receipt_consistency_status"] == "PASS"
     consistency = json.loads(Path(payload["artifacts"]["receipt_consistency"]).read_text())
     assert consistency["schema"] == "monitor_opportunities.receipt_consistency.v1"
@@ -246,6 +247,15 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
     assert payload["steps"]["tau_semantic"]["selected_count"] == 1
     assert payload["steps"]["tau_semantic"]["provider_live"] is False
+    assert payload["steps"]["zero_effect_replay"]["status"] == "PASS"
+    zero_effect_replay = json.loads(Path(payload["artifacts"]["zero_effect_replay"]).read_text())
+    assert zero_effect_replay["schema"] == "monitor_opportunities.zero_effect_replay_receipt.v1"
+    assert zero_effect_replay["status"] == "PASS"
+    assert zero_effect_replay["mode"] == "PROMOTED_STAGE_0"
+    assert zero_effect_replay["checks"]["projection_external_effects_false"] is True
+    assert zero_effect_replay["checks"]["run_receipt_external_effects_false"] is True
+    assert zero_effect_replay["checks"]["receipt_consistency_pass"] is True
+    assert zero_effect_replay["external_effects"] is False
     assert semantic_prepare_calls == [
         {"run_dir": out, "out_dir": out / "tau-semantic", "top_n": 3}
     ]

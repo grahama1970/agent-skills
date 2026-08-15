@@ -66,13 +66,16 @@ GENERATED_RUN_FILES = (
     "claim-snapshot.json",
     "consulting-research.json",
     "contact-changes.json",
+    "decision-projection.json",
     "morning-digest.json",
     "prepublish-contract.json",
     "prospect-queue.json",
     "report-manifest.json",
+    "receipt-consistency.json",
     "run-receipt.json",
     "stage-ledger.json",
     "trigger-receipt.json",
+    "zero-effect-replay-receipt.json",
 )
 
 
@@ -1017,6 +1020,60 @@ def status_for_run(run_dir: Path) -> dict[str, Any]:
         else None,
         "report_html": receipt["report_html"],
         "external_effects": receipt["external_effects"],
+    }
+
+
+def build_zero_effect_replay_receipt(run_dir: Path, projection: dict[str, Any]) -> dict[str, Any]:
+    """Bind replayed local decisions to the run's no-effect receipts."""
+    rows = read_jsonl(run_dir / "decision-ledger.jsonl")
+    run_receipt_path = run_dir / "run-receipt.json"
+    consistency_path = run_dir / "receipt-consistency.json"
+    effect_policy_path = run_dir / "effect-policy-receipt.json"
+    run_receipt = read_json(run_receipt_path) if run_receipt_path.exists() else {}
+    consistency = read_json(consistency_path) if consistency_path.exists() else {}
+    effect_policy = read_json(effect_policy_path) if effect_policy_path.exists() else {}
+    event_effect_violations = [
+        str(row.get("event_id") or row.get("idempotency_key") or index)
+        for index, row in enumerate(rows)
+        if row.get("external_effects") is not False
+    ]
+    checks = {
+        "projection_external_effects_false": projection.get("external_effects") is False,
+        "decision_events_external_effects_false": not event_effect_violations,
+        "run_receipt_external_effects_false": (
+            run_receipt.get("external_effects") is False if run_receipt else True
+        ),
+        "receipt_consistency_pass": (
+            consistency.get("status") == "PASS" if consistency else True
+        ),
+        "effect_policy_external_effects_false": (
+            effect_policy.get("external_effects") is False if effect_policy else True
+        ),
+    }
+    status = "PASS" if all(checks.values()) else "FAIL"
+    return {
+        "schema": "monitor_opportunities.zero_effect_replay_receipt.v1",
+        "status": status,
+        "run_dir": str(run_dir),
+        "mode": effect_policy.get("mode", "UNAVAILABLE"),
+        "event_count": len(rows),
+        "projection_digest": projection.get("projection_digest"),
+        "external_effects": False,
+        "checks": checks,
+        "violations": {
+            "decision_event_external_effects": event_effect_violations,
+        },
+        "artifacts": {
+            "decision_projection": str(run_dir / "decision-projection.json"),
+            "decision_ledger": str(run_dir / "decision-ledger.jsonl")
+            if (run_dir / "decision-ledger.jsonl").exists()
+            else None,
+            "run_receipt": str(run_receipt_path) if run_receipt_path.exists() else None,
+            "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
+            "effect_policy": str(effect_policy_path) if effect_policy_path.exists() else None,
+        },
+        "mocked": False,
+        "live": bool(run_receipt.get("live", False)),
     }
 
 

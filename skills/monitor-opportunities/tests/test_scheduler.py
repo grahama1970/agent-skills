@@ -29,15 +29,16 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "--expected-revision" in source
     registered_args = source.split("nightly_args.extend(", 1)[1].split("command_parts", 1)[0]
     assert "--skip-relationship-memory" not in registered_args
-    assert "MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1" in source
+    assert '"MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1"' in source
     assert "scheduler" in source
     assert "_canonical_repo_root" in source
     assert '".worktrees"' in source
     assert "--promoted-stage0" in source
     assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
     assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" in source
-    assert "export BUZZ_BIN=" in source
+    assert 'environment["BUZZ_BIN"]' in source
     assert "monitor-opportunities-nightly-receipt.json" in source
+    assert "monitor-opportunities-nightly-equivalence.json" in source
 
 
 def test_promoted_stage0_schedule_registers_claim_bound_publication(
@@ -120,6 +121,26 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "buzz_summary": "ENABLED",
     }
     assert Path(payload["receipt"]).is_file()
+    equivalence_path = Path(payload["scheduler_equivalence_receipt"])
+    assert equivalence_path.is_file()
+    equivalence = json.loads(equivalence_path.read_text(encoding="utf-8"))
+    assert equivalence["schema"] == "monitor_opportunities.scheduler_equivalence_receipt.v1"
+    assert equivalence["status"] == "PASS"
+    assert equivalence["mode"] == "PROMOTED_STAGE_0"
+    assert equivalence["checks"]["command_matches"] is True
+    assert equivalence["checks"]["promoted_stage0_flag_matches"] is True
+    assert equivalence["checks"]["diagnostic_flag_absent"] is True
+    assert equivalence["checks"]["external_effects_false"] is True
+    assert equivalence["intent"]["nightly_args"] == [
+        "nightly",
+        "--expected-revision",
+        "abc123",
+        "--require-clean",
+        "--skip-tracker",
+        "--skip-ats-memory",
+        "--promoted-stage0",
+    ]
+    assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
 
 
 def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
@@ -197,3 +218,21 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
         "ats_submit": "FORBIDDEN",
         "buzz_summary": "SKIPPED",
     }
+    equivalence = json.loads(
+        Path(payload["scheduler_equivalence_receipt"]).read_text(encoding="utf-8")
+    )
+    assert equivalence["status"] == "PASS"
+    assert equivalence["mode"] == "DIAGNOSTIC"
+    assert equivalence["checks"]["diagnostic_flag_matches"] is True
+    assert equivalence["checks"]["promoted_stage0_flag_absent"] is True
+    assert equivalence["checks"]["buzz_skipped_for_diagnostic"] is True
+    assert equivalence["intent"]["nightly_args"] == [
+        "nightly",
+        "--expected-revision",
+        "abc123",
+        "--require-clean",
+        "--skip-tracker",
+        "--skip-ats-memory",
+        "--diagnostic",
+        "--skip-buzz",
+    ]

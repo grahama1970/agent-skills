@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import typer
 from loguru import logger
@@ -24,7 +24,13 @@ from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
-from .pipeline import build_receipt_consistency, prepare_run_output, run_stage0, status_for_run
+from .pipeline import (
+    build_receipt_consistency,
+    build_zero_effect_replay_receipt,
+    prepare_run_output,
+    run_stage0,
+    status_for_run,
+)
 from .ranking import rank as rank_candidates
 from .report import load_manifest, render_report
 from .semantic_addenda import install_semantic_addendum
@@ -33,7 +39,7 @@ from .tau_semantic_prepare import prepare_tau_semantic_inputs
 from .tau_semantic_provider import run_provider_semantic_eval
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
-from .util import read_json, write_json
+from .util import read_json, sha256_json, write_json
 from .verification import run_verification
 
 from dotenv import load_dotenv
@@ -104,6 +110,73 @@ def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
         "buzz_summary": "SKIPPED" if diagnostic else "ENABLED",
+    }
+
+
+def _scheduler_command_from_intent(intent: dict[str, Any]) -> str:
+    command_parts = ["source ~/.zshrc >/dev/null 2>&1"]
+    for name, value in intent["environment"].items():
+        command_parts.append(f"export {name}={shlex.quote(str(value))}")
+    command_parts.append(
+        "exec "
+        + " ".join(
+            [
+                shlex.quote(str(intent["entrypoint"])),
+                *[shlex.quote(str(arg)) for arg in intent["nightly_args"]],
+            ]
+        )
+    )
+    return "zsh -lc " + shlex.quote("; ".join(command_parts))
+
+
+def _scheduler_equivalence_receipt(
+    *,
+    cron: str,
+    command: str,
+    repo_root: Path,
+    intent: dict[str, Any],
+    readback: dict[str, Any],
+) -> dict[str, Any]:
+    checks = {
+        "cron_matches": readback.get("cron") == cron,
+        "command_matches": readback.get("command") == command,
+        "workdir_matches": readback.get("workdir") == str(repo_root),
+        "enabled": readback.get("enabled", True) is True,
+        "entrypoint_matches_monitor_run_sh": Path(str(intent["entrypoint"])).name == "run.sh",
+        "requires_clean": "--require-clean" in intent["nightly_args"],
+        "expected_revision_pinned": "--expected-revision" in intent["nightly_args"]
+        and bool(intent.get("expected_revision")),
+        "external_effects_false": intent.get("external_effects") is False,
+        "promoted_or_diagnostic_mode_explicit": (
+            "--promoted-stage0" in intent["nightly_args"]
+            or "--diagnostic" in intent["nightly_args"]
+        ),
+    }
+    mode = str(intent["mode"])
+    if mode == "PROMOTED_STAGE_0":
+        checks["promoted_stage0_flag_matches"] = "--promoted-stage0" in intent["nightly_args"]
+        checks["diagnostic_flag_absent"] = "--diagnostic" not in intent["nightly_args"]
+        checks["buzz_enabled_for_promoted"] = intent["effect_policy"].get("buzz_summary") == "ENABLED"
+    if mode == "DIAGNOSTIC":
+        checks["diagnostic_flag_matches"] = "--diagnostic" in intent["nightly_args"]
+        checks["promoted_stage0_flag_absent"] = "--promoted-stage0" not in intent["nightly_args"]
+        checks["buzz_skipped_for_diagnostic"] = intent["effect_policy"].get("buzz_summary") == "SKIPPED"
+    status = "PASS" if all(checks.values()) else "FAIL"
+    return {
+        "schema": "monitor_opportunities.scheduler_equivalence_receipt.v1",
+        "status": status,
+        "mode": mode,
+        "cron": cron,
+        "name": "monitor-opportunities-nightly",
+        "external_effects": False,
+        "checks": checks,
+        "intended_command_digest": sha256_json(command),
+        "registered_command_digest": sha256_json(readback.get("command")),
+        "intent_digest": sha256_json(intent),
+        "intent": intent,
+        "readback": readback,
+        "mocked": False,
+        "live": False,
     }
 
 
@@ -405,7 +478,28 @@ def replay(
     """Replay the local decision ledger into the current projection."""
     _configure_logging()
     projection = replay_decisions(run)
-    typer.echo(json.dumps({"status": "PASS", **projection}, indent=2, sort_keys=True))
+    replay_receipt = build_zero_effect_replay_receipt(run, projection)
+    replay_receipt_path = run / "zero-effect-replay-receipt.json"
+    write_json(replay_receipt_path, replay_receipt)
+    if replay_receipt["status"] != "PASS":
+        _fail(
+            ContractError(
+                "ZERO_EFFECT_REPLAY_FAILED",
+                f"Replay produced external-effect violations: {replay_receipt}",
+            )
+        )
+    typer.echo(
+        json.dumps(
+            {
+                "status": "PASS",
+                **projection,
+                "zero_effect_replay": replay_receipt,
+                "zero_effect_replay_path": str(replay_receipt_path),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 @app.command()
@@ -1477,6 +1571,25 @@ def nightly(
     else:
         consistency = None
 
+    decision_projection = replay_decisions(out)
+    replay_receipt_path = out / "zero-effect-replay-receipt.json"
+    replay_receipt = build_zero_effect_replay_receipt(out, decision_projection)
+    write_json(replay_receipt_path, replay_receipt)
+    steps["zero_effect_replay"] = {
+        "status": replay_receipt.get("status"),
+        "receipt": str(replay_receipt_path),
+        "event_count": replay_receipt.get("event_count"),
+        "projection_digest": replay_receipt.get("projection_digest"),
+        "external_effects": replay_receipt.get("external_effects"),
+    }
+    if promoted_stage0 and replay_receipt.get("status") != "PASS":
+        _fail(
+            ContractError(
+                "PROMOTED_STAGE0_ZERO_EFFECT_REPLAY_FAILED",
+                f"Zero-effect replay failed: {replay_receipt}",
+            )
+        )
+
     nightly_receipt = {
         "status": "PASS",
         "schema": "monitor_opportunities.nightly_receipt.v1",
@@ -1499,6 +1612,7 @@ def nightly(
             if semantic_installs
             else None,
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
+            "zero_effect_replay": str(replay_receipt_path),
         },
         "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
         "steps": steps,
@@ -1619,20 +1733,32 @@ def schedule(
         nightly_args.append("--promoted-stage0")
     if claim_snapshot is not None:
         claim_snapshot = claim_snapshot.resolve()
-    command_parts = [
-        "source ~/.zshrc >/dev/null 2>&1",
-        "export MONITOR_TRACKER_ENABLED=0",
-        "export MONITOR_ATS_MEMORY_ENABLED=0",
-        "export MONITOR_RELATIONSHIP_SIGNALS_ENABLED=1",
-        *(["export BUZZ_BIN=" + shlex.quote(str(buzz_bin))] if buzz_bin else []),
-        *(
-            ["export MONITOR_CLAIM_SNAPSHOT_PATH=" + shlex.quote(str(claim_snapshot))]
-            if claim_snapshot is not None
-            else []
-        ),
-        "exec " + " ".join([shlex.quote(str(run_sh)), *[shlex.quote(arg) for arg in nightly_args]]),
-    ]
-    command = "zsh -lc " + shlex.quote("; ".join(command_parts))
+    environment: dict[str, str] = {
+        "MONITOR_TRACKER_ENABLED": "0",
+        "MONITOR_ATS_MEMORY_ENABLED": "0",
+        "MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1",
+    }
+    if buzz_bin:
+        environment["BUZZ_BIN"] = str(buzz_bin)
+    if claim_snapshot is not None:
+        environment["MONITOR_CLAIM_SNAPSHOT_PATH"] = str(claim_snapshot)
+    effect_policy = _scheduler_effect_policy(diagnostic=diagnostic)
+    scheduler_intent = {
+        "schema": "monitor_opportunities.scheduler_intent.v1",
+        "mode": "DIAGNOSTIC" if diagnostic else "PROMOTED_STAGE_0",
+        "diagnostic": diagnostic,
+        "promoted_stage0": not diagnostic,
+        "external_effects": False,
+        "entrypoint": str(run_sh),
+        "nightly_args": nightly_args,
+        "environment": environment,
+        "expected_revision": revision,
+        "claim_snapshot": str(claim_snapshot) if claim_snapshot is not None else None,
+        "effect_policy": effect_policy,
+        "workdir": str(repo_root),
+        "cron": cron,
+    }
+    command = _scheduler_command_from_intent(scheduler_intent)
     register = subprocess.run(
         [
             str(scheduler),
@@ -1664,6 +1790,20 @@ def schedule(
     job = jobs.get("monitor-opportunities-nightly")
     if not job or job.get("cron") != cron or job.get("command") != command or job.get("workdir") != str(repo_root) or not job.get("enabled", True):
         _fail(ContractError("SCHEDULER_READBACK_FAILED", "Registered job did not read back"))
+    scheduler_equivalence = _scheduler_equivalence_receipt(
+        cron=cron,
+        command=command,
+        repo_root=repo_root,
+        intent=scheduler_intent,
+        readback=job,
+    )
+    if scheduler_equivalence["status"] != "PASS":
+        _fail(
+            ContractError(
+                "SCHEDULER_EQUIVALENCE_FAILED",
+                f"Registered job does not match intended Stage 0 command: {scheduler_equivalence}",
+            )
+        )
     schedule_receipt = {
         "status": "PASS",
         "schema": "monitor_opportunities.scheduler_receipt.v1",
@@ -1679,11 +1819,18 @@ def schedule(
         "workdir": str(repo_root),
         "register_stdout": register.stdout,
         "readback": job,
-        "effect_policy": _scheduler_effect_policy(diagnostic=diagnostic),
+        "effect_policy": effect_policy,
+        "scheduler_intent": scheduler_intent,
+        "scheduler_equivalence": scheduler_equivalence,
     }
     scheduler_data_dir = Path(
         os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))
     )
+    scheduler_equivalence_path = (
+        scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-equivalence.json"
+    )
+    write_json(scheduler_equivalence_path, scheduler_equivalence)
+    schedule_receipt["scheduler_equivalence_receipt"] = str(scheduler_equivalence_path)
     schedule_receipt_path = (
         scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-receipt.json"
     )
