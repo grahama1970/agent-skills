@@ -54,6 +54,8 @@ def test_tau_semantic_prepare_includes_direct_relationship_evidence(tmp_path: Pa
     manifest = read_json(manifest_path)
     opportunity_id = manifest["opportunities"][0]["opportunity_id"]
     receipt_id = manifest["opportunities"][0]["source_receipt_ids"][0]
+    receipt = next(row for row in manifest["source_receipts"] if row["receipt_id"] == receipt_id)
+    evidence_ref = receipt["evidence_refs"][0]
     manifest["relationship_signals"].append(
         {
             "schema": "monitor_opportunities.relationship_candidate.v1",
@@ -69,8 +71,8 @@ def test_tau_semantic_prepare_includes_direct_relationship_evidence(tmp_path: Pa
                     "to": "redacted contact",
                     "relationship": "direct_contact",
                     "evidence_status": "MATCHES",
-                    "evidence_refs": ["memory://redacted-direct-test"],
-                    "source_receipt_ids": [receipt_id],
+                        "evidence_refs": [evidence_ref],
+                        "source_receipt_ids": [receipt_id],
                     "limitations": [],
                 }
             ],
@@ -78,7 +80,7 @@ def test_tau_semantic_prepare_includes_direct_relationship_evidence(tmp_path: Pa
             "degree_label": "direct",
             "confidence": 0.85,
             "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
-            "evidence_refs": ["memory://redacted-direct-test"],
+            "evidence_refs": [evidence_ref],
             "source_receipt_ids": [receipt_id],
             "provenance": "Direct report-visible relationship path exists.",
             "memory_recall_found": True,

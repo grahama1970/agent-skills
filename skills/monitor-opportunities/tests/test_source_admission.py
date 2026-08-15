@@ -127,7 +127,7 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
                     "to": "Known contact",
                     "relationship": "direct_contact",
                     "evidence_status": "MATCHES",
-                    "evidence_refs": ["memory://relationship"],
+                    "evidence_refs": ["fixture://a"],
                     "source_receipt_ids": [],
                     "limitations": [],
                 }
@@ -136,7 +136,7 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
             "degree_label": "direct",
             "confidence": 0.75,
             "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
-            "evidence_refs": ["memory://relationship"],
+            "evidence_refs": ["fixture://a"],
             "source_receipt_ids": [],
             "provenance": "Relationship claim without source receipt should fail.",
             "recommended_action": "human_decide_reconnect_or_defer",

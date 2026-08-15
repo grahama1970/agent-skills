@@ -46,7 +46,7 @@ def _relationship_signal(
                 "to": relationship_path[idx + 1],
                 "relationship": signal_type,
                 "evidence_status": "MATCHES",
-                "evidence_refs": ["memory://arcos-network"],
+                "evidence_refs": ["fixture://a"],
                 "source_receipt_ids": ["src:a"],
                 "limitations": [],
             }
@@ -56,7 +56,7 @@ def _relationship_signal(
         "degree_label": {1: "direct", 2: "second_degree", 3: "third_degree"}[len(relationship_path) - 1],
         "confidence": 0.75,
         "confidence_reasons": [f"{signal_type} path", "source evidence present"],
-        "evidence_refs": ["memory://arcos-network"],
+        "evidence_refs": ["fixture://a"],
         "source_receipt_ids": ["src:a"],
         "provenance": provenance,
         "recommended_action": "human_decide_reconnect_or_defer",

@@ -27,7 +27,7 @@ def _contact_path(
             "to": nodes[idx + 1],
             "relationship": relationship,
             "evidence_status": evidence_status,
-            "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+            "evidence_refs": ["fixture://a"],
             "source_receipt_ids": ["src:a"],
             "limitations": [],
         }
@@ -50,7 +50,7 @@ def _relationship_signal(**overrides: object) -> dict[str, object]:
         "degree_label": "direct",
         "confidence": 0.75,
         "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
-        "evidence_refs": ["file:///tmp/darpa_arcos_contacts.csv"],
+        "evidence_refs": ["fixture://a"],
         "source_receipt_ids": ["src:a"],
         "provenance": "Source-backed direct ARCOS/formal-methods contact path",
         "recommended_action": "human_decide_reconnect_or_defer",
@@ -175,6 +175,103 @@ def test_relationship_candidate_path_invariants_are_enforced(mutate, code: str) 
         validate_manifest(data)
 
     assert exc.value.code == code
+
+
+@pytest.mark.parametrize(
+    ("mutate", "code"),
+    [
+        (
+            lambda data, signal: signal["contact_path"][0].update(source_receipt_ids=[]),  # type: ignore[index]
+            "REPORT_VISIBLE_SOURCE_RECEIPT_MISSING",
+        ),
+        (
+            lambda data, signal: signal["contact_path"][0].update(source_receipt_ids=["src:missing"]),  # type: ignore[index]
+            "REPORT_VISIBLE_SOURCE_RECEIPT_UNKNOWN",
+        ),
+        (
+            lambda data, signal: signal["contact_path"][0].update(evidence_refs=["fixture://not-in-receipt"]),  # type: ignore[index]
+            "RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED",
+        ),
+        (
+            lambda data, signal: signal["contact_path"][0].update(source_receipt_ids=["src:b"]),  # type: ignore[index]
+            "RELATIONSHIP_EDGE_RECEIPT_UNRELATED",
+        ),
+        (
+            lambda data, signal: signal.update(confidence_reasons=["organization_sponsor path", "source evidence present"]),
+            "RELATIONSHIP_CONFIDENCE_UNSUPPORTED",
+        ),
+    ],
+)
+def test_relationship_candidate_edge_receipt_invariants_are_enforced(mutate, code: str) -> None:  # type: ignore[no-untyped-def]
+    data = copy.deepcopy(built_in_fixture())
+    data["source_receipts"].append(
+        {
+            **data["source_receipts"][0],
+            "receipt_id": "src:b",
+            "evidence_refs": ["fixture://b"],
+        }
+    )
+    signal = _relationship_signal()
+    mutate(data, signal)
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == code
+
+
+def test_relationship_candidate_edge_rejects_no_matches_receipt_even_when_signal_has_valid_receipt() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["source_receipts"].append(
+        {
+            **data["source_receipts"][0],
+            "receipt_id": "src:no-matches",
+            "result_status": "NO_MATCHES",
+            "evidence_refs": ["fixture://no-matches"],
+            "limitations": [],
+        }
+    )
+    path = ["Graham Anderson", "ARCOS/formal-methods network", "David Archer"]
+    signal = _relationship_signal(
+        signal_type="adjacent_contact",
+        subject="David Archer",
+        relationship_path=path,
+        contact_path=[
+            {
+                "from": "Graham Anderson",
+                "to": "ARCOS/formal-methods network",
+                "relationship": "adjacent_contact",
+                "evidence_status": "MATCHES",
+                "evidence_refs": ["fixture://a"],
+                "source_receipt_ids": ["src:a"],
+                "limitations": [],
+            },
+            {
+                "from": "ARCOS/formal-methods network",
+                "to": "David Archer",
+                "relationship": "adjacent_contact",
+                "evidence_status": "MATCHES",
+                "evidence_refs": ["fixture://no-matches"],
+                "source_receipt_ids": ["src:no-matches"],
+                "limitations": [],
+            },
+        ],
+        relationship_degree=2,
+        degree_label="second_degree",
+        confidence_reasons=["adjacent_contact path", "source evidence present"],
+        source_receipt_ids=["src:a", "src:no-matches"],
+    )
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "REPORT_VISIBLE_SOURCE_NOT_ACCEPTED"
 
 
 def test_relationship_binding_diagnostic_missing_signal_is_rejected() -> None:

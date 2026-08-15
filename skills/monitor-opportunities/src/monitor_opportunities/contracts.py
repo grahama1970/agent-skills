@@ -746,12 +746,13 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
         item_id: str,
         source_receipt_ids: list[str],
         allow_degraded: bool,
-    ) -> None:
+    ) -> list[SourceReceipt]:
         if not source_receipt_ids:
             raise ContractError(
                 "REPORT_VISIBLE_SOURCE_RECEIPT_MISSING",
                 f"{item_kind} {item_id} is report-visible without source receipts",
             )
+        accepted: list[SourceReceipt] = []
         for receipt_id in source_receipt_ids:
             receipt = receipts_by_id.get(receipt_id)
             if receipt is None:
@@ -760,6 +761,7 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
                     f"{item_kind} {item_id} cites unknown source receipt: {receipt_id}",
                 )
             if receipt.result_status == ResultStatus.MATCHES:
+                accepted.append(receipt)
                 continue
             if allow_degraded and receipt.result_status in DEGRADED_RESULT_STATUSES:
                 if not receipt.limitations:
@@ -767,11 +769,69 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
                         "DEGRADED_SOURCE_LIMITATION_MISSING",
                         f"{item_kind} {item_id} cites degraded receipt {receipt_id} without limitations",
                     )
+                accepted.append(receipt)
                 continue
             raise ContractError(
                 "REPORT_VISIBLE_SOURCE_NOT_ACCEPTED",
                 f"{item_kind} {item_id} cites {receipt_id} with status {receipt.result_status.value}",
             )
+        return accepted
+
+    def validate_relationship_edge_backing(signal: RelationshipSignal) -> None:
+        signal_receipts = validate_source_backing(
+            item_kind="relationship_signal",
+            item_id=signal.signal_id,
+            source_receipt_ids=signal.source_receipt_ids,
+            allow_degraded=True,
+        )
+        signal_receipt_ids = {receipt.receipt_id for receipt in signal_receipts}
+        for idx, edge in enumerate(signal.contact_path):
+            edge_receipts = validate_source_backing(
+                item_kind=f"relationship_signal_edge[{idx}]",
+                item_id=signal.signal_id,
+                source_receipt_ids=edge.source_receipt_ids,
+                allow_degraded=True,
+            )
+            edge_receipt_ids = {receipt.receipt_id for receipt in edge_receipts}
+            if not edge_receipt_ids <= signal_receipt_ids:
+                raise ContractError(
+                    "RELATIONSHIP_EDGE_RECEIPT_UNRELATED",
+                    f"Relationship signal {signal.signal_id} edge {idx} cites receipts outside the signal source_receipt_ids",
+                )
+            accepted_refs = {
+                ref
+                for receipt in edge_receipts
+                for ref in receipt.evidence_refs
+            }
+            missing_refs = [ref for ref in edge.evidence_refs if ref not in accepted_refs]
+            if missing_refs:
+                raise ContractError(
+                    "RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED",
+                    f"Relationship signal {signal.signal_id} edge {idx} evidence_refs are not present in cited receipts: {missing_refs}",
+                )
+        reasons = {reason.lower() for reason in signal.confidence_reasons}
+        if any("source evidence present" in reason for reason in reasons):
+            edge_ref_count = sum(len(edge.evidence_refs) for edge in signal.contact_path)
+            if edge_ref_count == 0:
+                raise ContractError(
+                    "RELATIONSHIP_CONFIDENCE_UNSUPPORTED",
+                    f"Relationship signal {signal.signal_id} claims source evidence without edge evidence refs",
+                )
+        if any("direct monitor-contact relationship" in reason for reason in reasons):
+            direct_edges = [edge for edge in signal.contact_path if edge.relationship == "direct_contact"]
+            if signal.relationship_degree != 1 or not direct_edges:
+                raise ContractError(
+                    "RELATIONSHIP_CONFIDENCE_UNSUPPORTED",
+                    f"Relationship signal {signal.signal_id} claims a direct contact without a direct one-hop edge",
+                )
+        for reason in reasons:
+            if reason.endswith(" path"):
+                expected = reason.removesuffix(" path")
+                if not any(edge.relationship == expected for edge in signal.contact_path):
+                    raise ContractError(
+                        "RELATIONSHIP_CONFIDENCE_UNSUPPORTED",
+                        f"Relationship signal {signal.signal_id} confidence reason is unsupported by contact_path: {reason}",
+                    )
 
     for opportunity in manifest.opportunities:
         if opportunity.visible_in_report:
@@ -793,12 +853,7 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
 
     for signal in manifest.relationship_signals:
         if signal.visible_in_report:
-            validate_source_backing(
-                item_kind="relationship_signal",
-                item_id=signal.signal_id,
-                source_receipt_ids=signal.source_receipt_ids,
-                allow_degraded=True,
-            )
+            validate_relationship_edge_backing(signal)
 
     visible_opportunity_ids = {
         opportunity.opportunity_id
