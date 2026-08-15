@@ -173,16 +173,38 @@ def _scheduler_equivalence_receipt(
     intent: dict[str, Any],
     readback: dict[str, Any],
 ) -> dict[str, Any]:
+    registered_command = str(readback.get("command") or "")
+    expected_revision = str(intent.get("expected_revision") or "")
+    effect_policy = intent.get("effect_policy") or {}
+    environment = intent.get("environment") or {}
+    forbidden_effects = {
+        "gmail_send": "FORBIDDEN",
+        "linkedin_action": "FORBIDDEN",
+        "meetup_rsvp": "FORBIDDEN",
+        "ats_submit": "FORBIDDEN",
+    }
     checks = {
+        "job_readback_present": bool(readback),
         "cron_matches": readback.get("cron") == cron,
-        "command_matches": readback.get("command") == command,
+        "command_matches": registered_command == command,
         "workdir_matches": readback.get("workdir") == str(repo_root),
         "enabled": readback.get("enabled", True) is True,
         "entrypoint_matches_monitor_run_sh": Path(str(intent["entrypoint"])).name == "run.sh",
         "requires_clean": "--require-clean" in intent["nightly_args"],
+        "registered_requires_clean": "--require-clean" in registered_command,
         "expected_revision_pinned": "--expected-revision" in intent["nightly_args"]
         and bool(intent.get("expected_revision")),
+        "registered_expected_revision_pinned": bool(expected_revision)
+        and expected_revision in registered_command,
         "external_effects_false": intent.get("external_effects") is False,
+        "tracker_disabled_in_environment": environment.get("MONITOR_TRACKER_ENABLED") == "0",
+        "ats_memory_disabled_in_environment": environment.get("MONITOR_ATS_MEMORY_ENABLED")
+        == "0",
+        "relationship_signals_enabled": environment.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED")
+        == "1",
+        "forbidden_effect_policy": all(
+            effect_policy.get(name) == expected for name, expected in forbidden_effects.items()
+        ),
         "promoted_or_diagnostic_mode_explicit": (
             "--promoted-stage0" in intent["nightly_args"]
             or "--diagnostic" in intent["nightly_args"]
@@ -191,12 +213,24 @@ def _scheduler_equivalence_receipt(
     mode = str(intent["mode"])
     if mode == "PROMOTED_STAGE_0":
         checks["promoted_stage0_flag_matches"] = "--promoted-stage0" in intent["nightly_args"]
+        checks["registered_promoted_stage0_flag_matches"] = (
+            "--promoted-stage0" in registered_command
+        )
         checks["diagnostic_flag_absent"] = "--diagnostic" not in intent["nightly_args"]
-        checks["buzz_enabled_for_promoted"] = intent["effect_policy"].get("buzz_summary") == "ENABLED"
+        checks["registered_diagnostic_flag_absent"] = "--diagnostic" not in registered_command
+        checks["buzz_enabled_for_promoted"] = (
+            intent["effect_policy"].get("buzz_summary") == "ENABLED"
+        )
     if mode == "DIAGNOSTIC":
         checks["diagnostic_flag_matches"] = "--diagnostic" in intent["nightly_args"]
+        checks["registered_diagnostic_flag_matches"] = "--diagnostic" in registered_command
         checks["promoted_stage0_flag_absent"] = "--promoted-stage0" not in intent["nightly_args"]
-        checks["buzz_skipped_for_diagnostic"] = intent["effect_policy"].get("buzz_summary") == "SKIPPED"
+        checks["registered_promoted_stage0_flag_absent"] = (
+            "--promoted-stage0" not in registered_command
+        )
+        checks["buzz_skipped_for_diagnostic"] = (
+            intent["effect_policy"].get("buzz_summary") == "SKIPPED"
+        )
     status = "PASS" if all(checks.values()) else "FAIL"
     return {
         "schema": "monitor_opportunities.scheduler_equivalence_receipt.v1",

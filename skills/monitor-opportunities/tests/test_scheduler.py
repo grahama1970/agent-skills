@@ -13,10 +13,46 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from monitor_opportunities.cli import app
-
+from monitor_opportunities.cli import _scheduler_equivalence_receipt, app
 
 runner = CliRunner()
+
+
+def _scheduler_test_intent(repo: Path) -> dict[str, object]:
+    return {
+        "schema": "monitor_opportunities.scheduler_intent.v1",
+        "mode": "PROMOTED_STAGE_0",
+        "diagnostic": False,
+        "promoted_stage0": True,
+        "external_effects": False,
+        "entrypoint": str(repo / "skills" / "monitor-opportunities" / "run.sh"),
+        "nightly_args": [
+            "nightly",
+            "--expected-revision",
+            "abc123",
+            "--require-clean",
+            "--promoted-stage0",
+        ],
+        "environment": {
+            "MONITOR_TRACKER_ENABLED": "0",
+            "MONITOR_ATS_MEMORY_ENABLED": "0",
+            "MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1",
+        },
+        "expected_revision": "abc123",
+        "claim_snapshot": str(repo / "claim-snapshot.json"),
+        "effect_policy": {
+            "tracker": "SKIPPED",
+            "prior_application_history": "ENABLED",
+            "ats_selector_memory_write": "SKIPPED",
+            "gmail_send": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+            "buzz_summary": "ENABLED",
+        },
+        "workdir": str(repo),
+        "cron": "0 2 * * *",
+    }
 
 
 def test_scheduler_command_is_full_run_transaction() -> None:
@@ -86,7 +122,10 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr("shutil.which", lambda name: "/usr/local/bin/buzz" if name == "buzz" else None)
+    monkeypatch.setattr(
+        "shutil.which",
+        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
+    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -129,7 +168,14 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["mode"] == "PROMOTED_STAGE_0"
     assert equivalence["checks"]["command_matches"] is True
     assert equivalence["checks"]["promoted_stage0_flag_matches"] is True
+    assert equivalence["checks"]["registered_promoted_stage0_flag_matches"] is True
     assert equivalence["checks"]["diagnostic_flag_absent"] is True
+    assert equivalence["checks"]["registered_diagnostic_flag_absent"] is True
+    assert equivalence["checks"]["registered_expected_revision_pinned"] is True
+    assert equivalence["checks"]["registered_requires_clean"] is True
+    assert equivalence["checks"]["tracker_disabled_in_environment"] is True
+    assert equivalence["checks"]["ats_memory_disabled_in_environment"] is True
+    assert equivalence["checks"]["forbidden_effect_policy"] is True
     assert equivalence["checks"]["external_effects_false"] is True
     assert equivalence["intent"]["nightly_args"] == [
         "nightly",
@@ -187,7 +233,10 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr("shutil.which", lambda name: "/usr/local/bin/buzz" if name == "buzz" else None)
+    monkeypatch.setattr(
+        "shutil.which",
+        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
+    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -202,12 +251,92 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
 
     assert result.exit_code == 2
     assert "SCHEDULER_EQUIVALENCE_FAILED" in result.stderr
-    equivalence_path = scheduler_data / "receipts" / "monitor-opportunities-nightly-equivalence.json"
+    equivalence_path = (
+        scheduler_data / "receipts" / "monitor-opportunities-nightly-equivalence.json"
+    )
     assert equivalence_path.is_file()
     equivalence = json.loads(equivalence_path.read_text(encoding="utf-8"))
     assert equivalence["status"] == "FAIL"
     assert equivalence["checks"]["command_matches"] is False
     assert equivalence["checks"]["workdir_matches"] is False
+
+
+def test_scheduler_equivalence_detects_registered_wrong_revision() -> None:
+    repo = Path("/repo")
+    intent = _scheduler_test_intent(repo)
+    intended = "run --expected-revision abc123 --require-clean --promoted-stage0"
+    readback = {
+        "cron": "0 2 * * *",
+        "command": "run --expected-revision wrong456 --require-clean --promoted-stage0",
+        "workdir": str(repo),
+        "enabled": True,
+    }
+
+    receipt = _scheduler_equivalence_receipt(
+        cron="0 2 * * *",
+        command=intended,
+        repo_root=repo,
+        intent=intent,
+        readback=readback,
+    )
+
+    assert receipt["status"] == "FAIL"
+    assert receipt["checks"]["command_matches"] is False
+    assert receipt["checks"]["registered_expected_revision_pinned"] is False
+
+
+def test_scheduler_equivalence_detects_omitted_promoted_flag() -> None:
+    repo = Path("/repo")
+    intent = _scheduler_test_intent(repo)
+    intended = "run --expected-revision abc123 --require-clean --promoted-stage0"
+    readback = {
+        "cron": "0 2 * * *",
+        "command": "run --expected-revision abc123 --require-clean",
+        "workdir": str(repo),
+        "enabled": True,
+    }
+
+    receipt = _scheduler_equivalence_receipt(
+        cron="0 2 * * *",
+        command=intended,
+        repo_root=repo,
+        intent=intent,
+        readback=readback,
+    )
+
+    assert receipt["status"] == "FAIL"
+    assert receipt["checks"]["command_matches"] is False
+    assert receipt["checks"]["registered_promoted_stage0_flag_matches"] is False
+
+
+def test_scheduler_equivalence_detects_effect_bearing_configuration() -> None:
+    repo = Path("/repo")
+    intent = _scheduler_test_intent(repo)
+    intent["external_effects"] = True
+    intent["environment"]["MONITOR_TRACKER_ENABLED"] = "1"
+    intent["environment"]["MONITOR_ATS_MEMORY_ENABLED"] = "1"
+    intent["effect_policy"]["gmail_send"] = "ENABLED"
+    command = "run --expected-revision abc123 --require-clean --promoted-stage0"
+    readback = {
+        "cron": "0 2 * * *",
+        "command": command,
+        "workdir": str(repo),
+        "enabled": True,
+    }
+
+    receipt = _scheduler_equivalence_receipt(
+        cron="0 2 * * *",
+        command=command,
+        repo_root=repo,
+        intent=intent,
+        readback=readback,
+    )
+
+    assert receipt["status"] == "FAIL"
+    assert receipt["checks"]["external_effects_false"] is False
+    assert receipt["checks"]["tracker_disabled_in_environment"] is False
+    assert receipt["checks"]["ats_memory_disabled_in_environment"] is False
+    assert receipt["checks"]["forbidden_effect_policy"] is False
 
 
 def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
@@ -217,7 +346,13 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
     scheduler = repo / "skills" / "scheduler" / "run.sh"
     run_sh = repo / "skills" / "monitor-opportunities" / "run.sh"
     default_claim_snapshot = (
-        repo / "skills" / "monitor-opportunities" / "local" / "nightly" / "authority" / "claim-snapshot.json"
+        repo
+        / "skills"
+        / "monitor-opportunities"
+        / "local"
+        / "nightly"
+        / "authority"
+        / "claim-snapshot.json"
     )
     scheduler.parent.mkdir(parents=True)
     run_sh.parent.mkdir(parents=True)
