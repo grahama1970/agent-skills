@@ -608,8 +608,10 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
         raise ContractError("LANE_COVERAGE_INCOMPLETE", "Exactly one record for lanes A, B, and C is required")
 
     receipts_by_lane: dict[str, list[SourceReceipt]] = {"A": [], "B": [], "C": []}
+    receipts_by_id: dict[str, SourceReceipt] = {}
     for receipt in manifest.source_receipts:
         receipts_by_lane.setdefault(receipt.lane, []).append(receipt)
+        receipts_by_id[receipt.receipt_id] = receipt
 
     for lane in manifest.lane_coverage:
         receipt_statuses = {
@@ -625,6 +627,66 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
         if lane.searched and not lane.source_receipt_ids:
             raise ContractError(
                 "SOURCE_RECEIPT_MISSING", f"Searched lane {lane.lane} has no source receipt"
+            )
+
+    def validate_source_backing(
+        *,
+        item_kind: str,
+        item_id: str,
+        source_receipt_ids: list[str],
+        allow_degraded: bool,
+    ) -> None:
+        if not source_receipt_ids:
+            raise ContractError(
+                "REPORT_VISIBLE_SOURCE_RECEIPT_MISSING",
+                f"{item_kind} {item_id} is report-visible without source receipts",
+            )
+        for receipt_id in source_receipt_ids:
+            receipt = receipts_by_id.get(receipt_id)
+            if receipt is None:
+                raise ContractError(
+                    "REPORT_VISIBLE_SOURCE_RECEIPT_UNKNOWN",
+                    f"{item_kind} {item_id} cites unknown source receipt: {receipt_id}",
+                )
+            if receipt.result_status == ResultStatus.MATCHES:
+                continue
+            if allow_degraded and receipt.result_status in DEGRADED_RESULT_STATUSES:
+                if not receipt.limitations:
+                    raise ContractError(
+                        "DEGRADED_SOURCE_LIMITATION_MISSING",
+                        f"{item_kind} {item_id} cites degraded receipt {receipt_id} without limitations",
+                    )
+                continue
+            raise ContractError(
+                "REPORT_VISIBLE_SOURCE_NOT_ACCEPTED",
+                f"{item_kind} {item_id} cites {receipt_id} with status {receipt.result_status.value}",
+            )
+
+    for opportunity in manifest.opportunities:
+        if opportunity.visible_in_report:
+            validate_source_backing(
+                item_kind="opportunity",
+                item_id=opportunity.opportunity_id,
+                source_receipt_ids=opportunity.source_receipt_ids,
+                allow_degraded=False,
+            )
+
+    for item in manifest.source_intel:
+        if item.visible_in_report:
+            validate_source_backing(
+                item_kind="source_intel",
+                item_id=item.signal_id,
+                source_receipt_ids=item.source_receipt_ids,
+                allow_degraded=True,
+            )
+
+    for signal in manifest.relationship_signals:
+        if signal.visible_in_report:
+            validate_source_backing(
+                item_kind="relationship_signal",
+                item_id=signal.signal_id,
+                source_receipt_ids=signal.source_receipt_ids,
+                allow_degraded=True,
             )
 
     rows = _artifact_rows(manifest)
