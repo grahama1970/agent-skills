@@ -189,7 +189,7 @@ def _nav_js(url: str) -> str:
     )
 
 
-_TAB_CLOSE_TIMEOUT_SECONDS = 5
+_TAB_CLOSE_TIMEOUT_SECONDS = 20
 _TAB_CLOSE_ATTEMPTS = 3
 
 

@@ -150,7 +150,7 @@ def test_close_tab_records_browser_control_failure(
     assert summary["status"] == "DEGRADED"
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
-    assert summary["recent"][0]["timeout"] == 5
+    assert summary["recent"][0]["timeout"] == 20
     assert sleeps == [1.0, 1.0]
 
 
