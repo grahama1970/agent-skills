@@ -24,6 +24,14 @@ from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
 from .discovery import sweep as sweep_sources
+from .github_repo_intelligence import (
+    DEFAULT_OWNER_NAMES as DEFAULT_GITHUB_INTELLIGENCE_OWNER_NAMES,
+    DEFAULT_OWNERS as DEFAULT_GITHUB_INTELLIGENCE_OWNERS,
+    DEFAULT_QUERIES as DEFAULT_GITHUB_INTELLIGENCE_QUERIES,
+    GitHubRepoIntelligenceConfig,
+    collect_github_repo_intelligence,
+    write_degraded_github_repo_intelligence,
+)
 from .pipeline import (
     build_receipt_consistency,
     build_zero_effect_replay_receipt,
@@ -72,6 +80,7 @@ IMPLEMENTED = [
     "base-resume",
     "tailor-artifact",
     "memory-sync",
+    "github-intelligence",
     "nightly",
     "apply",
     "tau-semantic-prepare",
@@ -93,6 +102,26 @@ def _canonical_repo_root() -> Path:
         marker = parts.index(".worktrees")
         return Path(*parts[:marker])
     return repo_root
+
+
+def _split_env_list(value: str | None) -> tuple[str, ...]:
+    if not value:
+        return ()
+    normalized = value.replace("\n", ";").replace(",", ";")
+    return tuple(item.strip() for item in normalized.split(";") if item.strip())
+
+
+def _parse_owner_names(values: tuple[str, ...]) -> tuple[tuple[str, str], ...]:
+    pairs: list[tuple[str, str]] = []
+    for value in values:
+        if "=" not in value:
+            continue
+        handle, name = value.split("=", 1)
+        handle = handle.strip().lstrip("@")
+        name = name.strip()
+        if handle and name:
+            pairs.append((handle, name))
+    return tuple(pairs)
 
 
 def _fail(exc: ContractError) -> NoReturn:
@@ -212,6 +241,7 @@ def status_payload() -> dict[str, object]:
             "tau_semantic_input_materializer": "IMPLEMENTED_NIGHTLY_LOCAL",
             "tau_semantic_provider_eval": "IMPLEMENTED_NIGHTLY_GATED",
             "tau_semantic_report_projection": "IMPLEMENTED_LOCAL",
+            "github_repo_intelligence": "IMPLEMENTED_NIGHTLY_READ_ONLY",
         },
         "non_claims": [
             "Stage 0 does not prove long-run nightly reliability.",
@@ -411,6 +441,71 @@ def sweep(
         hiddenjobs_evidence=hiddenjobs_evidence,
     )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
+
+
+@app.command("github-intelligence")
+def github_intelligence(
+    out: Path = typer.Option(..., "--out", dir_okay=False, help="JSON artifact consumed by --github-evidence."),
+    query: list[str] | None = typer.Option(
+        None,
+        "--query",
+        help="GitHub repository search query. Repeat for multiple bounded searches.",
+    ),
+    repo: list[str] | None = typer.Option(
+        None,
+        "--repo",
+        help="Exact owner/repo to inspect. Repeat for important known repositories.",
+    ),
+    owner: list[str] | None = typer.Option(
+        None,
+        "--owner",
+        help="GitHub owner handle whose public repositories should be inspected.",
+    ),
+    owner_name: list[str] | None = typer.Option(
+        None,
+        "--owner-name",
+        help="Human-confirmed owner mapping as handle=Name. Repeat for multiple contacts.",
+    ),
+    max_repos: int = typer.Option(8, "--max-repos", min=1, max=25),
+    max_contributors: int = typer.Option(12, "--max-contributors", min=0, max=50),
+    max_issues: int = typer.Option(8, "--max-issues", min=0, max=50),
+    max_pull_requests: int = typer.Option(8, "--max-pull-requests", min=0, max=50),
+    max_commits: int = typer.Option(8, "--max-commits", min=0, max=50),
+    timeout_seconds: int = typer.Option(45, "--timeout-seconds", min=10, max=180),
+) -> None:
+    """Produce bounded read-only GitHub repo/contact intelligence for relationship discovery."""
+    _configure_logging()
+    queries = tuple(query or ()) or _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_QUERIES"))
+    if not queries:
+        queries = DEFAULT_GITHUB_INTELLIGENCE_QUERIES
+    repos = tuple(repo or ()) or _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_REPOS"))
+    owners = tuple(owner or ()) or _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNERS"))
+    if not owners:
+        owners = DEFAULT_GITHUB_INTELLIGENCE_OWNERS
+    owner_names = _parse_owner_names(tuple(owner_name or ())) or _parse_owner_names(
+        _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNER_NAMES"))
+    )
+    if not owner_names:
+        owner_names = DEFAULT_GITHUB_INTELLIGENCE_OWNER_NAMES
+    try:
+        receipt = collect_github_repo_intelligence(
+            GitHubRepoIntelligenceConfig(
+                out=out,
+                queries=queries,
+                repos=repos,
+                owners=owners,
+                owner_names=owner_names,
+                max_repos=max_repos,
+                max_contributors=max_contributors,
+                max_issues=max_issues,
+                max_pull_requests=max_pull_requests,
+                max_commits=max_commits,
+                timeout_seconds=timeout_seconds,
+            )
+        )
+    except ValueError as exc:
+        _fail(ContractError("GITHUB_INTELLIGENCE_FAILED", str(exc)))
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
 @app.command()
@@ -1253,6 +1348,61 @@ def nightly(
     meetup_evidence = meetup_receipt.get("evidence_path")
     steps["browser_control"] = browser_control_summary()
 
+    github_queries = _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_QUERIES"))
+    if not github_queries:
+        github_queries = DEFAULT_GITHUB_INTELLIGENCE_QUERIES
+    github_repos = _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_REPOS"))
+    github_owners = _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNERS"))
+    if not github_owners:
+        github_owners = DEFAULT_GITHUB_INTELLIGENCE_OWNERS
+    github_owner_names = _parse_owner_names(
+        _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNER_NAMES"))
+    )
+    if not github_owner_names:
+        github_owner_names = DEFAULT_GITHUB_INTELLIGENCE_OWNER_NAMES
+    try:
+        github_max_repos = max(1, min(25, int(os.environ.get("MONITOR_GITHUB_INTEL_MAX_REPOS", "8"))))
+    except ValueError:
+        github_max_repos = 8
+    try:
+        github_max_participants = max(
+            0, min(50, int(os.environ.get("MONITOR_GITHUB_INTEL_MAX_PARTICIPANTS", "12")))
+        )
+    except ValueError:
+        github_max_participants = 12
+    github_evidence_path = capture_dir / "github-repo-intelligence.json"
+    github_config = GitHubRepoIntelligenceConfig(
+        out=github_evidence_path,
+        queries=github_queries,
+        repos=github_repos,
+        owners=github_owners,
+        owner_names=github_owner_names,
+        max_repos=github_max_repos,
+        max_contributors=github_max_participants,
+        max_issues=max(0, min(12, github_max_participants)),
+        max_pull_requests=max(0, min(12, github_max_participants)),
+        max_commits=max(0, min(12, github_max_participants)),
+    )
+    try:
+        github_receipt = collect_github_repo_intelligence(github_config)
+    except Exception as exc:  # pragma: no cover - exercised through nightly integration tests
+        github_receipt = write_degraded_github_repo_intelligence(
+            github_config,
+            error=f"{type(exc).__name__}: {exc}",
+        )
+    write_json(capture_dir / "github-repo-intelligence-receipt.json", github_receipt)
+    steps["github_repo_intelligence"] = {
+        "status": github_receipt.get("status"),
+        "artifact": github_receipt.get("artifact_path"),
+        "repositories_captured": github_receipt.get("repositories_captured"),
+        "contacts_captured": github_receipt.get("contacts_captured"),
+        "degradation_count": github_receipt.get("degradation_count"),
+        "owner_handles": github_receipt.get("owner_handles"),
+        "owner_name_seeds": github_receipt.get("owner_name_seeds"),
+        "external_effects": github_receipt.get("external_effects"),
+    }
+    github_evidence = github_receipt.get("artifact_path") if github_evidence_path.exists() else None
+
     run_cmd = [str(run_sh), "run", "--out", str(out)]
     if diagnostic:
         run_cmd.extend(["--memory-url", memory_url, "--degrade-required-sources"])
@@ -1262,6 +1412,8 @@ def nightly(
         run_cmd += ["--linkedin-evidence", str(linkedin_evidence)]
     if meetup_evidence:
         run_cmd += ["--meetup-evidence", str(meetup_evidence)]
+    if github_evidence:
+        run_cmd += ["--github-evidence", str(github_evidence)]
     if indeed_evidence:
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:

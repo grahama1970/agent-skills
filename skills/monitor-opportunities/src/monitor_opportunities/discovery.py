@@ -576,7 +576,7 @@ def _github_contacts(record: dict[str, Any]) -> list[dict[str, Any]]:
     for row in rows:
         name = str(row.get("name") or "").strip()
         handle = str(row.get("handle") or row.get("login") or row.get("username") or "").strip().lstrip("@")
-        key = (name.lower(), handle.lower())
+        key = f"handle:{handle.lower()}" if handle else f"name:{name.lower()}"
         if key in seen or not (name or handle):
             continue
         seen.add(key)

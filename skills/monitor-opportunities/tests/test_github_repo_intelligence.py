@@ -3,20 +3,30 @@
 from __future__ import annotations
 
 import copy
+import inspect
 import json
 from pathlib import Path
+from typing import Any
 
 from jsonschema import Draft202012Validator
+from typer.testing import CliRunner
 
+from monitor_opportunities import cli
 from monitor_opportunities import contact_changes as cc
+from monitor_opportunities.cli import app
 from monitor_opportunities.contracts import validate_manifest
 from monitor_opportunities.discovery import _github_evidence_candidates
+from monitor_opportunities.github_repo_intelligence import (
+    GitHubRepoIntelligenceConfig,
+    collect_github_repo_intelligence,
+)
 from monitor_opportunities.pipeline import _source_intel
 from monitor_opportunities.verification import built_in_fixture
 
 RELATIONSHIP_CANDIDATE_SCHEMA = Path(
     "skills/monitor-opportunities/schemas/relationship-candidate.schema.json"
 )
+runner = CliRunner()
 
 
 def _report_source_receipt(receipt: dict) -> dict:
@@ -70,7 +80,9 @@ def _github_fixture(path: Path) -> Path:
                                     {
                                         "type": "profile_name_match",
                                         "evidence_refs": ["https://github.com/rtinney1"],
-                                        "note": "Profile evidence supports the handle-to-person mapping.",
+                                        "note": (
+                                            "Profile evidence supports this handle mapping."
+                                        ),
                                     }
                                 ],
                             }
@@ -97,10 +109,14 @@ def test_github_evidence_candidates_preserve_repo_contact_receipts(tmp_path: Pat
     assert candidates[0]["github_contact_hypotheses"][0]["mapping_status"] == "corroborated"
     assert candidates[0]["github_contact_hypotheses"][0]["corroboration"][0]["resolved"] is True
     assert candidates[0]["external_effects"] is False
-    assert "No GitHub, LinkedIn, email, or application action" in candidates[0]["unresolved_assumptions"][2]
+    assert "No GitHub, LinkedIn, email, or application action" in candidates[0][
+        "unresolved_assumptions"
+    ][2]
 
 
-def test_github_repo_contacts_emit_relationship_candidate_with_edge_receipts(tmp_path: Path) -> None:
+def test_github_repo_contacts_emit_relationship_candidate_with_edge_receipts(
+    tmp_path: Path,
+) -> None:
     receipt, candidates = _github_evidence_candidates(_github_fixture(tmp_path / "github.json"))
 
     signals = cc.relationship_signals_from_candidates(candidates)
@@ -117,8 +133,14 @@ def test_github_repo_contacts_emit_relationship_candidate_with_edge_receipts(tmp
         "Randi Tinney (@rtinney1)",
     ]
     assert signal["relationship_degree"] == 2
-    assert all(edge["source_receipt_ids"] == [receipt["receipt_id"]] for edge in signal["contact_path"])
-    assert all("https://github.com/rtinney1" in edge["evidence_refs"] for edge in signal["contact_path"])
+    assert all(
+        edge["source_receipt_ids"] == [receipt["receipt_id"]]
+        for edge in signal["contact_path"]
+    )
+    assert all(
+        "https://github.com/rtinney1" in edge["evidence_refs"]
+        for edge in signal["contact_path"]
+    )
     assert "handle mapping status: corroborated" in signal["provenance"]
     assert signal["external_effects"] is False
     assert "LINKEDIN_HUMAN_HANDOFF" in signal["preferred_human_channels"]
@@ -253,3 +275,244 @@ def test_github_name_and_handle_without_corroboration_stays_hypothesis(tmp_path:
 
     assert hypothesis["mapping_status"] == "hypothesis"
     assert signal["subject"] == "GitHub @rtinney1"
+
+
+def test_github_contacts_deduplicate_same_handle_across_roles(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                        "repo_url": "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                        "contacts": [
+                            {
+                                "name": "Randi Tinney",
+                                "handle": "rtinney1",
+                                "profile_url": "https://github.com/rtinney1",
+                                "corroboration": [
+                                    {
+                                        "type": "human_confirmation",
+                                        "evidence_refs": [
+                                            "https://github.com/rtinney1",
+                                            "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
+                        "commit_authors": [
+                            {
+                                "handle": "rtinney1",
+                                "commit_url": (
+                                    "https://github.com/rtinney1/"
+                                    "OpenC3_Cosmos_cFS_CFDP/commit/abc"
+                                ),
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+
+    assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
+    assert len(candidates[0]["github_contact_hypotheses"]) == 1
+
+
+def _fake_gh_json(*args: str, timeout: int = 45) -> Any:
+    raw_endpoint = args[1] if len(args) > 1 and args[0] == "api" else ""
+    endpoint = raw_endpoint.split("?", 1)[0]
+    if endpoint == "/repos/rtinney1/arcos-tools":
+        return {
+            "full_name": "rtinney1/arcos-tools",
+            "html_url": "https://github.com/rtinney1/arcos-tools",
+            "owner": {"login": "rtinney1", "html_url": "https://github.com/rtinney1"},
+            "description": "ARCOS support tools",
+            "topics": ["darpa", "arcos"],
+            "updated_at": "2026-08-01T00:00:00Z",
+            "pushed_at": "2026-08-02T00:00:00Z",
+        }
+    if endpoint == "/users/rtinney1/repos":
+        return [
+            {
+                "full_name": "rtinney1/oss-security",
+                "html_url": "https://github.com/rtinney1/oss-security",
+                "owner": {"login": "rtinney1", "html_url": "https://github.com/rtinney1"},
+                "description": "Security mailing-list mirror",
+                "topics": ["security"],
+            }
+        ]
+    if endpoint == "/search/repositories":
+        return {
+            "items": [
+                {
+                    "full_name": "galoisinc/arcos-notes",
+                    "html_url": "https://github.com/galoisinc/arcos-notes",
+                    "owner": {"login": "galoisinc", "html_url": "https://github.com/galoisinc"},
+                    "description": "Public ARCOS notes",
+                    "topics": ["arcos"],
+                }
+            ]
+        }
+    if endpoint == "/users/rtinney1":
+        return {"login": "rtinney1", "name": "Randi Tinney", "html_url": "https://github.com/rtinney1"}
+    if endpoint == "/users/galoisinc":
+        return {"login": "galoisinc", "name": "Galois Inc", "html_url": "https://github.com/galoisinc"}
+    if endpoint == "/users/formalAlice":
+        return {"login": "formalAlice", "name": "Alice Formal", "html_url": "https://github.com/formalAlice"}
+    if endpoint.endswith("/contributors"):
+        return [{"login": "formalAlice", "html_url": "https://github.com/formalAlice"}]
+    if endpoint.endswith("/issues"):
+        return [
+            {
+                "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
+                    "/issues", "/issues/7"
+                ),
+                "user": {"login": "issueBob"},
+            }
+        ]
+    if endpoint.endswith("/pulls"):
+        return [
+            {
+                "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
+                    "/pulls", "/pull/3"
+                ),
+                "user": {"login": "prCarol"},
+            }
+        ]
+    if endpoint.endswith("/commits"):
+        return [
+            {
+                "html_url": endpoint.replace("/repos/", "https://github.com/").replace(
+                    "/commits", "/commit/abc"
+                ),
+                "author": {"login": "commitDave"},
+            }
+        ]
+    raise AssertionError(f"unexpected gh api call: {args!r} timeout={timeout}")
+
+
+def test_live_github_intelligence_producer_writes_ingestable_artifact(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "monitor_opportunities.github_repo_intelligence._gh_json",
+        _fake_gh_json,
+    )
+    artifact = tmp_path / "github-live.json"
+
+    producer_receipt = collect_github_repo_intelligence(
+        GitHubRepoIntelligenceConfig(
+            out=artifact,
+            queries=("Galois ARCOS",),
+            repos=("rtinney1/arcos-tools",),
+            owners=(),
+            max_repos=2,
+            max_contributors=2,
+            max_issues=1,
+            max_pull_requests=1,
+            max_commits=1,
+        )
+    )
+    receipt, candidates = _github_evidence_candidates(artifact)
+    signals = cc.relationship_signals_from_candidates(candidates)
+
+    assert producer_receipt["status"] == "PASS"
+    assert producer_receipt["external_effects"] is False
+    assert producer_receipt["repositories_captured"] == 2
+    assert producer_receipt["contacts_captured"] >= 8
+    assert receipt["result_status"] == "MATCHES"
+    assert {row["github_repo"] for row in candidates} == {
+        "rtinney1/arcos-tools",
+        "galoisinc/arcos-notes",
+    }
+    assert any(row["subject"] == "Randi Tinney (@rtinney1)" for row in signals)
+    assert any(row["subject"] == "GitHub @issueBob" for row in signals)
+    assert any(row["external_effects"] is False for row in signals)
+
+
+def test_github_intelligence_producer_accepts_owner_handles(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "monitor_opportunities.github_repo_intelligence._gh_json",
+        _fake_gh_json,
+    )
+    artifact = tmp_path / "github-owner.json"
+
+    producer_receipt = collect_github_repo_intelligence(
+        GitHubRepoIntelligenceConfig(
+            out=artifact,
+            queries=(),
+            repos=(),
+            owners=("rtinney1",),
+            max_repos=1,
+            max_contributors=0,
+            max_issues=0,
+            max_pull_requests=0,
+            max_commits=0,
+        )
+    )
+    receipt, candidates = _github_evidence_candidates(artifact)
+
+    assert producer_receipt["status"] == "PASS"
+    assert producer_receipt["owner_handles"] == ["rtinney1"]
+    assert receipt["result_status"] == "MATCHES"
+    assert candidates[0]["github_repo"] == "rtinney1/oss-security"
+    assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
+
+
+def test_github_intelligence_cli_writes_artifact(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "monitor_opportunities.github_repo_intelligence._gh_json",
+        _fake_gh_json,
+    )
+    artifact = tmp_path / "github-cli.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "github-intelligence",
+            "--out",
+            str(artifact),
+            "--repo",
+            "rtinney1/arcos-tools",
+            "--owner",
+            "rtinney1",
+            "--max-repos",
+            "1",
+            "--max-contributors",
+            "1",
+            "--max-issues",
+            "1",
+            "--max-pull-requests",
+            "1",
+            "--max-commits",
+            "1",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    artifact_payload = json.loads(artifact.read_text(encoding="utf-8"))
+    assert payload["status"] == "PASS"
+    assert payload["external_effects"] is False
+    assert artifact_payload["automation_policy"] == "github_read_only_no_mutation_no_outreach"
+    assert artifact_payload["external_effects"] is False
+    assert artifact_payload["repositories"][0]["repo"] == "rtinney1/arcos-tools"
+    assert artifact_payload["owner_handles"] == ["rtinney1"]
+
+
+def test_nightly_wires_github_intelligence_into_run() -> None:
+    source = inspect.getsource(cli.nightly)
+
+    assert "collect_github_repo_intelligence" in source
+    assert "github-repo-intelligence.json" in source
+    assert '"--github-evidence"' in source
+    assert "MONITOR_GITHUB_INTEL_OWNERS" in source
+    assert "MONITOR_GITHUB_INTEL_OWNER_NAMES" in source
