@@ -55,7 +55,7 @@ from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
 from .tau_semantic_prepare import prepare_tau_semantic_inputs
 from .tau_semantic_provider import run_provider_semantic_eval
-from .util import read_json, sha256_json, write_json
+from .util import read_json, sha256_bytes, sha256_json, utc_now, write_json
 from .verification import run_verification
 
 load_dotenv(override=False)
@@ -93,6 +93,7 @@ IMPLEMENTED = [
     "tau-semantic-provider-eval",
     "tau-semantic-install",
     "report-acceptance",
+    "scheduler-exec-check",
 ]
 NOT_IMPLEMENTED: list[str] = []
 
@@ -248,6 +249,321 @@ def _scheduler_equivalence_receipt(
         "mocked": False,
         "live": False,
     }
+
+
+def _scheduler_data_dir() -> Path:
+    return Path(os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler")))
+
+
+def _count_token(command: str, token: str) -> int:
+    return command.count(token)
+
+
+def _hash_file(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    return sha256_bytes(path.read_bytes())
+
+
+def _json_hash_file(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    return sha256_json(read_json(path))
+
+
+def _receipt_status(path: Path) -> str:
+    if not path.is_file():
+        return "MISSING"
+    try:
+        return str(read_json(path).get("status") or "MISSING")
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return "UNREADABLE"
+
+
+def _scheduler_execution_equivalence_preflight(
+    *,
+    schedule_receipt: dict[str, Any],
+    schedule_receipt_path: Path,
+    require_promoted_stage0: bool,
+) -> tuple[dict[str, bool], dict[str, Any]]:
+    readback = schedule_receipt.get("readback") or {}
+    intent = schedule_receipt.get("scheduler_intent") or {}
+    equivalence = schedule_receipt.get("scheduler_equivalence") or {}
+    command = str(readback.get("command") or "")
+    receipt_command = str(schedule_receipt.get("command") or "")
+    workdir = Path(str(readback.get("workdir") or ""))
+    expected_revision = str(schedule_receipt.get("expected_revision") or "")
+    current_revision = ""
+    skill_tree_dirty = True
+    if workdir.exists():
+        try:
+            current_revision = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=workdir,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=20,
+            ).stdout.strip()
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+            current_revision = ""
+        try:
+            status = subprocess.run(
+                ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"],
+                cwd=workdir,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=20,
+            ).stdout
+            skill_tree_dirty = bool(status.strip())
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+            skill_tree_dirty = True
+    effect_policy = schedule_receipt.get("effect_policy") or {}
+    environment = intent.get("environment") or {}
+    mode = str(schedule_receipt.get("mode") or "")
+    checks = {
+        "schedule_receipt_present": schedule_receipt_path.is_file(),
+        "schedule_receipt_pass": schedule_receipt.get("status") == "PASS",
+        "scheduler_equivalence_pass": equivalence.get("status") == "PASS",
+        "readback_present": bool(readback),
+        "command_byte_for_byte_matches_receipt": bool(command) and command == receipt_command,
+        "command_digest_matches_receipt": sha256_bytes(command.encode("utf-8"))
+        == sha256_bytes(receipt_command.encode("utf-8")),
+        "enabled": readback.get("enabled", True) is True,
+        "workdir_present": bool(readback.get("workdir")),
+        "workdir_exists": workdir.is_dir(),
+        "workdir_matches_receipt": str(readback.get("workdir") or "")
+        == str(schedule_receipt.get("workdir") or ""),
+        "expected_revision_present": bool(expected_revision),
+        "expected_revision_in_command": bool(expected_revision) and expected_revision in command,
+        "expected_revision_count_one": command.count(expected_revision) == 1
+        if expected_revision
+        else False,
+        "current_revision_matches_expected": bool(expected_revision)
+        and bool(current_revision)
+        and (
+            current_revision == expected_revision
+            or current_revision.startswith(expected_revision)
+            or expected_revision.startswith(current_revision)
+        ),
+        "skill_tree_clean": not skill_tree_dirty,
+        "requires_clean_flag_present_once": _count_token(command, "--require-clean") == 1,
+        "skip_tracker_flag_present_once": _count_token(command, "--skip-tracker") == 1,
+        "skip_ats_memory_flag_present_once": _count_token(command, "--skip-ats-memory") == 1,
+        "tracker_disabled_in_environment": environment.get("MONITOR_TRACKER_ENABLED") == "0",
+        "ats_memory_disabled_in_environment": environment.get("MONITOR_ATS_MEMORY_ENABLED")
+        == "0",
+        "relationship_signals_enabled": environment.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED")
+        == "1",
+        "external_effects_false": schedule_receipt.get("external_effects") is False,
+        "forbidden_effects": all(
+            effect_policy.get(name) == "FORBIDDEN"
+            for name in ("gmail_send", "linkedin_action", "meetup_rsvp", "ats_submit")
+        ),
+    }
+    if require_promoted_stage0:
+        checks.update(
+            {
+                "mode_promoted_stage0": mode == "PROMOTED_STAGE_0",
+                "promoted_flag_present_once": _count_token(command, "--promoted-stage0") == 1,
+                "diagnostic_flag_absent": _count_token(command, "--diagnostic") == 0,
+                "buzz_not_skipped": _count_token(command, "--skip-buzz") == 0,
+                "buzz_summary_enabled": effect_policy.get("buzz_summary") == "ENABLED",
+            }
+        )
+    else:
+        checks.update(
+            {
+                "mode_explicit": mode in {"PROMOTED_STAGE_0", "DIAGNOSTIC"},
+                "one_mode_flag_present": (
+                    _count_token(command, "--promoted-stage0")
+                    + _count_token(command, "--diagnostic")
+                )
+                == 1,
+            }
+        )
+    preflight = {
+        "schedule_receipt": str(schedule_receipt_path),
+        "mode": mode,
+        "name": str(schedule_receipt.get("name") or ""),
+        "cron": str(schedule_receipt.get("cron") or ""),
+        "command": command,
+        "command_sha256": sha256_bytes(command.encode("utf-8")) if command else None,
+        "workdir": str(workdir) if str(workdir) else None,
+        "expected_revision": expected_revision,
+        "current_revision": current_revision,
+        "scheduler_equivalence_status": equivalence.get("status"),
+        "skill_tree_dirty": skill_tree_dirty,
+    }
+    return checks, preflight
+
+
+def _default_nightly_out(workdir: Path) -> Path:
+    return workdir / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
+
+
+def _scheduler_execution_equivalence_receipt(
+    *,
+    schedule_receipt_path: Path,
+    out_path: Path,
+    require_promoted_stage0: bool,
+    timeout_seconds: int,
+    execute: bool,
+) -> dict[str, Any]:
+    started_at = None
+    finished_at = None
+    schedule_receipt = read_json(schedule_receipt_path)
+    preflight_checks, preflight = _scheduler_execution_equivalence_preflight(
+        schedule_receipt=schedule_receipt,
+        schedule_receipt_path=schedule_receipt_path,
+        require_promoted_stage0=require_promoted_stage0,
+    )
+    command = str(preflight.get("command") or "")
+    workdir = Path(str(preflight.get("workdir") or ""))
+    execution: dict[str, Any] = {"executed": False}
+    if all(preflight_checks.values()) and execute:
+        started_at = utc_now()
+        try:
+            proc = subprocess.run(
+                command,
+                shell=True,
+                cwd=workdir,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+            )
+            execution = {
+                "executed": True,
+                "exit_code": proc.returncode,
+                "stdout_tail": proc.stdout[-4000:],
+                "stderr_tail": proc.stderr[-4000:],
+            }
+        except subprocess.TimeoutExpired as exc:
+            execution = {
+                "executed": True,
+                "exit_code": -1,
+                "timeout": True,
+                "stdout_tail": str(exc.stdout or "")[-4000:],
+                "stderr_tail": str(exc.stderr or "")[-4000:],
+            }
+        finished_at = utc_now()
+    elif not execute:
+        execution["skipped_reason"] = "dry_run"
+    else:
+        execution["skipped_reason"] = "preflight_failed"
+
+    nightly_out = _default_nightly_out(workdir) if workdir else Path()
+    stdout_tail = str(execution.get("stdout_tail") or "")
+    try:
+        if stdout_tail.strip().startswith("{"):
+            payload = json.loads(stdout_tail)
+            if payload.get("out"):
+                nightly_out = Path(str(payload["out"]))
+    except (json.JSONDecodeError, TypeError):
+        pass
+    artifact_paths = {
+        "run_attestation": nightly_out / "run-attestation.json",
+        "nightly": nightly_out / "nightly-receipt.json",
+        "run": nightly_out / "run-receipt.json",
+        "report_manifest": nightly_out / "report-manifest.json",
+        "receipt_consistency": nightly_out / "receipt-consistency.json",
+        "zero_effect_replay": nightly_out / "zero-effect-replay-receipt.json",
+        "report_acceptance": nightly_out / "report-acceptance-receipt.json",
+    }
+    artifacts: dict[str, Any] = {}
+    for name, path in artifact_paths.items():
+        artifacts[name] = {
+            "path": str(path),
+            "present": path.is_file(),
+            "sha256": _hash_file(path),
+            "json_sha256": _json_hash_file(path),
+            "status": _receipt_status(path) if path.name.endswith(".json") else None,
+        }
+    nightly_receipt = (
+        read_json(artifact_paths["nightly"]) if artifact_paths["nightly"].is_file() else {}
+    )
+    acceptance_receipt = (
+        read_json(artifact_paths["report_acceptance"])
+        if artifact_paths["report_acceptance"].is_file()
+        else {}
+    )
+    replay_receipt = (
+        read_json(artifact_paths["zero_effect_replay"])
+        if artifact_paths["zero_effect_replay"].is_file()
+        else {}
+    )
+    consistency_receipt = (
+        read_json(artifact_paths["receipt_consistency"])
+        if artifact_paths["receipt_consistency"].is_file()
+        else {}
+    )
+    attestation = (
+        read_json(artifact_paths["run_attestation"])
+        if artifact_paths["run_attestation"].is_file()
+        else {}
+    )
+    expected_revision = str(preflight.get("expected_revision") or "")
+    revision_full = str((attestation.get("code") or {}).get("git_revision_full") or "")
+    report_acceptance_hash = _json_hash_file(artifact_paths["report_acceptance"])
+    post_checks = {
+        "execution_exit_code_zero": execution.get("exit_code") == 0,
+        "nightly_receipt_present": artifact_paths["nightly"].is_file(),
+        "nightly_status_pass": nightly_receipt.get("status") == "PASS",
+        "nightly_mode_matches_schedule": nightly_receipt.get("mode")
+        == schedule_receipt.get("mode"),
+        "nightly_live_true": nightly_receipt.get("live") is True,
+        "nightly_external_effects_false": nightly_receipt.get("external_effects") is False,
+        "run_attestation_present": artifact_paths["run_attestation"].is_file(),
+        "attestation_expected_revision_matches": (
+            (attestation.get("runtime") or {}).get("expected_revision") == expected_revision
+            or (nightly_receipt.get("steps") or {})
+            .get("attestation", {})
+            .get("expected_revision_matches")
+            is True
+        ),
+        "attestation_revision_matches_scheduler": bool(expected_revision)
+        and bool(revision_full)
+        and (
+            revision_full == expected_revision
+            or revision_full.startswith(expected_revision)
+            or expected_revision.startswith(revision_full)
+        ),
+        "attestation_skill_tree_clean": (attestation.get("code") or {}).get("skill_tree_dirty")
+        is False,
+        "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
+        "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
+        "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
+        "zero_effect_replay_pass": replay_receipt.get("status") == "PASS",
+        "zero_effect_replay_external_effects_false": replay_receipt.get("external_effects")
+        is False,
+        "report_acceptance_present": artifact_paths["report_acceptance"].is_file(),
+        "report_acceptance_pass": acceptance_receipt.get("status") == "PASS",
+        "report_acceptance_external_effects_false": acceptance_receipt.get("external_effects")
+        is False,
+        "report_acceptance_hash_bound_in_nightly": bool(report_acceptance_hash)
+        and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
+        == report_acceptance_hash,
+    }
+    checks = {**preflight_checks, **post_checks}
+    receipt = {
+        "schema": "monitor_opportunities.scheduler_execution_equivalence_receipt.v1",
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "mocked": False,
+        "live": execution.get("executed") is True,
+        "external_effects": False,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "require_promoted_stage0": require_promoted_stage0,
+        "timeout_seconds": timeout_seconds,
+        "preflight": preflight,
+        "execution": execution,
+        "nightly_out": str(nightly_out),
+        "artifacts": artifacts,
+        "checks": checks,
+    }
+    write_json(out_path, receipt)
+    return {**receipt, "receipt": str(out_path)}
 
 
 def status_payload() -> dict[str, object]:
@@ -2103,6 +2419,62 @@ def schedule(
             sort_keys=True,
         )
     )
+
+
+@app.command("scheduler-exec-check")
+def scheduler_exec_check(
+    schedule_receipt: Path | None = typer.Option(
+        None,
+        "--schedule-receipt",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Scheduler registration receipt to execute byte-for-byte from readback.",
+    ),
+    out: Path | None = typer.Option(None, "--out", dir_okay=False),
+    require_promoted_stage0: bool = typer.Option(
+        True,
+        "--require-promoted-stage0/--allow-diagnostic",
+        help="Require the registered readback to be the promoted 2am Stage 0 command.",
+    ),
+    timeout_seconds: int = typer.Option(7200, "--timeout-seconds", min=60),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Write a preflight receipt without executing the registered command.",
+    ),
+) -> None:
+    """Execute the exact scheduler-readback command and bind its receipts."""
+    _configure_logging()
+    scheduler_data_dir = _scheduler_data_dir()
+    if schedule_receipt is None:
+        schedule_receipt = (
+            scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-receipt.json"
+        )
+    if out is None:
+        out = (
+            scheduler_data_dir
+            / "receipts"
+            / "monitor-opportunities-nightly-execution-equivalence.json"
+        )
+    try:
+        receipt = _scheduler_execution_equivalence_receipt(
+            schedule_receipt_path=schedule_receipt,
+            out_path=out,
+            require_promoted_stage0=require_promoted_stage0,
+            timeout_seconds=timeout_seconds,
+            execute=not dry_run,
+        )
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        _fail(ContractError("SCHEDULER_EXEC_CHECK_FAILED", str(exc)))
+    if receipt["status"] != "PASS":
+        _fail(
+            ContractError(
+                "SCHEDULER_EXECUTION_EQUIVALENCE_FAILED",
+                f"Scheduler execution-equivalence failed; receipt: {out}",
+            )
+        )
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
 def _not_implemented(command: str) -> None:

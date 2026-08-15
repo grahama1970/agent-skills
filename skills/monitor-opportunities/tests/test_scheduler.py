@@ -14,6 +14,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import _scheduler_equivalence_receipt, app
+from monitor_opportunities.util import sha256_json
 
 runner = CliRunner()
 
@@ -55,6 +56,90 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
     }
 
 
+def _write_json(path: Path, data: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str, object]:
+    intent = _scheduler_test_intent(repo)
+    command = command or (
+        "zsh -lc 'exec "
+        f"{repo}/skills/monitor-opportunities/run.sh nightly "
+        "--expected-revision abc123 --require-clean --skip-tracker "
+        "--skip-ats-memory --promoted-stage0'"
+    )
+    readback = {
+        "name": "monitor-opportunities-nightly",
+        "cron": "0 2 * * *",
+        "command": command,
+        "workdir": str(repo),
+        "enabled": True,
+    }
+    equivalence = _scheduler_equivalence_receipt(
+        cron="0 2 * * *",
+        command=command,
+        repo_root=repo,
+        intent=intent,
+        readback=readback,
+    )
+    return {
+        "schema": "monitor_opportunities.scheduler_receipt.v1",
+        "status": "PASS",
+        "mode": "PROMOTED_STAGE_0",
+        "external_effects": False,
+        "name": "monitor-opportunities-nightly",
+        "cron": "0 2 * * *",
+        "command": command,
+        "expected_revision": "abc123",
+        "workdir": str(repo),
+        "readback": readback,
+        "effect_policy": intent["effect_policy"],
+        "scheduler_intent": intent,
+        "scheduler_equivalence": equivalence,
+    }
+
+
+def _write_scheduler_execution_artifacts(repo: Path) -> Path:
+    run_dir = repo / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
+    run_dir.mkdir(parents=True)
+    report_acceptance = {
+        "schema": "monitor_opportunities.report_acceptance_receipt.v1",
+        "status": "PASS",
+        "external_effects": False,
+        "failures": [],
+    }
+    _write_json(run_dir / "report-acceptance-receipt.json", report_acceptance)
+    _write_json(
+        run_dir / "nightly-receipt.json",
+        {
+            "schema": "monitor_opportunities.nightly_receipt.v1",
+            "status": "PASS",
+            "mode": "PROMOTED_STAGE_0",
+            "live": True,
+            "external_effects": False,
+            "out": str(run_dir),
+            "artifact_hashes": {"report_acceptance": sha256_json(report_acceptance)},
+            "steps": {"attestation": {"expected_revision_matches": True}},
+        },
+    )
+    _write_json(
+        run_dir / "run-attestation.json",
+        {
+            "schema": "monitor_opportunities.run_attestation.v1",
+            "code": {"git_revision_full": "abc123", "skill_tree_dirty": False},
+        },
+    )
+    _write_json(run_dir / "run-receipt.json", {"status": "PASS", "external_effects": False})
+    _write_json(run_dir / "report-manifest.json", {"status": "PASS"})
+    _write_json(run_dir / "receipt-consistency.json", {"status": "PASS"})
+    _write_json(
+        run_dir / "zero-effect-replay-receipt.json",
+        {"status": "PASS", "external_effects": False},
+    )
+    return run_dir
+
+
 def test_scheduler_command_is_full_run_transaction() -> None:
     source = (Path(__file__).parents[1] / "src" / "monitor_opportunities" / "cli.py").read_text(
         encoding="utf-8"
@@ -75,6 +160,8 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert 'environment["BUZZ_BIN"]' in source
     assert "monitor-opportunities-nightly-receipt.json" in source
     assert "monitor-opportunities-nightly-equivalence.json" in source
+    assert "scheduler-exec-check" in source
+    assert "monitor-opportunities-nightly-execution-equivalence.json" in source
 
 
 def test_promoted_stage0_schedule_registers_claim_bound_publication(
@@ -438,3 +525,279 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
         "--diagnostic",
         "--skip-buzz",
     ]
+
+
+def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = (
+        "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
+        "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0'"
+    )
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        assert cmd == command
+        assert kwargs["shell"] is True
+        assert kwargs["cwd"] == repo
+        captured["executed_command"] = cmd
+        run_dir = _write_scheduler_execution_artifacts(repo)
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout=json.dumps({"status": "PASS", "out": str(run_dir)}) + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert captured["executed_command"] == command
+    assert payload["schema"] == "monitor_opportunities.scheduler_execution_equivalence_receipt.v1"
+    assert payload["status"] == "PASS"
+    assert payload["live"] is True
+    assert payload["external_effects"] is False
+    assert payload["preflight"]["command"] == command
+    assert payload["execution"]["exit_code"] == 0
+    assert payload["checks"]["command_byte_for_byte_matches_receipt"] is True
+    assert payload["checks"]["mode_promoted_stage0"] is True
+    assert payload["checks"]["promoted_flag_present_once"] is True
+    assert payload["checks"]["diagnostic_flag_absent"] is True
+    assert payload["checks"]["report_acceptance_hash_bound_in_nightly"] is True
+    assert payload["artifacts"]["nightly"]["present"] is True
+    assert payload["artifacts"]["report_acceptance"]["json_sha256"]
+    assert Path(payload["receipt"]) == out
+
+
+def test_scheduler_exec_check_rejects_duplicate_and_overridden_mode_flags(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    command = (
+        "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
+        "--require-clean --skip-tracker --skip-ats-memory "
+        "--promoted-stage0 --promoted-stage0 --diagnostic'"
+    )
+    receipt = _scheduler_test_receipt(repo, command=command)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    _write_json(schedule_receipt, receipt)
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError("registered command must not execute after preflight failure")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["status"] == "FAIL"
+    assert payload["execution"]["skipped_reason"] == "preflight_failed"
+    assert payload["checks"]["promoted_flag_present_once"] is False
+    assert payload["checks"]["diagnostic_flag_absent"] is False
+
+
+def test_scheduler_exec_check_rejects_command_byte_drift_and_wrong_workdir(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    wrong_repo = tmp_path / "wrong-repo"
+    (wrong_repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    receipt = _scheduler_test_receipt(repo)
+    receipt["readback"]["command"] = str(receipt["command"]) + " --drift"
+    receipt["readback"]["workdir"] = str(wrong_repo)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    _write_json(schedule_receipt, receipt)
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError("drifted command must not execute")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["status"] == "FAIL"
+    assert payload["checks"]["command_byte_for_byte_matches_receipt"] is False
+    assert payload["checks"]["workdir_matches_receipt"] is False
+
+
+def test_scheduler_exec_check_rejects_effect_bearing_environment(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    receipt = _scheduler_test_receipt(repo)
+    receipt["external_effects"] = True
+    receipt["scheduler_intent"]["environment"]["MONITOR_TRACKER_ENABLED"] = "1"
+    receipt["scheduler_intent"]["environment"]["MONITOR_ATS_MEMORY_ENABLED"] = "1"
+    receipt["effect_policy"]["linkedin_action"] = "ENABLED"
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    _write_json(schedule_receipt, receipt)
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError("effect-bearing command must not execute")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["checks"]["external_effects_false"] is False
+    assert payload["checks"]["tracker_disabled_in_environment"] is False
+    assert payload["checks"]["ats_memory_disabled_in_environment"] is False
+    assert payload["checks"]["forbidden_effects"] is False
+
+
+def test_scheduler_exec_check_fails_on_nonzero_execution(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        return subprocess.CompletedProcess(cmd, 9, stdout="", stderr="boom")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["execution"]["exit_code"] == 9
+    assert payload["checks"]["execution_exit_code_zero"] is False
+    assert payload["checks"]["nightly_receipt_present"] is False
+
+
+def test_scheduler_exec_check_fails_on_mismatched_final_acceptance_hash(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        run_dir = _write_scheduler_execution_artifacts(repo)
+        nightly_path = run_dir / "nightly-receipt.json"
+        nightly = json.loads(nightly_path.read_text(encoding="utf-8"))
+        nightly["artifact_hashes"]["report_acceptance"] = "wrong"
+        _write_json(nightly_path, nightly)
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout=json.dumps({"status": "PASS", "out": str(run_dir)}) + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["checks"]["report_acceptance_pass"] is True
+    assert payload["checks"]["report_acceptance_hash_bound_in_nightly"] is False
