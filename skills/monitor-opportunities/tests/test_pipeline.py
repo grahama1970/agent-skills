@@ -314,6 +314,109 @@ def test_status_receipt_consistency_detects_manifest_count_mismatch(tmp_path: Pa
     )
 
 
+def test_status_receipt_consistency_detects_required_null(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipt_path = out / "run-receipt.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["run_id"] = None
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    status = runner.invoke(app, ["status", "--run", str(out), "--json"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.stdout)
+    assert payload["receipt_consistency"]["status"] == "FAIL"
+    assert payload["receipt_consistency"]["required_nulls"] >= 1
+
+
+def test_status_receipt_consistency_detects_unclassified_posted_field(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    effect_policy = {
+        "schema": "monitor_opportunities.effect_policy_receipt.v1",
+        "mode": "DIAGNOSTIC",
+        "external_effects": False,
+        "publications": {
+            "local_report": "ENABLED",
+            "digest": "ENABLED",
+            "memory_summary": "SKIPPED",
+            "relationship_graph": "SKIPPED",
+            "buzz_summary": "SKIPPED",
+            "unexpected": {"posted": True},
+        },
+        "read_only_checks": {"prior_application_history": "SKIPPED"},
+        "separately_gated": {"tracker": "SKIPPED", "ats_selector_memory_write": "SKIPPED"},
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "FORBIDDEN",
+        },
+    }
+    (out / "effect-policy-receipt.json").write_text(
+        json.dumps(effect_policy, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    status = runner.invoke(app, ["status", "--run", str(out), "--json"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.stdout)
+    assert payload["receipt_consistency"]["status"] == "FAIL"
+    assert payload["receipt_consistency"]["ambiguous_posted_fields"] == [
+        "publications.unexpected.posted"
+    ]
+
+
+def test_status_receipt_consistency_detects_stage0_external_site_mutation(
+    tmp_path: Path,
+) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "nightly"
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    effect_policy = {
+        "schema": "monitor_opportunities.effect_policy_receipt.v1",
+        "mode": "PROMOTED_STAGE_0",
+        "external_effects": False,
+        "publications": {
+            "local_report": "ENABLED",
+            "digest": "ENABLED",
+            "memory_summary": "ENABLED",
+            "relationship_graph": "ENABLED",
+            "buzz_summary": "ENABLED",
+        },
+        "read_only_checks": {"prior_application_history": "ENABLED"},
+        "separately_gated": {"tracker": "SKIPPED", "ats_selector_memory_write": "SKIPPED"},
+        "forbidden_effects": {
+            "gmail_send": "FORBIDDEN",
+            "gmail_schedule_send": "FORBIDDEN",
+            "gmail_forward": "FORBIDDEN",
+            "linkedin_action": "FORBIDDEN",
+            "meetup_rsvp": "FORBIDDEN",
+            "ats_submit": "ENABLED",
+        },
+    }
+    (out / "effect-policy-receipt.json").write_text(
+        json.dumps(effect_policy, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    status = runner.invoke(app, ["status", "--run", str(out), "--json"])
+
+    assert status.exit_code == 0, status.output
+    payload = json.loads(status.stdout)
+    assert payload["receipt_consistency"]["status"] == "FAIL"
+    assert payload["receipt_consistency"]["stage0_external_site_mutations"] == ["ats_submit"]
+
+
 def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path: Path) -> None:
     fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
     out = tmp_path / "nightly"

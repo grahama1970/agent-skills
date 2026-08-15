@@ -1242,16 +1242,17 @@ def _canonical_publication_states(
         "meetup_rsvp",
         "ats_submit",
     ):
+        policy = _publication_policy_value(publication, "forbidden_effects", destination)
         states.append(
             _publication_state(
                 destination=destination,
-                policy=_publication_policy_value(publication, "forbidden_effects", destination),
+                policy=policy,
                 effect_class=(
                     "HUMAN_TRANSMITTED"
                     if destination.startswith("gmail")
                     else "EXTERNAL_SITE_MUTATED"
                 ),
-                status="FORBIDDEN",
+                status="FORBIDDEN" if policy == "FORBIDDEN" else "POLICY_ENABLED",
                 note="Forbidden or human-only effect; monitor-opportunities did not perform it.",
             )
         )
@@ -1266,6 +1267,23 @@ def _count_required_nulls(value: Any) -> int:
     if isinstance(value, list):
         return sum(_count_required_nulls(item) for item in value)
     return 0
+
+
+def _find_posted_fields(value: Any, *, path: str = "") -> list[str]:
+    if isinstance(value, dict):
+        found: list[str] = []
+        for key, item in value.items():
+            child_path = f"{path}.{key}" if path else str(key)
+            if key == "posted":
+                found.append(child_path)
+            found.extend(_find_posted_fields(item, path=child_path))
+        return found
+    if isinstance(value, list):
+        found = []
+        for index, item in enumerate(value):
+            found.extend(_find_posted_fields(item, path=f"{path}[{index}]"))
+        return found
+    return []
 
 
 def build_receipt_consistency(
@@ -1310,12 +1328,27 @@ def build_receipt_consistency(
         "publication_states": publication_states,
     }
     required_nulls = _count_required_nulls(required_payload)
-    ambiguous_posted_fields = [
+    classified_posted_fields = {
+        "buzz-summary-receipt.posted",
+    }
+    ambiguous_posted_fields = sorted(
+        set(_find_posted_fields(publication))
+        - classified_posted_fields
+    )
+    stage0_external_site_mutations = [
         state["destination"]
         for state in publication_states
-        if state["evidence_field"].endswith(".posted") and not state["effect_class"]
+        if state["effect_class"] == "EXTERNAL_SITE_MUTATED"
+        and state["status"] not in {"FORBIDDEN", "NOT_ATTEMPTED"}
     ]
-    status = "PASS" if required_nulls == 0 and not count_mismatches and not ambiguous_posted_fields else "FAIL"
+    status = (
+        "PASS"
+        if required_nulls == 0
+        and not count_mismatches
+        and not ambiguous_posted_fields
+        and not stage0_external_site_mutations
+        else "FAIL"
+    )
     return {
         "schema": "monitor_opportunities.receipt_consistency.v1",
         "status": status,
@@ -1327,6 +1360,7 @@ def build_receipt_consistency(
         "publication_state_vocabulary": list(PUBLICATION_EFFECT_CLASSES),
         "publication_states": publication_states,
         "ambiguous_posted_fields": ambiguous_posted_fields,
+        "stage0_external_site_mutations": stage0_external_site_mutations,
         "external_effects": bool(receipt.get("external_effects", False)),
         "mocked": False,
         "live": bool(receipt.get("live", False)),
