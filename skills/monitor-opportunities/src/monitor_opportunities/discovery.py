@@ -709,7 +709,26 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             or record.get("owner")
             or repo.split("/", 1)[0]
         ).strip()
-        repo_refs = [repo_url, *_as_str_list(record.get("evidence_refs"))]
+        repository_analysis = record.get("repository_analysis")
+        analysis_refs = (
+            _as_str_list(repository_analysis.get("evidence_refs"))
+            if isinstance(repository_analysis, dict)
+            else []
+        )
+        matched_terms = (
+            _as_str_list(repository_analysis.get("matched_terms"))
+            if isinstance(repository_analysis, dict)
+            else []
+        )
+        snippets = []
+        if isinstance(repository_analysis, dict) and isinstance(repository_analysis.get("readme_snippets"), list):
+            snippets = [
+                str(row.get("snippet") or "").strip()
+                for row in repository_analysis["readme_snippets"]
+                if isinstance(row, dict) and str(row.get("snippet") or "").strip()
+            ]
+        repo_refs = [repo_url, *_as_str_list(record.get("evidence_refs")), *analysis_refs]
+        receipt["evidence_refs"].extend(repo_refs)
         github_contact_hypotheses = []
         for contact in contacts:
             evidence_refs = _github_contact_evidence_refs(contact, repo_url)
@@ -742,6 +761,8 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
                 f"Organization/context: {org}",
                 "Description: " + str(record.get("description") or "")[:1000],
                 "Topics: " + ", ".join(_as_str_list(record.get("topics"))[:12]),
+                "Matched repository terms: " + ", ".join(matched_terms[:12]),
+                "README evidence snippets: " + " | ".join(snippets[:4])[:1200],
                 "Contacts: " + "; ".join(row["subject"] for row in github_contact_hypotheses[:12]),
                 "No external effects are authorized.",
             ]
@@ -773,6 +794,7 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             "github_contact_hypotheses": github_contact_hypotheses,
             "adjacent_contacts": [row["subject"] for row in github_contact_hypotheses],
             "github_evidence_refs": list(dict.fromkeys(repo_refs)),
+            "github_repository_analysis": repository_analysis if isinstance(repository_analysis, dict) else {},
             "external_effects": False,
             "unresolved_assumptions": [
                 "GitHub participation does not prove current employment, availability, or willingness to reconnect.",

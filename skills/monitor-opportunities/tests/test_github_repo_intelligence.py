@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import inspect
 import json
+import base64
 from pathlib import Path
 from typing import Any
 
@@ -460,6 +461,21 @@ def _fake_gh_json(*args: str, timeout: int = 45) -> Any:
         return {"login": "galoisinc", "name": "Galois Inc", "html_url": "https://github.com/galoisinc"}
     if endpoint == "/users/formalAlice":
         return {"login": "formalAlice", "name": "Alice Formal", "html_url": "https://github.com/formalAlice"}
+    if endpoint.endswith("/languages"):
+        return {"Python": 1200, "Shell": 300}
+    if endpoint.endswith("/readme"):
+        full_name = endpoint.removeprefix("/repos/").removesuffix("/readme")
+        readme = (
+            "DARPA ARCOS repository intelligence for formal methods assurance, "
+            "cFS CFDP aerospace workflows, and Galois-adjacent verification. "
+            "Related profile: https://github.com/readmeEve"
+        )
+        return {
+            "path": "README.md",
+            "html_url": f"https://github.com/{full_name}/blob/HEAD/README.md",
+            "encoding": "base64",
+            "content": base64.b64encode(readme.encode("utf-8")).decode("ascii"),
+        }
     if endpoint.endswith("/contributors"):
         return [{"login": "formalAlice", "html_url": "https://github.com/formalAlice"}]
     if endpoint.endswith("/issues"):
@@ -522,11 +538,24 @@ def test_live_github_intelligence_producer_writes_ingestable_artifact(
     assert producer_receipt["repositories_captured"] == 2
     assert producer_receipt["contacts_captured"] >= 8
     assert receipt["result_status"] == "MATCHES"
+    artifact_payload = json.loads(artifact.read_text(encoding="utf-8"))
+    first_record = artifact_payload["repositories"][0]
+    analysis = first_record["repository_analysis"]
+    assert analysis["languages"] == {"Python": 1200, "Shell": 300}
+    assert "DARPA ARCOS" in analysis["matched_terms"]
+    assert "formal methods" in analysis["matched_terms"]
+    assert analysis["readme"]["path"] == "README.md"
+    assert analysis["readme_snippets"]
+    assert "https://github.com/readmeEve" in first_record["evidence_refs"]
+    assert any(contact["handle"] == "readmeEve" for contact in first_record["mentioned_contacts"])
     assert {row["github_repo"] for row in candidates} == {
         "rtinney1/arcos-tools",
         "galoisinc/arcos-notes",
     }
+    assert any("README evidence snippets" in row["posting_text"] for row in candidates)
+    assert any("DARPA ARCOS repository intelligence" in row["posting_text"] for row in candidates)
     assert any(row["subject"] == "Randi Tinney (@rtinney1)" for row in signals)
+    assert any(row["subject"] == "GitHub @readmeEve" for row in signals)
     assert any(row["subject"] == "GitHub @issueBob" for row in signals)
     assert any(row["external_effects"] is False for row in signals)
 
@@ -559,7 +588,8 @@ def test_github_intelligence_producer_accepts_owner_handles(
     assert producer_receipt["owner_handles"] == ["rtinney1"]
     assert receipt["result_status"] == "MATCHES"
     assert candidates[0]["github_repo"] == "rtinney1/oss-security"
-    assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
+    assert "Randi Tinney (@rtinney1)" in candidates[0]["adjacent_contacts"]
+    assert "GitHub @readmeEve" in candidates[0]["adjacent_contacts"]
 
 
 def test_github_intelligence_cli_writes_artifact(tmp_path: Path, monkeypatch) -> None:
@@ -589,6 +619,10 @@ def test_github_intelligence_cli_writes_artifact(tmp_path: Path, monkeypatch) ->
             "1",
             "--max-commits",
             "1",
+            "--max-readme-bytes",
+            "4096",
+            "--max-readme-snippets",
+            "4",
         ],
     )
 
@@ -601,6 +635,9 @@ def test_github_intelligence_cli_writes_artifact(tmp_path: Path, monkeypatch) ->
     assert artifact_payload["external_effects"] is False
     assert artifact_payload["repositories"][0]["repo"] == "rtinney1/arcos-tools"
     assert artifact_payload["owner_handles"] == ["rtinney1"]
+    assert artifact_payload["limits"]["max_readme_bytes"] == 4096
+    assert artifact_payload["limits"]["max_readme_snippets"] == 4
+    assert artifact_payload["repositories"][0]["repository_analysis"]["readme"]["path"] == "README.md"
 
 
 def test_nightly_wires_github_intelligence_into_run() -> None:
@@ -611,3 +648,5 @@ def test_nightly_wires_github_intelligence_into_run() -> None:
     assert '"--github-evidence"' in source
     assert "MONITOR_GITHUB_INTEL_OWNERS" in source
     assert "MONITOR_GITHUB_INTEL_OWNER_NAMES" in source
+    assert "MONITOR_GITHUB_INTEL_MAX_README_BYTES" in source
+    assert "MONITOR_GITHUB_INTEL_MAX_README_SNIPPETS" in source

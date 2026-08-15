@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import base64
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +26,22 @@ DEFAULT_QUERIES = (
 )
 DEFAULT_OWNERS = ("rtinney1",)
 DEFAULT_OWNER_NAMES = (("rtinney1", "Randi Tinney"),)
+DEFAULT_RELEVANCE_TERMS = (
+    "DARPA ARCOS",
+    "ARCOS",
+    "DARPA",
+    "Galois",
+    "formal methods",
+    "assurance",
+    "verification",
+    "aerospace",
+    "cyber",
+    "security",
+    "cFS",
+    "CFDP",
+    "RACK",
+)
+GITHUB_PROFILE_URL_RE = re.compile(r"https?://github\.com/([A-Za-z0-9-]+)(?:[)\]\s>#?]|$)")
 
 
 @dataclass(frozen=True)
@@ -38,6 +56,8 @@ class GitHubRepoIntelligenceConfig:
     max_issues: int = 8
     max_pull_requests: int = 8
     max_commits: int = 8
+    max_readme_bytes: int = 12000
+    max_readme_snippets: int = 8
     timeout_seconds: int = 45
 
 
@@ -81,6 +101,148 @@ def _profile_url(login: str, row: dict[str, Any] | None = None) -> str:
         if html_url:
             return html_url
     return f"https://github.com/{login}"
+
+
+def _terms_for_analysis(config: GitHubRepoIntelligenceConfig) -> list[str]:
+    terms: list[str] = []
+    for query in config.queries:
+        cleaned = " ".join(query.split())
+        if len(cleaned) >= 3:
+            terms.append(cleaned)
+        terms.extend(part for part in re.split(r"[^A-Za-z0-9_.+-]+", cleaned) if len(part) >= 3)
+    terms.extend(DEFAULT_RELEVANCE_TERMS)
+    return list(dict.fromkeys(terms))
+
+
+def _matching_terms(text: str, terms: list[str]) -> list[str]:
+    lowered = text.lower()
+    return [term for term in terms if term.lower() in lowered]
+
+
+def _term_snippets(text: str, terms: list[str], *, limit: int) -> list[dict[str, str]]:
+    normalized = re.sub(r"\s+", " ", text).strip()
+    lowered = normalized.lower()
+    snippets: list[dict[str, str]] = []
+    for term in terms:
+        index = lowered.find(term.lower())
+        if index < 0:
+            continue
+        start = max(0, index - 120)
+        end = min(len(normalized), index + len(term) + 120)
+        snippets.append({"term": term, "snippet": normalized[start:end]})
+        if len(snippets) >= limit:
+            break
+    return snippets
+
+
+def _decode_readme(payload: Any, *, max_bytes: int) -> dict[str, Any] | None:
+    if not isinstance(payload, dict):
+        return None
+    encoded = str(payload.get("content") or "")
+    encoding = str(payload.get("encoding") or "").lower()
+    if not encoded or encoding != "base64":
+        return None
+    raw = base64.b64decode(encoded.encode("ascii"), validate=False)
+    truncated = raw[:max_bytes]
+    text = truncated.decode("utf-8", errors="replace")
+    path = str(payload.get("path") or "README").strip() or "README"
+    html_url = str(payload.get("html_url") or "").strip()
+    return {
+        "path": path,
+        "html_url": html_url,
+        "bytes_available": len(raw),
+        "bytes_analyzed": len(truncated),
+        "truncated": len(raw) > len(truncated),
+        "text_sha256": sha256_json({"text": text}),
+        "text": text,
+    }
+
+
+def _readme_profile_mentions(readme: dict[str, Any] | None, *, max_handles: int = 8) -> list[dict[str, Any]]:
+    if not readme:
+        return []
+    html_url = str(readme.get("html_url") or "").strip()
+    text = str(readme.get("text") or "")
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for match in GITHUB_PROFILE_URL_RE.finditer(text):
+        handle = match.group(1).strip()
+        if not handle or handle.lower() in seen:
+            continue
+        seen.add(handle.lower())
+        profile_url = f"https://github.com/{handle}"
+        refs = [profile_url]
+        if html_url:
+            refs.append(html_url)
+        rows.append(
+            {
+                "handle": handle,
+                "role": "readme_mentioned_github_profile",
+                "profile_url": profile_url,
+                "evidence_url": html_url or profile_url,
+                "evidence_refs": refs,
+            }
+        )
+        if len(rows) >= max_handles:
+            break
+    return rows
+
+
+def _repository_content_analysis(
+    full_name: str,
+    repo: dict[str, Any],
+    *,
+    config: GitHubRepoIntelligenceConfig,
+    degradations: list[dict[str, Any]],
+) -> dict[str, Any]:
+    languages: dict[str, int] = {}
+    try:
+        payload = _gh_json("api", f"/repos/{full_name}/languages", timeout=config.timeout_seconds)
+        if isinstance(payload, dict):
+            languages = {str(key): int(value) for key, value in payload.items() if isinstance(value, int)}
+    except (GitHubRepoIntelligenceError, subprocess.TimeoutExpired) as exc:
+        degradations.append(
+            {"stage": "languages", "repo": full_name, "error": str(exc)[-300:]}
+        )
+
+    readme: dict[str, Any] | None = None
+    try:
+        payload = _gh_json("api", f"/repos/{full_name}/readme", timeout=config.timeout_seconds)
+        readme = _decode_readme(payload, max_bytes=config.max_readme_bytes)
+    except (GitHubRepoIntelligenceError, subprocess.TimeoutExpired) as exc:
+        degradations.append({"stage": "readme", "repo": full_name, "error": str(exc)[-300:]})
+
+    terms = _terms_for_analysis(config)
+    readme_text = str((readme or {}).get("text") or "")
+    analysis_text = "\n".join(
+        [
+            str(repo.get("description") or ""),
+            " ".join(str(item) for item in repo.get("topics") or []),
+            " ".join(languages.keys()),
+            readme_text,
+        ]
+    )
+    matched_terms = _matching_terms(analysis_text, terms)
+    snippets = _term_snippets(readme_text, matched_terms, limit=config.max_readme_snippets)
+    mentioned_contacts = _readme_profile_mentions(readme)
+    evidence_refs = [_repo_url(full_name, repo)]
+    if readme and readme.get("html_url"):
+        evidence_refs.append(str(readme["html_url"]))
+    analysis: dict[str, Any] = {
+        "schema": "monitor_opportunities.github_repository_content_analysis.v1",
+        "languages": languages,
+        "matched_terms": matched_terms,
+        "readme_snippets": snippets,
+        "mentioned_contacts": mentioned_contacts,
+        "evidence_refs": list(dict.fromkeys(evidence_refs)),
+        "limits": {
+            "max_readme_bytes": config.max_readme_bytes,
+            "max_readme_snippets": config.max_readme_snippets,
+        },
+    }
+    if readme:
+        analysis["readme"] = {key: value for key, value in readme.items() if key != "text"}
+    return analysis
 
 
 def _contact_from_user(
@@ -183,6 +345,22 @@ def _collect_repo_record(
     if owner_contact:
         contacts.append(owner_contact)
 
+    repository_analysis = _repository_content_analysis(
+        full_name,
+        repo,
+        config=config,
+        degradations=degradations,
+    )
+    mentioned_contacts = [
+        row for row in repository_analysis.get("mentioned_contacts", []) if isinstance(row, dict)
+    ]
+    mentioned_contact_refs = [
+        ref
+        for row in mentioned_contacts
+        for ref in row.get("evidence_refs", [])
+        if isinstance(ref, str) and ref
+    ]
+
     try:
         contributors = _as_items(
             _gh_json(
@@ -275,8 +453,12 @@ def _collect_repo_record(
         "updated_at": repo.get("updated_at"),
         "pushed_at": repo.get("pushed_at"),
         "observed_via": observed_via,
-        "evidence_refs": [repo_url],
+        "evidence_refs": list(
+            dict.fromkeys([repo_url, *repository_analysis.get("evidence_refs", []), *mentioned_contact_refs])
+        ),
+        "repository_analysis": repository_analysis,
         "contacts": contacts,
+        "mentioned_contacts": mentioned_contacts,
         "issue_participants": issue_participants,
         "pr_participants": pr_participants,
         "commit_authors": commit_authors,
@@ -301,6 +483,8 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
         max_issues=_bounded(config.max_issues, minimum=0, maximum=50),
         max_pull_requests=_bounded(config.max_pull_requests, minimum=0, maximum=50),
         max_commits=_bounded(config.max_commits, minimum=0, maximum=50),
+        max_readme_bytes=_bounded(config.max_readme_bytes, minimum=0, maximum=50000),
+        max_readme_snippets=_bounded(config.max_readme_snippets, minimum=0, maximum=20),
         timeout_seconds=_bounded(config.timeout_seconds, minimum=10, maximum=180),
     )
     started_at = utc_now()
@@ -401,6 +585,8 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
             "max_issues": config.max_issues,
             "max_pull_requests": config.max_pull_requests,
             "max_commits": config.max_commits,
+            "max_readme_bytes": config.max_readme_bytes,
+            "max_readme_snippets": config.max_readme_snippets,
             "timeout_seconds": config.timeout_seconds,
         },
         "degradations": degradations,
@@ -419,6 +605,7 @@ def collect_github_repo_intelligence(config: GitHubRepoIntelligenceConfig) -> di
             + len(row.get("issue_participants") or [])
             + len(row.get("pr_participants") or [])
             + len(row.get("commit_authors") or [])
+            + len(row.get("mentioned_contacts") or [])
             for row in records
         ),
         "queries": list(config.queries),
@@ -469,6 +656,8 @@ def write_degraded_github_repo_intelligence(
             "max_issues": config.max_issues,
             "max_pull_requests": config.max_pull_requests,
             "max_commits": config.max_commits,
+            "max_readme_bytes": config.max_readme_bytes,
+            "max_readme_snippets": config.max_readme_snippets,
             "timeout_seconds": config.timeout_seconds,
         },
         "degradations": [{"stage": "producer", "error": error[-500:]}],

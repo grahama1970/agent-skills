@@ -848,6 +848,8 @@ def github_intelligence(
     max_issues: int = typer.Option(8, "--max-issues", min=0, max=50),
     max_pull_requests: int = typer.Option(8, "--max-pull-requests", min=0, max=50),
     max_commits: int = typer.Option(8, "--max-commits", min=0, max=50),
+    max_readme_bytes: int = typer.Option(12000, "--max-readme-bytes", min=0, max=50000),
+    max_readme_snippets: int = typer.Option(8, "--max-readme-snippets", min=0, max=20),
     timeout_seconds: int = typer.Option(45, "--timeout-seconds", min=10, max=180),
 ) -> None:
     """Produce bounded read-only GitHub repo/contact intelligence for relationship discovery."""
@@ -877,6 +879,8 @@ def github_intelligence(
                 max_issues=max_issues,
                 max_pull_requests=max_pull_requests,
                 max_commits=max_commits,
+                max_readme_bytes=max_readme_bytes,
+                max_readme_snippets=max_readme_snippets,
                 timeout_seconds=timeout_seconds,
             )
         )
@@ -1747,6 +1751,18 @@ def nightly(
         )
     except ValueError:
         github_max_participants = 12
+    try:
+        github_max_readme_bytes = max(
+            0, min(50000, int(os.environ.get("MONITOR_GITHUB_INTEL_MAX_README_BYTES", "12000")))
+        )
+    except ValueError:
+        github_max_readme_bytes = 12000
+    try:
+        github_max_readme_snippets = max(
+            0, min(20, int(os.environ.get("MONITOR_GITHUB_INTEL_MAX_README_SNIPPETS", "8")))
+        )
+    except ValueError:
+        github_max_readme_snippets = 8
     github_evidence_path = capture_dir / "github-repo-intelligence.json"
     github_config = GitHubRepoIntelligenceConfig(
         out=github_evidence_path,
@@ -1759,6 +1775,8 @@ def nightly(
         max_issues=max(0, min(12, github_max_participants)),
         max_pull_requests=max(0, min(12, github_max_participants)),
         max_commits=max(0, min(12, github_max_participants)),
+        max_readme_bytes=github_max_readme_bytes,
+        max_readme_snippets=github_max_readme_snippets,
     )
     try:
         github_receipt = collect_github_repo_intelligence(github_config)
