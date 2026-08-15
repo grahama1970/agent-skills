@@ -7,11 +7,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from monitor_opportunities.memory_sync import (
     MORNING_COLLECTION,
     MemorySyncError,
+    attach_memory_recall_provenance,
+    governed_memory_recall,
+    governed_recall_queries,
     morning_documents,
     sync_run_to_memory,
 )
@@ -141,6 +145,14 @@ class _Response:
     def json(self) -> dict:
         return self._payload
 
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError(
+                "bad status",
+                request=httpx.Request("POST", "http://memory.local"),
+                response=httpx.Response(self.status_code),
+            )
+
 
 class _MemoryClient:
     def __init__(self) -> None:
@@ -217,3 +229,146 @@ def test_sync_run_to_memory_reads_back_exact_stored_keys(
     assert set(receipt["readback_keys"]) == set(receipt["stored_keys"])
     assert "by-keys" in client.paths
     assert "recall" not in client.paths
+
+
+def test_governed_recall_queries_cover_opportunities_contacts_and_paths() -> None:
+    opportunities = [{"organization": "Galois, Inc.", "screening_interface_profile": {"observed": [], "unknowns": ["n/a"]}}]
+    signals = [_galois_relationship_signal()]
+
+    queries = governed_recall_queries(opportunities, signals, limit=10)
+
+    assert {row["category"] for row in queries} >= {
+        "prior_projects",
+        "target_organization",
+        "known_contacts",
+        "relationship_candidate",
+    }
+    assert all(row["q"].endswith("?") for row in queries)
+    assert len(queries) <= 10
+
+
+class _RecallClient:
+    def __init__(self, *, timeout: bool = False) -> None:
+        self.timeout = timeout
+        self.paths: list[str] = []
+        self.payloads: list[dict] = []
+
+    def __enter__(self) -> "_RecallClient":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+    def post(self, url: str, json: dict) -> _Response:
+        self.paths.append(url.rsplit("/", 1)[-1])
+        self.payloads.append(json)
+        if self.timeout:
+            raise httpx.ReadTimeout("recall timeout")
+        assert url.endswith("/recall")
+        return _Response(
+            200,
+            {
+                "found": True,
+                "confidence": 0.91,
+                "items": [
+                    {
+                        "_key": "memory:galois:arcos",
+                        "scores": {"bm25": 0.8, "dense": 0.7, "graph": 0.4},
+                    }
+                ],
+                "meta": {"took_ms": 12},
+                "errors": [],
+            },
+        )
+
+
+def test_governed_memory_recall_batches_http_recall_and_records_score_channels(monkeypatch) -> None:
+    opportunities = [{"organization": "Galois, Inc.", "screening_interface_profile": {"observed": [], "unknowns": ["n/a"]}}]
+    signals = [_galois_relationship_signal()]
+    client = _RecallClient()
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=opportunities,
+        relationship_signals=signals,
+        limit=4,
+        k=3,
+    )
+
+    assert receipt["schema"] == "monitor_opportunities.governed_memory_recall.v1"
+    assert receipt["attempted"] == 4
+    assert receipt["succeeded"] == 4
+    assert receipt["degraded"] is False
+    assert {row["status"] for row in receipt["queries"]} == {"MATCHES"}
+    assert all(row["raw_database_fallback"] is False for row in receipt["queries"])
+    assert all(row["score_channels"] == {"bm25": True, "dense": True, "graph": True} for row in receipt["queries"])
+    assert client.paths == ["recall", "recall", "recall", "recall"]
+    assert all(payload["k"] == 3 for payload in client.payloads)
+
+
+def test_governed_memory_recall_records_timeout_degradation_without_raw_db(monkeypatch) -> None:
+    opportunities = [{"organization": "Galois, Inc.", "screening_interface_profile": {"observed": [], "unknowns": ["n/a"]}}]
+    signals = [_galois_relationship_signal()]
+    client = _RecallClient(timeout=True)
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=opportunities,
+        relationship_signals=signals,
+        limit=2,
+    )
+
+    assert receipt["attempted"] == 2
+    assert receipt["succeeded"] == 0
+    assert receipt["degraded"] is True
+    assert {row["status"] for row in receipt["queries"]} == {"DEGRADED_TIMEOUT"}
+    assert all("no raw database fallback" in " ".join(row["limitations"]).lower() for row in receipt["queries"])
+    assert client.paths == ["recall", "recall"]
+
+
+def test_attach_memory_recall_provenance_updates_existing_visible_fields() -> None:
+    opportunities = [
+        {
+            "organization": "Galois, Inc.",
+            "screening_interface_profile": {"observed": [], "unknowns": ["n/a"]},
+        }
+    ]
+    signals = [_galois_relationship_signal()]
+    receipt = {
+        "schema": "monitor_opportunities.governed_memory_recall.v1",
+        "degraded": False,
+        "queries": [
+            {
+                "query_id": "memory-recall-01-target_organization-galois-inc",
+                "category": "target_organization",
+                "target": "Galois, Inc.",
+                "found": True,
+                "item_keys": ["memory:galois:arcos"],
+                "status": "MATCHES",
+            },
+            {
+                "query_id": "memory-recall-02-known_contacts-eric-mertens",
+                "category": "known_contacts",
+                "target": "Eric Mertens",
+                "found": True,
+                "item_keys": ["memory:eric:mertens"],
+                "status": "MATCHES",
+            },
+        ],
+    }
+
+    attach_memory_recall_provenance(opportunities, signals, receipt)
+
+    assert "memory:galois:arcos" in opportunities[0]["screening_interface_profile"]["observed"][0]
+    assert signals[0]["memory_recall_found"] is True
+    assert signals[0]["memory_recall_degraded"] is False
+    assert "memory-recall://memory-recall-02-known_contacts-eric-mertens" in signals[0]["evidence_refs"]
+    assert "governed Memory recall found supporting contact context" in signals[0]["provenance"]

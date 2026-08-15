@@ -17,6 +17,7 @@ from .contact_changes import (
 )
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError, ResultStatus
 from .discovery import sweep
+from .memory_sync import attach_memory_recall_provenance, governed_memory_recall
 from .outreach import build_outreach_packets
 from .ranking import rank
 from .report import load_manifest, render_report
@@ -71,6 +72,7 @@ GENERATED_RUN_FILES = (
     "prepublish-contract.json",
     "prospect-queue.json",
     "report-manifest.json",
+    "memory-recall-receipt.json",
     "receipt-consistency.json",
     "run-receipt.json",
     "stage-ledger.json",
@@ -482,6 +484,13 @@ def _report_from_run(
     for signal in relationship_signals_from_memory(memory_url):
         if signal["signal_id"] not in {row["signal_id"] for row in relationship_signals}:
             relationship_signals.append(signal)
+    memory_recall_receipt = governed_memory_recall(
+        memory_url,
+        opportunities=opportunities,
+        relationship_signals=relationship_signals,
+    )
+    write_json(run_dir / "memory-recall-receipt.json", memory_recall_receipt)
+    attach_memory_recall_provenance(opportunities, relationship_signals, memory_recall_receipt)
     relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
         opportunities, relationship_signals
     )

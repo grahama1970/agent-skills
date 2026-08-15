@@ -11,6 +11,7 @@ Qdrant semantic sync for keyed documents.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -19,11 +20,239 @@ import httpx
 MEMORY_URL_DEFAULT = "http://127.0.0.1:8601"
 MORNING_COLLECTION = "morning_opportunities"
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=3.0)
+RECALL_TIMEOUT = httpx.Timeout(connect=2.0, read=8.0, write=3.0, pool=2.0)
 READBACK_BATCH_SIZE = 500
+RECALL_BATCH_LIMIT = 24
+RECALL_K = 5
 
 
 class MemorySyncError(ValueError):
     """Stable memory sync error."""
+
+
+def _slug(value: Any) -> str:
+    text = re.sub(r"[^a-z0-9]+", "-", str(value or "").lower()).strip("-")
+    return text[:80] or "unknown"
+
+
+def _dedupe_queries(rows: list[dict[str, str]], limit: int) -> list[dict[str, str]]:
+    seen: set[str] = set()
+    out: list[dict[str, str]] = []
+    for row in rows:
+        key = str(row.get("q") or "").strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def governed_recall_queries(
+    opportunities: list[dict[str, Any]],
+    relationship_signals: list[dict[str, Any]],
+    *,
+    limit: int = RECALL_BATCH_LIMIT,
+) -> list[dict[str, str]]:
+    """Build bounded question-shaped Memory recall requests for report context."""
+
+    rows: list[dict[str, str]] = [
+        {
+            "category": "prior_projects",
+            "target": "DARPA ARCOS formal methods aerospace R&D",
+            "q": (
+                "What memory evidence connects Graham Anderson to DARPA ARCOS, "
+                "formal methods, aerospace R&D, Galois, GE, SRI, Lockheed, STR, or Vanderbilt?"
+            ),
+        }
+    ]
+    for opportunity in opportunities[:limit]:
+        org = str(opportunity.get("organization") or "").strip()
+        if org:
+            rows.append(
+                {
+                    "category": "target_organization",
+                    "target": org,
+                    "q": (
+                        f"What memory evidence do we have about {org} relevant to opportunities, "
+                        "consulting, prior projects, contracts, contacts, or hiring?"
+                    ),
+                }
+            )
+    for signal in relationship_signals[:limit]:
+        subject = str(signal.get("subject") or "").strip()
+        org = str(signal.get("organization") or "").strip()
+        path = " -> ".join(str(item) for item in signal.get("relationship_path") or [] if str(item).strip())
+        if subject:
+            rows.append(
+                {
+                    "category": "known_contacts",
+                    "target": subject,
+                    "q": (
+                        f"What memory evidence do we have for contact {subject}"
+                        f"{' at ' + org if org else ''} as a monitor contact or adjacent relationship?"
+                    ),
+                }
+            )
+        if path:
+            rows.append(
+                {
+                    "category": "relationship_candidate",
+                    "target": subject or org or path,
+                    "q": f"What memory evidence supports this relationship path: {path}?",
+                }
+            )
+    return _dedupe_queries(rows, limit)
+
+
+def governed_memory_recall(
+    memory_url: str,
+    *,
+    opportunities: list[dict[str, Any]],
+    relationship_signals: list[dict[str, Any]],
+    limit: int = RECALL_BATCH_LIMIT,
+    k: int = RECALL_K,
+) -> dict[str, Any]:
+    """Run bounded Memory `/recall` requests and record fail-soft degradation.
+
+    This never calls `/list`, ArangoDB, Qdrant, or any raw database fallback.
+    """
+
+    queries = governed_recall_queries(opportunities, relationship_signals, limit=limit)
+    rows: list[dict[str, Any]] = []
+    if not memory_url:
+        return {
+            "schema": "monitor_opportunities.governed_memory_recall.v1",
+            "memory_url": memory_url,
+            "attempted": 0,
+            "succeeded": 0,
+            "degraded": True,
+            "degradation_reasons": ["memory_url_missing"],
+            "queries": [],
+            "external_effects": False,
+        }
+    with httpx.Client(timeout=RECALL_TIMEOUT) as client:
+        for idx, query in enumerate(queries, start=1):
+            query_id = f"memory-recall-{idx:02d}-{query['category']}-{_slug(query['target'])}"
+            payload = {"q": query["q"], "k": k}
+            try:
+                response = client.post(f"{memory_url}/recall", json=payload)
+                response.raise_for_status()
+                data = response.json()
+            except httpx.TimeoutException as exc:
+                rows.append(
+                    {
+                        "query_id": query_id,
+                        **query,
+                        "status": "DEGRADED_TIMEOUT",
+                        "found": False,
+                        "confidence": 0.0,
+                        "item_keys": [],
+                        "score_channels": {"bm25": False, "dense": False, "graph": False},
+                        "limitations": ["Memory /recall timed out; no raw database fallback attempted."],
+                        "error": type(exc).__name__,
+                    }
+                )
+                continue
+            except Exception as exc:  # noqa: BLE001 - recall degradation must not fail the run
+                rows.append(
+                    {
+                        "query_id": query_id,
+                        **query,
+                        "status": "DEGRADED_ERROR",
+                        "found": False,
+                        "confidence": 0.0,
+                        "item_keys": [],
+                        "score_channels": {"bm25": False, "dense": False, "graph": False},
+                        "limitations": ["Memory /recall failed; no raw database fallback attempted."],
+                        "error": type(exc).__name__,
+                    }
+                )
+                continue
+            items = data.get("items") or []
+            channels = {
+                "bm25": any((item.get("scores") or {}).get("bm25", 0) > 0 for item in items),
+                "dense": any((item.get("scores") or {}).get("dense", 0) > 0 for item in items),
+                "graph": any((item.get("scores") or {}).get("graph", 0) > 0 for item in items),
+            }
+            rows.append(
+                {
+                    "query_id": query_id,
+                    **query,
+                    "status": "MATCHES" if data.get("found") else "NO_MATCHES",
+                    "found": bool(data.get("found")),
+                    "confidence": float(data.get("confidence") or 0.0),
+                    "item_keys": [str(item.get("_key")) for item in items if item.get("_key")],
+                    "score_channels": channels,
+                    "limitations": list(data.get("errors") or []),
+                    "took_ms": (data.get("meta") or {}).get("took_ms"),
+                    "raw_database_fallback": False,
+                }
+            )
+    degraded_reasons = sorted(
+        {
+            reason
+            for row in rows
+            if str(row.get("status", "")).startswith("DEGRADED")
+            for reason in row.get("limitations", [])
+        }
+    )
+    return {
+        "schema": "monitor_opportunities.governed_memory_recall.v1",
+        "memory_url": memory_url,
+        "attempted": len(rows),
+        "succeeded": sum(1 for row in rows if row["status"] in {"MATCHES", "NO_MATCHES"}),
+        "degraded": bool(degraded_reasons),
+        "degradation_reasons": degraded_reasons,
+        "queries": rows,
+        "external_effects": False,
+    }
+
+
+def attach_memory_recall_provenance(
+    opportunities: list[dict[str, Any]],
+    relationship_signals: list[dict[str, Any]],
+    recall_receipt: dict[str, Any],
+) -> None:
+    """Attach governed recall provenance to existing report-visible fields."""
+
+    queries = recall_receipt.get("queries") or []
+    by_target: dict[str, list[dict[str, Any]]] = {}
+    for row in queries:
+        by_target.setdefault(_slug(row.get("target")), []).append(row)
+    degraded = bool(recall_receipt.get("degraded"))
+    for opportunity in opportunities:
+        org = str(opportunity.get("organization") or "").strip()
+        matched = by_target.get(_slug(org), [])
+        profile = opportunity.setdefault("screening_interface_profile", {})
+        observed = profile.setdefault("observed", [])
+        unknowns = profile.setdefault("unknowns", ["Memory recall not yet evaluated."])
+        if any(row.get("found") for row in matched):
+            keys = sorted({key for row in matched for key in row.get("item_keys", [])})
+            observed.append(
+                "Governed Memory recall found organization context: "
+                + ", ".join(keys[:5])
+            )
+        elif matched:
+            unknowns.append("Governed Memory recall found no stored organization context.")
+        if degraded:
+            unknowns.append("Governed Memory recall degraded; no raw database fallback was attempted.")
+    for signal in relationship_signals:
+        subject = str(signal.get("subject") or signal.get("organization") or "").strip()
+        matched = by_target.get(_slug(subject), [])
+        if any(row.get("found") for row in matched):
+            signal["memory_recall_found"] = True
+            signal["memory_recall_degraded"] = degraded
+            refs = [f"memory-recall://{row['query_id']}" for row in matched if row.get("found")]
+            signal["evidence_refs"] = list(dict.fromkeys([*(signal.get("evidence_refs") or []), *refs]))
+            signal["provenance"] = (
+                str(signal.get("provenance") or "")
+                + "; governed Memory recall found supporting contact context"
+            ).strip("; ")
+        elif matched or degraded:
+            signal["memory_recall_found"] = False
+            signal["memory_recall_degraded"] = True if degraded else False
 
 
 def morning_documents(
