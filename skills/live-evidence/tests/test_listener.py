@@ -4,6 +4,7 @@
 import httpx
 import ssl
 
+from live_evidence.cli import _listener_hard_exit_enabled
 from live_evidence.listener import (
     ListenerOptions,
     _backend_client,
@@ -93,6 +94,17 @@ def test_listener_default_compute_type_matches_workstation_safe_gpu_mode() -> No
         consent_confirmed=True,
         pipewire_source="sink:alsa_output.test",
     ).compute_type == "int8"
+
+
+def test_listener_hard_exit_defaults_on_and_allows_opt_out(monkeypatch) -> None:
+    monkeypatch.delenv("LIVE_EVIDENCE_LISTENER_HARD_EXIT", raising=False)
+    assert _listener_hard_exit_enabled() is True
+
+    monkeypatch.setenv("LIVE_EVIDENCE_LISTENER_HARD_EXIT", "false")
+    assert _listener_hard_exit_enabled() is False
+
+    monkeypatch.setenv("LIVE_EVIDENCE_LISTENER_HARD_EXIT", "1")
+    assert _listener_hard_exit_enabled() is True
 
 
 def test_stt_final_boundary_enables_vad_without_clip_timestamps() -> None:

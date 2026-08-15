@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import shutil
 import threading
 import time
@@ -97,7 +98,16 @@ def listen(
         compute_type=compute_type,
         input_device_index=input_device_index,
     )
-    LiveListener(options, profile).run()
+    error: Exception | None = None
+    try:
+        LiveListener(options, profile).run()
+    except Exception as exc:  # listener CLI owns this process; log before hard exit.
+        logger.exception("Live Evidence listener failed: {}", exc)
+        error = exc
+    if _listener_hard_exit_enabled():
+        os._exit(1 if error else 0)
+    if error is not None:
+        raise typer.Exit(code=1) from error
 
 
 @app.command()
@@ -252,3 +262,14 @@ def _memory_health(base_url: str) -> bool:
 def _open_browser_after_delay(url: str) -> None:
     time.sleep(0.9)
     webbrowser.open(url)
+
+
+def _listener_hard_exit_enabled() -> bool:
+    """Force process teardown after RealtimeSTT cleanup unless explicitly disabled."""
+
+    return os.getenv("LIVE_EVIDENCE_LISTENER_HARD_EXIT", "true").strip().casefold() not in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }
