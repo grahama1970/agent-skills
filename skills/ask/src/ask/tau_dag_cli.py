@@ -315,7 +315,11 @@ def run(
         )
         browser_availability = _annotate_browser_availability_cooldown(browser_availability)
         _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
-        browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
+        browser_selection = _select_available_browser_handlers(
+            input_payload,
+            browser_availability,
+            browser_tab_lifecycle=browser_tab_lifecycle,
+        )
         _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
         if browser_selection.get("status") == "ADJUSTED":
             input_payload = _apply_browser_provider_selection(input_payload, browser_selection)
@@ -609,7 +613,11 @@ def compete(
         )
         browser_availability = _annotate_browser_availability_cooldown(browser_availability)
         _write_browser_availability(Path(str(bundle["run_dir"])), browser_availability)
-        browser_selection = _select_available_browser_handlers(input_payload, browser_availability)
+        browser_selection = _select_available_browser_handlers(
+            input_payload,
+            browser_availability,
+            browser_tab_lifecycle=browser_tab_lifecycle,
+        )
         _write_browser_provider_selection(Path(str(bundle["run_dir"])), browser_selection)
         if browser_selection.get("status") == "ADJUSTED":
             input_payload = _apply_browser_provider_selection(input_payload, browser_selection)
@@ -1058,7 +1066,24 @@ def _annotate_browser_availability_cooldown(report: dict[str, Any]) -> dict[str,
     return annotated
 
 
-def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any]) -> dict[str, Any]:
+def _browser_lifecycle_creates_fresh_tabs(input_payload: Any, mode: str) -> bool:
+    browser_handlers = [handler for handler in getattr(input_payload, "handlers", ()) or () if handler in BROWSER_FRESH_URLS]
+    if not browser_handlers:
+        return False
+    normalized = (mode or "auto").strip()
+    if normalized in {"fresh-temporary", "fresh-keep"}:
+        return True
+    if normalized == "auto":
+        return str(getattr(input_payload, "workflow_mode", "") or "") in {"roundtable", "compete"}
+    return False
+
+
+def _select_available_browser_handlers(
+    input_payload: Any,
+    report: dict[str, Any],
+    *,
+    browser_tab_lifecycle: str = "auto",
+) -> dict[str, Any]:
     requested = list(getattr(input_payload, "handlers", ()) or ())
     if not any(handler in BROWSER_FRESH_URLS for handler in requested):
         return _skipped_browser_provider_selection()
@@ -1106,7 +1131,25 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
     min_handlers = _minimum_handlers_for_workflow(input_payload)
     desired_handlers = max(min_handlers, len(requested))
     fallback_added: list[str] = []
-    single_explicit_seat = len([h for h in requested if h in BROWSER_FRESH_URLS]) == 1
+    browser_requested = [h for h in requested if h in BROWSER_FRESH_URLS]
+    explicit_projects = _explicit_handler_projects(input_payload)
+    fresh_lifecycle_kept: list[str] = []
+    single_explicit_seat = len(browser_requested) == 1
+    if (
+        single_explicit_seat
+        and removed == browser_requested
+        and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
+        and browser_requested[0] not in explicit_projects
+        and all(unusable.get(handler) == "provider_limited" for handler in removed)
+    ):
+        # Ambient provider probes inspect already-open tabs before fresh
+        # lifecycle provisioning. A stale WebGPT modal in an old tab must not
+        # remove the only explicitly requested fresh WebGPT seat before the
+        # new tab exists; the WebGPT worker owns the bounded provider retry
+        # once that fresh tab is created.
+        active.extend(removed)
+        fresh_lifecycle_kept = list(removed)
+        removed = []
     if removed and not single_explicit_seat:
         for candidate in _fallback_provider_order(str(getattr(input_payload, "request", "") or "")):
             if candidate in active or candidate in requested:
@@ -1138,6 +1181,7 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
         "limited_providers": sorted(limited.intersection(set(requested))),
         "unusable_providers": {k: v for k, v in sorted(unusable.items()) if k in set(requested)},
         "removed_handlers": removed,
+        "fresh_lifecycle_kept_handlers": fresh_lifecycle_kept,
         "fallback_handlers": fallback_added,
         "fallback_order": _fallback_provider_order(str(getattr(input_payload, "request", "") or "")),
         # Report why the handler was actually removed. Hardcoding
@@ -1148,7 +1192,7 @@ def _select_available_browser_handlers(input_payload: Any, report: dict[str, Any
             if removed
             else None
         ),
-        "cooldown_seconds": 600 if removed else 0,
+        "cooldown_seconds": 600 if removed or fresh_lifecycle_kept else 0,
         "message": (
             "Provider cooldown/capacity is lane-local. Ask removed unavailable browser handlers "
             "and added available fallback handlers when the workflow still needed enough participants."

@@ -3630,6 +3630,146 @@ def test_roundtable_browser_availability_rate_limit_continues_to_tau(monkeypatch
     assert "no_tau_execution" not in payload["execution"]
 
 
+def test_single_fresh_webgpt_rate_limit_keeps_requested_seat(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "old-tab"}]},
+            },
+        }
+
+    def fake_lifecycle(input_payload, *args, **kwargs):
+        captured["lifecycle_started"] = True
+        captured["lifecycle_handlers"] = list(input_payload.handlers)
+        return {
+            "schema": "ask.browser_tab_lifecycle.v1",
+            "status": "READY",
+            "mode": "fresh-keep",
+            "handler_projects": ["webgpt=fresh-webgpt-project"],
+        }
+
+    def fake_tau_execution(bundle: dict[str, Any], **kwargs):
+        captured["bundle"] = bundle
+        dag = json.loads(Path(bundle["dag_path"]).read_text(encoding="utf-8"))
+        captured["dag_handlers"] = dag["context"]["handlers"]
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "PASS",
+            "ok": True,
+            "mocked": False,
+            "live": True,
+            "provider_live": True,
+        }
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", fake_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Ask WebGPT for a single fresh-tab review.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "single-fresh-webgpt",
+            "--immutable-goal",
+            "A fresh requested WebGPT seat is created even when stale ambient tabs show cooldown.",
+            "--dag-template",
+            "single-call",
+            "--handler",
+            "webgpt",
+            "--browser-tab-lifecycle",
+            "fresh-keep",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "READY"
+    assert selection["limited_providers"] == ["webgpt"]
+    assert selection["removed_handlers"] == []
+    assert selection["fresh_lifecycle_kept_handlers"] == ["webgpt"]
+    assert selection["active_handlers"] == ["webgpt"]
+    assert captured["lifecycle_started"] is True
+    assert captured["lifecycle_handlers"] == ["webgpt"]
+    assert captured["dag_handlers"] == ["webgpt"]
+    assert payload["execution"]["status"] == "PASS"
+
+
+def test_single_reuse_bound_webgpt_rate_limit_blocks_before_dispatch(monkeypatch, tmp_path: Path) -> None:
+    def fake_availability(*args, **kwargs):
+        return {
+            "schema": "ask.browser_provider_availability.v1",
+            "status": "NEEDS_ATTENTION",
+            "mocked": False,
+            "live": True,
+            "read_only": True,
+            "requested_providers": ["webgpt"],
+            "providers": {
+                "webgpt": {"provider_limited": True, "checked_tabs": [{"tab_id": "bound-tab"}]},
+            },
+        }
+
+    def unexpected_lifecycle(*args, **kwargs):
+        raise AssertionError("reuse-bound rate-limited WebGPT should block before lifecycle provisioning")
+
+    def unexpected_tau_execution(*args, **kwargs):
+        raise AssertionError("reuse-bound rate-limited WebGPT should not dispatch Tau")
+
+    monkeypatch.setattr(tau_dag_cli, "_probe_browser_provider_availability", fake_availability)
+    monkeypatch.setattr(tau_dag_cli, "_provision_browser_lifecycle", unexpected_lifecycle)
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", unexpected_tau_execution)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Ask WebGPT on the bound tab.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "single-bound-webgpt",
+            "--immutable-goal",
+            "A reused WebGPT tab with visible cooldown blocks before dispatch.",
+            "--dag-template",
+            "single-call",
+            "--handler",
+            "webgpt",
+            "--browser-tab-lifecycle",
+            "reuse-bound",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 4
+    payload = json.loads(result.stdout)
+    selection = payload["browser_provider_selection"]
+    assert selection["status"] == "BLOCKED"
+    assert selection["removed_handlers"] == ["webgpt"]
+    assert selection["fresh_lifecycle_kept_handlers"] == []
+    assert payload["execution"]["blocked_reason"] == "browser_provider_selection_insufficient_participants"
+
+
 def test_browser_availability_blocked_execution_preserves_surf_socket_recovery() -> None:
     report = {
         "schema": "ask.browser_provider_availability.v1",
