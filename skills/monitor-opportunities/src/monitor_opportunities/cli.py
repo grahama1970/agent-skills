@@ -1533,6 +1533,15 @@ def schedule(
     repo_root = _canonical_repo_root()
     scheduler = repo_root / "skills" / "scheduler" / "run.sh"
     run_sh = repo_root / "skills" / "monitor-opportunities" / "run.sh"
+    default_claim_snapshot = (
+        repo_root
+        / "skills"
+        / "monitor-opportunities"
+        / "local"
+        / "nightly"
+        / "authority"
+        / "claim-snapshot.json"
+    )
     revision = subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=repo_root,
@@ -1554,17 +1563,10 @@ def schedule(
     if diagnostic:
         nightly_args.extend(["--diagnostic", "--skip-buzz"])
         buzz_bin = None
+        if claim_snapshot is None and default_claim_snapshot.is_file():
+            claim_snapshot = default_claim_snapshot
     else:
         if claim_snapshot is None:
-            default_claim_snapshot = (
-                repo_root
-                / "skills"
-                / "monitor-opportunities"
-                / "local"
-                / "nightly"
-                / "authority"
-                / "claim-snapshot.json"
-            )
             if not default_claim_snapshot.is_file():
                 _fail(
                     ContractError(
@@ -1573,7 +1575,6 @@ def schedule(
                     )
                 )
             claim_snapshot = default_claim_snapshot
-        claim_snapshot = claim_snapshot.resolve()
         buzz_bin = shutil.which("buzz")
         if not buzz_bin:
             _fail(
@@ -1583,6 +1584,8 @@ def schedule(
                 )
             )
         nightly_args.append("--promoted-stage0")
+    if claim_snapshot is not None:
+        claim_snapshot = claim_snapshot.resolve()
     command_parts = [
         "source ~/.zshrc >/dev/null 2>&1",
         "export MONITOR_TRACKER_ENABLED=0",
