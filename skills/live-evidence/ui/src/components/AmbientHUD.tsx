@@ -29,6 +29,9 @@ function HudInsightCard({ card, onDismiss }: { card: EvidenceCard; onDismiss: (c
   const kind = cardKind(card);
   const dismissQid = `live-evidence:hud:dismiss:${card.card_id}`;
   const copyQid = `live-evidence:hud:copy:${card.card_id}`;
+  const question = card.question || card.query;
+  const answer = card.answer || card.talking_point;
+  const evidence = card.evidence || card.proof;
 
   useRegisterAction({
     element_id: dismissQid,
@@ -49,7 +52,7 @@ function HudInsightCard({ card, onDismiss }: { card: EvidenceCard; onDismiss: (c
 
   const copyInsight = async () => {
     try {
-      await navigator.clipboard.writeText(`${card.talking_point}\n\n${card.proof}\n\n${card.qualifier}`);
+      await navigator.clipboard.writeText(`Question: ${question}\n\nAnswer: ${answer}\n\nEvidence: ${evidence}\n\n${card.qualifier}`);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1_500);
     } catch {
@@ -66,7 +69,7 @@ function HudInsightCard({ card, onDismiss }: { card: EvidenceCard; onDismiss: (c
           ) : (
             <Brain aria-hidden="true" className="size-3.5 shrink-0 text-violet-300" />
           )}
-          <h2 className="truncate text-xs font-semibold text-slate-100">{card.talking_point}</h2>
+          <h2 className="truncate text-xs font-semibold text-slate-100">{card.thread}</h2>
         </div>
         <button
           data-qid={dismissQid}
@@ -81,7 +84,20 @@ function HudInsightCard({ card, onDismiss }: { card: EvidenceCard; onDismiss: (c
         </button>
       </div>
 
-      <p className="mt-2 max-h-20 overflow-hidden text-xs leading-5 text-slate-300">{card.proof}</p>
+      <div className="mt-2 space-y-2">
+        <div>
+          <div className="mb-0.5 text-[9px] font-semibold uppercase text-cyan-200/80">Question</div>
+          <p className="line-clamp-2 text-[11px] leading-4 text-slate-300">{question}</p>
+        </div>
+        <div>
+          <div className="mb-0.5 text-[9px] font-semibold uppercase text-emerald-200/80">Answer</div>
+          <p className="line-clamp-3 text-xs leading-5 text-slate-100">{answer}</p>
+        </div>
+        <div>
+          <div className="mb-0.5 text-[9px] font-semibold uppercase text-amber-200/80">Evidence</div>
+          <p className="line-clamp-2 text-[11px] leading-4 text-slate-400">{evidence}</p>
+        </div>
+      </div>
 
       <div className="mt-3 flex items-center justify-between gap-2 text-[10px]">
         <span className="min-w-0 truncate font-mono text-slate-400" title={sourceLabel(card)}>

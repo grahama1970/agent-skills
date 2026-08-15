@@ -15,6 +15,8 @@ export interface TranscriptEvent {
   source: "microphone" | "pipewire" | "demo" | "api";
   text: string;
   sequence?: number | null;
+  start_ms?: number | null;
+  end_ms?: number | null;
 }
 
 export interface EvidenceSource {
@@ -41,6 +43,9 @@ export interface EvidenceCard {
   created_at: string;
   query: string;
   thread: string;
+  question?: string | null;
+  answer?: string | null;
+  evidence?: string | null;
   talking_point: string;
   proof: string;
   qualifier: string;

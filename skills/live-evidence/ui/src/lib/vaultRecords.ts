@@ -7,6 +7,9 @@ export interface MemoryRecord {
   id: string;
   type: Exclude<VaultType, "all">;
   project: string;
+  question: string;
+  answer: string;
+  evidence: string;
   title: string;
   content: string;
   sourceText: string;
@@ -54,8 +57,11 @@ export function recordsFrom(cards: EvidenceCard[], session: SessionInfo, current
         id: card.card_id,
         type: recordType(card),
         project: card.thread || session.profile_name || currentThread || "current-session",
-        title: card.talking_point,
-        content: `${card.proof} ${card.qualifier}`.trim(),
+        question: card.question || card.query,
+        answer: card.answer || card.talking_point,
+        evidence: card.evidence || card.proof,
+        title: card.question || card.query,
+        content: `${card.answer || card.talking_point} ${card.evidence || card.proof} ${card.qualifier}`.trim(),
         sourceText: sourceText(primarySource),
         sourceHref: sourceHref(primarySource),
         tags,

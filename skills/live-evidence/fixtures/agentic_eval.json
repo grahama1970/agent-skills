@@ -58,6 +58,24 @@
       }
     },
     {
+      "name": "real-stt-window-question-answer-card",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-real-stt-window"
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "real STT window question-answer card: PASS",
+          "real STT window receipt:"
+        ]
+      }
+    },
+    {
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,

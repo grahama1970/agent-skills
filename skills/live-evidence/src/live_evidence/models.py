@@ -111,6 +111,8 @@ class TranscriptEvent(BaseModel):
     source: TranscriptSource = TranscriptSource.API
     text: str = Field(min_length=1, max_length=8_000)
     sequence: int | None = Field(default=None, ge=0)
+    start_ms: int | None = Field(default=None, ge=0)
+    end_ms: int | None = Field(default=None, ge=0)
 
     @field_validator("created_at")
     @classmethod
@@ -130,6 +132,14 @@ class TranscriptEvent(BaseModel):
         if not normalized:
             raise ValueError("text must contain non-whitespace characters")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_offsets(self) -> "TranscriptEvent":
+        """Keep replay/live transcript offsets ordered when present."""
+
+        if self.start_ms is not None and self.end_ms is not None and self.end_ms < self.start_ms:
+            raise ValueError("end_ms must be greater than or equal to start_ms")
+        return self
 
 
 class EvidenceSource(BaseModel):
@@ -182,6 +192,9 @@ class EvidenceCard(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     query: str = Field(min_length=1, max_length=8_000)
     thread: str = Field(min_length=1, max_length=180)
+    question: str | None = Field(default=None, max_length=8_000)
+    answer: str | None = Field(default=None, max_length=1_200)
+    evidence: str | None = Field(default=None, max_length=1_500)
     talking_point: str = Field(min_length=1, max_length=800)
     proof: str = Field(min_length=1, max_length=1_200)
     qualifier: str = Field(min_length=1, max_length=800)

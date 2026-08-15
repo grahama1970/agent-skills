@@ -84,8 +84,20 @@ export function MemoryVaultRecord({ record }: { record: MemoryRecord }) {
             {record.createdAt}
           </span>
         </div>
-        <h3 className="mt-3 text-sm font-semibold leading-5 text-white">{record.title}</h3>
-        <p className="mt-2 line-clamp-4 text-xs leading-5 text-slate-300">{record.content}</p>
+        <div className="mt-3 space-y-2">
+          <div>
+            <div className="mb-0.5 text-[9px] font-semibold uppercase text-cyan-200/80">Question</div>
+            <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-white">{record.question}</h3>
+          </div>
+          <div>
+            <div className="mb-0.5 text-[9px] font-semibold uppercase text-emerald-200/80">Answer</div>
+            <p className="line-clamp-3 text-xs leading-5 text-slate-300">{record.answer}</p>
+          </div>
+          <div>
+            <div className="mb-0.5 text-[9px] font-semibold uppercase text-amber-200/80">Evidence</div>
+            <p className="line-clamp-2 text-[11px] leading-4 text-slate-400">{record.evidence}</p>
+          </div>
+        </div>
       </div>
 
       <div className="mt-4 border-t border-white/[0.07] pt-3">

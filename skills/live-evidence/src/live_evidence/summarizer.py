@@ -28,6 +28,9 @@ class ExtractiveSummarizer:
             return EvidenceCard(
                 query=query,
                 thread=thread,
+                question=query,
+                answer="No source-bound support surfaced yet.",
+                evidence="Graph Memory and current-source retrieval returned no admissible evidence for this turn.",
                 talking_point="No source-bound support surfaced yet.",
                 proof="Graph Memory and current-source retrieval returned no admissible evidence for this turn.",
                 qualifier="Do not improvise a repository claim. Answer from direct experience or ask for a narrower question.",
@@ -47,6 +50,9 @@ class ExtractiveSummarizer:
         return EvidenceCard(
             query=query,
             thread=thread,
+            question=query,
+            answer=talking_point,
+            evidence=proof or _sentence(primary.excerpt, 520),
             talking_point=talking_point,
             proof=proof or _sentence(primary.excerpt, 520),
             qualifier=qualifier,
