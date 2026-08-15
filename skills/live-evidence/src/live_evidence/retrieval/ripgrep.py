@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from ..config import AppSettings, InterviewProfile
 from ..models import EvidenceSource, Freshness, RetrievalLane
-from ..trigger import search_terms
+from ..trigger import CODE_PROMPT_TERMS, search_terms
 
 load_dotenv(override=False)
 
@@ -59,6 +59,24 @@ LOW_SIGNAL_TERMS = {
     "system",
     "work",
 }
+
+CODE_TERM_PRIORITY = (
+    "parentheses",
+    "parenthesis",
+    "minimum",
+    "remove",
+    "removal",
+    "invalid",
+    "valid",
+    "stack",
+    "input",
+    "output",
+    "opening",
+    "closing",
+    "characters",
+    "string",
+    "strings",
+)
 
 
 class RipgrepResult(BaseModel):
@@ -151,8 +169,13 @@ def _prioritized_terms(query: str, profile: InterviewProfile) -> list[str]:
         for term in profile.watch_terms
         if term.casefold() in lower and _term_is_specific(term)
     ]
+    code_terms = [
+        term
+        for term in CODE_TERM_PRIORITY
+        if term in CODE_PROMPT_TERMS and term in lower and _term_is_specific(term)
+    ]
     lexical = [term for term in search_terms(query, limit=10) if _term_is_specific(term)]
-    return _unique([*aliases, *profile_terms, *lexical])[:6]
+    return _unique([*aliases, *profile_terms, *code_terms, *lexical])[:8]
 
 
 def _term_is_specific(term: str) -> bool:

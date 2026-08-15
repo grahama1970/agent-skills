@@ -216,7 +216,7 @@ class EvidenceCoordinator:
             )
             ask_sources = ask_result.sources
 
-        card_sources = rank_sources(ask_sources, decision.query, self._profile) if decision.code_related else ranked
+        card_sources = _card_sources_for_decision(decision, ranked, ask_sources, self._profile)
         card = self._summarizer.build(decision.query, decision.thread, card_sources)
         snapshot = await self._state.add_card(card)
         await self._journal.append(snapshot.session.session_id, "evidence_card", card)
@@ -292,3 +292,16 @@ def _code_problem_key(query: str) -> str:
         if len(selected) == 6:
             break
     return "code:" + " ".join(selected) if selected else "code:" + " ".join(tokenize(query)[:8]).casefold()
+
+
+def _card_sources_for_decision(
+    decision: TriggerDecision,
+    ranked_sources: list[EvidenceSource],
+    ask_sources: list[EvidenceSource],
+    profile: InterviewProfile,
+) -> list[EvidenceSource]:
+    """Prefer Ask receipts, but keep current-source evidence when Ask degrades."""
+
+    if not decision.code_related:
+        return ranked_sources
+    return rank_sources([*ask_sources, *ranked_sources], decision.query, profile)
