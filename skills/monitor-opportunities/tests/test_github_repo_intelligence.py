@@ -18,7 +18,9 @@ from monitor_opportunities.contracts import validate_manifest
 from monitor_opportunities.discovery import _github_evidence_candidates
 from monitor_opportunities.github_repo_intelligence import (
     GitHubRepoIntelligenceConfig,
+    GitHubRepoIntelligenceError,
     collect_github_repo_intelligence,
+    write_degraded_github_repo_intelligence,
 )
 from monitor_opportunities.pipeline import _source_intel
 from monitor_opportunities.verification import built_in_fixture
@@ -322,6 +324,99 @@ def test_github_contacts_deduplicate_same_handle_across_roles(tmp_path: Path) ->
 
     assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
     assert len(candidates[0]["github_contact_hypotheses"]) == 1
+
+
+def test_github_degraded_artifact_stays_degraded_through_sweep(tmp_path: Path) -> None:
+    artifact = tmp_path / "github-degraded.json"
+    degraded_receipt = write_degraded_github_repo_intelligence(
+        GitHubRepoIntelligenceConfig(
+            out=artifact,
+            queries=("DARPA ARCOS",),
+            owners=("rtinney1",),
+            owner_names=(("rtinney1", "Randi Tinney"),),
+        ),
+        error="GitHub rate limit exceeded (HTTP 429)",
+    )
+
+    receipt, candidates = _github_evidence_candidates(artifact)
+    sweep_out = tmp_path / "sweep"
+    result = runner.invoke(
+        app,
+        [
+            "sweep",
+            "--lane",
+            "C",
+            "--out",
+            str(sweep_out),
+            "--github-evidence",
+            str(artifact),
+        ],
+    )
+    source_receipts = [
+        json.loads(line)
+        for line in (sweep_out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    github_receipts = [row for row in source_receipts if row.get("provider") == "github"]
+
+    assert degraded_receipt["status"] == "DEGRADED"
+    assert receipt["result_status"] == "RATE_LIMITED"
+    assert receipt["parser_result"] == "DEGRADED"
+    assert candidates == []
+    assert result.exit_code == 0, result.output
+    assert github_receipts
+    assert github_receipts[0]["result_status"] == "RATE_LIMITED"
+    assert github_receipts[0]["evidence_refs"] == [f"file://{artifact.resolve()}"]
+    assert any("GitHub producer degraded" in item for item in github_receipts[0]["limitations"])
+
+
+def test_github_rate_limit_from_api_becomes_degraded_sweep_receipt(
+    tmp_path: Path, monkeypatch
+) -> None:
+    def rate_limited_gh(*_args: str, timeout: int = 45) -> Any:
+        del timeout
+        raise GitHubRepoIntelligenceError("GitHub rate limit exceeded (HTTP 429)")
+
+    monkeypatch.setattr(
+        "monitor_opportunities.github_repo_intelligence._gh_json",
+        rate_limited_gh,
+    )
+    artifact = tmp_path / "github-rate-limited.json"
+    producer_receipt = collect_github_repo_intelligence(
+        GitHubRepoIntelligenceConfig(
+            out=artifact,
+            queries=(),
+            repos=(),
+            owners=("rtinney1",),
+            owner_names=(("rtinney1", "Randi Tinney"),),
+        )
+    )
+    sweep_out = tmp_path / "sweep-rate-limited"
+    result = runner.invoke(
+        app,
+        [
+            "sweep",
+            "--lane",
+            "C",
+            "--out",
+            str(sweep_out),
+            "--github-evidence",
+            str(artifact),
+        ],
+    )
+    source_receipts = [
+        json.loads(line)
+        for line in (sweep_out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    github_receipt = next(row for row in source_receipts if row.get("provider") == "github")
+
+    assert producer_receipt["status"] == "DEGRADED"
+    assert producer_receipt["repositories_captured"] == 0
+    assert result.exit_code == 0, result.output
+    assert github_receipt["result_status"] == "RATE_LIMITED"
+    assert github_receipt["parser_result"] == "DEGRADED"
+    assert any("owner_repos" in item for item in github_receipt["limitations"])
 
 
 def _fake_gh_json(*args: str, timeout: int = 45) -> Any:

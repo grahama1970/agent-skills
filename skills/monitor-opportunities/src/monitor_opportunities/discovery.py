@@ -669,10 +669,29 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
     )
     try:
         records = _load_github_repo_records(path)
+        payload = read_json(path)
     except (OSError, UnicodeDecodeError, ValueError) as exc:
         receipt["result_status"] = "INVALID_RESPONSE"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Local GitHub artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    degradations: list[dict[str, Any]] = []
+    if isinstance(payload, dict) and isinstance(payload.get("degradations"), list):
+        degradations = [row for row in payload["degradations"] if isinstance(row, dict)]
+    if degradations:
+        messages = []
+        for item in degradations[:6]:
+            stage = str(item.get("stage") or "unknown_stage")
+            error = str(item.get("error") or item.get("message") or "unspecified degradation")
+            messages.append(f"{stage}: {error[:220]}")
+        receipt["limitations"].append("GitHub producer degraded: " + "; ".join(messages))
+        receipt["parser_result"] = "DEGRADED"
+        lowered = " ".join(messages).lower()
+        if "rate limit" in lowered or "rate_limit" in lowered or "http 429" in lowered:
+            receipt["result_status"] = "RATE_LIMITED"
+        else:
+            receipt["result_status"] = "INVALID_RESPONSE"
         return _finalize_receipt(receipt), []
 
     candidates: list[dict[str, Any]] = []
