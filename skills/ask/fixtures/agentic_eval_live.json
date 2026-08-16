@@ -307,6 +307,24 @@
           "HOST_ON_MAIN"
         ]
       }
+    },
+    {
+      "name": "live-a-run-leaves-a-readable-handoff-chain",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Reply with exactly: HANDOFF-EVAL' --repo local/agent-skills --target handoff-eval --immutable-goal 'Return the token.' --dag-template single-call --handler claude-opus-5-high --execute --json >/dev/null 2>&1; ./run.sh handoff | grep -q 'human' && echo HANDOFF_CHAIN_READABLE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HANDOFF_CHAIN_READABLE"
+        ]
+      }
     }
   ]
 }

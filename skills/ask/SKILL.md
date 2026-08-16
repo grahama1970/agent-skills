@@ -414,6 +414,24 @@ answer. The substitution is now recorded in the node receipt:
 A timeout is a named outcome, not a violation — that is exactly the
 non-determinism these accept.
 
+### Where did this run hand off to?
+
+```bash
+skills/ask/run.sh handoff            # most recent run
+skills/ask/run.sh handoff <run-dir>  # a specific run
+skills/ask/run.sh handoff --json
+```
+
+Every node emits a `tau.agent_handoff.v1` payload naming its result, its
+evidence and the next agent. Those used to be printed to stdout and lost, so
+after a run there was no way to answer where it handed off or what it carried --
+the one seam in Ask with no artifact, and the seam whose entire purpose is
+telling the next agent what happened. They are now written as `handoff.json`
+beside each node receipt, and this reads the chain back in order.
+
+A run with no handoff artifacts says so, rather than printing nothing: it
+either predates this or no node completed.
+
 ### Auditing a panel against the best-practices contracts
 
 ```bash
