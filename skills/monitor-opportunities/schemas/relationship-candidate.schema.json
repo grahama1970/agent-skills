@@ -93,6 +93,84 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "provenance": { "type": "string", "minLength": 1 },
+    "contact_quality_status": {
+      "enum": [
+        "QUALIFIED_RECONNECT_CANDIDATE",
+        "NEEDS_IDENTITY_CORROBORATION",
+        "NEEDS_SUBSTANTIVE_CONTRIBUTION_EVIDENCE",
+        "NEEDS_RELEVANCE_EVIDENCE",
+        "NEEDS_HUMAN_REVIEW"
+      ]
+    },
+    "qualified_for_reconnect": { "type": "boolean" },
+    "qualification_reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "repository_role": { "type": "string", "minLength": 1 },
+    "contribution_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "relevance_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "identity_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "relationship_adjacency": {
+      "enum": ["direct_contact", "adjacent_contact", "organization_sponsor", "event_copresence"]
+    },
+    "contact_qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject",
+        "repository_role",
+        "contribution_evidence_refs",
+        "relevance_evidence_refs",
+        "identity_confidence",
+        "relationship_adjacency",
+        "qualified_for_reconnect",
+        "status",
+        "reasons"
+      ],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "repository_role": { "type": "string", "minLength": 1 },
+        "contribution_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "relevance_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "identity_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "relationship_adjacency": {
+          "enum": ["direct_contact", "adjacent_contact", "organization_sponsor", "event_copresence"]
+        },
+        "qualified_for_reconnect": { "type": "boolean" },
+        "status": {
+          "enum": [
+            "QUALIFIED_RECONNECT_CANDIDATE",
+            "NEEDS_IDENTITY_CORROBORATION",
+            "NEEDS_SUBSTANTIVE_CONTRIBUTION_EVIDENCE",
+            "NEEDS_RELEVANCE_EVIDENCE",
+            "NEEDS_HUMAN_REVIEW"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
     "memory_recall_found": { "type": ["boolean", "null"] },
     "memory_recall_degraded": { "type": ["boolean", "null"] },
     "recommended_action": {

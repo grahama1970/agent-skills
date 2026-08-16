@@ -437,6 +437,87 @@ def _channel_guidance_fields(preferred_channels: list[str], evidence_refs: list[
     }
 
 
+def _github_contact_qualification(
+    *,
+    hypothesis: dict[str, Any],
+    candidate: dict[str, Any],
+    subject: str,
+    role: str,
+    mapping_status: str,
+    evidence_refs: list[str],
+    signal_type: str,
+) -> dict[str, Any]:
+    analysis = candidate.get("github_repository_analysis")
+    analysis_refs = (
+        _as_str_list(analysis.get("evidence_refs")) if isinstance(analysis, dict) else []
+    )
+    matched_terms = (
+        _as_str_list(analysis.get("matched_terms")) if isinstance(analysis, dict) else []
+    )
+    contribution_refs = list(dict.fromkeys(_as_str_list(hypothesis.get("evidence_refs")) or evidence_refs))
+    relevance_refs = list(dict.fromkeys([*analysis_refs, *_as_str_list(candidate.get("github_evidence_refs"))]))
+    identity_confidence = 0.8 if mapping_status == "corroborated" else 0.35
+    reasons: list[str] = []
+    if mapping_status == "corroborated":
+        reasons.append("identity mapping corroborated")
+    else:
+        reasons.append("identity mapping requires corroboration")
+    if contribution_refs:
+        reasons.append(f"repository role observed: {role}")
+    else:
+        reasons.append("repository role lacks evidence locator")
+    if matched_terms:
+        reasons.append("repository relevance terms: " + ", ".join(matched_terms[:6]))
+    else:
+        reasons.append("repository relevance terms absent")
+
+    substantive_role = role in {
+        "repository_owner",
+        "readme_mentioned_github_profile",
+        "issue_participant",
+        "pull_request_participant",
+        "commit_author",
+    }
+    qualified = (
+        mapping_status == "corroborated"
+        and bool(contribution_refs)
+        and bool(relevance_refs)
+        and bool(matched_terms)
+        and substantive_role
+    )
+    if qualified:
+        status = "QUALIFIED_RECONNECT_CANDIDATE"
+    elif mapping_status != "corroborated":
+        status = "NEEDS_IDENTITY_CORROBORATION"
+    elif not substantive_role:
+        status = "NEEDS_SUBSTANTIVE_CONTRIBUTION_EVIDENCE"
+    elif not matched_terms or not relevance_refs:
+        status = "NEEDS_RELEVANCE_EVIDENCE"
+    else:
+        status = "NEEDS_HUMAN_REVIEW"
+    return {
+        "contact_quality_status": status,
+        "qualified_for_reconnect": qualified,
+        "qualification_reasons": reasons,
+        "repository_role": role,
+        "contribution_evidence_refs": contribution_refs,
+        "relevance_evidence_refs": relevance_refs,
+        "identity_confidence": identity_confidence,
+        "relationship_adjacency": signal_type,
+        "contact_qualification": {
+            "subject": subject,
+            "repository_role": role,
+            "contribution_evidence_refs": contribution_refs,
+            "relevance_evidence_refs": relevance_refs,
+            "identity_confidence": identity_confidence,
+            "relationship_adjacency": signal_type,
+            "qualified_for_reconnect": qualified,
+            "status": status,
+            "reasons": reasons,
+        },
+    }
+
+
 def arcos_contact_rows(path: Path | None = None) -> list[dict[str, str]]:
     """Load the memory-recalled ARCOS contact seed file without broad DB scans."""
 
@@ -647,6 +728,15 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                 f"GitHub repository intelligence: {role} observed in {repo}; "
                 f"handle mapping status: {mapping_status}"
             )
+            qualification = _github_contact_qualification(
+                hypothesis=hypothesis,
+                candidate=c,
+                subject=subject,
+                role=role,
+                mapping_status=mapping_status,
+                evidence_refs=evidence,
+                signal_type=signal_type,
+            )
             signals.append(
                 {
                     "signal_id": key,
@@ -659,6 +749,7 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
                     "evidence_refs": evidence,
                     "source_receipt_ids": source_receipt_ids,
                     "provenance": provenance,
+                    **qualification,
                     "recommended_action": "human_decide_reconnect_or_defer",
                     "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
                     "preferred_human_channels": preferred_channels,

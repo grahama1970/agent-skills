@@ -69,6 +69,135 @@ def _relationship_signal(**overrides: object) -> dict[str, object]:
     return signal
 
 
+def _github_relationship_signal(**overrides: object) -> dict[str, object]:
+    qualification: dict[str, object] = {
+        "subject": "Randi Tinney (@rtinney1)",
+        "repository_role": "repository_owner",
+        "contribution_evidence_refs": ["fixture://a"],
+        "relevance_evidence_refs": ["fixture://a"],
+        "identity_confidence": 0.8,
+        "relationship_adjacency": "adjacent_contact",
+        "qualified_for_reconnect": True,
+        "status": "QUALIFIED_RECONNECT_CANDIDATE",
+        "reasons": ["identity mapping corroborated", "repository role observed: repository_owner"],
+    }
+    signal = _relationship_signal(
+        signal_id="rel:github:rtinney1",
+        source_opportunity_id="github:repo:rtinney1/OpenC3_Cosmos_cFS_CFDP",
+        signal_type="adjacent_contact",
+        subject="Randi Tinney (@rtinney1)",
+        organization="rtinney1/OpenC3_Cosmos_cFS_CFDP",
+        relationship_path=["Graham Anderson", "ARCOS/formal-methods network", "Randi Tinney (@rtinney1)"],
+        contact_path=_contact_path(
+            ["Graham Anderson", "ARCOS/formal-methods network", "Randi Tinney (@rtinney1)"],
+            relationship="adjacent_contact",
+        ),
+        relationship_degree=2,
+        degree_label="second_degree",
+        confidence_reasons=["GitHub repository relationship signal", "source evidence present"],
+        provenance=(
+            "GitHub repository intelligence: repository_owner observed in "
+            "rtinney1/OpenC3_Cosmos_cFS_CFDP; handle mapping status: corroborated"
+        ),
+        contact_quality_status="QUALIFIED_RECONNECT_CANDIDATE",
+        qualified_for_reconnect=True,
+        qualification_reasons=qualification["reasons"],
+        repository_role="repository_owner",
+        contribution_evidence_refs=["fixture://a"],
+        relevance_evidence_refs=["fixture://a"],
+        identity_confidence=0.8,
+        relationship_adjacency="adjacent_contact",
+        contact_qualification=qualification,
+    )
+    signal.update(overrides)
+    return signal
+
+
+def test_github_relationship_signal_requires_contact_qualification_fields() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["relationship_signals"] = [
+        _relationship_signal(
+            provenance=(
+                "GitHub repository intelligence: repository_contributor observed in "
+                "ge-high-assurance/RACK; handle mapping status: corroborated"
+            )
+        )
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "GITHUB_CONTACT_QUALIFICATION_MISSING"
+
+
+def test_github_relationship_signal_accepts_evidence_backed_qualification() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["relationship_signals"] = [_github_relationship_signal()]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    manifest = validate_manifest(data)
+
+    assert manifest.relationship_signals[0].qualified_for_reconnect is True
+    assert manifest.relationship_signals[0].contact_quality_status == "QUALIFIED_RECONNECT_CANDIDATE"
+
+
+def test_github_relationship_signal_rejects_nested_qualification_mismatch() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    signal = _github_relationship_signal()
+    qualification = dict(signal["contact_qualification"])  # type: ignore[arg-type]
+    qualification["status"] = "NEEDS_HUMAN_REVIEW"
+    signal["contact_qualification"] = qualification
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "GITHUB_CONTACT_QUALIFICATION_MISMATCH"
+
+
+def test_github_relationship_signal_rejects_contradictory_qualified_state() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    signal = _github_relationship_signal(
+        contact_quality_status="NEEDS_HUMAN_REVIEW",
+        contact_qualification={
+            **_github_relationship_signal()["contact_qualification"],  # type: ignore[arg-type]
+            "status": "NEEDS_HUMAN_REVIEW",
+        },
+    )
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "GITHUB_CONTACT_QUALIFICATION_CONTRADICTORY"
+
+
+def test_github_relationship_signal_rejects_weak_identity_for_qualified_contact() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    signal = _github_relationship_signal(
+        identity_confidence=0.35,
+        contact_qualification={
+            **_github_relationship_signal()["contact_qualification"],  # type: ignore[arg-type]
+            "identity_confidence": 0.35,
+        },
+    )
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "GITHUB_CONTACT_QUALIFICATION_WEAK_IDENTITY"
+
+
 def test_valid_fixture_is_accepted() -> None:
     manifest = validate_manifest(built_in_fixture())
     assert manifest.stage == "STAGE_0_RESEARCH_ONLY"

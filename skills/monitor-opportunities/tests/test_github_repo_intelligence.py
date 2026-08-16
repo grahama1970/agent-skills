@@ -73,6 +73,10 @@ def _github_fixture(path: Path) -> Path:
                         "organization": "DARPA ARCOS network",
                         "description": "ARCOS formal-methods support tools.",
                         "topics": ["darpa", "arcos", "formal-methods"],
+                        "repository_analysis": {
+                            "matched_terms": ["DARPA", "ARCOS", "formal methods"],
+                            "evidence_refs": ["https://github.com/rtinney1/arcos-tools"],
+                        },
                         "contacts": [
                             {
                                 "name": "Randi Tinney",
@@ -150,6 +154,14 @@ def test_github_repo_contacts_emit_relationship_candidate_with_edge_receipts(
         for edge in signal["contact_path"]
     )
     assert "handle mapping status: corroborated" in signal["provenance"]
+    assert signal["contact_quality_status"] == "QUALIFIED_RECONNECT_CANDIDATE"
+    assert signal["qualified_for_reconnect"] is True
+    assert signal["repository_role"] == "repository_owner"
+    assert signal["identity_confidence"] == 0.8
+    assert signal["relationship_adjacency"] == "adjacent_contact"
+    assert "https://github.com/rtinney1/arcos-tools" in signal["contribution_evidence_refs"]
+    assert "https://github.com/rtinney1/arcos-tools" in signal["relevance_evidence_refs"]
+    assert signal["contact_qualification"]["status"] == "QUALIFIED_RECONNECT_CANDIDATE"
     assert signal["external_effects"] is False
     assert "LINKEDIN_HUMAN_HANDOFF" in signal["preferred_human_channels"]
 
@@ -287,6 +299,58 @@ def test_github_name_and_handle_without_corroboration_stays_hypothesis(tmp_path:
 
     assert hypothesis["mapping_status"] == "hypothesis"
     assert signal["subject"] == "GitHub @rtinney1"
+    assert signal["contact_quality_status"] == "NEEDS_IDENTITY_CORROBORATION"
+    assert signal["qualified_for_reconnect"] is False
+    assert signal["identity_confidence"] == 0.35
+
+
+def test_github_raw_contributor_presence_is_not_qualified_for_reconnect(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "ge-high-assurance/RACK",
+                        "repo_url": "https://github.com/ge-high-assurance/RACK",
+                        "organization": "ge-high-assurance",
+                        "repository_analysis": {
+                            "matched_terms": ["DARPA", "ARCOS"],
+                            "evidence_refs": ["https://github.com/ge-high-assurance/RACK"],
+                        },
+                        "contacts": [
+                            {
+                                "name": "Kevin Quick",
+                                "handle": "kquick",
+                                "role": "repository_contributor",
+                                "profile_url": "https://github.com/kquick",
+                                "evidence_refs": [
+                                    "https://github.com/kquick",
+                                    "https://github.com/ge-high-assurance/RACK",
+                                ],
+                                "corroboration": [
+                                    {
+                                        "type": "profile_name_match",
+                                        "evidence_refs": ["https://github.com/kquick"],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    signal = cc.relationship_signals_from_candidates(candidates)[0]
+
+    assert signal["subject"] == "Kevin Quick (@kquick)"
+    assert signal["repository_role"] == "repository_contributor"
+    assert signal["contact_quality_status"] == "NEEDS_SUBSTANTIVE_CONTRIBUTION_EVIDENCE"
+    assert signal["qualified_for_reconnect"] is False
+    assert any("repository role observed" in reason for reason in signal["qualification_reasons"])
 
 
 def test_github_contacts_deduplicate_same_handle_across_roles(tmp_path: Path) -> None:

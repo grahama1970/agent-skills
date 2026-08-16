@@ -294,6 +294,15 @@ class RelationshipSignal(StrictModel):
     evidence_refs: list[str]
     source_receipt_ids: list[str]
     provenance: str
+    contact_quality_status: str | None = None
+    qualified_for_reconnect: bool | None = None
+    qualification_reasons: list[str] = Field(default_factory=list)
+    repository_role: str | None = None
+    contribution_evidence_refs: list[str] = Field(default_factory=list)
+    relevance_evidence_refs: list[str] = Field(default_factory=list)
+    identity_confidence: float | None = Field(default=None, ge=0, le=1)
+    relationship_adjacency: str | None = None
+    contact_qualification: dict[str, Any] | None = None
     memory_recall_found: bool | None = None
     memory_recall_degraded: bool | None = None
     recommended_action: str
@@ -318,8 +327,8 @@ class ContactPathEdge(StrictModel):
     relationship: str = Field(min_length=1)
     evidence_status: str
     evidence_refs: list[str] = Field(min_length=1)
-    source_receipt_ids: list[str] = []
-    limitations: list[str] = []
+    source_receipt_ids: list[str] = Field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
 
 
 class RelationshipBindingDiagnostic(StrictModel):
@@ -529,6 +538,87 @@ def _validate_relationship_signal_path(signal: dict[str, Any]) -> None:
         )
 
 
+def _validate_github_contact_qualification(signal: dict[str, Any]) -> None:
+    missing = [
+        field
+        for field in (
+            "contact_quality_status",
+            "qualified_for_reconnect",
+            "qualification_reasons",
+            "repository_role",
+            "contribution_evidence_refs",
+            "relevance_evidence_refs",
+            "identity_confidence",
+            "relationship_adjacency",
+            "contact_qualification",
+        )
+        if signal.get(field) in (None, [], {})
+    ]
+    if missing:
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_MISSING",
+            f"GitHub relationship signal lacks qualification fields: {missing}",
+        )
+
+    qualification = signal.get("contact_qualification")
+    if not isinstance(qualification, dict):
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_INVALID",
+            "GitHub contact_qualification must be an object",
+        )
+
+    consistency_fields = {
+        "status": "contact_quality_status",
+        "qualified_for_reconnect": "qualified_for_reconnect",
+        "repository_role": "repository_role",
+        "contribution_evidence_refs": "contribution_evidence_refs",
+        "relevance_evidence_refs": "relevance_evidence_refs",
+        "identity_confidence": "identity_confidence",
+        "relationship_adjacency": "relationship_adjacency",
+    }
+    mismatched = [
+        nested_field
+        for nested_field, signal_field in consistency_fields.items()
+        if qualification.get(nested_field) != signal.get(signal_field)
+    ]
+    if mismatched:
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_MISMATCH",
+            f"GitHub contact_qualification disagrees with top-level fields: {mismatched}",
+        )
+
+    qualified = signal.get("qualified_for_reconnect") is True
+    status = signal.get("contact_quality_status")
+    contribution_refs = signal.get("contribution_evidence_refs") or []
+    relevance_refs = signal.get("relevance_evidence_refs") or []
+    identity_confidence = signal.get("identity_confidence")
+    if qualified and status != "QUALIFIED_RECONNECT_CANDIDATE":
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_CONTRADICTORY",
+            "qualified_for_reconnect requires QUALIFIED_RECONNECT_CANDIDATE status",
+        )
+    if status == "QUALIFIED_RECONNECT_CANDIDATE" and not qualified:
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_CONTRADICTORY",
+            "QUALIFIED_RECONNECT_CANDIDATE status requires qualified_for_reconnect=true",
+        )
+    if qualified and not contribution_refs:
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_EVIDENCE_MISSING",
+            "Qualified GitHub reconnect candidates require contribution evidence refs",
+        )
+    if qualified and not relevance_refs:
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_EVIDENCE_MISSING",
+            "Qualified GitHub reconnect candidates require relevance evidence refs",
+        )
+    if qualified and (not isinstance(identity_confidence, int | float) or identity_confidence < 0.7):
+        raise ContractError(
+            "GITHUB_CONTACT_QUALIFICATION_WEAK_IDENTITY",
+            "Qualified GitHub reconnect candidates require high identity confidence",
+        )
+
+
 def _validate_raw_semantics(raw: dict[str, Any]) -> None:
     if not isinstance(raw, dict):
         raise ContractError("SCHEMA_INVALID", "Report manifest must be a JSON object")
@@ -592,6 +682,8 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             raise ContractError("RELATIONSHIP_SIGNAL_EXTERNAL_EFFECT", "Relationship signals are local-only")
         if signal.get("visible_in_report") is not True:
             raise ContractError("RELATIONSHIP_SIGNAL_HIDDEN", "Relationship signals must be report-visible")
+        if str(signal.get("provenance") or "").startswith("GitHub repository intelligence:"):
+            _validate_github_contact_qualification(signal)
         _validate_relationship_signal_path(signal)
 
     relationship_ids = {signal.get("signal_id") for signal in raw.get("relationship_signals", [])}
