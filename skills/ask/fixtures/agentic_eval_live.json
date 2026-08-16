@@ -79,6 +79,42 @@
           "0"
         ]
       }
+    },
+    {
+      "name": "a-non-selected-tab-is-hidden-so-seats-need-own-windows",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 600,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../surf && OUT=$(./run.sh window.new 'https://example.com' --unfocused 2>&1) && W=$(echo \"$OUT\" | grep -oE 'Window [0-9]+' | head -1 | awk '{print $2}') && T1=$(echo \"$OUT\" | grep -oE 'tab [0-9]+' | head -1 | awk '{print $2}') && T2=$(./run.sh tab.new 'https://example.org' --background --window-id \"$W\" 2>&1 | grep -oE 'tab [0-9]+' | awk '{print $2}') && A=$(./run.sh js --tab-id \"$T1\" --no-activate 'document.hidden' 2>&1 | tail -1) && B=$(./run.sh js --tab-id \"$T2\" --no-activate 'document.hidden' 2>&1 | tail -1) && ./run.sh window.close \"$W\" >/dev/null 2>&1; echo \"selected=$A second=$B\"; case \"$A$B\" in *false*true*) echo SECOND_TAB_IS_HIDDEN;; esac"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SECOND_TAB_IS_HIDDEN"
+        ]
+      },
+      "non_deterministic": true
+    },
+    {
+      "name": "live-a-removed-web-seat-is-refilled-locally-and-recorded",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1500,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Reply with exactly: SUBSTITUTE-OK' --repo local/agent-skills --target eval-substitute --immutable-goal 'Return the token or name a blocker.' --handler webgemini --execute --json 2>/dev/null | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);d=json.loads(t[m.start():]);sel=(d.get('execution') or {}).get('browser_provider_selection') or d.get('browser_provider_selection') or {};subs=sel.get('local_substitutions') or [];rem=sel.get('removed_handlers') or [];assert not rem or subs, ('a seat was removed with no recorded substitution', rem);print('SEAT_HONEST')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SEAT_HONEST"
+        ]
+      }
     }
   ]
 }

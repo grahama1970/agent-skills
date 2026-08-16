@@ -1131,6 +1131,7 @@ def _select_available_browser_handlers(
     min_handlers = _minimum_handlers_for_workflow(input_payload)
     desired_handlers = max(min_handlers, len(requested))
     fallback_added: list[str] = []
+    local_substitutions: list[dict[str, str]] = []
     browser_requested = [h for h in requested if h in BROWSER_FRESH_URLS]
     explicit_projects = _explicit_handler_projects(input_payload)
     fresh_lifecycle_kept: list[str] = []
@@ -1150,6 +1151,29 @@ def _select_available_browser_handlers(
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
+    # A single explicitly named seat is not substituted with ANOTHER browser
+    # provider -- the human named it -- but losing it must not block the run
+    # when a local stand-in exists. Observed live 2026-08-16: a one-seat
+    # webgemini round was removed on browser_provider_probe_timeout and the run
+    # blocked with "not enough participants" while its configured local family
+    # sat unused. Returning nothing is worse than returning a recorded
+    # substitution.
+    if removed and single_explicit_seat:
+        for lost in removed:
+            # Use the family's real catalog id. "opencode-qwen" was a name I
+            # made up and nothing resolves it -- the same trap this skill's own
+            # rule against partial aliases exists to prevent.
+            from .model_aliases import OPENCODE_FALLBACK_MODELS
+
+            substitute = local_substitute_family(lost)
+            local_seat = OPENCODE_FALLBACK_MODELS.get(substitute or "", "") or LOCAL_CLAUDE_SEAT
+            if local_seat in active or local_seat in unusable:
+                continue
+            active.append(local_seat)
+            fallback_added.append(local_seat)
+            local_substitutions.append({"from": lost, "to": local_seat, "reason": "seat_removed"})
+            if len(active) >= desired_handlers:
+                break
     if removed and not single_explicit_seat:
         for candidate in _fallback_provider_order(str(getattr(input_payload, "request", "") or "")):
             if candidate in active or candidate in requested:
@@ -1183,6 +1207,9 @@ def _select_available_browser_handlers(
         "removed_handlers": removed,
         "fresh_lifecycle_kept_handlers": fresh_lifecycle_kept,
         "fallback_handlers": fallback_added,
+        # A substitution the caller did not ask for must be visible, or the
+        # panel silently answers from somewhere else.
+        "local_substitutions": local_substitutions,
         "fallback_order": _fallback_provider_order(str(getattr(input_payload, "request", "") or "")),
         # Report why the handler was actually removed. Hardcoding
         # browser_provider_rate_limited mislabelled every removal, so a probe
