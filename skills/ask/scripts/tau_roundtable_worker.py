@@ -448,6 +448,22 @@ def main() -> int:
         result = _run_join(args, start, artifact_dir)
     else:
         result = _run_handler(args, start, artifact_dir)
+    # Persist the handoff next to the node receipt. It was built, validated and
+    # then only printed to stdout, so it survived exactly as long as whoever was
+    # capturing the pipe -- zero handoff artifacts existed across the last six
+    # runs on disk. Every other seam in Ask leaves a receipt
+    # (node-receipt.json, browser-tab-lifecycle.json, compete-scorecard.json);
+    # this one left nothing to read afterwards, nothing to hand a next agent,
+    # and nothing to look at when a lane failed to continue.
+    handoff = result.get("handoff")
+    if handoff is not None:
+        try:
+            (artifact_dir / "handoff.json").write_text(
+                json.dumps(handoff, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+        except OSError:
+            # A receipt write must never change the node's exit status.
+            pass
     print(json.dumps(result["handoff"], sort_keys=True))
     return int(result["exit_code"])
 
