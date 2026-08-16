@@ -272,6 +272,41 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "live-webdeepseek-reads-an-attached-image",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../surf && printf 'What animal is in the attached image? Answer with the single species name only.' > /tmp/ask-eval-vision.md && ./run.sh deepseek.submit --input /tmp/ask-eval-vision.md --output /tmp/ask-eval-vision-out.md --mode Vision --attach-file ../ask/fixtures/lion.jpg --timeout 400 >/dev/null 2>&1; grep -qi lion /tmp/ask-eval-vision-out.md && echo VISION_READ_THE_IMAGE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "VISION_READ_THE_IMAGE"
+        ]
+      }
+    },
+    {
+      "name": "the-surf-host-runs-from-the-main-checkout",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "ps aux | grep 'surf-cli/native/host.cjs' | grep -v grep | grep -q '/agent-skills/skills/surf' && echo HOST_ON_MAIN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HOST_ON_MAIN"
+        ]
+      }
     }
   ]
 }

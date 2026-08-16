@@ -155,11 +155,11 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         # the capability here only buys a window that fails at submit.
         # Unblocked by adding a deepseek entry to that table and rebuilding the
         # vendored surf-cli.
-        can_attach=False,
-        max_attachments=0,
+        can_attach=True,
+        max_attachments=1,
         zip_allowed=False,
-        preferred_bundle="bounded inline text only until surf can upload to deepseek",
-        gotcha="web chat supports vision but surf has no deepseek upload strategy; the API cannot read images at all",
+        preferred_bundle="one image via --attach-file; Ask selects Vision mode automatically",
+        gotcha="images need --mode Vision; Expert accepts the upload and answers from the prompt text alone. The deepseek API still cannot read images -- only the web chat can",
     ),
     "deepseek": ProviderPayloadPolicy(
         handler="deepseek",

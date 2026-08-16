@@ -247,51 +247,57 @@ async function waitForResponse(cdp, { sentinel, timeoutMs = 900000, stablePolls 
 }
 
 async function setDeepseekFiles(inputCdp, filePaths, log) {
-  const result = await inputCdp("Runtime.evaluate", {
-    expression: `(() => {
-      const input = document.querySelector('input[type=file]');
-      if (!input || input.tagName !== 'INPUT' || input.type !== 'file') return null;
-      return input;
-    })()`,
-    userGesture: true,
-  });
-  const objectId = result?.result?.objectId;
-  if (!objectId) {
-    log("No file input on the DeepSeek composer");
-    return false;
+  // DeepSeek's composer accepts a PASTE, not a file-input write. Writing
+  // input.files reported success and the composer submitted with nothing
+  // attached; pasting a DataTransfer makes the app consume the event
+  // (dispatchEvent returns false because it calls preventDefault) and render
+  // the attachment. Verified live 2026-08-16: after the paste the page showed
+  // an attachment thumbnail and DeepSeek itself replied "No text found. Try
+  // Vision", which is the app confirming it received an image.
+  const fs = require("fs");
+  for (const filePath of filePaths) {
+    const b64 = fs.readFileSync(filePath).toString("base64");
+    const name = String(filePath).split("/").pop();
+    const mime = name.toLowerCase().endsWith(".png")
+      ? "image/png"
+      : name.toLowerCase().endsWith(".webp")
+        ? "image/webp"
+        : name.toLowerCase().endsWith(".gif")
+          ? "image/gif"
+          : "image/jpeg";
+    const result = await inputCdp("Runtime.evaluate", {
+      expression: `(function(){
+        try{
+          const bin = atob(${JSON.stringify(b64)});
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          const file = new File([arr], ${JSON.stringify(name)}, { type: ${JSON.stringify(mime)} });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          const box = document.querySelector('textarea, [contenteditable="true"]');
+          if (!box) return 'no-composer';
+          box.focus();
+          const consumed = box.dispatchEvent(new ClipboardEvent('paste', {
+            clipboardData: dt, bubbles: true, cancelable: true,
+          }));
+          // consumed === false means a listener called preventDefault, i.e.
+          // DeepSeek took the file. true means nobody handled it.
+          return consumed ? 'ignored' : 'accepted';
+        } catch (e) { return 'err:' + e.message; }
+      })()`,
+      returnByValue: true,
+      userGesture: true,
+    });
+    const verdict = result?.result?.value;
+    if (verdict !== "accepted") {
+      log(`DeepSeek did not accept the pasted file (${verdict})`);
+      return false;
+    }
+    log(`Pasted ${name} (${b64.length} b64 chars)`);
   }
-  await inputCdp("DOM.setFileInputFiles", { files: filePaths, objectId });
-  // DOM.setFileInputFiles populates input.files but a React composer only
-  // notices through its own listeners. Without an explicit change/input pair
-  // DeepSeek submitted happily and answered "No image attached" -- a lane that
-  // looks like the model ignored the picture when it never received one.
-  await inputCdp("Runtime.callFunctionOn", {
-    objectId,
-    functionDeclaration: `function () {
-      this.dispatchEvent(new Event('input', { bubbles: true }));
-      this.dispatchEvent(new Event('change', { bubbles: true }));
-      return this.files ? this.files.length : 0;
-    }`,
-    userGesture: true,
-  });
   return true;
 }
 
-
-//: The composer shows the file name once it has accepted the upload. Waiting on
-//: that, rather than on a fixed sleep, is the difference between attaching and
-//: appearing to attach.
-async function waitForAttachmentVisible(cdp, names, log, timeoutMs = 45000) {
-  const deadline = Date.now() + timeoutMs;
-  const wanted = names.map((n) => String(n).split("/").pop());
-  while (Date.now() < deadline) {
-    const body = await evaluate(cdp, "document.body.innerText || ''").catch(() => "");
-    if (wanted.some((n) => n && String(body).includes(n))) return true;
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  log(`Attachment name never appeared in the composer: ${wanted.join(", ")}`);
-  return false;
-}
 
 //: An upload is asynchronous: the composer shows a chip once the file is
 //: accepted. Sending before it settles submits a prompt with no attachment,
@@ -304,12 +310,35 @@ async function waitForAttachmentSettled(cdp, log, timeoutMs = 30000) {
       "(document.body.innerText||'').match(/uploading|上传中/i) ? '1' : '0'",
     ).catch(() => "0");
     if (String(busy) !== "1") {
-      await new Promise((r) => setTimeout(r, 1200));
+      // The thumbnail appears before the upload finishes server-side. Sending
+      // then produced "Image not provided" and later "Unknown" -- the model
+      // answering about an image it had not finished receiving. Give the
+      // upload a real settle window rather than a token one.
+      await new Promise((r) => setTimeout(r, 8000));
       return true;
     }
     await new Promise((r) => setTimeout(r, 700));
   }
   log("Attachment still uploading at deadline; submitting anyway");
+  return false;
+}
+
+//: The composer renders a thumbnail once it has the file, not the filename, so
+//: waiting on the name never fires for a pasted or set image.
+async function waitForAttachmentVisible(cdp, names, log, timeoutMs = 45000) {
+  const deadline = Date.now() + timeoutMs;
+  const wanted = names.map((n) => String(n).split("/").pop());
+  while (Date.now() < deadline) {
+    const seen = await evaluate(
+      cdp,
+      "String(document.querySelectorAll('img[src^=\"blob:\"], img[src^=\"data:\"]').length)",
+    ).catch(() => "0");
+    if (parseInt(String(seen), 10) > 0) return true;
+    const body = await evaluate(cdp, "document.body.innerText || ''").catch(() => "");
+    if (wanted.some((n) => n && String(body).includes(n))) return true;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  log(`No attachment thumbnail appeared in the composer for ${wanted.join(", ")}`);
   return false;
 }
 
@@ -345,6 +374,11 @@ async function query(options) {
     if (!(await waitForPromptReady(cdp))) throw new Error("DeepSeek composer not ready");
     log("Prompt ready");
     const modeSelection = await selectMode(cdp, inputCdp, mode, log);
+    const composerChars = await typePrompt(cdp, inputCdp, prompt);
+    log(`Prompt typed (${composerChars} chars in composer)`);
+    // Attach AFTER typing. Pasting first put a thumbnail in the composer and
+    // the model still answered "Image not provided": typePrompt rewrites the
+    // composer and the pending attachment goes with it.
     if (attachments.length) {
       // chat.deepseek.com renders one unhidden multiple-file input accepting
       // .png/.jpg/.jpeg/.webp (verified on a live tab 2026-08-16), so files go
@@ -354,16 +388,17 @@ async function query(options) {
       // Prefer the extension's upload path; it intercepts the file chooser
       // the way the composer expects. The direct-input write is kept only as a
       // fallback for hosts that do not inject uploadFile.
-      let uploaded = false;
-      if (typeof uploadFile === "function") {
+      // Paste is the path DeepSeek actually honours; the extension upload is
+      // kept only as a fallback for a future composer that prefers a chooser.
+      let uploaded = await setDeepseekFiles(inputCdp, attachments, log);
+      if (!uploaded && typeof uploadFile === "function") {
         try {
           await uploadFile(tabId, attachments);
           uploaded = true;
         } catch (err) {
-          log(`Extension upload failed (${err && err.message}); trying direct input`);
+          log(`Extension upload fallback failed (${err && err.message})`);
         }
       }
-      if (!uploaded) uploaded = await setDeepseekFiles(inputCdp, attachments, log);
       if (!uploaded) {
         throw new Error("deepseek_attachment_input_missing: no file input found on the DeepSeek composer");
       }
@@ -376,8 +411,6 @@ async function query(options) {
       log(`Attached ${attachments.length} file(s)`);
       await waitForAttachmentSettled(cdp, log);
     }
-    const composerChars = await typePrompt(cdp, inputCdp, prompt);
-    log(`Prompt typed (${composerChars} chars in composer)`);
     await clickSend(cdp, inputCdp);
     log("Prompt sent, waiting for response...");
     const response = await waitForResponse(cdp, { sentinel, timeoutMs: timeout, stablePolls });

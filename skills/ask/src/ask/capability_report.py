@@ -306,11 +306,10 @@ def _browser_handlers(live: bool, availability: dict[str, Any] | None) -> list[C
         else:
             cap.state, cap.reason_code = "READY", "probe_ok"
             cap.explanation = "seat answered the availability probe"
-            # DeepSeek web chat CAN read images; surf cannot upload to it yet
-            # (no providerUploadStrategies entry, no input[type=file] on the
-            # page). Reported as unsupported so a round does not spend a window
-            # discovering it.
-            attach = False if handler == "webdeepseek" else True
+            # webdeepseek takes images through surf as of 2026-08-16: the
+            # client sets the composer's file input by nodeId and Ask selects
+            # Vision mode. Proven live -- it returned "Lion" for a lion photo.
+            attach = True
             cap.operations = {"text": True, "attachment": attach, "multi_turn": True, "resume": None}
         caps.append(cap)
     return caps
