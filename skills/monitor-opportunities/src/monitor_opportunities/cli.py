@@ -1993,6 +1993,8 @@ def nightly(
                         provider_receipt_path=provider_dir / "tau-semantic-provider-receipt.json",
                     )
                     semantic_installs.append(install_receipt)
+                    if promoted_stage0:
+                        break
                 except (ContractError, FileNotFoundError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
                     provider_results.append(
                         {
