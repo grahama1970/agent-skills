@@ -1099,6 +1099,19 @@ def run_tau_dag_bundle(
     }
     result = _enforce_seam("ask.tau_dag_execution.v1", result)
     _write_json(run_dir / "execution-status.json", result)
+    # Remember the wall. Ask emitted BLOCKED in 58 places and persisted none of
+    # it across runs, so nothing could ever notice work piling up beside a
+    # blocker instead of on it. Recorded here, at Ask's own choke point, rather
+    # than by the agent filing a report -- the agent this detects is by
+    # construction the one who would not have filed it.
+    try:
+        from . import blocker_ledger
+
+        blocker_ledger.record_from_execution(
+            result, target=str(bundle.get("target") or bundle.get("dag_id") or ""), run_dir=str(run_dir)
+        )
+    except Exception:
+        pass
     return result
 
 

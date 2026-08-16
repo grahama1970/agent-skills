@@ -374,6 +374,57 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Blocked, or avoiding the blocker?
+
+Ask emitted `BLOCKED` in 58 places and persisted **none** of it across runs, so
+a blocker lasted exactly one process. That is why nothing could ever detect the
+failure this guards: hit a wall on the load-bearing part, do not say "blocked",
+and produce a stream of defensible deterministic work beside it -- tests over
+your own code, contracts for a path that cannot run, greps instead of the live
+call. Every artifact real, none of them touching the wall.
+
+`goal-drift` cannot see this and is not meant to. It grades work against the
+registered human goal, and this work *serves* the goal; it is the hard half
+being routed around. goal-drift reports clean, exactly as the knowledge-drift
+auditor did in the incident goal-drift itself was written for.
+
+```bash
+skills/ask/run.sh drift blockers                  # what is still in the way
+skills/ask/run.sh drift check <target> --work "…" # was work done beside it?
+skills/ask/run.sh drift acknowledge <target> <failure_code>
+skills/ask/run.sh drift clear <target> <failure_code> --live-proof "…"
+```
+
+The ledger (`~/.ask/blockers.jsonl`) is written at Ask's own execution choke
+point, not by an agent choosing to file a report -- the agent this detects is
+by construction the one who would not have filed it. Identity is
+`(target, failure_code)`, so one wall hit three times is one blocker.
+
+Verdicts:
+
+| verdict | meaning |
+| --- | --- |
+| `AVOIDANCE_DRIFT` | work landed on a target whose blocker is open and unacknowledged, and that work states its own live path did not run |
+| `BLOCKED_DECLARED` | the blocker was acknowledged, attempted live, or nothing was built beside it — the honest cases |
+| `CLEARED` | closed with live proof |
+| `CLEAN` | no blocker, or no claim of a missing live path |
+
+Two rules keep it honest. **Clearing requires live proof** — "it should work
+now" is what an avoiding agent also says. **Attempting and failing is never
+drift** — the detector must never punish going at the wall and losing.
+
+The tell it keys on is the agent's own words. The output contract already
+forces a statement of what was live and what was fixture-backed, so an avoiding
+agent writes its own indictment voluntarily; selecting what to work on is
+easy to rationalise, fabricating a live run is not.
+
+Limitations, stated because they change how you read a verdict: it matches
+phrases, so novel wording for "I did not run this live" slips through, and it
+assesses whatever work items you hand it — feeding one commit that mixes
+live-proven and fixture-only work yields a single coarse verdict. It reports
+and never gates; a detector that can block work becomes one more lane to drift
+into.
+
 ### Which model actually answered
 
 Every browser lane receipt carries a `model_provenance` block. Ask requests a
