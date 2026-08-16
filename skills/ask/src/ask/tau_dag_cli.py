@@ -1140,13 +1140,18 @@ def _select_available_browser_handlers(
         and removed == browser_requested
         and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
         and browser_requested[0] not in explicit_projects
-        and all(unusable.get(handler) == "provider_limited" for handler in removed)
+        and all(
+            unusable.get(handler) in {"provider_limited", "browser_provider_probe_timeout"}
+            for handler in removed
+        )
     ):
         # Ambient provider probes inspect already-open tabs before fresh
         # lifecycle provisioning. A stale WebGPT modal in an old tab must not
-        # remove the only explicitly requested fresh WebGPT seat before the
-        # new tab exists; the WebGPT worker owns the bounded provider retry
-        # once that fresh tab is created.
+        # remove the only explicitly requested fresh WebGPT seat before the new
+        # tab exists. Likewise, a stale/loaded old tab that times out during
+        # read-only probing is not evidence about the fresh tab Ask is about to
+        # create. The WebGPT worker owns bounded provider retry once that fresh
+        # tab exists.
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
