@@ -374,6 +374,35 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Auditing a panel against the best-practices contracts
+
+```bash
+skills/ask/run.sh panel-audit <run-dir> --mode roundtable
+skills/ask/run.sh panel-audit <run-dir> --mode compete
+```
+
+`best-practices-roundtable` and `best-practices-competition` state rules that
+decide whether a panel's output means anything. They lived only in prose, so
+"this run complied" was an assertion nobody could check. This reads a finished
+run directory and answers from artifacts:
+
+| check | rule |
+| --- | --- |
+| `equal_context` | every seat received the same task body |
+| `seat_status` | every seat accounted for from its own artifacts |
+| `no_silent_consensus` | no agreement claimed over a seat that never answered |
+| `isolation` | no candidate was shown a rival's response |
+| `competition_outcome` | two candidates **answered**, and no winner without evidence |
+
+Equal context is measured on the task body, not raw bytes: `Handler:`,
+`Model:`, `Seat:`, `node_id:` and `Browser model preference:` are per-seat
+addressing and may differ. Everything else that differs is a tailored packet.
+
+`competition_outcome` counts candidates that **answered**. A run that dispatched
+two seats and received one is a single opinion; the live run on 2026-08-16 did
+exactly that while its scorecard read `candidates: 2`, and stayed honest only
+because it also reported `NEEDS_ATTENTION`.
+
 ### Prefer the local Claude lane over webclaude
 
 Handler preference for Claude work, in order:

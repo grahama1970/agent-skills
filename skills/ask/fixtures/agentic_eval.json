@@ -417,6 +417,144 @@
           "BROWSER_FIRST_FOR_WEB"
         ]
       }
+    },
+    {
+      "name": "roundtable-every-seat-gets-the-same-packet",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nc=pc.check_equal_context(Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595'))\nassert c['compliant'], c\nprint('ONE_SHARED_PACKET')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_SHARED_PACKET"
+        ]
+      }
+    },
+    {
+      "name": "roundtable-a-tailored-packet-is-a-violation",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,tempfile,shutil;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nsrc=Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595');tmp=Path(tempfile.mkdtemp())/'run';shutil.copytree(src/'node-artifacts',tmp/'node-artifacts')\nlane=sorted((tmp/'node-artifacts').glob('handler-*'))[0]\n(lane/'prompt.md').write_text((lane/'prompt.md').read_text()+chr(10)+'Extra hint only this seat gets.')\nassert not pc.check_equal_context(tmp)['compliant']\nprint('TAILORED_PACKET_CAUGHT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TAILORED_PACKET_CAUGHT"
+        ]
+      }
+    },
+    {
+      "name": "roundtable-per-seat-status-comes-from-seat-artifacts",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nc=pc.check_seat_status(Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595'))\nassert c['compliant'], c\nassert c['did_not_answer']==['handler-webclaude'], c\nprint('SEATS_ACCOUNTED')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SEATS_ACCOUNTED"
+        ]
+      }
+    },
+    {
+      "name": "roundtable-consensus-over-a-dead-seat-is-a-violation",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,tempfile,shutil;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nsrc=Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595');tmp=Path(tempfile.mkdtemp())/'run';shutil.copytree(src/'node-artifacts',tmp/'node-artifacts')\n(tmp/'node-artifacts'/'join'/'synthesis.md').write_text('The panel agrees on the fix.')\nassert not pc.check_no_silent_consensus(tmp)['compliant']\nprint('SILENT_CONSENSUS_CAUGHT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SILENT_CONSENSUS_CAUGHT"
+        ]
+      }
+    },
+    {
+      "name": "competition-candidates-stay-isolated",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nc=pc.check_isolation(Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595'))\nassert c['compliant'], c\nprint('NO_CROSS_LANE_LEAK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO_CROSS_LANE_LEAK"
+        ]
+      }
+    },
+    {
+      "name": "competition-cross-lane-leakage-is-caught",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,tempfile,shutil;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nsrc=Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595');tmp=Path(tempfile.mkdtemp())/'run';shutil.copytree(src/'node-artifacts',tmp/'node-artifacts')\nresp=(tmp/'node-artifacts'/'handler-webgpt'/'response.md').read_text()\nvictim=tmp/'node-artifacts'/'handler-webclaude'/'prompt.md'\nvictim.write_text(victim.read_text()+chr(10)+resp)\nassert not pc.check_isolation(tmp)['compliant']\nprint('LEAK_CAUGHT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LEAK_CAUGHT"
+        ]
+      }
+    },
+    {
+      "name": "competition-one-answer-is-not-a-competition",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,json,tempfile,shutil;sys.path.insert(0,'src');from pathlib import Path;from ask import panel_compliance as pc\nsrc=Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595');tmp=Path(tempfile.mkdtemp())/'run';shutil.copytree(src/'node-artifacts',tmp/'node-artifacts')\np=tmp/'node-artifacts'/'join'/'compete-scorecard.json';d=json.loads(p.read_text());d['status']='PASS';d['winner_handler']='webgpt';p.write_text(json.dumps(d))\nc=pc.check_competition_outcome(tmp)\nassert c['candidates_answered']==1 and not c['compliant'], c\nprint('ONE_OPINION_CAUGHT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_OPINION_CAUGHT"
+        ]
+      }
+    },
+    {
+      "name": "competition-audit-cli-runs-on-a-real-run",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh panel-audit /mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595 --mode compete"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPLIANT",
+          "equal_context",
+          "isolation"
+        ]
+      }
     }
   ]
 }
