@@ -1064,6 +1064,15 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
           { type: "KIMI_CDP_COMMAND", tabId, method, params },
           Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
         ),
+        // Route uploads through the extension: it owns the file-chooser
+        // interception path that actually makes a composer accept a file.
+        // Writing the input directly from the client set input.files to 0 and
+        // DeepSeek answered "NoImage".
+        uploadFile: (tabId, filePaths) => requestCallExtension(
+          requestContext,
+          "upload_file",
+          buildProviderUploadMessage("deepseek", tabId, filePaths),
+        ),
         log: (msg) => log(`[deepseek] ${msg}`),
       });
 

@@ -327,6 +327,7 @@ async function query(options) {
     closeTab,
     cdpEvaluate,
     cdpCommand,
+    uploadFile,
     log = () => {},
   } = options;
   const attachments = Array.isArray(file) ? file.filter(Boolean) : (file ? [file] : []);
@@ -350,7 +351,19 @@ async function query(options) {
       // in directly via DOM.setFileInputFiles -- the same path grok uses. This
       // used to throw "attachments are not supported for this provider",
       // which was true of the old provider allowlist and not of the page.
-      const uploaded = await setDeepseekFiles(inputCdp, attachments, log);
+      // Prefer the extension's upload path; it intercepts the file chooser
+      // the way the composer expects. The direct-input write is kept only as a
+      // fallback for hosts that do not inject uploadFile.
+      let uploaded = false;
+      if (typeof uploadFile === "function") {
+        try {
+          await uploadFile(tabId, attachments);
+          uploaded = true;
+        } catch (err) {
+          log(`Extension upload failed (${err && err.message}); trying direct input`);
+        }
+      }
+      if (!uploaded) uploaded = await setDeepseekFiles(inputCdp, attachments, log);
       if (!uploaded) {
         throw new Error("deepseek_attachment_input_missing: no file input found on the DeepSeek composer");
       }

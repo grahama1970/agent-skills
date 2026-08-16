@@ -144,6 +144,13 @@ async function uploadFilesWithChooser(
       });
       return;
     }
+    if (provider === "deepseek") {
+      await cdp.sendCommand(tabId, "Runtime.evaluate", {
+        expression: `document.querySelector(${JSON.stringify(providerUploadStrategies.deepseek.openerSelector)})?.click()`,
+        userGesture: true,
+      });
+      return;
+    }
 
     await cdp.sendCommand(tabId, "Runtime.evaluate", {
       expression: `document.querySelector(${JSON.stringify(providerUploadStrategies.chatgpt.openerSelector)})?.click()`,
@@ -199,14 +206,11 @@ async function uploadFilesToProviderTab(
     );
     if (directUpload) return { success: true };
   }
-  if (provider === "deepseek") {
-    const directUpload = await setFileInputFilesBySelector(
-      tabId,
-      filePaths,
-      providerUploadStrategies.deepseek.directInputSelector,
-    );
-    if (directUpload) return { success: true };
-  }
+  // No direct-input shortcut for deepseek. Writing input.files there returns
+  // "success" and the composer still submits without the file -- DeepSeek then
+  // answers "No image provided", which is the worst possible outcome: a green
+  // upload and a model that never saw the picture. The chooser-interception
+  // path below is what the composer actually listens to.
 
   await uploadFilesWithChooser(tabId, filePaths, provider);
   return { success: true };
