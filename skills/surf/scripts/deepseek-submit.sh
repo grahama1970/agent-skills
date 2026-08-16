@@ -112,18 +112,22 @@ pathlib.Path(meta).write_text(json.dumps({
     "finished_at": finished,
     "submitted_to_deepseek": status == "completed",
     "stderr_excerpt": stderr_excerpt[:2000],
-    "attachment_supported": False,
+    "attachment_supported": True,
 }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 PY
 }
 
-if [[ ${#attach_files[@]} -gt 0 ]]; then
-  finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  write_meta "$finished_at" "failed" "deepseek_attachment_unsupported" \
-    "DeepSeek submits cannot carry attachments; UPLOAD_FILE_TO_TAB accepts only gemini, chatgpt, and grok."
-  echo "deepseek.submit blocked: attachments are not supported for this provider." >&2
-  exit 2
-fi
+# Attachments are supported: chat.deepseek.com exposes a real file input and the
+# client uploads through DOM.setFileInputFiles. Images need Vision mode -- Expert
+# accepts the upload and then answers from the prompt text alone.
+attach_file_abs=()
+for attach_file in "${attach_files[@]}"; do
+  if [[ ! -f "$attach_file" ]]; then
+    echo "--attach-file: file not found: $attach_file" >&2
+    exit 2
+  fi
+  attach_file_abs+=("$(readlink -f "$attach_file")")
+done
 
 if [[ "$sentinel" == "auto" ]]; then
   sentinel="<<<DEEPSEEK_DONE:$(date -u +%Y%m%dT%H%M%SZ):$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')>>>"
@@ -138,6 +142,9 @@ fi
 
 args=(deepseek --query "$(cat "$submitted_output")" --sentinel "$sentinel"
       --timeout "$timeout_s" --stable-polls "$stable_polls" --mode "$mode")
+if [[ "${#attach_file_abs[@]}" -gt 0 ]]; then
+  args+=(--files "$(IFS=,; printf '%s' "${attach_file_abs[*]}")")
+fi
 [[ -n "$tab_id" ]] && args+=(--target-tab-id "$tab_id")
 [[ "$keep_tab" -eq 1 ]] && args+=(--keep-tab)
 [[ "$no_activate" -eq 1 ]] && args+=(--no-activate)

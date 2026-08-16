@@ -246,6 +246,73 @@ async function waitForResponse(cdp, { sentinel, timeoutMs = 900000, stablePolls 
   throw new Error("DeepSeek response timeout");
 }
 
+async function setDeepseekFiles(inputCdp, filePaths, log) {
+  const result = await inputCdp("Runtime.evaluate", {
+    expression: `(() => {
+      const input = document.querySelector('input[type=file]');
+      if (!input || input.tagName !== 'INPUT' || input.type !== 'file') return null;
+      return input;
+    })()`,
+    userGesture: true,
+  });
+  const objectId = result?.result?.objectId;
+  if (!objectId) {
+    log("No file input on the DeepSeek composer");
+    return false;
+  }
+  await inputCdp("DOM.setFileInputFiles", { files: filePaths, objectId });
+  // DOM.setFileInputFiles populates input.files but a React composer only
+  // notices through its own listeners. Without an explicit change/input pair
+  // DeepSeek submitted happily and answered "No image attached" -- a lane that
+  // looks like the model ignored the picture when it never received one.
+  await inputCdp("Runtime.callFunctionOn", {
+    objectId,
+    functionDeclaration: `function () {
+      this.dispatchEvent(new Event('input', { bubbles: true }));
+      this.dispatchEvent(new Event('change', { bubbles: true }));
+      return this.files ? this.files.length : 0;
+    }`,
+    userGesture: true,
+  });
+  return true;
+}
+
+
+//: The composer shows the file name once it has accepted the upload. Waiting on
+//: that, rather than on a fixed sleep, is the difference between attaching and
+//: appearing to attach.
+async function waitForAttachmentVisible(cdp, names, log, timeoutMs = 45000) {
+  const deadline = Date.now() + timeoutMs;
+  const wanted = names.map((n) => String(n).split("/").pop());
+  while (Date.now() < deadline) {
+    const body = await evaluate(cdp, "document.body.innerText || ''").catch(() => "");
+    if (wanted.some((n) => n && String(body).includes(n))) return true;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  log(`Attachment name never appeared in the composer: ${wanted.join(", ")}`);
+  return false;
+}
+
+//: An upload is asynchronous: the composer shows a chip once the file is
+//: accepted. Sending before it settles submits a prompt with no attachment,
+//: which reads as a model that ignored the image.
+async function waitForAttachmentSettled(cdp, log, timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const busy = await evaluate(
+      cdp,
+      "(document.body.innerText||'').match(/uploading|上传中/i) ? '1' : '0'",
+    ).catch(() => "0");
+    if (String(busy) !== "1") {
+      await new Promise((r) => setTimeout(r, 1200));
+      return true;
+    }
+    await new Promise((r) => setTimeout(r, 700));
+  }
+  log("Attachment still uploading at deadline; submitting anyway");
+  return false;
+}
+
 async function query(options) {
   const {
     prompt,
@@ -262,11 +329,7 @@ async function query(options) {
     cdpCommand,
     log = () => {},
   } = options;
-  if (file) {
-    // UPLOAD_FILE_TO_TAB only accepts gemini, chatgpt, and grok, so an
-    // attachment would be silently dropped here.
-    throw new Error("deepseek_attachment_unsupported: DeepSeek submits cannot carry file attachments yet");
-  }
+  const attachments = Array.isArray(file) ? file.filter(Boolean) : (file ? [file] : []);
   const startTime = Date.now();
   log("Starting DeepSeek query");
   const tabInfo = await createTab();
@@ -281,6 +344,25 @@ async function query(options) {
     if (!(await waitForPromptReady(cdp))) throw new Error("DeepSeek composer not ready");
     log("Prompt ready");
     const modeSelection = await selectMode(cdp, inputCdp, mode, log);
+    if (attachments.length) {
+      // chat.deepseek.com renders one unhidden multiple-file input accepting
+      // .png/.jpg/.jpeg/.webp (verified on a live tab 2026-08-16), so files go
+      // in directly via DOM.setFileInputFiles -- the same path grok uses. This
+      // used to throw "attachments are not supported for this provider",
+      // which was true of the old provider allowlist and not of the page.
+      const uploaded = await setDeepseekFiles(inputCdp, attachments, log);
+      if (!uploaded) {
+        throw new Error("deepseek_attachment_input_missing: no file input found on the DeepSeek composer");
+      }
+      if (!(await waitForAttachmentVisible(cdp, attachments, log))) {
+        throw new Error(
+          "deepseek_attachment_not_visible: the file never appeared in the composer; " +
+          "submitting would ask about an image DeepSeek never received",
+        );
+      }
+      log(`Attached ${attachments.length} file(s)`);
+      await waitForAttachmentSettled(cdp, log);
+    }
     const composerChars = await typePrompt(cdp, inputCdp, prompt);
     log(`Prompt typed (${composerChars} chars in composer)`);
     await clickSend(cdp, inputCdp);

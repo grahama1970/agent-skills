@@ -58,6 +58,13 @@ const providerUploadStrategies = {
     directInputSelector: 'input[type="file"]',
     openerSelector: 'button[aria-label*="Attach"], button[data-testid="attach-button"], button[aria-label*="Upload"]',
   },
+  // chat.deepseek.com renders a single unhidden multiple-file input with no id
+  // or class, accepting .png/.jpg/.jpeg/.webp among many others. Verified on a
+  // live tab 2026-08-16; the direct-input path is enough, same shape as grok.
+  deepseek: {
+    directInputSelector: 'input[type="file"]',
+    openerSelector: 'button[aria-label*="Attach"], button[aria-label*="Upload"], div[class*="upload"] button',
+  },
 };
 
 async function setFileInputFilesBySelector(
@@ -82,7 +89,7 @@ async function setFileInputFilesBySelector(
 async function uploadFilesWithChooser(
   tabId: number,
   filePaths: string[],
-  provider: "gemini" | "chatgpt" | "grok",
+  provider: "gemini" | "chatgpt" | "grok" | "deepseek",
 ): Promise<void> {
   await cdp.sendCommand(tabId, "Page.setInterceptFileChooserDialog", { enabled: true });
 
@@ -169,7 +176,7 @@ async function uploadFilesWithChooser(
 }
 
 async function uploadFilesToProviderTab(
-  provider: "gemini" | "chatgpt" | "grok",
+  provider: "gemini" | "chatgpt" | "grok" | "deepseek",
   tabId: number,
   filePaths: string[],
 ): Promise<{ success: true }> {
@@ -189,6 +196,14 @@ async function uploadFilesToProviderTab(
       tabId,
       filePaths,
       providerUploadStrategies.grok.directInputSelector,
+    );
+    if (directUpload) return { success: true };
+  }
+  if (provider === "deepseek") {
+    const directUpload = await setFileInputFilesBySelector(
+      tabId,
+      filePaths,
+      providerUploadStrategies.deepseek.directInputSelector,
     );
     if (directUpload) return { success: true };
   }
@@ -2716,21 +2731,13 @@ export async function handleMessage(
     }
 
     case "CLOSE_TAB": {
-      const rawTabIds = message.tabIds || (message.tabId ? [message.tabId] : []);
-      const tabIds = (Array.isArray(rawTabIds) ? rawTabIds : String(rawTabIds).split(","))
-        .map((id) => Number(id))
-        .filter((id) => Number.isInteger(id) && id > 0);
+      const tabIds = message.tabIds || (message.tabId ? [message.tabId] : []);
       if (tabIds.length === 0) throw new Error("No tabId(s) provided");
-      const liveTabs = await chrome.tabs.query({});
-      const liveIds = new Set(liveTabs.map((tab) => tab.id).filter((id): id is number => typeof id === "number"));
-      const closeIds = tabIds.filter((id) => liveIds.has(id));
-      if (closeIds.length > 0) {
-        await chrome.tabs.remove(closeIds);
-      }
+      await chrome.tabs.remove(tabIds);
       if (tabIds.length === 1) {
-        return { success: true, tabId: tabIds[0], alreadyClosed: closeIds.length === 0 };
+        return { success: true, tabId: tabIds[0] };
       }
-      return { success: true, closed: closeIds, alreadyClosed: tabIds.filter((id) => !liveIds.has(id)) };
+      return { success: true, closed: tabIds };
     }
 
     case "TAB_MOVE": {
@@ -3590,7 +3597,7 @@ export async function handleMessage(
       if (!uploadTabId || !filePaths?.length) {
         throw new Error(`${message.type} requires tabId and filePaths`);
       }
-      if (provider !== "gemini" && provider !== "chatgpt" && provider !== "grok") {
+      if (provider !== "gemini" && provider !== "chatgpt" && provider !== "grok" && provider !== "deepseek") {
         throw new Error(`Unsupported upload provider: ${provider}`);
       }
       return uploadFilesToProviderTab(provider, uploadTabId, filePaths);
@@ -3861,10 +3868,6 @@ const COMMANDS_WITHOUT_TAB = new Set([
   "EMULATE_DEVICE_LIST"
 ]);
 
-const COMMANDS_ALLOW_MISSING_TARGET_TAB = new Set([
-  "CLOSE_TAB"
-]);
-
 initNativeMessaging(async (msg) => {
   let tabId = msg.tabId;
   const windowId = msg.windowId;
@@ -3872,7 +3875,7 @@ initNativeMessaging(async (msg) => {
   const needsTab = !COMMANDS_WITHOUT_TAB.has(msg.type);
   let autoCreatedTab = false;
 
-  if (tabId && !isDialogCommand && !COMMANDS_ALLOW_MISSING_TARGET_TAB.has(msg.type)) {
+  if (tabId && !isDialogCommand) {
     try {
       await chrome.tabs.get(tabId);
     } catch {

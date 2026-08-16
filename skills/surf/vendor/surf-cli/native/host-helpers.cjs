@@ -4,7 +4,10 @@ const networkStore = require("./network-store.cjs");
 
 function buildProviderUploadMessage(provider, tabId, filePaths, id) {
   const normalizedProvider = String(provider || "").toLowerCase();
-  if (!["chatgpt", "gemini", "grok"].includes(normalizedProvider)) {
+  // deepseek added 2026-08-16: chat.deepseek.com exposes a single unhidden
+  // multiple-file input accepting .png/.jpg/.jpeg/.webp, so the direct-input
+  // upload path works there exactly as it does for grok.
+  if (!["chatgpt", "gemini", "grok", "deepseek"].includes(normalizedProvider)) {
     throw new Error(`Unsupported upload provider: ${provider}`);
   }
   return { type: "AI_UPLOAD_FILE_TO_TAB", provider: normalizedProvider, tabId, filePaths, id };
@@ -1195,7 +1198,11 @@ function mapToolToMessage(tool, args, tabId) {
         // Expert is the default tier for every DeepSeek submit; the client
         // fails closed when it cannot confirm the mode (agent-skills#1067).
         mode: a.mode || "Expert",
-        file: a.file,
+        // --file may repeat, or --files may carry a comma-separated list, to
+        // match how the other provider submits pass attachments.
+        file: a.files
+          ? String(a.files).split(",").map((p) => p.trim()).filter(Boolean)
+          : a.file,
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 900000,
         sentinel: a.sentinel,
         stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
