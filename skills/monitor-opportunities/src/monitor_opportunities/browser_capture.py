@@ -200,6 +200,7 @@ _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS = 8
 _TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 5
 _TAB_CLOSE_ATTEMPTS = 1
 _TAB_CLOSE_SWEEP_TIMEOUT_SECONDS = 30
+_TAB_CLOSE_INDIVIDUAL_SWEEP_TIMEOUT_SECONDS = 12
 
 
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
@@ -276,17 +277,40 @@ def flush_browser_control_cleanup(surf_run: Path = SURF_RUN_DEFAULT) -> None:
                     if tab_id not in open_ids:
                         _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
 
+    if _PENDING_TAB_CLOSE_FAILURES:
+        for tab_id in list(_PENDING_TAB_CLOSE_FAILURES):
+            try:
+                _surf(
+                    surf_run,
+                    "tab.close",
+                    tab_id,
+                    "--no-lock",
+                    timeout=_TAB_CLOSE_INDIVIDUAL_SWEEP_TIMEOUT_SECONDS,
+                )
+                _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
+            except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+                sweep_error = exc
+        if _PENDING_TAB_CLOSE_FAILURES:
+            open_ids = _current_tab_ids(surf_run)
+            if open_ids is not None:
+                for tab_id in list(_PENDING_TAB_CLOSE_FAILURES):
+                    if tab_id not in open_ids:
+                        _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
+
     if sweep_error is None:
         return
 
     for tab_id, pending in list(_PENDING_TAB_CLOSE_FAILURES.items()):
         attempted_modes = list(pending.get("attempted_modes") or [])
         attempted_modes.append("final_batch_sweep")
+        attempted_modes.append("final_individual_sweep")
         _record_browser_control_event(
             kind="tab_close_failed",
             operation="tab.close",
             tab_id=tab_id,
-            timeout=int(pending.get("timeout") or 0) + _TAB_CLOSE_SWEEP_TIMEOUT_SECONDS,
+            timeout=int(pending.get("timeout") or 0)
+            + _TAB_CLOSE_SWEEP_TIMEOUT_SECONDS
+            + _TAB_CLOSE_INDIVIDUAL_SWEEP_TIMEOUT_SECONDS,
             details={"attempted_modes": attempted_modes, "label": pending.get("label")},
             error=sweep_error,
         )
