@@ -443,6 +443,23 @@ two seats and received one is a single opinion; the live run on 2026-08-16 did
 exactly that while its scorecard read `candidates: 2`, and stayed honest only
 because it also reported `NEEDS_ATTENTION`.
 
+### webclaude is testing-only
+
+A claude.ai web call is billed the same as an OAuth call, so there is no reason
+to spend a browser seat, a window, and Chrome contention on it. Use the local
+Claude lane. `webclaude` exists to test the browser path itself; for that
+testing, `claude-opus-5` is the model to use.
+
+When `webclaude` is requested and unavailable it is the ONE named seat that
+auto-substitutes, to `claude-fable-low` then `claude-opus-4-8-high`, because
+preferring the local lane is the policy rather than a workaround. Every other
+named browser seat blocks with its failure code instead of quietly answering as
+something else.
+
+Proven live 2026-08-16: claude.ai reported "You're out of usage credits", the
+seat was removed at selection, and the run answered from
+`handler-claude-fable-low` with status DEGRADED and the substitution recorded.
+
 ### The preferred seat roster
 
 Five browser providers plus the local Claude lane:

@@ -395,6 +395,15 @@ def _submit_prompt(tab_id: str, prompt: str) -> None:
     else:
         _surf(["key", "Enter", "--tab-id", tab_id], timeout=60)
     if not _wait_for_claude_submission_acceptance(tab_id, prompt, timeout_seconds=10):
+        # Name the reason instead of the symptom. Every provider fails its own
+        # way, and "staged but not submitted" describes what we saw rather than
+        # why. Observed live 2026-08-16: the composer accepted the text and the
+        # Send button was present and clicked, but claude.ai showed
+        # "You're out of usage credits" and never dispatched -- indistinguishable
+        # from a broken selector to the caller, and the wrong thing to retry.
+        blocker = _claude_account_blocker(tab_id)
+        if blocker:
+            raise SubmitFailure(blocker)
         raise SubmitFailure("Claude prompt was staged but not submitted")
 
 
@@ -408,6 +417,31 @@ def _wait_for_claude_prompt_text(tab_id: str, prompt: str, *, timeout_seconds: i
             return True
         time.sleep(0.5)
     return False
+
+
+#: claude.ai states that stop a submit for account reasons rather than UI ones.
+#: Each maps to a distinct, actionable failure so /ask can drop the seat and
+#: substitute instead of retrying a wall that will not move this hour.
+CLAUDE_ACCOUNT_BLOCKERS = (
+    ("out of usage credits", "claude_out_of_usage_credits"),
+    ("buy more to keep using", "claude_out_of_usage_credits"),
+    ("message limit", "claude_message_limit_reached"),
+    ("you've reached your limit", "claude_message_limit_reached"),
+    ("upgrade to continue", "claude_upgrade_required"),
+    ("conversation is too long", "claude_conversation_full"),
+)
+
+
+def _claude_account_blocker(tab_id: str) -> str | None:
+    """An account-level reason this submit could never land, if one is visible."""
+    try:
+        text = _normalize_visible_text(_page_text(tab_id, timeout=30)).casefold()
+    except Exception:
+        return None
+    for marker, code in CLAUDE_ACCOUNT_BLOCKERS:
+        if marker in text:
+            return f"{code}: claude.ai reported '{marker}'; the seat cannot submit until it clears"
+    return None
 
 
 def _wait_for_claude_submission_acceptance(tab_id: str, prompt: str, *, timeout_seconds: int) -> bool:

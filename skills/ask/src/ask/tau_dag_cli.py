@@ -1189,7 +1189,26 @@ def _select_available_browser_handlers(
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
-    # A single explicitly named seat is NOT substituted. Asking for webgpt and
+    # webclaude is the ONE named seat that is substituted, because the operator
+    # made it policy: the local Claude lane is preferred over a claude.ai chat
+    # tab outright, and webclaude is last resort. So "Claude is unavailable in
+    # the browser" means use the local Claude lane, not block.
+    #
+    # Observed live 2026-08-16: claude.ai answered "You're out of usage
+    # credits", the prompt could never submit, and blocking there would strand a
+    # request that claude-opus-4-8-high can serve immediately.
+    if "webclaude" in removed:
+        for candidate in WEBCLAUDE_PREFERRED_SUBSTITUTES:
+            if candidate in active or candidate in unusable:
+                continue
+            active.append(candidate)
+            fallback_added.append(candidate)
+            local_substitutions.append(
+                {"from": "webclaude", "to": candidate, "reason": "webclaude_is_last_resort"}
+            )
+            break
+
+    # Every OTHER explicitly named seat is NOT substituted. Asking for webgpt and
     # receiving a local qwen answer under webgpt's name is worse than being told
     # webgpt is unavailable: the caller cannot tell which model spoke. Tried the
     # other way on 2026-08-16 and it silently turned `/ask webgpt` into

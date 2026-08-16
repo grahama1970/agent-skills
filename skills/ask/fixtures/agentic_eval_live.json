@@ -167,6 +167,111 @@
           "FRESH_TAB_WHEN_UNBOUND"
         ]
       }
+    },
+    {
+      "name": "live-webgpt-opens-a-tab-and-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webgpt"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-webkimi-opens-a-tab-and-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webkimi"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-webgemini-opens-a-tab-and-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webgemini"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-webgrok-opens-a-tab-and-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webgrok"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-webdeepseek-opens-a-tab-and-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webdeepseek"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-webclaude-is-blocked-with-a-named-reason",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webclaude; true"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     }
   ]
 }

@@ -41,7 +41,16 @@ PROVIDERS: dict[str, ProviderProbe] = {
     ),
     "webgemini": ProviderProbe(
         hosts=("gemini.google.com",),
-        limited_pattern=r"rate limit(?:ed)?|too many requests|temporarily unavailable|you'?ve reached.*limit",
+        # Out-of-credits is a hard stop, not a slow provider: claude.ai accepts
+        # the typed prompt and simply never submits it. Observed live
+        # 2026-08-16 -- the composer took the text, "Send message" was present
+        # and clicked, and the page read "You're out of usage credits". Without
+        # this marker the seat looked healthy, dispatched, and failed at submit
+        # time, which is too late for the local fallback to take the seat.
+        limited_pattern=(
+            r"rate limit(?:ed)?|too many requests|temporarily unavailable|you'?ve reached.*limit"
+            r"|out of usage credits|buy more to keep using|upgrade to continue"
+        ),
     ),
     "webgrok": ProviderProbe(
         hosts=("grok.com", "x.com"),
