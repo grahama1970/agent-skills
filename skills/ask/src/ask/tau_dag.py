@@ -2765,8 +2765,20 @@ def _browser_lock_timeout_seconds(input: TauDagCompileInput) -> int:
     override = int(getattr(input, "browser_lock_timeout", 0) or 0)
     if override > 0:
         return override
+    # A queued lane must be allowed to wait out one full turn of the lane ahead
+    # of it. Surf serializes non-streaming commands per socket, and a healthy
+    # submit may hold that socket for the whole worker timeout, so a waiter
+    # budgeted below it expires while the owner is still legitimately working.
+    # Observed live 2026-08-16: two concurrent seats yielded a 900s wait against
+    # a 2400s owner, and the lane died as browser_submit_not_accepted with the
+    # prompt already delivered.
+    #
+    # Raised here rather than on DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS itself,
+    # because that constant also budgets window.close/tab.close teardown, which
+    # must not inherit a 40-minute wait.
     if input.topology == "concurrent":
-        return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(browser_count - 1, 1)
+        derived = DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS * max(browser_count - 1, 1)
+        return max(derived, DEFAULT_BROWSER_WORKER_TIMEOUT_SECONDS)
     return DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS
 
 

@@ -1020,7 +1020,12 @@ def test_compete_cli_execute_passes_poll_timeout_to_browser_worker_budget(monkey
         # Lane budgets come from per-handler envelopes, NOT --poll-timeout
         # (98b021d2e: deriving them from poll timeout starved browser lanes;
         # execution_timeout_seconds=0 means no --command-timeout-budget cap).
-        expected = {"handler-webgpt": 3900, "handler-webclaude": 3000}[node]
+        # The worker envelope tracks the lock budget by design: a lane that may
+        # wait out a full turn for the socket must outlive that wait, or it is
+        # killed mid-submit. Raising the concurrent lock floor to the worker
+        # timeout (2026-08-16) therefore lifts webclaude 3000 -> 3480. webgpt is
+        # unchanged because its 3900 floor already exceeded the new envelope.
+        expected = {"handler-webgpt": 3900, "handler-webclaude": 3480}[node]
         assert spec["timeout_s"] == expected
         assert "--command-timeout-budget" not in command
 
@@ -3228,7 +3233,10 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
         "webkimi=fresh-browser-lifecycle-webkimi",
     ]
     logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
-    assert logged[0] == [
+    # Seat windows are now snapshotted and placed on the reviewer desktop, so
+    # window.new is no longer the first logged command; select it by name.
+    window_new = [cmd for cmd in logged if cmd and cmd[0] == "window.new"]
+    assert window_new[0] == [
         "window.new",
         "https://chatgpt.com/",
         "--json",
@@ -3271,10 +3279,11 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     )
 
     capped_logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    capped_window_new = [cmd for cmd in capped_logged if cmd and cmd[0] == "window.new"]
     assert capped_lifecycle["status"] == "READY"
     assert capped_lifecycle["lock_timeout_seconds"] == 900
     assert capped_lifecycle["command_timeout_seconds"] == 900 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
-    assert capped_logged[0] == [
+    assert capped_window_new[0] == [
         "window.new",
         "https://chatgpt.com/",
         "--json",

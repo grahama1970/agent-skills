@@ -240,6 +240,31 @@ def parse_candidate(text: str) -> dict[str, str]:
     return fields
 
 
+def _chains_commands(command: str) -> bool:
+    """True only for shell chaining OUTSIDE quotes.
+
+    A naive `";" in command` rejects `python -c 'import x; assert y'`, which is
+    one command carrying one claim. Caught by the first real model response the
+    gate ever saw -- a correct proposal refused for a separator inside a quoted
+    argument. The test suite never found it because its fixture was written by
+    the same hand as the check.
+    """
+    quote: str | None = None
+    previous = ""
+    for index, char in enumerate(str(command or "")):
+        if quote:
+            if char == quote and previous != "\\":
+                quote = None
+        elif char in "'\"":
+            quote = char
+        elif char == ";":
+            return True
+        elif char == "&" and command[index + 1: index + 2] == "&":
+            return True
+        previous = char
+    return False
+
+
 def validate_singular(fields: dict[str, str]) -> list[str]:
     """Every way a proposal stops being an MVP."""
     problems: list[str] = []
@@ -269,7 +294,7 @@ def validate_singular(fields: dict[str, str]) -> list[str]:
                     "it was already green while the wall stood"
                 )
                 break
-        if "&&" in proof or ";" in proof:
+        if _chains_commands(proof):
             problems.append("proof command chains several commands; one command, one claim")
 
     return problems
