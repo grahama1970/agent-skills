@@ -1238,22 +1238,35 @@ def _minimum_handlers_for_workflow(input_payload: Any) -> int:
     return 1
 
 
+#: Preferred substitutes for webclaude, in order (operator, 2026-08-16).
+#: webclaude is a claude.ai chat tab: no tools, no repo access, no Ask-controlled
+#: reasoning effort, and one more browser seat competing for the same Chrome.
+#: The local Fable 5 lane answers the same questions with effort control and no
+#: browser at all, so it is preferred outright; claude-opus-4-8 is the step up
+#: when Fable is rate limited. webclaude is the last resort, not the default.
+WEBCLAUDE_PREFERRED_SUBSTITUTES = ("claude-fable-low", "claude-opus-4-8")
+
+
 def _fallback_provider_order(request: str) -> list[str]:
     configured = os.environ.get("ASK_BROWSER_FALLBACK_ORDER", "").strip()
     if configured:
         order = [item.strip() for item in configured.split(",") if item.strip()]
     else:
         lower = request.lower()
+        substitutes = list(WEBCLAUDE_PREFERRED_SUBSTITUTES)
         if any(word in lower for word in ("code", "patch", "bug", "review", "diff", "implementation")):
-            order = ["webclaude", "webgemini", "webkimi", "webgpt", "webgrok"]
+            order = [*substitutes, "webgemini", "webkimi", "webgpt", "webgrok", "webclaude"]
         elif any(word in lower for word in ("current", "web", "source", "research", "search")):
-            order = ["webgpt", "webgemini", "webclaude", "webkimi", "webgrok"]
+            # Live-web questions still want a browser seat first.
+            order = ["webgpt", "webgemini", *substitutes, "webkimi", "webgrok", "webclaude"]
         else:
-            order = ["webclaude", "webgemini", "webkimi", "webgpt", "webgrok"]
+            order = [*substitutes, "webgemini", "webkimi", "webgpt", "webgrok", "webclaude"]
     seen: set[str] = set()
     result: list[str] = []
     for handler in order:
-        if handler in BROWSER_FRESH_URLS and handler not in seen:
+        # Model handlers are legitimate fallbacks: filtering to browser-only
+        # names is what forced every Claude fallback onto a chat tab.
+        if handler not in seen and (handler in BROWSER_FRESH_URLS or "-" in handler):
             seen.add(handler)
             result.append(handler)
     return result

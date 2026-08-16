@@ -347,6 +347,76 @@
           "SECOND_TAB_IS_HIDDEN"
         ]
       }
+    },
+    {
+      "name": "unsupported-flags-never-reach-a-provider-submit",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');sys.path.insert(0,'scripts');import tau_roundtable_worker as w\nbad=[]\nfor sub in ('claude.submit','kimi.submit','gemini.submit','grok.submit','deepseek.submit'):\n c,drop=w._strip_unsupported_flags(['/s/run.sh',sub,'--stable-stall-ms','0','--timeout','60'])\n if '--stable-stall-ms' in c: bad.append(sub)\nkeep,_=w._strip_unsupported_flags(['/s/run.sh','webgpt.submit','--stable-stall-ms','0'])\nassert not bad, bad\nassert '--stable-stall-ms' in keep, 'stripped it from the one command that accepts it'\nprint('FLAG_GATED_CORRECTLY')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FLAG_GATED_CORRECTLY"
+        ]
+      }
+    },
+    {
+      "name": "only-webgpt-submit-accepts-stable-stall-ms",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../surf && for c in webgpt.submit claude.submit kimi.submit; do n=$(./run.sh $c --help 2>&1 | grep -c stable-stall-ms); echo \"$c=$n\"; done"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "webgpt.submit=1",
+          "claude.submit=0",
+          "kimi.submit=0"
+        ]
+      }
+    },
+    {
+      "name": "claude-fallback-prefers-the-local-model-over-webclaude",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('review this patch for bugs')\nassert order[0]=='claude-fable-low', order\nassert order.index('claude-opus-4-8') < order.index('webclaude'), order\nprint('LOCAL_MODEL_PREFERRED')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LOCAL_MODEL_PREFERRED"
+        ]
+      }
+    },
+    {
+      "name": "live-web-questions-still-prefer-a-browser-seat",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('research current web sources')\nassert order[0]=='webgpt', order\nprint('BROWSER_FIRST_FOR_WEB')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BROWSER_FIRST_FOR_WEB"
+        ]
+      }
     }
   ]
 }

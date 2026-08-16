@@ -374,6 +374,25 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Prefer the local Claude lane over webclaude
+
+Handler preference for Claude work, in order:
+
+1. **`claude-fable-low`** — local Fable 5 at low reasoning effort. Preferred
+   outright.
+2. **`claude-opus-4-8`** — when Fable is rate limited.
+3. **`webclaude`** — last resort only.
+
+`webclaude` is a claude.ai chat tab: no tools, no repo access, no Ask-controlled
+reasoning effort, and one more seat competing for the same Chrome. The local
+lane answers the same questions with effort control and no browser at all.
+Live-web questions still put a browser seat first, since that is what a chat tab
+is actually better at.
+
+This ordering lives in `WEBCLAUDE_PREFERRED_SUBSTITUTES` and is eval-gated.
+Before it, the fallback list filtered to browser names only, so every Claude
+fallback was forced onto a chat tab by construction.
+
 ### Unblocking: one singular MVP, or nothing
 
 A spiralling agent does not need more options. It needs exactly one small thing

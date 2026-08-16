@@ -5788,6 +5788,45 @@ def _claimed_tab_ids(command: list[str], result: "CmdResult") -> list[str]:
     return []
 
 
+#: Flags only some provider submit commands accept. Measured 2026-08-16 by
+#: running `--help` on each: only webgpt.submit takes --stable-stall-ms, while
+#: claude/kimi/gemini/grok/deepseek submit reject it outright with
+#: "unrecognized arguments" -- so every non-webgpt browser lane died on a CLI
+#: usage error before touching the browser. That is why webclaude sat at
+#: claude.ai/new having never submitted.
+PROVIDER_ONLY_FLAGS = {
+    "--stable-stall-ms": {"webgpt.submit"},
+}
+
+
+def _strip_unsupported_flags(command: list[str]) -> tuple[list[str], list[str]]:
+    """Drop flags the target surf subcommand does not accept.
+
+    Filtered here, at the one choke point every browser command passes
+    through, rather than at each construction site: there are seven such sites
+    and the eighth would reintroduce the bug. Returns the cleaned command and
+    the flags removed, so the omission is reported rather than silent.
+    """
+    subcommand = command[1] if len(command) > 1 else ""
+    removed: list[str] = []
+    cleaned: list[str] = []
+    index = 0
+    while index < len(command):
+        item = command[index]
+        supported = PROVIDER_ONLY_FLAGS.get(item)
+        if supported is not None and subcommand not in supported:
+            removed.append(item)
+            # Drop its value too when the flag takes one.
+            if index + 1 < len(command) and not str(command[index + 1]).startswith("--"):
+                index += 2
+            else:
+                index += 1
+            continue
+        cleaned.append(item)
+        index += 1
+    return cleaned, removed
+
+
 def _run_browser_transport_cmd(command: list[str], **kwargs: Any) -> "CmdResult":
     """Run a browser transport command and claim any window it created.
 
@@ -5800,6 +5839,13 @@ def _run_browser_transport_cmd(command: list[str], **kwargs: Any) -> "CmdResult"
     Claiming must never fail the transport: a lost claim reproduces the old
     leak, while a raised exception would lose a provider response.
     """
+    command, dropped = _strip_unsupported_flags(list(command))
+    if dropped:
+        print(
+            f"[tau-worker] dropped {', '.join(dropped)}: not accepted by "
+            f"{command[1] if len(command) > 1 else 'this command'}",
+            file=sys.stderr,
+        )
     result = _run_browser_transport_cmd_inner(command, **kwargs)
     try:
         tabs = _claimed_tab_ids(list(command), result)
