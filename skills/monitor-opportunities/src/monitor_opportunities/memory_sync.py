@@ -177,6 +177,7 @@ def governed_memory_recall(
             }
         consecutive_failures = 0
         total_failures = 0
+        circuit_open = False
         for idx, query in enumerate(queries, start=1):
             query_id = f"memory-recall-{idx:02d}-{query['category']}-{_slug(query['target'])}"
             payload = {"q": query["q"], "k": k}
@@ -242,6 +243,7 @@ def governed_memory_recall(
                 consecutive_failures >= RECALL_CIRCUIT_FAILURE_LIMIT
                 or total_failures >= RECALL_CIRCUIT_TOTAL_FAILURE_LIMIT
             ):
+                circuit_open = True
                 for skip_idx, skipped in enumerate(queries[idx:], start=idx + 1):
                     rows.append(
                         {
@@ -274,7 +276,7 @@ def governed_memory_recall(
         "attempted": sum(1 for row in rows if not str(row.get("status", "")).startswith("SKIPPED")),
         "succeeded": sum(1 for row in rows if row["status"] in {"MATCHES", "NO_MATCHES"}),
         "skipped": sum(1 for row in rows if str(row.get("status", "")).startswith("SKIPPED")),
-        "circuit_open": any(row.get("status") == "SKIPPED_CIRCUIT_OPEN" for row in rows),
+        "circuit_open": circuit_open,
         "degraded": bool(degraded_reasons),
         "degradation_reasons": degraded_reasons,
         "queries": rows,

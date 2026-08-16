@@ -471,6 +471,33 @@ def test_governed_memory_recall_opens_circuit_after_three_total_timeouts(monkeyp
     assert receipt["external_effects"] is False
 
 
+def test_governed_memory_recall_marks_circuit_open_when_threshold_hits_final_query(monkeypatch) -> None:
+    client = _MixedRecallClient()
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=[{"organization": f"Org {idx}"} for idx in range(3)],
+        relationship_signals=[],
+        limit=4,
+    )
+
+    assert receipt["degraded"] is True
+    assert receipt["circuit_open"] is True
+    assert receipt["attempted"] == 4
+    assert receipt["succeeded"] == 1
+    assert receipt["skipped"] == 0
+    assert [row["status"] for row in receipt["queries"]] == [
+        "DEGRADED_TIMEOUT",
+        "MATCHES",
+        "DEGRADED_TIMEOUT",
+        "DEGRADED_TIMEOUT",
+    ]
+
+
 def test_attach_memory_recall_provenance_updates_existing_visible_fields() -> None:
     opportunities = [
         {
