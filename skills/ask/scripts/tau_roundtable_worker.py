@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from ask import browser_windows, model_provenance  # noqa: E402
+from ask.tau_dag import resolve_scillm_model_route  # noqa: E402
 from ask.seam_models import enforce  # noqa: E402
 
 
@@ -720,14 +721,41 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             ):
                 binding_refresh = post_submit_refresh
         else:
-            response_text, submit_meta = _run_scillm_handler(
-                args,
-                handler=handler,
-                prompt_path=prompt_path,
-                response_path=response_path,
-                raw_path=raw_path,
-                meta_path=meta_path,
-            )
+            try:
+                response_text, submit_meta = _run_scillm_handler(
+                    args,
+                    handler=handler,
+                    prompt_path=prompt_path,
+                    response_path=response_path,
+                    raw_path=raw_path,
+                    meta_path=meta_path,
+                )
+            except RuntimeError as exc:
+                fallback = _rate_limit_fallback_handler(handler, str(exc))
+                if not fallback:
+                    raise
+                # A rate limit is the provider saying "not now", not "never".
+                # Losing the seat entirely would shrink the panel for a
+                # condition that has a configured answer. Observed live
+                # 2026-08-16: claude-fable-5 returned HTTP 429
+                # PROVIDER_RATE_LIMITED while claude-opus-4-8 answered fine.
+                print(
+                    f"[tau-worker] {handler} rate limited; falling back to {fallback}",
+                    file=sys.stderr,
+                )
+                response_text, submit_meta = _run_scillm_handler(
+                    args,
+                    handler=fallback,
+                    prompt_path=prompt_path,
+                    response_path=response_path,
+                    raw_path=raw_path,
+                    meta_path=meta_path,
+                )
+                submit_meta["rate_limit_fallback"] = {
+                    "from": handler,
+                    "to": fallback,
+                    "reason": "provider_rate_limited",
+                }
             commands.append(
                 {
                     "command": ["scillm.chat", submit_meta.get("model") or handler],
@@ -6260,6 +6288,32 @@ def _run_codex_handler(
     return response, meta, commands
 
 
+#: Configured stand-ins for a rate-limited local model. A rate limit is the
+#: provider saying "not now", not "never", so the seat is refilled rather than
+#: dropped. Only ONE hop: a fallback that is itself limited fails honestly
+#: instead of walking a chain and reporting whichever model happened to be free.
+SCILLM_RATE_LIMIT_FALLBACKS = {
+    "claude-fable-low": "claude-opus-4-8-high",
+    "claude-fable-5": "claude-opus-4-8-high",
+    "claude-fable": "claude-opus-4-8-high",
+}
+
+_RATE_LIMIT_MARKERS = ("http 429", "provider_rate_limited", "rate_limit_error", "rate limit")
+
+
+def _rate_limit_fallback_handler(handler: str, error_text: str) -> str | None:
+    """The stand-in for this handler, but only when the error IS a rate limit.
+
+    Matching on the error keeps an unrelated failure -- a bad model id, an auth
+    problem -- from being silently answered by a different model, which would
+    hide the real fault behind a working reply.
+    """
+    lowered = str(error_text or "").casefold()
+    if not any(marker in lowered for marker in _RATE_LIMIT_MARKERS):
+        return None
+    return SCILLM_RATE_LIMIT_FALLBACKS.get(str(handler or "").strip())
+
+
 def _run_scillm_handler(
     args: argparse.Namespace,
     *,
@@ -6275,15 +6329,20 @@ def _run_scillm_handler(
         handler,
         str(getattr(args, "provider_hint", "") or ""),
     )
-    # Effort-suffix selectors (gpt-5.5-high, ...): the router serves base
-    # model names; the suffix becomes reasoning_effort (xhigh -> high).
-    model = canonical_handler
-    reasoning_effort = None
-    for effort in ("xhigh", "high", "medium", "low"):
-        if canonical_handler.lower().endswith(f"-{effort}"):
-            model = canonical_handler[: -(len(effort) + 1)]
-            reasoning_effort = "high" if effort == "xhigh" else effort
-            break
+    # Effort-suffix selectors (gpt-5.5-high, claude-fable-low, ...): the router
+    # serves base model names, so the suffix becomes reasoning_effort.
+    #
+    # Resolved through the canonical route table rather than re-implemented
+    # here. The duplicate that used to live at this spot stripped the suffix
+    # but never applied the Claude alias, so `claude-fable-low` was dispatched
+    # as `claude-fable` and scillm answered HTTP 400 model_not_available --
+    # observed live 2026-08-16, and it took out the one seat in the panel that
+    # needs no browser at all.
+    route = resolve_scillm_model_route(canonical_handler)
+    model = route.model
+    reasoning_effort = route.reasoning_effort
+    if reasoning_effort == "xhigh":
+        reasoning_effort = "high"
     # multimodal: attached images are SHOWN to the model (#1391) — a vision
     # check seat must never judge blind. Non-image attachments are inlined.
     attach_files = [str(item) for item in (getattr(args, "attach_files", None) or [])]
