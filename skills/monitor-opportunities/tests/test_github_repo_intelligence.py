@@ -158,6 +158,8 @@ def test_github_source_intel_and_relationship_signal_validate_in_report(tmp_path
     assert source_intel is not None
     assert source_intel["signal_type"] == "GITHUB_REPO_INTELLIGENCE"
     assert source_intel["decision"] == "CONTACT_INTELLIGENCE_ONLY"
+    assert "rtinney1/arcos-tools" in source_intel["summary"]
+    assert "https://github.com/rtinney1/arcos-tools" in source_intel["evidence_refs"]
 
     manifest = copy.deepcopy(built_in_fixture())
     manifest["source_receipts"].append(_report_source_receipt(receipt))
@@ -169,6 +171,8 @@ def test_github_source_intel_and_relationship_signal_validate_in_report(tmp_path
     loaded = validate_manifest(manifest)
 
     assert loaded.source_intel[-1].signal_type == "GITHUB_REPO_INTELLIGENCE"
+    assert loaded.source_intel[-1].summary
+    assert loaded.source_intel[-1].evidence_refs
     assert loaded.relationship_signals[-1].subject == "Randi Tinney (@rtinney1)"
 
 

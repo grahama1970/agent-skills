@@ -1393,7 +1393,9 @@
         "signal_type",
         "title",
         "organization",
+        "summary",
         "source_receipt_ids",
+        "evidence_refs",
         "decision",
         "reasons",
         "action_worthy",
@@ -1426,6 +1428,10 @@
           "type": "string",
           "minLength": 1
         },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
         "source_receipt_ids": {
           "type": "array",
           "minItems": 1,
@@ -1439,6 +1445,14 @@
             "string",
             "null"
           ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "decision": {
           "enum": [

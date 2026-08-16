@@ -177,8 +177,10 @@ class SourceIntel(StrictModel):
     signal_type: str
     title: str
     organization: str
+    summary: str = Field(min_length=1)
     source_receipt_ids: list[str] = Field(min_length=1)
     primary_evidence_url: str | None = None
+    evidence_refs: list[str] = Field(min_length=1)
     decision: str
     reasons: list[str]
     action_worthy: bool
@@ -846,12 +848,23 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
 
     for item in manifest.source_intel:
         if item.visible_in_report:
-            validate_source_backing(
+            item_receipts = validate_source_backing(
                 item_kind="source_intel",
                 item_id=item.signal_id,
                 source_receipt_ids=item.source_receipt_ids,
                 allow_degraded=True,
             )
+            accepted_refs = {
+                ref
+                for receipt in item_receipts
+                for ref in receipt.evidence_refs
+            }
+            missing_refs = [ref for ref in item.evidence_refs if ref not in accepted_refs]
+            if missing_refs:
+                raise ContractError(
+                    "SOURCE_INTEL_EVIDENCE_REF_UNRESOLVED",
+                    f"Source-intel {item.signal_id} evidence_refs are not present in cited receipts: {missing_refs}",
+                )
 
     for signal in manifest.relationship_signals:
         if signal.visible_in_report:

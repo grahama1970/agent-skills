@@ -64,8 +64,10 @@ def test_report_visible_source_intel_can_cite_visible_degraded_receipt() -> None
             "signal_type": "LINKEDIN_LOCATOR",
             "title": "LinkedIn top-applicant capture required",
             "organization": "LinkedIn",
+            "summary": "LinkedIn locator evidence is visible but remains source intelligence.",
             "source_receipt_ids": ["src:degraded"],
             "primary_evidence_url": None,
+            "evidence_refs": data["source_receipts"][0]["evidence_refs"],
             "decision": "LOCATOR_ONLY",
             "reasons": ["Visible degraded-source receipt, not a no-match."],
             "action_worthy": False,
@@ -95,8 +97,10 @@ def test_report_visible_source_intel_cannot_cite_no_matches_receipt() -> None:
             "signal_type": "LINKEDIN_LOCATOR",
             "title": "No matches is not evidence for a visible proposition",
             "organization": "LinkedIn",
+            "summary": "No-match source intelligence should not validate.",
             "source_receipt_ids": ["src:no-matches"],
             "primary_evidence_url": None,
+            "evidence_refs": ["fixture://no-matches"],
             "decision": "LOCATOR_ONLY",
             "reasons": ["This should fail."],
             "action_worthy": False,
@@ -108,6 +112,32 @@ def test_report_visible_source_intel_cannot_cite_no_matches_receipt() -> None:
         validate_manifest(data)
 
     assert exc.value.code == "REPORT_VISIBLE_SOURCE_NOT_ACCEPTED"
+
+
+def test_report_visible_source_intel_evidence_refs_must_be_receipt_backed() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["source_intel"] = [
+        {
+            "signal_id": "intel:dangling-ref",
+            "lane": "A",
+            "signal_type": "LINKEDIN_LOCATOR",
+            "title": "Dangling source-intel evidence",
+            "organization": "LinkedIn",
+            "summary": "This row cites evidence absent from its accepted source receipt.",
+            "source_receipt_ids": [data["source_receipts"][0]["receipt_id"]],
+            "primary_evidence_url": None,
+            "evidence_refs": ["fixture://not-in-receipt"],
+            "decision": "LOCATOR_ONLY",
+            "reasons": ["This should fail."],
+            "action_worthy": False,
+            "visible_in_report": True,
+        }
+    ]
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "SOURCE_INTEL_EVIDENCE_REF_UNRESOLVED"
 
 
 def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:

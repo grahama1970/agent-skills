@@ -163,7 +163,9 @@ def render_html(manifest: ReportManifest) -> str:
     source_intel = "".join(
         f"<article><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
         f"<p>{_badge(item.signal_type)} {_badge(item.decision)}</p>"
+        f"<p>{html.escape(item.summary)}</p>"
         f"{_link('Source evidence', item.primary_evidence_url)}"
+        f"<h4>Evidence</h4>{_list(item.evidence_refs)}"
         f"<h4>Reasons</h4>{_list(item.reasons)}</article>"
         for item in manifest.source_intel
     ) or "<p>None</p>"

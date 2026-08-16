@@ -265,6 +265,67 @@ def _is_report_opportunity(candidate: dict[str, Any]) -> bool:
     )
 
 
+def _string_list(values: Any) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    return [str(item).strip() for item in values if str(item).strip()]
+
+
+def _source_intel_refs(candidate: dict[str, Any], evidence_url: str | None) -> list[str]:
+    refs = [
+        *_string_list(candidate.get("github_evidence_refs")),
+        *_string_list(candidate.get("source_evidence_refs")),
+    ]
+    if evidence_url:
+        refs.append(str(evidence_url))
+    return list(dict.fromkeys(refs))
+
+
+def _source_intel_summary(candidate: dict[str, Any], *, contacts: list[Any] | None = None) -> str:
+    title = str(candidate.get("title") or "Source intelligence").strip()
+    organization = str(candidate.get("organization") or "unknown organization").strip()
+    if _is_github_intelligence(candidate):
+        repo = str(candidate.get("github_repo") or title).strip()
+        terms = _string_list((candidate.get("github_repository_analysis") or {}).get("matched_terms"))
+        term_text = ", ".join(terms[:8]) if terms else "no configured relevance terms"
+        return (
+            f"{repo} GitHub repository intelligence for {organization}; "
+            f"{len(contacts or [])} contact or adjacent-contact hypotheses observed; matched terms: {term_text}."
+        )
+    if _is_networking_signal(candidate):
+        decision = str(candidate.get("networking_decision") or "WATCH").upper()
+        return f"{title} at {organization} is Meetup source intelligence with recommended decision {decision}."
+    if _is_linkedin_locator(candidate):
+        return (
+            f"{title} at {organization} is LinkedIn locator source intelligence; "
+            "primary employer or client readback is still required before opportunity admission."
+        )
+    return f"{title} at {organization} is source intelligence."
+
+
+def _bind_source_intel_evidence(
+    source_intel: list[dict[str, Any]],
+    source_receipts: list[dict[str, Any]],
+) -> None:
+    refs_by_receipt = {
+        str(receipt.get("receipt_id")): _string_list(receipt.get("evidence_refs"))
+        for receipt in source_receipts
+    }
+    for item in source_intel:
+        accepted_refs = list(
+            dict.fromkeys(
+                ref
+                for receipt_id in item.get("source_receipt_ids", [])
+                for ref in refs_by_receipt.get(str(receipt_id), [])
+            )
+        )
+        current_refs = _string_list(item.get("evidence_refs"))
+        receipt_backed_refs = [ref for ref in current_refs if ref in accepted_refs]
+        if not receipt_backed_refs and accepted_refs:
+            receipt_backed_refs = accepted_refs[:1]
+        item["evidence_refs"] = receipt_backed_refs
+
+
 def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
@@ -276,8 +337,10 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "signal_type": "MEETUP_NETWORKING",
             "title": candidate["title"],
             "organization": candidate["organization"],
+            "summary": _source_intel_summary(candidate),
             "source_receipt_ids": [source_id],
             "primary_evidence_url": evidence_url,
+            "evidence_refs": _source_intel_refs(candidate, evidence_url),
             "decision": f"{decision}_MEETUP",
             "reasons": [
                 *(candidate.get("networking_reasons") or []),
@@ -293,8 +356,10 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "signal_type": "LINKEDIN_LOCATOR",
             "title": candidate["title"],
             "organization": candidate["organization"],
+            "summary": _source_intel_summary(candidate),
             "source_receipt_ids": [source_id],
             "primary_evidence_url": evidence_url,
+            "evidence_refs": _source_intel_refs(candidate, evidence_url),
             "decision": "LOCATOR_ONLY",
             "reasons": [
                 "LinkedIn row is profile/recommendation source intelligence only.",
@@ -311,8 +376,10 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "signal_type": "GITHUB_REPO_INTELLIGENCE",
             "title": candidate["title"],
             "organization": candidate["organization"],
+            "summary": _source_intel_summary(candidate, contacts=contacts),
             "source_receipt_ids": [source_id],
             "primary_evidence_url": evidence_url,
+            "evidence_refs": _source_intel_refs(candidate, evidence_url),
             "decision": "CONTACT_INTELLIGENCE_ONLY",
             "reasons": [
                 f"GitHub repository analyzed for contact and adjacent-contact intelligence; contacts observed: {len(contacts)}.",
@@ -607,6 +674,7 @@ def _report_from_run(
             str(memory_source_receipt["receipt_id"]),
         )
         source_receipts.append(memory_source_receipt)
+    _bind_source_intel_evidence(source_intel, source_receipts)
     relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
         opportunities, relationship_signals
     )
