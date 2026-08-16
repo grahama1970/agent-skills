@@ -145,6 +145,7 @@ def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
         "tracker": "SKIPPED",
         "prior_application_history": "ENABLED",
         "ats_selector_memory_write": "SKIPPED",
+        "tau_semantic_provider": "LOCAL_PREP_ONLY" if diagnostic else "ENABLED",
         "gmail_send": "FORBIDDEN",
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
@@ -220,10 +221,19 @@ def _scheduler_equivalence_receipt(
         checks["registered_promoted_stage0_flag_matches"] = (
             "--promoted-stage0" in registered_command
         )
+        checks["tau_semantic_provider_flag_matches"] = (
+            "--tau-semantic-provider" in intent["nightly_args"]
+        )
+        checks["registered_tau_semantic_provider_flag_matches"] = (
+            "--tau-semantic-provider" in registered_command
+        )
         checks["diagnostic_flag_absent"] = "--diagnostic" not in intent["nightly_args"]
         checks["registered_diagnostic_flag_absent"] = "--diagnostic" not in registered_command
         checks["buzz_enabled_for_promoted"] = (
             intent["effect_policy"].get("buzz_summary") == "ENABLED"
+        )
+        checks["tau_semantic_provider_enabled_for_promoted"] = (
+            intent["effect_policy"].get("tau_semantic_provider") == "ENABLED"
         )
     if mode == "DIAGNOSTIC":
         checks["diagnostic_flag_matches"] = "--diagnostic" in intent["nightly_args"]
@@ -370,9 +380,13 @@ def _scheduler_execution_equivalence_preflight(
             {
                 "mode_promoted_stage0": mode == "PROMOTED_STAGE_0",
                 "promoted_flag_present_once": _count_token(command, "--promoted-stage0") == 1,
+                "tau_semantic_provider_flag_present_once": _count_token(command, "--tau-semantic-provider")
+                == 1,
                 "diagnostic_flag_absent": _count_token(command, "--diagnostic") == 0,
                 "buzz_not_skipped": _count_token(command, "--skip-buzz") == 0,
                 "buzz_summary_enabled": effect_policy.get("buzz_summary") == "ENABLED",
+                "tau_semantic_provider_enabled": effect_policy.get("tau_semantic_provider")
+                == "ENABLED",
             }
         )
     else:
@@ -470,6 +484,8 @@ def _scheduler_execution_equivalence_receipt(
         "nightly": nightly_out / "nightly-receipt.json",
         "run": nightly_out / "run-receipt.json",
         "report_manifest": nightly_out / "report-manifest.json",
+        "tau_semantic_prepare": nightly_out / "tau-semantic" / "tau-semantic-prepare-receipt.json",
+        "semantic_addenda_index": nightly_out / "semantic-addenda" / "index.json",
         "receipt_consistency": nightly_out / "receipt-consistency.json",
         "zero_effect_replay": nightly_out / "zero-effect-replay-receipt.json",
         "report_acceptance": nightly_out / "report-acceptance-receipt.json",
@@ -548,6 +564,16 @@ def _scheduler_execution_equivalence_receipt(
         and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
         == report_acceptance_hash,
     }
+    if require_promoted_stage0:
+        tau_step = (nightly_receipt.get("steps") or {}).get("tau_semantic") or {}
+        post_checks.update(
+            {
+                "tau_semantic_prepare_present": artifact_paths["tau_semantic_prepare"].is_file(),
+                "tau_semantic_provider_live": tau_step.get("provider_live") is True,
+                "tau_semantic_addenda_installed": int(tau_step.get("installed_addenda") or 0) > 0,
+                "semantic_addenda_index_present": artifact_paths["semantic_addenda_index"].is_file(),
+            }
+        )
     checks = {**preflight_checks, **post_checks}
     receipt = {
         "schema": "monitor_opportunities.scheduler_execution_equivalence_receipt.v1",
@@ -599,7 +625,7 @@ def status_payload() -> dict[str, object]:
             "ats_submit": "BLOCKED_STAGE_0",
             "tau_semantic_input_contract": "IMPLEMENTED_LOCAL",
             "tau_semantic_input_materializer": "IMPLEMENTED_NIGHTLY_LOCAL",
-            "tau_semantic_provider_eval": "IMPLEMENTED_NIGHTLY_GATED",
+            "tau_semantic_provider_eval": "IMPLEMENTED_PROMOTED_REQUIRED_DIAGNOSTIC_SKIPPED",
             "tau_semantic_report_projection": "IMPLEMENTED_LOCAL",
             "github_repo_intelligence": "IMPLEMENTED_NIGHTLY_READ_ONLY",
         },
@@ -1056,6 +1082,14 @@ def run_command(
         readable=True,
         help="Read-only GitHub repository intelligence artifact; no GitHub mutation or outreach.",
     ),
+    linkedin_contact_evidence: Path | None = typer.Option(
+        None,
+        "--linkedin-contact-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Read-only LinkedIn 1st/2nd/3rd-degree contact graph evidence; no LinkedIn action.",
+    ),
     indeed_evidence: Path | None = typer.Option(
         None,
         "--indeed-evidence",
@@ -1111,6 +1145,7 @@ def run_command(
             federal_evidence=federal_evidence,
             meetup_evidence=meetup_evidence,
             github_evidence=github_evidence,
+            linkedin_contact_evidence=linkedin_contact_evidence,
             indeed_evidence=indeed_evidence,
             hiddenjobs_evidence=hiddenjobs_evidence,
             memory_url=memory_url,
@@ -1549,6 +1584,7 @@ def nightly(
         skip_tracker = True
         skip_ats_memory = True
         require_clean = True
+        tau_semantic_provider = True
 
     # `latest/` is intentionally reused by cron. Clear prior generated artifacts
     # before capture so stale tailoring/application files cannot imply current
@@ -1644,6 +1680,8 @@ def nightly(
         capture_hiddenjobs,
         capture_indeed_jobs,
         capture_linkedin_advanced_search,
+        capture_linkedin_actively_hiring,
+        capture_linkedin_who_viewed,
         capture_linkedin_top_applicant,
         capture_meetup_buffalo_isolated,
         capture_sales_navigator_saved,
@@ -1697,6 +1735,56 @@ def nightly(
             logger.warning("premium evidence merge skipped: {}", exc)
     elif prem_receipt.get("evidence_path") and not linkedin_evidence:
         linkedin_evidence = prem_receipt["evidence_path"]
+
+    linkedin_contact_evidence = None
+    contact_rows: list[dict[str, Any]] = []
+    wv_receipt = capture_linkedin_who_viewed(capture_dir)
+    steps["browser_capture_linkedin_who_viewed"] = {
+        "status": wv_receipt.get("status"),
+        "captured": wv_receipt.get("viewers_captured"),
+    }
+    if wv_receipt.get("evidence_path"):
+        try:
+            for row in read_json(Path(str(wv_receipt["evidence_path"]))).get("viewers", []):
+                if isinstance(row, dict):
+                    contact_rows.append({**row, "linkedin_contact_source": "who_viewed"})
+        except (OSError, ValueError):
+            pass
+    ah_receipt = capture_linkedin_actively_hiring(capture_dir)
+    steps["browser_capture_linkedin_actively_hiring"] = {
+        "status": ah_receipt.get("status"),
+        "captured": ah_receipt.get("contacts_captured"),
+    }
+    if ah_receipt.get("evidence_path"):
+        try:
+            for row in read_json(Path(str(ah_receipt["evidence_path"]))).get("contacts", []):
+                if isinstance(row, dict):
+                    contact_rows.append({**row, "linkedin_contact_source": "actively_hiring"})
+        except (OSError, ValueError):
+            pass
+    if contact_rows:
+        linkedin_contact_evidence_path = capture_dir / "linkedin-contact-graph-evidence.json"
+        write_json(
+            linkedin_contact_evidence_path,
+            {
+                "schema_version": "monitor_opportunities.linkedin_contact_graph_evidence.v1",
+                "observed_at": utc_now(),
+                "source": "human_authorized_linkedin_contact_graph",
+                "automation_policy": "linkedin_authorized_read_only_no_actions",
+                "external_effects": False,
+                "contacts": contact_rows,
+                "non_claims": [
+                    "No LinkedIn connect, follow, message, InMail, email, application, or profile mutation occurred.",
+                    "Relationship-degree evidence is for human review and report binding only.",
+                ],
+            },
+        )
+        linkedin_contact_evidence = str(linkedin_contact_evidence_path)
+    steps["browser_capture_linkedin_contact_graph"] = {
+        "captured": len(contact_rows),
+        "evidence_path": linkedin_contact_evidence,
+        "external_effects": False,
+    }
 
     # Required aggregator/locator sources: capture visible browser evidence to
     # satisfy source-health contracts without admitting these rows as ranked
@@ -1816,6 +1904,8 @@ def nightly(
         run_cmd += ["--meetup-evidence", str(meetup_evidence)]
     if github_evidence:
         run_cmd += ["--github-evidence", str(github_evidence)]
+    if linkedin_contact_evidence:
+        run_cmd += ["--linkedin-contact-evidence", str(linkedin_contact_evidence)]
     if indeed_evidence:
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:
@@ -1918,6 +2008,13 @@ def nightly(
             steps["tau_semantic"]["provider_results"] = provider_results  # type: ignore[index]
             steps["tau_semantic"]["installed_addenda"] = len(semantic_installs)  # type: ignore[index]
             steps["tau_semantic"]["provider_live"] = bool(semantic_installs)  # type: ignore[index]
+            if promoted_stage0 and not semantic_installs:
+                _fail(
+                    ContractError(
+                        "PROMOTED_STAGE0_TAU_SEMANTIC_PROVIDER_FAILED",
+                        "Promoted Stage 0 requires at least one provider-live Tau semantic addendum",
+                    )
+                )
 
     # Live ATS form capture: for each top job, read-only capture of the
     # application-form schema so a human-promoted site policy can later drive
@@ -2335,6 +2432,7 @@ def schedule(
                 )
             )
         nightly_args.append("--promoted-stage0")
+        nightly_args.append("--tau-semantic-provider")
     if claim_snapshot is not None:
         claim_snapshot = claim_snapshot.resolve()
     environment: dict[str, str] = {

@@ -33,6 +33,7 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "abc123",
             "--require-clean",
             "--promoted-stage0",
+            "--tau-semantic-provider",
         ],
         "environment": {
             "MONITOR_TRACKER_ENABLED": "0",
@@ -45,6 +46,7 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "tracker": "SKIPPED",
             "prior_application_history": "ENABLED",
             "ats_selector_memory_write": "SKIPPED",
+            "tau_semantic_provider": "ENABLED",
             "gmail_send": "FORBIDDEN",
             "linkedin_action": "FORBIDDEN",
             "meetup_rsvp": "FORBIDDEN",
@@ -67,7 +69,7 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
         "zsh -lc 'exec "
         f"{repo}/skills/monitor-opportunities/run.sh nightly "
         "--expected-revision abc123 --require-clean --skip-tracker "
-        "--skip-ats-memory --promoted-stage0'"
+        "--skip-ats-memory --promoted-stage0 --tau-semantic-provider'"
     )
     readback = {
         "name": "monitor-opportunities-nightly",
@@ -111,6 +113,14 @@ def _write_scheduler_execution_artifacts(repo: Path) -> Path:
     }
     _write_json(run_dir / "report-acceptance-receipt.json", report_acceptance)
     _write_json(
+        run_dir / "tau-semantic" / "tau-semantic-prepare-receipt.json",
+        {"status": "PASS", "external_effects": False},
+    )
+    _write_json(
+        run_dir / "semantic-addenda" / "index.json",
+        {"schema": "monitor_opportunities.semantic_addenda_index.v1", "addenda": []},
+    )
+    _write_json(
         run_dir / "nightly-receipt.json",
         {
             "schema": "monitor_opportunities.nightly_receipt.v1",
@@ -120,7 +130,14 @@ def _write_scheduler_execution_artifacts(repo: Path) -> Path:
             "external_effects": False,
             "out": str(run_dir),
             "artifact_hashes": {"report_acceptance": sha256_json(report_acceptance)},
-            "steps": {"attestation": {"expected_revision_matches": True}},
+            "steps": {
+                "attestation": {"expected_revision_matches": True},
+                "tau_semantic": {
+                    "status": "PASS",
+                    "provider_live": True,
+                    "installed_addenda": 1,
+                },
+            },
         },
     )
     _write_json(
@@ -155,6 +172,7 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "_canonical_repo_root" in source
     assert '".worktrees"' in source
     assert "--promoted-stage0" in source
+    assert "--tau-semantic-provider" in source
     assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
     assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" in source
     assert 'environment["BUZZ_BIN"]' in source
@@ -240,6 +258,7 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "tracker": "SKIPPED",
         "prior_application_history": "ENABLED",
         "ats_selector_memory_write": "SKIPPED",
+        "tau_semantic_provider": "ENABLED",
         "gmail_send": "FORBIDDEN",
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
@@ -256,6 +275,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["checks"]["command_matches"] is True
     assert equivalence["checks"]["promoted_stage0_flag_matches"] is True
     assert equivalence["checks"]["registered_promoted_stage0_flag_matches"] is True
+    assert equivalence["checks"]["tau_semantic_provider_flag_matches"] is True
+    assert equivalence["checks"]["registered_tau_semantic_provider_flag_matches"] is True
     assert equivalence["checks"]["diagnostic_flag_absent"] is True
     assert equivalence["checks"]["registered_diagnostic_flag_absent"] is True
     assert equivalence["checks"]["registered_expected_revision_pinned"] is True
@@ -272,6 +293,7 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "--skip-tracker",
         "--skip-ats-memory",
         "--promoted-stage0",
+        "--tau-semantic-provider",
     ]
     assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
 
@@ -501,6 +523,7 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
         "tracker": "SKIPPED",
         "prior_application_history": "ENABLED",
         "ats_selector_memory_write": "SKIPPED",
+        "tau_semantic_provider": "LOCAL_PREP_ONLY",
         "gmail_send": "FORBIDDEN",
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
@@ -535,7 +558,8 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     schedule_receipt = tmp_path / "schedule-receipt.json"
     command = (
         "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
-        "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0'"
+        "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0 "
+        "--tau-semantic-provider'"
     )
     _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
     out = tmp_path / "execution-equivalence.json"
@@ -583,6 +607,7 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     assert payload["checks"]["command_byte_for_byte_matches_receipt"] is True
     assert payload["checks"]["mode_promoted_stage0"] is True
     assert payload["checks"]["promoted_flag_present_once"] is True
+    assert payload["checks"]["tau_semantic_provider_flag_present_once"] is True
     assert payload["checks"]["diagnostic_flag_absent"] is True
     assert payload["checks"]["report_acceptance_hash_bound_in_nightly"] is True
     assert payload["artifacts"]["nightly"]["present"] is True

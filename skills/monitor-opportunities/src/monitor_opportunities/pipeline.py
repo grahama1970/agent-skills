@@ -15,6 +15,7 @@ from loguru import logger
 from .application_packets import build_application_packets
 from .contact_changes import (
     bind_relationship_signals_to_opportunities,
+    relationship_signals_from_linkedin_contact_evidence,
     relationship_signals_from_candidates,
     relationship_signals_from_memory,
 )
@@ -633,6 +634,68 @@ def _memory_recall_source_receipt(
     }
 
 
+def _linkedin_contact_source_receipt(path: Path | None) -> dict[str, Any] | None:
+    if path is None or not path.exists():
+        return None
+    try:
+        payload = read_json(path)
+    except (OSError, ValueError):
+        return None
+    rows = payload.get("contacts")
+    required_source_id = "linkedin_actively_hiring_contacts"
+    if not isinstance(rows, list):
+        rows = payload.get("viewers")
+        required_source_id = "linkedin_who_viewed_contacts"
+    if not isinstance(rows, list) or not rows:
+        return None
+    evidence_refs = [path.as_uri()]
+    for row in rows:
+        if isinstance(row, dict) and row.get("profile"):
+            evidence_refs.append(str(row["profile"]))
+    evidence_refs = list(dict.fromkeys(evidence_refs))
+    receipt_id = "src:c:linkedin-contacts:" + sha256_json(
+        {
+            "path": str(path),
+            "schema": payload.get("schema_version"),
+            "contacts": [
+                {
+                    "name": row.get("name"),
+                    "org": row.get("org") or row.get("organization"),
+                    "degree": row.get("degree"),
+                    "profile": row.get("profile"),
+                }
+                for row in rows
+                if isinstance(row, dict)
+            ],
+        }
+    )[:16]
+    return {
+        "receipt_id": receipt_id,
+        "lane": "C",
+        "provider": "linkedin",
+        "target": "LinkedIn 1st/2nd/3rd-degree contact evidence",
+        "source_class": "ops_linkedin_authorized_read_only_contacts",
+        "result_status": ResultStatus.MATCHES.value,
+        "observed_at": payload.get("observed_at") or utc_now(),
+        "request_summary": (
+            "Local read-only LinkedIn people evidence captured through the human-authorized browser; "
+            "no connect, message, follow, InMail, email, or application action."
+        ),
+        "response_status": 200,
+        "content_type": "application/json",
+        "response_bytes": path.stat().st_size,
+        "content_sha256": sha256_json(payload),
+        "evidence_refs": evidence_refs,
+        "limitations": [
+            "LinkedIn relationship degree and mutual text are screen evidence for human review, not outreach authority.",
+            "The human must verify identity/current role before connecting or messaging.",
+        ],
+        "automation_policy": "linkedin_authorized_read_only_no_actions",
+        "required_source_id": required_source_id,
+        "channel": "linkedin_contact_graph",
+    }
+
+
 def _attach_source_receipt_to_memory_relationship_signals(
     relationship_signals: list[dict[str, Any]],
     receipt_id: str,
@@ -659,6 +722,7 @@ def _report_from_run(
     claim_snapshot: dict[str, Any] | None,
     roundtable_receipts: dict[str, dict[str, Any]] | None = None,
     outreach_effects: dict[str, dict[str, Any]] | None = None,
+    linkedin_contact_evidence: Path | None = None,
     memory_url: str = "http://127.0.0.1:8601",
     degraded_contracts: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
@@ -679,6 +743,16 @@ def _report_from_run(
     for signal in relationship_signals_from_memory(memory_url):
         if signal["signal_id"] not in {row["signal_id"] for row in relationship_signals}:
             relationship_signals.append(signal)
+    linkedin_contact_receipt = _linkedin_contact_source_receipt(linkedin_contact_evidence)
+    if linkedin_contact_receipt is not None and linkedin_contact_evidence is not None:
+        existing_signal_ids = {row["signal_id"] for row in relationship_signals}
+        for signal in relationship_signals_from_linkedin_contact_evidence(
+            linkedin_contact_evidence,
+            source_receipt_id=str(linkedin_contact_receipt["receipt_id"]),
+        ):
+            if signal["signal_id"] not in existing_signal_ids:
+                relationship_signals.append(signal)
+                existing_signal_ids.add(signal["signal_id"])
     memory_recall_receipt = governed_memory_recall(
         memory_url,
         opportunities=opportunities,
@@ -687,6 +761,8 @@ def _report_from_run(
     write_json(run_dir / "memory-recall-receipt.json", memory_recall_receipt)
     attach_memory_recall_provenance(opportunities, relationship_signals, memory_recall_receipt)
     source_receipts = _source_receipts(discovery_dir)
+    if linkedin_contact_receipt is not None:
+        source_receipts.append(linkedin_contact_receipt)
     memory_source_receipt = _memory_recall_source_receipt(
         run_dir,
         memory_recall_receipt,
@@ -987,6 +1063,7 @@ def run_stage0(
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
     github_evidence: Path | None = None,
+    linkedin_contact_evidence: Path | None = None,
     degrade_required_source_failures: bool = False,
     memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
@@ -1108,6 +1185,7 @@ def run_stage0(
         claim_snapshot,
         _load_receipt_map(roundtable_receipts_path, key_field="receipt_key"),
         _load_receipt_map(outreach_effects_path, key_field="packet_id"),
+        linkedin_contact_evidence,
         memory_url if fixture_dir is None else "",
         degraded_contracts,
     )

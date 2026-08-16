@@ -521,6 +521,61 @@ def test_run_with_meetup_evidence_renders_networking_signal_and_decisions(tmp_pa
     assert lane_c["candidates_admitted_source_intel"] >= len(networking)
 
 
+def test_run_with_linkedin_contact_evidence_renders_second_degree_signal(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    contact_evidence = tmp_path / "linkedin-contact-graph-evidence.json"
+    contact_evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_contact_graph_evidence.v1",
+                "observed_at": "2026-08-16T05:30:00Z",
+                "contacts": [
+                    {
+                        "name": "Avery Second",
+                        "degree": "2nd",
+                        "org": "Acme Aerospace",
+                        "mutuals": "Dana Mutual",
+                        "profile": "https://www.linkedin.com/in/avery-second/",
+                    }
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "nightly-linkedin-contacts"
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--fixture-dir",
+            str(fixture_dir),
+            "--linkedin-contact-evidence",
+            str(contact_evidence),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((out / "report-manifest.json").read_text(encoding="utf-8"))
+    signal = next(row for row in manifest["relationship_signals"] if row["subject"] == "Avery Second")
+    assert signal["degree_label"] == "second_degree"
+    assert signal["relationship_path"] == ["Graham Anderson", "Dana Mutual", "Avery Second"]
+    assert signal["organization"] == "Acme Aerospace"
+    assert signal["source_receipt_ids"]
+    assert signal["source_receipt_ids"][0].startswith("src:c:linkedin-contacts:")
+    acme = next(row for row in manifest["opportunities"] if row["organization"] == "Acme Aerospace")
+    assert signal["signal_id"] in acme["relationship_signal_ids"]
+    receipt = next(row for row in manifest["source_receipts"] if row["receipt_id"] == signal["source_receipt_ids"][0])
+    assert receipt["provider"] == "linkedin"
+    assert receipt["source_class"] == "ops_linkedin_authorized_read_only_contacts"
+    assert receipt["automation_policy"] == "linkedin_authorized_read_only_no_actions"
+    assert (out / "report" / "index.html").exists()
+
+
 def test_memory_relationship_signals_are_bound_to_source_receipts(tmp_path: Path) -> None:
     recall = {
         "schema": "monitor_opportunities.governed_memory_recall.v1",

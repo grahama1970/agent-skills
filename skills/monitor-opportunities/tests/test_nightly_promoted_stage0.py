@@ -74,6 +74,14 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         lambda capture_dir: {"status": "NO_MATCHES", "opportunities_captured": 0},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_who_viewed",
+        lambda capture_dir: {"status": "EMPTY", "viewers_captured": 0},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_actively_hiring",
+        lambda capture_dir: {"status": "EMPTY", "contacts_captured": 0},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_indeed_jobs",
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
     )
@@ -138,6 +146,38 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         "monitor_opportunities.cli.prepare_tau_semantic_inputs",
         fake_semantic_prepare,
     )
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.run_provider_semantic_eval",
+        lambda **kwargs: {
+            "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
+            "status": "PASS",
+            "opportunity_id": "candidate:a:test",
+            "provider_live": True,
+            "live": True,
+            "mocked": False,
+            "external_effects": False,
+        },
+    )
+
+    def fake_semantic_install(*, run_dir: Path, provider_receipt_path: Path):
+        del provider_receipt_path
+        index = run_dir / "semantic-addenda" / "index.json"
+        index.parent.mkdir(parents=True, exist_ok=True)
+        index.write_text(
+            json.dumps(
+                {
+                    "schema": "monitor_opportunities.semantic_addenda_index.v1",
+                    "addenda": [{"opportunity_id": "candidate:a:test"}],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return {"status": "PASS", "provider_live": True, "external_effects": False}
+
+    monkeypatch.setattr("monitor_opportunities.cli.install_semantic_addendum", fake_semantic_install)
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: _HealthResponse())
 
     def fake_subprocess_run(cmd, **kwargs):
@@ -215,7 +255,8 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert states["buzz_summary"]["status"] == "WRITTEN"
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
     assert payload["steps"]["tau_semantic"]["selected_count"] == 1
-    assert payload["steps"]["tau_semantic"]["provider_live"] is False
+    assert payload["steps"]["tau_semantic"]["provider_live"] is True
+    assert payload["steps"]["tau_semantic"]["installed_addenda"] == 1
     assert payload["steps"]["zero_effect_replay"]["status"] == "PASS"
     zero_effect_replay = json.loads(Path(payload["artifacts"]["zero_effect_replay"]).read_text())
     assert zero_effect_replay["schema"] == "monitor_opportunities.zero_effect_replay_receipt.v1"
@@ -305,6 +346,14 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
         lambda capture_dir: {"status": "NO_MATCHES", "opportunities_captured": 0},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_who_viewed",
+        lambda capture_dir: {"status": "EMPTY", "viewers_captured": 0},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_actively_hiring",
+        lambda capture_dir: {"status": "EMPTY", "contacts_captured": 0},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_indeed_jobs",
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
     )
@@ -346,7 +395,13 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
             "status": "PASS",
             "selected_count": 1,
             "rejected_count": 0,
-            "selected": [],
+            "selected": [
+                {
+                    "rank": 1,
+                    "opportunity_id": "candidate:a:test",
+                    "artifact": str(out_dir / "semantic-inputs" / "01-candidate-a-test.json"),
+                }
+            ],
             "provider_live": False,
             "mocked": False,
             "live": True,
@@ -362,6 +417,38 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
         "monitor_opportunities.cli.prepare_tau_semantic_inputs",
         fake_semantic_prepare,
     )
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.run_provider_semantic_eval",
+        lambda **kwargs: {
+            "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
+            "status": "PASS",
+            "opportunity_id": "candidate:a:test",
+            "provider_live": True,
+            "live": True,
+            "mocked": False,
+            "external_effects": False,
+        },
+    )
+
+    def fake_semantic_install(*, run_dir: Path, provider_receipt_path: Path):
+        del provider_receipt_path
+        index = run_dir / "semantic-addenda" / "index.json"
+        index.parent.mkdir(parents=True, exist_ok=True)
+        index.write_text(
+            json.dumps(
+                {
+                    "schema": "monitor_opportunities.semantic_addenda_index.v1",
+                    "addenda": [{"opportunity_id": "candidate:a:test"}],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return {"status": "PASS", "provider_live": True, "external_effects": False}
+
+    monkeypatch.setattr("monitor_opportunities.cli.install_semantic_addendum", fake_semantic_install)
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: _HealthResponse())
     monkeypatch.setattr(
         "monitor_opportunities.cli.replay_decisions",
@@ -484,6 +571,14 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
         lambda capture_dir: {"status": "NO_MATCHES", "opportunities_captured": 0},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_who_viewed",
+        lambda capture_dir: {"status": "EMPTY", "viewers_captured": 0},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_linkedin_actively_hiring",
+        lambda capture_dir: {"status": "EMPTY", "contacts_captured": 0},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_indeed_jobs",
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
     )
@@ -525,7 +620,13 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
             "status": "PASS",
             "selected_count": 1,
             "rejected_count": 0,
-            "selected": [],
+            "selected": [
+                {
+                    "rank": 1,
+                    "opportunity_id": "candidate:a:test",
+                    "artifact": str(out_dir / "semantic-inputs" / "01-candidate-a-test.json"),
+                }
+            ],
             "provider_live": False,
             "mocked": False,
             "live": True,
@@ -541,6 +642,38 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
         "monitor_opportunities.cli.prepare_tau_semantic_inputs",
         fake_semantic_prepare,
     )
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.run_provider_semantic_eval",
+        lambda **kwargs: {
+            "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
+            "status": "PASS",
+            "opportunity_id": "candidate:a:test",
+            "provider_live": True,
+            "live": True,
+            "mocked": False,
+            "external_effects": False,
+        },
+    )
+
+    def fake_semantic_install(*, run_dir: Path, provider_receipt_path: Path):
+        del provider_receipt_path
+        index = run_dir / "semantic-addenda" / "index.json"
+        index.parent.mkdir(parents=True, exist_ok=True)
+        index.write_text(
+            json.dumps(
+                {
+                    "schema": "monitor_opportunities.semantic_addenda_index.v1",
+                    "addenda": [{"opportunity_id": "candidate:a:test"}],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return {"status": "PASS", "provider_live": True, "external_effects": False}
+
+    monkeypatch.setattr("monitor_opportunities.cli.install_semantic_addendum", fake_semantic_install)
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: _HealthResponse())
 
     def fake_acceptance(*args, **kwargs):

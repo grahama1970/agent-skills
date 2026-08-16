@@ -835,6 +835,121 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
     return signals
 
 
+def _linkedin_degree(value: Any) -> int:
+    raw = str(value or "").lower()
+    if "1st" in raw or raw == "1":
+        return 1
+    if "3rd" in raw or raw == "3":
+        return 3
+    return 2
+
+
+def _linkedin_relationship_nodes(name: str, degree: int, mutuals: str) -> list[str]:
+    if degree == 1:
+        return ["Graham Anderson", name]
+    if degree == 3:
+        return [
+            "Graham Anderson",
+            mutuals or "LinkedIn mutual network",
+            "LinkedIn third-degree network",
+            name,
+        ]
+    return ["Graham Anderson", mutuals or "LinkedIn mutual network", name]
+
+
+def relationship_signals_from_linkedin_contact_evidence(
+    evidence_path: Path,
+    *,
+    source_receipt_id: str,
+) -> list[dict[str, Any]]:
+    """Emit relationship signals from read-only LinkedIn people captures.
+
+    Accepts the local `linkedin-actively-hiring.json` and `linkedin-who-viewed.json`
+    shapes. It performs no LinkedIn action and does not infer private facts.
+    """
+
+    if os.environ.get("MONITOR_RELATIONSHIP_SIGNALS_ENABLED", "1") == "0":
+        return []
+    try:
+        raw = json.loads(evidence_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    rows = raw.get("contacts")
+    source_kind = "linkedin_actively_hiring"
+    if not isinstance(rows, list):
+        rows = raw.get("viewers")
+        source_kind = "linkedin_who_viewed"
+    if not isinstance(rows, list):
+        return []
+    signals: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    evidence_ref = evidence_path.as_uri()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = str(row.get("name") or "").strip()
+        org = str(row.get("org") or row.get("organization") or "").strip()
+        if not name or not org:
+            continue
+        degree = _linkedin_degree(row.get("degree"))
+        mutuals = str(row.get("mutuals") or "").strip()
+        profile = str(row.get("profile") or "").strip()
+        key = relationship_signal_key(f"{source_kind}:{source_receipt_id}", name, org)
+        if key in seen:
+            continue
+        seen.add(key)
+        refs = [evidence_ref]
+        if profile:
+            refs.append(profile)
+        refs = list(dict.fromkeys(refs))
+        nodes = _linkedin_relationship_nodes(name, degree, mutuals)
+        signal_type = "direct_contact" if degree == 1 else "adjacent_contact"
+        contact_path = _contact_path_edges(
+            nodes,
+            relationship=signal_type,
+            evidence_refs=refs,
+            source_receipt_ids=[source_receipt_id],
+            limitations=[
+                "LinkedIn people evidence is read-only relationship context; the human must verify current role before outreach.",
+                "No automated LinkedIn connection, message, follow, InMail, or email action is authorized.",
+            ],
+        )
+        signals.append(
+            {
+                "signal_id": key,
+                "source_opportunity_id": f"linkedin-contact-network:{key}",
+                "signal_type": signal_type,
+                "subject": name,
+                "organization": org,
+                "relationship_path": nodes,
+                "contact_path": contact_path,
+                "evidence_refs": refs,
+                "source_receipt_ids": [source_receipt_id],
+                "provenance": (
+                    f"Read-only LinkedIn {source_kind} contact evidence: "
+                    f"{degree}-degree relationship candidate at {org}"
+                ),
+                "recommended_action": "human_decide_reconnect_or_defer",
+                "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+                "preferred_human_channels": list(DEFAULT_RELATIONSHIP_CHANNELS),
+                "channel_guidance": [
+                    *DEFAULT_RELATIONSHIP_CHANNEL_GUIDANCE,
+                    "Use LinkedIn only as a human-operated handoff surface; do not automate contact expansion or outreach.",
+                ],
+                **_channel_guidance_fields(list(DEFAULT_RELATIONSHIP_CHANNELS), refs),
+                "external_effects": False,
+                "action_worthy": True,
+                "visible_in_report": True,
+                **_relationship_candidate_fields(
+                    signal_type=signal_type,
+                    contact_path=contact_path,
+                    evidence_refs=refs,
+                ),
+            }
+        )
+    return signals
+
+
 def _org_key(value: Any) -> str:
     words = re.findall(r"[a-z0-9]+", str(value or "").lower())
     return " ".join(word for word in words if word not in ORG_SUFFIXES)

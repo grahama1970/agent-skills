@@ -414,6 +414,7 @@
             "federal_feed",
             "human_supplied_linkedin",
             "ops_linkedin_authorized_read_only",
+            "ops_linkedin_authorized_read_only_contacts",
             "primary_company_source",
             "source_locator",
             "job_board",

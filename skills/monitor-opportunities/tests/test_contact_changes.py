@@ -214,6 +214,65 @@ def test_relationship_signals_include_adjacent_no_linkedin_profile_contacts() ->
     assert adjacent["recommended_human_channel"] == "LINKEDIN_HUMAN_HANDOFF"
 
 
+def test_linkedin_second_and_third_degree_contacts_become_relationship_signals(
+    tmp_path: Path,
+) -> None:
+    evidence_path = tmp_path / "linkedin-contact-graph-evidence.json"
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_contact_graph_evidence.v1",
+                "observed_at": "2026-08-16T05:30:00Z",
+                "contacts": [
+                    {
+                        "name": "Avery Second",
+                        "degree": "2nd",
+                        "org": "Galois Inc.",
+                        "mutuals": "Dana Mutual",
+                        "profile": "https://www.linkedin.com/in/avery-second/",
+                    },
+                    {
+                        "name": "Terry Third",
+                        "degree": "3rd",
+                        "org": "GE Research",
+                        "profile": "https://www.linkedin.com/in/terry-third/",
+                    },
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    signals = cc.relationship_signals_from_linkedin_contact_evidence(
+        evidence_path,
+        source_receipt_id="src:c:linkedin-contacts:test",
+    )
+
+    assert [signal["subject"] for signal in signals] == ["Avery Second", "Terry Third"]
+    assert [signal["degree_label"] for signal in signals] == ["second_degree", "third_degree"]
+    assert signals[0]["relationship_path"] == ["Graham Anderson", "Dana Mutual", "Avery Second"]
+    assert signals[1]["relationship_path"] == [
+        "Graham Anderson",
+        "LinkedIn mutual network",
+        "LinkedIn third-degree network",
+        "Terry Third",
+    ]
+    assert all(signal["source_receipt_ids"] == ["src:c:linkedin-contacts:test"] for signal in signals)
+    assert all(signal["external_effects"] is False for signal in signals)
+    assert all(signal["recommended_human_channel"] == "LINKEDIN_HUMAN_HANDOFF" for signal in signals)
+    assert all(
+        any("No automated LinkedIn" in limitation for limitation in edge["limitations"])
+        for signal in signals
+        for edge in signal["contact_path"]
+    )
+    validator = Draft202012Validator(json.loads(RELATIONSHIP_CANDIDATE_SCHEMA.read_text()))
+    for signal in signals:
+        validator.validate(signal)
+
+
 def test_relationship_signals_attach_to_opportunities_by_exact_id_and_unique_org() -> None:
     opportunities = [
         {"opportunity_id": "candidate:a:galois", "organization": "Galois, Inc."},

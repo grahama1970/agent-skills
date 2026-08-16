@@ -1886,7 +1886,7 @@ def capture_linkedin_who_viewed(
                 if om:
                     org = om.group(1).strip().rstrip(".,")
                     break
-            viewers.append({"name": name, "headline": headline[:120], "org": org,
+            viewers.append({"name": name, "degree": degree.lstrip("• ").strip(), "headline": headline[:120], "org": org,
                             "when": m.group(1)})
             if len(viewers) >= 20:
                 break
@@ -1900,8 +1900,8 @@ def capture_linkedin_who_viewed(
                     _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
                 ))
                 for c in alt:
-                    viewers.append({"name": c.get("name"), "headline": c.get("current") or "",
-                                    "org": c.get("org"), "when": None})
+                    viewers.append({"name": c.get("name"), "degree": c.get("degree"), "headline": c.get("current") or "",
+                                    "org": c.get("org"), "when": None, "profile": c.get("profile")})
                 if viewers:
                     receipt["extract_strategy"] = "anchor_fallback"
                     logger.warning(
