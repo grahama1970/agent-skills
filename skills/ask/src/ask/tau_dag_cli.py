@@ -1078,6 +1078,31 @@ def _browser_lifecycle_creates_fresh_tabs(input_payload: Any, mode: str) -> bool
     return False
 
 
+def _provider_limit_is_attributable(payload: dict[str, Any], handler: str, input_payload: Any) -> bool:
+    """Whether a rate-limit verdict belongs to the tab this run will use.
+
+    Attributable when the limited tab is the one explicitly bound for this
+    handler. Otherwise the limit is ambient: it belongs to a tab Ask is not
+    going to send anything to, and removing the seat over it punishes this run
+    for a page nobody is using.
+    """
+    bound = ""
+    for entry in list(getattr(input_payload, "handler_projects", []) or []):
+        text = str(entry)
+        if text.startswith(f"{handler}="):
+            bound = text.split("=", 1)[1].strip()
+            break
+    if not bound:
+        # No bound tab: Ask will open or claim one, so ambient state is noise.
+        return False
+    limited_tabs = [
+        str(tab.get("href") or tab.get("tab_id") or "")
+        for tab in (payload.get("checked_tabs") or [])
+        if isinstance(tab, dict) and tab.get("limited")
+    ]
+    return any(bound and bound in tab for tab in limited_tabs)
+
+
 def _select_available_browser_handlers(
     input_payload: Any,
     report: dict[str, Any],
@@ -1107,11 +1132,24 @@ def _select_available_browser_handlers(
     # needs a human readback before anything is sent. Dispatching anyway
     # contradicts the artifact the probe just wrote.
     unusable: dict[str, str] = {}
+    advisory_limited: dict[str, str] = {}
     for name, payload in providers.items():
         if not isinstance(payload, dict):
             continue
         if payload.get("provider_limited") is True:
-            unusable[name] = "provider_limited"
+            # Ask knows which tab it will use. A rate-limit banner sitting in
+            # some OTHER tab -- a finished review, an old run, one of the
+            # human's own conversations -- says nothing about the tab this run
+            # will talk to, and treating it as provider-wide state is how one
+            # abandoned tab disabled webgpt for every later run.
+            #
+            # Measured 2026-08-16: 20 open chatgpt tabs, two of them Ask review
+            # tabs left behind holding "Too many requests", and webgpt was
+            # removed from every run until they were closed by hand.
+            if _provider_limit_is_attributable(payload, name, input_payload):
+                unusable[name] = "provider_limited"
+            else:
+                advisory_limited[name] = "ambient_tab_rate_limited"
         elif payload.get("probe_failed") is True:
             unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
         elif payload.get("probe_degraded") is True:
@@ -1151,29 +1189,11 @@ def _select_available_browser_handlers(
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
-    # A single explicitly named seat is not substituted with ANOTHER browser
-    # provider -- the human named it -- but losing it must not block the run
-    # when a local stand-in exists. Observed live 2026-08-16: a one-seat
-    # webgemini round was removed on browser_provider_probe_timeout and the run
-    # blocked with "not enough participants" while its configured local family
-    # sat unused. Returning nothing is worse than returning a recorded
-    # substitution.
-    if removed and single_explicit_seat:
-        for lost in removed:
-            # Use the family's real catalog id. "opencode-qwen" was a name I
-            # made up and nothing resolves it -- the same trap this skill's own
-            # rule against partial aliases exists to prevent.
-            from .model_aliases import OPENCODE_FALLBACK_MODELS
-
-            substitute = local_substitute_family(lost)
-            local_seat = OPENCODE_FALLBACK_MODELS.get(substitute or "", "") or LOCAL_CLAUDE_SEAT
-            if local_seat in active or local_seat in unusable:
-                continue
-            active.append(local_seat)
-            fallback_added.append(local_seat)
-            local_substitutions.append({"from": lost, "to": local_seat, "reason": "seat_removed"})
-            if len(active) >= desired_handlers:
-                break
+    # A single explicitly named seat is NOT substituted. Asking for webgpt and
+    # receiving a local qwen answer under webgpt's name is worse than being told
+    # webgpt is unavailable: the caller cannot tell which model spoke. Tried the
+    # other way on 2026-08-16 and it silently turned `/ask webgpt` into
+    # `/ask qwen`. An unavailable named seat blocks, with its failure_code.
     if removed and not single_explicit_seat:
         for candidate in _fallback_provider_order(str(getattr(input_payload, "request", "") or "")):
             if candidate in active or candidate in requested:
@@ -1204,6 +1224,8 @@ def _select_available_browser_handlers(
         "active_handlers": active,
         "limited_providers": sorted(limited.intersection(set(requested))),
         "unusable_providers": {k: v for k, v in sorted(unusable.items()) if k in set(requested)},
+        # Recorded, not acted on: a limit seen in a tab this run will not use.
+        "advisory_limited_providers": {k: v for k, v in sorted(advisory_limited.items()) if k in set(requested)},
         "removed_handlers": removed,
         "fresh_lifecycle_kept_handlers": fresh_lifecycle_kept,
         "fallback_handlers": fallback_added,
@@ -1504,7 +1526,21 @@ def _provision_browser_lifecycle(
     mode = (mode or "auto").strip()
     browser_handlers = [handler for handler in input_payload.handlers if handler in BROWSER_FRESH_URLS]
     if mode == "auto":
-        if browser_handlers and str(input_payload.workflow_mode or "") in {"roundtable", "compete"}:
+        # Any browser run with no explicit tab binding gets a FRESH tab. The
+        # alternative -- reuse-bound with nothing bound -- meant availability
+        # was judged by scanning every open tab of that provider, so one
+        # abandoned tab showing "Too many requests" removed the seat from every
+        # future run. Measured 2026-08-16: 20 open chatgpt tabs, webgpt
+        # unusable, zero lanes dispatched.
+        #
+        # gpt-5.5-xhigh, asked with the receipts, named the same rule:
+        # resolve the handler's own tab first, and when none is bound open one
+        # rather than choosing among candidates the run never asked for.
+        explicit_bindings = _explicit_handler_projects(input_payload)
+        unbound = [h for h in browser_handlers if h not in explicit_bindings]
+        if browser_handlers and (
+            str(input_payload.workflow_mode or "") in {"roundtable", "compete"} or unbound
+        ):
             mode = "fresh-temporary"
         else:
             mode = "reuse-bound"

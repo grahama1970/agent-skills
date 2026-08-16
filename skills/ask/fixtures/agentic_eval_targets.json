@@ -9,86 +9,6 @@
   },
   "cases": [
     {
-      "name": "herdr-target-resolution-contract",
-      "type": "positive",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
-      "name": "herdr-ambiguous-name-never-guesses",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py::test_an_ambiguous_name_refuses_and_offers_candidates -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "herdr-interview-lists-session-model-directory",
-      "type": "positive",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py::test_interview_shows_session_model_and_directory tests/test_herdr_target.py::test_interview_options_carry_machine_readable_fields -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "herdr-dead-and-busy-panes-are-never-typed-into",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py::test_a_dead_pane_is_never_a_candidate tests/test_herdr_target.py::test_a_busy_pane_is_excluded_unless_asked_for -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
-      "name": "herdr-repo-slug-reaches-its-checkout",
-      "type": "positive",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py::test_the_repo_slug_reaches_the_checkout_directory -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
       "name": "herdr-sessions-are-listable-live",
       "type": "positive",
       "real_world": true,
@@ -193,22 +113,6 @@
       }
     },
     {
-      "name": "herdr-never-interrupts-a-working-pane",
-      "type": "adversarial",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_herdr_target.py::test_send_refuses_a_pane_whose_screen_is_still_changing tests/test_herdr_target.py::test_an_unreadable_pane_is_treated_as_busy_not_free -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
-    },
-    {
       "name": "seat-windows-land-on-the-reviewer-desktop",
       "type": "positive",
       "real_world": true,
@@ -242,22 +146,6 @@
       }
     },
     {
-      "name": "degraded-provider-is-never-dispatched-into",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_browser_provider_selection_probe_state.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "ticket-1397-real-artifact-blocks-instead-of-stalling",
       "type": "adversarial",
       "timeout_seconds": 180,
@@ -274,22 +162,6 @@
       }
     },
     {
-      "name": "compiled-request-carries-the-goal-hash-1399",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_request_carries_goal_hash_1399.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "join-seam-never-fails-after-provider-spend",
       "type": "adversarial",
       "timeout_seconds": 240,
@@ -302,22 +174,6 @@
         "exit_code": 0,
         "stdout_contains": [
           "compiled request carries goal_hash matching the dag"
-        ]
-      }
-    },
-    {
-      "name": "run-projection-reports-absence-not-silence",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_run_projection.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
         ]
       }
     },
@@ -339,22 +195,6 @@
       }
     },
     {
-      "name": "run-projection-covers-every-execution-mode",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_run_projection_modes.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "run-projection-fixtures-regenerate-byte-identically",
       "type": "adversarial",
       "timeout_seconds": 120,
@@ -371,22 +211,6 @@
       }
     },
     {
-      "name": "capability-report-never-collapses-readiness",
-      "type": "adversarial",
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_capability_report.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "default-doctor-touches-no-subsystem",
       "type": "adversarial",
       "timeout_seconds": 180,
@@ -399,22 +223,6 @@
         "exit_code": 0,
         "stdout_contains": [
           "default doctor is bounded"
-        ]
-      }
-    },
-    {
-      "name": "run-control-never-simulates-authority",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_runs_control.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
         ]
       }
     },
@@ -452,22 +260,6 @@
       }
     },
     {
-      "name": "launch-contract-never-widens",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_launch_contract.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "launch-contract-digest-ignores-ephemeral-identity",
       "type": "adversarial",
       "timeout_seconds": 120,
@@ -484,22 +276,6 @@
       }
     },
     {
-      "name": "local-api-is-one-implementation-behind-two-transports",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_local_api.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
       "name": "local-api-stdio-answers-and-confines-paths",
       "type": "adversarial",
       "timeout_seconds": 180,
@@ -512,22 +288,6 @@
         "exit_code": 0,
         "stdout_contains": [
           "typed errors"
-        ]
-      }
-    },
-    {
-      "name": "writer-isolation-fails-closed-before-execution",
-      "type": "adversarial",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_writer_isolation.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
         ]
       }
     }

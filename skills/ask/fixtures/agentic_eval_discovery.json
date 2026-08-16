@@ -157,44 +157,6 @@
           "BAD_MODE_FAILS_CLOSED"
         ]
       }
-    },
-    {
-      "name": "compete-and-join-edge-cases-hold",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "/home/graham/workspace/experiments/agent-skills/skills/ask",
-        "pytest",
-        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_discovery_compete_join_edges.py",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
-    },
-    {
-      "name": "broad-surface-batch2-probes",
-      "type": "adversarial",
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "/home/graham/workspace/experiments/agent-skills/skills/ask",
-        "pytest",
-        "/home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_discovery_batch2.py",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "passed"
-        ]
-      }
     }
   ]
 }

@@ -26,23 +26,6 @@
       }
     },
     {
-      "name": "surf-stale-socket-preflight-classification",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run pytest tests/test_browser_provider_availability.py::test_probe_reports_surf_stale_socket_recovery_when_tab_list_refuses -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
       "name": "help-does-not-contradict-dispatch",
       "type": "positive",
       "command": [

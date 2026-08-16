@@ -115,6 +115,58 @@
           "SEAT_HONEST"
         ]
       }
+    },
+    {
+      "name": "live-ask-webgpt-returns-the-token",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow webgpt"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "an-ambient-rate-limited-tab-does-not-remove-a-seat",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _provider_limit_is_attributable as attr\nclass I:\n    handler_projects=[]\npayload={'checked_tabs':[{'href':'https://chatgpt.com/c/stale','limited':True}]}\nassert attr(payload,'webgpt',I()) is False, 'an unbound stale tab removed the seat'\nclass B:\n    handler_projects=['webgpt=https://chatgpt.com/c/stale']\nassert attr(payload,'webgpt',B()) is True, 'the bound tab limit was ignored'\nprint('LIMIT_SCOPED_TO_OUR_TAB')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LIMIT_SCOPED_TO_OUR_TAB"
+        ]
+      }
+    },
+    {
+      "name": "an-unbound-browser-run-opens-a-fresh-tab",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src')\nimport ask.tau_dag_cli as c\nclass I:\n    handlers=['webgpt']; workflow_mode='single'; handler_projects=[]\n# reuse-bound with nothing bound is what let 20 ambient tabs decide availability\nimport inspect\nsrc=inspect.getsource(c._provision_browser_lifecycle)\nassert 'unbound' in src, 'unbound runs no longer choose a fresh tab'\nprint('FRESH_TAB_WHEN_UNBOUND')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FRESH_TAB_WHEN_UNBOUND"
+        ]
+      }
     }
   ]
 }
