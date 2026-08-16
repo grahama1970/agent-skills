@@ -1140,18 +1140,13 @@ def _select_available_browser_handlers(
         and removed == browser_requested
         and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
         and browser_requested[0] not in explicit_projects
-        and all(
-            unusable.get(handler) in {"provider_limited", "browser_provider_probe_timeout"}
-            for handler in removed
-        )
+        and all(unusable.get(handler) == "provider_limited" for handler in removed)
     ):
         # Ambient provider probes inspect already-open tabs before fresh
         # lifecycle provisioning. A stale WebGPT modal in an old tab must not
-        # remove the only explicitly requested fresh WebGPT seat before the new
-        # tab exists. Likewise, a stale/loaded old tab that times out during
-        # read-only probing is not evidence about the fresh tab Ask is about to
-        # create. The WebGPT worker owns bounded provider retry once that fresh
-        # tab exists.
+        # remove the only explicitly requested fresh WebGPT seat before the
+        # new tab exists; the WebGPT worker owns the bounded provider retry
+        # once that fresh tab is created.
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
@@ -1577,6 +1572,23 @@ _RECOVERABLE_LANE_FAILURE_CODES = {
 }
 
 
+def _lane_response_captured(lane_dir: Path) -> bool:
+    """Whether this lane's provider response already exists on disk.
+
+    Only non-empty artifacts count. An empty `response.md` is what a lane that
+    never answered leaves behind, and treating it as captured would close the
+    tab that still holds the real answer.
+    """
+    for name in ("response.md", "response.raw.md", "response.recovered.md", "response.recovered.raw.md"):
+        candidate = lane_dir / name
+        try:
+            if candidate.is_file() and candidate.stat().st_size > 0:
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def _lanes_pending_recovery(run_dir: Path) -> list[dict[str, Any]]:
     """Lanes whose in-tab state may still hold the provider response.
 
@@ -1594,6 +1606,13 @@ def _lanes_pending_recovery(run_dir: Path) -> list[dict[str, Any]]:
         heartbeat = _read_json_file(lane_dir / "webgpt_heartbeat.json")
         failure_code = str(packet.get("failure_code") or "") if isinstance(packet, dict) else ""
         submitted = bool(isinstance(heartbeat, dict) and heartbeat.get("submitted_at"))
+        # A lane whose response is already on disk holds nothing unique in its
+        # tab, so retention protects nothing and the window leaks forever.
+        # Observed 2026-08-16: a run kept two windows open indefinitely at
+        # cleanup_status=skipped_pending_recovery while response.md (1134 bytes)
+        # and response.raw.md sat captured in that same lane directory.
+        if _lane_response_captured(lane_dir):
+            continue
         if failure_code in _RECOVERABLE_LANE_FAILURE_CODES or submitted:
             pending.append(
                 {

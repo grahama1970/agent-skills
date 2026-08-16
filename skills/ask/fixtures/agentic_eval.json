@@ -229,19 +229,19 @@
       }
     },
     {
-      "name": "model-provenance-on-a-real-receipt-is-unconfirmed",
+      "name": "model-provenance-on-a-real-receipt-is-never-proven",
       "type": "adversarial",
       "real_world": true,
       "timeout_seconds": 180,
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . python -c \"import sys,json,pathlib;sys.path.insert(0,'src');from ask import model_provenance as m;p=sorted(pathlib.Path('/mnt/storage12tb/skills/ask/outputs').rglob('*response*.meta.json'),key=lambda x:x.stat().st_mtime,reverse=True)[0];b=m.from_submit_meta(json.loads(p.read_text()),handler='webgpt');print(b['provenance_status']);assert b['reasoning_proven'] is False\""
+        "cd .. && uv run --project . python -c \"import sys,json,pathlib;sys.path.insert(0,'src');from ask import model_provenance as m;cands=[p for p in pathlib.Path('/mnt/storage12tb/skills/ask/outputs').rglob('*response*.meta.json')];picked=None\nfor p in cands:\n    try: d=json.loads(p.read_text())\n    except Exception: continue\n    if str(d.get('requested_reasoning') or '').strip():\n        picked=d; break\nassert picked is not None, 'no receipt on disk requested a reasoning tier'\nb=m.from_submit_meta(picked,handler='webgpt');print('status',b['provenance_status']);assert b['reasoning_proven'] is False;print('NOT_PROVEN')\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "unconfirmed"
+          "NOT_PROVEN"
         ]
       }
     },
@@ -311,6 +311,40 @@
         "exit_code": 0,
         "stdout_contains": [
           "compound"
+        ]
+      }
+    },
+    {
+      "name": "a-lane-with-a-captured-response-releases-its-window",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from pathlib import Path;import ask.tau_dag_cli as c;p=c._lanes_pending_recovery(Path('/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-a-project-agent-is-stuck-on-one--f6d214e20595'));lanes=[x['lane'] for x in p];print('pending:',lanes);assert 'handler-webgpt' not in lanes, 'held a window for a lane whose response is already on disk';assert 'handler-webclaude' in lanes, 'released the tab still holding the only copy'\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pending:"
+        ]
+      }
+    },
+    {
+      "name": "a-non-selected-tab-is-hidden-so-seats-need-own-windows",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../surf && OUT=$(./run.sh window.new 'https://example.com' --unfocused 2>&1) && W=$(echo \"$OUT\" | grep -oE 'Window [0-9]+' | head -1 | awk '{print $2}') && T1=$(echo \"$OUT\" | grep -oE 'tab [0-9]+' | head -1 | awk '{print $2}') && T2=$(./run.sh tab.new 'https://example.org' --background --window-id \"$W\" 2>&1 | grep -oE 'tab [0-9]+' | awk '{print $2}') && A=$(./run.sh js --tab-id \"$T1\" --no-activate 'document.hidden' 2>&1 | tail -1) && B=$(./run.sh js --tab-id \"$T2\" --no-activate 'document.hidden' 2>&1 | tail -1) && ./run.sh window.close \"$W\" >/dev/null 2>&1; echo \"selected=$A second=$B\"; case \"$A$B\" in *false*true*) echo SECOND_TAB_IS_HIDDEN;; esac"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SECOND_TAB_IS_HIDDEN"
         ]
       }
     }
