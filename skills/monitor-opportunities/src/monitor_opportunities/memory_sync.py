@@ -21,9 +21,19 @@ MEMORY_URL_DEFAULT = "http://127.0.0.1:8601"
 MORNING_COLLECTION = "morning_opportunities"
 HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=120.0, write=10.0, pool=3.0)
 RECALL_TIMEOUT = httpx.Timeout(connect=2.0, read=8.0, write=3.0, pool=2.0)
+RECALL_HEALTH_TIMEOUT = httpx.Timeout(connect=1.0, read=2.0, write=1.0, pool=1.0)
 READBACK_BATCH_SIZE = 500
 RECALL_BATCH_LIMIT = 24
 RECALL_K = 5
+RECALL_CIRCUIT_FAILURE_LIMIT = 3
+RECALL_CIRCUIT_TOTAL_FAILURE_LIMIT = 3
+RECALL_CIRCUIT_OPEN_LIMITATION = (
+    "Memory /recall circuit opened after repeated failures; "
+    "remaining recall queries skipped with no raw database fallback."
+)
+RECALL_HEALTH_LIMITATION = (
+    "Memory /health failed before governed recall; no raw database fallback attempted."
+)
 
 
 class MemorySyncError(ValueError):
@@ -133,6 +143,40 @@ def governed_memory_recall(
             "external_effects": False,
         }
     with httpx.Client(timeout=RECALL_TIMEOUT) as client:
+        try:
+            health_response = client.get(f"{memory_url}/health", timeout=RECALL_HEALTH_TIMEOUT)
+            health_response.raise_for_status()
+            health = health_response.json()
+            if health.get("ok") is not True:
+                raise MemorySyncError("MEMORY_HEALTH_NOT_OK")
+        except Exception as exc:  # noqa: BLE001 - recall must degrade instead of failing the run
+            return {
+                "schema": "monitor_opportunities.governed_memory_recall.v1",
+                "memory_url": memory_url,
+                "attempted": 0,
+                "succeeded": 0,
+                "skipped": len(queries),
+                "circuit_open": False,
+                "degraded": True,
+                "degradation_reasons": [RECALL_HEALTH_LIMITATION],
+                "queries": [
+                    {
+                        "query_id": f"memory-recall-{idx:02d}-{query['category']}-{_slug(query['target'])}",
+                        **query,
+                        "status": "SKIPPED_HEALTHCHECK_FAILED",
+                        "found": False,
+                        "confidence": 0.0,
+                        "item_keys": [],
+                        "score_channels": {"bm25": False, "dense": False, "graph": False},
+                        "limitations": [RECALL_HEALTH_LIMITATION],
+                        "error": type(exc).__name__,
+                    }
+                    for idx, query in enumerate(queries, start=1)
+                ],
+                "external_effects": False,
+            }
+        consecutive_failures = 0
+        total_failures = 0
         for idx, query in enumerate(queries, start=1):
             query_id = f"memory-recall-{idx:02d}-{query['category']}-{_slug(query['target'])}"
             payload = {"q": query["q"], "k": k}
@@ -154,7 +198,8 @@ def governed_memory_recall(
                         "error": type(exc).__name__,
                     }
                 )
-                continue
+                consecutive_failures += 1
+                total_failures += 1
             except Exception as exc:  # noqa: BLE001 - recall degradation must not fail the run
                 rows.append(
                     {
@@ -169,40 +214,67 @@ def governed_memory_recall(
                         "error": type(exc).__name__,
                     }
                 )
-                continue
-            items = data.get("items") or []
-            channels = {
-                "bm25": any((item.get("scores") or {}).get("bm25", 0) > 0 for item in items),
-                "dense": any((item.get("scores") or {}).get("dense", 0) > 0 for item in items),
-                "graph": any((item.get("scores") or {}).get("graph", 0) > 0 for item in items),
-            }
-            rows.append(
-                {
-                    "query_id": query_id,
-                    **query,
-                    "status": "MATCHES" if data.get("found") else "NO_MATCHES",
-                    "found": bool(data.get("found")),
-                    "confidence": float(data.get("confidence") or 0.0),
-                    "item_keys": [str(item.get("_key")) for item in items if item.get("_key")],
-                    "score_channels": channels,
-                    "limitations": list(data.get("errors") or []),
-                    "took_ms": (data.get("meta") or {}).get("took_ms"),
-                    "raw_database_fallback": False,
+                consecutive_failures += 1
+                total_failures += 1
+            else:
+                consecutive_failures = 0
+                items = data.get("items") or []
+                channels = {
+                    "bm25": any((item.get("scores") or {}).get("bm25", 0) > 0 for item in items),
+                    "dense": any((item.get("scores") or {}).get("dense", 0) > 0 for item in items),
+                    "graph": any((item.get("scores") or {}).get("graph", 0) > 0 for item in items),
                 }
-            )
+                rows.append(
+                    {
+                        "query_id": query_id,
+                        **query,
+                        "status": "MATCHES" if data.get("found") else "NO_MATCHES",
+                        "found": bool(data.get("found")),
+                        "confidence": float(data.get("confidence") or 0.0),
+                        "item_keys": [str(item.get("_key")) for item in items if item.get("_key")],
+                        "score_channels": channels,
+                        "limitations": list(data.get("errors") or []),
+                        "took_ms": (data.get("meta") or {}).get("took_ms"),
+                        "raw_database_fallback": False,
+                    }
+                )
+            if (
+                consecutive_failures >= RECALL_CIRCUIT_FAILURE_LIMIT
+                or total_failures >= RECALL_CIRCUIT_TOTAL_FAILURE_LIMIT
+            ):
+                for skip_idx, skipped in enumerate(queries[idx:], start=idx + 1):
+                    rows.append(
+                        {
+                            "query_id": (
+                                f"memory-recall-{skip_idx:02d}-"
+                                f"{skipped['category']}-{_slug(skipped['target'])}"
+                            ),
+                            **skipped,
+                            "status": "SKIPPED_CIRCUIT_OPEN",
+                            "found": False,
+                            "confidence": 0.0,
+                            "item_keys": [],
+                            "score_channels": {"bm25": False, "dense": False, "graph": False},
+                            "limitations": [RECALL_CIRCUIT_OPEN_LIMITATION],
+                            "error": "recall_circuit_open",
+                        }
+                    )
+                break
     degraded_reasons = sorted(
         {
             reason
             for row in rows
-            if str(row.get("status", "")).startswith("DEGRADED")
+            if row.get("status") not in {"MATCHES", "NO_MATCHES"}
             for reason in row.get("limitations", [])
         }
     )
     return {
         "schema": "monitor_opportunities.governed_memory_recall.v1",
         "memory_url": memory_url,
-        "attempted": len(rows),
+        "attempted": sum(1 for row in rows if not str(row.get("status", "")).startswith("SKIPPED")),
         "succeeded": sum(1 for row in rows if row["status"] in {"MATCHES", "NO_MATCHES"}),
+        "skipped": sum(1 for row in rows if str(row.get("status", "")).startswith("SKIPPED")),
+        "circuit_open": any(row.get("status") == "SKIPPED_CIRCUIT_OPEN" for row in rows),
         "degraded": bool(degraded_reasons),
         "degradation_reasons": degraded_reasons,
         "queries": rows,

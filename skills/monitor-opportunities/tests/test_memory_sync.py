@@ -259,6 +259,10 @@ class _RecallClient:
     def __exit__(self, exc_type, exc, tb) -> bool:
         return False
 
+    def get(self, url: str, **kwargs) -> _Response:
+        assert url.endswith("/health")
+        return _Response(200, {"ok": True})
+
     def post(self, url: str, json: dict) -> _Response:
         self.paths.append(url.rsplit("/", 1)[-1])
         self.payloads.append(json)
@@ -332,6 +336,139 @@ def test_governed_memory_recall_records_timeout_degradation_without_raw_db(monke
     assert {row["status"] for row in receipt["queries"]} == {"DEGRADED_TIMEOUT"}
     assert all("no raw database fallback" in " ".join(row["limitations"]).lower() for row in receipt["queries"])
     assert client.paths == ["recall", "recall"]
+
+
+class _HealthFailClient:
+    def __enter__(self) -> "_HealthFailClient":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+    def get(self, url: str, **kwargs) -> _Response:
+        raise httpx.ConnectTimeout("health timeout")
+
+
+class _TimeoutRecallClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __enter__(self) -> "_TimeoutRecallClient":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+    def get(self, url: str, **kwargs) -> _Response:
+        assert url.endswith("/health")
+        return _Response(200, {"ok": True})
+
+    def post(self, url: str, json: dict) -> _Response:
+        self.calls += 1
+        raise httpx.ReadTimeout("recall timeout")
+
+
+class _MixedRecallClient:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __enter__(self) -> "_MixedRecallClient":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        return False
+
+    def get(self, url: str, **kwargs) -> _Response:
+        assert url.endswith("/health")
+        return _Response(200, {"ok": True})
+
+    def post(self, url: str, json: dict) -> _Response:
+        self.calls += 1
+        if self.calls == 2:
+            return _Response(
+                200,
+                {
+                    "found": True,
+                    "confidence": 0.9,
+                    "items": [{"_key": "memory-hit", "scores": {"bm25": 1.0}}],
+                    "errors": [],
+                    "meta": {"took_ms": 12},
+                },
+            )
+        raise httpx.ReadTimeout("recall timeout")
+
+
+def test_governed_memory_recall_skips_all_queries_when_healthcheck_fails(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: _HealthFailClient(),
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=[{"organization": "Galois"}],
+        relationship_signals=[],
+    )
+
+    assert receipt["degraded"] is True
+    assert receipt["attempted"] == 0
+    assert receipt["skipped"] == 2
+    assert {row["status"] for row in receipt["queries"]} == {"SKIPPED_HEALTHCHECK_FAILED"}
+    assert receipt["external_effects"] is False
+
+
+def test_governed_memory_recall_opens_circuit_after_three_consecutive_timeouts(monkeypatch) -> None:
+    client = _TimeoutRecallClient()
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=[{"organization": f"Org {idx}"} for idx in range(5)],
+        relationship_signals=[],
+        limit=6,
+    )
+
+    assert receipt["degraded"] is True
+    assert receipt["circuit_open"] is True
+    assert receipt["attempted"] == 3
+    assert receipt["skipped"] == 3
+    assert [row["status"] for row in receipt["queries"][:3]] == ["DEGRADED_TIMEOUT"] * 3
+    assert {row["status"] for row in receipt["queries"][3:]} == {"SKIPPED_CIRCUIT_OPEN"}
+    assert client.calls == 3
+    assert receipt["external_effects"] is False
+
+
+def test_governed_memory_recall_opens_circuit_after_three_total_timeouts(monkeypatch) -> None:
+    client = _MixedRecallClient()
+    monkeypatch.setattr(
+        "monitor_opportunities.memory_sync.httpx.Client",
+        lambda timeout: client,
+    )
+
+    receipt = governed_memory_recall(
+        "http://memory.local",
+        opportunities=[{"organization": f"Org {idx}"} for idx in range(5)],
+        relationship_signals=[],
+        limit=6,
+    )
+
+    assert receipt["degraded"] is True
+    assert receipt["circuit_open"] is True
+    assert receipt["attempted"] == 4
+    assert receipt["succeeded"] == 1
+    assert receipt["skipped"] == 2
+    assert [row["status"] for row in receipt["queries"][:4]] == [
+        "DEGRADED_TIMEOUT",
+        "MATCHES",
+        "DEGRADED_TIMEOUT",
+        "DEGRADED_TIMEOUT",
+    ]
+    assert {row["status"] for row in receipt["queries"][4:]} == {"SKIPPED_CIRCUIT_OPEN"}
+    assert client.calls == 4
+    assert receipt["external_effects"] is False
 
 
 def test_attach_memory_recall_provenance_updates_existing_visible_fields() -> None:

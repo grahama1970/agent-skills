@@ -93,6 +93,23 @@
       }
     },
     {
+      "name": "memory-recall-circuit-breaker-contract",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_memory_sync.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      },
+      "timeout_seconds": 120,
+      "proves": "Governed Memory recall records healthcheck degradation and opens a fail-soft circuit after repeated recall timeouts, preserving no-raw-database-fallback and external_effects=false."
+    },
+    {
       "name": "relevance-adversarial-corpus",
       "type": "adversarial",
       "timeout_seconds": 120,
