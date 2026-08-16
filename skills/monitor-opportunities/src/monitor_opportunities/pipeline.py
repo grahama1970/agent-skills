@@ -286,11 +286,18 @@ def _source_intel_summary(candidate: dict[str, Any], *, contacts: list[Any] | No
     organization = str(candidate.get("organization") or "unknown organization").strip()
     if _is_github_intelligence(candidate):
         repo = str(candidate.get("github_repo") or title).strip()
-        terms = _string_list((candidate.get("github_repository_analysis") or {}).get("matched_terms"))
+        analysis = candidate.get("github_repository_analysis") or {}
+        terms = _string_list(analysis.get("matched_terms"))
         term_text = ", ".join(terms[:8]) if terms else "no configured relevance terms"
+        relevance_status = str(
+            candidate.get("github_relevance_quality_status")
+            or analysis.get("relevance_quality_status")
+            or "MISSING_RELEVANCE_QUALITY"
+        )
         return (
             f"{repo} GitHub repository intelligence for {organization}; "
-            f"{len(contacts or [])} contact or adjacent-contact hypotheses observed; matched terms: {term_text}."
+            f"{len(contacts or [])} contact or adjacent-contact hypotheses observed; "
+            f"relevance quality: {relevance_status}; matched terms: {term_text}."
         )
     if _is_networking_signal(candidate):
         decision = str(candidate.get("networking_decision") or "WATCH").upper()
@@ -370,6 +377,20 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
         }
     if _is_github_intelligence(candidate):
         contacts = candidate.get("github_contact_hypotheses") or []
+        analysis = candidate.get("github_repository_analysis") or {}
+        relevance_status = str(
+            candidate.get("github_relevance_quality_status")
+            or analysis.get("relevance_quality_status")
+            or "MISSING_RELEVANCE_QUALITY"
+        )
+        relevance_reasons = _string_list(
+            candidate.get("github_relevance_quality_reasons")
+            or analysis.get("relevance_quality_reasons")
+        )
+        relevance_warnings = _string_list(
+            candidate.get("github_relevance_quality_warnings")
+            or analysis.get("relevance_quality_warnings")
+        )
         return {
             "signal_id": stable_id("source-intel", candidate["candidate_id"]),
             "lane": candidate["lane"],
@@ -383,10 +404,13 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "decision": "CONTACT_INTELLIGENCE_ONLY",
             "reasons": [
                 f"GitHub repository analyzed for contact and adjacent-contact intelligence; contacts observed: {len(contacts)}.",
+                f"Repository relevance quality: {relevance_status}.",
+                *relevance_reasons[:4],
+                *[f"Repository relevance warning: {warning}" for warning in relevance_warnings[:4]],
                 "Repository ownership, commits, issues, PRs, docs, and mentions are source-intel signals only.",
                 "No GitHub mutation, LinkedIn connection, email, application, or outreach is authorized.",
             ],
-            "action_worthy": bool(contacts),
+            "action_worthy": bool(contacts) and relevance_status == "STRONG_RELEVANCE",
             "visible_in_report": True,
         }
     return None

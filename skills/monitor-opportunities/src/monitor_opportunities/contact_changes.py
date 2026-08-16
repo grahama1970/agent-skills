@@ -454,6 +454,11 @@ def _github_contact_qualification(
     matched_terms = (
         _as_str_list(analysis.get("matched_terms")) if isinstance(analysis, dict) else []
     )
+    relevance_quality_status = (
+        str(analysis.get("relevance_quality_status") or candidate.get("github_relevance_quality_status") or "").strip()
+        if isinstance(analysis, dict)
+        else str(candidate.get("github_relevance_quality_status") or "").strip()
+    )
     contribution_refs = list(dict.fromkeys(_as_str_list(hypothesis.get("evidence_refs")) or evidence_refs))
     relevance_refs = list(dict.fromkeys([*analysis_refs, *_as_str_list(candidate.get("github_evidence_refs"))]))
     identity_confidence = 0.8 if mapping_status == "corroborated" else 0.35
@@ -470,6 +475,8 @@ def _github_contact_qualification(
         reasons.append("repository relevance terms: " + ", ".join(matched_terms[:6]))
     else:
         reasons.append("repository relevance terms absent")
+    if relevance_quality_status:
+        reasons.append(f"repository relevance quality: {relevance_quality_status}")
 
     substantive_role = role in {
         "repository_owner",
@@ -484,6 +491,7 @@ def _github_contact_qualification(
         and bool(relevance_refs)
         and bool(matched_terms)
         and substantive_role
+        and relevance_quality_status == "STRONG_RELEVANCE"
     )
     if qualified:
         status = "QUALIFIED_RECONNECT_CANDIDATE"
@@ -491,6 +499,8 @@ def _github_contact_qualification(
         status = "NEEDS_IDENTITY_CORROBORATION"
     elif not substantive_role:
         status = "NEEDS_SUBSTANTIVE_CONTRIBUTION_EVIDENCE"
+    elif not relevance_quality_status or relevance_quality_status != "STRONG_RELEVANCE":
+        status = "NEEDS_RELEVANCE_EVIDENCE"
     elif not matched_terms or not relevance_refs:
         status = "NEEDS_RELEVANCE_EVIDENCE"
     else:

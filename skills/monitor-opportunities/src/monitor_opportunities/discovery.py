@@ -722,6 +722,21 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             if isinstance(repository_analysis, dict)
             else []
         )
+        relevance_quality_status = (
+            str(repository_analysis.get("relevance_quality_status") or "MISSING_RELEVANCE_QUALITY").strip()
+            if isinstance(repository_analysis, dict)
+            else "MISSING_RELEVANCE_QUALITY"
+        )
+        relevance_quality_reasons = (
+            _as_str_list(repository_analysis.get("relevance_quality_reasons"))
+            if isinstance(repository_analysis, dict)
+            else []
+        )
+        relevance_quality_warnings = (
+            _as_str_list(repository_analysis.get("relevance_quality_warnings"))
+            if isinstance(repository_analysis, dict)
+            else []
+        )
         observed_via = _as_str_list(record.get("observed_via"))
         explicit_repo_seed = any(item.startswith("repo:") for item in observed_via)
         confirmed_owner_contact = any(
@@ -738,6 +753,10 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
         if confirmed_owner_contact:
             github_fit_score += 0.03
         github_fit_score += min(len(matched_terms), 8) * 0.015
+        if relevance_quality_status == "REVIEW_RELEVANCE":
+            github_fit_score = min(github_fit_score, 0.52)
+        elif relevance_quality_status != "STRONG_RELEVANCE":
+            github_fit_score = min(github_fit_score, 0.42)
         github_fit_score = min(0.9, round(github_fit_score, 3))
         snippets = []
         if isinstance(repository_analysis, dict) and isinstance(repository_analysis.get("readme_snippets"), list):
@@ -790,6 +809,9 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
                 "Description: " + str(record.get("description") or "")[:1000],
                 "Topics: " + ", ".join(_as_str_list(record.get("topics"))[:12]),
                 "Matched repository terms: " + ", ".join(matched_terms[:12]),
+                "Repository relevance quality: " + relevance_quality_status,
+                "Repository relevance reasons: " + " | ".join(relevance_quality_reasons[:4])[:1000],
+                "Repository relevance warnings: " + ", ".join(relevance_quality_warnings[:8]),
                 "README evidence snippets: " + " | ".join(snippets[:4])[:1200],
                 "Recent activity snippets: " + " | ".join(activity_snippets[:4])[:1200],
                 "Contacts: " + "; ".join(row["subject"] for row in github_contact_hypotheses[:12]),
@@ -826,6 +848,9 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             "github_observed_via": observed_via,
             "github_explicit_repo_seed": explicit_repo_seed,
             "github_repository_analysis": repository_analysis if isinstance(repository_analysis, dict) else {},
+            "github_relevance_quality_status": relevance_quality_status,
+            "github_relevance_quality_reasons": relevance_quality_reasons,
+            "github_relevance_quality_warnings": relevance_quality_warnings,
             "external_effects": False,
             "unresolved_assumptions": [
                 "GitHub participation does not prove current employment, availability, or willingness to reconnect.",

@@ -22,6 +22,7 @@ from monitor_opportunities.github_repo_intelligence import (
     GitHubRepoIntelligenceConfig,
     GitHubRepoIntelligenceError,
     collect_github_repo_intelligence,
+    _repository_relevance_quality,
     write_degraded_github_repo_intelligence,
 )
 from monitor_opportunities.pipeline import _source_intel
@@ -76,6 +77,11 @@ def _github_fixture(path: Path) -> Path:
                         "repository_analysis": {
                             "matched_terms": ["DARPA", "ARCOS", "formal methods"],
                             "evidence_refs": ["https://github.com/rtinney1/arcos-tools"],
+                            "relevance_quality_status": "STRONG_RELEVANCE",
+                            "relevance_quality_reasons": [
+                                "repository relevance is supported by bounded GitHub evidence"
+                            ],
+                            "relevance_quality_warnings": [],
                         },
                         "contacts": [
                             {
@@ -353,6 +359,239 @@ def test_github_raw_contributor_presence_is_not_qualified_for_reconnect(tmp_path
     assert any("repository role observed" in reason for reason in signal["qualification_reasons"])
 
 
+def test_github_relevance_quality_flags_adversarial_repo_patterns(tmp_path: Path) -> None:
+    config = GitHubRepoIntelligenceConfig(out=tmp_path / "github.json")
+    keyword_stuffed = _repository_relevance_quality(
+        "keyword/stuffed",
+        {
+            "full_name": "keyword/stuffed",
+            "pushed_at": "2026-08-01T00:00:00Z",
+            "updated_at": "2026-08-01T00:00:00Z",
+        },
+        {
+            "matched_terms": ["DARPA", "ARCOS", "Galois", "formal methods"],
+            "relevance_surfaces": [
+                {"surface": "readme", "matched_terms": ["DARPA", "ARCOS"]}
+            ],
+            "activity_snippets": [],
+        },
+        observed_via=["query:DARPA ARCOS"],
+        config=config,
+    )
+    archived_fork = _repository_relevance_quality(
+        "old/fork",
+        {
+            "full_name": "old/fork",
+            "archived": True,
+            "fork": True,
+            "pushed_at": "2021-01-01T00:00:00Z",
+        },
+        {
+            "matched_terms": ["DARPA", "ARCOS"],
+            "relevance_surfaces": [
+                {"surface": "metadata", "matched_terms": ["DARPA"]},
+                {"surface": "activity", "matched_terms": ["ARCOS"]},
+            ],
+            "activity_snippets": [{"kind": "issue", "matched_terms": ["ARCOS"]}],
+        },
+        observed_via=["query:DARPA ARCOS"],
+        config=config,
+    )
+    missing_timestamp = _repository_relevance_quality(
+        "missing/timestamp",
+        {"full_name": "missing/timestamp"},
+        {
+            "matched_terms": ["DARPA", "ARCOS"],
+            "relevance_surfaces": [
+                {"surface": "metadata", "matched_terms": ["DARPA"]},
+                {"surface": "readme", "matched_terms": ["ARCOS"]},
+            ],
+            "activity_snippets": [],
+        },
+        observed_via=["query:DARPA ARCOS"],
+        config=config,
+    )
+    unrelated_explicit_seed = _repository_relevance_quality(
+        "explicit/unrelated",
+        {
+            "full_name": "explicit/unrelated",
+            "pushed_at": "2026-08-01T00:00:00Z",
+        },
+        {"matched_terms": [], "relevance_surfaces": [], "activity_snippets": []},
+        observed_via=["repo:explicit/unrelated"],
+        config=config,
+    )
+
+    assert keyword_stuffed["status"] == "WEAK_RELEVANCE"
+    assert archived_fork["status"] == "REVIEW_RELEVANCE"
+    assert "repository_archived" in archived_fork["warnings"]
+    assert "repository_is_fork" in archived_fork["warnings"]
+    assert "repository_activity_stale" in archived_fork["warnings"]
+    assert missing_timestamp["status"] == "REVIEW_RELEVANCE"
+    assert "repository_timestamp_missing" in missing_timestamp["warnings"]
+    assert unrelated_explicit_seed["status"] == "WEAK_RELEVANCE"
+
+
+def test_weak_github_repo_relevance_stays_visible_but_not_actionable(tmp_path: Path) -> None:
+    path = tmp_path / "github-weak-relevance.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "keyword/stuffed",
+                        "repo_url": "https://github.com/keyword/stuffed",
+                        "organization": "keyword",
+                        "observed_via": ["query:DARPA ARCOS"],
+                        "repository_analysis": {
+                            "matched_terms": ["DARPA", "ARCOS", "Galois", "formal methods"],
+                            "evidence_refs": ["https://github.com/keyword/stuffed"],
+                            "relevance_quality_status": "WEAK_RELEVANCE",
+                            "relevance_quality_reasons": [
+                                "only one evidence surface matched relevance terms"
+                            ],
+                            "relevance_quality_warnings": [],
+                        },
+                        "contacts": [
+                            {
+                                "name": "Keyword Owner",
+                                "handle": "keyword-owner",
+                                "role": "repository_owner",
+                                "profile_url": "https://github.com/keyword-owner",
+                                "evidence_url": "https://github.com/keyword/stuffed",
+                                "corroboration": [
+                                    {
+                                        "type": "profile_name_match",
+                                        "evidence_refs": ["https://github.com/keyword-owner"],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    signal = cc.relationship_signals_from_candidates(candidates)[0]
+    source_intel = _source_intel(candidates[0])
+
+    assert candidates[0]["github_relevance_quality_status"] == "WEAK_RELEVANCE"
+    assert candidates[0]["fit_score"] <= 0.42
+    assert signal["subject"] == "Keyword Owner (@keyword-owner)"
+    assert signal["contact_quality_status"] == "NEEDS_RELEVANCE_EVIDENCE"
+    assert signal["qualified_for_reconnect"] is False
+    assert source_intel is not None
+    assert source_intel["visible_in_report"] is True
+    assert source_intel["action_worthy"] is False
+    assert "relevance quality: WEAK_RELEVANCE" in source_intel["summary"]
+    assert "Repository relevance quality: WEAK_RELEVANCE." in source_intel["reasons"]
+
+
+def test_mixed_github_relevance_allows_only_strong_actionable_and_qualified(tmp_path: Path) -> None:
+    def repo_record(
+        repo: str,
+        *,
+        status: str | None,
+        matched_terms: list[str],
+        warnings: list[str] | None = None,
+        observed_via: list[str] | None = None,
+    ) -> dict[str, Any]:
+        owner = repo.split("/", 1)[0]
+        handle = f"{owner}-owner"
+        analysis: dict[str, Any] = {
+            "matched_terms": matched_terms,
+            "evidence_refs": [f"https://github.com/{repo}"],
+            "relevance_quality_reasons": [
+                "test fixture repository relevance classification"
+            ],
+            "relevance_quality_warnings": warnings or [],
+        }
+        if status is not None:
+            analysis["relevance_quality_status"] = status
+        return {
+            "repo": repo,
+            "repo_url": f"https://github.com/{repo}",
+            "organization": owner,
+            "observed_via": observed_via or [f"query:{repo}"],
+            "repository_analysis": analysis,
+            "contacts": [
+                {
+                    "name": f"{owner.title()} Owner",
+                    "handle": handle,
+                    "role": "repository_owner",
+                    "profile_url": f"https://github.com/{handle}",
+                    "evidence_url": f"https://github.com/{repo}",
+                    "corroboration": [
+                        {
+                            "type": "profile_name_match",
+                            "evidence_refs": [f"https://github.com/{handle}"],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    path = tmp_path / "github-mixed-relevance.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    repo_record("strong/cfs-cfdp", status="STRONG_RELEVANCE", matched_terms=["cFS", "CFDP"]),
+                    repo_record("weak/keyword-stuffed", status="WEAK_RELEVANCE", matched_terms=["DARPA", "ARCOS", "Galois"]),
+                    repo_record(
+                        "review/archived-fork",
+                        status="REVIEW_RELEVANCE",
+                        matched_terms=["DARPA", "ARCOS", "RACK"],
+                        warnings=["repository_archived", "repository_is_fork", "repository_activity_stale"],
+                    ),
+                    repo_record(
+                        "missing/status",
+                        status=None,
+                        matched_terms=["RACK"],
+                        observed_via=["repo:missing/status"],
+                    ),
+                    repo_record(
+                        "explicit/unrelated",
+                        status="WEAK_RELEVANCE",
+                        matched_terms=[],
+                        observed_via=["repo:explicit/unrelated"],
+                    ),
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+    source_intel_by_repo = {
+        candidate["github_repo"]: _source_intel(candidate) for candidate in candidates
+    }
+    signals_by_org = {
+        signal["organization"]: signal for signal in cc.relationship_signals_from_candidates(candidates)
+    }
+
+    assert source_intel_by_repo["strong/cfs-cfdp"]["action_worthy"] is True
+    assert signals_by_org["strong"]["contact_quality_status"] == "QUALIFIED_RECONNECT_CANDIDATE"
+    assert signals_by_org["strong"]["qualified_for_reconnect"] is True
+
+    for repo, org, status in (
+        ("weak/keyword-stuffed", "weak", "WEAK_RELEVANCE"),
+        ("review/archived-fork", "review", "REVIEW_RELEVANCE"),
+        ("missing/status", "missing", "MISSING_RELEVANCE_QUALITY"),
+        ("explicit/unrelated", "explicit", "WEAK_RELEVANCE"),
+    ):
+        source_intel = source_intel_by_repo[repo]
+        signal = signals_by_org[org]
+        assert source_intel["visible_in_report"] is True
+        assert source_intel["action_worthy"] is False
+        assert status in source_intel["summary"]
+        assert signal["contact_quality_status"] == "NEEDS_RELEVANCE_EVIDENCE"
+        assert signal["qualified_for_reconnect"] is False
+
+
 def test_github_contacts_deduplicate_same_handle_across_roles(tmp_path: Path) -> None:
     path = tmp_path / "github.json"
     path.write_text(
@@ -414,6 +653,11 @@ def test_explicit_github_repo_seed_gets_source_intel_priority(tmp_path: Path) ->
                         "repository_analysis": {
                             "matched_terms": ["DARPA", "ARCOS", "Galois", "RACK"],
                             "evidence_refs": ["https://github.com/ge-high-assurance/RACK"],
+                            "relevance_quality_status": "STRONG_RELEVANCE",
+                            "relevance_quality_reasons": [
+                                "repository relevance is supported by bounded GitHub evidence"
+                            ],
+                            "relevance_quality_warnings": [],
                         },
                         "contacts": [
                             {
@@ -432,6 +676,11 @@ def test_explicit_github_repo_seed_gets_source_intel_priority(tmp_path: Path) ->
                             "evidence_refs": [
                                 "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP"
                             ],
+                            "relevance_quality_status": "STRONG_RELEVANCE",
+                            "relevance_quality_reasons": [
+                                "repository relevance is supported by bounded GitHub evidence"
+                            ],
+                            "relevance_quality_warnings": [],
                         },
                         "contacts": [
                             {

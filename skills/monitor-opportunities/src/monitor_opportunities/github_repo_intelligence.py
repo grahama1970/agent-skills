@@ -7,6 +7,7 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote_plus
@@ -42,6 +43,7 @@ DEFAULT_RELEVANCE_TERMS = (
     "CFDP",
     "RACK",
 )
+SPECIFIC_RELEVANCE_TERMS = {"cfs", "cfdp", "rack", "rite"}
 GITHUB_PROFILE_URL_RE = re.compile(r"https?://github\.com/([A-Za-z0-9-]+)(?:[)\]\s>#?]|$)")
 
 
@@ -118,6 +120,27 @@ def _terms_for_analysis(config: GitHubRepoIntelligenceConfig) -> list[str]:
 def _matching_terms(text: str, terms: list[str]) -> list[str]:
     lowered = text.lower()
     return [term for term in terms if term.lower() in lowered]
+
+
+def _parse_github_timestamp(raw: Any) -> datetime | None:
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _latest_repo_timestamp(repo: dict[str, Any]) -> datetime | None:
+    stamps = [
+        parsed
+        for key in ("pushed_at", "updated_at", "created_at")
+        if (parsed := _parse_github_timestamp(repo.get(key))) is not None
+    ]
+    return max(stamps) if stamps else None
 
 
 def _repo_metadata_text(row: dict[str, Any]) -> str:
@@ -249,7 +272,14 @@ def _repository_content_analysis(
         degradations.append({"stage": "readme", "repo": full_name, "error": str(exc)[-300:]})
 
     terms = _terms_for_analysis(config)
+    repo_url = _repo_url(full_name, repo)
     readme_text = str((readme or {}).get("text") or "")
+    metadata_terms = _matching_terms(
+        "\n".join([str(repo.get("description") or ""), " ".join(str(item) for item in repo.get("topics") or [])]),
+        terms,
+    )
+    language_terms = _matching_terms(" ".join(languages.keys()), terms)
+    readme_terms = _matching_terms(readme_text, terms)
     analysis_text = "\n".join(
         [
             str(repo.get("description") or ""),
@@ -261,13 +291,31 @@ def _repository_content_analysis(
     matched_terms = _matching_terms(analysis_text, terms)
     snippets = _term_snippets(readme_text, matched_terms, limit=config.max_readme_snippets)
     mentioned_contacts = _readme_profile_mentions(readme)
-    evidence_refs = [_repo_url(full_name, repo)]
+    evidence_refs = [repo_url]
     if readme and readme.get("html_url"):
         evidence_refs.append(str(readme["html_url"]))
+    relevance_surfaces: list[dict[str, Any]] = []
+    if metadata_terms:
+        relevance_surfaces.append(
+            {"surface": "metadata", "matched_terms": metadata_terms, "evidence_refs": [repo_url]}
+        )
+    if language_terms:
+        relevance_surfaces.append(
+            {"surface": "languages", "matched_terms": language_terms, "evidence_refs": [repo_url]}
+        )
+    if readme_terms:
+        relevance_surfaces.append(
+            {
+                "surface": "readme",
+                "matched_terms": readme_terms,
+                "evidence_refs": [ref for ref in evidence_refs if ref],
+            }
+        )
     analysis: dict[str, Any] = {
         "schema": "monitor_opportunities.github_repository_content_analysis.v1",
         "languages": languages,
         "matched_terms": matched_terms,
+        "relevance_surfaces": relevance_surfaces,
         "readme_snippets": snippets,
         "mentioned_contacts": mentioned_contacts,
         "evidence_refs": list(dict.fromkeys(evidence_refs)),
@@ -346,6 +394,87 @@ def _add_activity_analysis(
     analysis["activity_snippets"] = activity
     analysis["matched_terms"] = list(dict.fromkeys([*analysis.get("matched_terms", []), *matched_terms]))
     analysis["evidence_refs"] = list(dict.fromkeys([*analysis.get("evidence_refs", []), *activity_refs]))
+    if matched_terms:
+        surfaces = [
+            row for row in analysis.get("relevance_surfaces", []) if isinstance(row, dict)
+        ]
+        surfaces.append(
+            {
+                "surface": "activity",
+                "matched_terms": list(dict.fromkeys(matched_terms)),
+                "evidence_refs": activity_refs,
+            }
+        )
+        analysis["relevance_surfaces"] = surfaces
+
+
+def _repository_relevance_quality(
+    full_name: str,
+    repo: dict[str, Any],
+    analysis: dict[str, Any],
+    *,
+    observed_via: list[str],
+    config: GitHubRepoIntelligenceConfig,
+) -> dict[str, Any]:
+    del config
+    matched_terms = [str(term) for term in analysis.get("matched_terms") or [] if str(term).strip()]
+    surfaces = [
+        row
+        for row in analysis.get("relevance_surfaces", [])
+        if isinstance(row, dict) and row.get("matched_terms")
+    ]
+    activity_snippets = [
+        row for row in analysis.get("activity_snippets", []) if isinstance(row, dict)
+    ]
+    explicit_seed = any(item == f"repo:{full_name}" for item in observed_via)
+    warnings: list[str] = []
+    reasons: list[str] = []
+    if repo.get("archived") is True:
+        warnings.append("repository_archived")
+    if repo.get("fork") is True:
+        warnings.append("repository_is_fork")
+    latest = _latest_repo_timestamp(repo)
+    if latest is None:
+        warnings.append("repository_timestamp_missing")
+    else:
+        age_days = (datetime.now(UTC) - latest).total_seconds() / 86400.0
+        if age_days > 1095:
+            warnings.append("repository_activity_stale")
+            reasons.append(f"latest repository timestamp is {age_days:.0f} days old")
+    if not matched_terms:
+        status = "WEAK_RELEVANCE"
+        reasons.append("no configured relevance terms matched repository evidence")
+    elif any(warning in warnings for warning in ("repository_archived", "repository_is_fork", "repository_timestamp_missing", "repository_activity_stale")):
+        status = "REVIEW_RELEVANCE"
+        reasons.append("repository context requires human review before treating contacts as reconnect candidates")
+    elif (
+        not activity_snippets
+        and not explicit_seed
+        and not {term.lower() for term in matched_terms} & SPECIFIC_RELEVANCE_TERMS
+    ):
+        status = "WEAK_RELEVANCE"
+        reasons.append("generic relevance terms lack activity evidence or specific project terms")
+    elif len(surfaces) < 2 and not activity_snippets and not explicit_seed:
+        status = "WEAK_RELEVANCE"
+        reasons.append("only one evidence surface matched relevance terms")
+    else:
+        status = "STRONG_RELEVANCE"
+        reasons.append("repository relevance is supported by bounded GitHub evidence")
+    if explicit_seed:
+        reasons.append("repository was explicitly seeded for analysis")
+    reasons.append(f"matched relevance terms: {', '.join(matched_terms[:8]) if matched_terms else 'none'}")
+    reasons.append(
+        "relevance evidence surfaces: "
+        + (", ".join(str(row.get("surface")) for row in surfaces[:8]) if surfaces else "none")
+    )
+    return {
+        "status": status,
+        "warnings": warnings,
+        "reasons": reasons,
+        "surface_count": len(surfaces),
+        "activity_signal_count": len(activity_snippets),
+        "explicit_repo_seed": explicit_seed,
+    }
 
 
 def _contact_from_user(
@@ -553,6 +682,17 @@ def _collect_repo_record(
         commits=commits,
         config=config,
     )
+    relevance_quality = _repository_relevance_quality(
+        full_name,
+        repo,
+        repository_analysis,
+        observed_via=observed_via,
+        config=config,
+    )
+    repository_analysis["relevance_quality"] = relevance_quality
+    repository_analysis["relevance_quality_status"] = relevance_quality["status"]
+    repository_analysis["relevance_quality_reasons"] = relevance_quality["reasons"]
+    repository_analysis["relevance_quality_warnings"] = relevance_quality["warnings"]
 
     return {
         "repo": full_name,
