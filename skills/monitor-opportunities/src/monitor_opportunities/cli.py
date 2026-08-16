@@ -2301,6 +2301,8 @@ def nightly(
             )
         )
 
+    steps["browser_control"] = browser_control_summary()
+
     nightly_receipt = {
         "status": "PASS",
         "schema": "monitor_opportunities.nightly_receipt.v1",

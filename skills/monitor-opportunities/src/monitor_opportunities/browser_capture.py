@@ -133,13 +133,16 @@ class BrowserCaptureError(ValueError):
 
 
 _BROWSER_CONTROL_EVENTS: list[dict[str, Any]] = []
+_PENDING_TAB_CLOSE_FAILURES: dict[str, dict[str, Any]] = {}
 
 
 def reset_browser_control_events() -> None:
     _BROWSER_CONTROL_EVENTS.clear()
+    _PENDING_TAB_CLOSE_FAILURES.clear()
 
 
-def browser_control_summary() -> dict[str, Any]:
+def browser_control_summary(surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    flush_browser_control_cleanup(surf_run)
     counts: dict[str, int] = {}
     for event in _BROWSER_CONTROL_EVENTS:
         kind = str(event.get("kind") or "unknown")
@@ -196,6 +199,7 @@ _TAB_CLOSE_TIMEOUT_SECONDS = 8
 _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS = 8
 _TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 5
 _TAB_CLOSE_ATTEMPTS = 1
+_TAB_CLOSE_SWEEP_TIMEOUT_SECONDS = 30
 
 
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
@@ -216,6 +220,77 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     if proc.returncode != 0:
         raise BrowserCaptureError(f"surf {args[0]} failed: {proc.stderr[-200:]}")
     return proc.stdout.strip()
+
+
+def _current_tab_ids(surf_run: Path) -> set[str] | None:
+    try:
+        raw = _surf(surf_run, "tab.list", "--json", timeout=20)
+        tabs = json.loads(raw)
+    except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
+        logger.warning("could not list tabs during cleanup sweep: {}", exc)
+        return None
+    ids: set[str] = set()
+    if isinstance(tabs, list):
+        for tab in tabs:
+            if isinstance(tab, dict) and tab.get("id") is not None:
+                ids.add(str(tab["id"]))
+    return ids
+
+
+def flush_browser_control_cleanup(surf_run: Path = SURF_RUN_DEFAULT) -> None:
+    """Sweep tabs whose individual close call timed out before reporting status.
+
+    Surf occasionally times out waiting for the close response even though the
+    browser later closes the tab. The run should degrade only for tabs that are
+    still present after a final sweep, not for stale timeout receipts.
+    """
+
+    if not _PENDING_TAB_CLOSE_FAILURES:
+        return
+
+    open_ids = _current_tab_ids(surf_run)
+    if open_ids is not None:
+        for tab_id in list(_PENDING_TAB_CLOSE_FAILURES):
+            if tab_id not in open_ids:
+                _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
+
+    remaining = list(_PENDING_TAB_CLOSE_FAILURES)
+    sweep_error: BrowserCaptureError | subprocess.TimeoutExpired | None = None
+    if remaining:
+        try:
+            _surf(
+                surf_run,
+                "tab.close",
+                "--ids",
+                ",".join(remaining),
+                "--no-lock",
+                timeout=max(_TAB_CLOSE_SWEEP_TIMEOUT_SECONDS, len(remaining) * 4),
+            )
+            for tab_id in remaining:
+                _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
+        except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+            sweep_error = exc
+            open_ids = _current_tab_ids(surf_run)
+            if open_ids is not None:
+                for tab_id in list(_PENDING_TAB_CLOSE_FAILURES):
+                    if tab_id not in open_ids:
+                        _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
+
+    if sweep_error is None:
+        return
+
+    for tab_id, pending in list(_PENDING_TAB_CLOSE_FAILURES.items()):
+        attempted_modes = list(pending.get("attempted_modes") or [])
+        attempted_modes.append("final_batch_sweep")
+        _record_browser_control_event(
+            kind="tab_close_failed",
+            operation="tab.close",
+            tab_id=tab_id,
+            timeout=int(pending.get("timeout") or 0) + _TAB_CLOSE_SWEEP_TIMEOUT_SECONDS,
+            details={"attempted_modes": attempted_modes, "label": pending.get("label")},
+            error=sweep_error,
+        )
+        _PENDING_TAB_CLOSE_FAILURES.pop(tab_id, None)
 
 
 def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
@@ -244,14 +319,12 @@ def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
     if last_error is None:
         return
     logger.warning("could not close {} tab {} after {} attempts: {}", label, tab_id, len(attempts), last_error)
-    _record_browser_control_event(
-        kind="tab_close_failed",
-        operation="tab.close",
-        tab_id=tab_id,
-        timeout=_TAB_CLOSE_TIMEOUT_SECONDS + _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS,
-        details={"attempted_modes": attempted_modes},
-        error=last_error,
-    )
+    _PENDING_TAB_CLOSE_FAILURES[tab_id] = {
+        "attempted_modes": attempted_modes,
+        "error": last_error,
+        "label": label,
+        "timeout": _TAB_CLOSE_TIMEOUT_SECONDS + _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS,
+    }
 
 
 def _write_surf_diagnostic_bundle(
@@ -1806,8 +1879,7 @@ def capture_linkedin_job_insights(
                 out[url] = info
     finally:
         if tab_id:
-            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            _close_tab(surf_run, tab_id, "job insight")
     # FAIL CLOSED on the 2026-08-13 defect: >2 jobs all reporting byte-identical
     # insights means we read one page repeatedly, not N jobs. Wrong-but-plausible
     # per-job facts are worse than no facts, so emit nothing.
@@ -1936,8 +2008,7 @@ def capture_linkedin_who_viewed(
         receipt["error"] = str(exc)
     finally:
         if tab_id:
-            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            _close_tab(surf_run, tab_id, "LinkedIn who-viewed")
     evidence_path = out_dir / "linkedin-who-viewed.json"
     evidence_path.write_text(
         json.dumps({"schema_version": "monitor_opportunities.who_viewed.v1",
@@ -2024,8 +2095,7 @@ def capture_linkedin_actively_hiring(
         receipt["error"] = str(exc)
     finally:
         if tab_id:
-            with contextlib.suppress(BrowserCaptureError, subprocess.TimeoutExpired):
-                _surf(surf_run, "tab.close", tab_id, timeout=30)
+            _close_tab(surf_run, tab_id, "LinkedIn actively-hiring")
     evidence_path = out_dir / "linkedin-actively-hiring.json"
     evidence_path.write_text(
         json.dumps({"schema_version": "monitor_opportunities.actively_hiring.v1",

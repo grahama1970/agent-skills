@@ -152,11 +152,47 @@ def test_close_tab_records_browser_control_failure(
     assert summary["status"] == "DEGRADED"
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
-    assert summary["recent"][0]["timeout"] == 16
-    assert summary["recent"][0]["details"]["attempted_modes"] == ["locked", "no_lock_cleanup"]
+    assert summary["recent"][0]["timeout"] == 46
+    assert summary["recent"][0]["details"]["attempted_modes"] == [
+        "locked",
+        "no_lock_cleanup",
+        "final_batch_sweep",
+    ]
     assert close_calls[0][1:] == ("tab.close", "123", "--lock-timeout", "5")
     assert close_calls[1][1:] == ("tab.close", "123", "--no-lock")
+    assert close_calls[2][1:] == ("tab.list", "--json")
+    assert close_calls[3][1:] == ("tab.close", "--ids", "123", "--no-lock")
     assert sleeps == []
+
+
+def test_close_tab_final_sweep_success_does_not_degrade(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    close_calls: list[tuple[object, ...]] = []
+
+    def close_then_sweep(*args: object, **__: object) -> str:
+        close_calls.append(args)
+        command = args[1:]
+        if command in {
+            ("tab.close", "123", "--lock-timeout", "5"),
+            ("tab.close", "123", "--no-lock"),
+        }:
+            raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 8)
+        if command == ("tab.list", "--json"):
+            return '[{"id": 123}]'
+        if command == ("tab.close", "--ids", "123", "--no-lock"):
+            return ""
+        raise AssertionError(f"unexpected surf call: {command}")
+
+    monkeypatch.setattr(browser_capture, "_surf", close_then_sweep)
+    browser_capture.reset_browser_control_events()
+
+    browser_capture._close_tab(Path("surf/run.sh"), "123", "test")
+
+    summary = browser_capture.browser_control_summary()
+    assert summary["status"] == "OK"
+    assert summary["counts"] == {}
+    assert close_calls[-1][1:] == ("tab.close", "--ids", "123", "--no-lock")
 
 
 def test_close_tab_no_lock_cleanup_success_does_not_degrade(
