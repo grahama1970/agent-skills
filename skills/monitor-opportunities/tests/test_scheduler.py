@@ -34,6 +34,8 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "--require-clean",
             "--promoted-stage0",
             "--tau-semantic-provider",
+            "--tau-semantic-handler",
+            "gpt-5.5-high",
         ],
         "environment": {
             "MONITOR_TRACKER_ENABLED": "0",
@@ -69,7 +71,8 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
         "zsh -lc 'exec "
         f"{repo}/skills/monitor-opportunities/run.sh nightly "
         "--expected-revision abc123 --require-clean --skip-tracker "
-        "--skip-ats-memory --promoted-stage0 --tau-semantic-provider'"
+        "--skip-ats-memory --promoted-stage0 --tau-semantic-provider "
+        "--tau-semantic-handler gpt-5.5-high'"
     )
     readback = {
         "name": "monitor-opportunities-nightly",
@@ -277,6 +280,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["checks"]["registered_promoted_stage0_flag_matches"] is True
     assert equivalence["checks"]["tau_semantic_provider_flag_matches"] is True
     assert equivalence["checks"]["registered_tau_semantic_provider_flag_matches"] is True
+    assert equivalence["checks"]["tau_semantic_handler_matches"] is True
+    assert equivalence["checks"]["registered_tau_semantic_handler_matches"] is True
     assert equivalence["checks"]["diagnostic_flag_absent"] is True
     assert equivalence["checks"]["registered_diagnostic_flag_absent"] is True
     assert equivalence["checks"]["registered_expected_revision_pinned"] is True
@@ -294,6 +299,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "--skip-ats-memory",
         "--promoted-stage0",
         "--tau-semantic-provider",
+        "--tau-semantic-handler",
+        "gpt-5.5-high",
     ]
     assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
 
@@ -559,7 +566,7 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     command = (
         "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
         "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0 "
-        "--tau-semantic-provider'"
+        "--tau-semantic-provider --tau-semantic-handler gpt-5.5-high'"
     )
     _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
     out = tmp_path / "execution-equivalence.json"

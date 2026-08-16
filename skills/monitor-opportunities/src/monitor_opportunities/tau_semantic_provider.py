@@ -22,6 +22,30 @@ def _safe_id(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "-", value).strip("-") or "opportunity"
 
 
+def _ask_handler_node_dir(run_dir: Path, handler: str) -> Path:
+    """Return the Ask node-artifact directory for a single handler.
+
+    Ask node ids are transport-safe and may replace punctuation in model names
+    (`gpt-5.5-high` becomes `handler-gpt-5-5-high`). The monitor wrapper must
+    read the emitted artifact directory instead of assuming a raw handler name.
+    """
+
+    exact = run_dir / "node-artifacts" / f"handler-{handler}"
+    if exact.is_dir():
+        return exact
+    artifacts = run_dir / "node-artifacts"
+    candidates = [
+        path
+        for path in artifacts.glob("handler-*")
+        if path.is_dir() and path.name != "handler-join"
+    ]
+    if len(candidates) == 1:
+        return candidates[0]
+    sanitized = re.sub(r"[^A-Za-z0-9_-]+", "-", handler).strip("-")
+    fallback = artifacts / f"handler-{sanitized}"
+    return fallback
+
+
 def _extract_json_object(text: str) -> dict[str, Any]:
     fence = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
     if fence:
@@ -161,7 +185,7 @@ def run_provider_semantic_eval(
     write_json(out_dir / "provider-process.json", process_receipt)
 
     run_dir = ask_root / ask_id
-    node_dir = run_dir / "node-artifacts" / f"handler-{handler}"
+    node_dir = _ask_handler_node_dir(run_dir, handler)
     node_receipt_path = node_dir / "node-receipt.json"
     response_path = node_dir / "response.md"
     provider_result_path = node_dir / "response.provider_result.json"
@@ -179,11 +203,18 @@ def run_provider_semantic_eval(
     else:
         parse_errors.append("response_path_missing")
 
-    provider_live = (
-        node_receipt.get("provider_live") is True
-        and provider_result.get("success") is True
-        and provider_result.get("proof_status") == "response_proven"
-    )
+    if provider_result:
+        provider_live = (
+            node_receipt.get("provider_live") is True
+            and provider_result.get("success") is True
+            and provider_result.get("proof_status") == "response_proven"
+        )
+    else:
+        provider_live = (
+            node_receipt.get("provider_live") is True
+            and node_receipt.get("ok") is True
+            and node_receipt.get("status") == "PASS"
+        )
     status = "PASS" if proc.returncode == 0 and provider_live and not parse_errors else "FAIL"
     if addendum is not None and not parse_errors:
         write_json(out_dir / "semantic-addendum.json", addendum)

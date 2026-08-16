@@ -227,6 +227,14 @@ def _scheduler_equivalence_receipt(
         checks["registered_tau_semantic_provider_flag_matches"] = (
             "--tau-semantic-provider" in registered_command
         )
+        checks["tau_semantic_handler_matches"] = (
+            "--tau-semantic-handler" in intent["nightly_args"]
+            and "gpt-5.5-high" in intent["nightly_args"]
+        )
+        checks["registered_tau_semantic_handler_matches"] = (
+            "--tau-semantic-handler" in registered_command
+            and "gpt-5.5-high" in registered_command
+        )
         checks["diagnostic_flag_absent"] = "--diagnostic" not in intent["nightly_args"]
         checks["registered_diagnostic_flag_absent"] = "--diagnostic" not in registered_command
         checks["buzz_enabled_for_promoted"] = (
@@ -382,6 +390,9 @@ def _scheduler_execution_equivalence_preflight(
                 "promoted_flag_present_once": _count_token(command, "--promoted-stage0") == 1,
                 "tau_semantic_provider_flag_present_once": _count_token(command, "--tau-semantic-provider")
                 == 1,
+                "tau_semantic_handler_flag_present_once": _count_token(command, "--tau-semantic-handler")
+                == 1,
+                "tau_semantic_handler_is_gpt_5_5_high": "gpt-5.5-high" in command,
                 "diagnostic_flag_absent": _count_token(command, "--diagnostic") == 0,
                 "buzz_not_skipped": _count_token(command, "--skip-buzz") == 0,
                 "buzz_summary_enabled": effect_policy.get("buzz_summary") == "ENABLED",
@@ -1978,6 +1989,7 @@ def nightly(
                     provider_results.append(
                         {
                             "opportunity_id": provider_receipt.get("opportunity_id"),
+                            "handler": provider_receipt.get("handler"),
                             "status": provider_receipt.get("status"),
                             "receipt": str(provider_dir / "tau-semantic-provider-receipt.json"),
                             "provider_live": provider_receipt.get("provider_live"),
@@ -1999,6 +2011,7 @@ def nightly(
                     provider_results.append(
                         {
                             "opportunity_id": str(selected.get("opportunity_id", "")),
+                            "handler": tau_semantic_handler,
                             "status": "ERROR",
                             "error": str(exc),
                             "provider_live": False,
@@ -2435,6 +2448,7 @@ def schedule(
             )
         nightly_args.append("--promoted-stage0")
         nightly_args.append("--tau-semantic-provider")
+        nightly_args.extend(["--tau-semantic-handler", "gpt-5.5-high"])
     if claim_snapshot is not None:
         claim_snapshot = claim_snapshot.resolve()
     environment: dict[str, str] = {

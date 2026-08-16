@@ -38,6 +38,10 @@ def main() -> int:
     _assert("--skip-tracker" in command, "promoted cron command does not skip tracker")
     _assert("--skip-ats-memory" in command, "promoted cron command does not skip ATS memory writes")
     _assert("--tau-semantic-provider" in command, "promoted cron command does not enable Tau provider")
+    _assert(
+        "--tau-semantic-handler gpt-5.5-high" in command,
+        "promoted cron command is not pinned to the live non-browser Tau semantic handler",
+    )
 
     schedule_path = Path(str(preflight.get("schedule_receipt") or ""))
     _assert(schedule_path.is_file(), f"schedule receipt missing: {schedule_path}")
@@ -99,9 +103,14 @@ def main() -> int:
     _assert(int(tau.get("installed_addenda") or 0) == 1, f"expected one installed addendum: {tau}")
     _assert(pass_indexes, f"no provider-live PASS result: {provider_results}")
     _assert(
+        provider_results[pass_indexes[0]].get("handler") == "gpt-5.5-high",
+        f"provider-live PASS did not use gpt-5.5-high: {provider_results}",
+    )
+    _assert(
         len(provider_results) == pass_indexes[0] + 1,
         f"provider loop continued after first provider-live PASS: {provider_results}",
     )
+    print("TAU_PROVIDER_HANDLER_OK")
     print("TAU_PROVIDER_EARLY_STOP_OK")
     print("CRON_HARDENING_EVAL_PASS")
     return 0
