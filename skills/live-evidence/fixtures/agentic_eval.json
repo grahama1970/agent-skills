@@ -121,6 +121,7 @@
           "step3 stabilized final turn projection: PASS",
           "step4 interviewer code question trigger: PASS",
           "step5 memory http and code runner boundaries: PASS",
+          "punctuation-poor ASR query window selects one relevant question: PASS",
           "sampled adversarial trigger suppression: PASS",
           "step6 current checkout ripgrep after startup: PASS",
           "initial transcript query selects one relevant question: PASS",

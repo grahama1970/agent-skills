@@ -23,6 +23,10 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
+from live_evidence.config import InterviewProfile
+from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
+from live_evidence.question_window import QuestionWindowBuilder
+
 load_dotenv(override=False)
 
 
@@ -291,6 +295,54 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
         )
         profile_path = temp / "profile.yaml"
         write_profile(profile_path)
+        profile = InterviewProfile(
+            name="mvp-steps-2-8-agentic-eval",
+            watch_terms=[
+                "source-bound",
+                "evidence-card",
+                "after-start-sentinel",
+                "memory-alpha",
+                "opening parentheses",
+                "valid parentheses",
+            ],
+            project_aliases={
+                "mvp-eval": [
+                    "source-bound",
+                    "evidence-card",
+                    "after-start-sentinel",
+                    "memory-alpha",
+                ]
+            },
+        )
+        asr_chunk = (
+            "Yeah that makes sense Cool so sort of what I'm thinking is like I said the actual "
+            "English characters I think we mostly just ignore and just have to preserve and then "
+            "the opening closing parentheses a Opening parentheses always has to come before "
+            "closing right so if we sort of iterate to our string We have like the three letters "
+            "that we're ignoring and then we have an opening parentheses which is good and Had we "
+            "had a closing parentheses there"
+        )
+        builder = QuestionWindowBuilder(profile)
+        asr_outcome = builder.ingest(
+            TranscriptEvent(
+                event_id="asr-poor-punctuation-0001",
+                speaker=Speaker.INTERVIEWER,
+                kind=TranscriptKind.FINAL,
+                source="pipewire",
+                sequence=1,
+                text=asr_chunk,
+            )
+        )
+        if asr_outcome.candidate is None:
+            raise RuntimeError("punctuation-poor ASR chunk did not produce a selected query")
+        selected_asr = asr_outcome.candidate.normalized_question
+        if (
+            "opening parentheses always has to come before closing" not in selected_asr.casefold()
+            or "yeah that makes sense" in selected_asr.casefold()
+            or len(selected_asr) >= len(asr_chunk) * 0.6
+        ):
+            raise RuntimeError(f"punctuation-poor ASR query was not bounded to the relevant question: {selected_asr!r}")
+        print("punctuation-poor ASR query window selects one relevant question: PASS")
         memory_runner_log = temp / "memory-runner.argv"
         ask_runner_log = temp / "ask-runner.argv"
         brave_runner_log = temp / "brave-runner.argv"
@@ -564,6 +616,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         "youtube_derived_ripgrep_relevance": True,
                         "youtube_derived_overlapping_transcript_collapse": True,
                         "initial_transcript_query_selects_one_relevant_question": True,
+                        "punctuation_poor_asr_query_selects_one_relevant_question": True,
                     },
                     "claims": {
                         "proves": [
@@ -575,6 +628,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                             "ripgrep sees source created after service startup",
                             "overlapping YouTube-like transcript variants produce one automatic evidence card",
                             "initial YouTube-like transcript query is one selected question, not the full transcript chunk",
+                            "punctuation-poor ASR chunks select one bounded retrieval question instead of the full transcript",
                             "YouTube-like parenthesis transcript retrieves the domain source instead of generic filler matches",
                             "Ask lane preserves a run directory and surfaces fixture-only response text",
                             "manual Brave/Dogpile lanes receive a derived question, not transcript history",

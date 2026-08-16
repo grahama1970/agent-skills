@@ -151,7 +151,12 @@ class QuestionWindowBuilder:
         if len(tokens) < 4:
             return None
         first = tokens[0].casefold()
-        if len(self._buffer) == 1 and text[:1].islower() and first not in QUESTION_LEADS:
+        if (
+            len(self._buffer) == 1
+            and text[:1].islower()
+            and first not in QUESTION_LEADS
+            and not is_code_prompt(text)
+        ):
             return None
         if (
             first == "when"
@@ -283,6 +288,12 @@ class QuestionWindowBuilder:
             score += 14.0
         if tokens[0] in QUESTION_LEADS:
             score += 10.0
+        if "opening parentheses always" in lower_text or "opening parenthesis always" in lower_text:
+            score += 45.0
+        if "given a string" in lower_text:
+            score += 35.0
+        if "remove the minimum" in lower_text:
+            score += 35.0
         score += 16.0 * sum(1 for alias in self._aliases if alias in lower_text)
         score += 18.0 * sum(1 for term in self._watch_terms if term in lower_text)
         score += min(len(set(tokens) & CODE_PROMPT_TERMS), 8) * 7.0
@@ -339,7 +350,60 @@ def _query_candidates(text: str) -> list[str]:
             merged[-1] = f"{merged[-1]} {candidate}".strip()
         else:
             merged.append(candidate)
-    return [_normalize_question(candidate) for candidate in merged if len(tokenize(candidate)) >= 4]
+    selected: list[str] = []
+    for candidate in merged:
+        normalized = _normalize_question(candidate)
+        if len(tokenize(normalized)) < 4:
+            continue
+        dense_windows = _dense_token_windows(normalized)
+        if dense_windows:
+            selected.extend(dense_windows)
+        else:
+            selected.append(normalized)
+    return selected
+
+
+def _dense_token_windows(text: str) -> list[str]:
+    tokens = tokenize(text)
+    if len(tokens) <= 32:
+        return []
+    windows: list[str] = []
+    for size in (14, 20, 26):
+        if len(tokens) <= size:
+            continue
+        for start in range(0, len(tokens) - size + 1, 4):
+            window = tokens[start : start + size]
+            normalized_window = {token.casefold() for token in window}
+            if len(normalized_window & CODE_PROMPT_TERMS) < 3:
+                continue
+            candidate = _trim_dense_window(window)
+            if len(tokenize(candidate)) < 8:
+                continue
+            if candidate not in windows:
+                windows.append(candidate)
+    return windows
+
+
+def _trim_dense_window(tokens: list[str]) -> str:
+    lowered = [token.casefold() for token in tokens]
+    for pattern in (
+        ("given", "a", "string"),
+        ("opening", "parentheses", "always"),
+        ("opening", "parenthesis", "always"),
+        ("open", "parentheses"),
+        ("remove", "the", "minimum"),
+        ("minimum", "number", "of", "parentheses"),
+    ):
+        limit = len(lowered) - len(pattern) + 1
+        for index in range(max(limit, 0)):
+            if tuple(lowered[index : index + len(pattern)]) == pattern:
+                return " ".join(tokens[index:])
+    for index, token in enumerate(lowered):
+        if token in CODE_PROMPT_TERMS:
+            trimmed = tokens[index:]
+            if len(trimmed) >= 8:
+                return " ".join(trimmed)
+    return " ".join(tokens)
 
 
 def _is_smalltalk(text: str) -> bool:
