@@ -142,6 +142,59 @@ class TranscriptEvent(BaseModel):
         return self
 
 
+class EventSpan(BaseModel):
+    """One transcript event's character span inside a question candidate."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str = Field(min_length=8)
+    sequence: int = Field(ge=0)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_span_order(self) -> "EventSpan":
+        """Keep span offsets ordered inside the assembled question."""
+
+        if self.end_offset < self.start_offset:
+            raise ValueError("end_offset must be greater than or equal to start_offset")
+        return self
+
+
+class QuestionCandidate(BaseModel):
+    """Bounded interviewer question assembled from one or more transcript events."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_id: Literal["live_evidence.question_candidate.v1"] = Field(
+        default="live_evidence.question_candidate.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    question_id: str = Field(min_length=12, max_length=80)
+    normalized_question: str = Field(min_length=1, max_length=1_200)
+    speaker: Speaker = Speaker.INTERVIEWER
+    source_event_ids: list[str] = Field(min_length=1, max_length=8)
+    source_spans: list[EventSpan] = Field(min_length=1, max_length=8)
+    start_sequence: int = Field(ge=0)
+    end_sequence: int = Field(ge=0)
+    trigger_reason: str = Field(min_length=1, max_length=120)
+    fingerprint: str = Field(min_length=12, max_length=96)
+
+    @model_validator(mode="after")
+    def validate_candidate_bounds(self) -> "QuestionCandidate":
+        """Require interviewer-only ordered question provenance."""
+
+        if self.speaker is not Speaker.INTERVIEWER:
+            raise ValueError("question candidates must be interviewer turns")
+        if self.end_sequence < self.start_sequence:
+            raise ValueError("end_sequence must be greater than or equal to start_sequence")
+        span_event_ids = [span.event_id for span in self.source_spans]
+        if span_event_ids != self.source_event_ids:
+            raise ValueError("source_spans must match source_event_ids order")
+        return self
+
+
 class EvidenceSource(BaseModel):
     """One retrievable source candidate with a concrete locator."""
 

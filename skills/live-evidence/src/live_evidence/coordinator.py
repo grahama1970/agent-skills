@@ -27,7 +27,8 @@ from .retrieval import (
 )
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
-from .trigger import TriggerDecision, TriggerEngine, tokenize
+from .question_window import QuestionWindowBuilder, candidate_thread
+from .trigger import TriggerDecision, is_code_question, tokenize
 
 
 class EvidenceCoordinator:
@@ -43,7 +44,7 @@ class EvidenceCoordinator:
         self._profile = profile
         self._state = state
         self._journal = journal
-        self._trigger = TriggerEngine(profile)
+        self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
         self._external = ExternalSkillClient(settings)
@@ -63,10 +64,17 @@ class EvidenceCoordinator:
         await self._journal.append(snapshot.session.session_id, "transcript", event)
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
-        async with self._trigger_lock:
-            decision = self._trigger.decide(event)
-        if decision is None:
+        outcome = self._question_window.ingest(event)
+        if outcome.candidate is None or outcome.duplicate:
             return
+        candidate = outcome.candidate
+        decision = TriggerDecision(
+            event_id=candidate.question_id,
+            query=candidate.normalized_question,
+            thread=candidate_thread(candidate, self._profile),
+            reason=candidate.trigger_reason,
+            code_related=is_code_question(candidate.normalized_question),
+        )
         await self._state.set_thread(decision.thread)
         task = asyncio.create_task(self._retrieve(decision))
         self._tasks.add(task)

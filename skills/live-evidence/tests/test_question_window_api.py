@@ -1,0 +1,80 @@
+"""API integration for split interviewer question windowing."""
+
+from pathlib import Path
+import time
+
+from fastapi.testclient import TestClient
+
+from live_evidence.api import create_app
+from live_evidence.config import AppSettings
+
+
+def make_settings(tmp_path: Path) -> AppSettings:
+    profile_path = tmp_path / "profile.yaml"
+    profile_path.write_text(
+        "name: question-window-api-test\n"
+        "watch_terms:\n"
+        "  - invalid parentheses\n"
+        "project_aliases: {}\n",
+        encoding="utf-8",
+    )
+    return AppSettings(
+        skill_root=tmp_path,
+        data_dir=tmp_path / "data",
+        profile_path=profile_path,
+        repo_roots=[],
+        memory_url="http://127.0.0.1:9",
+        request_timeout_s=0.2,
+        subprocess_timeout_s=0.5,
+    )
+
+
+def post_turn(client: TestClient, sequence: int, text: str, speaker: str = "interviewer") -> None:
+    response = client.post(
+        "/api/transcript",
+        json={
+            "schema": "live_evidence.transcript_event.v1",
+            "speaker": speaker,
+            "kind": "final",
+            "source": "api",
+            "sequence": sequence,
+            "text": text,
+        },
+    )
+    assert response.status_code == 202
+
+
+def wait_for_cards(client: TestClient, count: int) -> dict:
+    deadline = time.monotonic() + 3.0
+    last_payload: dict | None = None
+    while time.monotonic() < deadline:
+        response = client.get("/api/state")
+        assert response.status_code == 200
+        last_payload = response.json()
+        if len(last_payload.get("cards") or []) >= count:
+            return last_payload
+        time.sleep(0.05)
+    raise AssertionError(f"timed out waiting for {count} card(s): {last_payload}")
+
+
+def test_split_interviewer_question_creates_one_joined_card(tmp_path: Path) -> None:
+    app = create_app(make_settings(tmp_path))
+    with TestClient(app) as client:
+        client.post("/api/session/start", json={"consent_confirmed": True}).raise_for_status()
+
+        post_turn(client, 1, "Given a string with parentheses, how would")
+        time.sleep(0.2)
+        assert client.get("/api/state").json()["cards"] == []
+
+        post_turn(client, 2, "you remove the minimum invalid parentheses?")
+        payload = wait_for_cards(client, 1)
+
+    assert len(payload["cards"]) == 1
+    card = payload["cards"][0]
+    assert card["query"] == (
+        "Given a string with parentheses, how would "
+        "you remove the minimum invalid parentheses?"
+    )
+    assert card["question"] == card["query"]
+    assert card["status"] == "insufficient"
+    assert len(payload["transcript"]) == 2

@@ -1,0 +1,108 @@
+"""Tests for split-question transcript windowing."""
+
+from live_evidence.config import InterviewProfile
+from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
+from live_evidence.question_window import QuestionWindowBuilder
+
+
+PROFILE = InterviewProfile(
+    name="question-window-test",
+    watch_terms=["invalid parentheses", "stack"],
+    project_aliases={"youtube-eval": ["parenthesis interview"]},
+)
+
+
+def turn(
+    sequence: int,
+    text: str,
+    *,
+    speaker: Speaker = Speaker.INTERVIEWER,
+    event_id: str | None = None,
+) -> TranscriptEvent:
+    return TranscriptEvent(
+        event_id=event_id or f"event-{sequence:04d}",
+        speaker=speaker,
+        kind=TranscriptKind.FINAL,
+        text=text,
+        sequence=sequence,
+    )
+
+
+def test_split_interviewer_question_emits_one_candidate() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    first = builder.ingest(turn(1, "Given a string with parentheses, how would"))
+    second = builder.ingest(turn(2, "you remove the minimum invalid parentheses?"))
+
+    assert first.candidate is None
+    assert second.candidate is not None
+    assert second.duplicate is False
+    assert second.candidate.normalized_question == (
+        "Given a string with parentheses, how would "
+        "you remove the minimum invalid parentheses?"
+    )
+    assert second.candidate.source_event_ids == ["event-0001", "event-0002"]
+    assert second.candidate.start_sequence == 1
+    assert second.candidate.end_sequence == 2
+
+
+def test_candidate_turn_is_hard_boundary() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    assert builder.ingest(turn(1, "Given a string with parentheses, how would")).candidate is None
+    assert (
+        builder.ingest(
+            turn(2, "I would use a stack.", speaker=Speaker.GRAHAM)
+        ).candidate
+        is None
+    )
+    assert (
+        builder.ingest(turn(3, "you remove the minimum invalid parentheses?")).candidate
+        is None
+    )
+
+
+def test_stabilized_and_final_duplicate_is_suppressed() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    stabilized = TranscriptEvent(
+        event_id="event-stable",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=1,
+    )
+    final = TranscriptEvent(
+        event_id="event-final",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.FINAL,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=2,
+    )
+
+    first = builder.ingest(stabilized)
+    second = builder.ingest(final)
+
+    assert first.candidate is not None
+    assert first.duplicate is False
+    assert second.candidate is not None
+    assert second.duplicate is True
+
+
+def test_sequence_gap_prevents_unrelated_join() -> None:
+    builder = QuestionWindowBuilder(PROFILE, max_sequence_gap=2)
+
+    assert builder.ingest(turn(1, "Given a string with parentheses, how would")).candidate is None
+    assert (
+        builder.ingest(turn(10, "you remove the minimum invalid parentheses?")).candidate
+        is None
+    )
+
+
+def test_short_fragment_does_not_trigger() -> None:
+    builder = QuestionWindowBuilder(PROFILE)
+
+    outcome = builder.ingest(turn(1, "What makes a"))
+
+    assert outcome.candidate is None
+    assert outcome.reason == "not_question"

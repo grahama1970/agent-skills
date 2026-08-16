@@ -3,7 +3,7 @@
 
 from live_evidence.config import InterviewProfile
 from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
-from live_evidence.trigger import TriggerEngine, extract_thread, search_terms
+from live_evidence.trigger import TriggerEngine, extract_thread, is_code_question, search_terms
 
 
 PROFILE = InterviewProfile(
@@ -188,6 +188,13 @@ def test_real_stt_valid_parentheses_question_is_actionable() -> None:
     assert decision is not None
     assert decision.reason == "code-question"
     assert decision.code_related is True
+
+
+def test_shared_code_question_classifier_matches_interview_prompt() -> None:
+    assert is_code_question(
+        "Given a valid parenthesis string with lowercase characters, how would you "
+        "find the minimum number of parentheses to remove and return a valid output string?"
+    )
 
 
 def test_search_terms_are_bounded_and_not_question_words() -> None:

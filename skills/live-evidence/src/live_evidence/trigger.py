@@ -167,7 +167,7 @@ class TriggerEngine:
         normalized = " ".join(tokens)
         code_related = is_code_prompt(event.text)
         now = monotonic()
-        code_trigger_ready = code_related and _has_code_action(event.text)
+        code_trigger_ready = is_code_question(event.text)
         if code_related and not code_trigger_ready:
             return None
         key = _dedupe_key(tokens, code_related=code_trigger_ready)
@@ -267,6 +267,12 @@ def is_code_prompt(text: str) -> bool:
     phrase_hits = sum(1 for phrase in CODE_PROMPT_PHRASES if phrase in lower)
     term_hits = len({token.casefold() for token in tokenize(text)} & CODE_PROMPT_TERMS)
     return phrase_hits >= 1 and term_hits >= 5
+
+
+def is_code_question(text: str) -> bool:
+    """Detect code prompts ready for the Ask solution lane."""
+
+    return is_code_prompt(text) and _has_code_action(text)
 
 
 def _dedupe_key(tokens: list[str], *, code_related: bool) -> str:
