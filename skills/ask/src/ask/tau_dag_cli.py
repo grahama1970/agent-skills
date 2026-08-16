@@ -1323,7 +1323,12 @@ PREFERRED_PANEL_ROSTER = (*PREFERRED_BROWSER_SEATS, LOCAL_CLAUDE_SEAT)
 #: Substitutes for webclaude, in order. webclaude is a claude.ai chat tab: no
 #: tools, no repo access, no Ask-controlled reasoning effort, and one more seat
 #: competing for the same Chrome. It stays reachable by explicit name only.
-WEBCLAUDE_PREFERRED_SUBSTITUTES = (LOCAL_CLAUDE_SEAT, LOCAL_CLAUDE_FALLBACK)
+#: webclaude exists to test the browser path and nothing else -- a claude.ai web
+#: call is billed the same as an OAuth call, so spending a browser seat, a
+#: window and Chrome contention on it buys nothing. When it is unavailable the
+#: work goes to Opus 5, the strongest local Claude lane, rather than to a
+#: cheaper tier: the caller asked for Claude and should get Claude.
+WEBCLAUDE_PREFERRED_SUBSTITUTES = ("claude-opus-5-high", LOCAL_CLAUDE_FALLBACK, LOCAL_CLAUDE_SEAT)
 
 #: When a web seat is rate limited or unavailable it is removed from the panel,
 #: and its LOCAL SAME-FAMILY equivalent takes the seat rather than another copy

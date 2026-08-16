@@ -451,14 +451,20 @@ Claude lane. `webclaude` exists to test the browser path itself; for that
 testing, `claude-opus-5` is the model to use.
 
 When `webclaude` is requested and unavailable it is the ONE named seat that
-auto-substitutes, to `claude-fable-low` then `claude-opus-4-8-high`, because
+auto-substitutes, to **`claude-opus-5-high`** (then `claude-opus-4-8-high`,
+then `claude-fable-low`), because
 preferring the local lane is the policy rather than a workaround. Every other
 named browser seat blocks with its failure code instead of quietly answering as
 something else.
 
-Proven live 2026-08-16: claude.ai reported "You're out of usage credits", the
-seat was removed at selection, and the run answered from
-`handler-claude-fable-low` with status DEGRADED and the substitution recorded.
+The takeover happens at BOTH selection and submit time. The availability probe
+can only see an account banner if some existing claude.ai tab is showing one; a
+fresh tab shows nothing until the submit is attempted, so a selection-only
+fallback fires or does not depending on which tabs happen to be open.
+
+Proven live 2026-08-16: claude.ai reported "You're out of usage credits" and the
+run answered from `handler-claude-opus-5-high`, status DEGRADED, substitution
+recorded.
 
 ### The preferred seat roster
 

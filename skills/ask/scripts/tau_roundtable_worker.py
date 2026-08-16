@@ -141,11 +141,17 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
     "webdeepseek": ProviderPayloadPolicy(
         handler="webdeepseek",
         submit_command="deepseek.submit",
-        can_attach=False,
-        max_attachments=0,
+        # The web chat DOES take uploads -- DeepSeek shipped image vision for
+        # V4-Pro and V4-Flash on web and mobile, and `surf deepseek.submit`
+        # accepts --attach-file. The old can_attach=False came from the API,
+        # which genuinely cannot read images, and that conflation made every
+        # webdeepseek lane in an attachment round fail
+        # browser_attachment_unsupported before opening a page.
+        can_attach=True,
+        max_attachments=1,
         zip_allowed=False,
-        preferred_bundle="bounded inline text only",
-        gotcha="attachments and zip files are unsupported",
+        preferred_bundle="one image or one readable Markdown/text bundle via --attach-file",
+        gotcha="the deepseek API cannot read images; the web chat can. Upload support is visible-input dependent",
     ),
     "deepseek": ProviderPayloadPolicy(
         handler="deepseek",
@@ -706,7 +712,35 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 commands=commands,
             )
             if submit.returncode != 0 and not degraded_response_recovered:
-                raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
+                failure_text = submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed"
+                # webclaude out of credits: hand the work to Opus 5 rather than
+                # failing the seat. The caller asked for Claude and gets Claude.
+                takeover = _webclaude_submit_fallback(handler, failure_text)
+                if takeover:
+                    print(
+                        f"[tau-worker] {handler} cannot submit ({failure_text.strip()[:90]}); "
+                        f"falling back to {takeover}",
+                        file=sys.stderr,
+                    )
+                    response_text, submit_meta = _run_scillm_handler(
+                        args,
+                        handler=takeover,
+                        prompt_path=prompt_path,
+                        response_path=response_path,
+                        raw_path=raw_path,
+                        meta_path=meta_path,
+                    )
+                    submit_meta["webclaude_fallback"] = {
+                        "from": handler, "to": takeover, "reason": "claude_web_cannot_submit",
+                    }
+                    commands.append({
+                        "command": ["scillm.chat", submit_meta.get("model") or takeover],
+                        "returncode": 0,
+                        "stdout_excerpt": response_text[:1000],
+                        "stderr_excerpt": "",
+                    })
+                else:
+                    raise RuntimeError(failure_text)
             response_text = response_path.read_text(encoding="utf-8")
             post_submit_refresh = _refresh_browser_binding_after_proven_submit(
                 args,
@@ -6303,6 +6337,35 @@ SCILLM_RATE_LIMIT_FALLBACKS = {
     "claude-fable-5": "claude-opus-4-8-high",
     "claude-fable": "claude-opus-4-8-high",
 }
+
+#: webclaude only ever exists to test the browser path: a claude.ai web call is
+#: billed the same as an OAuth call. When it cannot submit, the work goes to
+#: Opus 5 rather than failing.
+#:
+#: Handled HERE as well as at selection because the availability probe can only
+#: see an account banner if some existing claude.ai tab happens to be showing
+#: one. A fresh tab shows nothing until the submit is attempted, so a
+#: selection-only fallback fires or does not depending on which tabs are open --
+#: observed both ways on 2026-08-16.
+WEBCLAUDE_SUBMIT_FALLBACK = "claude-opus-5-high"
+
+_CLAUDE_ACCOUNT_BLOCKED_MARKERS = (
+    "claude_out_of_usage_credits",
+    "claude_message_limit_reached",
+    "claude_upgrade_required",
+    "out of usage credits",
+    "staged but not submitted",
+)
+
+
+def _webclaude_submit_fallback(handler: str, error_text: str) -> str | None:
+    """The local seat that takes over when claude.ai will not accept a submit."""
+    if str(handler or "").strip() != "webclaude":
+        return None
+    lowered = str(error_text or "").casefold()
+    if not any(marker in lowered for marker in _CLAUDE_ACCOUNT_BLOCKED_MARKERS):
+        return None
+    return WEBCLAUDE_SUBMIT_FALLBACK
 
 _RATE_LIMIT_MARKERS = ("http 429", "provider_rate_limited", "rate_limit_error", "rate limit")
 

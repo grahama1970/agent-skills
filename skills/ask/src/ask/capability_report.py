@@ -306,9 +306,10 @@ def _browser_handlers(live: bool, availability: dict[str, Any] | None) -> list[C
         else:
             cap.state, cap.reason_code = "READY", "probe_ok"
             cap.explanation = "seat answered the availability probe"
-            # webdeepseek cannot take attachments at all; the matrix must keep
-            # that distinct from a seat that merely was not tested.
-            attach = False if handler == "webdeepseek" else True
+            # DeepSeek web chat takes uploads (V4-Pro/V4-Flash vision); only
+            # its API cannot read images. Verified 2026-08-16 by search and by
+            # `surf deepseek.submit --help` accepting --attach-file.
+            attach = True
             cap.operations = {"text": True, "attachment": attach, "multi_turn": True, "resume": None}
         caps.append(cap)
     return caps
