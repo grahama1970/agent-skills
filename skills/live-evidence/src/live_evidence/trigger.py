@@ -189,7 +189,7 @@ class TriggerEngine:
         lower_text = event.text.casefold()
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
-        is_question = event.text.rstrip().endswith("?") or first in QUESTION_LEADS
+        is_question = "?" in event.text or first in QUESTION_LEADS
         if not (is_question or matched_term or matched_alias or code_trigger_ready):
             return None
 

@@ -42,6 +42,8 @@ def write_profile(path: Path) -> None:
                 "  - evidence-card",
                 "  - after-start-sentinel",
                 "  - memory-alpha",
+                "  - opening parentheses",
+                "  - valid parentheses",
                 "project_aliases:",
                 "  mvp-eval:",
                 "    - source-bound",
@@ -269,6 +271,24 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
             "def lookup():\n    return 'memory-alpha source-bound evidence card pipeline'\n",
             encoding="utf-8",
         )
+        (source_dir / "valid_parentheses.py").write_text(
+            "\n".join(
+                [
+                    "def is_valid_parentheses(text: str) -> bool:",
+                    "    stack: list[str] = []",
+                    "    pairs = {')': '(', ']': '[', '}': '{'}",
+                    "    for char in text:",
+                    "        if char in pairs.values():",
+                    "            stack.append(char)",
+                    "        elif char in pairs:",
+                    "            if not stack or stack.pop() != pairs[char]:",
+                    "                return False",
+                    "    return not stack",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
         profile_path = temp / "profile.yaml"
         write_profile(profile_path)
         memory_runner_log = temp / "memory-runner.argv"
@@ -435,6 +455,71 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 assert_card_has(state["cards"][0], lane="ripgrep", path_fragment="after_start_sentinel.py")
                 print("step6 current checkout ripgrep after startup: PASS")
 
+                youtube_like_question = (
+                    "A opening parentheses always has to come before closing, right? "
+                    "So if we sort of iterate through our string, we have like the three letters "
+                    "that we're ignoring."
+                )
+                noisy_youtube_followup = (
+                    "And closing theyre just like in different orders Correct So to make it clear "
+                    "for you let me actually paste in the sample in terms of looking for minimum "
+                    "number of parentheses. As you can see we effectively based on the input if "
+                    "you kind of think about it like a dangling parentheses right here."
+                )
+                before_burst_count = len(state.get("cards") or [])
+                post_turn(
+                    client,
+                    speaker="interviewer",
+                    sequence=1_100,
+                    text=youtube_like_question,
+                )
+                burst_state = wait_for_cards(client, before_burst_count + 1)
+                youtube_card = burst_state["cards"][0]
+                assert_card_has(youtube_card, lane="ripgrep", path_fragment="valid_parentheses.py")
+                if youtube_card.get("query") != "A opening parentheses always has to come before closing, right?":
+                    raise RuntimeError(
+                        "initial YouTube transcript query did not select one most relevant question: "
+                        f"{youtube_card.get('query')!r}"
+                    )
+                for offset, variant in enumerate(
+                    [
+                        "A opening parentheses always has to come",
+                        "A opening parentheses always has to come before closing",
+                        "A opening parentheses always has to come before closing, right?",
+                        (
+                            f"{youtube_like_question} And if we see an opening parentheses, "
+                            "we can keep track of it with a stack."
+                        ),
+                    ],
+                    start=1,
+                ):
+                    post_turn(
+                        client,
+                        speaker="interviewer",
+                        sequence=1_100 + offset,
+                        text=variant,
+                    )
+                assert_no_new_cards(client, before_burst_count + 1, delay_s=0.8)
+                print("initial transcript query selects one relevant question: PASS")
+                print("youtube-derived overlapping transcript collapses to one card: PASS")
+
+                ripgrep_card = client.post(
+                    "/api/search",
+                    json={"lane": "ripgrep", "query": youtube_like_question},
+                )
+                ripgrep_card.raise_for_status()
+                card_payload = ripgrep_card.json()
+                assert_card_has(card_payload, lane="ripgrep", path_fragment="valid_parentheses.py")
+                noisy_card = client.post(
+                    "/api/search",
+                    json={"lane": "ripgrep", "query": noisy_youtube_followup},
+                )
+                noisy_card.raise_for_status()
+                noisy_payload = noisy_card.json()
+                if noisy_payload.get("status") == "supported" and "valid_parentheses.py" not in json.dumps(noisy_payload):
+                    raise RuntimeError(f"noisy youtube transcript produced irrelevant source-bound card: {noisy_payload}")
+                print("youtube-derived ripgrep relevance gate: PASS")
+
                 raw_transcript = (
                     "graham: candidate-private-sentinel should not leave the transcript. "
                     "interviewer: What does bounded evidence card mean?"
@@ -476,6 +561,9 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         "step7_ask_run_dir_fixture_only": True,
                         "step8_source_bound_cards": True,
                         "step8_manual_lanes_derived_query_only": True,
+                        "youtube_derived_ripgrep_relevance": True,
+                        "youtube_derived_overlapping_transcript_collapse": True,
+                        "initial_transcript_query_selects_one_relevant_question": True,
                     },
                     "claims": {
                         "proves": [
@@ -485,6 +573,9 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                             "Memory is called through HTTP /intent and /recall boundaries",
                             "memory runner is called through code-search and code-node subprocess boundaries",
                             "ripgrep sees source created after service startup",
+                            "overlapping YouTube-like transcript variants produce one automatic evidence card",
+                            "initial YouTube-like transcript query is one selected question, not the full transcript chunk",
+                            "YouTube-like parenthesis transcript retrieves the domain source instead of generic filler matches",
                             "Ask lane preserves a run directory and surfaces fixture-only response text",
                             "manual Brave/Dogpile lanes receive a derived question, not transcript history",
                         ],

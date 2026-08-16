@@ -123,6 +123,9 @@
           "step5 memory http and code runner boundaries: PASS",
           "sampled adversarial trigger suppression: PASS",
           "step6 current checkout ripgrep after startup: PASS",
+          "initial transcript query selects one relevant question: PASS",
+          "youtube-derived overlapping transcript collapses to one card: PASS",
+          "youtube-derived ripgrep relevance gate: PASS",
           "step7 ask fixture-only run-dir surfaced: PASS",
           "step8 source-bound cards and manual derived-query lanes: PASS",
           "mvp steps 2-8 receipt:"

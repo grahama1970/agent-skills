@@ -48,15 +48,37 @@ SKIP_GLOBS = (
 )
 
 LOW_SIGNAL_TERMS = {
+    "actually",
     "agent",
     "agents",
+    "always",
+    "answer",
+    "answers",
+    "before",
     "code",
+    "come",
+    "comes",
+    "correct",
     "current",
+    "different",
     "during",
     "evidence",
+    "ignore",
+    "looking",
+    "order",
+    "orders",
     "memory",
     "project",
+    "really",
+    "right",
+    "sample",
+    "samples",
+    "sort",
     "system",
+    "terms",
+    "thing",
+    "things",
+    "through",
     "work",
 }
 
@@ -295,7 +317,10 @@ def _parse_rg_json(root: Path, stdout: str) -> list[EvidenceSource]:
         except ValueError:
             continue
         matched_terms = _matched_texts(data.get("submatches"))
-        score = min(0.88, 0.58 + (0.08 * len(matched_terms)))
+        specific_matches = [term for term in matched_terms if _term_is_specific(term)]
+        if not specific_matches:
+            continue
+        score = _source_score(path, specific_matches)
         sources.append(
             EvidenceSource(
                 lane=RetrievalLane.RIPGREP,
@@ -333,6 +358,40 @@ def _positive_int(value: Any) -> int | None:
     except (TypeError, ValueError):
         return None
     return parsed if parsed >= 1 else None
+
+
+def _source_score(path: Path, matched_terms: list[str]) -> float:
+    """Score exact matches higher when the current source path is also topical."""
+
+    path_tokens = _path_tokens(path)
+    matched_tokens = {
+        token
+        for term in matched_terms
+        for token in _path_tokens(Path(term))
+        if token
+    }
+    path_overlap = len(path_tokens & matched_tokens)
+    suffix_bonus = 0.04 if path.suffix.casefold() in {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go"} else 0.0
+    path_bonus = min(0.18, path_overlap * 0.09)
+    return min(0.93, 0.56 + (0.10 * len(matched_terms)) + path_bonus + suffix_bonus)
+
+
+def _path_tokens(path: Path) -> set[str]:
+    tokens: set[str] = set()
+    current: list[str] = []
+    for char in path.as_posix().casefold():
+        if char.isalnum():
+            current.append(char)
+        elif current:
+            token = "".join(current)
+            if len(token) >= 3:
+                tokens.add(token)
+            current = []
+    if current:
+        token = "".join(current)
+        if len(token) >= 3:
+            tokens.add(token)
+    return tokens
 
 
 def _unique(values: list[str]) -> list[str]:

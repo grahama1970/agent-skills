@@ -58,15 +58,15 @@ def _tokens(text: str) -> set[str]:
     current: list[str] = []
     tokens: set[str] = set()
     for char in text.casefold():
-        if char.isalnum() or char in {"-", "_"}:
+        if char.isalnum():
             current.append(char)
         elif current:
-            token = "".join(current).strip("-_")
+            token = "".join(current)
             if len(token) >= 3:
                 tokens.add(token)
             current = []
     if current:
-        token = "".join(current).strip("-_")
+        token = "".join(current)
         if len(token) >= 3:
             tokens.add(token)
     return tokens

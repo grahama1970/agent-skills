@@ -207,6 +207,29 @@ def test_long_live_pasted_problem_final_becomes_code_candidate() -> None:
     assert outcome.candidate is not None
     assert outcome.candidate.trigger_reason == "code-question"
     assert "remove the minimum number of parentheses" in outcome.candidate.normalized_question
+    assert "Hey Connor, how are you doing today" not in outcome.candidate.normalized_question
+
+
+def test_multi_question_transcript_selects_most_relevant_query() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+    text = (
+        "Hey Connor, how are you doing today? Good, good. So you ready to get started? "
+        "Given a string of opening parentheses, closing parentheses, and lowercase "
+        "characters, remove the minimum number of parentheses so the result is valid "
+        "and return any valid string. What did you have for breakfast?"
+    )
+
+    outcome = builder.ingest(turn(60, text))
+
+    assert outcome.candidate is not None
+    assert outcome.candidate.trigger_reason == "code-question"
+    assert outcome.candidate.normalized_question == (
+        "Given a string of opening parentheses, closing parentheses, and lowercase "
+        "characters, remove the minimum number of parentheses so the result is valid "
+        "and return any valid string."
+    )
+    assert "how are you" not in outcome.candidate.normalized_question.casefold()
+    assert "breakfast" not in outcome.candidate.normalized_question.casefold()
 
 
 def test_sequence_gap_prevents_unrelated_join() -> None:
