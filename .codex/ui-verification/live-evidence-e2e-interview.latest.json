@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-15T12:33:55.993139+00:00",
-  "cwd": "/mnt/storage12tb/tmp/live-evidence-ask-env-fix-20260814",
-  "root": "/mnt/storage12tb/tmp/live-evidence-ask-env-fix-20260814",
-  "output_root": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814",
-  "url": "http://127.0.0.1:8787/",
+  "verified_at": "2026-08-16T15:30:12.047893+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-live-evidence-push",
+  "root": "/home/graham/workspace/experiments/agent-skills-live-evidence-push",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-live-evidence-push",
+  "url": "http://127.0.0.1:8811/",
   "name": "live-evidence-e2e-interview",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T123321Z.png",
-  "read_json": "/tmp/codex-ui-verification/live-evidence-ask-env-fix-20260814/live-evidence-e2e-interview/20260815T123321Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-live-evidence-push/live-evidence-e2e-interview/20260816T153006Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-live-evidence-push/live-evidence-e2e-interview/20260816T153006Z.read.json"
 }

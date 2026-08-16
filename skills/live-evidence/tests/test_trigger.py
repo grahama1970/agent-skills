@@ -197,6 +197,32 @@ def test_shared_code_question_classifier_matches_interview_prompt() -> None:
     )
 
 
+def test_live_stack_parentheses_discussion_is_code_question() -> None:
+    assert is_code_question(
+        "We need the last opening parentheses corresponds like the next closing "
+        "parentheses. So it's sort of like a stack type of structure to keep track "
+        "of the last one we got. If we see a closing parentheses and the stack is "
+        "empty, we remove the closing parentheses from the string."
+    )
+
+
+def test_live_javascript_implementation_discussion_is_code_question() -> None:
+    assert is_code_question(
+        "On what input we get. We'd love to see it in code. What coding language "
+        "are you going to use? Let's use JavaScript. We'll say function and let's "
+        "say remove extra prints. Is this just going to take in just the string "
+        "correct? Yes, just the string input. The first thing we want to do is "
+        "iterate through this string and use a stack."
+    )
+
+
+def test_live_closing_parentheses_question_is_code_question() -> None:
+    assert is_code_question(
+        "Is a closing parentheses. And what do we want to do in this case? "
+        "If it is closing we want to see, do we have something in the stack?"
+    )
+
+
 def test_search_terms_are_bounded_and_not_question_words() -> None:
     terms = search_terms("How do agents use receipts and knowledge graphs in production?", limit=4)
     assert "How" not in terms

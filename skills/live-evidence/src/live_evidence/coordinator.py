@@ -41,6 +41,7 @@ class EvidenceCoordinator:
         state: RuntimeState,
         journal: SessionJournal,
     ) -> None:
+        self._settings = settings
         self._profile = profile
         self._state = state
         self._journal = journal
@@ -147,51 +148,43 @@ class EvidenceCoordinator:
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
         started = monotonic()
-        memory_result, ripgrep_result = await asyncio.gather(
-            self._memory.retrieve(decision.query),
-            self._ripgrep.retrieve(decision.query),
-            return_exceptions=True,
-        )
+        memory_task = asyncio.create_task(self._memory.retrieve(decision.query))
+        ripgrep_task = asyncio.create_task(self._ripgrep.retrieve(decision.query))
 
         sources: list[EvidenceSource] = []
-        if isinstance(memory_result, Exception):
-            await self._state.set_lane(
-                RetrievalLane.MEMORY,
-                LaneState.ERROR,
-                f"Memory error: {type(memory_result).__name__}",
-            )
-            await self._state.set_lane(
-                RetrievalLane.CODE,
-                LaneState.ERROR,
-                "Indexed code unavailable with Memory lane",
-            )
+        memory_result: object | None = None
+        if decision.code_related:
+            try:
+                memory_result = await asyncio.wait_for(
+                    asyncio.shield(memory_task),
+                    timeout=min(0.75, self._settings.request_timeout_s),
+                )
+            except TimeoutError:
+                await self._state.set_lane(
+                    RetrievalLane.MEMORY,
+                    LaneState.RUNNING,
+                    "Optional Memory still running; showing current-source answer",
+                )
+                await self._state.set_lane(
+                    RetrievalLane.CODE,
+                    LaneState.RUNNING,
+                    "Optional indexed code still running",
+                )
+            except Exception as exc:  # memory is optional for the live answer path
+                memory_result = exc
         else:
-            await self._state.set_lane(
-                RetrievalLane.MEMORY,
-                LaneState.OK if memory_result.ok else LaneState.DEGRADED,
-                memory_result.detail,
-                latency_ms=memory_result.latency_ms,
-                result_count=len(
-                    [
-                        source
-                        for source in memory_result.sources
-                        if source.lane is RetrievalLane.MEMORY
-                    ]
-                ),
-            )
-            code_sources = [
-                source
-                for source in memory_result.sources
-                if source.lane is RetrievalLane.CODE
-            ]
-            await self._state.set_lane(
-                RetrievalLane.CODE,
-                LaneState.OK if code_sources else LaneState.DEGRADED,
-                f"Indexed code {len(code_sources)}" if code_sources else "No indexed source",
-                latency_ms=memory_result.latency_ms,
-                result_count=len(code_sources),
-            )
-            sources.extend(memory_result.sources)
+            try:
+                memory_result = await memory_task
+            except Exception as exc:  # surfaced as explicit lane state below
+                memory_result = exc
+
+        if memory_result is not None:
+            sources.extend(await self._apply_memory_result(memory_result))
+
+        try:
+            ripgrep_result = await ripgrep_task
+        except Exception as exc:
+            ripgrep_result = exc
 
         if isinstance(ripgrep_result, Exception):
             await self._state.set_lane(
@@ -234,6 +227,12 @@ class EvidenceCoordinator:
             len(card.sources),
             int((monotonic() - started) * 1000),
         )
+        if memory_result is None:
+            try:
+                late_memory_result = await memory_task
+            except Exception as exc:
+                late_memory_result = exc
+            await self._apply_memory_result(late_memory_result)
 
     async def close(self) -> None:
         """Cancel unfinished retrieval tasks during service shutdown."""
@@ -253,6 +252,48 @@ class EvidenceCoordinator:
             return
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
+
+    async def _apply_memory_result(self, memory_result: object) -> list[EvidenceSource]:
+        """Project optional Memory/code result state and return any source evidence."""
+
+        if isinstance(memory_result, Exception):
+            await self._state.set_lane(
+                RetrievalLane.MEMORY,
+                LaneState.ERROR,
+                f"Memory error: {type(memory_result).__name__}",
+            )
+            await self._state.set_lane(
+                RetrievalLane.CODE,
+                LaneState.ERROR,
+                "Indexed code unavailable with Memory lane",
+            )
+            return []
+
+        memory_sources = [
+            source
+            for source in memory_result.sources
+            if source.lane is RetrievalLane.MEMORY
+        ]
+        await self._state.set_lane(
+            RetrievalLane.MEMORY,
+            LaneState.OK if memory_result.ok else LaneState.DEGRADED,
+            memory_result.detail,
+            latency_ms=memory_result.latency_ms,
+            result_count=len(memory_sources),
+        )
+        code_sources = [
+            source
+            for source in memory_result.sources
+            if source.lane is RetrievalLane.CODE
+        ]
+        await self._state.set_lane(
+            RetrievalLane.CODE,
+            LaneState.OK if code_sources else LaneState.DEGRADED,
+            f"Indexed code {len(code_sources)}" if code_sources else "No indexed source",
+            latency_ms=memory_result.latency_ms,
+            result_count=len(code_sources),
+        )
+        return list(memory_result.sources)
 
     def _reserve_code_question(self, query: str) -> bool:
         key = _code_problem_key(query)

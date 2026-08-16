@@ -107,12 +107,21 @@ CODE_PROMPT_TERMS = {
 }
 
 CODE_PROMPT_PHRASES = {
+    "coding language",
+    "closing parenthesis",
+    "closing parentheses",
+    "function and",
+    "opening parenthesis",
+    "opening parentheses",
+    "remove extra",
+    "string input",
     "valid string",
     "parentheses string",
     "parenthesis string",
     "minimum number",
     "input string",
     "return the",
+    "stack type",
 }
 
 
@@ -266,7 +275,7 @@ def is_code_prompt(text: str) -> bool:
     lower = text.casefold()
     phrase_hits = sum(1 for phrase in CODE_PROMPT_PHRASES if phrase in lower)
     term_hits = len({token.casefold() for token in tokenize(text)} & CODE_PROMPT_TERMS)
-    return phrase_hits >= 1 and term_hits >= 5
+    return phrase_hits >= 1 and term_hits >= 3
 
 
 def is_code_question(text: str) -> bool:
@@ -302,4 +311,4 @@ def _dedupe_key(tokens: list[str], *, code_related: bool) -> str:
 
 def _has_code_action(text: str) -> bool:
     tokens = {token.casefold() for token in tokenize(text)}
-    return bool(tokens & {"find", "makes", "minimum", "output", "return", "remove", "removal"})
+    return bool(tokens & {"find", "makes", "minimum", "output", "return", "remove", "removal", "stack"})

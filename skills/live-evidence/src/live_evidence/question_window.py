@@ -19,7 +19,7 @@ from .models import (
     TranscriptEvent,
     TranscriptKind,
 )
-from .trigger import QUESTION_LEADS, extract_thread, tokenize
+from .trigger import QUESTION_LEADS, extract_thread, is_code_question, tokenize
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,7 +39,7 @@ class QuestionWindowBuilder:
         profile: InterviewProfile,
         *,
         max_events: int = 4,
-        max_chars: int = 512,
+        max_chars: int = 1_800,
         max_sequence_gap: int = 2,
         duplicate_ttl_s: float = 15.0,
     ) -> None:
@@ -113,13 +113,21 @@ class QuestionWindowBuilder:
         ):
             self._buffer[-1] = event
             return
+        if (
+            event.kind is TranscriptKind.STABILIZED
+            and self._buffer
+            and self._buffer[-1].kind is TranscriptKind.STABILIZED
+            and _is_incremental_update(event.text, self._buffer[-1].text)
+        ):
+            self._buffer[-1] = event
+            return
         self._buffer.append(event)
         self._buffer.sort(key=lambda item: item.sequence if item.sequence is not None else 0)
 
     def _enforce_bounds(self) -> None:
         while len(self._buffer) > self._max_events:
             self._buffer.pop(0)
-        while self._buffer and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
+        while len(self._buffer) > 1 and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
             self._buffer.pop(0)
 
     def _should_reset_for_sequence(self, event: TranscriptEvent) -> bool:
@@ -140,10 +148,42 @@ class QuestionWindowBuilder:
         first = tokens[0].casefold()
         if len(self._buffer) == 1 and text[:1].islower() and first not in QUESTION_LEADS:
             return None
+        if (
+            first == "when"
+            and len(tokens) > 1
+            and tokens[1].casefold() in {"i", "we"}
+            and not text.rstrip().endswith("?")
+        ):
+            return None
         lower_text = text.casefold()
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
         is_question = text.rstrip().endswith("?") or first in QUESTION_LEADS
+        code_question = (
+            is_code_question(text)
+            and self._buffer
+            and self._buffer[-1].kind is TranscriptKind.FINAL
+        )
+        has_question_shape = is_question or matched_alias is not None
+        if (
+            is_question
+            and matched_alias is None
+            and matched_term is None
+            and not code_question
+            and self._buffer
+            and self._buffer[-1].kind is not TranscriptKind.FINAL
+        ):
+            return None
+        if (
+            matched_term
+            and not has_question_shape
+            and not code_question
+            and self._buffer
+            and self._buffer[-1].kind is not TranscriptKind.FINAL
+        ):
+            return None
+        if code_question:
+            return "code-question"
         if matched_alias:
             return f"project:{self._aliases[matched_alias]}"
         if matched_term:
@@ -213,3 +253,13 @@ def _token_overlap(left: str, right: str) -> float:
     if not left_tokens or not right_tokens:
         return 0.0
     return len(left_tokens & right_tokens) / max(len(left_tokens), len(right_tokens))
+
+
+def _is_incremental_update(left: str, right: str) -> bool:
+    left_normalized = " ".join(token.casefold() for token in tokenize(left))
+    right_normalized = " ".join(token.casefold() for token in tokenize(right))
+    if not left_normalized or not right_normalized:
+        return False
+    if left_normalized.startswith(right_normalized) or right_normalized.startswith(left_normalized):
+        return True
+    return _token_overlap(left, right) >= 0.55
