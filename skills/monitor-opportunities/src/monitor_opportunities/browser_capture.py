@@ -160,6 +160,7 @@ def _record_browser_control_event(
     seconds: str | None = None,
     timeout: int | None = None,
     tab_id: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> None:
     event: dict[str, Any] = {
         "kind": kind,
@@ -174,6 +175,8 @@ def _record_browser_control_event(
         event["timeout"] = timeout
     if tab_id is not None:
         event["tab_id"] = tab_id
+    if details:
+        event["details"] = details
     _BROWSER_CONTROL_EVENTS.append(event)
 
 
@@ -189,7 +192,8 @@ def _nav_js(url: str) -> str:
     )
 
 
-_TAB_CLOSE_TIMEOUT_SECONDS = 20
+_TAB_CLOSE_TIMEOUT_SECONDS = 8
+_TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS = 8
 _TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 5
 _TAB_CLOSE_ATTEMPTS = 1
 
@@ -216,30 +220,36 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
 
 def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
     last_error: BrowserCaptureError | subprocess.TimeoutExpired | None = None
-    for attempt in range(1, _TAB_CLOSE_ATTEMPTS + 1):
+    attempts = [
+        (
+            "locked",
+            ("tab.close", tab_id, "--lock-timeout", str(_TAB_CLOSE_LOCK_TIMEOUT_SECONDS)),
+            _TAB_CLOSE_TIMEOUT_SECONDS,
+        ),
+        (
+            "no_lock_cleanup",
+            ("tab.close", tab_id, "--no-lock"),
+            _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS,
+        ),
+    ]
+    attempted_modes: list[str] = []
+    for mode, args, timeout in attempts:
+        attempted_modes.append(mode)
         try:
-            _surf(
-                surf_run,
-                "tab.close",
-                tab_id,
-                "--lock-timeout",
-                str(_TAB_CLOSE_LOCK_TIMEOUT_SECONDS),
-                timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
-            )
+            _surf(surf_run, *args, timeout=timeout)
             return
         except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
             last_error = exc
-            if attempt < _TAB_CLOSE_ATTEMPTS:
-                time.sleep(1.0)
-                continue
+            continue
     if last_error is None:
         return
-    logger.warning("could not close {} tab {} after {} attempts: {}", label, tab_id, _TAB_CLOSE_ATTEMPTS, last_error)
+    logger.warning("could not close {} tab {} after {} attempts: {}", label, tab_id, len(attempts), last_error)
     _record_browser_control_event(
         kind="tab_close_failed",
         operation="tab.close",
         tab_id=tab_id,
-        timeout=_TAB_CLOSE_TIMEOUT_SECONDS,
+        timeout=_TAB_CLOSE_TIMEOUT_SECONDS + _TAB_CLOSE_NO_LOCK_TIMEOUT_SECONDS,
+        details={"attempted_modes": attempted_modes},
         error=last_error,
     )
 
