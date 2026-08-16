@@ -172,3 +172,38 @@ def test_the_scan_names_every_drifting_target() -> None:
 
 def test_a_scan_with_nothing_recorded_is_clean() -> None:
     assert ad.scan({})["clean"] is True
+
+
+# --- defects found by the first live run ----------------------------------
+
+def test_the_lane_failure_code_beats_the_generic_run_status(tmp_path) -> None:
+    """A run ending NEEDS_ATTENTION says nothing about which wall was hit.
+
+    Observed live: four distinct lane failures all collapsed into one useless
+    key, `unknown::NEEDS_ATTENTION`.
+    """
+    node = tmp_path / "node-artifacts" / "handler-webgpt"
+    node.mkdir(parents=True)
+    (node / "node-receipt.json").write_text(
+        '{"failure_code": "browser_submit_not_accepted", "status": "NEEDS_ATTENTION"}',
+        encoding="utf-8",
+    )
+    entry = blocker_ledger.record_from_execution(
+        {"status": "NEEDS_ATTENTION", "ok": False}, target="t", run_dir=str(tmp_path)
+    )
+    assert entry["failure_code"] == "browser_submit_not_accepted"
+
+
+def test_the_target_is_read_from_where_ask_actually_puts_it() -> None:
+    """It lives at dag.target.target; the top-level lookup recorded 'unknown'."""
+    bundle = {"dag": {"target": {"repo": "local/agent-skills", "target": "unblock-x"},
+                      "dag_id": "ask-tau-…"}}
+    assert blocker_ledger.target_of_bundle(bundle) == "unblock-x"
+
+
+def test_a_bundle_without_a_target_falls_back_to_the_dag_id() -> None:
+    assert blocker_ledger.target_of_bundle({"dag": {"dag_id": "ask-tau-abc"}}) == "ask-tau-abc"
+
+
+def test_an_unreadable_run_dir_does_not_raise() -> None:
+    assert blocker_ledger.most_specific_failure_code("/nonexistent/path") == ""

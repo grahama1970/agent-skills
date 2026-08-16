@@ -1108,7 +1108,7 @@ def run_tau_dag_bundle(
         from . import blocker_ledger
 
         blocker_ledger.record_from_execution(
-            result, target=str(bundle.get("target") or bundle.get("dag_id") or ""), run_dir=str(run_dir)
+            result, target=blocker_ledger.target_of_bundle(bundle), run_dir=str(run_dir)
         )
     except Exception:
         pass

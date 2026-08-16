@@ -216,6 +216,42 @@ def open_blockers() -> list[dict[str, Any]]:
     return [entry for entry in state().values() if entry.get("state") == OPEN]
 
 
+def most_specific_failure_code(run_dir: str) -> str:
+    """The lane's own failure code, not the run's generic status.
+
+    A run that ends NEEDS_ATTENTION says nothing about the wall; the node
+    receipt says `browser_submit_not_accepted`. Recording the generic status
+    collapses every distinct blocker into one useless key -- observed on the
+    first live run, where four different lane failures all landed as
+    `unknown::NEEDS_ATTENTION`.
+    """
+    root = Path(str(run_dir or ""))
+    if not root.is_dir():
+        return ""
+    for receipt in sorted(root.glob("node-artifacts/*/node-receipt.json")):
+        try:
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        code = str((payload or {}).get("failure_code") or "").strip()
+        if code:
+            return code
+    return ""
+
+
+def target_of_bundle(bundle: Any) -> str:
+    """Ask's target lives at `dag.target.target`, not at the top level."""
+    if not isinstance(bundle, dict):
+        return ""
+    dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else bundle
+    target = dag.get("target")
+    if isinstance(target, dict):
+        return str(target.get("target") or target.get("repo") or "")
+    if isinstance(target, str) and target:
+        return target
+    return str(dag.get("dag_id") or "")
+
+
 def record_from_execution(execution: Any, *, target: str = "", run_dir: str = "") -> dict[str, Any] | None:
     """Record a blocker directly from an Ask execution result, if it is one.
 
@@ -232,6 +268,7 @@ def record_from_execution(execution: Any, *, target: str = "", run_dir: str = ""
     failure_code = str(
         execution.get("blocked_reason")
         or execution.get("failure_code")
+        or most_specific_failure_code(run_dir)
         or (status or "unspecified")
     )
     return record(

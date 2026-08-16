@@ -374,6 +374,46 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Unblocking: one singular MVP, or nothing
+
+A spiralling agent does not need more options. It needs exactly one small thing
+that demonstrably moves the wall, chosen by somebody other than itself.
+
+```bash
+skills/ask/run.sh unblock                                  # compile from the top open blocker
+skills/ask/run.sh unblock --target T --failure-code F      # a specific wall
+skills/ask/run.sh unblock ... --execute                    # dispatch isolated candidates
+skills/ask/run.sh unblock --judge resp.md --run-proof      # score responses
+```
+
+It reads the open blocker from the ledger, grounds it with `/brave-search`
+(queries built from the recorded `failure_code` and message, never from the
+agent's own theory — that framing is what produced the spiral), and competes it
+across isolated browser models that run their own web search. Candidates never
+see each other: two models that read each other converge into one, and the
+whole point is an outside view.
+
+**The gate that does the real work: `PROOF_COMMAND` must fail right now.**
+
+That single requirement kills the failure class this exists for. Work produced
+to avoid a blocker has a proof that passes immediately — tests over your own
+code, contracts for a path that never runs, a suite that was already green
+while the wall stood. If a proposal's proof already passes, it does not address
+anything currently broken, whatever its prose claims. `--run-proof` executes it
+and requires a non-zero exit before the proposal can win.
+
+Singularity is enforced mechanically, not requested politely, because "keep it
+minimal" in a prompt is advice and advice is what an agent under pressure
+rationalises away. Refused: a second deliverable (`and also`, `follow-up`,
+`phase 2`), more than one change surface, a chained proof command, and a
+whole-suite proof such as bare `pytest` or `./sanity.sh`.
+
+If no candidate returns a singular proposal with a proof that fails now, the
+result is `NEEDS_ATTENTION` and no winner. An unblocking step that does not
+unblock is the spiral, not the exit. "This needs a human decision or an
+upstream change" is an explicitly valid answer — without that escape the
+candidates invent a fix.
+
 ### Blocked, or avoiding the blocker?
 
 Ask emitted `BLOCKED` in 58 places and persisted **none** of it across runs, so
