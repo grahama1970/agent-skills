@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "ask",
   "trials": 3,
-  "proof_scope": "ask entrypoint and browser-provider preflight troubleshooting posture",
+  "proof_scope": "ask entrypoints, browser-window reclamation, output pruning, blocker-ledger honesty gates, and the MVP fail-now proof gate, exercised against real browser/filesystem state and a real captured model proposal",
   "claims": {
     "proves": "the Ask sanity entrypoint and Surf browser-provider preflight recovery classification meet explicit local expectations",
     "does_not_prove": "browser provider semantic correctness, live WebGPT review completion, or full Ask orchestration readiness"
@@ -48,7 +48,7 @@
       "command": [
         "bash",
         "-c",
-        "uv run python scripts/check_help_dispatch_consistency.py"
+        "cd .. && python3 scripts/check_help_dispatch_consistency.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -76,6 +76,243 @@
       },
       "timeout_seconds": 400,
       "proves": "The gate is not vacuous: reintroducing the real 2026-08-13 contradiction ('WebGPT has been removed from /ask' beside the advertised webgpt shortcut) makes it FAIL, and run.sh is restored afterward."
+    },
+    {
+      "name": "window-reaper-reads-live-browser-state",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh reap-windows --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ask.window_reap_receipt.v1",
+          "tracked_windows"
+        ]
+      }
+    },
+    {
+      "name": "output-pruner-walks-the-real-output-tree",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prune-outputs --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ask.prune_outputs_receipt.v1"
+        ],
+        "stdout_not_contains": [
+          "\"applied\": true"
+        ]
+      }
+    },
+    {
+      "name": "pruner-never-deletes-on-a-dry-run",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && before=$(find /mnt/storage12tb/skills/ask/outputs -maxdepth 2 -type d | wc -l) && ./run.sh prune-outputs >/dev/null 2>&1; after=$(find /mnt/storage12tb/skills/ask/outputs -maxdepth 2 -type d | wc -l); test \"$before\" = \"$after\" && echo DRY_RUN_DELETED_NOTHING"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DRY_RUN_DELETED_NOTHING"
+        ]
+      }
+    },
+    {
+      "name": "blocker-ledger-is-readable-live",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh drift blockers"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "clearing-a-blocker-without-live-proof-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh drift clear t f --live-proof '' 2>&1 || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "live proof"
+        ]
+      }
+    },
+    {
+      "name": "unblock-refuses-a-single-candidate",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='evalt',failure_code='evalf')\" >/dev/null 2>&1 && ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target evalt --failure-code evalf --handler webgpt --no-research --execute 2>&1 || true"
+      ],
+      "expected": {
+        "stdout_contains": [
+          "at least 2 isolated candidates"
+        ],
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "real-model-proposal-passes-the-fail-now-gate",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh unblock --judge fixtures/live-webgpt-proposal.md"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SELECTED"
+        ]
+      }
+    },
+    {
+      "name": "a-proof-that-already-passes-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh unblock --judge fixtures/already-green-proposal.md --run-proof --cwd . 2>&1 || true"
+      ],
+      "expected": {
+        "stdout_contains": [
+          "NEEDS_ATTENTION"
+        ],
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "brave-search-grounding-is-live",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh unblock --target skills/ask --failure-code surf_browser_lock_timeout --json 2>/dev/null | head -c 4000 || true"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "model-provenance-on-a-real-receipt-is-unconfirmed",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,json,pathlib;sys.path.insert(0,'src');from ask import model_provenance as m;p=sorted(pathlib.Path('/mnt/storage12tb/skills/ask/outputs').rglob('*response*.meta.json'),key=lambda x:x.stat().st_mtime,reverse=True)[0];b=m.from_submit_meta(json.loads(p.read_text()),handler='webgpt');print(b['provenance_status']);assert b['reasoning_proven'] is False\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "unconfirmed"
+        ]
+      }
+    },
+    {
+      "name": "a-torn-ledger-append-loses-one-entry-not-the-file",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys,os;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='t',failure_code='f1');open(os.environ['ASK_BLOCKER_LEDGER'],'a').write('{\\\"key\\\": \\\"tor');b.record(target='t',failure_code='f2');ks={e['failure_code'] for e in b.load()};print(sorted(ks));assert ks=={'f1','f2'}, ks\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "f1",
+          "f2"
+        ]
+      }
+    },
+    {
+      "name": "the-lane-failure-code-beats-the-generic-status",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && export RD=$(mktemp -d) && mkdir -p $RD/node-artifacts/handler-webgpt && echo '{\"failure_code\":\"browser_submit_not_accepted\"}' > $RD/node-artifacts/handler-webgpt/node-receipt.json && export ASK_BLOCKER_LEDGER=$(mktemp) && uv run --project . python -c \"import sys,os;sys.path.insert(0,'src');from ask import blocker_ledger as b;e=b.record_from_execution({'status':'NEEDS_ATTENTION','ok':False},target='t',run_dir=os.environ['RD']);print(e['failure_code'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "browser_submit_not_accepted"
+        ]
+      }
+    },
+    {
+      "name": "a-tracked-path-can-never-be-declared-synthetic",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.writer_isolation import verify_setup_hook_result,SetupHookError\nfrom contextlib import suppress\ntry:\n verify_setup_hook_result({'syntheticPaths':['src/app.py']},tracked_paths=['src/app.py'])\n raise SystemExit('ACCEPTED_A_TRACKED_PATH')\nexcept SetupHookError as e:\n print('REFUSED:',e)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REFUSED"
+        ]
+      }
+    },
+    {
+      "name": "a-compound-proposal-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import mvp_unblock as m;f=m.parse_candidate(open('fixtures/live-webgpt-proposal.md').read());f['WHY_THIS_UNBLOCKS']+=' and also refactor the module.';p=m.validate_singular(f);print(p);assert any('compound' in x for x in p)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "compound"
+        ]
+      }
     }
   ]
 }
