@@ -725,6 +725,109 @@
           "CATALOG_DECIDES"
         ]
       }
+    },
+    {
+      "name": "roundtable-compiles-concurrent-seats-into-one-join",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Compare two repair options for a stuck lane.' --repo local/agent-skills --target eval-rt-compile --immutable-goal 'Each seat returns a position or a blocker.' --dag-template roundtable --topology concurrent --handler webgpt --handler webkimi --handler claude-fable-low --json 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);dag=d['bundle']['dag'];nodes=[str(n.get('node_id') or n.get('id')) for n in (dag.get('nodes') or [])];h=[n for n in nodes if n.startswith('handler-')];edges=[(e.get('from'),e.get('to')) for e in (dag.get('edges') or [])];chain=[e for e in edges if e[0] in h and e[1] in h];assert len(h)>=3, h;assert 'join' in nodes, nodes;assert not chain, chain;assert all((x,'join') in edges for x in h), edges;print('ROUNDTABLE_CONCURRENT',len(h))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ROUNDTABLE_CONCURRENT 3"
+        ]
+      }
+    },
+    {
+      "name": "a-sequential-chain-is-not-a-roundtable",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Compare two repair options.' --repo local/agent-skills --target eval-rt-chain --immutable-goal 'Positions or blockers.' --dag-template roundtable --topology concurrent --handler webgpt --handler webkimi --json 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);dag=d['bundle']['dag'];nodes=[str(n.get('node_id') or n.get('id')) for n in (dag.get('nodes') or [])];h=[n for n in nodes if n.startswith('handler-')];edges=[(e.get('from'),e.get('to')) for e in (dag.get('edges') or [])];assert not [e for e in edges if e[0] in h and e[1] in h], 'seats feed each other; this is a pipeline';print('NO_SEAT_TO_SEAT_EDGE')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO_SEAT_TO_SEAT_EDGE"
+        ]
+      }
+    },
+    {
+      "name": "competition-compiles-isolated-candidates-and-a-join",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh compete 'Propose the smallest fix.' --repo local/agent-skills --target eval-compete-compile --immutable-goal 'One singular change with a proof that fails now.' --handler webgpt --handler claude-fable-low --criterion singular-change-surface --json 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);dag=d['bundle']['dag'];nodes=[str(n.get('node_id') or n.get('id')) for n in (dag.get('nodes') or [])];h=[n for n in nodes if n.startswith('handler-')];edges=[(e.get('from'),e.get('to')) for e in (dag.get('edges') or [])];chain=[e for e in edges if e[0] in h and e[1] in h];assert len(h)>=2, h;assert 'join' in nodes, nodes;assert not chain, chain;assert all((x,'join') in edges for x in h), edges;print('COMPETE_ISOLATED',len(h))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPETE_ISOLATED 2"
+        ]
+      }
+    },
+    {
+      "name": "a-local-model-can-take-a-panel-seat",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 420,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh tau-dag 'Compare options.' --repo local/agent-skills --target eval-local-seat --immutable-goal 'Positions or blockers.' --dag-template roundtable --topology concurrent --handler webgpt --handler claude-fable-low --json 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);nodes=[str(n.get('node_id') or n.get('id')) for n in d['bundle']['dag']['nodes']];assert 'handler-claude-fable-low' in nodes, nodes;print('LOCAL_SEAT_COMPILED')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LOCAL_SEAT_COMPILED"
+        ]
+      }
+    },
+    {
+      "name": "a-real-two-seat-roundtable-is-compliant",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh panel-audit '/mnt/storage12tb/skills/ask/outputs/monitor-opportunities-next-steps-20260815/ask-tau-roundtable-review-this-monitor-o-4d4f989989e1' --mode roundtable"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPLIANT",
+          "all seats answered"
+        ]
+      }
+    },
+    {
+      "name": "mvp-packet-carries-the-fail-now-contract",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='evalt',failure_code='evalf',message='a lane timed out waiting for the transport lock')\" >/dev/null 2>&1 && ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target evalt --failure-code evalf --no-research 2>&1 | grep -c 'FAILS RIGHT NOW'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1"
+        ]
+      }
     }
   ]
 }
