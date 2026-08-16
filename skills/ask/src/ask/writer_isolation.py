@@ -201,7 +201,12 @@ def compile_isolation(plan: dict[str, Any]) -> dict[str, Any]:
     return contract
 
 
-def verify_writer_receipt(receipt: dict[str, Any], contract_entry: dict[str, Any]) -> dict[str, Any]:
+def verify_writer_receipt(
+    receipt: dict[str, Any],
+    contract_entry: dict[str, Any],
+    *,
+    synthetic_paths: list[str] | None = None,
+) -> dict[str, Any]:
     """Accept a writer's output only on artifacts, never on prose.
 
     "I made the change" is exactly what an unverified writer would also say,
@@ -225,8 +230,16 @@ def verify_writer_receipt(receipt: dict[str, Any], contract_entry: dict[str, Any
 
     allowed = _normalize_paths(contract_entry.get("allowed_paths"))
     denied = _normalize_paths(contract_entry.get("denied_paths"))
+    # Scaffolding the setup hook created is not the writer's work. Judging it
+    # as out-of-scope rejects the receipt for a true statement about a
+    # meaningless change, which trains everyone to ignore the verdict.
+    synthetic = {str(PurePosixPath(str(p))) for p in (synthetic_paths or [])}
+    ignored_synthetic: list[str] = []
     for path in changed:
         normalized = str(PurePosixPath(str(path)))
+        if normalized in synthetic:
+            ignored_synthetic.append(normalized)
+            continue
         if denied and any(_paths_overlap(normalized, d) for d in denied):
             problems.append(f"{normalized} is in a denied path")
         if allowed and not any(_paths_overlap(normalized, a) for a in allowed):
@@ -238,7 +251,8 @@ def verify_writer_receipt(receipt: dict[str, Any], contract_entry: dict[str, Any
         "accepted": not problems,
         "problems": problems,
         "patch_digest": patch_digest,
-        "changed_file_count": len(changed),
+        "changed_file_count": len(changed) - len(ignored_synthetic),
+        "ignored_synthetic_paths": sorted(ignored_synthetic),
     }
 
 
@@ -272,4 +286,191 @@ def reviewer_inputs(contract: dict[str, Any], receipts: list[dict[str, Any]]) ->
         "accepted_manifests": accepted,
         "withheld": withheld,
         "grants_filesystem_access": False,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Worktree setup hooks and diff capture (#1404 follow-on)
+#
+# `setup_hook` was a declared field nobody consumed. The gap it left: a managed
+# worktree needs helper files to be usable at all -- a `.venv`, a `.env.local`,
+# a node_modules symlink -- and every one of them then shows up in the writer's
+# patch. A reviewer reading that patch is reading the writer's scaffolding, and
+# `verify_writer_receipt` would reject the receipt for touching files outside
+# the declared scope, which is a true statement about a meaningless change.
+#
+# So a hook may declare which paths it created. Ask validates that declaration;
+# Tau runs the hook and captures the diff. Nothing here shells out to git.
+# ---------------------------------------------------------------------------
+
+DEFAULT_SETUP_HOOK_TIMEOUT_MS = 30_000
+MAX_SETUP_HOOK_TIMEOUT_MS = 300_000
+
+
+class SetupHookError(ValueError):
+    """A setup hook declaration that cannot be trusted. Raised before execution."""
+
+
+def compile_setup_hook(spec: Any, *, timeout_ms: int | None = None) -> dict[str, Any]:
+    """Validate a worktree setup hook before anything runs it.
+
+    A bare command name is rejected: it resolves through PATH, so what executes
+    depends on the ambient environment of whoever happens to run the DAG. The
+    hook must name a file -- absolute, `~`-anchored, or repo-relative.
+    """
+    command = str(spec or "").strip()
+    if not command:
+        return {"schema": "ask.worktree_setup_hook.v1", "declared": False}
+
+    if command.startswith("-"):
+        raise SetupHookError(f"setup hook {command!r} is not a path")
+    looks_like_path = (
+        command.startswith(("/", "~", "./", "../"))
+        or "/" in command
+    )
+    if not looks_like_path:
+        raise SetupHookError(
+            f"setup hook {command!r} is a bare command name; it would resolve through PATH. "
+            "Use an absolute, ~-anchored, or repo-relative path"
+        )
+
+    resolved_timeout = DEFAULT_SETUP_HOOK_TIMEOUT_MS if timeout_ms is None else int(timeout_ms)
+    if resolved_timeout <= 0 or resolved_timeout > MAX_SETUP_HOOK_TIMEOUT_MS:
+        raise SetupHookError(
+            f"setup hook timeout {resolved_timeout}ms must be between 1 and {MAX_SETUP_HOOK_TIMEOUT_MS}"
+        )
+
+    return {
+        "schema": "ask.worktree_setup_hook.v1",
+        "declared": True,
+        "command": command,
+        "timeout_ms": resolved_timeout,
+        # What Tau must hand the hook on stdin, so the hook can be written
+        # against a contract rather than against one caller's happenstance.
+        "stdin_fields": [
+            "repoRoot", "worktreePath", "agentCwd", "branch", "index", "runId", "baseCommit",
+        ],
+        "expected_stdout": {"syntheticPaths": "list of worktree-relative paths the hook created"},
+    }
+
+
+def verify_setup_hook_result(
+    payload: Any,
+    *,
+    tracked_paths: list[str] | None = None,
+) -> dict[str, Any]:
+    """Validate a setup hook's declared synthetic paths.
+
+    The refusals matter more than the acceptance:
+
+    - a tracked path may never be declared synthetic. That is how a writer
+      would hide a real edit from both the patch and the reviewer, and it is
+      indistinguishable from a hook bug, so it fails closed either way;
+    - paths must stay inside the worktree. `..` and absolute paths are refused
+      rather than normalized, because a hook that asks to exclude
+      `/etc/passwd` is not a hook whose other output should be trusted.
+    """
+    if not isinstance(payload, dict):
+        raise SetupHookError("setup hook stdout must be one JSON object")
+
+    raw = payload.get("syntheticPaths", [])
+    if raw is None:
+        raw = []
+    if not isinstance(raw, list):
+        raise SetupHookError("syntheticPaths must be a list")
+
+    tracked = {str(PurePosixPath(str(p))) for p in (tracked_paths or [])}
+    synthetic: list[str] = []
+    for item in raw:
+        text = str(item or "").strip()
+        if not text:
+            raise SetupHookError("syntheticPaths contains an empty path")
+        if text.startswith("/") or text.startswith("~"):
+            raise SetupHookError(f"synthetic path {text!r} must be relative to the worktree root")
+        normalized = PurePosixPath(text)
+        if ".." in normalized.parts:
+            raise SetupHookError(f"synthetic path {text!r} escapes the worktree")
+        cleaned = str(normalized)
+        if cleaned in tracked:
+            raise SetupHookError(
+                f"synthetic path {cleaned!r} is tracked; a tracked file can never be excluded "
+                "from diff capture"
+            )
+        synthetic.append(cleaned)
+
+    return {
+        "schema": "ask.worktree_setup_hook_result.v1",
+        "accepted": True,
+        "synthetic_paths": sorted(dict.fromkeys(synthetic)),
+    }
+
+
+def diff_capture_plan(contract_entry: dict[str, Any], *, synthetic_paths: list[str] | None = None) -> dict[str, Any]:
+    """What Tau should capture for one writer, and what it must leave out.
+
+    Emitted as pathspecs rather than as a command so the executor stays free to
+    capture however it likes; Ask is declaring intent, not running git.
+    """
+    excluded = sorted(dict.fromkeys(str(p) for p in (synthetic_paths or []) if str(p or "").strip()))
+    return {
+        "schema": "ask.writer_diff_capture.v1",
+        "workstream": contract_entry.get("id"),
+        "base_commit": contract_entry.get("base_commit"),
+        "include_paths": list(contract_entry.get("allowed_paths") or []),
+        "excluded_synthetic_paths": excluded,
+        "pathspecs": [f":(exclude){path}" for path in excluded],
+        "required_outputs": ["diff_stat", "patch_path", "patch_digest", "changed_files"],
+    }
+
+
+def verify_diff_capture(
+    capture: Any,
+    contract_entry: dict[str, Any],
+    *,
+    synthetic_paths: list[str] | None = None,
+) -> dict[str, Any]:
+    """Accept a captured diff only when it is attributable and in scope."""
+    problems: list[str] = []
+    capture = capture if isinstance(capture, dict) else {}
+    synthetic = {str(PurePosixPath(str(p))) for p in (synthetic_paths or [])}
+
+    if not str(capture.get("patch_digest") or ""):
+        problems.append("no patch_digest; a diff nobody can identify is not evidence")
+    if not str(capture.get("patch_path") or ""):
+        problems.append("no patch_path; the patch must be retrievable, not summarized")
+
+    stat = capture.get("diff_stat")
+    if not isinstance(stat, dict) or not stat:
+        problems.append("no diff_stat")
+        stat = {}
+
+    changed = capture.get("changed_files")
+    if not isinstance(changed, list):
+        changed = []
+
+    leaked = sorted(
+        str(PurePosixPath(str(path)))
+        for path in changed
+        if str(PurePosixPath(str(path))) in synthetic
+    )
+    if leaked:
+        problems.append(f"synthetic scaffolding leaked into the patch: {leaked}")
+
+    allowed = _normalize_paths(contract_entry.get("allowed_paths"))
+    out_of_scope = sorted(
+        str(PurePosixPath(str(path)))
+        for path in changed
+        if allowed and not any(_paths_overlap(str(PurePosixPath(str(path))), a) for a in allowed)
+    )
+    if out_of_scope:
+        problems.append(f"changed files outside the declared scope: {out_of_scope}")
+
+    return {
+        "schema": "ask.writer_diff_capture_verdict.v1",
+        "workstream": contract_entry.get("id"),
+        "accepted": not problems,
+        "problems": problems,
+        "files_changed": len(changed),
+        "insertions": int(stat.get("insertions") or 0),
+        "deletions": int(stat.get("deletions") or 0),
     }

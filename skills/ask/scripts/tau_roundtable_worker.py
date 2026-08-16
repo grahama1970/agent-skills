@@ -24,7 +24,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from ask import browser_windows  # noqa: E402
+from ask import browser_windows, model_provenance  # noqa: E402
 from ask.seam_models import enforce  # noqa: E402
 
 
@@ -974,6 +974,13 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "transport": _transport_for_args(args, handler),
             "model": submit_meta.get("model") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "requested_model": submit_meta.get("requested_handler") if handler not in HANDLER_SUBMIT_COMMANDS else None,
+            # Browser lanes recorded model: None / requested_model: None, so a
+            # panel could ask three seats for Pro reasoning and produce a
+            # receipt in which the tier that actually answered was invisible.
+            # Surf already carried the evidence; this stops dropping it.
+            "model_provenance": model_provenance.from_submit_meta(submit_meta, handler=handler)
+            if handler in HANDLER_SUBMIT_COMMANDS
+            else None,
             "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
             "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
             "surf_provider_result_path": str(surf_provider_result_path) if surf_provider_result_path else None,

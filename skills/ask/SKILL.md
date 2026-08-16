@@ -374,6 +374,45 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Which model actually answered
+
+Every browser lane receipt carries a `model_provenance` block. Ask requests a
+reasoning tier (`Pro` by default) but Surf cannot always confirm the dropdown
+took, and before this the receipt recorded `model: null` for every browser
+handler -- so a panel could ask three seats for `Pro` and leave no evidence of
+what answered.
+
+`provenance_status` is one of:
+
+| value | meaning |
+| --- | --- |
+| `confirmed` | an observation matched the request; `reasoning_proven: true` |
+| `unconfirmed` | a tier was requested and nothing confirmed it -- the shape a silently-failing dropdown produces |
+| `mismatch` | the provider was observed on a different tier than requested |
+| `selection_failed` | Surf reported a selector error |
+| `not_requested` | no tier was asked for |
+
+Absence of evidence is never confirmation. Read `reasoning_proven` before
+claiming a panel ran at a given tier; every real webgpt receipt on disk as of
+2026-08-16 reads `unconfirmed`.
+
+### Reclaiming finished runs
+
+```bash
+skills/ask/run.sh prune-outputs            # dry-run
+skills/ask/run.sh prune-outputs --apply
+```
+
+Installed daily at 05:41. `run_state.prune_runs` covers runtime runs; this
+covers the DAG output tree, a different directory shape it could not see --
+which is why that tree reached 2.2 GB across 332 runs with nothing pruning it.
+
+It removes a directory only when it carries `dag.json` or `compile-status.json`,
+its newest file is older than 14 days, and any `execution-status.json` is
+terminal. A non-terminal run is pinned regardless of age: a BLOCKED run is the
+evidence for why it blocked. A stale `webgpt_inflight.json` is not liveness --
+1,226 of them exist because completed submits leave the marker behind.
+
 ### Who owns a window Ask opened
 
 Every window Ask causes to exist is recorded in `~/.ask/browser-windows.jsonl`

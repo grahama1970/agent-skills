@@ -464,6 +464,10 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/close_stale_ask_tabs.py" "$@"
         ;;
+    prune-outputs)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prune_ask_outputs.py" "$@"
+        ;;
     reap-windows)
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/reap_ask_windows.py" "$@"
