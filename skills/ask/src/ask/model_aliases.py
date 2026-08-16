@@ -63,6 +63,12 @@ OPENCODE_PREFERENCES = {
         "opencode-go/glm-5",
     ],
     "kimi": [
+        # k3 first when the live catalog offers it. Listing an id here is safe
+        # by construction: preferences are intersected with the models scillm
+        # actually reports, so an id that does not exist is skipped rather than
+        # dispatched. That is how a newer model can be preferred without
+        # inventing a working name.
+        "opencode-go/kimi-k3",
         "opencode-go/kimi-k2.6",
         "opencode-go/kimi-k2.5",
     ],

@@ -436,6 +436,41 @@ is better at those than a local model without one.
 The roster lives in `PREFERRED_PANEL_ROSTER` and is eval-gated, including a case
 that fails if a roster seat has no launch URL.
 
+### When a web seat is rate limited
+
+Rate limits and unavailability are reported explicitly — `browser-availability`
+names the provider, and `browser-provider-selection.json` records
+`removed_handlers` with a `failure_code`. A limited provider is **removed** from
+the roundtable, competition, or MVP rather than retried into a timeout.
+
+The seat is then refilled by that provider's **local same-family equivalent**,
+not by another copy of whatever is left:
+
+| removed seat | local family |
+| --- | --- |
+| `webkimi` | `kimi` |
+| `webdeepseek` | `deepseek` |
+| `webgemini` | `qwen` |
+| `webgrok` | `glm` |
+| `webgpt` | `qwen` |
+
+Family-for-family preserves the diversity a panel exists for; collapsing every
+removed seat onto one model produces a panel that agrees with itself.
+
+Build selection inside a family is capability-driven:
+
+- **text question → `flash`.** Reaching for `pro` by default spends the capable
+  build on work that never needed it.
+- **multi-modal question → `pro`**, selected by asserting `image`/`pdf` input
+  support against the live catalog. A multi-modal question can never land on a
+  text-only build; if no configured model supports the input, the substitution
+  returns nothing instead of answering blind.
+
+Model ids come from the live OpenCode Go catalog, so preference lists may name
+a build that does not exist yet — `opencode-go/kimi-k3` sits ahead of `k2.6` and
+is simply skipped until scillm reports it. That is how a newer model is
+preferred without inventing a working name.
+
 ### Prefer the local Claude lane over webclaude
 
 Handler preference for Claude work, in order:

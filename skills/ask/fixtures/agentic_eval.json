@@ -640,6 +640,91 @@
           "BROWSER_LEADS_FOR_WEB"
         ]
       }
+    },
+    {
+      "name": "a-text-question-takes-flash-not-pro",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import local_substitute_model as pick\ncat=[{'id':'opencode-go/deepseek-v4-pro','input':{'text':True,'image':True}},{'id':'opencode-go/deepseek-v4-flash','input':{'text':True,'image':False}},{'id':'opencode-go/kimi-k3','input':{'text':True,'image':True}},{'id':'opencode-go/kimi-k2.6','input':{'text':True,'image':True}}]\nm=pick('webdeepseek',cat)\nassert m.endswith('-flash'), m\nprint('FLASH_FOR_TEXT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FLASH_FOR_TEXT"
+        ]
+      }
+    },
+    {
+      "name": "a-multimodal-question-takes-pro",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import local_substitute_model as pick\ncat=[{'id':'opencode-go/deepseek-v4-pro','input':{'text':True,'image':True}},{'id':'opencode-go/deepseek-v4-flash','input':{'text':True,'image':False}},{'id':'opencode-go/kimi-k3','input':{'text':True,'image':True}},{'id':'opencode-go/kimi-k2.6','input':{'text':True,'image':True}}]\nm=pick('webdeepseek',cat,multimodal=True)\nassert m.endswith('-pro'), m\nprint('PRO_FOR_MULTIMODAL')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PRO_FOR_MULTIMODAL"
+        ]
+      }
+    },
+    {
+      "name": "a-multimodal-question-never-lands-on-a-text-only-build",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import local_substitute_model as pick\ncat=[{'id':'opencode-go/deepseek-v4-flash','input':{'text':True,'image':False}}]\nm=pick('webdeepseek',cat,multimodal=True)\nassert m is None, m\nprint('REFUSED_TEXT_ONLY_FOR_IMAGE')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REFUSED_TEXT_ONLY_FOR_IMAGE"
+        ]
+      }
+    },
+    {
+      "name": "a-removed-web-seat-is-replaced-by-its-own-family",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import local_substitute_family as f\npairs={'webkimi':'kimi','webdeepseek':'deepseek','webgemini':'qwen','webgrok':'glm'}\nfor h,fam in pairs.items():\n assert f(h)==fam, (h,f(h))\nprint('FAMILY_FOR_FAMILY')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAMILY_FOR_FAMILY"
+        ]
+      }
+    },
+    {
+      "name": "a-newer-model-id-absent-from-the-catalog-is-skipped",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.model_aliases import select_opencode_model,OPENCODE_PREFERENCES\nassert 'opencode-go/kimi-k3' in OPENCODE_PREFERENCES['kimi']\ncat=[{'id':'opencode-go/kimi-k2.6','input':{'text':True}}]\nassert select_opencode_model('kimi',cat)=='opencode-go/kimi-k2.6'\ncat2=[{'id':'opencode-go/kimi-k3','input':{'text':True}},{'id':'opencode-go/kimi-k2.6','input':{'text':True}}]\nassert select_opencode_model('kimi',cat2)=='opencode-go/kimi-k3'\nprint('CATALOG_DECIDES')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CATALOG_DECIDES"
+        ]
+      }
     }
   ]
 }

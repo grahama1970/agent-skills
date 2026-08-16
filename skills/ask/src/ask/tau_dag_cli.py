@@ -1257,6 +1257,77 @@ PREFERRED_PANEL_ROSTER = (*PREFERRED_BROWSER_SEATS, LOCAL_CLAUDE_SEAT)
 #: competing for the same Chrome. It stays reachable by explicit name only.
 WEBCLAUDE_PREFERRED_SUBSTITUTES = (LOCAL_CLAUDE_SEAT, LOCAL_CLAUDE_FALLBACK)
 
+#: When a web seat is rate limited or unavailable it is removed from the panel,
+#: and its LOCAL SAME-FAMILY equivalent takes the seat rather than another copy
+#: of whatever is left. Substituting family-for-family preserves the diversity
+#: a panel exists for; collapsing every removed seat onto one model produces a
+#: panel that agrees with itself.
+#:
+#: Selection inside a family is capability-driven: `select_opencode_model`
+#: prefers the `pro` build and filters on `required_input`, so a multi-modal
+#: question (image or pdf attached) cannot land on a text-only `flash` build.
+LOCAL_FAMILY_SUBSTITUTES = {
+    "webkimi": "kimi",
+    "webdeepseek": "deepseek",
+    "webgemini": "qwen",
+    "webgrok": "glm",
+    "webgpt": "qwen",
+}
+
+
+def local_substitute_family(handler: str) -> str | None:
+    """The OpenCode family that stands in for a removed web seat."""
+    return LOCAL_FAMILY_SUBSTITUTES.get(str(handler or "").strip())
+
+
+def required_input_for(multimodal: bool, kind: str = "image") -> str | None:
+    """What a substitute must support.
+
+    Returning the capability rather than a model id keeps the choice with
+    `select_opencode_model`, which checks it against the live catalog instead
+    of against an assumption about which build is current.
+    """
+    return kind if multimodal else None
+
+
+def local_substitute_model(
+    handler: str,
+    models: list[dict[str, Any]],
+    *,
+    multimodal: bool = False,
+) -> str | None:
+    """The local model that replaces a removed web seat.
+
+    `pro` is reserved for multi-modal questions; a text question takes the
+    `flash` build, which is the cheaper and faster answer to the same thing.
+    Reaching for `pro` by default spends the capable build on work that never
+    needed it.
+
+    Availability still decides: a `flash` build absent from the live catalog
+    falls through to the family's normal preference order rather than failing.
+    """
+    from .model_aliases import select_opencode_model
+
+    family = local_substitute_family(handler)
+    if not family:
+        return None
+    required = required_input_for(multimodal)
+    if not multimodal:
+        usable = {
+            str(m.get("id") or m.get("name") or "")
+            for m in models
+            if m.get("supported") is not False and m.get("key_configured") is not False
+        }
+        flash = next(
+            (mid for mid in usable if f"/{family}-" in mid and mid.endswith("-flash")), None
+        )
+        if flash:
+            return flash
+    try:
+        return select_opencode_model(family, models, required_input=required)
+    except ValueError:
+        return None
+
 
 def _fallback_provider_order(request: str) -> list[str]:
     configured = os.environ.get("ASK_BROWSER_FALLBACK_ORDER", "").strip()
