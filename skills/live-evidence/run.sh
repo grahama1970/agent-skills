@@ -157,6 +157,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_youtube_interview.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-reliability-adversarial)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_reliability_adversarial.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-real-stt-window)
     shift || true
     prepare_python_environment

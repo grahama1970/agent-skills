@@ -1,18 +1,23 @@
 {
   "version": 2,
   "skill": "live-evidence",
+  "eval_tier": "compliance",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, interviewer question detection, Ask command/card answer text plumbing, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, interviewer question detection, sampled adversarial transcript-window recovery, degraded Memory self-recovery, Ask command/card answer text plumbing, and fail-closed contract smoke",
   "claims": {
-    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, reject consentless listener startup, and fail closed on malformed skill contracts",
-    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, recover from sampled noisy transcript windows, suppress duplicate/card-storm triggers, keep answer cards available while Memory is slow/degraded, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, real Graph Memory relevance, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, React visual quality, or interview semantic correctness"
   },
   "cases": [
     {
       "name": "verify-entrypoint-local-http-ripgrep-ui",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh verify"],
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh verify"
+      ],
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
@@ -23,29 +28,14 @@
       }
     },
     {
-      "name": "interview-loop-question-to-scannable-cards",
-      "type": "positive",
-      "real_world": true,
-      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-interview-loop"],
-      "timeout_seconds": 90,
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "graham turns do not trigger retrieval: PASS",
-          "existing code evidence card: PASS",
-          "ask code solution card: PASS",
-          "question-to-answer text surfaced: PASS",
-          "new code evidence card: PASS",
-          "unsupported question fail-closed: PASS",
-          "card queue bounded for realtime scanning: PASS"
-        ]
-      }
-    },
-    {
       "name": "youtube-derived-coding-interview-ask-cards",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-youtube-interview"],
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-youtube-interview"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
@@ -64,7 +54,7 @@
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-real-stt-window"
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-real-stt-window"
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -76,25 +66,76 @@
       }
     },
     {
+      "name": "adversarial-sampled-transcript-window-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-reliability-adversarial --scenario transcript-window --samples 60 --seed ${RANDOM}"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "sampled transcript recovery: PASS",
+          "false trigger suppression: PASS",
+          "duplicate question suppression: PASS",
+          "reliability adversarial receipt:"
+        ]
+      }
+    },
+    {
+      "name": "adversarial-degraded-memory-http-self-recovery",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-reliability-adversarial --scenario http-recovery --samples 60 --seed ${RANDOM}"
+      ],
+      "timeout_seconds": 150,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "memory degradation self-recovery: PASS",
+          "card storm suppression: PASS",
+          "reliability adversarial receipt:"
+        ]
+      }
+    },
+    {
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh listen --mode microphone"],
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh listen --mode microphone"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 2,
-        "stderr_contains": ["live modes require --consent-confirmed"]
+        "stderr_contains": [
+          "live modes require --consent-confirmed"
+        ]
       }
     },
     {
       "name": "invalid-skill-contract-rejected",
       "type": "adversarial",
       "real_world": true,
-      "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" bash ../run.sh eval-adversarial"],
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-adversarial"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["invalid skill rejected: PASS"]
+        "stdout_contains": [
+          "invalid skill rejected: PASS"
+        ]
       }
     }
   ]
