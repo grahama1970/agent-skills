@@ -1267,6 +1267,28 @@ def _roundtable_handler_map_from_dag(dag: dict[str, Any]) -> dict[str, str]:
     return handlers
 
 
+#: How long a browser lane must be silent before its missing receipt counts as
+#: a failure rather than as work in progress. Generous on purpose: the cost of
+#: waiting is a slower verdict, while the cost of being early is discarding a
+#: provider answer that already exists.
+BROWSER_LANE_ACTIVITY_GRACE_SECONDS = 180
+
+
+def _browser_lane_recently_active(evidence_paths: list[Path], *, now: float | None = None) -> bool:
+    """Whether this lane wrote anything recently enough to still be working."""
+    moment = time.time() if now is None else now
+    newest = 0.0
+    for path in evidence_paths:
+        try:
+            if path.exists():
+                newest = max(newest, path.stat().st_mtime)
+        except OSError:
+            continue
+    if not newest:
+        return False
+    return (moment - newest) < BROWSER_LANE_ACTIVITY_GRACE_SECONDS
+
+
 def _synthesize_missing_browser_handler_receipts(
     dag: dict[str, Any],
     run_dir: Path,
@@ -1299,6 +1321,13 @@ def _synthesize_missing_browser_handler_receipts(
             heartbeat_path,
         ]
         if not any(path.exists() for path in evidence_paths):
+            continue
+        # A lane that is still writing has not failed. Synthesizing a failure
+        # receipt over a live submit is how a working provider round became a
+        # blocked run: measured 2026-08-16, webgemini was declared
+        # browser_handler_timeout 3 SECONDS after submitting, and its real
+        # answer landed 12 seconds later and was discarded.
+        if _browser_lane_recently_active(evidence_paths):
             continue
         artifact_dir.mkdir(parents=True, exist_ok=True)
         submit_meta = _read_json(meta_path) if meta_path.is_file() else {}

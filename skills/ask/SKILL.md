@@ -374,6 +374,46 @@ intentionally wants the same long-lived provider tabs to keep their conversation
 context across the whole roundtable or competition; preflight every named tab
 before submission and keep the same binding for every round.
 
+### Live evals: the contract is honesty, not a fixed answer
+
+```bash
+skills/ask/run.sh live-seat-probe claude-opus-4-8-high
+skills/ask/run.sh live-seat-probe claude-fable-low     # exercises self-recovery
+skills/ask/run.sh live-seat-probe webgemini
+```
+
+Deterministic tests over local functions proved nothing about whether `/ask`
+works: every real defect this session came from a live run, and none from a
+test. These cases call real providers, so they are non-deterministic by design.
+
+A live provider may answer, rate limit, or stall, and none of that is under our
+control. Asserting a fixed answer would go red whenever a provider is merely
+busy, and everyone would learn to ignore it. So the contract is:
+
+> a seat either answers with real content, or names why it did not.
+
+Both outcomes pass. Three things fail, whatever the provider was doing:
+
+| violation | why it matters |
+| --- | --- |
+| `PASS` with zero response bytes | a green run that produced nothing |
+| a non-PASS status with no `failure_code` | a dead end nobody can act on |
+| a different model answered, unrecorded | a reply that looks fine and silently came from elsewhere |
+
+The third caught a real bug minutes after the rate-limit fallback was added:
+the receipt read `claude-fable-low PASS` while `claude-opus-4-8` had written the
+answer. The substitution is now recorded in the node receipt:
+
+```json
+"rate_limit_fallback": {
+  "from": "claude-fable-low", "to": "claude-opus-4-8-high",
+  "reason": "provider_rate_limited"
+}
+```
+
+A timeout is a named outcome, not a violation — that is exactly the
+non-determinism these accept.
+
 ### Auditing a panel against the best-practices contracts
 
 ```bash

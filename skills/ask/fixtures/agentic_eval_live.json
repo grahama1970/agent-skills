@@ -1,0 +1,84 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "live provider dispatch through the real Ask runtime",
+  "claims": {
+    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, and that no seat dispatches a nonexistent model",
+    "does_not_prove": "that any given provider is available at run time, browser seat completion, or semantic correctness of any response"
+  },
+  "cases": [
+    {
+      "name": "live-a-local-seat-answers-or-names-its-blocker",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1000,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh live-seat-probe claude-opus-4-8-high"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HONEST"
+        ]
+      }
+    },
+    {
+      "name": "live-a-rate-limited-seat-self-recovers-and-records-it",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1000,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh live-seat-probe claude-fable-low"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HONEST"
+        ]
+      }
+    },
+    {
+      "name": "live-a-browser-seat-that-fails-names-a-failure-code",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1200,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh live-seat-probe webgemini"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HONEST"
+        ]
+      }
+    },
+    {
+      "name": "live-no-seat-dispatches-a-nonexistent-model",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1000,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh live-seat-probe claude-fable-low --json 2>/dev/null | grep -c model_not_available || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "0"
+        ]
+      }
+    }
+  ]
+}

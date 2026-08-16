@@ -4,8 +4,8 @@
   "trials": 3,
   "proof_scope": "ask entrypoints, browser-window reclamation, output pruning, blocker-ledger honesty gates, and the MVP fail-now proof gate, exercised against real browser/filesystem state and a real captured model proposal",
   "claims": {
-    "proves": "the Ask sanity entrypoint and Surf browser-provider preflight recovery classification meet explicit local expectations",
-    "does_not_prove": "browser provider semantic correctness, live WebGPT review completion, or full Ask orchestration readiness"
+    "proves": "ask entrypoints, panel compliance with best-practices-roundtable/competition, workflow compilation, and the MVP refusal gates",
+    "does_not_prove": "that any provider answers; see fixtures/agentic_eval_live.json for the live contract"
   },
   "cases": [
     {
@@ -826,6 +826,23 @@
         "exit_code": 0,
         "stdout_contains": [
           "1"
+        ]
+      }
+    },
+    {
+      "name": "a-still-writing-browser-lane-is-not-declared-failed",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys,os,time,tempfile;sys.path.insert(0,'src');from pathlib import Path;from ask.tau_dag import _browser_lane_recently_active as a\nd=Path(tempfile.mkdtemp());f=d/'response.md';f.write_text('x')\nassert a([f]), 'a lane that just wrote was treated as dead'\no=d/'old.md';o.write_text('x');os.utime(o,(time.time()-9999,)*2)\nassert not a([o]), 'a silent lane was treated as alive forever'\nprint('LIVENESS_GUARD_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LIVENESS_GUARD_OK"
         ]
       }
     }

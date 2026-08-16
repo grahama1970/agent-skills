@@ -1002,6 +1002,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "transport": _transport_for_args(args, handler),
             "model": submit_meta.get("model") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "requested_model": submit_meta.get("requested_handler") if handler not in HANDLER_SUBMIT_COMMANDS else None,
+            # Which model actually answered, when it is not the one asked for.
+            # Without this the receipt reads "claude-fable-low PASS" while
+            # claude-opus-4-8 wrote the answer -- a reply that looks fine and
+            # silently came from somewhere else. Caught live by the seat probe
+            # on 2026-08-16, in the very fallback added minutes earlier.
+            "rate_limit_fallback": submit_meta.get("rate_limit_fallback"),
             # Browser lanes recorded model: None / requested_model: None, so a
             # panel could ask three seats for Pro reasoning and produce a
             # receipt in which the tier that actually answered was invisible.
