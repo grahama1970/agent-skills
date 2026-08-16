@@ -105,6 +105,31 @@
       }
     },
     {
+      "name": "mvp-steps-2-8-sampled-adversarial-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-mvp-steps-2-8 --samples 60 --seed ${RANDOM}"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "step2 real stt dependency gate: PASS",
+          "step3 stabilized final turn projection: PASS",
+          "step4 interviewer code question trigger: PASS",
+          "step5 memory http and code runner boundaries: PASS",
+          "sampled adversarial trigger suppression: PASS",
+          "step6 current checkout ripgrep after startup: PASS",
+          "step7 ask fixture-only run-dir surfaced: PASS",
+          "step8 source-bound cards and manual derived-query lanes: PASS",
+          "mvp steps 2-8 receipt:"
+        ]
+      }
+    },
+    {
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,

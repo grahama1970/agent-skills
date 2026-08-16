@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import subprocess
 from pathlib import Path
 from time import monotonic
@@ -38,12 +39,15 @@ class ExternalSkillClient:
     async def retrieve(self, lane: RetrievalLane, query: str) -> ExternalResult:
         """Execute one manual Brave or Dogpile request."""
 
+        derived_query = derive_manual_search_query(query)
+        if not derived_query:
+            return ExternalResult(sources=[], latency_ms=0, detail="No bounded manual query", ok=False)
         if lane is RetrievalLane.BRAVE:
             runner = self._settings.brave_runner
-            args = ["web", query, "--count", "5"]
+            args = ["web", derived_query, "--count", "5"]
         elif lane is RetrievalLane.DOGPILE:
             runner = self._settings.dogpile_runner
-            args = ["search", query]
+            args = ["search", derived_query]
         else:
             return ExternalResult(sources=[], latency_ms=0, detail="Unsupported external lane", ok=False)
         if runner is None:
@@ -53,7 +57,7 @@ class ExternalSkillClient:
                 detail=f"{lane.value} runner not configured",
                 ok=False,
             )
-        return await asyncio.to_thread(self._run, runner, lane, args, query)
+        return await asyncio.to_thread(self._run, runner, lane, args, derived_query)
 
     def _run(
         self,
@@ -140,6 +144,19 @@ def _parse_external(lane: RetrievalLane, query: str, stdout: str) -> list[Eviden
             )
         )
     return sources
+
+
+def derive_manual_search_query(text: str, *, max_chars: int = 180) -> str:
+    """Derive a bounded external-search query from a question, not transcript history."""
+
+    clean = " ".join(text.split())
+    if not clean:
+        return ""
+    question_matches = re.findall(r"([^?.!]{8,}\?)", clean)
+    candidate = question_matches[-1] if question_matches else clean
+    candidate = re.sub(r"(?i)\b(interviewer|candidate|graham|speaker\s*\d+)\s*:\s*", "", candidate)
+    candidate = candidate.strip(" -:;,.")
+    return candidate[:max_chars].rstrip(" -:;,.")
 
 
 def _first_text(item: dict[str, Any], *keys: str) -> str:

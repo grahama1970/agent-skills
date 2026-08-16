@@ -111,7 +111,14 @@ class RuntimeState:
                         and item.source is event.source
                     )
                 ]
-            if not any(item.event_id == event.event_id for item in self._transcript):
+            replaced = False
+            for index, item in enumerate(self._transcript):
+                if item.event_id != event.event_id:
+                    continue
+                self._transcript[index] = event
+                replaced = True
+                break
+            if not replaced:
                 self._transcript.append(event)
             self._transcript = self._transcript[-self._settings.max_transcript_events :]
             snapshot = self._snapshot_unlocked()
