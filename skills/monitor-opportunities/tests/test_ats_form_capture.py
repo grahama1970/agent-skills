@@ -152,31 +152,29 @@ def test_close_tab_records_browser_control_failure(
     assert summary["status"] == "DEGRADED"
     assert summary["counts"] == {"tab_close_failed": 1}
     assert summary["recent"][0]["tab_id"] == "123"
-    assert summary["recent"][0]["timeout"] == 75
-    assert close_calls[0][1:] == ("tab.close", "123", "--lock-timeout", "15")
-    assert sleeps == [1.0, 1.0]
+    assert summary["recent"][0]["timeout"] == 20
+    assert close_calls[0][1:] == ("tab.close", "123", "--lock-timeout", "5")
+    assert sleeps == []
 
 
-def test_close_tab_does_not_degrade_after_retry_success(
+def test_close_tab_success_does_not_degrade(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls = 0
 
-    def close_after_retry(*_: object, **__: object) -> str:
+    def close_success(*_: object, **__: object) -> str:
         nonlocal calls
         calls += 1
-        if calls == 1:
-            raise subprocess.TimeoutExpired(["surf", "tab.close", "123"], 30)
         return ""
 
-    monkeypatch.setattr(browser_capture, "_surf", close_after_retry)
+    monkeypatch.setattr(browser_capture, "_surf", close_success)
     monkeypatch.setattr(browser_capture.time, "sleep", lambda _seconds: None)
     browser_capture.reset_browser_control_events()
 
     browser_capture._close_tab(Path("surf/run.sh"), "123", "test")
 
     summary = browser_capture.browser_control_summary()
-    assert calls == 2
+    assert calls == 1
     assert summary["status"] == "OK"
     assert summary["counts"] == {}
 

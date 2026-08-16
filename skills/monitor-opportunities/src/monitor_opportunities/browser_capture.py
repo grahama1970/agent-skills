@@ -189,9 +189,9 @@ def _nav_js(url: str) -> str:
     )
 
 
-_TAB_CLOSE_TIMEOUT_SECONDS = 75
-_TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 15
-_TAB_CLOSE_ATTEMPTS = 3
+_TAB_CLOSE_TIMEOUT_SECONDS = 20
+_TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 5
+_TAB_CLOSE_ATTEMPTS = 1
 
 
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
