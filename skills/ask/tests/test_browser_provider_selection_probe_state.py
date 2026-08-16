@@ -112,6 +112,33 @@ def test_an_explicit_single_seat_is_never_answered_by_another_provider() -> None
     assert selection["status"] == "BLOCKED"
 
 
+def test_fresh_single_seat_survives_ambient_probe_timeout() -> None:
+    """Old-tab probe timeouts must not prevent Ask from creating a fresh tab."""
+    selection = _select_available_browser_handlers(
+        _payload(["webgpt"]),
+        _report(webgpt=_degraded("browser_provider_probe_timeout")),
+        browser_tab_lifecycle="fresh-keep",
+    )
+    assert selection["status"] == "READY"
+    assert selection["active_handlers"] == ["webgpt"]
+    assert selection["removed_handlers"] == []
+    assert selection["fresh_lifecycle_kept_handlers"] == ["webgpt"]
+    assert selection["unusable_providers"] == {"webgpt": "browser_provider_probe_timeout"}
+
+
+def test_fresh_single_seat_still_blocks_on_non_timeout_degraded_probe() -> None:
+    """Fresh-tab keep is only for old-tab cooldowns and old-tab read timeouts."""
+    selection = _select_available_browser_handlers(
+        _payload(["webgpt"]),
+        _report(webgpt=_degraded("browser_provider_auth_unknown")),
+        browser_tab_lifecycle="fresh-keep",
+    )
+    assert selection["status"] == "BLOCKED"
+    assert selection["active_handlers"] == []
+    assert selection["removed_handlers"] == ["webgpt"]
+    assert selection["fresh_lifecycle_kept_handlers"] == []
+
+
 def test_a_roundtable_still_falls_back_to_healthy_seats() -> None:
     """Multi-seat panels keep substituting; seats there are interchangeable."""
     selection = _select_available_browser_handlers(
