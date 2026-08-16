@@ -147,11 +147,19 @@ PROVIDER_PAYLOAD_POLICIES: dict[str, ProviderPayloadPolicy] = {
         # which genuinely cannot read images, and that conflation made every
         # webdeepseek lane in an attachment round fail
         # browser_attachment_unsupported before opening a page.
-        can_attach=True,
-        max_attachments=1,
+        # The DeepSeek WEB chat does read images (V4-Pro/V4-Flash vision, and
+        # deepseek.submit exposes --mode Vision). Ask still declares this False
+        # because surf cannot perform the upload yet: the extension's
+        # providerUploadStrategies table covers gemini, chatgpt and grok only,
+        # and chat.deepseek.com exposes no input[type=file] to target. Claiming
+        # the capability here only buys a window that fails at submit.
+        # Unblocked by adding a deepseek entry to that table and rebuilding the
+        # vendored surf-cli.
+        can_attach=False,
+        max_attachments=0,
         zip_allowed=False,
-        preferred_bundle="one image or one readable Markdown/text bundle via --attach-file",
-        gotcha="the deepseek API cannot read images; the web chat can. Upload support is visible-input dependent",
+        preferred_bundle="bounded inline text only until surf can upload to deepseek",
+        gotcha="web chat supports vision but surf has no deepseek upload strategy; the API cannot read images at all",
     ),
     "deepseek": ProviderPayloadPolicy(
         handler="deepseek",
@@ -1246,9 +1254,26 @@ def _browser_submit_command(
         command.extend(["--model", browser_model_preference])
     for attachment_path in attachment_paths:
         command.extend(["--attach-file", attachment_path])
+    # DeepSeek's web chat reads images only in Vision mode; deepseek.submit
+    # defaults to Expert, which takes the upload and answers from the prompt
+    # text alone -- a lane that looks like it saw the picture and did not.
+    # Confirmed by the operator, by search (V4-Pro/V4-Flash ship vision on the
+    # web app while the API has no public vision endpoint), and by
+    # `deepseek.submit --help` exposing --mode Instant|Expert|Vision.
+    if handler == "webdeepseek" and any(_is_image_attachment(p) for p in attachment_paths):
+        command.extend(["--mode", "Vision"])
     if args.no_activate:
         command.append("--no-activate")
     return command
+
+
+#: Suffixes DeepSeek's Vision mode is for. Kept narrow: a text bundle must stay
+#: in Expert mode, which reasons better on prose.
+_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff"}
+
+
+def _is_image_attachment(path: str) -> bool:
+    return Path(str(path)).suffix.lower() in _IMAGE_SUFFIXES
 
 
 def _browser_stable_stall_ms() -> str:
