@@ -1994,8 +1994,6 @@ def nightly(
                     )
                     semantic_installs.append(install_receipt)
                 except (ContractError, FileNotFoundError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
-                    if promoted_stage0:
-                        _fail(ContractError("PROMOTED_STAGE0_TAU_SEMANTIC_PROVIDER_FAILED", str(exc)))
                     provider_results.append(
                         {
                             "opportunity_id": str(selected.get("opportunity_id", "")),
@@ -2004,7 +2002,9 @@ def nightly(
                             "provider_live": False,
                         }
                     )
-                    break
+                    if not promoted_stage0:
+                        break
+                    continue
             steps["tau_semantic"]["provider_results"] = provider_results  # type: ignore[index]
             steps["tau_semantic"]["installed_addenda"] = len(semantic_installs)  # type: ignore[index]
             steps["tau_semantic"]["provider_live"] = bool(semantic_installs)  # type: ignore[index]

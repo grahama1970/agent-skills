@@ -122,13 +122,18 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         receipt = {
             "schema": "monitor_opportunities.tau_semantic_prepare_receipt.v1",
             "status": "PASS",
-            "selected_count": 1,
+            "selected_count": 2,
             "rejected_count": 0,
             "selected": [
                 {
                     "rank": 1,
-                    "opportunity_id": "candidate:a:test",
-                    "artifact": str(out_dir / "semantic-inputs" / "01-candidate-a-test.json"),
+                    "opportunity_id": "candidate:a:first",
+                    "artifact": str(out_dir / "semantic-inputs" / "01-candidate-a-first.json"),
+                },
+                {
+                    "rank": 2,
+                    "opportunity_id": "candidate:a:second",
+                    "artifact": str(out_dir / "semantic-inputs" / "02-candidate-a-second.json"),
                 }
             ],
             "provider_live": False,
@@ -146,17 +151,23 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         "monitor_opportunities.cli.prepare_tau_semantic_inputs",
         fake_semantic_prepare,
     )
-    monkeypatch.setattr(
-        "monitor_opportunities.cli.run_provider_semantic_eval",
-        lambda **kwargs: {
+    def fake_provider_eval(**kwargs):
+        input_path = Path(str(kwargs["input_path"]))
+        if "first" in input_path.name:
+            raise subprocess.TimeoutExpired(["ask", "tau-dag"], 60)
+        return {
             "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
             "status": "PASS",
-            "opportunity_id": "candidate:a:test",
+            "opportunity_id": "candidate:a:second",
             "provider_live": True,
             "live": True,
             "mocked": False,
             "external_effects": False,
-        },
+        }
+
+    monkeypatch.setattr(
+        "monitor_opportunities.cli.run_provider_semantic_eval",
+        fake_provider_eval,
     )
 
     def fake_semantic_install(*, run_dir: Path, provider_receipt_path: Path):
@@ -167,7 +178,7 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
             json.dumps(
                 {
                     "schema": "monitor_opportunities.semantic_addenda_index.v1",
-                    "addenda": [{"opportunity_id": "candidate:a:test"}],
+                    "addenda": [{"opportunity_id": "candidate:a:second"}],
                 },
                 indent=2,
                 sort_keys=True,
@@ -254,9 +265,13 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert states["buzz_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
     assert states["buzz_summary"]["status"] == "WRITTEN"
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
-    assert payload["steps"]["tau_semantic"]["selected_count"] == 1
+    assert payload["steps"]["tau_semantic"]["selected_count"] == 2
     assert payload["steps"]["tau_semantic"]["provider_live"] is True
     assert payload["steps"]["tau_semantic"]["installed_addenda"] == 1
+    assert [row["status"] for row in payload["steps"]["tau_semantic"]["provider_results"]] == [
+        "ERROR",
+        "PASS",
+    ]
     assert payload["steps"]["zero_effect_replay"]["status"] == "PASS"
     zero_effect_replay = json.loads(Path(payload["artifacts"]["zero_effect_replay"]).read_text())
     assert zero_effect_replay["schema"] == "monitor_opportunities.zero_effect_replay_receipt.v1"
