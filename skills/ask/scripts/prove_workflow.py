@@ -16,11 +16,17 @@ ROOT = Path(__file__).resolve().parents[1]
 def run(mode: str, handlers: list[str], timeout: int) -> dict:
     token = f"OK-{uuid.uuid4().hex[:6].upper()}"
     ask = f"Reply with exactly: {token}"
-    if mode == "webgpt":
+    if mode not in {"roundtable", "compete"}:
         # Single-call path. The roundtable template needs two seats and returns
         # NEEDS_INTERVIEW for one, which is the harness misusing Ask, not Ask
         # failing.
-        cmd = [str(ROOT / "run.sh"), "webgpt", ask, "--json"]
+        # single-call template: one seat, no join, no interview. The
+        # roundtable template demands two seats and returns NEEDS_INTERVIEW for
+        # one, which is the harness misusing Ask rather than Ask failing.
+        cmd = [str(ROOT / "run.sh"), "tau-dag", ask,
+               "--repo", "local/agent-skills", "--target", f"prove-{mode}",
+               "--immutable-goal", "Return the token.",
+               "--dag-template", "single-call"]
     elif mode == "compete":
         cmd = [str(ROOT / "run.sh"), "compete", ask,
                "--repo", "local/agent-skills", "--target", "prove-compete",
@@ -66,13 +72,15 @@ def run(mode: str, handlers: list[str], timeout: int) -> dict:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("mode", choices=["webgpt", "roundtable", "compete"])
+    # Any browser handler may be proved as a single seat: the question
+    # "can Ask open a window and tab for THIS provider and get a response"
+    # has to be answered per provider, not for webgpt and then assumed.
+    ap.add_argument("mode")
     ap.add_argument("--handler", action="append", default=[])
     ap.add_argument("--timeout", type=int, default=1500)
     args = ap.parse_args(argv)
-    handlers = args.handler or {"webgpt": ["webgpt"],
-                                "roundtable": ["webgpt", "webkimi"],
-                                "compete": ["webgpt", "webkimi"]}[args.mode]
+    defaults = {"roundtable": ["webgpt", "webkimi"], "compete": ["webgpt", "webkimi"]}
+    handlers = args.handler or defaults.get(args.mode, [args.mode])
     try:
         r = run(args.mode, handlers, args.timeout)
     except subprocess.TimeoutExpired:

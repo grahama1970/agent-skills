@@ -2023,6 +2023,25 @@ def _place_seat_window(browser_oracle_run: Path, before: list[str]) -> dict[str,
     )
 
 
+def _close_windows(lifecycle: dict[str, Any], window_ids: list[str]) -> list[dict[str, Any]]:
+    """Close named windows now, returning the command receipts."""
+    if not window_ids:
+        return []
+    surf_run = Path(str(lifecycle.get("surf_run") or (Path(__file__).resolve().parents[2].parent / "surf" / "run.sh")))
+    lock_timeout = int(lifecycle.get("lock_timeout_seconds") or DEFAULT_BROWSER_SUBMIT_TIMEOUT_SECONDS)
+    receipts: list[dict[str, Any]] = []
+    for window_id in window_ids:
+        receipts.append(
+            _lifecycle_command(
+                [str(surf_run), "window.close", window_id, "--lock-timeout", str(lock_timeout)],
+                cwd=surf_run.parent,
+                timeout_seconds=lock_timeout + BROWSER_COMMAND_GRACE_SECONDS,
+            )
+        )
+    _deregister_ask_windows(set(window_ids))
+    return receipts
+
+
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     if lifecycle.get("cleanup_status") == "attempted":
         return
@@ -2032,7 +2051,23 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     if run_dir.is_dir():
         pending = _lanes_pending_recovery(run_dir)
         if pending:
-            lifecycle["cleanup"] = []
+            # Retain ONLY the windows whose lane still holds the sole copy of a
+            # response. Keeping every window because one lane pends recovery
+            # leaked six windows for one unfinished seat (observed 2026-08-16 on
+            # the six-seat vision run), which is how the tab count reached 20
+            # and started removing providers from later runs.
+            pending_handlers = {
+                str(entry.get("lane", "")).replace("handler-", "") for entry in pending
+            }
+            releasable = [
+                str(tab.get("window_id"))
+                for tab in lifecycle.get("created_tabs", [])
+                if isinstance(tab, dict)
+                and tab.get("window_id")
+                and str(tab.get("handler") or "") not in pending_handlers
+            ]
+            lifecycle["cleanup"] = _close_windows(lifecycle, sorted(set(releasable)))
+            lifecycle["released_windows"] = sorted(set(releasable))
             lifecycle["cleanup_status"] = "skipped_pending_recovery"
             lifecycle["pending_recovery_lanes"] = pending
             # Retention is an obligation with a clock, not an exemption. 28 of
@@ -2043,7 +2078,9 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
                 [
                     str(tab.get("window_id"))
                     for tab in lifecycle.get("created_tabs", [])
-                    if isinstance(tab, dict) and tab.get("window_id")
+                    if isinstance(tab, dict)
+                    and tab.get("window_id")
+                    and str(tab.get("handler") or "") in pending_handlers
                 ],
                 mode="pending-recovery",
                 run_dir=str(lifecycle.get("run_dir") or ""),

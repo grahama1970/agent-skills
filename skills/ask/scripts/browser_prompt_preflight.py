@@ -27,14 +27,49 @@ import sys
 _ABS = re.compile(r"(?<![\w])/(?:run|home|mnt|tmp|var|opt|usr|etc|root|dev|proc|sys)/[\w./+-]+")
 _HOME = re.compile(r"(?<![\w])~/[\w./+-]+")
 _TILDE_NUM = re.compile(r"~\d")
+# Relative paths that resolve to a real file are rejected by surf too. This
+# preflight exists to catch refusals BEFORE a lane is bound, and it missed a
+# live one: `./run.sh` in a review bundle passed here and surf then refused the
+# submit as web_review_bundle_unreadable, after tab binding and a wasted round.
+_REL = re.compile(r"(?<![\w])\.{1,2}/[\w./+-]+")
 
 
 def scan(label: str, text: str) -> list[tuple[str, str, str]]:
     hits: list[tuple[str, str, str]] = []
-    for rx, kind in ((_ABS, "absolute_local_path"), (_HOME, "home_path"), (_TILDE_NUM, "tilde_digits")):
+    for rx, kind in (
+        (_ABS, "absolute_local_path"),
+        (_HOME, "home_path"),
+        (_TILDE_NUM, "tilde_digits"),
+        (_REL, "relative_local_path"),
+    ):
         for m in rx.finditer(text or ""):
             hits.append((label, kind, m.group(0)))
     return hits
+
+
+#: Extensions whose content is data, not prose. An attachment the provider
+#: uploads as a file is never read as prompt text.
+_BINARY_SUFFIXES = {
+    ".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff", ".ico",
+    ".pdf", ".zip", ".gz", ".tar", ".mp4", ".mov", ".mp3", ".wav", ".woff", ".woff2",
+}
+
+
+def _is_binary(path: str) -> bool:
+    """Whether this attachment is data rather than prose.
+
+    Checked by suffix first, then by sniffing for a NUL byte, so an unlisted
+    binary format is still skipped rather than mis-scanned as text.
+    """
+    import os
+
+    if os.path.splitext(path)[1].lower() in _BINARY_SUFFIXES:
+        return True
+    try:
+        with open(path, "rb") as handle:
+            return b"\x00" in handle.read(4096)
+    except OSError:
+        return False
 
 
 def main(argv: list[str]) -> int:
@@ -60,6 +95,12 @@ def main(argv: list[str]) -> int:
     if prompt:
         hits += scan("<prompt>", prompt)
     for f in files:
+        # Binary attachments carry no prose to reject. Scanning a JPEG's bytes
+        # found "~4", "~5", "~2" and failed the submit as tilde_digits, which
+        # blocked EVERY image attachment: a six-seat vision roundtable could not
+        # dispatch at all (observed 2026-08-16 with a 308 KB lion photo).
+        if _is_binary(f):
+            continue
         try:
             with open(f, encoding="utf-8", errors="replace") as fh:
                 hits += scan(f, fh.read())
