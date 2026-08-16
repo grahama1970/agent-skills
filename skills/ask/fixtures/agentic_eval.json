@@ -392,7 +392,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('review this patch for bugs')\nassert order[0]=='claude-fable-low', order\nassert order.index('claude-opus-4-8') < order.index('webclaude'), order\nprint('LOCAL_MODEL_PREFERRED')\""
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('review this patch for bugs')\nassert order[0]=='claude-fable-low', order\nassert order.index('claude-opus-4-8-high') < order.index('webclaude'), order\nprint('LOCAL_MODEL_PREFERRED')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -553,6 +553,91 @@
           "COMPLIANT",
           "equal_context",
           "isolation"
+        ]
+      }
+    },
+    {
+      "name": "the-preferred-roster-is-five-browsers-plus-local-claude",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import PREFERRED_PANEL_ROSTER as r\nexpected=('webgpt','webgrok','webkimi','webdeepseek','webgemini','claude-fable-low')\nassert r==expected, r\nprint('ROSTER_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ROSTER_OK"
+        ]
+      }
+    },
+    {
+      "name": "every-roster-browser-seat-has-a-fresh-url",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import PREFERRED_BROWSER_SEATS,BROWSER_FRESH_URLS\nmissing=[h for h in PREFERRED_BROWSER_SEATS if h not in BROWSER_FRESH_URLS]\nassert not missing, missing\nprint('ALL_SEATS_LAUNCHABLE')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_LAUNCHABLE"
+        ]
+      }
+    },
+    {
+      "name": "both-local-claude-ids-resolve-to-real-models",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag import resolve_scillm_model_route as r\nfrom ask.tau_dag_cli import LOCAL_CLAUDE_SEAT,LOCAL_CLAUDE_FALLBACK\na=r(LOCAL_CLAUDE_SEAT);b=r(LOCAL_CLAUDE_FALLBACK)\nassert (a.model,a.reasoning_effort)==('claude-fable-5','low'), a\nassert (b.model,b.reasoning_effort)==('claude-opus-4-8','high'), b\nprint('MODEL_IDS_RESOLVE')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MODEL_IDS_RESOLVE"
+        ]
+      }
+    },
+    {
+      "name": "webclaude-is-never-preferred-over-the-local-lane",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\nfor q in ('review this patch','summarise','research current sources'):\n o=f(q)\n assert o[-1]=='webclaude', (q,o)\n assert o.index('claude-fable-low') < o.index('webclaude'), (q,o)\nprint('WEBCLAUDE_LAST')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WEBCLAUDE_LAST"
+        ]
+      }
+    },
+    {
+      "name": "live-web-questions-lead-with-a-browser-seat",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\no=f('research current web sources')\nassert o[0]=='webgpt', o\nassert o.index('webgemini') < o.index('claude-fable-low'), o\nprint('BROWSER_LEADS_FOR_WEB')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BROWSER_LEADS_FOR_WEB"
         ]
       }
     }

@@ -1238,13 +1238,24 @@ def _minimum_handlers_for_workflow(input_payload: Any) -> int:
     return 1
 
 
-#: Preferred substitutes for webclaude, in order (operator, 2026-08-16).
-#: webclaude is a claude.ai chat tab: no tools, no repo access, no Ask-controlled
-#: reasoning effort, and one more browser seat competing for the same Chrome.
-#: The local Fable 5 lane answers the same questions with effort control and no
-#: browser at all, so it is preferred outright; claude-opus-4-8 is the step up
-#: when Fable is rate limited. webclaude is the last resort, not the default.
-WEBCLAUDE_PREFERRED_SUBSTITUTES = ("claude-fable-low", "claude-opus-4-8")
+#: The preferred seat roster (operator, 2026-08-16). Five browser providers plus
+#: the local Claude lane, so a panel does not collapse when one provider
+#: rate-limits -- measured the same day: webgpt reported limited on both its
+#: tabs while it was the only browser seat that worked at all.
+#:
+#: `claude-fable-low` is the local Fable 5 lane at low reasoning effort;
+#: `claude-opus-4-8-high` is its fallback when Fable is rate limited. Both ids
+#: resolve through the SciLLM route table and were verified present rather than
+#: invented, per this skill's rule against partial aliases.
+PREFERRED_BROWSER_SEATS = ("webgpt", "webgrok", "webkimi", "webdeepseek", "webgemini")
+LOCAL_CLAUDE_SEAT = "claude-fable-low"
+LOCAL_CLAUDE_FALLBACK = "claude-opus-4-8-high"
+PREFERRED_PANEL_ROSTER = (*PREFERRED_BROWSER_SEATS, LOCAL_CLAUDE_SEAT)
+
+#: Substitutes for webclaude, in order. webclaude is a claude.ai chat tab: no
+#: tools, no repo access, no Ask-controlled reasoning effort, and one more seat
+#: competing for the same Chrome. It stays reachable by explicit name only.
+WEBCLAUDE_PREFERRED_SUBSTITUTES = (LOCAL_CLAUDE_SEAT, LOCAL_CLAUDE_FALLBACK)
 
 
 def _fallback_provider_order(request: str) -> list[str]:
@@ -1254,13 +1265,15 @@ def _fallback_provider_order(request: str) -> list[str]:
     else:
         lower = request.lower()
         substitutes = list(WEBCLAUDE_PREFERRED_SUBSTITUTES)
+        browsers = list(PREFERRED_BROWSER_SEATS)
         if any(word in lower for word in ("code", "patch", "bug", "review", "diff", "implementation")):
-            order = [*substitutes, "webgemini", "webkimi", "webgpt", "webgrok", "webclaude"]
+            order = [*substitutes, *browsers, "webclaude"]
         elif any(word in lower for word in ("current", "web", "source", "research", "search")):
-            # Live-web questions still want a browser seat first.
-            order = ["webgpt", "webgemini", *substitutes, "webkimi", "webgrok", "webclaude"]
+            # Live-web questions still want a browser seat first: a chat tab
+            # with search is better at those than a local model without one.
+            order = [*browsers, *substitutes, "webclaude"]
         else:
-            order = [*substitutes, "webgemini", "webkimi", "webgpt", "webgrok", "webclaude"]
+            order = [*substitutes, *browsers, "webclaude"]
     seen: set[str] = set()
     result: list[str] = []
     for handler in order:

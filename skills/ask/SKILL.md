@@ -403,6 +403,39 @@ two seats and received one is a single opinion; the live run on 2026-08-16 did
 exactly that while its scorecard read `candidates: 2`, and stayed honest only
 because it also reported `NEEDS_ATTENTION`.
 
+### The preferred seat roster
+
+Five browser providers plus the local Claude lane:
+
+```
+webgpt  webgrok  webkimi  webdeepseek  webgemini  claude-fable-low
+```
+
+with **`claude-opus-4-8-high`** as the fallback when Fable is rate limited.
+
+Spread matters because providers rate-limit independently. Measured 2026-08-16:
+`browser-availability` reported webgpt `limited: true` on both its tabs while
+webgpt was, at that moment, the only browser seat that worked at all. A panel
+drawn from one or two providers is one rate limit away from no panel.
+
+`claude-fable-low` is the local Fable 5 lane at low reasoning effort; it needs
+no browser, no tab, and no Chrome contention, and it carries a real reasoning
+selector. Both ids resolve through the SciLLM route table:
+
+```
+claude-fable-low      -> claude-fable-5   effort=low
+claude-opus-4-8-high  -> claude-opus-4-8  effort=high
+```
+
+**`webclaude` is not in the roster.** It is a claude.ai chat tab: no tools, no
+repo access, no Ask-controlled reasoning effort, and one more seat competing for
+the same Chrome. It stays reachable by explicit name and is always ordered last.
+Live-web questions still lead with a browser seat, since a chat tab with search
+is better at those than a local model without one.
+
+The roster lives in `PREFERRED_PANEL_ROSTER` and is eval-gated, including a case
+that fails if a roster seat has no launch URL.
+
 ### Prefer the local Claude lane over webclaude
 
 Handler preference for Claude work, in order:
