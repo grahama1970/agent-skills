@@ -264,6 +264,30 @@
       },
       "timeout_seconds": 180,
       "proves": "Against the REAL run: every discovered record resolves to exactly one disposition (accepted/rejected/deduplicated-into-a-named-canonical) with zero unaccounted, and the ledger provably fails when an unaccounted record is injected."
+    },
+    {
+      "name": "promoted-stage0-cron-hardening-regression-2026-08-16",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/monitor-opportunities-agentic-cron-hardening-$(date -u +%Y%m%dT%H%M%SZ).json && ./skills/monitor-opportunities/run.sh schedule --promoted-stage0 >/tmp/monitor-opportunities-agentic-cron-hardening-schedule.json && ./skills/monitor-opportunities/run.sh scheduler-exec-check --out \"$out\" --timeout-seconds 7200 && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/cron_hardening_eval.py --scheduler-exec-receipt \"$out\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TRACKER_POLICY_OK",
+          "ATS_MEMORY_POLICY_OK",
+          "APPLICATION_HISTORY_DEGRADATION_EXPLICIT_OK",
+          "SURF_TAB_CLEANUP_OK",
+          "TAU_PROVIDER_EARLY_STOP_OK",
+          "CRON_HARDENING_EVAL_PASS"
+        ]
+      },
+      "timeout_seconds": 7200,
+      "proves": "The promoted Stage 0 cron path is live, pinned, no-effect, tracker-skipped, ATS-memory-skipped, explicit about application-history degradation, free of Surf tab-close cleanup failures, and stops Tau provider evaluation after the first provider-live addendum.",
+      "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
     }
   ]
 }
