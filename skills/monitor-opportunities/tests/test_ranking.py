@@ -151,11 +151,62 @@ def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> 
     assert result.exit_code == 0, result.output
     source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
     source_ids = [row["candidate_id"] for row in source_intel]
-    assert len(source_intel) == 8
+    assert len(source_intel) == 10
     assert "github-source:0" in source_ids
     assert "github-source:1" in source_ids
     assert sum(row["source_provider"] == "github_repo_intelligence" for row in source_intel) == 2
-    assert sum(row["source_provider"] == "ops_linkedin_authorized_read_only" for row in source_intel) == 6
+    assert sum(row["source_provider"] == "ops_linkedin_authorized_read_only" for row in source_intel) == 8
+
+
+def test_source_intel_limit_is_separate_from_opportunity_limit(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("MONITOR_SOURCE_INTEL_LIMIT", "12")
+    candidates = [
+        {
+            "candidate_id": f"linkedin-source:{i}",
+            "lane": "A",
+            "organization": f"LinkedIn Locator {i}",
+            "title": "Principal AI Architect",
+            "workplace_type": "WNY_HYBRID",
+            "location_display": "Buffalo, NY (hybrid)",
+            "fit_score": 0.99,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": f"receipt:linkedin:{i}",
+        }
+        for i in range(10)
+    ]
+    candidates.extend(
+        {
+            "candidate_id": f"github-source:{i}",
+            "lane": "C",
+            "organization": "GitHub Repo Intel",
+            "title": f"rtinney1/OpenC3_Cosmos_cFS_CFDP intelligence {i}",
+            "workplace_type": "NOT_APPLICABLE",
+            "location_display": "GitHub source-intel; delivery model not applicable",
+            "fit_score": 0.72,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "github_repo_intelligence",
+            "source_receipt_id": f"receipt:github:{i}",
+        }
+        for i in range(4)
+    )
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    source_ids = [row["candidate_id"] for row in source_intel]
+    assert receipt["limit"] == 8
+    assert receipt["source_intel_limit"] == 12
+    assert len(source_intel) == 12
+    assert "github-source:3" in source_ids
+    assert sum(row["source_provider"] == "github_repo_intelligence" for row in source_intel) == 4
 
 
 def test_github_source_intel_is_not_rejected_by_job_posting_staleness(tmp_path: Path) -> None:

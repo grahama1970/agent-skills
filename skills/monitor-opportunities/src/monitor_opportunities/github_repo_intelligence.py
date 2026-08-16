@@ -24,6 +24,7 @@ DEFAULT_QUERIES = (
     "Galois ARCOS",
     "rtinney1 ARCOS",
 )
+DEFAULT_REPOS = ("rtinney1/OpenC3_Cosmos_cFS_CFDP",)
 DEFAULT_OWNERS = ("rtinney1",)
 DEFAULT_OWNER_NAMES = (("rtinney1", "Randi Tinney"),)
 DEFAULT_RELEVANCE_TERMS = (
@@ -48,7 +49,7 @@ GITHUB_PROFILE_URL_RE = re.compile(r"https?://github\.com/([A-Za-z0-9-]+)(?:[)\]
 class GitHubRepoIntelligenceConfig:
     out: Path
     queries: tuple[str, ...] = DEFAULT_QUERIES
-    repos: tuple[str, ...] = ()
+    repos: tuple[str, ...] = DEFAULT_REPOS
     owners: tuple[str, ...] = DEFAULT_OWNERS
     owner_names: tuple[tuple[str, str], ...] = DEFAULT_OWNER_NAMES
     max_repos: int = 8

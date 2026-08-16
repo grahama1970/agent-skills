@@ -722,6 +722,23 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             if isinstance(repository_analysis, dict)
             else []
         )
+        observed_via = _as_str_list(record.get("observed_via"))
+        explicit_repo_seed = any(item.startswith("repo:") for item in observed_via)
+        confirmed_owner_contact = any(
+            any(
+                isinstance(row, dict) and row.get("type") == "human_confirmation"
+                for row in (contact.get("corroboration") or [])
+            )
+            for contact in contacts
+            if isinstance(contact, dict)
+        )
+        github_fit_score = 0.58
+        if explicit_repo_seed:
+            github_fit_score += 0.16
+        if confirmed_owner_contact:
+            github_fit_score += 0.03
+        github_fit_score += min(len(matched_terms), 8) * 0.015
+        github_fit_score = min(0.9, round(github_fit_score, 3))
         snippets = []
         if isinstance(repository_analysis, dict) and isinstance(repository_analysis.get("readme_snippets"), list):
             snippets = [
@@ -799,13 +816,15 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             "updated_at": record.get("pushed_at") or record.get("updated_at"),
             "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
             "posting_text": posting_text[:4000],
-            "fit_score": float(record.get("fit_score") or 0.58),
+            "fit_score": float(record.get("fit_score") or github_fit_score),
             "contact_state": "CONTACT_PRESENT",
             "github_repo": repo,
             "github_repo_url": repo_url,
             "github_contact_hypotheses": github_contact_hypotheses,
             "adjacent_contacts": [row["subject"] for row in github_contact_hypotheses],
             "github_evidence_refs": list(dict.fromkeys(repo_refs)),
+            "github_observed_via": observed_via,
+            "github_explicit_repo_seed": explicit_repo_seed,
             "github_repository_analysis": repository_analysis if isinstance(repository_analysis, dict) else {},
             "external_effects": False,
             "unresolved_assumptions": [

@@ -187,6 +187,18 @@ def _source_intel_provider(candidate: dict[str, Any]) -> str:
     return str(candidate.get("source_provider") or candidate.get("source_class") or "unknown")
 
 
+def _source_intel_limit(opportunity_limit: int) -> int:
+    """Return the bounded report cap for source-intel rows."""
+
+    raw = os.environ.get("MONITOR_SOURCE_INTEL_LIMIT")
+    if raw:
+        try:
+            return max(0, min(int(raw), 25))
+        except ValueError:
+            pass
+    return max(opportunity_limit, 12)
+
+
 def _diverse_source_intel_shortlist(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     """Round-robin source-intel providers so one locator cannot hide another."""
 
@@ -359,7 +371,11 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
     admitted_opportunities = [row for row in admitted if not _is_source_intel_candidate(row)]
     admitted_source_intel = [row for row in admitted if _is_source_intel_candidate(row)]
     shortlist = admitted_opportunities[:limit]
-    source_intel_shortlist = _diverse_source_intel_shortlist(admitted_source_intel, limit)
+    source_intel_limit = _source_intel_limit(limit)
+    source_intel_shortlist = _diverse_source_intel_shortlist(
+        admitted_source_intel,
+        source_intel_limit,
+    )
     for position, candidate in enumerate(shortlist, start=1):
         ranking_receipts.append(
             {
@@ -381,7 +397,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
                 "rank": position,
                 "ranking_context": "source_intel",
                 "policy_version": "ranking.v1",
-                "policy_digest": sha256_json({"policy": "ranking.v1", "limit": limit, "context": "source_intel"}),
+                "policy_digest": sha256_json({"policy": "ranking.v1", "limit": source_intel_limit, "context": "source_intel"}),
                 "component_scores": candidate["score_components"],
                 "limitations": ["Source-intel rows are visible sourcing signals, not application opportunities."],
             }
@@ -395,6 +411,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
         "external_effects": False,
         "input": str(discovery_run),
         "limit": limit,
+        "source_intel_limit": source_intel_limit,
         "inspected": len(candidates),
         "duplicates_dropped": duplicates_dropped,
         "duplicates_merged_into": merged_into,

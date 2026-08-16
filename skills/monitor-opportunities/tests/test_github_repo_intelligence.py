@@ -18,6 +18,7 @@ from monitor_opportunities.cli import app
 from monitor_opportunities.contracts import validate_manifest
 from monitor_opportunities.discovery import _github_evidence_candidates
 from monitor_opportunities.github_repo_intelligence import (
+    DEFAULT_REPOS,
     GitHubRepoIntelligenceConfig,
     GitHubRepoIntelligenceError,
     collect_github_repo_intelligence,
@@ -115,6 +116,10 @@ def test_github_evidence_candidates_preserve_repo_contact_receipts(tmp_path: Pat
     assert "No GitHub, LinkedIn, email, or application action" in candidates[0][
         "unresolved_assumptions"
     ][2]
+
+
+def test_default_github_repos_include_randi_tinney_contact_repo() -> None:
+    assert "rtinney1/OpenC3_Cosmos_cFS_CFDP" in DEFAULT_REPOS
 
 
 def test_github_repo_contacts_emit_relationship_candidate_with_edge_receipts(
@@ -329,6 +334,72 @@ def test_github_contacts_deduplicate_same_handle_across_roles(tmp_path: Path) ->
 
     assert candidates[0]["adjacent_contacts"] == ["Randi Tinney (@rtinney1)"]
     assert len(candidates[0]["github_contact_hypotheses"]) == 1
+
+
+def test_explicit_github_repo_seed_gets_source_intel_priority(tmp_path: Path) -> None:
+    path = tmp_path / "github.json"
+    path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repo": "ge-high-assurance/RACK",
+                        "repo_url": "https://github.com/ge-high-assurance/RACK",
+                        "organization": "ge-high-assurance",
+                        "observed_via": ["query:DARPA ARCOS"],
+                        "repository_analysis": {
+                            "matched_terms": ["DARPA", "ARCOS", "Galois", "RACK"],
+                            "evidence_refs": ["https://github.com/ge-high-assurance/RACK"],
+                        },
+                        "contacts": [
+                            {
+                                "handle": "cuddihyge",
+                                "profile_url": "https://github.com/cuddihyge",
+                            }
+                        ],
+                    },
+                    {
+                        "repo": "rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                        "repo_url": "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                        "organization": "rtinney1",
+                        "observed_via": ["repo:rtinney1/OpenC3_Cosmos_cFS_CFDP"],
+                        "repository_analysis": {
+                            "matched_terms": ["cFS", "CFDP"],
+                            "evidence_refs": [
+                                "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP"
+                            ],
+                        },
+                        "contacts": [
+                            {
+                                "name": "Randi Tinney",
+                                "handle": "rtinney1",
+                                "profile_url": "https://github.com/rtinney1",
+                                "corroboration": [
+                                    {
+                                        "type": "human_confirmation",
+                                        "evidence_refs": [
+                                            "https://github.com/rtinney1",
+                                            "https://github.com/rtinney1/OpenC3_Cosmos_cFS_CFDP",
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _receipt, candidates = _github_evidence_candidates(path)
+
+    by_repo = {row["github_repo"]: row for row in candidates}
+    explicit = by_repo["rtinney1/OpenC3_Cosmos_cFS_CFDP"]
+    rack = by_repo["ge-high-assurance/RACK"]
+    assert explicit["github_explicit_repo_seed"] is True
+    assert explicit["github_observed_via"] == ["repo:rtinney1/OpenC3_Cosmos_cFS_CFDP"]
+    assert explicit["fit_score"] > rack["fit_score"]
 
 
 def test_github_degraded_artifact_stays_degraded_through_sweep(tmp_path: Path) -> None:

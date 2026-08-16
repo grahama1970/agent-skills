@@ -35,6 +35,9 @@ from .github_repo_intelligence import (
     DEFAULT_QUERIES as DEFAULT_GITHUB_INTELLIGENCE_QUERIES,
 )
 from .github_repo_intelligence import (
+    DEFAULT_REPOS as DEFAULT_GITHUB_INTELLIGENCE_REPOS,
+)
+from .github_repo_intelligence import (
     GitHubRepoIntelligenceConfig,
     collect_github_repo_intelligence,
     write_degraded_github_repo_intelligence,
@@ -858,6 +861,8 @@ def github_intelligence(
     if not queries:
         queries = DEFAULT_GITHUB_INTELLIGENCE_QUERIES
     repos = tuple(repo or ()) or _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_REPOS"))
+    if not repos:
+        repos = DEFAULT_GITHUB_INTELLIGENCE_REPOS
     owners = tuple(owner or ()) or _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNERS"))
     if not owners:
         owners = DEFAULT_GITHUB_INTELLIGENCE_OWNERS
@@ -1733,6 +1738,8 @@ def nightly(
     if not github_queries:
         github_queries = DEFAULT_GITHUB_INTELLIGENCE_QUERIES
     github_repos = _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_REPOS"))
+    if not github_repos:
+        github_repos = DEFAULT_GITHUB_INTELLIGENCE_REPOS
     github_owners = _split_env_list(os.environ.get("MONITOR_GITHUB_INTEL_OWNERS"))
     if not github_owners:
         github_owners = DEFAULT_GITHUB_INTELLIGENCE_OWNERS
