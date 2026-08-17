@@ -1,8 +1,10 @@
-import { Archive, Brain, FileText, MessageCircle, Radio } from "lucide-react";
+import { Archive, Brain, FileText, Maximize2, MessageCircle, Mic, MicOff, Minimize2, Radio } from "lucide-react";
+import { useState } from "react";
 
 import { activeClarificationPrompt, ClarificationCard } from "@/components/ClarificationCard";
 import { SessionControls } from "@/components/SessionControls";
 import { SolutionStage } from "@/components/SolutionStage";
+import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
 import { compactPath } from "@/lib/utils";
 import type { EvidenceCard, LaneActivity, SessionInfo } from "@/types";
@@ -95,6 +97,8 @@ function QuietHeader({
   onStart,
   onPause,
   onStop,
+  compactMode,
+  onToggleCompact,
 }: Pick<
   LiveMeetingSurfaceProps,
   | "connected"
@@ -109,7 +113,12 @@ function QuietHeader({
   | "onStart"
   | "onPause"
   | "onStop"
->) {
+> & {
+  compactMode: boolean;
+  onToggleCompact: () => void;
+}) {
+  const listening = connected && session.status === "listening";
+
   useRegisterAction({
     element_id: "live-evidence:meeting:open-transcript",
     app: "live-evidence",
@@ -123,6 +132,20 @@ function QuietHeader({
     action: "LIVE_EVIDENCE_MEETING_TOGGLE_VAULT",
     label: "Toggle Memory Vault",
     description: "Show or hide the searchable post-call memory vault",
+  });
+  useRegisterAction({
+    element_id: "live-evidence:meeting:toggle-stt",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_MEETING_TOGGLE_STT",
+    label: "Toggle local STT session",
+    description: "Start or pause the existing consented local STT/evidence session",
+  });
+  useRegisterAction({
+    element_id: "live-evidence:meeting:toggle-compact",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT",
+    label: "Toggle compact webcam strip mode",
+    description: "Switch Live Evidence between full HUD and compact webcam-line-of-sight mode",
   });
 
   return (
@@ -152,10 +175,25 @@ function QuietHeader({
         <kbd>1-4</kbd> Clarify
         <span>|</span>
         <kbd>Shift+C</kbd> Copy Code
+        <span>|</span>
+        <kbd>Shift+F</kbd> Compact
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="hidden font-mono text-[10px] text-slate-500 sm:inline">{transcriptCount} turns</span>
+        <span className="transcript-count-label hidden font-mono text-[10px] text-slate-500 sm:inline">{transcriptCount} turns</span>
+        <button
+          type="button"
+          data-qid="live-evidence:meeting:toggle-stt"
+          data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_STT"
+          title={listening ? "Pause local STT/evidence session" : "Start local STT/evidence session"}
+          className={`stt-status-button ${listening ? "is-listening" : ""}`}
+          disabled={busy}
+          onClick={listening ? onPause : onStart}
+          aria-label={listening ? "Pause local STT evidence session" : "Start local STT evidence session"}
+        >
+          {listening ? <Mic aria-hidden="true" className="size-3.5" /> : <MicOff aria-hidden="true" className="size-3.5" />}
+          <span>{listening ? "STT Active" : "STT Off"}</span>
+        </button>
         <button
           type="button"
           data-qid="live-evidence:meeting:open-transcript"
@@ -177,6 +215,17 @@ function QuietHeader({
           aria-label={vaultOpen ? "Hide Vault" : "Show Vault"}
         >
           <Archive aria-hidden="true" className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          data-qid="live-evidence:meeting:toggle-compact"
+          data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT"
+          title="Toggle compact webcam strip mode"
+          className={`quiet-icon-button ${compactMode ? "is-active" : ""}`}
+          onClick={onToggleCompact}
+          aria-label={compactMode ? "Exit compact webcam strip mode" : "Enter compact webcam strip mode"}
+        >
+          {compactMode ? <Maximize2 aria-hidden="true" className="size-3.5" /> : <Minimize2 aria-hidden="true" className="size-3.5" />}
         </button>
         <SessionControls status={session.status} busy={busy} onStart={onStart} onPause={onPause} onStop={onStop} />
       </div>
@@ -298,13 +347,24 @@ function ActiveInsightStage({
 }
 
 export function LiveMeetingSurface(props: LiveMeetingSurfaceProps) {
+  const [compactMode, setCompactMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("compact") === "1";
+  });
   const shimmerKey = props.selectedCardId ?? props.activeCard?.card_id ?? "empty";
   const sayAloudPrompt = props.activeCard ? activeClarificationPrompt(props.activeCard) : "Wait for a stable question before answering.";
+  const toggleCompactMode = () => setCompactMode((value) => !value);
+
+  useHUDHotkeys([{ key: "Shift+F", handler: toggleCompactMode }]);
 
   return (
-    <div className="meeting-shell" data-listening={props.session.status === "listening" ? "true" : "false"}>
+    <div
+      className={`meeting-shell app-hud-root ${compactMode ? "compact-mode" : ""}`}
+      data-listening={props.session.status === "listening" ? "true" : "false"}
+      data-compact={compactMode ? "true" : "false"}
+    >
       <div key={shimmerKey} className="top-shimmer-alert shimmer-active" aria-hidden="true" />
-      <QuietHeader {...props} />
+      <QuietHeader {...props} compactMode={compactMode} onToggleCompact={toggleCompactMode} />
       <SpeechTeleprompterBar prompt={sayAloudPrompt} />
       <div className="app-layout">
         <LiveCardStream cards={props.cards} selectedCardId={props.selectedCardId} onSelectCard={props.onSelectCard} />

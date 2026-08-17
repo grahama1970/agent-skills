@@ -127,6 +127,45 @@ select {
   background: #202430;
 }
 
+.stt-status-button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #232836;
+  border-radius: 6px;
+  background: #181b24;
+  padding: 0 9px;
+  color: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.stt-status-button:hover:not(:disabled),
+.stt-status-button:focus-visible {
+  border-color: var(--card-border-active);
+  color: #e0f2fe;
+}
+
+.stt-status-button.is-listening {
+  border-color: rgba(16, 185, 129, 0.46);
+  background: rgba(16, 185, 129, 0.14);
+  color: #86efac;
+}
+
+.stt-status-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .hud-hotkeys {
   display: none;
   align-items: center;
@@ -216,6 +255,131 @@ kbd {
   display: grid;
   grid-template-columns: minmax(18rem, 360px) minmax(0, 1fr);
   height: calc(100vh - 83px);
+}
+
+.meeting-shell.compact-mode {
+  width: min(520px, 100vw);
+  min-height: auto;
+  margin: 0 auto;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: rgba(9, 10, 15, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.meeting-shell.compact-mode .hud-header {
+  height: 36px;
+  padding: 0 10px;
+}
+
+.meeting-shell.compact-mode .stt-status-button {
+  width: 32px;
+  justify-content: center;
+  padding: 0;
+}
+
+.meeting-shell.compact-mode .stt-status-button span {
+  display: none;
+}
+
+.meeting-shell.compact-mode .top-shimmer-alert {
+  height: 2px;
+}
+
+.meeting-shell.compact-mode .hud-hotkeys,
+.meeting-shell.compact-mode .transcript-count-label,
+.meeting-shell.compact-mode .card-stream,
+.meeting-shell.compact-mode .topic-breadcrumbs,
+.meeting-shell.compact-mode .question-anchor,
+.meeting-shell.compact-mode .diag-drawer,
+.meeting-shell.compact-mode .teleprompter-anchor,
+.meeting-shell.compact-mode .stage-actions {
+  display: none;
+}
+
+.meeting-shell.compact-mode .app-layout {
+  grid-template-columns: minmax(0, 1fr);
+  height: auto;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.meeting-shell.compact-mode .teleprompter-bar {
+  height: 34px;
+  padding: 0 10px;
+}
+
+.meeting-shell.compact-mode .teleprompter-label {
+  padding: 2px 6px;
+}
+
+.meeting-shell.compact-mode .teleprompter-prompt {
+  font-size: 13px;
+}
+
+.meeting-shell.compact-mode .main-stage {
+  overflow: visible;
+  padding: 12px 14px;
+}
+
+.meeting-shell.compact-mode .stage-content {
+  max-width: none;
+  gap: 12px;
+}
+
+.meeting-shell.compact-mode .hero-clarify-card,
+.meeting-shell.compact-mode .solution-pane {
+  padding: 12px;
+}
+
+.meeting-shell.compact-mode .clarify-header {
+  margin-bottom: 10px;
+}
+
+.meeting-shell.compact-mode .clarify-actions,
+.meeting-shell.compact-mode .timer-badge {
+  display: none;
+}
+
+.meeting-shell.compact-mode .clarify-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.meeting-shell.compact-mode .clarify-anchor-card {
+  min-height: 76px;
+  padding: 9px 10px;
+}
+
+.meeting-shell.compact-mode .clarify-anchor-card[data-active-next="false"] {
+  display: none;
+}
+
+.meeting-shell.compact-mode .solution-pane {
+  gap: 10px;
+}
+
+.meeting-shell.compact-mode .solution-header p,
+.meeting-shell.compact-mode .code-block-container {
+  display: none;
+}
+
+.meeting-shell.compact-mode .takeaway-box {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.meeting-shell.compact-mode .clarify-note-input {
+  width: 100%;
+  margin-top: 5px;
+}
+
+@supports not (backdrop-filter: blur(12px)) {
+  .meeting-shell.compact-mode {
+    background: rgba(9, 10, 15, 0.98);
+  }
 }
 
 .card-stream {
@@ -486,7 +650,7 @@ kbd {
 .clarify-anchor-card {
   display: flex;
   min-width: 0;
-  min-height: 68px;
+  min-height: 82px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -559,6 +723,28 @@ kbd {
   white-space: nowrap;
 }
 
+.clarify-note-input {
+  width: min(100%, 24rem);
+  margin-top: 7px;
+  border: 0;
+  border-bottom: 1px dashed #3a4152;
+  border-radius: 0;
+  background: transparent;
+  padding: 3px 2px;
+  color: #f8fafc;
+  font-size: 11px;
+  line-height: 1.2;
+  outline: none;
+}
+
+.clarify-note-input::placeholder {
+  color: #64748b;
+}
+
+.clarify-note-input:focus {
+  border-bottom-color: #60a5fa;
+}
+
 .clarify-status {
   border: 1px solid #2d3342;
   border-radius: 999px;
@@ -597,6 +783,18 @@ kbd {
   border: 1px solid #262b3a;
   border-radius: 999px;
   background: #11131a;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+
+.clarify-status-icon:hover,
+.clarify-status-icon:focus-visible {
+  border-color: #f59e0b;
+  transform: scale(1.04);
 }
 
 .clarify-anchor-card[data-active-next="true"] .clarify-status-icon {

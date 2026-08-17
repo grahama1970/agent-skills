@@ -100,15 +100,19 @@ function ChecklistItem({
   item,
   index,
   status,
+  note,
   activeNext,
   onToggle,
+  onNoteChange,
 }: {
   cardId: string;
   item: ClarifyItem;
   index: number;
   status: ClarifyStatus;
+  note: string;
   activeNext: boolean;
   onToggle: (id: string) => void;
+  onNoteChange: (id: string, value: string) => void;
 }) {
   const qid = `live-evidence:clarify:item:${cardId}:${item.id}`;
   useRegisterAction({
@@ -121,28 +125,38 @@ function ChecklistItem({
   });
 
   return (
-    <button
-      data-qid={qid}
-      data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
+    <article
       title={`${activeNext ? "Active next step: " : ""}${item.question}`}
-      type="button"
       className={`clarify-anchor-card ${activeNext ? "active-next-action" : ""}`}
       data-status={status}
       data-active-next={activeNext ? "true" : "false"}
-      onClick={() => onToggle(item.id)}
-      aria-label={`Toggle clarification ${index}: ${item.label}`}
-      aria-pressed={status !== "unanswered"}
+      aria-label={`Clarification ${index}: ${item.label}`}
     >
       <span className="clarify-anchor-copy">
         <span className="anchor-title">
           {index}. {item.label}
         </span>
         <span className="anchor-subtext">{item.question}</span>
+        <input
+          className="clarify-note-input"
+          value={note}
+          onChange={(event) => onNoteChange(item.id, event.target.value)}
+          placeholder="Answer / note..."
+          aria-label={`Answer note for ${item.label}`}
+        />
       </span>
-      <span className="clarify-status-icon" aria-label={statusLabel(status, activeNext)}>
+      <button
+        data-qid={qid}
+        data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
+        type="button"
+        className="clarify-status-icon"
+        onClick={() => onToggle(item.id)}
+        aria-label={`Cycle clarification ${index}: ${statusLabel(status, activeNext)}`}
+        aria-pressed={status !== "unanswered"}
+      >
         <StatusIcon status={status} activeNext={activeNext} />
-      </span>
-    </button>
+      </button>
+    </article>
   );
 }
 
@@ -152,6 +166,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
   const [completed, setCompleted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [statuses, setStatuses] = useState<Record<string, ClarifyStatus>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const copyQid = `live-evidence:clarify:copy:${card.card_id}`;
   const completeQid = `live-evidence:clarify:complete:${card.card_id}`;
   const timerState = completed ? "complete" : seconds <= 0 ? "expired" : seconds <= 10 ? "urgent" : seconds <= 20 ? "warning" : "normal";
@@ -179,6 +194,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
     setCompleted(false);
     setCopied(false);
     setStatuses({});
+    setNotes({});
   }, [card.card_id]);
 
   useEffect(() => {
@@ -191,8 +207,19 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
     setStatuses((current) => ({ ...current, [id]: nextStatus(current[id] ?? "unanswered") }));
   };
 
+  const updateNote = (id: string, value: string) => {
+    setNotes((current) => ({ ...current, [id]: value }));
+  };
+
   const copyQuestions = async () => {
-    await navigator.clipboard.writeText(items.map((item) => `${item.label}: ${item.question}`).join("\n"));
+    await navigator.clipboard.writeText(
+      items
+        .map((item) => {
+          const answer = notes[item.id]?.trim();
+          return `${item.label}: ${item.question}${answer ? `\nAnswer: ${answer}` : ""}`;
+        })
+        .join("\n\n"),
+    );
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1_500);
   };
@@ -248,8 +275,10 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
             item={item}
             index={index + 1}
             status={statuses[item.id] ?? "unanswered"}
+            note={notes[item.id] ?? ""}
             activeNext={item.id === activeNextId}
             onToggle={toggleItem}
+            onNoteChange={updateNote}
           />
         ))}
       </div>
