@@ -711,11 +711,16 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
             if key in seen:
                 continue
             seen.add(key)
-            evidence = (
+            # Signal-level evidence may fall back to the candidate's own refs, but an
+            # EDGE may only cite what its receipts actually recorded. The 2026-08-17
+            # 02:00 nightly died on RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED because
+            # this fallback put a LinkedIn posting URL on a GitHub-intelligence edge
+            # whose receipt had never seen that URL.
+            edge_evidence = (
                 _as_str_list(hypothesis.get("evidence_refs"))
                 or _as_str_list(c.get("github_evidence_refs"))
-                or list(dict.fromkeys(evidence_refs))
             )
+            evidence = edge_evidence or list(dict.fromkeys(evidence_refs))
             repo = str(c.get("github_repo") or c.get("source_identity") or org or "GitHub repository").strip()
             role = str(hypothesis.get("role") or "repository_participant").strip()
             mapping_status = str(hypothesis.get("mapping_status") or "hypothesis").strip()
@@ -727,11 +732,14 @@ def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> li
             contact_path = _contact_path_edges(
                 path,
                 relationship=signal_type,
-                evidence_refs=evidence,
+                evidence_refs=edge_evidence,
                 source_receipt_ids=source_receipt_ids,
                 limitations=[
                     "GitHub participation does not prove current employment, availability, or outreach consent.",
                     "Handle-to-person mapping is corroboration-dependent and must be checked by the human.",
+                    *([] if edge_evidence else [
+                        "No receipt-backed edge evidence; the signal cites candidate-level evidence only."
+                    ]),
                 ],
             )
             provenance = (
