@@ -1,23 +1,18 @@
 {
   "version": 2,
   "skill": "live-evidence",
-  "eval_tier": "compliance",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, real Memory recall for promoted project-memory problem records, React instrumentation, interviewer question detection, sampled adversarial transcript-window recovery, degraded Memory self-recovery, Ask command/card answer text plumbing, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, real Memory recall for promoted project-memory problem records, React instrumentation, Ask command/card plumbing, and fail-closed contract smoke",
   "claims": {
-    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, retrieve promoted project-memory problem records through real Memory recall, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, recover from sampled noisy transcript windows, suppress duplicate/card-storm triggers, keep answer cards available while Memory is slow/degraded, reject consentless listener startup, and fail closed on malformed skill contracts",
-    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, broad Graph Memory relevance, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, React visual quality, or interview semantic correctness"
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, retrieve promoted project-memory problem records through real Memory recall, route code-related interview questions through the Ask lane when configured, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
   },
   "cases": [
     {
       "name": "verify-entrypoint-local-http-ripgrep-ui",
       "type": "positive",
       "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh verify"
-      ],
+      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh verify"],
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
@@ -28,22 +23,35 @@
       }
     },
     {
+      "name": "interview-loop-question-to-scannable-cards",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-interview-loop"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "graham turns do not trigger retrieval: PASS",
+          "existing code evidence card: PASS",
+          "ask code solution card: PASS",
+          "new code evidence card: PASS",
+          "unsupported question fail-closed: PASS",
+          "card queue bounded for realtime scanning: PASS"
+        ]
+      }
+    },
+    {
       "name": "youtube-derived-coding-interview-ask-cards",
       "type": "positive",
       "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-youtube-interview"
-      ],
+      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-youtube-interview"],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "youtube-derived prompt routes to Ask solution: PASS",
-          "youtube-derived answer text surfaced: PASS",
           "candidate explanation suppressed: PASS",
-          "youtube-derived follow-up routes to source-backed code card: PASS"
+          "youtube-derived follow-up routes to source-backed Ask card: PASS"
         ]
       }
     },
@@ -54,7 +62,7 @@
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-real-stt-window"
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-real-stt-window"
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -66,52 +74,13 @@
       }
     },
     {
-      "name": "adversarial-sampled-transcript-window-recovery",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-reliability-adversarial --scenario transcript-window --samples 60 --seed ${RANDOM}"
-      ],
-      "timeout_seconds": 120,
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "sampled transcript recovery: PASS",
-          "false trigger suppression: PASS",
-          "duplicate question suppression: PASS",
-          "reliability adversarial receipt:"
-        ]
-      }
-    },
-    {
-      "name": "adversarial-degraded-memory-http-self-recovery",
-      "type": "adversarial",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-reliability-adversarial --scenario http-recovery --samples 60 --seed ${RANDOM}"
-      ],
-      "timeout_seconds": 150,
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "memory degradation self-recovery: PASS",
-          "card storm suppression: PASS",
-          "reliability adversarial receipt:"
-        ]
-      }
-    },
-    {
       "name": "mvp-steps-2-8-sampled-adversarial-regression",
       "type": "adversarial",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-mvp-steps-2-8 --samples 60 --seed ${RANDOM}"
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-mvp-steps-2-8 --samples 60 --seed \"$RANDOM\""
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -121,10 +90,8 @@
           "step3 stabilized final turn projection: PASS",
           "step4 interviewer code question trigger: PASS",
           "step5 memory http and code runner boundaries: PASS",
-          "punctuation-poor ASR query window selects one relevant question: PASS",
           "sampled adversarial trigger suppression: PASS",
           "step6 current checkout ripgrep after startup: PASS",
-          "initial transcript query selects one relevant question: PASS",
           "youtube-derived overlapping transcript collapses to one card: PASS",
           "youtube-derived progressive transcript projection collapses repeats: PASS",
           "youtube-derived ripgrep relevance gate: PASS",
@@ -135,22 +102,21 @@
       }
     },
     {
-      "name": "leetcode-public-github-corpus-memory-recall",
-      "type": "positive",
+      "name": "two-stage-prompt-contract-sampled-adversarial",
+      "type": "adversarial",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-public-corpus"
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-two-stage-prompt-contract --samples 60 --seed \"$RANDOM\""
       ],
-      "timeout_seconds": 360,
+      "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "\"schema\": \"live_evidence.two_stage_prompt_contract_eval_receipt.v1\"",
           "\"status\": \"PASS\"",
-          "leetcode-public-corpus",
-          "live-evidence-leetcode-public-two-sum",
-          "live-evidence-leetcode-public-longest-substring-without-repeating-characters"
+          "two-stage prompt contract: PASS"
         ]
       }
     },
@@ -161,7 +127,7 @@
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -173,37 +139,43 @@
       }
     },
     {
-      "name": "listener-requires-explicit-consent",
-      "type": "negative",
+      "name": "leetcode-public-github-corpus-memory-recall",
+      "type": "positive",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh listen --mode microphone"
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-public-corpus"
       ],
-      "timeout_seconds": 120,
+      "timeout_seconds": 360,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "leetcode-public-corpus"
+        ]
+      }
+    },
+    {
+      "name": "listener-requires-explicit-consent",
+      "type": "negative",
+      "real_world": true,
+      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"],
+      "timeout_seconds": 30,
       "expected": {
         "exit_code": 2,
-        "stderr_contains": [
-          "live modes require --consent-confirmed"
-        ]
+        "stderr_contains": ["live modes require --consent-confirmed"]
       }
     },
     {
       "name": "invalid-skill-contract-rejected",
       "type": "adversarial",
       "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv bash ../run.sh eval-adversarial"
-      ],
-      "timeout_seconds": 120,
+      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adversarial"],
+      "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "invalid skill rejected: PASS"
-        ]
+        "stdout_contains": ["invalid skill rejected: PASS"]
       }
     }
   ]

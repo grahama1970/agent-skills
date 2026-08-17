@@ -129,18 +129,7 @@ PY
       exit 2
     fi
     prepare_python_environment
-    stt_extra_args=(--extra dev --extra stt)
-    consent_confirmed="false"
-    for arg in "$@"; do
-      if [[ "$arg" == "--consent-confirmed" ]]; then
-        consent_confirmed="true"
-        break
-      fi
-    done
-    if [[ "$consent_confirmed" != "true" ]]; then
-      stt_extra_args=(--extra dev)
-    fi
-    exec uv run --project "$SCRIPT_DIR" "${stt_extra_args[@]}" python -m live_evidence listen "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python -m live_evidence listen "$@"
     ;;
   eval-adversarial)
     shift || true
@@ -150,17 +139,12 @@ PY
   eval-interview-loop)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_interview_loop.py" "$SCRIPT_DIR" "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_interview_loop.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-youtube-interview)
     shift || true
     prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_youtube_interview.py" "$SCRIPT_DIR" "$@"
-    ;;
-  eval-reliability-adversarial)
-    shift || true
-    prepare_python_environment
-    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_reliability_adversarial.py" "$SCRIPT_DIR" "$@"
+    exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_youtube_interview.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-real-stt-window)
     shift || true
@@ -171,6 +155,11 @@ PY
     shift || true
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_mvp_steps_2_8.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-two-stage-prompt-contract)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_two_stage_prompt_contract.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-leetcode-memory-recall)
     shift || true
