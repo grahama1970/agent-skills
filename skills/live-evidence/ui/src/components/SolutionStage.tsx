@@ -102,12 +102,74 @@ function semanticTakeaway(answer: string): ReactNode {
   return answer;
 }
 
+/**
+ * Split a staged solver answer into interview-order sections.
+ *
+ * The Ask prompt requests APPROACH -> PSEUDOCODE -> CODE -> COMPLEXITY ->
+ * OPTIMIZATIONS because that is the order a candidate actually speaks: name the
+ * data structure, narrate the steps, then write real code, then discuss
+ * trade-offs. Rendering the final implementation first leaves nothing to say
+ * while typing.
+ *
+ * Returns null when the answer is unstaged, so older cards and non-code lanes
+ * fall through to the existing single-block rendering rather than showing empty
+ * headings.
+ */
+export interface SolutionSections {
+  approach?: string;
+  pseudocode?: string;
+  complexity?: string;
+  optimizations: string[];
+}
+
+function parseSolutionSections(text: string): SolutionSections | null {
+  // Accept ## or ### and stop at the next heading of EITHER depth. The solver
+  // mixes them -- observed emitting "## APPROACH" then "### PSEUDOCODE" in one
+  // answer -- and a lookahead pinned to "##" swallowed every later section into
+  // the first block. Headings may also be inline rather than line-anchored.
+  if (!text || !/#{2,3}\s*(APPROACH|PSEUDOCODE|OPTIMIZATIONS)/i.test(text)) return null;
+  const grab = (name: string): string | undefined => {
+    const match = text.match(
+      new RegExp(`#{2,3}\\s*${name}\\b:?\\s*([\\s\\S]*?)(?=#{2,3}\\s*[A-Z]{3,}|$)`, "i"),
+    );
+    return match?.[1]?.trim() || undefined;
+  };
+  const stripFence = (value?: string): string | undefined => {
+    if (!value) return undefined;
+    const fenced = value.match(/```(?:[a-zA-Z0-9_-]+)?\s*\n?([\s\S]*?)```/);
+    return (fenced?.[1] ?? value).trim() || undefined;
+  };
+  const optimizationsRaw = grab("OPTIMIZATIONS") ?? "";
+  const optimizations = optimizationsRaw
+    .split("\n")
+    .map((line) => line.replace(/^\s*[-*\d.)]+\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  const sections: SolutionSections = {
+    approach: grab("APPROACH"),
+    pseudocode: stripFence(grab("PSEUDOCODE")),
+    complexity: grab("COMPLEXITY"),
+    optimizations,
+  };
+  const hasAny =
+    sections.approach || sections.pseudocode || sections.complexity || optimizations.length > 0;
+  return hasAny ? sections : null;
+}
+
+function askAnswerText(card: EvidenceCard): string {
+  // The summarizer reduces the card to one extracted sentence, so staged
+  // sections survive only on the ask-lane source excerpt.
+  const askSource = card.sources.find((source) => source.lane === "ask");
+  return askSource?.excerpt ?? "";
+}
+
 export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionStageProps) {
   const [copiedInsight, setCopiedInsight] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [expandedCode, setExpandedCode] = useState(false);
   const primarySource = card.sources[0];
   const code = useMemo(() => solutionCode(card), [card]);
+  const sections = useMemo(() => parseSolutionSections(askAnswerText(card)), [card]);
   const answer = takeaway(card);
   const displayedCode = code ? (expandedCode ? code.code : coreLogicSnippet(code.code)) : null;
   const copyQid = `live-evidence:solution:copy:${card.card_id}`;
@@ -204,6 +266,38 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
       </div>
 
       <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(answer)}</div>
+      {sections ? (
+        <div className="solution-stages" data-aoi="AOI_SOLUTION_STAGES">
+          {sections.approach ? (
+            <section className="solution-stage-block" data-stage="approach">
+              <p className="solution-stage-label">Approach · say this first</p>
+              <p className="solution-stage-body">{sections.approach}</p>
+            </section>
+          ) : null}
+          {sections.pseudocode ? (
+            <section className="solution-stage-block" data-stage="pseudocode">
+              <p className="solution-stage-label">Pseudocode · narrate while you type</p>
+              <pre className="solution-stage-pre">{sections.pseudocode}</pre>
+            </section>
+          ) : null}
+          {sections.complexity ? (
+            <section className="solution-stage-block" data-stage="complexity">
+              <p className="solution-stage-label">Complexity</p>
+              <p className="solution-stage-body">{sections.complexity}</p>
+            </section>
+          ) : null}
+          {sections.optimizations.length > 0 ? (
+            <section className="solution-stage-block" data-stage="optimizations">
+              <p className="solution-stage-label">Likely follow-ups · be ready</p>
+              <ul className="solution-stage-list">
+                {sections.optimizations.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="code-block-container">
         <div className="code-bar">

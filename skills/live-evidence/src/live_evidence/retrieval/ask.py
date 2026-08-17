@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import json
 import subprocess
+
+from .subprocess_env import child_env
 from pathlib import Path
 from time import monotonic
 from typing import Any
@@ -83,6 +85,7 @@ class AskSolutionClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.ask_timeout_s,
+                env=child_env(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             return AskSolutionResult(
@@ -156,9 +159,33 @@ def _build_prompt(query: str, evidence: list[EvidenceSource]) -> str:
     evidence_block = "\n\n".join(evidence_lines) or "No local source evidence was found."
     return "\n\n".join(
         [
-            "You are answering a live coding interview question for Graham.",
+            "You are supporting Graham live in a coding interview. He is speaking "
+            "while he reads this, so it must be scannable in a glance.",
             "Use only the supplied source evidence. If it is insufficient, say exactly what is missing.",
-            "Return a concise solution the human can scan in real time: answer, relevant code path, and one caution.",
+            # A candidate states the approach, walks pseudo-code, then writes real
+            # code, then discusses trade-offs. Emitting the final implementation
+            # first gives him nothing to say while he types.
+            "Answer in exactly these sections, in this order, using these headings:",
+            "\n".join(
+                [
+                    "## APPROACH",
+                    "One or two lines naming the data structure and the invariant. This is what he says out loud first.",
+                    "",
+                    "## PSEUDOCODE",
+                    "A fenced block, language-agnostic, 5-12 lines. Steps he can narrate while writing real code.",
+                    "",
+                    "## CODE",
+                    "A fenced block with a language tag. Complete and runnable, no ellipses.",
+                    "",
+                    "## COMPLEXITY",
+                    "One line: time and space, with the reason.",
+                    "",
+                    "## OPTIMIZATIONS",
+                    "2-4 bullets. What to improve, and the follow-up questions an interviewer is "
+                    "most likely to ask NEXT about this problem (harder constraints, streaming "
+                    "input, memory limits, edge cases). These are what he should be ready for.",
+                ]
+            ),
             f"Question: {' '.join(query.split())[:1200]}",
             evidence_block,
         ]

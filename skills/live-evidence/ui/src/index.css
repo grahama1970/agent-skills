@@ -1056,6 +1056,78 @@ kbd {
   line-height: 1.5;
 }
 
+/* Staged solution: approach -> pseudocode -> complexity -> follow-ups.
+   Ordered the way a candidate speaks, so the top of the block is what to say
+   next rather than the finished implementation. */
+.solution-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.solution-stage-block {
+  border: 1px solid #232838;
+  border-left: 3px solid #3b4252;
+  border-radius: 6px;
+  background: #15181f;
+  padding: 10px 12px;
+}
+
+.solution-stage-block[data-stage="approach"] {
+  border-left-color: var(--accent-code, #7aa2f7);
+}
+
+.solution-stage-block[data-stage="pseudocode"] {
+  border-left-color: #9ece6a;
+}
+
+.solution-stage-block[data-stage="optimizations"] {
+  border-left-color: #e0af68;
+}
+
+.solution-stage-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b93a7;
+  font-weight: 700;
+}
+
+.solution-stage-body {
+  margin: 0;
+  color: #e6e8ee;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.solution-stage-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cdd3e0;
+}
+
+.solution-stage-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #e6e8ee;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.meeting-shell.compact-mode .solution-stage-block {
+  padding: 8px 10px;
+}
+
+.meeting-shell.compact-mode .solution-stage-body,
+.meeting-shell.compact-mode .solution-stage-list {
+  font-size: 13px;
+}
+
 .takeaway-box mark {
   border-radius: 3px;
   background: rgba(59, 130, 246, 0.25);
