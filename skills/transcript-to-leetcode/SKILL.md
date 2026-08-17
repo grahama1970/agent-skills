@@ -5,7 +5,7 @@ description: Reconstruct likely LeetCode or LeetCode-style coding questions from
 
 # Transcript to LeetCode
 
-Convert stable transcript evidence into an answerable coding contract. Treat `skills/live-evidence` as the audio, speaker-turn, and question-window producer; own only the downstream path from transcript to problem hypotheses, clarification, and code.
+Convert stable transcript evidence into an answerable coding contract. Treat `skills/live-evidence` as the audio, speaker-turn, and question-window producer; own only the downstream path from transcript to problem hypotheses, clarification, and code. Compose with `skills/interview` for structured human answers and with `skills/ask` only after the deterministic gate authorizes a solution.
 
 ## Run the deterministic pass
 
@@ -36,6 +36,8 @@ State that no stable coding question was established. Show the selected uncertai
 Show the draft problem and no more than the returned candidate hypotheses. Use **likely exact** only when `match_kind` is `likely_exact`; otherwise say **LeetCode-like archetype**, not an exact match.
 
 Ask the returned `clarifying_questions` in one compact numbered batch. Preserve each question's `id`. Do not answer the questions yourself, silently import customary LeetCode defaults, provide code, or provide solution-revealing pseudocode while `solution_allowed` is false.
+
+When `skills/interview` is available, map the returned questions into one Interview request. Preserve each analyzer question `id`, use a short header, use text input unless the analyzer exposes a finite choice, and write the resulting answers back as the same flat JSON object. The Interview UI is a collection surface only; it may not rewrite, drop, or pre-answer a blocking question.
 
 Record the human's answers as a JSON object keyed by question id and rerun:
 
