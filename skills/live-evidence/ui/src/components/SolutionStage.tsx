@@ -72,11 +72,33 @@ function coreLogicSnippet(text: string): string {
   return lines.slice(0, Math.min(lines.length, 8)).join("\n");
 }
 
+function TermBadge({
+  className,
+  label,
+  definition,
+}: {
+  className: string;
+  label: string;
+  definition: string;
+}) {
+  return (
+    <span className={`hud-term ${className}`} title={definition}>
+      {label}
+      <span className="hud-term-popover" role="tooltip">
+        {definition}
+      </span>
+    </span>
+  );
+}
+
 function semanticTakeaway(card: EvidenceCard, answer: string, hasCandidateCode: boolean): ReactNode {
   if (!isParenthesesQuestion(card) || !hasCandidateCode) return answer;
   return (
     <>
-      Use a <span className="sem-ds">stack</span> after confirming the contract: validate in <span className="sem-complexity">O(N) time</span> and <span className="sem-complexity">O(N) space</span>, push opening brackets, pop on matching closes, and reject <span className="sem-alert">mismatches or leftover openings</span>.
+      Use a <TermBadge className="sem-ds" label="stack" definition="LIFO structure holding unmatched opening brackets." /> after confirming the contract: validate in{" "}
+      <TermBadge className="sem-complexity" label="O(N) time" definition="One scan over N characters." /> and{" "}
+      <TermBadge className="sem-complexity" label="O(N) space" definition="Worst case stores all opening brackets." />, push opening brackets, pop on matching closes, and reject{" "}
+      <TermBadge className="sem-alert" label="mismatches or leftover openings" definition="Fail on wrong closer, early close, or unclosed opener." />.
     </>
   );
 }

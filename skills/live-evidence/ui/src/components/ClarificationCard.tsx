@@ -115,12 +115,21 @@ function ChecklistItem({
   onNoteChange: (id: string, value: string) => void;
 }) {
   const qid = `live-evidence:clarify:item:${cardId}:${item.id}`;
+  const noteQid = `live-evidence:clarify:note:${cardId}:${item.id}`;
   useRegisterAction({
     element_id: qid,
     app: "live-evidence",
     action: "LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE",
     label: `Toggle clarification ${index}`,
     description: "Cycle a clarification item between unanswered, confirmed, and alternate contract",
+    params: { card_id: cardId, item_id: item.id },
+  });
+  useRegisterAction({
+    element_id: noteQid,
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE",
+    label: `Update clarification note ${index}`,
+    description: "Capture the interviewer's answer or operator note for a clarification item",
     params: { card_id: cardId, item_id: item.id },
   });
 
@@ -138,6 +147,9 @@ function ChecklistItem({
         </span>
         <span className="anchor-subtext">{item.question}</span>
         <input
+          data-qid={noteQid}
+          data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE"
+          title={`Answer note for ${item.label}`}
           className="clarify-note-input"
           value={note}
           onChange={(event) => onNoteChange(item.id, event.target.value)}
@@ -149,6 +161,7 @@ function ChecklistItem({
         data-qid={qid}
         data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
         type="button"
+        title={`Cycle clarification status for ${item.label}`}
         className="clarify-status-icon"
         onClick={() => onToggle(item.id)}
         aria-label={`Cycle clarification ${index}: ${statusLabel(status, activeNext)}`}

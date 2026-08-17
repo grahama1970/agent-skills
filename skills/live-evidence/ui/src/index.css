@@ -966,6 +966,9 @@ kbd {
 .sem-ds,
 .sem-complexity,
 .sem-alert {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   border-radius: 4px;
   padding: 1px 6px;
   font-weight: 800;
@@ -987,6 +990,64 @@ kbd {
   border: 1px solid rgba(251, 191, 36, 0.34);
   background: rgba(251, 191, 36, 0.16);
   color: #fcd34d;
+}
+
+.hud-term-popover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  width: max-content;
+  max-width: 15rem;
+  transform: translateX(-50%) translateY(2px);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  padding: 7px 9px;
+  color: #e2e8f0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
+}
+
+.hud-term:hover .hud-term-popover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.meeting-shell.peek-mode .takeaway-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.meeting-shell.peek-mode .hud-term-popover {
+  position: static;
+  width: auto;
+  max-width: 14rem;
+  margin-left: 6px;
+  transform: none;
+  white-space: normal;
+  opacity: 1;
+}
+
+.meeting-shell.compact-mode .hud-term-popover {
+  bottom: auto;
+  top: calc(100% + 8px);
+  max-width: 13rem;
+  white-space: normal;
+}
+
+.meeting-shell.compact-mode.peek-mode .hud-term-popover {
+  position: static;
+  transform: none;
 }
 
 .code-block-container {
