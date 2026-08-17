@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-17T01:15:28.657005+00:00",
-  "cwd": "/home/graham/workspace/experiments/agent-skills/.worktrees/live-evidence-collapse-20260816T181717Z",
-  "root": "/home/graham/workspace/experiments/agent-skills/.worktrees/live-evidence-collapse-20260816T181717Z",
-  "output_root": "/tmp/codex-ui-verification/live-evidence-collapse-20260816T181717Z",
-  "url": "http://127.0.0.1:48039",
-  "name": "live-evidence-docker-pipewire-leetcode-gate-real",
+  "verified_at": "2026-08-17T15:52:48.933366+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:8798/",
+  "name": "live-evidence-agentic-evals-ui",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/live-evidence-collapse-20260816T181717Z/live-evidence-docker-pipewire-leetcode-gate-real/20260817T011523Z.png",
-  "read_json": "/tmp/codex-ui-verification/live-evidence-collapse-20260816T181717Z/live-evidence-docker-pipewire-leetcode-gate-real/20260817T011523Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/live-evidence-agentic-evals-ui/20260817T155243Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/live-evidence-agentic-evals-ui/20260817T155243Z.read.json"
 }

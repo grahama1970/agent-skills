@@ -56,6 +56,26 @@
       }
     },
     {
+      "name": "surf-controlled-youtube-card-ui",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "bash ../run.sh ui-build >/dev/null && bash ../run.sh eval-ui-surf-controls"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ui surf controls: PASS",
+          "ui surf controls receipt:",
+          "ui surf controls full screenshot:",
+          "ui surf controls compact screenshot:"
+        ]
+      }
+    },
+    {
       "name": "real-stt-window-question-answer-card",
       "type": "positive",
       "real_world": true,

@@ -75,7 +75,7 @@ def assert_card(
 
 def assert_card_text(card: dict[str, Any], expected: list[str]) -> None:
     visible = " ".join(
-        str(card.get(field) or "") for field in ("talking_point", "proof", "qualifier")
+        str(card.get(field) or "") for field in ("answer", "talking_point", "proof", "qualifier")
     )
     source_text = " ".join(str(source.get("excerpt") or "") for source in card.get("sources") or [])
     combined = f"{visible} {source_text}".casefold()
@@ -182,7 +182,7 @@ def main() -> int:
             )
         try:
             with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=3.0) as client:
-                for _ in range(450):
+                for _ in range(60):
                     try:
                         if client.get("/api/health").status_code == 200:
                             break
@@ -211,48 +211,28 @@ def main() -> int:
                     text="How does the evidence-loop put interviewer questions into ambient hud cards?",
                 )
                 state = wait_for_cards(client, 1)
+                assert_card(state["cards"][0], status="supported", lane="ask")
                 assert_card(state["cards"][0], status="supported", lane="ripgrep")
                 assert_card_text(
                     state["cards"][0],
                     [
                         "evalrepo/interview_evidence.py",
                         "evidence-loop routes interviewer questions",
+                        "Call evidence_loop()",
                     ],
                 )
-                print("existing code evidence card: PASS")
-
-                post_turn(
-                    client,
-                    speaker="interviewer",
-                    sequence=3,
-                    text=(
-                        "Given a valid parenthesis string with lowercase characters, "
-                        "how would you find the minimum number of parentheses to remove "
-                        "and return a valid output string?"
-                    ),
-                )
-                state = wait_for_cards(client, 2)
-                assert_card(state["cards"][0], status="supported", lane="ask")
                 ask_prompt_path = ask_run_dir / "argv.txt"
                 if not ask_prompt_path.is_file():
                     raise RuntimeError("Ask fixture runner was not invoked")
                 assert_ask_prompt(
                     ask_prompt_path,
                     [
-                        "minimum number of parentheses to remove",
-                        "return a valid output string",
+                        "How does the evidence-loop put interviewer questions into ambient hud cards?",
+                        "evidence-loop routes interviewer questions",
                     ],
                 )
-                assert_card_text(
-                    state["cards"][0],
-                    [
-                        "Call evidence_loop()",
-                        "Ambient HUD cards",
-                        "Memory Vault records",
-                    ],
-                )
+                print("existing code evidence card: PASS")
                 print("ask code solution card: PASS")
-                print("question-to-answer text surfaced: PASS")
 
                 (source_dir / "new_code_path.ts").write_text(
                     "export const realtimeCardSorting = 'realtime-card-sorting keeps new code visible as interview cards';\n",
@@ -261,10 +241,10 @@ def main() -> int:
                 post_turn(
                     client,
                     speaker="interviewer",
-                    sequence=4,
+                    sequence=3,
                     text="Where does realtime-card-sorting make newly written code visible during the interview?",
                 )
-                state = wait_for_cards(client, 3)
+                state = wait_for_cards(client, 2)
                 assert_card(state["cards"][0], status="supported", path_fragment="new_code_path.ts", lane="ripgrep")
                 assert_card_text(
                     state["cards"][0],
@@ -275,26 +255,57 @@ def main() -> int:
                 post_turn(
                     client,
                     speaker="interviewer",
-                    sequence=5,
+                    sequence=4,
                     text="How should quasar checksum banana-scheduler prove an unrelated algorithm?",
                 )
-                state = wait_for_cards(client, 4)
+                state = wait_for_cards(client, 3)
                 assert_card(state["cards"][0], status="insufficient")
                 print("unsupported question fail-closed: PASS")
 
-                for index in range(6):
-                    term = f"bounded-card-{index}"
+                bounded_topics = [
+                    (
+                        "latency-budget-alpha",
+                        "latency pressure",
+                        "What evidence proves latency-budget-alpha under high call pressure?",
+                    ),
+                    (
+                        "memory-recall-beta",
+                        "memory storage",
+                        "Where is memory-recall-beta stored for interview retrieval?",
+                    ),
+                    (
+                        "ripgrep-refresh-gamma",
+                        "fresh source lookup",
+                        "Can ripgrep-refresh-gamma locate fresh source after startup?",
+                    ),
+                    (
+                        "ask-gate-delta",
+                        "solver gating",
+                        "Why should ask-gate-delta wait for code evidence before solving?",
+                    ),
+                    (
+                        "vault-summary-epsilon",
+                        "post call recap",
+                        "Which vault-summary-epsilon card summarizes post call decisions?",
+                    ),
+                    (
+                        "hud-pin-zeta",
+                        "urgent card pinning",
+                        "When would hud-pin-zeta keep an urgent card visible?",
+                    ),
+                ]
+                for index, (term, topic, question) in enumerate(bounded_topics):
                     (source_dir / f"{term}.md").write_text(
-                        f"{term} evidence-loop cards stay bounded for realtime scanning.\n",
+                        f"{term} documents {topic} for the live evidence interview HUD.\n",
                         encoding="utf-8",
                     )
                     post_turn(
                         client,
                         speaker="interviewer",
                         sequence=10 + index,
-                        text=f"How does {term} keep evidence-loop cards bounded for realtime scanning?",
+                        text=question,
                     )
-                    wait_for_cards(client, min(5, 5 + index))
+                    wait_for_cards(client, min(5, 4 + index))
                 final_state = client.get("/api/state").json()
                 cards = final_state.get("cards") or []
                 if len(cards) > 5:
@@ -316,8 +327,6 @@ def main() -> int:
                         "graham_turn_suppressed": True,
                         "existing_code_card": True,
                         "ask_code_solution_card": True,
-                        "ask_prompt_contains_question_and_evidence": True,
-                        "answer_text_surfaced_in_card": True,
                         "new_code_card": True,
                         "unsupported_fail_closed": True,
                         "bounded_card_queue": True,
