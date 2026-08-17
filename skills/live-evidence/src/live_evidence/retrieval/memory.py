@@ -86,7 +86,9 @@ class MemoryEvidenceClient:
         )
 
     async def _recall(self, query: str) -> tuple[list[EvidenceSource], str]:
-        selected_profile = await self._intent_profile(query)
+        selected_profile = None
+        if not _skip_intent_profile(self._profile):
+            selected_profile = await self._intent_profile(query)
         profiles = _unique_text(
             [
                 selected_profile or "",
@@ -150,7 +152,7 @@ class MemoryEvidenceClient:
             "q": query,
             "recall_profile": profile,
             "k": 6,
-            "scope": "",
+            "scope": self._profile.memory_scope,
             "collections": self._profile.memory_collections,
         }
         async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
@@ -161,6 +163,7 @@ class MemoryEvidenceClient:
                     json={
                         "q": query,
                         "k": 8,
+                        "scope": self._profile.memory_scope,
                         "collections": self._profile.memory_collections,
                     },
                     headers={"X-Caller-Skill": "live-evidence"},
@@ -362,7 +365,7 @@ def _memory_items_to_sources(
     if not isinstance(candidates, list):
         return []
     sources: list[EvidenceSource] = []
-    for item in candidates[:8]:
+    for index, item in enumerate(candidates[:8]):
         if not isinstance(item, dict) or not _memory_item_allowed(item, interview_profile):
             continue
         if _is_code_symbol_item(item):
@@ -372,19 +375,18 @@ def _memory_items_to_sources(
             if source is not None:
                 sources.append(source)
             continue
-        excerpt = _first_text(item, "solution", "text", "answer", "content", "problem")
-        path = _first_text(item, "path", "source_path", "file_path")
-        repository = _first_text(item, "repo", "repository", "project")
-        url = _first_text(item, "url", "source_url")
+        excerpt = _memory_excerpt(item)
+        path = _first_text(item, "path", "source_path", "file_path", "source_locator", "source_ref")
+        repository = _first_text(item, "repo", "repository", "project", "project_id", "source", "_source")
+        url = _first_text(item, "url", "source_url", "canonical_url")
         key = _first_text(item, "_key", "key", "id")
         if not excerpt or not any((path, repository, url, key)):
             continue
-        raw_score = item.get("score", item.get("combined_score", item.get("relevance", 0.55)))
-        score = _bounded_score(raw_score)
+        score = max(_memory_item_score(item), 0.94 - index * 0.03)
         sources.append(
             EvidenceSource(
                 lane=RetrievalLane.MEMORY,
-                label=_first_text(item, "problem", "title", "name") or f"Memory · {profile}",
+                label=_memory_label(item, profile),
                 excerpt=excerpt[:4_000],
                 score=score,
                 freshness=Freshness.UNKNOWN,
@@ -395,10 +397,61 @@ def _memory_items_to_sources(
                 line_start=_optional_int(item.get("start_line")),
                 line_end=_optional_int(item.get("end_line")),
                 url=url or None,
-                metadata={"_key": key or None, "profile": profile, "tags": item.get("tags", [])},
+                metadata={
+                    "_key": key or None,
+                    "profile": profile,
+                    "tags": item.get("tags", []),
+                    "source": item.get("_source") or item.get("source"),
+                    "source_ref": item.get("source_ref"),
+                    "canonical_ref": item.get("canonical_ref"),
+                    "topic_id": item.get("topic_id"),
+                    "topic_kind": item.get("topic_kind"),
+                    "recall_rank": index,
+                },
             )
         )
     return sources
+
+
+def _skip_intent_profile(profile: InterviewProfile) -> bool:
+    """Avoid slow intent preflight when a scoped project-memory source is explicit."""
+
+    return bool(profile.memory_scope) and "project_memory_active" in {
+        collection.casefold()
+        for collection in profile.memory_collections
+    }
+
+
+def _memory_label(item: dict[str, Any], profile: str) -> str:
+    title = _first_text(item, "title", "name")
+    topic_kind = _first_text(item, "topic_kind")
+    if title and topic_kind == "leetcode_problem":
+        return title
+    return _first_text(item, "problem", "title", "name", "topic_id") or f"Memory · {profile}"
+
+
+def _memory_excerpt(item: dict[str, Any]) -> str:
+    text = _first_text(
+        item,
+        "solution",
+        "answer",
+        "retrieval_text",
+        "text",
+        "content",
+        "summary",
+        "problem",
+    )
+    if text:
+        return text
+    claims = item.get("claims")
+    if isinstance(claims, list):
+        claim_text = " ".join(
+            str(claim.get("text") or claim.get("claim_text") or "").strip()
+            for claim in claims
+            if isinstance(claim, dict)
+        )
+        return " ".join(claim_text.split())
+    return ""
 
 
 def _memory_payload_has_usable_evidence(payload: dict[str, Any]) -> bool:
@@ -415,6 +468,18 @@ def _memory_payload_has_usable_evidence(payload: dict[str, Any]) -> bool:
     except (TypeError, ValueError):
         return found is not False
     return score >= 0.5
+
+
+def _memory_item_score(item: dict[str, Any]) -> float:
+    for key in ("score", "combined_score", "relevance"):
+        if key in item:
+            return _bounded_score(item.get(key))
+    scores = item.get("scores")
+    if isinstance(scores, dict):
+        for key in ("dense", "graph", "bm25"):
+            if key in scores:
+                return _bounded_score(scores.get(key))
+    return 0.55
 
 
 def _memory_item_allowed(item: dict[str, Any], profile: InterviewProfile) -> bool:

@@ -29,6 +29,7 @@ class InterviewProfile(BaseModel):
     watch_terms: list[str] = Field(default_factory=list, max_length=200)
     project_aliases: dict[str, list[str]] = Field(default_factory=dict)
     repo_priorities: list[str] = Field(default_factory=list, max_length=100)
+    memory_scope: str = Field(default="", max_length=200)
     memory_collections: list[str] = Field(
         default_factory=lambda: [
             "project_memory_active",
@@ -68,15 +69,18 @@ class InterviewProfile(BaseModel):
     @field_validator(
         "watch_terms",
         "repo_priorities",
+        "memory_scope",
         "memory_collections",
         "blocked_tags",
         "blocked_path_fragments",
         "stt_prompt_terms",
     )
     @classmethod
-    def normalize_list(cls, values: list[str]) -> list[str]:
+    def normalize_list(cls, values: list[str] | str) -> list[str] | str:
         """Remove empty and duplicate profile terms while preserving order."""
 
+        if isinstance(values, str):
+            return " ".join(values.split())
         seen: set[str] = set()
         normalized: list[str] = []
         for value in values:

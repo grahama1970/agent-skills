@@ -172,6 +172,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_mvp_steps_2_8.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-leetcode-memory-recall)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_leetcode_memory_recall.py" "$SCRIPT_DIR" "$@"
+    ;;
 esac
 
 if [[ $# -eq 0 ]]; then

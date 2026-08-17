@@ -44,6 +44,7 @@ repo_priorities:
   - agent-skills
   - sparta
   - graph-memory-operator
+memory_scope: live-evidence
 stt_prompt_terms:
   - G2i
   - SkillsBench

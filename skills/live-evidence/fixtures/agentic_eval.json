@@ -3,10 +3,10 @@
   "skill": "live-evidence",
   "eval_tier": "compliance",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, React instrumentation, interviewer question detection, sampled adversarial transcript-window recovery, degraded Memory self-recovery, Ask command/card answer text plumbing, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, real Memory recall for promoted project-memory problem records, React instrumentation, interviewer question detection, sampled adversarial transcript-window recovery, degraded Memory self-recovery, Ask command/card answer text plumbing, and fail-closed contract smoke",
   "claims": {
-    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, recover from sampled noisy transcript windows, suppress duplicate/card-storm triggers, keep answer cards available while Memory is slow/degraded, reject consentless listener startup, and fail closed on malformed skill contracts",
-    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, real Graph Memory relevance, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, React visual quality, or interview semantic correctness"
+    "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, suppress Graham/candidate turns, identify interviewer questions, retrieve promoted project-memory problem records through real Memory recall, route code-related questions through the Ask lane when configured, surface answer text and source grounding in cards, recover from sampled noisy transcript windows, suppress duplicate/card-storm triggers, keep answer cards available while Memory is slow/degraded, reject consentless listener startup, and fail closed on malformed skill contracts",
+    "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, broad Graph Memory relevance, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, React visual quality, or interview semantic correctness"
   },
   "cases": [
     {
@@ -130,6 +130,24 @@
           "step7 ask fixture-only run-dir surfaced: PASS",
           "step8 source-bound cards and manual derived-query lanes: PASS",
           "mvp steps 2-8 receipt:"
+        ]
+      }
+    },
+    {
+      "name": "leetcode-problem-index-from-real-memory-recall",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "leetcode-memory-recall"
         ]
       }
     },

@@ -530,6 +530,8 @@ def _leetcode_gate_card(
             "seed_sources": [source.model_dump(mode="json") for source in seed_sources[:4]],
         },
     )
+    visible_sources = [source, *seed_sources[:4]]
+    lanes = list(dict.fromkeys(item.lane for item in visible_sources))
     return EvidenceCard(
         query=decision.query,
         thread=decision.thread,
@@ -541,8 +543,8 @@ def _leetcode_gate_card(
         qualifier=qualifier,
         confidence=0.0,
         status=CardStatus.INSUFFICIENT,
-        sources=[source],
-        lanes=[RetrievalLane.ASK],
+        sources=visible_sources,
+        lanes=lanes,
     )
 
 
