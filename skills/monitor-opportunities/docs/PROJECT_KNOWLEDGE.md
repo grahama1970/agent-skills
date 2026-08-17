@@ -1,88 +1,66 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-14
+Updated: 2026-08-17
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
 
-## Current state (2026-08-14): promoted Stage 0 cron path proven, effects gated
+## Relationship lane (2026-08-17): contacts come from memory, not from postings
 
-WebGPT review on 2026-08-13 found that current main could produce success-looking reports
-with schema-invalid Meetup values, loose required-source matching, hidden downstream work,
-LinkedIn-only opportunity admission, and test-fixture claim authority. The current repair
-line makes those paths fail closed and has live promoted receipts:
+Every live run published `relationship_signal_count: 0`. Root cause: signals could
+only be built by `contact_changes.relationship_signals_from_candidates`, which needs
+contact evidence embedded in the discovery candidate (`known_monitor_contacts`,
+`adjacent_contacts`, `company_sponsors`, `warm_path_via`). Real postings never carry
+those fields — the live 2026-08-17 shortlist had `contact_state: CONTACT_UNKNOWN`
+on every row. The people Graham knows live in the `/memory` collection
+`contact_snapshots` (15 records, LinkedIn-captured, the same store
+`monitor-contacts` operates over).
 
-- report manifests validate against the committed `schemas/report.schema.json` before
-  rendering;
-- the authoritative shortlist and all downstream apply-prep artifacts are capped at the
-  report-visible set;
-- required source receipts bind exact `required_source_id`, lane/channel/source-class, and
-  accepted terminal states;
-- API failure fallback requires a bound website/browser receipt with retained evidence;
-- LinkedIn rows and Meetup groups render as `source_intel`, not opportunities;
-- Meetup source intelligence cannot create resume, outreach, application, or application
-  packet artifacts;
-- claim-bearing artifacts bind one run-scoped claim snapshot digest, and live runs cannot
-  use `tests/fixtures` as claim authority;
-- Indeed and HiddenJobs mandatory browser captures are read-only source-health evidence
-  only and do not admit aggregator rows as opportunities;
-- `apply` is an implemented local gate over report-visible application packets. It checks
-  packet drift, unresolved `human_required` fields, human authorization, and capability
-  authority, then fails closed with `external_effects=false`;
-- ranking is mandate-first before geography, with a regression proving a high-fit remote
-  Principal AI role outranks a mediocre local role;
-- browser pacing no longer calls `surf wait`; live promoted receipts show
-  `browser_control.status=OK`, `events=0` after the repair;
-- a Tau local creator/reviewer smoke runs one report-visible opportunity through a
-  Tau generic artifact transaction with producer, validator, reviewer, goal-hash
-  binding, and receipts (`scripts/tau_opportunity_eval_smoke.py`). This is
-  `provider_live=false` proof of Tau plumbing, not semantic provider evaluation.
-- WebGPT review on 2026-08-14 returned `NEEDS_ATTENTION` for enabling provider-live
-  Tau semantic evaluation in the 2 AM cron. The accepted next slice is a non-blocking
-  sidecar path. Slice `MO-TAU-SEM-01` now freezes
-  `monitor_opportunities.tau_semantic_input.v1` through
-  `schemas/tau-semantic-input.schema.json` and `validate_tau_semantic_input()`.
-  It requires immutable-goal hash binding, primary non-Meetup opportunity evidence,
-  retained source/artifact hashes, redacted relationship facts, Meetup supplemental-only
-  policy, and `external_effects=false`.
+`src/monitor_opportunities/relationship_expansion.py` closes that gap. It reads
+`contact_snapshots` through `POST /list` and joins stored contacts to the report's
+opportunities two ways:
 
-`external_effects` remains FALSE by design: no auto-apply, no auto-submit,
-no InMail/Gmail send, and no LinkedIn platform action.
+- `direct_contact` — the contact's stored employer equals the opportunity
+  organization.
+- `adjacent_contact` — the contact's stored role text and the opportunity share at
+  least one mandate concept from `/extract-entities` (`opportunity_vocabulary`, the
+  same vocabulary ranking uses). Capped at 2 per opportunity, ranked by shared-concept
+  count. This is a role-peer path for informational outreach, NOT a claim that the
+  contact works at the target organization; the provenance string says so explicitly
+  and the receipt repeats it as a non-claim.
 
-Latest deterministic receipts on `main`:
+Wiring: `pipeline._report_from_run` calls `expand_from_memory` and writes
+`relationship-expansion-receipt.json` per run; `report.py` renders a
+`Relationship signals` section (previously a signal was `visible_in_report: true`
+while being absent from the rendered HTML — a visibility-invariant defect).
+Memory URL override: `MONITOR_OPPORTUNITIES_MEMORY_URL`.
 
-- current remote proof revision: read `refs/heads/main` with `git ls-remote origin refs/heads/main`;
-- full sanity: `304 passed`, `monitor-opportunities sanity: PASS`;
-- live promoted nightly receipt:
-  `skills/monitor-opportunities/local/nightly/latest/nightly-receipt.json`
-  in the cron worktree, with `status=PASS`, `mocked=false`, `live=true`,
-  `mode=PROMOTED_STAGE_0`, `external_effects=false`,
-  `expected_revision_matches=true`, and `browser_control.status=OK`;
-- run status: `operational_readiness=STAGE_0_READY`, source health
-  `degraded_count=0` across 43 receipts, 8 opportunities, 8 applications,
-  8 application packets, 8 resume variants, 16 outreach packets, 57 relationship
-  signals, 105 visible action-worthy artifacts, and `hidden_total=0`;
-- digest counts: 8 employment items and 4 consulting signals;
-- prospect queue: 74 prospects, including 57 relationship signals and 13 federal
-  entries;
-- Memory readback: `readback_found=true`,
-  `relationship_readback_found=true`, `external_effects=false`;
-- Buzz readback: `posted=true`, `live=true`, `external_effects=false`;
-- Tau local evaluator smoke:
-  `/tmp/monitor-opportunities-tau-eval-smoke-20260814T2120Z/tau-eval-smoke-receipt.json`,
-  with `status=PASS`, `mocked=false`, `live=true`, `provider_live=false`,
-  `completed_node_count=1`, review verdict `PASS`, and `external_effects=false`;
-- WebGPT Ask/Tau review:
-  local run directory
-  `skills/monitor-opportunities/local/review/ask-webgpt-tau-semantic-eval/...`,
-  with Surf provider result `response_proven`, provider live true, and WebGPT verdict
-  `NEEDS_ATTENTION` for adding provider-live semantic evaluation to the 2 AM cron
-  before slices `MO-TAU-SEM-01` through `MO-TAU-SEM-05` have live receipts;
-- scheduler receipt:
-  `/home/graham/.pi/scheduler/receipts/monitor-opportunities-nightly-receipt.json`,
-  cron `0 2 * * *`, enabled, workdir
-  `/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-cron-main`
-  (read back after each scheduler update). This receipt is the authority for the
-  current pinned `expected_revision` because doc-only commits change the SHA.
+Fail-soft rules that matter: an unreachable memory service or unavailable vocabulary
+yields zero signals plus a named limitation in the receipt, never an invented contact.
+An empty role/title string means "nothing to match", not "vocabulary unavailable" —
+`mandate_hits` returns `None` for both, and conflating them fakes a degradation.
+
+Live proof 2026-08-17 (`run_id mo_d8543c3db62de2b7`): 2 adjacent signals,
+`contacts_available: 15`, `limitations: []`, `hidden_total: 0`; `memory-sync` reported
+`relationship_signal_count: 2` and `relationship_readback_state: FOUND` (was `0` /
+`NO_RELATIONSHIP_SIGNALS`), confirmed by an independent `/recall/by-keys` read of
+`morning_opportunities/2026-08-17-rel-dbeb38b9850db9f6`.
+Regression guard: `scripts/relationship_expansion_check.py` +
+`/agentic-evals` case `relationship-lane-must-not-publish-zero-contacts`, which runs
+against the live collection and fails if the store is empty/unreachable or a control
+opportunity built from a stored contact's own employer yields no `direct_contact`.
+Commit `5a6d65786a`.
+
+Still open on the contact track (handoff next-order 3, 4, 6): Meetup Buffalo
+source-intelligence capture, GitHub repository intelligence as a contact-expansion
+input, and cron readiness — `status --json` still says `NOT_ESTABLISHED`.
+
+## Current state (2026-08-08): OPERATIONAL nightly, human-gated effects
+
+The nightly is scheduled (`monitor-opportunities-nightly`, cron `0 2 * * *`) and runs
+live end-to-end — proven by a successful scheduled run and by the `/agentic-evals`
+real-world case (READY). `external_effects` stays FALSE by design: no auto-apply,
+no auto-submit, no InMail/Gmail send; submit is per-opportunity human-authorized,
+outreach drafts go to `/memory`.
 
 Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
 1. **Discovery** — read-only browser capture of SAM.gov + LinkedIn advanced-search &
@@ -100,21 +78,16 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
    solicitations + commercial signals, mandate-filtered).
 6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
 
-Still not complete against the immutable goal (honest gaps):
-- Full per-opportunity `/tau` semantic provider evaluation loop in the nightly path
-  (`opportunity-evaluator` + `opportunity-evaluation-reviewer` contracts in `agents/`,
-  pass best-practices-subagent). Current proof is a local Tau artifact-transaction
-  smoke over one report item plus a committed input contract; it does not prove
-  provider/model semantic quality, all top-N opportunities, or 2 AM OAuth/provider
-  behavior.
+Written but NOT yet live-proven (honest gaps):
+- Per-opportunity `/tau` creator-reviewer eval loop (`opportunity-evaluator` +
+  `opportunity-evaluation-reviewer` contracts in `agents/`, pass best-practices-subagent).
+  Blocker to verify: headless tau under OAuth at 2 AM.
+- **Mandate-first ranking** (webgpt P0) — current ranking is still geo-weighted.
 - **Learned relevance classifier** — label flywheel (`opportunity_labels`) accumulating
   toward `MIN_LABELS_TO_TRAIN=300`; trains via `/classifier-lab` when ready.
-- Actual ATS submit remains blocked by stage and policy. Submit requires separate
-  site/provider promotion plus exact per-application human authorization bound to the
-  packet digest. Stage 0 `apply` never submits or prefills.
 
-Live nightly readiness is no longer gated on Indeed/HiddenJobs, claim authority, or
-delivery/readback for the current Stage 0 cron path; those have receipt-backed coverage.
+Legacy note: the old "Stage 0 kernel / NOT_ESTABLISHED / network_access=false" language
+below predates 2026-08-08 and is superseded by this section.
 
 The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
 run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through
@@ -176,6 +149,10 @@ correct for every capability not explicitly reported as implemented by `status`.
     `human_required`.
 11. Empty nights are valid. Volume is audit data, not a success objective.
 12. Feed failure, no matches, and not searched are distinct evidence states.
+13. Relationship signals are read-only reconnect candidates built from stored contact
+    records. A role-peer (`adjacent_contact`) match is never presented as employment,
+    a warm introduction, or a mutual connection; only evidence actually stored on the
+    contact document may be shown. The skill contacts no one.
 
 ## Focused implementation sequence
 
@@ -255,10 +232,9 @@ Required separately per capability:
 
 ## Non-claims
 
-- The proven promoted nightly is Stage 0 research/report operation only; it does not
-  prove ATS submission, Gmail send, LinkedIn outbound action, or job/client outcomes.
-- The expected fixture and Stage 0 kernel do not prove ranking quality, resume
-  effectiveness, Gmail draft creation, or ATS submission.
+- The nightly pipeline is not currently reliable or operational.
+- The expected fixture and Stage 0 kernel do not prove live discovery, ranking quality,
+  resume correctness, scheduler reliability, Gmail draft creation, or ATS submission.
 - A working ATS discovery interface does not prove an application-submit interface.
 - A model or roundtable verdict is advisory and cannot authorize facts or effects.
 - This project does not optimize application volume or promise job/client outcomes.
