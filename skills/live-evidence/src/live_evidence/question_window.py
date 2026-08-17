@@ -40,9 +40,9 @@ class QuestionWindowBuilder:
         profile: InterviewProfile,
         *,
         max_events: int = 4,
-        max_chars: int = 512,
+        max_chars: int = 1_800,
         max_sequence_gap: int = 2,
-        duplicate_ttl_s: float = 15.0,
+        duplicate_ttl_s: float = 45.0,
     ) -> None:
         self._profile = profile
         self._max_events = max_events
@@ -123,7 +123,11 @@ class QuestionWindowBuilder:
     def _enforce_bounds(self) -> None:
         while len(self._buffer) > self._max_events:
             self._buffer.pop(0)
-        while self._buffer and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
+        # Keep at least one event: real STT events routinely exceed max_chars on
+        # their own (measured mean 640 chars on live PipeWire capture), and an
+        # unguarded loop drains the buffer to empty, so the turn is silently
+        # dropped as not_question instead of being considered.
+        while len(self._buffer) > 1 and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
             self._buffer.pop(0)
 
     def _should_reset_for_sequence(self, event: TranscriptEvent) -> bool:
