@@ -27,41 +27,30 @@ function fencedCode(text: string): string | null {
   return match?.[1]?.trim() || null;
 }
 
-function isParenthesesQuestion(card: EvidenceCard): boolean {
-  return `${card.question ?? ""} ${card.query} ${card.answer ?? ""}`.toLowerCase().match(/parenthes|bracket|stack|\(\)/) !== null;
-}
-
+/**
+ * Only ever surface code the backend actually produced.
+ *
+ * This previously fell back to a hard-coded Python bracket validator whenever
+ * a regex matched /parenthes|bracket|stack/ in the card text. That made the
+ * HUD show an authoritative-looking implementation for questions the pipeline
+ * had not answered at all, and it made every solution screenshot unfalsifiable
+ * -- an agentic eval could assert the solution pane rendered while the backend
+ * had returned nothing.
+ */
 function solutionCode(card: EvidenceCard): { label: string; code: string; sourceBound: boolean } | null {
   const explicit = fencedCode(`${card.answer ?? ""}\n${card.talking_point}\n${card.proof}`);
-  if (explicit) {
-    return { label: "answer-snippet", code: explicit, sourceBound: card.status === "supported" };
-  }
-  if (!isParenthesesQuestion(card)) return null;
-  return {
-    label: "candidate_valid_parentheses.py",
-    sourceBound: false,
-    code: `class Solution:
-    def isValid(self, s: str) -> bool:
-        stack: list[str] = []
-        pairs = {")": "(", "]": "[", "}": "{"}
-
-        for char in s:
-            if char in pairs.values():
-                stack.append(char)
-            elif char in pairs:
-                if not stack or stack.pop() != pairs[char]:
-                    return False
-
-        return not stack`,
-  };
+  if (!explicit) return null;
+  return { label: "answer-snippet", code: explicit, sourceBound: card.status === "supported" };
 }
 
-function takeaway(card: EvidenceCard, hasCandidateCode: boolean): string {
+/**
+ * Show only what the backend said. This previously substituted a fixed
+ * stack-algorithm sentence whenever the hard-coded candidate code was present,
+ * so the HUD narrated an approach the pipeline never produced.
+ */
+function takeaway(card: EvidenceCard): string {
   const answer = card.answer || card.talking_point;
   if (answer && answer !== "No source-bound support surfaced yet.") return answer;
-  if (hasCandidateCode) {
-    return "Use a stack after confirming the contract: push opening brackets, pop on matching closes, reject mismatches immediately, and reject leftover openings at the end.";
-  }
   return answer || "No formatted solution is available yet.";
 }
 
@@ -91,16 +80,17 @@ function TermBadge({
   );
 }
 
-function semanticTakeaway(card: EvidenceCard, answer: string, hasCandidateCode: boolean): ReactNode {
-  if (!isParenthesesQuestion(card) || !hasCandidateCode) return answer;
-  return (
-    <>
-      Use a <TermBadge className="sem-ds" label="stack" definition="LIFO structure holding unmatched opening brackets." /> after confirming the contract: validate in{" "}
-      <TermBadge className="sem-complexity" label="O(N) time" definition="One scan over N characters." /> and{" "}
-      <TermBadge className="sem-complexity" label="O(N) space" definition="Worst case stores all opening brackets." />, push opening brackets, pop on matching closes, and reject{" "}
-      <TermBadge className="sem-alert" label="mismatches or leftover openings" definition="Fail on wrong closer, early close, or unclosed opener." />.
-    </>
-  );
+/**
+ * Render the backend answer as-is.
+ *
+ * This previously replaced the answer with a fixed annotated sentence about
+ * stacks and O(N) complexity whenever the card text matched a parentheses
+ * regex, so the HUD presented term-badged analysis that no model had produced.
+ * Any future term annotation must be driven by resolver output, not by
+ * pattern-matching the question text in the browser.
+ */
+function semanticTakeaway(answer: string): ReactNode {
+  return answer;
 }
 
 export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionStageProps) {
@@ -109,7 +99,7 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
   const [expandedCode, setExpandedCode] = useState(false);
   const primarySource = card.sources[0];
   const code = useMemo(() => solutionCode(card), [card]);
-  const answer = takeaway(card, Boolean(code));
+  const answer = takeaway(card);
   const displayedCode = code ? (expandedCode ? code.code : coreLogicSnippet(code.code)) : null;
   const copyQid = `live-evidence:solution:copy:${card.card_id}`;
   const copyCodeQid = `live-evidence:solution:copy-code:${card.card_id}`;
@@ -204,7 +194,7 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
         </div>
       </div>
 
-      <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(card, answer, Boolean(code))}</div>
+      <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(answer)}</div>
 
       <div className="code-block-container">
         <div className="code-bar">

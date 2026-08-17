@@ -235,6 +235,26 @@ class EvidenceSource(BaseModel):
         return self
 
 
+class ClarificationItem(BaseModel):
+    """One clarifying question the backend decided is worth asking.
+
+    These must be produced by the question resolver, never invented by the
+    browser. Before this existed the HUD hard-coded four parentheses prompts
+    and showed them whenever a regex matched the card text, which made every
+    clarification screenshot unfalsifiable.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1, max_length=80)
+    question: str = Field(min_length=1, max_length=400)
+    why_it_matters: str | None = Field(default=None, max_length=400)
+    default_assumption: str | None = Field(default=None, max_length=400)
+    blocking: bool = False
+    answer: str | None = Field(default=None, max_length=400)
+    answer_source_event_ids: list[str] = Field(default_factory=list, max_length=8)
+
+
 class EvidenceCard(BaseModel):
     """Compact human-facing evidence prompt derived only from selected sources."""
 
@@ -259,6 +279,7 @@ class EvidenceCard(BaseModel):
     status: CardStatus
     sources: list[EvidenceSource] = Field(default_factory=list, max_length=8)
     lanes: list[RetrievalLane] = Field(default_factory=list)
+    clarifications: list[ClarificationItem] = Field(default_factory=list, max_length=6)
     pinned: bool = False
     dismissed: bool = False
 

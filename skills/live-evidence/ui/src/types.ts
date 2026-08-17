@@ -37,6 +37,16 @@ export interface EvidenceSource {
   metadata: Record<string, unknown>;
 }
 
+export interface ClarificationItem {
+  id: string;
+  question: string;
+  why_it_matters?: string | null;
+  default_assumption?: string | null;
+  blocking: boolean;
+  answer?: string | null;
+  answer_source_event_ids: string[];
+}
+
 export interface EvidenceCard {
   schema: "live_evidence.evidence_card.v1";
   card_id: string;
@@ -53,6 +63,7 @@ export interface EvidenceCard {
   status: CardStatus;
   sources: EvidenceSource[];
   lanes: RetrievalLane[];
+  clarifications: ClarificationItem[];
   pinned: boolean;
   dismissed: boolean;
 }

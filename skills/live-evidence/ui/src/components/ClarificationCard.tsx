@@ -17,62 +17,28 @@ interface ClarificationCardProps {
   card: EvidenceCard;
 }
 
-function isParenthesesQuestion(card: EvidenceCard): boolean {
-  const text = `${card.question ?? ""} ${card.query} ${card.answer ?? ""}`.toLowerCase();
-  return /parenthes|bracket|stack|\(\)/i.test(text);
-}
-
+/**
+ * Clarifications come from the backend resolver only.
+ *
+ * This previously returned four hard-coded parentheses prompts whenever a
+ * regex matched /parenthes|bracket|stack/ in the card text, and four generic
+ * prompts otherwise. The HUD therefore always displayed a plausible-looking
+ * clarification grid regardless of whether the pipeline had analysed the
+ * question, which made clarification screenshots unfalsifiable and let an
+ * agentic eval assert on strings that were compiled into the bundle.
+ *
+ * An empty list is the honest state when the resolver has produced nothing.
+ */
 function clarificationItems(card: EvidenceCard): ClarifyItem[] {
-  if (isParenthesesQuestion(card)) {
-    return [
-      {
-        id: "input-constraints",
-        label: "Bounds on N?",
-        question: "What are the expected bounds on string length N, and are there memory constraints?",
-      },
-      {
-        id: "character-set",
-        label: "Character Set?",
-        question: "Does the string contain only bracket pairs, or can it include arbitrary alphanumeric characters?",
-      },
-      {
-        id: "return-contract",
-        label: "Return Type?",
-        question: "Should we return a boolean, a corrected string, or the invalid indices?",
-      },
-      {
-        id: "edge-cases",
-        label: "Empty Strings?",
-        question: "How should empty strings, unmatched closing brackets, and leftover opening brackets behave?",
-      },
-    ];
-  }
-  return [
-    {
-      id: "input-shape",
-      label: "Input Shape?",
-      question: "What are the input types, bounds, and malformed-input expectations?",
-    },
-    {
-      id: "output-contract",
-      label: "Output Type?",
-      question: "What exactly should be returned, and are multiple valid outputs acceptable?",
-    },
-    {
-      id: "constraints",
-      label: "Constraints?",
-      question: "What time, memory, ordering, or mutation constraints matter for this solution?",
-    },
-    {
-      id: "examples",
-      label: "Examples?",
-      question: "Can we confirm one normal case and one edge case before implementing?",
-    },
-  ];
+  return (card.clarifications ?? []).map((item) => ({
+    id: item.id,
+    label: item.question,
+    question: item.question,
+  }));
 }
 
 export function activeClarificationPrompt(card: EvidenceCard): string {
-  return clarificationItems(card)[0]?.question ?? "Confirm the problem contract before answering.";
+  return clarificationItems(card)[0]?.question ?? "";
 }
 
 function nextStatus(status: ClarifyStatus): ClarifyStatus {
