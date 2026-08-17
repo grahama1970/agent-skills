@@ -129,16 +129,33 @@ recorded here rather than left implicit (operator, 2026-08-17).
 | Stage 1 — readiness gate | direct SciLLM | ~8 calls per 43s of audio | disposable, stateless judgment |
 | Stage 2 — answer | `$ask tau-dag` | ~1 call per question | run directory is the source receipt |
 
-Measured on this machine against live PipeWire capture:
+Measured on this machine, same readiness prompt, all producing the correct 5/5
+gate verdicts:
 
-- `tau-dag` single-call, `claude-opus-5-high`: 56s
-- `tau-dag` single-call, `claude-opus-5-low`: 38s
-- Lowering reasoning effort removed only 18s, so the remaining floor is
-  orchestration (DAG compile, dispatch, run-dir creation, polling), not
-  generation.
-- Replaying the real 359-event capture through the readiness trigger fires 3-8
-  resolver calls per 43s of audio. At 38s per call that is 114-304s of serial
-  model time for 43s of speech: 2.6x to 7x realtime.
+| Path | Latency |
+| --- | --- |
+| `tau-dag` `claude-opus-5-high` | 56s |
+| `tau-dag` `claude-opus-5-low` | 38s |
+| `tau-dag` trivial "reply OK" prompt | 18s |
+| direct SciLLM `claude-opus-5` default effort | 11.6s |
+| direct SciLLM `claude-opus-5` `reasoning_effort: low` | 10.8s |
+
+Tau adds roughly 27s to an 11s call. The trivial-prompt probe isolates the
+cause: 18s with nothing to generate, so the floor is orchestration (DAG
+compile, dispatch, run-dir creation, polling), not generation.
+
+Reasoning effort is not the lever for this task: direct low vs default differs
+by under a second. Note `claude-opus-5-low` is NOT a valid SciLLM model id;
+the `-low` suffix is an Ask/Tau handler convention, and direct calls pass
+`reasoning_effort` as a separate parameter.
+
+Replaying the real 359-event capture through the readiness trigger fires 3-8
+resolver calls per 43s of audio. At 10.8s per call that fits inside realtime;
+at 38s per call nothing does.
+
+SciLLM proxy note: the running container validates `SCILLM_MASTER_KEY`, which
+has drifted from the `SCILLM_PROXY_KEY` exported in `~/.zshrc`. The stale key
+returns 401 and trips the proxy abuse guard after 5 errors in 30s.
 
 Stage 1 uses none of what Tau provides. It needs no goal-hash continuity, no
 resume (a stale readiness verdict is discarded, not resumed), no per-call
