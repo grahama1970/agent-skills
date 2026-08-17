@@ -1,8 +1,73 @@
 # monitor-opportunities project knowledge
 
-Updated: 2026-08-14
+Updated: 2026-08-17
 Authoritative branch target: `grahama1970/agent-skills@main`
 Immutable goal: see `../SKILL.md`. Rubric: `best-practices-opportunities`.
+
+## Current state (2026-08-17): sanity is RED — the discovery fixture aged out
+
+`sanity.sh` on `main` (commit `f41a16af3c`) reports **17 failed, 406 passed**. One
+cause explains all 17. The committed discovery fixture
+(`tests/fixtures/discovery/`) carries postings dated `2026-08-03`, and the 2-week
+recency gate now rejects them, so a fixture run produces
+`inspected: 3, shortlisted: 0, rejected_or_review: 3` with every candidate marked
+`REJECT_RELOCATION_REQUIRED` or `REJECT_STALE_AGE`. With zero shortlisted
+opportunities the run writes no `claim-snapshot.json` and no tailoring receipt
+(`tailoring_receipt: null`, `dependency_readiness.tailoring: MISSING`), and every
+test that needs one report-visible opportunity fails:
+
+- `test_claim_snapshot_binding.py::test_report_claim_artifacts_share_one_snapshot_digest`
+- `test_cli.py::test_apply_requires_exact_report_visible_packet`,
+  `test_apply_blocks_unresolved_human_required_fields`
+- `test_pipeline.py` (3), `test_report_acceptance.py` (2),
+  `test_visibility_accounting.py` (2), `test_tau_semantic_prepare.py` (3),
+  `test_tau_semantic_provider.py` (1), `test_report_visibility.py` (1),
+  `test_eligibility.py` (1), `test_buzz_review.py` (1)
+
+This is a dated-fixture time bomb, not a regression in the pipeline: the same
+fixture passed while its postings were inside the recency window. The fix is a
+decision — generate fixture dates relative to now at load time, or freeze the
+clock in the tests. Until it lands, `sanity.sh` cannot gate anything, and a green
+count from before 2026-08-17 is not evidence about today's tree.
+
+`run.sh status --json` on this tree: `stage: STAGE_0_RESEARCH_ONLY`,
+`operational_readiness: NOT_ESTABLISHED`, `external_effects: false`,
+`not_implemented_commands: []` — 27 commands are implemented, including `apply`,
+`github-intelligence`, `tau-semantic-prepare`, `tau-semantic-provider-eval`,
+`report-acceptance`, and `scheduler-exec-check`.
+
+### Stale-working-tree incident, 2026-08-17
+
+The primary checkout `~/workspace/experiments/agent-skills` held a working tree
+that had **24 tracked files deleted** relative to HEAD — `github_repo_intelligence.py`,
+`tau_semantic_prepare.py`, `tau_semantic_provider.py`, `report_acceptance.py`,
+`application_history.py`, `semantic_addenda.py`, `schemas/tau-semantic-input.schema.json`,
+`schemas/relationship-candidate.schema.json`, and 16 more — plus 73 reverted paths
+under `skills/monitor-opportunities` (+858/−18,877). Repo-wide the same signature
+covered 209 files across 17 areas.
+
+Consequences worth remembering:
+
+- `local/HANDOFF.md`'s "next deterministic order" describes that stale tree. Items
+  3 (Meetup Buffalo capture) and 4 (GitHub repository intelligence) were already
+  implemented on `main` when it was written, and its `relationship_signal_count: 0`
+  is a property of the stale tree. The scheduler's 2026-08-16 promoted nightly
+  receipt records **81 relationship signals** (78 `adjacent_contact`, 3 `direct_contact`)
+  sourced from GitHub repository intelligence (`rtinney1`, `ge-high-assurance`,
+  Kevin Quick), Meetup Buffalo (8 groups), and LinkedIn premium warm paths (20).
+- A docs commit made from that tree silently reverted committed PROJECT_KNOWLEDGE
+  content; restored in `eee45fb278`.
+- Audit result: every unique-looking line in the stale delta was an older commit's
+  content plus edits already merged to `main`, so `git checkout HEAD -- <path>`
+  lost nothing. Backup patch was taken first.
+
+Guard, added 2026-08-17 (`dbe768c3ed`): run **`python3 scripts/check_tree_fresh.py
+--path skills/monitor-opportunities`** before editing, testing, or claiming proof.
+It exits 1 when a tracked file present in HEAD is missing from the working tree
+and prints the recovery command. Proven both directions: exit 1 on the re-applied
+stale delta listing all 24 files, exit 0 on the restored tree. A live run against
+a stale tree proves nothing about `main`, and that is how a full session was spent
+on 2026-08-17.
 
 ## Current state (2026-08-14): promoted Stage 0 cron path proven, effects gated
 
