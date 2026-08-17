@@ -45,6 +45,14 @@ function sourceLabel(card?: EvidenceCard): string {
   return `${source.repository ?? source.lane} / ${compactPath(locator)}${suffix}`;
 }
 
+function previewText(card: EvidenceCard): string {
+  const raw = card.answer || card.talking_point;
+  if (raw === "No source-bound support surfaced yet.") {
+    return card.status === "insufficient" ? "Pending source-bound evidence" : "Clarify before relying on this card";
+  }
+  return raw;
+}
+
 function laneTone(state: LaneActivity["state"]): string {
   if (state === "ok") return "bg-emerald-300";
   if (state === "running") return "bg-sky-300 animate-pulse";
@@ -209,7 +217,7 @@ function LiveCardStream({
                   <span>{index === 0 ? "Now" : `${index + 1}`}</span>
                 </div>
                 <div className="card-question-preview">{card.question || card.query}</div>
-                <div className="card-answer-preview">{card.answer || card.talking_point}</div>
+                <div className="card-answer-preview">{previewText(card)}</div>
                 <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500">
                   <span className="truncate">{sourceLabel(card)}</span>
                   <span>{Math.round(card.confidence * 100)}%</span>
@@ -276,7 +284,7 @@ function ActiveInsightStage({
 
 export function LiveMeetingSurface(props: LiveMeetingSurfaceProps) {
   return (
-    <div className="meeting-shell">
+    <div className="meeting-shell" data-listening={props.session.status === "listening" ? "true" : "false"}>
       <QuietHeader {...props} />
       <div className="app-layout">
         <LiveCardStream cards={props.cards} selectedCardId={props.selectedCardId} onSelectCard={props.onSelectCard} />

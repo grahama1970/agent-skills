@@ -27,22 +27,22 @@ function clarificationItems(card: EvidenceCard): ClarifyItem[] {
     return [
       {
         id: "input-constraints",
-        label: "Input Constraints",
+        label: "Bounds on N?",
         question: "What are the expected bounds on string length N, and are there memory constraints?",
       },
       {
         id: "character-set",
-        label: "Character Set",
+        label: "Character Set?",
         question: "Does the string contain only bracket pairs, or can it include arbitrary alphanumeric characters?",
       },
       {
         id: "return-contract",
-        label: "Return Requirements",
+        label: "Return Type?",
         question: "Should we return a boolean, a corrected string, or the invalid indices?",
       },
       {
         id: "edge-cases",
-        label: "Edge Cases",
+        label: "Empty Strings?",
         question: "How should empty strings, unmatched closing brackets, and leftover opening brackets behave?",
       },
     ];
@@ -50,22 +50,22 @@ function clarificationItems(card: EvidenceCard): ClarifyItem[] {
   return [
     {
       id: "input-shape",
-      label: "Input Shape",
+      label: "Input Shape?",
       question: "What are the input types, bounds, and malformed-input expectations?",
     },
     {
       id: "output-contract",
-      label: "Output Contract",
+      label: "Output Type?",
       question: "What exactly should be returned, and are multiple valid outputs acceptable?",
     },
     {
       id: "constraints",
-      label: "Constraints",
+      label: "Constraints?",
       question: "What time, memory, ordering, or mutation constraints matter for this solution?",
     },
     {
       id: "examples",
-      label: "Examples",
+      label: "Examples?",
       question: "Can we confirm one normal case and one edge case before implementing?",
     },
   ];
@@ -77,17 +77,26 @@ function nextStatus(status: ClarifyStatus): ClarifyStatus {
   return "unanswered";
 }
 
+function statusLabel(status: ClarifyStatus, activeNext: boolean): string {
+  if (activeNext) return "Active Step";
+  if (status === "confirmed") return "Confirmed";
+  if (status === "denied") return "Alt Contract";
+  return "Unanswered";
+}
+
 function ChecklistItem({
   cardId,
   item,
   index,
   status,
+  activeNext,
   onToggle,
 }: {
   cardId: string;
   item: ClarifyItem;
   index: number;
   status: ClarifyStatus;
+  activeNext: boolean;
   onToggle: (id: string) => void;
 }) {
   const qid = `live-evidence:clarify:item:${cardId}:${item.id}`;
@@ -101,24 +110,26 @@ function ChecklistItem({
   });
 
   return (
-    <div className="clarify-checklist-item" data-status={status}>
-      <button
-        data-qid={qid}
-        data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
-        title={`Toggle clarification ${index}`}
-        type="button"
-        className="clarify-hotkey"
-        onClick={() => onToggle(item.id)}
-        aria-label={`Toggle clarification ${index}`}
-      >
-        {index}
-      </button>
-      <div className="clarify-item-copy">
-        <span>{item.label}</span>
-        <p>{item.question}</p>
-      </div>
-      <span className="clarify-status">{status.replace("-", " ")}</span>
-    </div>
+    <button
+      data-qid={qid}
+      data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
+      title={`${activeNext ? "Active next step: " : ""}${item.question}`}
+      type="button"
+      className={`clarify-anchor-card ${activeNext ? "active-next-action" : ""}`}
+      data-status={status}
+      data-active-next={activeNext ? "true" : "false"}
+      onClick={() => onToggle(item.id)}
+      aria-label={`Toggle clarification ${index}: ${item.label}`}
+      aria-pressed={status !== "unanswered"}
+    >
+      <span className="clarify-anchor-copy">
+        <span className="anchor-title">
+          {index}. {item.label}
+        </span>
+        <span className="anchor-subtext">{item.question}</span>
+      </span>
+      <span className="clarify-status">{statusLabel(status, activeNext)}</span>
+    </button>
   );
 }
 
@@ -131,6 +142,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
   const copyQid = `live-evidence:clarify:copy:${card.card_id}`;
   const completeQid = `live-evidence:clarify:complete:${card.card_id}`;
   const timerState = completed ? "complete" : seconds <= 0 ? "expired" : seconds <= 10 ? "urgent" : seconds <= 20 ? "warning" : "normal";
+  const activeNextId = useMemo(() => items.find((item) => (statuses[item.id] ?? "unanswered") === "unanswered")?.id ?? null, [items, statuses]);
 
   useRegisterAction({
     element_id: copyQid,
@@ -215,7 +227,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
           </button>
         </div>
       </div>
-      <div className="clarify-checklist">
+      <div className="clarify-grid">
         {items.map((item, index) => (
           <ChecklistItem
             key={item.id}
@@ -223,6 +235,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
             item={item}
             index={index + 1}
             status={statuses[item.id] ?? "unanswered"}
+            activeNext={item.id === activeNextId}
             onToggle={toggleItem}
           />
         ))}
