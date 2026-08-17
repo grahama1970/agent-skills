@@ -1,77 +1,106 @@
 {
- "schema": "monitor_opportunities.candidate_profile.v1",
- "updated": "2026-08-06",
- "source": "Graham, direct, this session \u2014 single source of truth; agents answer 'what does Graham prefer' from here",
- "identity": {
-  "name": "Graham Anderson",
-  "email": "graham@grahama.co",
-  "phone": "310-402-3980",
-  "website": "https://grahama.co",
-  "location": "Buffalo, NY",
-  "citizenship": "US citizen",
-  "work_authorization": "Authorized to work in the US"
- },
- "workplace_preference": {
-  "preferred": [
-   "remote",
-   "hybrid"
-  ],
-  "acceptable": [
-   "on-site if Buffalo/WNY"
-  ],
-  "rejected": [
-   "relocation outside Buffalo/WNY"
-  ],
-  "verbatim": [
-   "'On-site is fine for Buffalo' (2026-08-06)",
-   "'hybrid or remote is preferred' (2026-08-06)"
-  ]
- },
- "seniority": [
-  "Principal",
-  "Staff+",
-  "Architect",
-  "Senior"
- ],
- "seniority_floor_note": "Below Principal/Staff (e.g. 'Implementation Engineer','Software Engineer') is deprioritized unless exceptional.",
- "mandates": [
-  "agentic-compliance (flagship: sparta)",
-  "document-extraction (flagships: pdf_oxide, extractor)",
-  "agentic pipelines / LLM systems",
-  "verification-oriented AI"
- ],
- "eeo_standing": {
-  "gender": "Male",
-  "race_ethnicity": "White/Caucasian",
-  "veteran": "Not a protected veteran",
-  "disability": "No, not disabled"
- },
- "open_strategic_questions": {
-  "fte_vs_client": "UNRESOLVED \u2014 Graham pursuing both employment and consulting clients; affects ranking and whether a lead is an application or a client prospect.",
-  "resume_persona": "RESOLVED (2026-08-06): no fixed persona. Per opportunity, tell the story that most resonates with that specific employer/client, drawn from approved claims. Custom resume + custom framing per client. Audience-adaptive narrative selection, not one voice."
- },
- "narrative_policy": {
-  "rule": "For each opportunity, select and order the approved claims / framing that the specific audience would most want to hear.",
-  "examples": {
-   "defense/compliance": "lead ARCOS + SPARTA verification",
-   "document-AI": "lead pdf_oxide + extractor",
-   "product/creative-systems": "lead worlds/creative-systems framing",
-   "product/brand/creative-digital": "lead RealPie EP + Dentsu interactive leadership (Disney/Toyota/Cartoon Network/Bandai, global teams)"
+  "schema": "monitor_opportunities.candidate_profile.v1",
+  "updated": "2026-08-17",
+  "source": "Graham, direct, this session \u2014 single source of truth; agents answer 'what does Graham prefer' from here",
+  "identity": {
+    "name": "Graham Anderson",
+    "email": "graham@grahama.co",
+    "phone": "310-402-3980",
+    "website": "https://grahama.co",
+    "location": "Buffalo, NY",
+    "citizenship": "US citizen",
+    "work_authorization": "Authorized to work in the US"
   },
-  "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented.",
-  "recency_rule": "Recent work (ARCOS, pdf_oxide, extractor, SPARTA, memory) leads for engineering/technical audiences. RealPie/Dentsu are early-career leadership \u2014 surface as depth/range or for leadership-framed audiences, never as recent experience. Respect the existing 10-year-window resume-targeting policy: older roles are supporting context, not headline.",
-  "color_rule": "The creative/leadership arc (composer -> interactive leadership) is COLOR: it establishes a differentiated, cross-disciplinary problem-solving approach vs a typical agentic VP/engineer. Deploy as a thin differentiation thread, not as headline experience. The technical claims carry the credential weight."
- },
- "audiences": [
-  "defense/compliance",
-  "document-AI",
-  "agentic pipelines/LLM systems",
-  "product/brand/creative-digital leadership",
-  "creative/brand/audio"
- ],
- "correction_log": [
-  "2026-08-06: 'Sony God of War Executive Producer' framing (Indeed resume) is INACCURATE and must not be used. Actual: Executive Producer (web) at RealPie leading ~12; Director of Interactive Services at Dentsu America, Santa Monica, major consumer brands, global teams."
- ],
- "career_arc": "Commercial composer (X Games/Nokia/Pepsi/Taco Bell/Adidas) -> interactive/digital leadership (RealPie EP, Dentsu Director of Interactive Services) -> AI/verification architect (DARPA ARCOS, SPARTA, pdf_oxide, extractor, memory). Unusual creative-to-hard-technical range; the arc itself is a differentiator for the right audience.",
- "differentiator": "Cross-disciplinary path (music/creative -> brand/interactive leadership -> AI/verification architecture) yields a problem-solving approach distinct from conventionally-trained agentic engineers/VPs."
+  "workplace_preference": {
+    "preferred": [
+      "remote",
+      "hybrid"
+    ],
+    "acceptable": [
+      "on-site if Buffalo/WNY"
+    ],
+    "rejected": [
+      "relocation outside Buffalo/WNY"
+    ],
+    "verbatim": [
+      "'On-site is fine for Buffalo' (2026-08-06)",
+      "'hybrid or remote is preferred' (2026-08-06)"
+    ]
+  },
+  "seniority": [
+    "Principal",
+    "Staff+",
+    "Architect",
+    "Senior"
+  ],
+  "seniority_floor_note": "Below Principal/Staff (e.g. 'Implementation Engineer','Software Engineer') is deprioritized unless exceptional.",
+  "mandates": [
+    "agentic pipelines / LLM systems",
+    "agentic extraction (agentic document extraction)",
+    "AI R&D / applied research",
+    "agentic-compliance (flagship: sparta)",
+    "document-extraction (flagships: pdf_oxide, extractor)",
+    "verification-oriented AI",
+    "robotics \u2014 TANGENTIAL ONLY, admit when the role is AI/autonomy work that a robotics team happens to own"
+  ],
+  "eeo_standing": {
+    "gender": "Male",
+    "race_ethnicity": "White/Caucasian",
+    "veteran": "Not a protected veteran",
+    "disability": "No, not disabled"
+  },
+  "open_strategic_questions": {
+    "fte_vs_client": "UNRESOLVED \u2014 Graham pursuing both employment and consulting clients; affects ranking and whether a lead is an application or a client prospect.",
+    "resume_persona": "RESOLVED (2026-08-06): no fixed persona. Per opportunity, tell the story that most resonates with that specific employer/client, drawn from approved claims. Custom resume + custom framing per client. Audience-adaptive narrative selection, not one voice."
+  },
+  "narrative_policy": {
+    "rule": "For each opportunity, select and order the approved claims / framing that the specific audience would most want to hear.",
+    "examples": {
+      "defense/compliance": "lead ARCOS + SPARTA verification",
+      "document-AI": "lead pdf_oxide + extractor",
+      "product/creative-systems": "lead worlds/creative-systems framing",
+      "product/brand/creative-digital": "lead RealPie EP + Dentsu interactive leadership (Disney/Toyota/Cartoon Network/Bandai, global teams)"
+    },
+    "constraint": "Only approved-claim facts may be stated (test-enforced). Framing/emphasis is adaptive; facts are not invented.",
+    "recency_rule": "Recent work (ARCOS, pdf_oxide, extractor, SPARTA, memory) leads for engineering/technical audiences. RealPie/Dentsu are early-career leadership \u2014 surface as depth/range or for leadership-framed audiences, never as recent experience. Respect the existing 10-year-window resume-targeting policy: older roles are supporting context, not headline.",
+    "color_rule": "The creative/leadership arc (composer -> interactive leadership) is COLOR: it establishes a differentiated, cross-disciplinary problem-solving approach vs a typical agentic VP/engineer. Deploy as a thin differentiation thread, not as headline experience. The technical claims carry the credential weight."
+  },
+  "audiences": [
+    "defense/compliance",
+    "document-AI",
+    "agentic pipelines/LLM systems",
+    "product/brand/creative-digital leadership",
+    "creative/brand/audio"
+  ],
+  "correction_log": [
+    "2026-08-06: 'Sony God of War Executive Producer' framing (Indeed resume) is INACCURATE and must not be used. Actual: Executive Producer (web) at RealPie leading ~12; Director of Interactive Services at Dentsu America, Santa Monica, major consumer brands, global teams."
+  ],
+  "career_arc": "Commercial composer (X Games/Nokia/Pepsi/Taco Bell/Adidas) -> interactive/digital leadership (RealPie EP, Dentsu Director of Interactive Services) -> AI/verification architect (DARPA ARCOS, SPARTA, pdf_oxide, extractor, memory). Unusual creative-to-hard-technical range; the arc itself is a differentiator for the right audience.",
+  "differentiator": "Cross-disciplinary path (music/creative -> brand/interactive leadership -> AI/verification architecture) yields a problem-solving approach distinct from conventionally-trained agentic engineers/VPs.",
+  "search_phrases": {
+    "source": "Graham, direct, 2026-08-17: 'we are looking for AI, agentic pipeline, agentic extraction', 'R&D', 'robotics, if tangentially applicable'",
+    "primary": [
+      "agentic AI engineer",
+      "agentic document extraction",
+      "AI architect",
+      "AI research engineer",
+      "document extraction AI"
+    ],
+    "tangential": [
+      "robotics AI engineer"
+    ],
+    "budget_note": "Each phrase costs two LinkedIn navigations (remote+hybrid, and Buffalo on-site-OK). Capped at 6 phrases = 12 navigations to stay inside the surf call budget that trips the build-lock wedge."
+  },
+  "industry_scope": {
+    "rule": "The capability is the filter, never the vertical. Any industry that must manage data is in scope.",
+    "named_by_graham": [
+      "aerospace",
+      "medical",
+      "legal",
+      "military",
+      "any data-heavy industry"
+    ],
+    "source": "Graham, direct, 2026-08-17",
+    "vocabulary_note": "Mandate matching runs through /extract-entities over the ArangoDB collection opportunity_vocabulary, which is NOT in git. On 2026-08-17 these concepts were extended so vertical-flavoured capability roles stop falling through: document-extraction (13->31 aliases: clinical documentation, medical records, legal discovery, eDiscovery, contract analytics, claims processing, technical manuals, maintenance records, engineering drawings, certification evidence, technical data management, unstructured data), rd-innovation and rd-modernization (applied research, research engineer, prototype development), agentic-pipelines and agentic-systems (agentic extraction, agentic document extraction), plus a new tangential concept robotics-autonomy (14 aliases). Verified: 'Aerospace Certification Evidence Automation', 'Clinical Document Understanding', 'Legal Discovery and Contract Analytics', 'Claims Processing Automation', 'Maintenance Records', and 'Autonomy and Perception (Robotics)' all returned [] before and now match; 'Flooring Abatement' and 'Account Executive, Enterprise SaaS Sales' still return [], so the additions did not loosen the junk filter."
+  }
 }

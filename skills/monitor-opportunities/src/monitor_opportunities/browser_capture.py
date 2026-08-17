@@ -668,12 +668,29 @@ def build_linkedin_search_url(
     return _LINKEDIN_JOB_SEARCH_BASE + "?" + urlencode(params)
 
 
+MAX_SEARCH_PHRASES = 6
+
+
 def _mandate_keyword_groups(profile: dict[str, Any]) -> list[str]:
     """Derive bounded, high-signal keyword phrases from the candidate mandates.
 
     Falls back to a sane default set if the profile has no mandates, so the
     search never silently degrades to an empty query.
     """
+    # Graham states the target directly (2026-08-17: "AI, agentic pipeline,
+    # agentic extraction", "R&D", "robotics, if tangentially applicable"), so the
+    # profile's own search_phrases win over any derivation. Tangential phrases
+    # come last and are the first thing the cap drops.
+    configured = profile.get("search_phrases") or {}
+    if isinstance(configured, dict):
+        stated = [
+            phrase
+            for phrase in [*configured.get("primary", []), *configured.get("tangential", [])]
+            if isinstance(phrase, str) and phrase.strip()
+        ]
+        if stated:
+            return stated[:MAX_SEARCH_PHRASES]
+
     mandates = [m for m in profile.get("mandates", []) if isinstance(m, str)]
     phrases: list[str] = []
     for m in mandates:
@@ -695,7 +712,7 @@ def _mandate_keyword_groups(profile: dict[str, Any]) -> list[str]:
         if p not in seen:
             seen.add(p)
             out.append(p)
-    return out[:4]
+    return out[:MAX_SEARCH_PHRASES]
 
 
 def linkedin_search_queries_from_profile(profile: dict[str, Any]) -> list[dict[str, str]]:
