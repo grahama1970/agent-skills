@@ -246,9 +246,24 @@ def parse_args() -> argparse.Namespace:
         help="Optional local WAV to play through PipeWire. Omit to capture an already-playing desktop source.",
     )
     parser.add_argument("--playback-target", default="59")
+    # Record the MICROPHONE SOURCE, never the sink. Binding a capture stream to
+    # the sink (--capture-kind sink-monitor) wedged the Jabra SPEAK 510 on
+    # 2026-08-17: the sink went to state suspended, the card needed a wpctl
+    # profile cycle to recover, and every Chrome audio stream came back MUTED on
+    # the new node ids - in the middle of a live meeting. The pattern proven in
+    # the 2026-07-02 chatterbox rung-8 receipt plays through the sink and records
+    # the mic source; on a speakerphone that one channel already carries both the
+    # room and the far end.
     parser.add_argument(
         "--capture-target",
-        default="alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo",
+        default="alsa_input.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.mono-fallback",
+    )
+    parser.add_argument(
+        "--capture-kind",
+        choices=("source", "sink-monitor"),
+        default="source",
+        help="source records a microphone and is safe. sink-monitor binds a capture stream to the sink and "
+             "can wedge a USB speakerphone mid-call; opt in only for a device you can afford to lose.",
     )
     parser.add_argument("--docker-image", default="live-evidence-realtimestt-gpu:local")
     parser.add_argument("--output-dir", default="/tmp/live-evidence-e2e-docker-pipewire")
@@ -311,8 +326,7 @@ def main() -> int:
     ]
     record_command = [
         "pw-record",
-        "-P",
-        "{ stream.capture.sink=true }",
+        *(("-P", "{ stream.capture.sink=true }") if args.capture_kind == "sink-monitor" else ()),
         "--target",
         args.capture_target,
         "--rate",
