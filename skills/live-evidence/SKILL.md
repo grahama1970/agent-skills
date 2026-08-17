@@ -117,6 +117,42 @@ raw audio, unless a future explicitly authorized extension changes that policy.
 5. Brave Search only from the manual search control.
 6. Dogpile only from an explicit deep-research request.
 
+## Provider boundary: two tiers, and why
+
+`$tau` owns provider orchestration everywhere else in this repo, and its skill
+contract states that a skill recommending direct SciLLM calls should be treated
+as a contract bug. This skill is a human-authorized exception for one tier only,
+recorded here rather than left implicit (operator, 2026-08-17).
+
+| Tier | Transport | Cadence | Why |
+| --- | --- | --- | --- |
+| Stage 1 — readiness gate | direct SciLLM | ~8 calls per 43s of audio | disposable, stateless judgment |
+| Stage 2 — answer | `$ask tau-dag` | ~1 call per question | run directory is the source receipt |
+
+Measured on this machine against live PipeWire capture:
+
+- `tau-dag` single-call, `claude-opus-5-high`: 56s
+- `tau-dag` single-call, `claude-opus-5-low`: 38s
+- Lowering reasoning effort removed only 18s, so the remaining floor is
+  orchestration (DAG compile, dispatch, run-dir creation, polling), not
+  generation.
+- Replaying the real 359-event capture through the readiness trigger fires 3-8
+  resolver calls per 43s of audio. At 38s per call that is 114-304s of serial
+  model time for 43s of speech: 2.6x to 7x realtime.
+
+Stage 1 uses none of what Tau provides. It needs no goal-hash continuity, no
+resume (a stale readiness verdict is discarded, not resumed), no per-call
+receipt, and no attempt budget (a missed poll is superseded by the next one
+seconds later). Paying 38s of compliance machinery for a verdict that is
+worthless 3 seconds later makes the live loop impossible.
+
+Stage 2 keeps `$ask tau-dag` precisely because the preserved Ask run directory
+is the source receipt this contract requires, and once per question 38s is
+acceptable.
+
+Do not "simplify" stage 1 back onto `tau-dag`. That change is what makes the
+skill unusable in a live interview, and the numbers above are the reason.
+
 Never import ArangoDB or Qdrant clients here. `/memory` owns ArangoDB, BM25,
 Qdrant/Jina semantic retrieval, graph traversal, code-index lifecycle, and
 freshness policy.
