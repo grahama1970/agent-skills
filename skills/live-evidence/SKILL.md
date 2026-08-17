@@ -60,18 +60,16 @@ consented audio
   -> bounded trigger decision
   -> Memory/GMO recall + code navigation
   -> current-checkout ripgrep verification
-  -> transcript-to-leetcode answerability gate for code-related turns
   -> $ask code-question solver when the turn is code-related
   -> one source-bound evidence card
 ```
 
 The default critical path is local. Graph Memory is the primary retrieval
 boundary. Ripgrep is an exact-current-source verifier and fallback. Code-related
-interviewer questions are routed through `transcript-to-leetcode` before `$ask`;
-Ask is blocked until the analyzer returns `ready_for_solution` and supplies a
-bounded `solver_prompt`. The Ask run directory is preserved as a source receipt.
-Brave and Dogpile are manual lanes only and receive a derived query, never the
-complete transcript.
+interviewer questions are routed through `$ask` only after bounded Memory/code
+evidence has been gathered, and the Ask run directory is preserved as a source
+receipt. Brave and Dogpile are manual lanes only and receive a derived query,
+never the complete transcript.
 
 ## Start
 
@@ -114,11 +112,10 @@ raw audio, unless a future explicitly authorized extension changes that policy.
 1. `memory /intent` and `/recall` using supported HTTP boundaries.
 2. `memory/run.sh code-search` and `code-node` for indexed source with freshness.
 3. `rg --fixed-strings` over explicitly configured repository roots.
-4. `transcript-to-leetcode/run.sh` for code-question answerability.
-5. `$ask tau-dag` for gated code-related interviewer questions, seeded only with
-   the solver prompt and top bounded Memory/code/ripgrep evidence.
-6. Brave Search only from the manual search control.
-7. Dogpile only from an explicit deep-research request.
+4. `$ask tau-dag` for code-related interviewer questions, seeded only with the
+   current question and top bounded Memory/code/ripgrep evidence.
+5. Brave Search only from the manual search control.
+6. Dogpile only from an explicit deep-research request.
 
 Never import ArangoDB or Qdrant clients here. `/memory` owns ArangoDB, BM25,
 Qdrant/Jina semantic retrieval, graph traversal, code-index lifecycle, and
@@ -138,7 +135,6 @@ Runner paths are autodetected from sibling skills and can be overridden with:
 
 ```bash
 export LIVE_EVIDENCE_MEMORY_RUNNER=/path/to/skills/memory/run.sh
-export LIVE_EVIDENCE_LEETCODE_RUNNER=/path/to/skills/transcript-to-leetcode/run.sh
 export LIVE_EVIDENCE_ASK_RUNNER=/path/to/skills/ask/run.sh  # explicit opt-in
 export LIVE_EVIDENCE_ASK_HANDLER=gpt-5.5-high
 export LIVE_EVIDENCE_BRAVE_RUNNER=/path/to/skills/brave-search/run.sh
@@ -156,17 +152,6 @@ turn over HTTP, runs real ripgrep against a temporary repository, waits for a
 source-bound card, validates the UI instrumentation contract, and writes a JSON
 receipt. It does not claim live microphone, PipeWire, GPU inference, Graph
 Memory, Brave, or Dogpile health unless those lanes were actually exercised.
-
-The automatic coding-question gate has a separate live HTTP eval:
-
-```bash
-uv run python scripts/eval_leetcode_gate.py . /path/to/leetcode-gate-eval-receipt.json
-```
-
-That eval exercises `needs_clarification`, partial-answer blocking, and
-`ready_for_solution` handoff through a real local API server. Its Ask lane uses a
-fixture runner, so it proves gate behavior and Ask invocation count, not live
-provider quality.
 
 ## Boundaries
 

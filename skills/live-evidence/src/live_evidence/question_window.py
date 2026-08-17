@@ -8,7 +8,6 @@ question candidate while treating candidate speech as a hard boundary.
 from __future__ import annotations
 
 import hashlib
-import re
 from dataclasses import dataclass
 from time import monotonic
 
@@ -20,7 +19,8 @@ from .models import (
     TranscriptEvent,
     TranscriptKind,
 )
-from .trigger import CODE_PROMPT_TERMS, QUESTION_LEADS, extract_thread, is_code_prompt, is_code_question, tokenize
+from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
+from .trigger import QUESTION_LEADS, extract_thread, tokenize
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,20 +40,17 @@ class QuestionWindowBuilder:
         profile: InterviewProfile,
         *,
         max_events: int = 4,
-        max_chars: int = 1_800,
+        max_chars: int = 512,
         max_sequence_gap: int = 2,
-        duplicate_ttl_s: float = 45.0,
-        code_topic_ttl_s: float = 90.0,
+        duplicate_ttl_s: float = 15.0,
     ) -> None:
         self._profile = profile
         self._max_events = max_events
         self._max_chars = max_chars
         self._max_sequence_gap = max_sequence_gap
         self._duplicate_ttl_s = duplicate_ttl_s
-        self._code_topic_ttl_s = code_topic_ttl_s
         self._buffer: list[TranscriptEvent] = []
         self._recent: list[tuple[str, str, float]] = []
-        self._recent_code_topics: list[tuple[set[str], float]] = []
         self._watch_terms = {
             term.casefold() for term in profile.watch_terms if term.strip()
         }
@@ -77,13 +74,12 @@ class QuestionWindowBuilder:
 
         self._append_or_replace(event)
         self._enforce_bounds()
-        window_text = _normalize_question(" ".join(item.text for item in self._buffer))
-        question_text = self._best_retrieval_query(window_text)
+        question_text = _normalize_question(" ".join(item.text for item in self._buffer))
         reason = self._trigger_reason(question_text)
         if reason is None:
             return WindowOutcome(reason="not_question")
 
-        spans = self._spans(window_text)
+        spans = self._spans(question_text)
         fingerprint = _fingerprint(question_text)
         candidate = QuestionCandidate(
             question_id=f"q_{_fingerprint('|'.join([*candidate_event_ids(spans), question_text]))[:32]}",
@@ -96,7 +92,7 @@ class QuestionWindowBuilder:
             trigger_reason=reason,
             fingerprint=fingerprint,
         )
-        if self._is_duplicate(fingerprint, question_text) or self._is_duplicate_code_topic(question_text):
+        if self._is_duplicate(fingerprint, question_text):
             self.reset()
             return WindowOutcome(candidate=candidate, duplicate=True, reason="duplicate")
         self._remember(fingerprint, question_text)
@@ -110,19 +106,14 @@ class QuestionWindowBuilder:
 
     def _append_or_replace(self, event: TranscriptEvent) -> None:
         self._buffer = [item for item in self._buffer if item.event_id != event.event_id]
+        if self._buffer and is_progressive_restatement(self._buffer[-1], event):
+            self._buffer[-1] = richer_transcript_event(self._buffer[-1], event)
+            return
         if (
             event.kind is TranscriptKind.FINAL
             and self._buffer
             and self._buffer[-1].kind is TranscriptKind.STABILIZED
             and _token_overlap(event.text, self._buffer[-1].text) >= 0.88
-        ):
-            self._buffer[-1] = event
-            return
-        if (
-            event.kind is TranscriptKind.STABILIZED
-            and self._buffer
-            and self._buffer[-1].kind is TranscriptKind.STABILIZED
-            and _is_incremental_update(event.text, self._buffer[-1].text)
         ):
             self._buffer[-1] = event
             return
@@ -132,7 +123,7 @@ class QuestionWindowBuilder:
     def _enforce_bounds(self) -> None:
         while len(self._buffer) > self._max_events:
             self._buffer.pop(0)
-        while len(self._buffer) > 1 and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
+        while self._buffer and len(" ".join(item.text for item in self._buffer)) > self._max_chars:
             self._buffer.pop(0)
 
     def _should_reset_for_sequence(self, event: TranscriptEvent) -> bool:
@@ -151,49 +142,12 @@ class QuestionWindowBuilder:
         if len(tokens) < 4:
             return None
         first = tokens[0].casefold()
-        if (
-            len(self._buffer) == 1
-            and text[:1].islower()
-            and first not in QUESTION_LEADS
-            and not is_code_prompt(text)
-        ):
-            return None
-        if (
-            first == "when"
-            and len(tokens) > 1
-            and tokens[1].casefold() in {"i", "we"}
-            and not text.rstrip().endswith("?")
-        ):
+        if len(self._buffer) == 1 and text[:1].islower() and first not in QUESTION_LEADS:
             return None
         lower_text = text.casefold()
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
         is_question = "?" in text or first in QUESTION_LEADS
-        code_question = (
-            is_code_question(text)
-            and self._buffer
-            and self._buffer[-1].kind is TranscriptKind.FINAL
-        )
-        has_question_shape = is_question or matched_alias is not None
-        if (
-            is_question
-            and matched_alias is None
-            and matched_term is None
-            and not code_question
-            and self._buffer
-            and self._buffer[-1].kind is not TranscriptKind.FINAL
-        ):
-            return None
-        if (
-            matched_term
-            and not has_question_shape
-            and not code_question
-            and self._buffer
-            and self._buffer[-1].kind is not TranscriptKind.FINAL
-        ):
-            return None
-        if code_question:
-            return "code-question"
         if matched_alias:
             return f"project:{self._aliases[matched_alias]}"
         if matched_term:
@@ -239,73 +193,6 @@ class QuestionWindowBuilder:
 
     def _remember(self, fingerprint: str, text: str) -> None:
         self._recent.append((fingerprint, text, monotonic()))
-        code_terms = _code_terms(text)
-        if code_terms:
-            self._recent_code_topics.append((code_terms, monotonic()))
-
-    def _is_duplicate_code_topic(self, text: str) -> bool:
-        if not is_code_prompt(text):
-            return False
-        terms = _code_terms(text)
-        if len(terms) < 3:
-            return False
-        now = monotonic()
-        self._recent_code_topics = [
-            (recent_terms, seen_at)
-            for recent_terms, seen_at in self._recent_code_topics
-            if now - seen_at <= self._code_topic_ttl_s
-        ]
-        for recent_terms, _ in self._recent_code_topics:
-            overlap = len(terms & recent_terms)
-            if overlap / min(len(terms), len(recent_terms)) >= 0.6:
-                return True
-        return False
-
-    def _best_retrieval_query(self, text: str) -> str:
-        candidates = _query_candidates(text)
-        if len(candidates) <= 1:
-            return candidates[0] if candidates else text
-        best = max(
-            enumerate(candidates),
-            key=lambda item: (
-                self._query_score(item[1]),
-                item[0],
-            ),
-        )[1]
-        return _normalize_question(best)
-
-    def _query_score(self, text: str) -> float:
-        tokens = [token.casefold() for token in tokenize(text)]
-        if len(tokens) < 4:
-            return -100.0
-        lower_text = text.casefold()
-        score = 0.0
-        if is_code_question(text):
-            score += 110.0
-        elif is_code_prompt(text):
-            score += 85.0
-        if "?" in text:
-            score += 14.0
-        if tokens[0] in QUESTION_LEADS:
-            score += 10.0
-        if "opening parentheses always" in lower_text or "opening parenthesis always" in lower_text:
-            score += 45.0
-        if "given a string" in lower_text:
-            score += 35.0
-        if "remove the minimum" in lower_text:
-            score += 35.0
-        score += 16.0 * sum(1 for alias in self._aliases if alias in lower_text)
-        score += 18.0 * sum(1 for term in self._watch_terms if term in lower_text)
-        score += min(len(set(tokens) & CODE_PROMPT_TERMS), 8) * 7.0
-        score += min(
-            len({token for token in tokens if token not in QUESTION_LEADS and len(token) >= 4}),
-            12,
-        )
-        if _is_smalltalk(text):
-            score -= 45.0
-        if len(text) > 520:
-            score -= min((len(text) - 520) / 40.0, 25.0)
-        return score
 
 
 def candidate_event_ids(spans: list[EventSpan]) -> list[str]:
@@ -322,102 +209,6 @@ def candidate_thread(candidate: QuestionCandidate, profile: InterviewProfile) ->
 
 def _normalize_question(text: str) -> str:
     return " ".join(text.split())[:1_200]
-
-
-def _query_candidates(text: str) -> list[str]:
-    clean = _normalize_question(text)
-    if not clean:
-        return []
-    candidates: list[str] = []
-    start = 0
-    for match in re.finditer(r"[?.!]+", clean):
-        end = match.end()
-        fragment = clean[start:end].strip(" ,;:-")
-        if fragment:
-            candidates.append(fragment)
-        start = end
-    tail = clean[start:].strip(" ,;:-")
-    if tail:
-        candidates.append(tail)
-    if not candidates:
-        candidates.append(clean)
-    merged: list[str] = []
-    for candidate in candidates:
-        tokens = tokenize(candidate)
-        if len(tokens) >= 4:
-            merged.append(candidate)
-        elif merged:
-            merged[-1] = f"{merged[-1]} {candidate}".strip()
-        else:
-            merged.append(candidate)
-    selected: list[str] = []
-    for candidate in merged:
-        normalized = _normalize_question(candidate)
-        if len(tokenize(normalized)) < 4:
-            continue
-        dense_windows = _dense_token_windows(normalized)
-        if dense_windows:
-            selected.extend(dense_windows)
-        else:
-            selected.append(normalized)
-    return selected
-
-
-def _dense_token_windows(text: str) -> list[str]:
-    tokens = tokenize(text)
-    if len(tokens) <= 32:
-        return []
-    windows: list[str] = []
-    for size in (14, 20, 26):
-        if len(tokens) <= size:
-            continue
-        for start in range(0, len(tokens) - size + 1, 4):
-            window = tokens[start : start + size]
-            normalized_window = {token.casefold() for token in window}
-            if len(normalized_window & CODE_PROMPT_TERMS) < 3:
-                continue
-            candidate = _trim_dense_window(window)
-            if len(tokenize(candidate)) < 8:
-                continue
-            if candidate not in windows:
-                windows.append(candidate)
-    return windows
-
-
-def _trim_dense_window(tokens: list[str]) -> str:
-    lowered = [token.casefold() for token in tokens]
-    for pattern in (
-        ("given", "a", "string"),
-        ("opening", "parentheses", "always"),
-        ("opening", "parenthesis", "always"),
-        ("open", "parentheses"),
-        ("remove", "the", "minimum"),
-        ("minimum", "number", "of", "parentheses"),
-    ):
-        limit = len(lowered) - len(pattern) + 1
-        for index in range(max(limit, 0)):
-            if tuple(lowered[index : index + len(pattern)]) == pattern:
-                return " ".join(tokens[index:])
-    for index, token in enumerate(lowered):
-        if token in CODE_PROMPT_TERMS:
-            trimmed = tokens[index:]
-            if len(trimmed) >= 8:
-                return " ".join(trimmed)
-    return " ".join(tokens)
-
-
-def _is_smalltalk(text: str) -> bool:
-    lower = text.casefold()
-    smalltalk_phrases = {
-        "how are you",
-        "ready to get started",
-        "are you ready",
-        "doing today",
-        "let's do it",
-        "thought process",
-        "pause the video",
-    }
-    return any(phrase in lower for phrase in smalltalk_phrases)
 
 
 def _fingerprint(text: str) -> str:
@@ -439,17 +230,3 @@ def _token_containment(left: str, right: str) -> float:
     if not left_tokens or not right_tokens:
         return 0.0
     return len(left_tokens & right_tokens) / min(len(left_tokens), len(right_tokens))
-
-
-def _code_terms(text: str) -> set[str]:
-    return {token.casefold() for token in tokenize(text)} & CODE_PROMPT_TERMS
-
-
-def _is_incremental_update(left: str, right: str) -> bool:
-    left_normalized = " ".join(token.casefold() for token in tokenize(left))
-    right_normalized = " ".join(token.casefold() for token in tokenize(right))
-    if not left_normalized or not right_normalized:
-        return False
-    if left_normalized.startswith(right_normalized) or right_normalized.startswith(left_normalized):
-        return True
-    return _token_overlap(left, right) >= 0.55

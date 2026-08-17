@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import subprocess
 from pathlib import Path
 from time import monotonic
@@ -76,10 +75,7 @@ class MemoryEvidenceClient:
         code_sources, code_detail = await code_task
         sources = _dedupe_sources([*recall_sources, *code_sources])
         latency_ms = int((monotonic() - started) * 1000)
-        if code_sources and not recall_sources:
-            details = [detail for detail in (code_detail, recall_detail) if detail]
-        else:
-            details = [detail for detail in (recall_detail, code_detail) if detail]
+        details = [detail for detail in (recall_detail, code_detail) if detail]
         ok = bool(sources)
         return MemoryRetrievalResult(
             sources=sources,
@@ -89,9 +85,7 @@ class MemoryEvidenceClient:
         )
 
     async def _recall(self, query: str) -> tuple[list[EvidenceSource], str]:
-        selected_profile = None
-        if not _skip_intent_profile(self._profile):
-            selected_profile = await self._intent_profile(query)
+        selected_profile = await self._intent_profile(query)
         profiles: list[str | None] = [
             None,
             *_unique_text(
@@ -110,7 +104,7 @@ class MemoryEvidenceClient:
         errors: list[str] = []
         for profile, payload in zip(profiles, payloads, strict=True):
             if isinstance(payload, Exception):
-                errors.append(f"{profile or 'raw'}:{_exception_summary(payload)}")
+                errors.append(f"{profile or 'raw'}:{type(payload).__name__}")
                 continue
             sources.extend(_memory_items_to_sources(payload, profile, self._profile))
         if not sources and self._profile.memory_collections:
@@ -120,7 +114,7 @@ class MemoryEvidenceClient:
             )
             for profile, payload in zip(profiles, fallback_payloads, strict=True):
                 if isinstance(payload, Exception):
-                    errors.append(f"{profile or 'raw'}:fallback:{_exception_summary(payload)}")
+                    errors.append(f"{profile or 'raw'}:fallback:{type(payload).__name__}")
                     continue
                 sources.extend(_memory_items_to_sources(payload, profile, self._profile))
         route = f"intent={selected_profile}" if selected_profile else "intent=degraded"
@@ -136,7 +130,7 @@ class MemoryEvidenceClient:
         url = f"{self._settings.memory_url}/intent"
         request = {"q": query, "fast": True, "app": "live-evidence"}
         try:
-            async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.post(
                     url,
                     json=request,
@@ -146,8 +140,7 @@ class MemoryEvidenceClient:
                     return None
                 response.raise_for_status()
                 payload = response.json()
-        except (httpx.HTTPError, OSError, ValueError) as exc:
-            logger.warning("memory intent profile degraded: {}", _exception_summary(exc))
+        except (httpx.HTTPError, ValueError):
             return None
         if not isinstance(payload, dict):
             return None
@@ -179,7 +172,7 @@ class MemoryEvidenceClient:
             request["recall_profile"] = profile
         if use_profile_collections:
             request["collections"] = self._profile.memory_collections
-        async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(url, json=request, headers={"X-Caller-Skill": "live-evidence"})
             if response.status_code in {400, 404, 422}:
                 fallback_request = {
@@ -214,36 +207,22 @@ class MemoryEvidenceClient:
         )
         sources: list[EvidenceSource] = []
         symbol_ids: list[str] = []
-        filtered_repositories: set[str] = set()
         errors = 0
         for result in results:
             if isinstance(result, Exception):
                 errors += 1
                 continue
-            term_sources, term_symbol_ids, term_filtered_repositories = result
+            term_sources, term_symbol_ids = result
             sources.extend(term_sources)
             symbol_ids.extend(term_symbol_ids)
-            filtered_repositories.update(term_filtered_repositories)
-        if symbol_ids:
-            node_results = await asyncio.gather(
-                *(
-                    asyncio.to_thread(self._code_node_sync, runner, symbol_id)
-                    for symbol_id in _unique_text(symbol_ids)[:4]
-                ),
-                return_exceptions=True,
-            )
-            nodes = [
-                node
-                for node in node_results
-                if isinstance(node, EvidenceSource)
-            ]
-            sources = [*nodes, *sources]
         sources = _dedupe_sources(sources)
+        if symbol_ids:
+            node = await asyncio.to_thread(self._code_node_sync, runner, symbol_ids[0])
+            if node is not None:
+                sources.insert(0, node)
+                sources = _dedupe_sources(sources)
         if not sources:
             detail = "Indexed code returned no exact source"
-            if filtered_repositories:
-                repos = ", ".join(sorted(filtered_repositories)[:5])
-                detail += f"; filtered repositories outside profile repo_priorities: {repos}"
             if errors:
                 detail += f"; {errors} query error(s)"
             return [], detail
@@ -253,7 +232,7 @@ class MemoryEvidenceClient:
         self,
         runner: Path,
         query: str,
-    ) -> tuple[list[EvidenceSource], list[str], set[str]]:
+    ) -> tuple[list[EvidenceSource], list[str]]:
         command = [str(runner), "code-search", "--q", query, "--limit", "4"]
         try:
             result = subprocess.run(
@@ -262,26 +241,26 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
-                env=_subprocess_env(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             logger.warning("memory code search degraded: {}", type(exc).__name__)
-            return [], [], set()
+            return [], []
         if result.returncode != 0:
-            return [], [], set()
+            return [], []
         payload = _parse_json_output(result.stdout)
         items = payload.get("items", []) if isinstance(payload, dict) else []
-        filtered_repositories = _filtered_code_repositories(items, self._profile)
         sources: list[EvidenceSource] = []
         symbol_ids: list[str] = []
-        for item in _select_code_items(items, self._profile, limit=4):
+        for item in items[:4]:
+            if not isinstance(item, dict) or not _code_item_allowed(item, self._profile):
+                continue
             source = _code_item_to_source(item)
             if source is not None:
                 sources.append(source)
             symbol_id = str(item.get("symbol_id") or item.get("stable_id") or "").strip()
             if symbol_id:
                 symbol_ids.append(symbol_id)
-        return sources, symbol_ids, filtered_repositories
+        return sources, symbol_ids
 
     def _code_node_sync(self, runner: Path, symbol_id: str) -> EvidenceSource | None:
         command = [str(runner), "code-node", "--symbol-id", symbol_id, "--source"]
@@ -292,7 +271,6 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
-                env=_subprocess_env(),
             )
         except (OSError, subprocess.TimeoutExpired):
             return None
@@ -305,8 +283,7 @@ class MemoryEvidenceClient:
         source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
         freshness_payload = payload.get("freshness") if isinstance(payload.get("freshness"), dict) else {}
         excerpt = str(source.get("text") or symbol.get("qualified_name") or "").strip()
-        source_path = str(source.get("path") or "").strip()
-        path = str(symbol.get("path") or source_path).strip()
+        path = str(source.get("path") or symbol.get("path") or "").strip()
         if not excerpt or not path:
             return None
         freshness = (
@@ -331,7 +308,6 @@ class MemoryEvidenceClient:
                 "symbol_id": symbol.get("symbol_id"),
                 "indexed_hash": freshness_payload.get("indexed_hash"),
                 "current_hash": freshness_payload.get("current_hash"),
-                "source_path": source_path or None,
             },
         )
 
@@ -341,26 +317,6 @@ def _validated_payload(value: Any) -> dict[str, Any]:
         raise ValueError("Memory response must be a JSON object")
     FlexibleMemoryResponse.model_validate(value)
     return value
-
-
-def _exception_summary(exc: Exception) -> str:
-    message = str(exc).strip()
-    if not message:
-        return type(exc).__name__
-    return f"{type(exc).__name__}({message[:160]})"
-
-
-def _subprocess_env() -> dict[str, str]:
-    env = dict(os.environ)
-    for key in (
-        "VIRTUAL_ENV",
-        "UV_PROJECT_ENVIRONMENT",
-        "PYTHONHOME",
-        "PYTHONPATH",
-    ):
-        env.pop(key, None)
-    env.setdefault("UV_LINK_MODE", "copy")
-    return env
 
 
 def _parse_json_output(stdout: str) -> dict[str, Any]:
@@ -396,13 +352,6 @@ def _memory_items_to_sources(
     for index, item in enumerate(candidates[:8]):
         if not isinstance(item, dict) or not _memory_item_allowed(item, interview_profile):
             continue
-        if _is_code_symbol_item(item):
-            if not _code_item_allowed(item, interview_profile):
-                continue
-            source = _code_item_to_source(item)
-            if source is not None:
-                sources.append(source)
-            continue
         excerpt = _memory_excerpt(item)
         path = _first_text(item, "path", "source_path", "file_path", "source_locator", "source_ref")
         repository = _first_text(item, "repo", "repository", "project", "project_id", "source", "_source")
@@ -415,7 +364,7 @@ def _memory_items_to_sources(
             sources.append(
                 EvidenceSource(
                     lane=RetrievalLane.MEMORY,
-                    label=_memory_label(item, profile)[:240],
+                    label=_memory_label(item, profile or "raw")[:240],
                     excerpt=excerpt[:4_000],
                     score=score,
                     freshness=Freshness.UNKNOWN,
@@ -444,21 +393,12 @@ def _memory_items_to_sources(
     return sources
 
 
-def _skip_intent_profile(profile: InterviewProfile) -> bool:
-    """Avoid slow intent preflight when a scoped project-memory source is explicit."""
-
-    return bool(profile.memory_scope) and "project_memory_active" in {
-        collection.casefold()
-        for collection in profile.memory_collections
-    }
-
-
-def _memory_label(item: dict[str, Any], profile: str | None) -> str:
+def _memory_label(item: dict[str, Any], profile: str) -> str:
     title = _first_text(item, "title", "name")
     topic_kind = _first_text(item, "topic_kind", "kind")
     if title and topic_kind in {"leetcode_problem", "leetcode_problem_index"}:
         return title
-    return _first_text(item, "problem", "title", "name", "topic_id") or f"Memory · {profile or 'raw'}"
+    return _first_text(item, "problem", "title", "name", "topic_id") or f"Memory · {profile}"
 
 
 def _memory_excerpt(item: dict[str, Any]) -> str:
@@ -544,80 +484,15 @@ def _code_item_allowed(item: dict[str, Any], profile: InterviewProfile) -> bool:
     return repository in allowed or repository.rsplit("/", 1)[-1] in allowed
 
 
-def _filtered_code_repositories(items: list[Any], profile: InterviewProfile) -> set[str]:
-    """Return indexed-code repositories rejected by the profile allowlist."""
-
-    if not profile.repo_priorities:
-        return set()
-    return {
-        repository
-        for item in items
-        if isinstance(item, dict)
-        for repository in [_first_text(item, "repository", "repo", "project")]
-        if repository and not _code_item_allowed(item, profile)
-    }
-
-
-def _is_code_symbol_item(item: dict[str, Any]) -> bool:
-    """Detect Memory code-symbol rows without depending on one schema version."""
-
-    item_type = _first_text(item, "type").casefold()
-    return (
-        item_type == "code_context"
-        or bool(item.get("symbol_id"))
-        or bool(item.get("qualified_name") and item.get("symbol_kind"))
-    )
-
-
-def _select_code_items(
-    items: list[Any],
-    profile: InterviewProfile,
-    *,
-    limit: int,
-) -> list[dict[str, Any]]:
-    """Prefer complete-projection code records and suppress legacy duplicates."""
-
-    candidates = [
-        item
-        for item in items
-        if isinstance(item, dict) and _code_item_allowed(item, profile)
-    ]
-    candidates.sort(key=_code_item_rank)
-    selected: list[dict[str, Any]] = []
-    seen: set[tuple[str, str, str]] = set()
-    for item in candidates:
-        key = (
-            _first_text(item, "repository", "repo", "project").casefold(),
-            _first_text(item, "path", "file_path").casefold(),
-            _first_text(item, "qualified_name", "symbol_name", "name").casefold(),
-        )
-        if key in seen:
-            continue
-        seen.add(key)
-        selected.append(item)
-        if len(selected) >= limit:
-            break
-    return selected
-
-
-def _code_item_rank(item: dict[str, Any]) -> tuple[int, int, int]:
-    return (
-        0 if item.get("code_index_id") and item.get("file_id") else 1,
-        0 if item.get("coverage_complete") is True else 1,
-        0 if _first_text(item, "branch") and _first_text(item, "branch") != "unknown" else 1,
-    )
-
-
 def _code_item_to_source(item: dict[str, Any]) -> EvidenceSource | None:
     path = _first_text(item, "path", "file_path")
     qualified = _first_text(item, "qualified_name", "symbol_name", "name")
     if not path or not qualified:
         return None
-    excerpt = _first_text(item, "retrieval_text", "signature")
     return EvidenceSource(
         lane=RetrievalLane.CODE,
         label=qualified,
-        excerpt=(excerpt[:4_000] if excerpt else f"Indexed symbol {qualified} in {path}"),
+        excerpt=f"Indexed symbol {qualified} in {path}",
         score=0.74,
         freshness=Freshness.UNKNOWN,
         repository=_first_text(item, "repository", "repo") or None,
@@ -639,7 +514,7 @@ def _code_queries(query: str, profile: InterviewProfile) -> list[str]:
         if any(alias.casefold() in lower for alias in [project, *aliases])
     ]
     matched_watch = [term for term in profile.watch_terms if term.casefold() in lower]
-    return _unique_text([*search_terms(query, limit=5), *matched_watch, *matched_projects])[:3]
+    return _unique_text([*matched_projects, *matched_watch, *search_terms(query, limit=5)])[:3]
 
 
 def _unique_text(values: list[str]) -> list[str]:
@@ -688,18 +563,11 @@ def _dedupe_sources(sources: list[EvidenceSource]) -> list[EvidenceSource]:
     seen: set[tuple[str, str, str]] = set()
     result: list[EvidenceSource] = []
     for source in sorted(sources, key=lambda item: item.score, reverse=True):
-        if source.lane is RetrievalLane.CODE:
-            key = (
-                source.repository or "",
-                source.path or "",
-                source.label.casefold(),
-            )
-        else:
-            key = (
-                source.repository or "",
-                source.path or source.url or str(source.metadata.get("_key") or ""),
-                source.excerpt[:120].casefold(),
-            )
+        key = (
+            source.repository or "",
+            source.path or source.url or str(source.metadata.get("_key") or ""),
+            source.excerpt[:120].casefold(),
+        )
         if key in seen:
             continue
         seen.add(key)

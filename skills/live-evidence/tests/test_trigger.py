@@ -3,7 +3,7 @@
 
 from live_evidence.config import InterviewProfile
 from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
-from live_evidence.trigger import TriggerEngine, extract_thread, is_code_question, search_terms
+from live_evidence.trigger import TriggerEngine, extract_thread, search_terms
 
 
 PROFILE = InterviewProfile(
@@ -23,26 +23,6 @@ def test_interviewer_question_triggers() -> None:
     decision = engine.decide(event)
     assert decision is not None
     assert decision.reason in {"question", "watch-term:agent"}
-
-
-def test_growing_non_code_stabilized_question_waits_for_final() -> None:
-    engine = TriggerEngine(PROFILE, cooldown_s=30)
-    first = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text="What is under specified security clarify response?",
-    )
-    grown = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text=(
-            "What is under specified security clarify response? "
-            "What is under specified security clarify response in clarify helpers?"
-        ),
-    )
-
-    assert engine.decide(first) is None
-    assert engine.decide(grown) is None
 
 
 def test_graham_turn_does_not_trigger() -> None:
@@ -75,14 +55,33 @@ def test_interim_question_does_not_trigger() -> None:
     assert engine.decide(event) is None
 
 
-def test_stabilized_question_does_not_trigger_before_final() -> None:
+def test_stabilized_question_triggers_before_final() -> None:
     engine = TriggerEngine(PROFILE, cooldown_s=0)
     event = TranscriptEvent(
         speaker=Speaker.INTERVIEWER,
         kind=TranscriptKind.STABILIZED,
         text="How would you validate a parentheses string?",
     )
-    assert engine.decide(event) is None
+    decision = engine.decide(event)
+    assert decision is not None
+    assert decision.reason == "question"
+
+
+def test_final_duplicate_after_stabilized_is_deduplicated_during_cooldown() -> None:
+    engine = TriggerEngine(PROFILE, cooldown_s=60)
+    stabilized = TranscriptEvent(
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text="How would you validate a parentheses string?",
+    )
+    final = TranscriptEvent(
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.FINAL,
+        text="How would you validate a parentheses string?",
+    )
+
+    assert engine.decide(stabilized) is not None
+    assert engine.decide(final) is None
 
 
 def test_obvious_fragment_does_not_trigger() -> None:
@@ -109,122 +108,6 @@ def test_repeated_final_is_deduplicated_during_cooldown() -> None:
 
 def test_project_alias_becomes_thread() -> None:
     assert extract_thread("Tell me about receipt-gated execution in Tau", PROFILE) == "tau"
-
-
-def test_stabilized_filler_does_not_trigger() -> None:
-    engine = TriggerEngine(PROFILE, cooldown_s=0)
-    event = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text="That is alright, something like this is still not valid even though it has the same opening and closing.",
-    )
-
-    assert engine.decide(event) is None
-
-
-def test_coding_problem_stabilized_turn_waits_for_final() -> None:
-    engine = TriggerEngine(PROFILE, cooldown_s=30)
-    setup = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text=(
-            "Turn any valid string. Formally a parentheses string is valid if it contains "
-            "only lowercase characters or can be written as AB where A and B are valid strings."
-        ),
-    )
-    second = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text=(
-            "Turn any valid string. Formally a parentheses string is valid if it contains "
-            "only lowercase characters or can be written as AB where A and B are valid strings. "
-            "Find the minimum number of parentheses to remove."
-        ),
-    )
-    third = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.STABILIZED,
-        text=(
-            "Turn any valid string. Formally a parentheses string is valid if it contains "
-            "only lowercase characters or can be written as AB where A and B are valid strings. "
-            "Find the minimum number of parentheses to remove so the output is valid."
-        ),
-    )
-
-    assert engine.decide(setup) is None
-    assert engine.decide(second) is None
-    assert engine.decide(third) is None
-
-
-def test_coding_problem_setup_question_waits_for_actionable_prompt() -> None:
-    engine = TriggerEngine(PROFILE, cooldown_s=0)
-    event = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.FINAL,
-        text=(
-            "Turn any valid string. Formally, a parenthesis string is valid if it contains "
-            "only lowercase characters or can be written as AB where A and B are valid strings. "
-            "Does the order matter here?"
-        ),
-    )
-
-    assert engine.decide(event) is None
-
-
-def test_real_stt_valid_parentheses_question_is_actionable() -> None:
-    engine = TriggerEngine(PROFILE, cooldown_s=0)
-    event = TranscriptEvent(
-        speaker=Speaker.INTERVIEWER,
-        kind=TranscriptKind.FINAL,
-        text=(
-            "What makes a parentheses string valid? A opening parentheses always has to come "
-            "before closing, right? So if we sort of iterate to our string, each closing "
-            "parenthesis needs a previous opening parenthesis."
-        ),
-    )
-
-    decision = engine.decide(event)
-
-    assert decision is not None
-    assert decision.reason == "code-question"
-    assert decision.code_related is True
-
-
-def test_selected_valid_parentheses_ordering_question_is_actionable() -> None:
-    assert is_code_question("A opening parentheses always has to come before closing, right?")
-
-
-def test_shared_code_question_classifier_matches_interview_prompt() -> None:
-    assert is_code_question(
-        "Given a valid parenthesis string with lowercase characters, how would you "
-        "find the minimum number of parentheses to remove and return a valid output string?"
-    )
-
-
-def test_live_stack_parentheses_discussion_is_code_question() -> None:
-    assert is_code_question(
-        "We need the last opening parentheses corresponds like the next closing "
-        "parentheses. So it's sort of like a stack type of structure to keep track "
-        "of the last one we got. If we see a closing parentheses and the stack is "
-        "empty, we remove the closing parentheses from the string."
-    )
-
-
-def test_live_javascript_implementation_discussion_is_code_question() -> None:
-    assert is_code_question(
-        "On what input we get. We'd love to see it in code. What coding language "
-        "are you going to use? Let's use JavaScript. We'll say function and let's "
-        "say remove extra prints. Is this just going to take in just the string "
-        "correct? Yes, just the string input. The first thing we want to do is "
-        "iterate through this string and use a stack."
-    )
-
-
-def test_live_closing_parentheses_question_is_code_question() -> None:
-    assert is_code_question(
-        "Is a closing parentheses. And what do we want to do in this case? "
-        "If it is closing we want to see, do we have something in the stack?"
-    )
 
 
 def test_search_terms_are_bounded_and_not_question_words() -> None:

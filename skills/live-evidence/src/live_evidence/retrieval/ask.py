@@ -8,9 +8,7 @@ the Ask run directory as the solution receipt.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
-import os
 import subprocess
 from pathlib import Path
 from time import monotonic
@@ -83,7 +81,6 @@ class AskSolutionClient:
                 command,
                 check=False,
                 capture_output=True,
-                env=_subprocess_env(),
                 text=True,
                 timeout=self._settings.ask_timeout_s,
             )
@@ -102,7 +99,7 @@ class AskSolutionClient:
 
         payload = _parse_json_output(result.stdout)
         run_dir = _find_run_dir(payload)
-        response_path, response = _read_ask_response(run_dir) if run_dir else (None, "")
+        response = _read_ask_response(run_dir) if run_dir else ""
         if not response:
             response = _response_from_payload(payload) or result.stdout.strip()
         response = " ".join(response.split())
@@ -125,8 +122,6 @@ class AskSolutionClient:
             metadata={
                 "handler": self._settings.ask_handler,
                 "run_dir": str(run_dir) if run_dir else None,
-                "response_path": str(response_path) if response_path else None,
-                "response_sha256": _sha256_file(response_path) if response_path else None,
                 "seed_source_count": len(evidence),
                 "query": query[:500],
             },
@@ -157,9 +152,8 @@ def _build_prompt(query: str, evidence: list[EvidenceSource]) -> str:
     return "\n\n".join(
         [
             "You are answering a live coding interview question for Graham.",
-            "If the question is a general algorithm prompt, solve it directly from the prompt.",
-            "Use supplied source evidence only for repo-specific claims. If source evidence is insufficient for a repo claim, say exactly what is missing.",
-            "Return a concise solution the human can scan in real time: approach, code sketch or pseudocode, complexity, and one caution.",
+            "Use only the supplied source evidence. If it is insufficient, say exactly what is missing.",
+            "Return a concise solution the human can scan in real time: answer, relevant code path, and one caution.",
             f"Question: {' '.join(query.split())[:1200]}",
             evidence_block,
         ]
@@ -176,21 +170,6 @@ def _safe_locator(source: EvidenceSource) -> str:
     return source.label[:500]
 
 
-def _subprocess_env() -> dict[str, str]:
-    """Run sibling skill tools without inheriting this skill's virtualenv."""
-
-    env = os.environ.copy()
-    for key in (
-        "VIRTUAL_ENV",
-        "UV_PROJECT_ENVIRONMENT",
-        "PYTHONHOME",
-        "PYTHONPATH",
-    ):
-        env.pop(key, None)
-    env.setdefault("UV_LINK_MODE", "copy")
-    return env
-
-
 def _parse_json_output(stdout: str) -> Any:
     text = stdout.strip()
     if not text:
@@ -198,25 +177,11 @@ def _parse_json_output(stdout: str) -> Any:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        decoder = json.JSONDecoder()
-        best_payload: Any = None
-        for index, char in enumerate(text):
-            if char not in "[{":
-                continue
-            try:
-                payload, _ = decoder.raw_decode(text[index:])
-            except json.JSONDecodeError:
-                continue
-            best_payload = payload
-            if _find_run_dir(payload):
-                return payload
         for line in reversed(text.splitlines()):
             try:
                 return json.loads(line)
             except json.JSONDecodeError:
                 continue
-        if best_payload is not None:
-            return best_payload
     return {"response": text}
 
 
@@ -238,9 +203,9 @@ def _find_run_dir(payload: Any) -> Path | None:
     return None
 
 
-def _read_ask_response(run_dir: Path | None) -> tuple[Path | None, str]:
+def _read_ask_response(run_dir: Path | None) -> str:
     if run_dir is None or not run_dir.is_dir():
-        return None, ""
+        return ""
     candidates = sorted(run_dir.glob("node-artifacts/handler-*/response.md"))
     candidates.extend(sorted(run_dir.glob("node-artifacts/*/response.md")))
     for path in candidates:
@@ -249,21 +214,8 @@ def _read_ask_response(run_dir: Path | None) -> tuple[Path | None, str]:
         except OSError:
             continue
         if text:
-            return path, text
-    return None, ""
-
-
-def _sha256_file(path: Path | None) -> str | None:
-    if path is None:
-        return None
-    digest = hashlib.sha256()
-    try:
-        with path.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-    except OSError:
-        return None
-    return digest.hexdigest()
+            return text
+    return ""
 
 
 def _response_from_payload(payload: Any) -> str:

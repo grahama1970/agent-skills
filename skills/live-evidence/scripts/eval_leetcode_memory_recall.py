@@ -271,6 +271,8 @@ def wait_for_card(client: httpx.Client, *, timeout_s: float = 12.0) -> dict[str,
 def assert_memory_card(card: dict[str, Any], candidate_key: str) -> dict[str, Any]:
     sources = card.get("sources") or []
     memory_sources = [source for source in sources if source.get("lane") == "memory"]
+    if card.get("status") != "supported":
+        raise RuntimeError(f"expected supported Memory card: {card}")
     if not memory_sources:
         raise RuntimeError(f"card did not include a Memory source: {card}")
     first_key = (memory_sources[0].get("metadata") or {}).get("_key")
@@ -392,7 +394,6 @@ def run_eval(root: Path, receipt_path: Path | None) -> Path:
             "transcript_triggered_card": True,
             "card_has_memory_source": True,
             "card_has_problem_answer_terms": True,
-            "card_may_remain_clarification_blocked": True,
         },
         "card_check": card_check,
         "state_counts": {
@@ -403,7 +404,6 @@ def run_eval(root: Path, receipt_path: Path | None) -> Path:
             "proves": [
                 "Live Evidence can retrieve a LeetCode-style problem record from real Memory /recall after transcript ingestion.",
                 "The question/answer content is stored in Memory project_memory_active, not hardcoded in React.",
-                "A clarification-blocked coding gate still exposes the relevant Memory match as a visible card source.",
             ],
             "does_not_prove": [
                 "Bulk ingestion of all public GitHub LeetCode repositories.",

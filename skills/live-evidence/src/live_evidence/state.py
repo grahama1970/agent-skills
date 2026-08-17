@@ -45,9 +45,7 @@ class RuntimeState:
         """Start or restart a session."""
 
         async with self._lock:
-            if not consent_confirmed:
-                snapshot = self._snapshot_unlocked()
-            elif self._session.status is SessionStatus.PAUSED:
+            if self._session.status is SessionStatus.PAUSED:
                 self._session.status = SessionStatus.LISTENING
                 self._session.consent_confirmed = (
                     self._session.consent_confirmed or consent_confirmed
@@ -121,21 +119,16 @@ class RuntimeState:
                 self._transcript[index] = event
                 replaced = True
                 break
+            if not replaced and event.kind.value in {"stabilized", "final"}:
+                for index in range(len(self._transcript) - 1, -1, -1):
+                    item = self._transcript[index]
+                    if not is_progressive_restatement(item, event):
+                        continue
+                    self._transcript[index] = richer_transcript_event(item, event)
+                    replaced = True
+                    break
             if not replaced:
-                replacement_index = None
-                if event.kind.value in {"stabilized", "final"}:
-                    for index in range(len(self._transcript) - 1, -1, -1):
-                        item = self._transcript[index]
-                        if is_progressive_restatement(item, event):
-                            replacement_index = index
-                            break
-                if replacement_index is None:
-                    self._transcript.append(event)
-                else:
-                    self._transcript[replacement_index] = richer_transcript_event(
-                        self._transcript[replacement_index],
-                        event,
-                    )
+                self._transcript.append(event)
             self._transcript = self._transcript[-self._settings.max_transcript_events :]
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
@@ -229,11 +222,6 @@ class RuntimeState:
         """Return the current status for low-cost coordinator routing."""
 
         return self._session.status
-
-    def session_id(self) -> str:
-        """Return the current session id for append-only journal writes."""
-
-        return self._session.session_id
 
     def _initial_lanes(self) -> dict[RetrievalLane, LaneActivity]:
         """Create the truthful initial state for every retrieval lane."""

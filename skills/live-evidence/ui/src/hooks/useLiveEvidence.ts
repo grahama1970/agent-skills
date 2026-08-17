@@ -78,7 +78,7 @@ export function useLiveEvidence() {
 
   const actions = useMemo(
     () => ({
-      start: () => execute(() => api.start(true)),
+      start: () => execute(() => api.start(false)),
       pause: () => execute(api.pause),
       stop: () => execute(api.stop),
       search: (query: string, lane: RetrievalLane) => execute(() => api.search(query, lane)),

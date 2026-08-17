@@ -20,15 +20,14 @@ export function TranscriptDrawer({ open, transcript, currentThread, onClose }: T
     description: "Close the transcript drawer and return to the Vault surface",
   });
 
+  if (!open) return null;
+
   const visible = transcript.slice(-60).reverse();
 
   return (
     <aside
-      className={`fixed bottom-4 left-4 z-40 flex max-h-[76vh] w-[min(34rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#071012]/95 shadow-2xl shadow-black/40 backdrop-blur-xl transition duration-150 ${
-        open ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
-      }`}
+      className="fixed bottom-4 left-4 z-40 flex max-h-[76vh] w-[min(34rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#071012]/95 shadow-2xl shadow-black/40 backdrop-blur-xl"
       aria-label="Live transcript drawer"
-      aria-hidden={!open}
     >
       <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
         <div className="min-w-0">
@@ -43,10 +42,9 @@ export function TranscriptDrawer({ open, transcript, currentThread, onClose }: T
           data-qs-action="LIVE_EVIDENCE_TRANSCRIPT_CLOSE"
           title="Close transcript drawer"
           type="button"
-          className="grid size-11 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
           onClick={onClose}
           aria-label="Close transcript drawer"
-          tabIndex={open ? 0 : -1}
         >
           <X aria-hidden="true" className="size-4" />
         </button>

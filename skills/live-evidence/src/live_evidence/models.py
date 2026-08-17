@@ -74,7 +74,6 @@ class LaneState(StrEnum):
     RUNNING = "running"
     OK = "ok"
     DEGRADED = "degraded"
-    BLOCKED = "blocked"
     DISABLED = "disabled"
     ERROR = "error"
 
@@ -344,27 +343,6 @@ class ManualSearchRequest(BaseModel):
         """Prevent the code-only lane from being treated as broad search."""
 
         return value
-
-
-class ClarificationAnswerRequest(BaseModel):
-    """Clarification answers for a blocked automatic coding question."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    answers: dict[str, str] = Field(min_length=1, max_length=20)
-
-    @field_validator("answers")
-    @classmethod
-    def normalize_answers(cls, value: dict[str, str]) -> dict[str, str]:
-        normalized: dict[str, str] = {}
-        for key, answer in value.items():
-            clean_key = " ".join(str(key).split())[:120]
-            clean_answer = " ".join(str(answer).split())[:2_000]
-            if clean_key and clean_answer:
-                normalized[clean_key] = clean_answer
-        if not normalized:
-            raise ValueError("answers must contain at least one non-empty answer")
-        return normalized
 
 
 class ActionDefinition(BaseModel):

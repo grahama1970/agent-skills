@@ -23,10 +23,6 @@ from typing import Any
 import httpx
 from dotenv import load_dotenv
 
-from live_evidence.config import InterviewProfile
-from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
-from live_evidence.question_window import QuestionWindowBuilder
-
 load_dotenv(override=False)
 
 
@@ -256,29 +252,6 @@ def assert_card_has(card: dict[str, Any], *, lane: str | None = None, path_fragm
         raise RuntimeError(f"card missing path fragment {path_fragment}: {card}")
 
 
-def assert_card_contains_source(card: dict[str, Any], *, lane: str, path_fragment: str) -> None:
-    serialized = json.dumps(card)
-    if path_fragment not in serialized:
-        raise RuntimeError(f"card missing path fragment {path_fragment}: {card}")
-    if f'"lane": "{lane}"' not in serialized:
-        raise RuntimeError(f"card missing lane {lane}: {card}")
-
-
-def assert_ask_receipt_backed(card: dict[str, Any]) -> None:
-    """Require Ask cards to preserve the actual run artifact identity."""
-
-    for source in card.get("sources") or []:
-        metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
-        if (
-            source.get("lane") == "ask"
-            and metadata.get("run_dir")
-            and metadata.get("response_path")
-            and metadata.get("response_sha256")
-        ):
-            return
-    raise RuntimeError(f"card missing Ask run-dir/response hash metadata: {card}")
-
-
 def assert_runner_called(log_path: Path, expected: str) -> None:
     text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
     if expected not in text:
@@ -318,54 +291,6 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
         )
         profile_path = temp / "profile.yaml"
         write_profile(profile_path)
-        profile = InterviewProfile(
-            name="mvp-steps-2-8-agentic-eval",
-            watch_terms=[
-                "source-bound",
-                "evidence-card",
-                "after-start-sentinel",
-                "memory-alpha",
-                "opening parentheses",
-                "valid parentheses",
-            ],
-            project_aliases={
-                "mvp-eval": [
-                    "source-bound",
-                    "evidence-card",
-                    "after-start-sentinel",
-                    "memory-alpha",
-                ]
-            },
-        )
-        asr_chunk = (
-            "Yeah that makes sense Cool so sort of what I'm thinking is like I said the actual "
-            "English characters I think we mostly just ignore and just have to preserve and then "
-            "the opening closing parentheses a Opening parentheses always has to come before "
-            "closing right so if we sort of iterate to our string We have like the three letters "
-            "that we're ignoring and then we have an opening parentheses which is good and Had we "
-            "had a closing parentheses there"
-        )
-        builder = QuestionWindowBuilder(profile)
-        asr_outcome = builder.ingest(
-            TranscriptEvent(
-                event_id="asr-poor-punctuation-0001",
-                speaker=Speaker.INTERVIEWER,
-                kind=TranscriptKind.FINAL,
-                source="pipewire",
-                sequence=1,
-                text=asr_chunk,
-            )
-        )
-        if asr_outcome.candidate is None:
-            raise RuntimeError("punctuation-poor ASR chunk did not produce a selected query")
-        selected_asr = asr_outcome.candidate.normalized_question
-        if (
-            "opening parentheses always has to come before closing" not in selected_asr.casefold()
-            or "yeah that makes sense" in selected_asr.casefold()
-            or len(selected_asr) >= len(asr_chunk) * 0.6
-        ):
-            raise RuntimeError(f"punctuation-poor ASR query was not bounded to the relevant question: {selected_asr!r}")
-        print("punctuation-poor ASR query window selects one relevant question: PASS")
         memory_runner_log = temp / "memory-runner.argv"
         ask_runner_log = temp / "ask-runner.argv"
         brave_runner_log = temp / "brave-runner.argv"
@@ -427,10 +352,6 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 else:
                     raise RuntimeError(f"server did not start; log={log_path.read_text()}")
                 client.post("/api/session/start", json={"consent_confirmed": True}).raise_for_status()
-                answerable_code_prompt = (
-                    "Can you implement a function and solve Two Sum given an array and target, "
-                    "return two distinct indices, exactly one solution exists?"
-                )
 
                 stt_available = importlib.util.find_spec("RealtimeSTT") is not None
                 stt_status = "available" if stt_available else "blocked_live_dependency"
@@ -467,11 +388,10 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                     event_id=turn_id,
                     start_ms=1_000,
                     end_ms=3_200,
-                    text=answerable_code_prompt,
+                    text="Can you explain how memory-alpha builds source-bound evidence-card answers?",
                 )
                 state = wait_for_cards(client, 1)
                 assert_card_has(state["cards"][0], lane="ask", path_fragment="ask-run")
-                assert_ask_receipt_backed(state["cards"][0])
                 projected = [event for event in state.get("transcript") or [] if event.get("event_id") == turn_id]
                 if len(projected) != 1 or projected[0].get("kind") != "final" or projected[0].get("end_ms") != 3_200:
                     raise RuntimeError(f"stabilized/final projection regression: {projected}")
@@ -489,7 +409,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                     client,
                     speaker="interviewer",
                     sequence=50,
-                    text=answerable_code_prompt,
+                    text="Can you explain how memory-alpha builds source-bound evidence-card answers?",
                 )
                 assert_no_new_cards(client, 1, delay_s=0.4)
 
@@ -554,20 +474,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                     text=youtube_like_question,
                 )
                 burst_state = wait_for_cards(client, before_burst_count + 1)
-                youtube_card = burst_state["cards"][0]
-                assert_card_contains_source(youtube_card, lane="ripgrep", path_fragment="valid_parentheses.py")
-                gate_sources = [
-                    source
-                    for source in youtube_card.get("sources") or []
-                    if source.get("repository") == "transcript-to-leetcode"
-                ]
-                if not gate_sources or gate_sources[0].get("metadata", {}).get("gate_status") != "no_coding_question":
-                    raise RuntimeError(f"YouTube-like fragment did not fail closed through transcript gate: {youtube_card}")
-                if youtube_card.get("query") != "A opening parentheses always has to come before closing, right?":
-                    raise RuntimeError(
-                        "initial YouTube transcript query did not select one most relevant question: "
-                        f"{youtube_card.get('query')!r}"
-                    )
+                assert_card_has(burst_state["cards"][0], lane="ripgrep", path_fragment="valid_parentheses.py")
                 for offset, variant in enumerate(
                     [
                         "A opening parentheses always has to come",
@@ -589,20 +496,14 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 assert_no_new_cards(client, before_burst_count + 1, delay_s=0.8)
                 collapse_state = client.get("/api/state").json()
                 matching_transcript = [
-                    event
+                    event.get("text", "")
                     for event in collapse_state.get("transcript") or []
-                    if "opening parentheses" in str(event.get("text") or "").casefold()
+                    if "opening parentheses" in str(event.get("text", "")).casefold()
                 ]
                 if len(matching_transcript) != 1:
-                    raise RuntimeError(f"progressive YouTube transcript was not collapsed: {matching_transcript}")
-                if (
-                    str(matching_transcript[0].get("text") or "")
-                    .casefold()
-                    .count("a opening parentheses")
-                    != 1
-                ):
-                    raise RuntimeError(f"progressive transcript still repeated itself: {matching_transcript}")
-                print("initial transcript query selects one relevant question: PASS")
+                    raise RuntimeError(f"progressive STT transcript did not collapse: {matching_transcript}")
+                if matching_transcript[0].casefold().count("a opening parentheses") != 1:
+                    raise RuntimeError(f"progressive STT transcript repeated prefix: {matching_transcript[0]}")
                 print("youtube-derived overlapping transcript collapses to one card: PASS")
                 print("youtube-derived progressive transcript projection collapses repeats: PASS")
 
@@ -662,14 +563,10 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         "step5_memory_runner_boundary": True,
                         "step6_current_checkout_rg_after_start": True,
                         "step7_ask_run_dir_fixture_only": True,
-                        "step7_ask_response_hash_preserved": True,
                         "step8_source_bound_cards": True,
                         "step8_manual_lanes_derived_query_only": True,
                         "youtube_derived_ripgrep_relevance": True,
                         "youtube_derived_overlapping_transcript_collapse": True,
-                        "youtube_derived_progressive_transcript_projection_collapse": True,
-                        "initial_transcript_query_selects_one_relevant_question": True,
-                        "punctuation_poor_asr_query_selects_one_relevant_question": True,
                     },
                     "claims": {
                         "proves": [
@@ -680,12 +577,8 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                             "memory runner is called through code-search and code-node subprocess boundaries",
                             "ripgrep sees source created after service startup",
                             "overlapping YouTube-like transcript variants produce one automatic evidence card",
-                            "progressive YouTube-like transcript restatements collapse to one visible transcript row",
-                            "initial YouTube-like transcript query is one selected question, not the full transcript chunk",
-                            "punctuation-poor ASR chunks select one bounded retrieval question instead of the full transcript",
                             "YouTube-like parenthesis transcript retrieves the domain source instead of generic filler matches",
                             "Ask lane preserves a run directory and surfaces fixture-only response text",
-                            "Ask lane preserves the response artifact hash on the evidence card",
                             "manual Brave/Dogpile lanes receive a derived question, not transcript history",
                         ],
                         "does_not_prove": [

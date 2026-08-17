@@ -18,7 +18,6 @@ from .coordinator import EvidenceCoordinator
 from .models import (
     ActionRegistrationBatch,
     AppSnapshot,
-    ClarificationAnswerRequest,
     EvidenceCard,
     HealthResponse,
     ManualSearchRequest,
@@ -132,15 +131,6 @@ def _register_api_routes(
     @app.post("/api/search", response_model=EvidenceCard)
     async def manual_search(request: ManualSearchRequest) -> EvidenceCard:
         return await coordinator.manual_search(request)
-
-    @app.post("/api/cards/{card_id}/clarifications", response_model=EvidenceCard)
-    async def clarify_card(card_id: str, request: ClarificationAnswerRequest) -> EvidenceCard:
-        try:
-            return await coordinator.submit_clarification(card_id, request.answers)
-        except KeyError as exc:
-            raise HTTPException(status_code=404, detail="card not found") from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.post("/api/cards/{card_id}/pin", response_model=AppSnapshot)
     async def pin_card(card_id: str) -> AppSnapshot:
