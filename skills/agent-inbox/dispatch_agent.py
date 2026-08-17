@@ -30,6 +30,35 @@ from loguru import logger
 PID_FILE = INBOX_DIR / "dispatcher.pid"
 _running = True  # Global flag for graceful shutdown
 
+# Dispatch logs are one file per spawn and were never reclaimed: 173,413 files
+# totalling 93 GB by 2026-08-17, which filled the boot drive. Prune on write.
+LOG_RETENTION_DAYS = int(os.environ.get("AGENT_INBOX_LOG_RETENTION_DAYS", "30"))
+
+
+def prune_logs(retention_days: int = None) -> int:
+    """Delete dispatch logs older than the retention window. Returns count removed.
+
+    Never raises: log reclamation must not fail a dispatch.
+    """
+    days = LOG_RETENTION_DAYS if retention_days is None else retention_days
+    if days <= 0 or not LOG_DIR.exists():
+        return 0
+    cutoff = time.time() - days * 86400
+    removed = 0
+    try:
+        for path in LOG_DIR.glob("*.log"):
+            try:
+                if path.stat().st_mtime < cutoff:
+                    path.unlink()
+                    removed += 1
+            except OSError:
+                continue
+    except OSError:
+        return removed
+    if removed:
+        logger.info(f"[dispatcher] pruned {removed} log(s) older than {days}d")
+    return removed
+
 
 def spawn_agent(
     message: dict,
@@ -80,6 +109,7 @@ def spawn_agent(
         return None, None
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    prune_logs()
 
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     log_file = LOG_DIR / f"{msg_id}_{timestamp}.log"

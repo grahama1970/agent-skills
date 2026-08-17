@@ -161,7 +161,7 @@
       "command": [
         "bash",
         "-c",
-        "UV_PROJECT_ENVIRONMENT=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
       ],
       "timeout_seconds": 120,
       "expected": {
