@@ -80,8 +80,14 @@ def main() -> int:
                 else:
                     raise RuntimeError(f"server did not start; log={log_path.read_text()}")
 
-                start = client.post("/api/session/start", json={"consent_confirmed": False})
+                # Consent must be explicit. An unconsented session is ARMED, not
+                # LISTENING, and the coordinator gates retrieval on LISTENING, so
+                # a canary that starts unconsented produces no card at all. This
+                # previously passed because an unconsented session was allowed to
+                # drive Memory/code/ripgrep retrieval.
+                start = client.post("/api/session/start", json={"consent_confirmed": True})
                 start.raise_for_status()
+                assert start.json()["session"]["status"] == "listening"
                 event = {
                     "schema": "live_evidence.transcript_event.v1",
                     "speaker": "interviewer",

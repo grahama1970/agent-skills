@@ -34,9 +34,19 @@ def test_session_state_transitions(tmp_path: Path) -> None:
         assert initial.status_code == 200
         assert initial.json()["session"]["status"] == "idle"
 
+        # An unconsented start must NOT present as listening: no audio capture
+        # is authorized, and coordinator.py gates retrieval on LISTENING, so
+        # reporting it here would both mislabel the session and let an
+        # unconsented one trigger Memory/code/ripgrep retrieval.
         started = client.post("/api/session/start", json={"consent_confirmed": False})
         assert started.status_code == 200
-        assert started.json()["session"]["status"] == "listening"
+        assert started.json()["session"]["status"] == "armed"
+        assert started.json()["session"]["consent_confirmed"] is False
+
+        consented = client.post("/api/session/start", json={"consent_confirmed": True})
+        assert consented.status_code == 200
+        assert consented.json()["session"]["status"] == "listening"
+        assert consented.json()["session"]["consent_confirmed"] is True
 
         paused = client.post("/api/session/pause")
         assert paused.status_code == 200
