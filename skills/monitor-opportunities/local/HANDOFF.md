@@ -1,536 +1,187 @@
 # Handoff Report: monitor-opportunities
 
-**Timestamp**: 2026-08-17T09:19:18-04:00
+**Timestamp**: 2026-08-17T15:57:54Z
 **Active Agent**: Codex
 **Canonical workspace**: `/home/graham/workspace/experiments/agent-skills`
-
-## 0. 2026-08-17 canonical handoff update
-
-This section is the current handoff snapshot for the canonical workspace. Older
-sections below are historical and may describe superseded state.
-
-### Operational state
-
-- Stage remains `STAGE_0_RESEARCH_ONLY`.
-- The immutable goal is not met. The skill can produce a Stage 0 opportunity
-  report and local preparation artifacts, but it has not proven the complete
-  daily best-in-class lead, consulting, contact-expansion, and human-authorized
-  application-preparation loop.
-- `./skills/monitor-opportunities/run.sh status --json` in the canonical
-  workspace reports `operational_readiness: NOT_ESTABLISHED`,
-  `external_effects: false`, and `apply` in `not_implemented_commands`.
-- A live Stage 0 run receipt exists at
-  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/run-receipt.json`.
-  It reports `run_id: mo_050183db486da25e`, `live: true`,
-  `mocked: false`, `external_effects: false`, and
-  `terminal_state: AWAITING_HUMAN`.
-- The frozen report exists at
-  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/report/index.html`
-  with source JSON at
-  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/report/report.json`.
-  The report JSON has 8 opportunities, `action_worthy_total: 29`,
-  `visible_total: 29`, `hidden_total: 0`, and
-  `operational_readiness: STAGE_0_READY`.
-- The status command and the latest run report disagree on readiness. Treat the
-  run receipt as evidence for that specific run only; do not infer cron or
-  full immutable-goal readiness from it while `status` still says
-  `NOT_ESTABLISHED`.
-
-### Evidence gathered this handoff
-
-- Handoff automation expected by `$handoff` is missing:
-  `.pi/skills/handoff/run.sh` does not exist in this repository.
-- Canonical local verification command:
-  `./skills/monitor-opportunities/run.sh verify --out /tmp/monitor-opportunities-handoff-verify-canonical-20260817T091856`
-  returned `overall: PASS`, `live: true`, `mocked: false`,
-  `network_used: false`, `external_effects: false`, with 9/9 fixture
-  cases passing. This proves only the local Stage 0 report kernel; it does not
-  prove live discovery, ranking, resume generation, scheduling, or external
-  effects.
-- Memory sync receipt:
-  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/memory-sync-receipt.json`
-  reports `status: PASS`, `readback_count: 9`,
-  `readback_missing_keys: []`, `relationship_signal_count: 0`,
-  `relationship_readback_state: NO_RELATIONSHIP_SIGNALS`, and
-  `relationship_readback_found: false`.
-- Memory recall readback:
-  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/memory-recall-readback.json`
-  reports `found: true`, `meta_took_ms: 27`, `wall_ms: 39.8`, and top key
-  `2026-08-17-run-summary-050183db486da25e`.
-
-### What is working
-
-- The Stage 0 report kernel validates hidden-artifact, feed-health,
-  relocation, outreach-sendability, ATS authorization, human-required-field,
-  shortlist-limit, and unknown-source-status negative gates.
-- Required-source enforcement and API website fallback are represented in the
-  live run receipt phases for LinkedIn top-applicant, Indeed, HiddenJobs,
-  Greenhouse, Ashby, SAM.gov, DARPA, and client research.
-- Claim-bound local tailoring produced a tailoring receipt with
-  `external_effects: false`, `live: true`, `mocked: false`, and explicit
-  non-claims about unknown employer weights and recruiter workflow.
-- The latest report preserved the visibility invariant: every action-worthy
-  artifact is visible in the report and `hidden_total` is zero.
-- Memory write/readback for the run summary is working fast enough in this
-  receipt: `/recall` returned the current run summary in 39.8 ms wall time.
-
-### What is still broken or incomplete
-
-- Contact and relationship expansion is still not producing live value in the
-  current run. The latest report has `relationship_visible_count: 0`, and the
-  memory-sync receipt has `relationship_signal_count: 0` with
-  `NO_RELATIONSHIP_SIGNALS`.
-- Meetup/source-intelligence capture for Buffalo-area groups is not proven in
-  this handoff run. The next run needs real read-only Meetup evidence or a
-  source-capture lane that can emit relationship/event/company-sponsor signals.
-- `monitor-contacts` composition is not yet sufficient as a standard discovery
-  step. Candidates only become relationship-rich when evidence already carries
-  contacts; the run does not yet reliably expand from known contacts, adjacent
-  ARCOS/formal-methods people, GitHub repositories, LinkedIn-visible
-  second/third-degree paths, or event co-presence into report-visible graph
-  records.
-- `status --json` still reports `NOT_ESTABLISHED`, so a project agent should
-  not claim cron readiness solely from the latest run receipt.
-- `apply` is not implemented in the canonical tree. This is acceptable under
-  the no-auto-apply policy, but the command surface should make the human-gated
-  application-preparation path unambiguous.
-- The canonical worktree has many pre-existing modified files under
-  `skills/monitor-opportunities/`. Do not reset, stash, clean, or overwrite
-  them. Use path-scoped diffs and commits only.
-
-### Next deterministic order
-
-1. Add or repair the live relationship expansion slice first. It should ingest
-   `monitor-contacts` recall results and source-intelligence artifacts, then
-   emit report-visible `relationship_signal` records with provenance and graph
-   edges.
-2. Add an `$agentic-evals` regression for the current failure signature:
-   relationship evidence expected but `relationship_signal_count: 0` and
-   `relationship_visible_count: 0`.
-3. Add or repair the Meetup Buffalo source-intelligence capture lane. Evidence
-   should preserve group URL, category, sponsor/company signal, event title,
-   event date, attendee/contact path when visible, source limitations, and
-   why attendance/reconnect is or is not worth human time.
-4. Add GitHub repository intelligence as a contact-expansion input. The Randi
-   Tinney style case should analyze repository ownership, contributors,
-   READMEs, issues, commits, organizations, emails if public, and project
-   relevance without inventing contact claims.
-5. Re-run `run.sh run` with fresh local read-only evidence, then run
-   `memory-sync`, then prove `/memory recall` finds both the run summary and at
-   least one relationship graph document when evidence supports it.
-6. Only after the contact lane produces live graph records, re-check
-   scheduler/cron readiness with `run.sh nightly` or the exact scheduler
-   command and read back the cron receipt.
-
-### Commit and branch notes
-
-- The pushed receipt commit on `agent-skills@main` for the latest memory-ready
-  run is `0328ebe20c72f305ed551f09cca16bc3c022674f`.
-- The canonical local branch also has `290d481c68` at the top of the
-  path-scoped log for `skills/monitor-opportunities`; do not treat branch shape
-  alone as proof of operational state. Use the receipts and commands above.
-
-**Timestamp**: 2026-08-05T08:25:00-04:00
-**Active Agent**: Claude (Claude Code)
-
-## 0. 2026-08-05 morning update (supersedes items below where noted)
-
-- **Repo risk (section 4, "Repository state is risky") is RESOLVED.** The
-  48-path uncommitted delta was a stale lane that wrote files from the Aug 3
-  baseline at 01:05, reverting the Aug 4 commits in the working tree. The Aug 4
-  code (application/ATS/outreach/Buzz modules and tests) was restored from HEAD;
-  only the genuinely new pieces were kept: `requires-python <3.13` pin,
-  `run.sh` `unset VIRTUAL_ENV` fix, test-lab test headers, matching `uv.lock`.
-  Landed as `e4825ff73` on `main` (pushed; `origin/main..HEAD` empty). Full
-  pre-reconciliation delta backed up at
-  `/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/6f1e978f-21be-4223-89ee-b4e54796dc5e/scratchpad/monitor-opps-full-dirty-backup.patch`.
-- Gates on the reconciled tree: `sanity.sh` from repo root: **71 passed**;
-  `python3 scripts/check_mock_evidence_claims.py`: OK over 586 test files.
-  Note: several tests hardcode repo-root-relative fixture paths, so sanity must
-  run with cwd at the repo root.
-- **Fresh morning run (step 2) done**: `/tmp/monitor-opportunities-20260805T120849Z`
-  — `live: true`, `mocked: false`, `external_effects: false`, terminal
-  `AWAITING_HUMAN`, 5 opportunities, 10 outreach packets, 3 applications,
-  `hidden_total: 0`, lanes A/B/C all `MATCHES` (3/20, 1/1, 1/1).
-- **Loopback serve (step 3, local half) proven**: served on port 8797 with
-  `--allow-remote`; `curl http://127.0.0.1:8797/health` returned
-  `{"status":"PASS","external_effects":false}`. Tailnet URL printed for
-  100.102.12.64. Remote/iPad readback still requires another Tailscale client —
-  not provable from this machine. Port 8791 is held by an older leftover serve
-  (pid 2528421), left running.
-- **Buzz path (step 4) restored and proven**: `run.sh buzz-summary --post` to
-  channel `ed942a5f-609d-4849-9128-3168c6dfac8c` succeeded (requires
-  `BUZZ_IDENTITY_KEY`/`BUZZ_RELAY_URL` from `~/.zshrc`; ops-buzz maps it to
-  `BUZZ_PRIVATE_KEY`). Independent readback via
-  `buzz messages get --channel … --limit 1` returned today's run summary.
-  Receipt: `/tmp/monitor-opportunities-20260805T120849Z/buzz/buzz-summary-receipt.json`.
-- Remaining next steps are human-gated: remote iPad readback (step 3, remote
-  half), Gmail draft / LinkedIn handoff / ATS promotions (steps 5–7), and
-  scheduler registration (step 8, gated on the remote readback).
-
-### Later on 2026-08-05: outreach promotion executed (steps 5–6 resolved)
-
-- Graham authorized draft creation ("all drafts are allowed"; send remains
-  forbidden). Promotion receipts:
-  `/tmp/monitor-opportunities-20260805T120849Z/promotions/`.
-- Ask roundtable gate ran live through API seats (gpt-5.5-high +
-  chutes deepseek-ai/DeepSeek-V3.2-TEE; the claude-sonnet-4-6 seat failed with
-  `scillm_auth_invalid_api_key` and was dropped). Round 1 split
-  (DO_NOT_SEND vs SEND_WITH_REVISIONS over `CONTACT_UNKNOWN` recipients);
-  Round 2 converged: SEND_WITH_REVISIONS for all 10 packets with recipient
-  placeholder, internal-note removal, and a Discord claim-relevance human gate.
-  Runs under `/tmp/monitor-opportunities-20260805T120849Z/outreach-roundtable/runs/`.
-- Receipt map validated by the pipeline: run
-  `/tmp/monitor-opportunities-20260805T-permitted` renders all 10 packets
-  `PASS / REVIEW_PERMITTED / SEND_WITH_REVISIONS`, `hidden_total: 0`.
-- Drafts of record: ArangoDB `memory.outreach_drafts`, 10 docs
-  (`draft-20260805-<packet>`), verified by direct AQL keyed readback.
-  Gmail mailbox drafts were trialed (5 created via surf, never sent) and
-  deleted the same day at Graham's direction; see the PROJECT_KNOWLEDGE
-  draft-storage decision. One pre-existing Aug 4 "Readback proof only" UB
-  draft was intentionally left in the mailbox.
-- Infra fixed en route: surf CLI was globally wedged behind a dead Jul 31
-  lock owner (`/tmp/surf-lock-*`) plus a kernel-stuck `npm ci` holding
-  `vendor/surf-cli/.ensure-surf-cli-build.lock`; cleared, `tab.list`/`js` live.
-
-### Still later on 2026-08-05: contact identification + ats_form_inspect
-
-- Recall integration: `outreach_drafts` is linked into the `unified_search`
-  view AND semantically synced to Qdrant; `/recall` finds drafts by keyword,
-  collections filter, and paraphrase. Memory-side commits `fd0dee29`
-  (view-derived unified collections) and `b9dd7910` (keyed `/store` runs
-  semantic sync) on graph-memory-operator@main.
-- Contact identification (human-verify leads, no LinkedIn automation):
-  `/tmp/monitor-opportunities-20260805T-permitted/contact-targets.json` —
-  UB UBIT official leadership/jobs routes (site blocks curl; read via
-  browser), DARPA per-BAA PM route plus the official BAA-response info
-  sheet, and 5 public Discord recruiter leads as manual LinkedIn search
-  targets. All 10 memory drafts now carry `contact_candidates`.
-- `ats_form_inspect` promoted (read-only) and exercised: promotion receipt
-  plus three Greenhouse form-schema receipts under
-  `/tmp/monitor-opportunities-20260805T-permitted/ats-inspect/` (13/13/14
-  questions, `form_schema_digest` per posting, sensitive/free-text fields
-  marked `human_required`, `writes_performed: false`). Captured via the
-  public Greenhouse job-board API — no browser writes.
-- `ats-inspect` is now an implemented CLI command (`b0cd8b9f9`):
-  Greenhouse adapter (`ats/greenhouse.py`) feeding the existing
-  `application_plan.inspect_ats_form` gate, site-scoped human policy
-  receipt required, fixture-backed tests, sanity 77 passed. All three
-  Discord postings inspected live via the CLI.
-- Application plans built for all three Discord postings
-  (`ats-inspect/application-plan-greenhouse-discord-*.json`): state
-  `PREPARED`, 4 prefillable fields each (First Name, Email, Website,
-  "How did you hear"), and the plans fail closed on unresolved required
-  fields that only Graham can answer: Last Name, Phone, the "Why
-  Discord?" free-text, work-authorization and US-location selects, and
-  Bay-Area/relocation questions (note: two roles ask about SF Bay Area
-  relocation — eligibility-relevant). `authorize_application_plan`
-  refuses any plan with unresolved required fields, so prefill/submit
-  remain blocked on those answers plus per-site `ats_form_prefill`
-  promotion.
-- Graham supplied Last Name (Anderson) and Phone (310-402-3980) on
-  2026-08-05; the answer bank lives at `ats-inspect/answer-bank.json` and
-  in memory `career_answers/graham-core-application-answers` (synced).
-  Plans rebuilt: 6 prefillable fields per posting. Remaining unresolved
-  required fields are the contract floor that stays human-in-browser by
-  design (gate tests prove required free-text/choice/sensitive fields can
-  never be machine-authorized): the "Why Discord?" free-text, work
-  authorization and US-location selects, Bay-Area/relocation questions,
-  and Resume/CV upload on 8537955002. Next automation increment is
-  `ats_form_prefill:greenhouse:discord` promotion: browser-prefill the six
-  fillable fields with screenshot receipt; Graham completes the rest and
-  transmits.
-- Course correction (Graham, 2026-08-05): the rendered DOM is the
-  authoritative inspect surface, not the job-board API — the live form
-  requires Country, Location (City), and demographic selects the API
-  omits. `form_from_dom_capture` now builds the canonical form from a
-  surf read-only DOM query (API refines input kinds where labels match);
-  inspections and plans for all three Discord postings were rebuilt from
-  DOM (new digests; demographic fields human_required). Selector
-  knowledge is stored ahead of any apply attempt: provider-stable core
-  ids in `config/ats_selectors/greenhouse.json` (repo), per-posting
-  `question_*` bindings in memory `ats_selector_bindings` (digest-bound,
-  Qdrant-synced, recallable). Sanity 81 passed.
-- Interface reshape (Graham, 2026-08-05): chat/Buzz is the interface, report
-  demoted to per-run receipt. New `memory-sync` and `nightly` CLI commands;
-  shortlist published to memory `morning_opportunities` (view-linked,
-  recall-proven broad + filtered), Buzz channel in
-  `config/notifications.json`. Scheduler registered and read back:
-  `monitor-opportunities-nightly` -> `run.sh nightly`, cron `0 2 * * *`,
-  enabled. Full nightly smoke PASS (run + memory_sync + buzz all exit 0;
-  Buzz message read back from the channel). The iPad/Tailscale remote
-  readback gate is retired — the report no longer needs serving.
-  Note for cron: the Buzz step needs BUZZ_IDENTITY_KEY/BUZZ_RELAY_URL in
-  the job environment; a Buzz failure is recorded in the nightly receipt
-  but does not fail the run. Sanity 84 passed.
-- `ats_form_prefill:greenhouse:discord` promoted (Graham: "promote prefill
-  and build the executors") and PROVEN LIVE on discord/8433948002:
-  `ats-prefill` filled all 6 exact-approved fields in the real form
-  (React-safe setters, per-field DOM readback 6/6 FILLED_VERIFIED, tel
-  digits-normalized compare), screenshot shows the filled form, submit
-  never touched, tab left open for human completion. Receipt + screenshot
-  under `/tmp/monitor-opportunities-20260805T-permitted/ats-prefill/`.
-  Surf gotchas fixed en route: `tab.activate` is listed in help but not
-  implemented (tab.new opens active; executor no longer calls it), and
-  the prefill run queues on the shared browser lease when another lane
-  (e.g. a roundtable) holds it — wait, do not kill.
-- `ats-submit` adapter exists (`ats/submit_executor.py`) but only runs
-  through `commit_application`: site `ats_form_submit` promotion +
-  per-application exact-payload human authorization + zero unresolved
-  required fields; ambiguous outcomes are INDETERMINATE for the
-  reconciliation gate. Not yet exercised live. Sanity 89 passed.
-- Base resume wired (Graham: it already existed): `base-resume` CLI
-  command resolves the active AI Architect base resume from
-  `config/resume_source.json` — ATS markdown + rendered PDF in the
-  resume repo (`~/workspace/experiments/resume`), canonical envelope in
-  memory `career_profile/resume:general:2026-08-02`. All three Discord
-  application plans now carry the real PDF sha256 as
-  `resume_digest`/`attachment_digests`. Remaining resume work:
-  per-opportunity tailored variants via the resume repo exporter, and
-  surf file-upload for the Greenhouse `#resume` input (js cannot set
-  file inputs).
-- Tailored resume artifacts live: `tailor-artifact` composes the ATS base
-  resume plus a claim-bound targeted-highlights section (only approved
-  claim wordings may be added; tests enforce it), renders PDF through the
-  resume repo exporter (`resume-job pdf`; input is positional). All five
-  shortlisted opportunities rendered with unique digests; the three
-  Discord plans now bind their opportunity-specific tailored PDF as
-  resume_digest/attachment_digests. Sanity 93 passed. Remaining toward
-  the immutable goal: screening-profile-driven keyword shaping inside the
-  variant, surf file upload at prefill, source-registry breadth, nightly
-  wiring of inspect/plan/tailor, and first authorized submit.
-
-**Previous handoff (2026-08-05 07:57, Codex) follows.**
-**Target**: `/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities`
-**Authoritative branch target**: `grahama1970/agent-skills@main`
-
-This handoff replaces the stale 2026-08-03 snapshot. The old snapshot said the
-skill only had `SKILL.md`; that is no longer true. The current tree has a
-Python package, `run.sh`, `sanity.sh`, fixtures, schemas, report/service code,
-and tests, but it is still Stage 0 and does not meet the immutable goal.
+**Branch observed**: `main` at `1c04b6d890ad6c9767894a80e51a9ee37d66a35e`
 
 ## 1. Project Overview
 
-- **Ecosystem**: Python package driven by `run.sh`, Typer CLI, JSON schemas,
-  local HTML report renderer, loopback report service, local decision ledger,
-  and pytest-based behavioral gates.
-- **Core Purpose**: Nightly opportunity monitor that finds a bounded, highly
-  relevant set of job/contract leads, ranks them, prepares claim-bound targeted
-  resume variants, and presents one interactive morning report/interview.
-- **Immutable goal**:
-
-  > Daily top opportunities that are highly targeted, delivered in an
-  > interactive report/interview, with human-authorized application preparation using a custom targeted resume
-  > given the algorithm likely employed by the employer or client.
-
-- **Current stage**: `STAGE_0_RESEARCH_ONLY`.
-- **Current external-effect rule**: `external_effects: false`. Gmail send and
-  LinkedIn automation are permanently forbidden. Gmail mailbox draft creation,
-  LinkedIn human-handoff promotion, and ATS inspect/prefill/submit remain
-  separate promotions, not Stage 0 behavior.
+- **Ecosystem**: Python skill with shell entrypoints, Typer CLI, JSON schemas, pytest
+  tests, and local report artifacts.
+- **Core purpose**: Nightly, human-in-the-loop opportunity monitor for Graham Anderson.
+  It researches targeted employment, federal/defense, commercial contract, and
+  relationship/reconnect signals; ranks a small eligible set; prepares claim-bound
+  resume/application/outreach artifacts; and renders one morning report/interview.
+- **Immutable goal**: Daily top opportunities that are highly targeted, delivered in an
+  interactive report/interview, with human-authorized application preparation using a
+  custom targeted resume and evidence-backed `screening_interface_profile`.
+- **Safety boundary**: Current stage is `STAGE_0_RESEARCH_ONLY`. `external_effects` must
+  remain `false`. No auto-apply, auto-submit, auto-send, LinkedIn automation, Gmail send,
+  or autonomous ATS mutation.
 
 ## 2. Current State (Doc-Code Alignment)
 
-`skills/monitor-opportunities/run.sh status --json` on 2026-08-05 reported:
+Current readbacks:
 
-- `contract_version: 0.2.0`
-- `operational_readiness: NOT_ESTABLISHED`
-- `network_access: true`
-- `external_effects: false`
-- implemented commands: `status`, `report`, `verify`, `sweep`, `rank`,
-  `tailor`, `decision`, `replay`, `run`, `resume`, `schedule`, `serve`
-- not implemented command: `apply`
-- blocked Stage 0 capabilities: `gmail_mailbox_draft`, `linkedin_handoff`,
-  `ats_inspect`, `ats_prefill`, `ats_submit`
-- permanently forbidden capabilities: `gmail_send`, `linkedin_automation`
+- `./skills/monitor-opportunities/run.sh status --json` returned:
+  - `stage: STAGE_0_RESEARCH_ONLY`
+  - `operational_readiness: NOT_ESTABLISHED`
+  - `external_effects: false`
+  - `not_implemented_commands: []`
+  - 27 implemented commands, including `run`, `nightly`, `apply`,
+    `tau-semantic-prepare`, `tau-semantic-provider-eval`, `report-acceptance`, and
+    `scheduler-exec-check`.
+- `python3 scripts/check_tree_fresh.py --path skills/monitor-opportunities` returned:
+  `tree freshness: branch main, 1 ahead / 0 behind origin/main` and
+  `OK: working tree matches HEAD for the checked path`.
+- No `.pi/skills/handoff/run.sh` runner exists in this repository, so this handoff uses
+  direct repository inspection and local commands as the fallback.
 
-Fresh local handoff run:
+Doc-code alignment:
 
-- command: `skills/monitor-opportunities/run.sh run --out /tmp/monitor-opportunities-handoff-run-20260805`
-- run receipt: `/tmp/monitor-opportunities-handoff-run-20260805/run-receipt.json`
-- report: `/tmp/monitor-opportunities-handoff-run-20260805/report/index.html`
-- report JSON: `/tmp/monitor-opportunities-handoff-run-20260805/report/report.json`
-- reported `live: true`, `mocked: false`, `external_effects: false`
-- terminal state: `AWAITING_HUMAN`
-- ranking receipt: 22 inspected, 5 shortlisted, 17 rejected or human-review
-- report JSON: 5 opportunities, 5 outreach packets, 3 applications
-- artifact accounting: `action_worthy_total: 14`, `visible_total: 14`,
-  `hidden_total: 0`, `hidden_ids: []`
-- lane A: searched, `MATCHES`, 20 observed, 3 admitted; receipts for
-  hiddenjobs.dev, Indeed, Greenhouse
-- lane B: searched, `MATCHES`, 1 observed, 1 admitted; receipts for DARPA and
-  SAM.gov
-- lane C: searched, `MATCHES`, 1 observed, 1 admitted; primary-company-source
-  receipt
-
-Proof scope: this proves the current local Stage 0 runner can produce a
-read-only report artifact from the current code path. It does not prove nightly
-reliability, iPad/Tailscale reachability, Buzz-agent availability, Gmail draft
-creation, LinkedIn handoff promotion, ATS form inspection, ATS prefill, ATS
-submit, or real successful applications.
-
-Doc-code drift to preserve:
-
-- `docs/PROJECT_KNOWLEDGE.md` still says the project is
-  `CONTRACT_ONLY / STAGE_0_RESEARCH_ONLY / NOT_ESTABLISHED` and describes PR
-  #1180 as the first executable state. Code has moved past pure contract-only:
-  Stage 0 commands now exist and pass local checks.
-- `SKILL.md` correctly says `run.sh status --json` and
-  `docs/PROJECT_KNOWLEDGE.md` are authoritative for current implementation
-  state, and `status` currently says `apply` is still not implemented.
-- The immutable goal now excludes autonomous apply. Application submission remains
-  human-authorized per exact opportunity and payload.
+- `README.md` says the nightly is operational and scheduled, but `status --json` still
+  reports `operational_readiness: NOT_ESTABLISHED`. Treat run-specific receipts as local
+  evidence only; do not infer complete cron or immutable-goal readiness from prose.
+- `docs/PROJECT_KNOWLEDGE.md` is the most current project context. Its top section
+  correctly records the current red sanity state caused by stale discovery fixture dates.
+- `PROJECT_STATE.md` is dated `2026-08-12` and explicitly says it is not rolling context.
+  Use it only as historical assessment metadata.
+- Previous `local/HANDOFF.md` snapshots contained superseded guidance around relationship
+  expansion. This file now leads with the current 2026-08-17 command evidence.
 
 ## 3. What is Working Well
 
-- Local Stage 0 command surface exists and runs through `run.sh`.
-- Current `sanity.sh` passed: `37 passed in 1.43s`.
-- Mock-evidence wording gate passed:
-  `python3 scripts/check_mock_evidence_claims.py` returned
-  `OK: checked 583 test file(s); no mock+proof claim violations`.
-- Current verification receipt passed:
-  `/tmp/monitor-opportunities-handoff-verify-current/verification-receipt.json`.
-  It reported `overall: PASS`, `live: true`, `mocked: false`,
-  `network_used: false`, and 9 passing cases:
-  `valid_stage0_report`, `hidden_action_artifact`,
-  `feed_down_as_no_matches`, `relocation_shortlisted`,
-  `sendable_outreach`, `ats_authorized`, `free_text_autofilled`,
-  `nine_shortlisted`, and `unknown_source_status`.
-- The fresh run produced a single source-of-truth report with hidden-artifact
-  count zero.
-- Ranking still respects the eight-opportunity cap and separates inspected,
-  shortlisted, and rejected/human-review counts.
-- The generated report includes outreach packets and application records as
-  visible Stage 0 artifacts, without sending or submitting anything.
+- Local Stage 0 report-kernel verification passed:
+  `./skills/monitor-opportunities/run.sh verify --out /tmp/monitor-opportunities-handoff-verify-20260817T155639Z`
+  wrote `/tmp/monitor-opportunities-handoff-verify-20260817T155639Z/verification-receipt.json`.
+- That receipt reports:
+  - `overall: PASS`
+  - `live: true`
+  - `mocked: false`
+  - `network_used: false`
+  - `external_effects: false`
+  - 9/9 fixture cases passing.
+- The passing verification cases cover:
+  - valid Stage 0 report rendering
+  - hidden action artifact rejection
+  - feed failure mislabeled as no-match rejection
+  - relocation-required shortlist rejection
+  - sendable outreach rejection in Stage 0
+  - ATS authorization rejection in Stage 0
+  - sensitive/free-text autofill rejection
+  - shortlist cap rejection
+  - unknown source status rejection
+- Current status shows the command surface is implemented rather than placeholder-only:
+  `not_implemented_commands: []`.
+- The tree freshness guard is present and working for this path. Run it before future
+  edits or proof claims:
+  `python3 scripts/check_tree_fresh.py --path skills/monitor-opportunities`.
 
 ## 4. What is Currently Broken
 
-- **Immutable goal is not met.** The current product is a Stage 0 read-only
-  local report, not a complete daily application-preparation workflow.
-- **`apply` is not implemented.** The CLI registers it as an unsupported command
-  that fails closed with `NOT_IMPLEMENTED`.
-- **Gmail mailbox draft creation is not promoted.** Gmail send remains
-  permanently forbidden; draft creation must be a human-gated capability
-  promotion with receipt and readback.
-- **LinkedIn platform automation is forbidden.** The project may use
-  human-supplied or human-saved LinkedIn evidence and produce local handoff
-  text, but must not log in, scrape, click, message, connect, post, or otherwise
-  drive LinkedIn.
-- **LinkedIn human-handoff readiness is still blocked in Stage 0.** The handoff
-  packet path needs promotion if the next product slice wants ready-to-send
-  InMail/connection-note packets.
-- **ATS inspect/prefill/submit are still blocked in Stage 0.** Each provider or
-  site needs explicit capability promotion, exact payload binding, idempotency,
-  readback, and `INDETERMINATE` reconciliation before any external effect.
-- **Buzz integration is not proven by the current repo check.** A prior Aug 4
-  run posted/read back update receipts through a fallback Buzz channel, but the
-  current Stage 0 code state no longer contains the previously added
-  `buzz_review.py` module in the worktree diff.
-- **Tailscale/iPad reachability is not proven by the fresh Aug 5 run.** Prior
-  Aug 4 artifacts showed loopback report health and Tailscale serve
-  configuration, but local readback of the tailnet URL timed out with curl exit
-  28. Keep loopback proof separate from remote-device proof.
-- **Repository state is risky.** `git diff --stat -- skills/monitor-opportunities`
-  shows 48 changed paths with 244 insertions and 3965 deletions. Deleted files
-  include application/ATS/outreach/Buzz modules and tests:
-  `application_packets.py`, `application_plan.py`, `buzz_review.py`,
-  `gmail_handoff.py`, `linkedin_handoff.py`, `outreach.py`,
-  `roundtable_gate.py`, `tests/test_application_gates.py`,
-  `tests/test_buzz_review.py`, and `tests/test_outreach.py`. Treat these as
-  current uncommitted state that must be reconciled before claiming the broader
-  product is restored.
+### Failed Tests
+
+`./skills/monitor-opportunities/sanity.sh` is red:
+
+- Result: `17 failed, 406 passed in 65.09s`.
+- Shared failure signature: the committed discovery fixture under
+  `skills/monitor-opportunities/tests/fixtures/discovery/` has aged out of the two-week
+  recency window. Fixture runs produce zero shortlisted opportunities, so downstream
+  tests fail when they expect report-visible opportunities, tailoring receipts,
+  application packets, Gmail outreach packets, or Tau semantic inputs.
+
+Failing test files/functions observed:
+
+- `tests/test_buzz_review.py::test_buzz_summary_emits_ops_buzz_message_dry_run`
+- `tests/test_claim_snapshot_binding.py::test_report_claim_artifacts_share_one_snapshot_digest`
+- `tests/test_cli.py::test_apply_requires_exact_report_visible_packet`
+- `tests/test_cli.py::test_apply_blocks_unresolved_human_required_fields`
+- `tests/test_eligibility.py::test_rank_is_stable_and_caps_shortlist`
+- `tests/test_pipeline.py::test_run_creates_one_report_and_receipt`
+- `tests/test_pipeline.py::test_run_with_linkedin_contact_evidence_renders_second_degree_signal`
+- `tests/test_pipeline.py::test_run_renders_reviewed_gmail_draft_receipt`
+- `tests/test_report_acceptance.py::test_report_acceptance_fails_shortlist_overflow`
+- `tests/test_report_acceptance.py::test_report_acceptance_fails_authorized_or_effectful_application_packet`
+- `tests/test_report_visibility.py::test_loopback_service_decisions_replay_and_visibility`
+- `tests/test_tau_semantic_prepare.py::test_tau_semantic_prepare_writes_validated_inputs`
+- `tests/test_tau_semantic_prepare.py::test_tau_semantic_prepare_includes_direct_relationship_evidence`
+- `tests/test_tau_semantic_prepare.py::test_tau_semantic_prepare_rejects_meetup_primary_input`
+- `tests/test_tau_semantic_provider.py::test_tau_semantic_install_projects_addendum_into_interview_page`
+- `tests/test_visibility_accounting.py::test_authoritative_shortlist_cap_prevents_hidden_downstream_ids`
+- `tests/test_visibility_accounting.py::test_prior_applied_alias_dedupe_suppresses_downstream_artifacts`
+
+### Known Issues
+
+- The active test blocker is not a broad pipeline regression; it is a dated-fixture time
+  bomb. Either freeze the test clock or generate fixture dates relative to the test run.
+- `operational_readiness: NOT_ESTABLISHED` remains the authoritative status result until
+  the readiness command changes and is read back.
+- Stage 0 deliberately blocks ATS inspect/prefill/submit, Gmail mailbox draft/send, and
+  LinkedIn handoff/automation. Do not treat those as broken unless the task is a scoped
+  capability promotion.
+- Repository-level working tree is heavily dirty outside `skills/monitor-opportunities`.
+  Do not reset, stash, clean, or stage unrelated paths. Use path-scoped status/diff/add.
+
+### Recent Regressions / Risk Notes
+
+- `docs/PROJECT_KNOWLEDGE.md` documents a 2026-08-17 stale-working-tree incident where
+  missing tracked files made a live run prove the wrong tree. Always run the freshness
+  guard before testing or editing.
+- Recent path-scoped commits:
+  - `ce9ecfa451 monitor-opportunities: target AI, agentic pipelines, agentic extraction, R&D, robotics`
+  - `07c99981a5 monitor-opportunities: stop local run artifacts from marking the skill tree dirty`
+  - `8d055b3c43 monitor-opportunities: record current red sanity state and the stale-tree guard`
+  - `eee45fb278 Restore project knowledge content dropped by a stale working tree`
+  - `4b2b7e8ca7 monitor-opportunities: record relationship expansion lane in project knowledge`
 
 ## 5. Next Steps
 
-1. Preserve or reconcile the current uncommitted monitor-opportunities delta.
-   Decide whether the large deletion/simplification set is intentional. If it
-   is intentional, update `docs/PROJECT_KNOWLEDGE.md` and tickets to say the
-   outreach/ATS/Buzz promotion modules were rolled back. If it is not
-   intentional, recover the deleted modules/tests from the relevant commits
-   without using broad reset/checkout.
-2. Run and inspect a fresh morning report from the intended repo state:
-   `skills/monitor-opportunities/run.sh run --out /tmp/monitor-opportunities-$(date -u +%Y%m%dT%H%M%SZ)`.
-   Read back `run-receipt.json`, `report/report.json`, and
-   `artifact_accounting.hidden_total`.
-3. Serve that report through the loopback service and Tailscale. Prove both:
-   loopback health with `curl http://127.0.0.1:<port>/health`, and remote/iPad
-   reachability from another Tailscale client. Do not treat Tailscale serve
-   config as remote readback proof.
-4. Restore the Buzz availability path for ops-buzz agents. Required artifact:
-   a Buzz post receipt and readback pointing to the current report/run, with the
-   accepted channel identity recorded. If the restricted channel rejects the
-   identity again, either add the identity to that channel or make the fallback
-   channel the configured channel.
-5. Promote Gmail draft creation only after the current report/outreach packet
-   contract is stable. Required behavior: create mailbox drafts, never send,
-   read back draft IDs/links, and render them in the report with
-   `candidate_transmits: true`.
-6. Promote LinkedIn local handoff only after it is separated from platform
-   automation. Required behavior: use human-supplied/saved LinkedIn opportunity
-   evidence, write local InMail/connection-note handoff packets, run `/ask`
-   roundtable, and expose final human-transmitted text in the report.
-7. Promote ATS capabilities last and per provider/site. Required order:
-   inspect form, bind exact schema and fields, generate targeted resume, mark
-   unknown/free-text/sensitive fields `human_required`, request exact human
-   authorization, then prefill/submit only within the authorized payload.
-8. Register or refresh the nightly scheduler only after the above Stage 0 report
-   path and Tailscale/Buzz readbacks are current. Registration must be read back
-   by name, command, working directory, cron, and enabled state.
+1. Fix the dated discovery fixture failure family. Choose one invariant and apply it
+   consistently:
+   freeze time in affected tests, or make fixture dates relative to the test run.
+2. Re-run `./skills/monitor-opportunities/sanity.sh` from the repo root and require
+   the current `17 failed, 406 passed` signature to disappear.
+3. Re-run `./skills/monitor-opportunities/run.sh status --json`; do not claim readiness
+   until `operational_readiness` reflects the intended stage and the command explains the
+   evidence behind that state.
+4. Re-run the local verify receipt:
+   `./skills/monitor-opportunities/run.sh verify --out /tmp/<fresh-dir>`.
+5. Only after deterministic sanity is green, run the live Stage 0 path needed for the
+   current acceptance rung, then bind the result to receipts and Memory/Buzz readbacks.
+6. Keep external effects blocked unless a separate human-authorized capability promotion
+   is explicitly requested and receipt-backed.
 
 ## 6. Project Context for Success
 
 Key files:
 
-- `SKILL.md`: immutable goal, lane policy, command contract, capability
-  authority, human-transmission rules.
-- `docs/PROJECT_KNOWLEDGE.md`: implementation sequence and non-claims; currently
-  stale relative to the existing command surface.
-- `run.sh`: skill runtime wrapper.
-- `sanity.sh`: current deterministic gate runner.
-- `src/monitor_opportunities/cli.py`: command surface and capability status.
-- `src/monitor_opportunities/discovery.py`: read-only source discovery.
-- `src/monitor_opportunities/ranking.py`: eligibility-before-ranking path.
-- `src/monitor_opportunities/tailoring.py`: claim-bound resume variant path.
-- `src/monitor_opportunities/report.py`: report rendering and visibility surface.
-- `src/monitor_opportunities/service.py`: token-gated loopback report service.
-- `src/monitor_opportunities/verification.py`: positive and adversarial local
-  Stage 0 verification.
-- `schemas/report.schema.json`: report manifest contract and hidden-artifact
-  invariant.
-- `fixtures/reports/stage0_mixed_lanes.json`: built-in Stage 0 fixture.
+- `skills/monitor-opportunities/SKILL.md` — immutable goal, stage authority, lanes,
+  source/fallback policy, and no-auto-effect rules.
+- `skills/monitor-opportunities/docs/PROJECT_KNOWLEDGE.md` — current implementation
+  state and known red sanity cause.
+- `skills/monitor-opportunities/src/monitor_opportunities/cli.py` — command surface,
+  status output, nightly orchestration, and stage gates.
+- `skills/monitor-opportunities/src/monitor_opportunities/pipeline.py` — run pipeline,
+  required-source enforcement, API website fallback, ranking/tailoring/report flow.
+- `skills/monitor-opportunities/src/monitor_opportunities/eligibility.py` and
+  `ranking.py` — eligibility-before-ranking behavior.
+- `skills/monitor-opportunities/src/monitor_opportunities/report.py` and
+  `report_acceptance.py` — report rendering and visibility/acceptance checks.
+- `skills/monitor-opportunities/src/monitor_opportunities/verification.py` — local
+  Stage 0 verify receipt.
+- `skills/monitor-opportunities/tests/fixtures/discovery/` — current failing fixture
+  family.
+- `skills/monitor-opportunities/tests/test_*` — broad pytest coverage; many failing tests
+  currently share the stale-recency fixture root cause.
 
-Recent commits touching this skill:
+Working rules for the next agent:
 
-- `e9c5080b6 Wire monitor opportunities buzz summary`
-- `7d4edda6a Add authorized LinkedIn opportunity capture`
-- `283f40e0a Wire reviewed outreach receipts into opportunity report`
-- `c064a117e monitor-opportunities: add ATS application gates`
-- `3757710d6 monitor-opportunities: add local outreach handoff gates`
-- `8f8642678 Bind application packets to resume artifacts`
-- `83c27d744 Add local LinkedIn evidence intake`
-- `184e02448 monitor-opportunities: render morning opportunity interview`
-
-Prior Aug 4 evidence that may still matter during recovery/reconciliation:
-
-- run root: `/tmp/monitor-morning-run-20260804T221811Z`
-- consolidated receipt:
-  `/tmp/monitor-morning-run-20260804T221811Z/morning-handoff-receipt.json`
-- report manifest:
-  `/tmp/monitor-morning-run-20260804T221811Z/report-manifest.json`
-- report JSON:
-  `/tmp/monitor-morning-run-20260804T221811Z/report/report.json`
-- verification receipt:
-  `/tmp/monitor-morning-run-20260804T221811Z/verify/verification-receipt.json`
-- ask-gated outreach screenshot:
-  `/tmp/monitor-morning-run-20260804T221811Z/report/ask-gated-outreach-section-screenshot.png`
-- ask-gated live screenshot receipt:
-  `/tmp/monitor-morning-run-20260804T221811Z/report/ask-gated-outreach-live-screenshot-receipt.json`
-- Buzz roundtable update post receipt:
-  `/tmp/monitor-morning-run-20260804T221811Z/outreach-contact-packets/ask-roundtable/buzz-roundtable-update-post-receipt.json`
-- Buzz roundtable update readback:
-  `/tmp/monitor-morning-run-20260804T221811Z/outreach-contact-packets/ask-roundtable/buzz-roundtable-update-readback.json`
-
-Do not copy any local report URL token into committed docs. Use the receipt paths
-above and generate a fresh token when serving a report.
+- Start with `git status --short -- skills/monitor-opportunities` and
+  `python3 scripts/check_tree_fresh.py --path skills/monitor-opportunities`.
+- Do not use broad git cleanup in this repository.
+- Do not touch external-effect capabilities unless explicitly authorized.
+- Treat mocked/fixture checks as local wiring or deterministic contract evidence only.
+- Treat live receipts as scoped to the specific run directory and source version.
 
 Immutable Goal: NOT_MET
