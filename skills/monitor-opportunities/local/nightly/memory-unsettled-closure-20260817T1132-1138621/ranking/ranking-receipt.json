@@ -1,0 +1,27 @@
+{
+  "admitted": 46,
+  "duplicates_dropped": 11,
+  "duplicates_merged_into": {
+    "candidate:a:233dd622056c6e55": "candidate:a:0a489d7daefc5d12",
+    "candidate:a:38c8c4bb0f24ae09": "candidate:a:08d0081a7fc10fc9",
+    "candidate:a:931b8c00d74e3802": "candidate:a:13f52f2f4e4e9b87",
+    "candidate:a:9835adac5bd4a715": "candidate:a:13049a69e0eb2a56",
+    "candidate:a:9ec458b5be73a4bc": "candidate:a:13049a69e0eb2a56",
+    "candidate:a:a55edbb0536f0d24": "candidate:a:2d29d6733f70058c",
+    "candidate:a:ae5ec60e3547f18b": "candidate:a:13049a69e0eb2a56",
+    "candidate:a:b5e9f556d4fcc155": "candidate:a:13049a69e0eb2a56",
+    "candidate:a:c5d90d5accc22112": "candidate:a:0aa9febc8b601005",
+    "candidate:a:faa58cf1498422c1": "candidate:a:537675111f7bcab9",
+    "candidate:a:fc4c4af09a4decb1": "candidate:a:13049a69e0eb2a56"
+  },
+  "external_effects": false,
+  "generated_at": "2026-08-17T11:29:46.868370Z",
+  "input": "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/discovery",
+  "inspected": 260,
+  "limit": 150,
+  "live": true,
+  "mocked": false,
+  "rejected_or_review": 214,
+  "schema": "monitor_opportunities.rank_receipt.v1",
+  "shortlisted": 46
+}

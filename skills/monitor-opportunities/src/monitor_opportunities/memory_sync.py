@@ -543,6 +543,7 @@ def sync_run_to_memory(
         for document in documents
         if document.get("schema") == "monitor_opportunities.relationship_signal.v1"
     ]
+    relationship_readback_state = _relationship_readback_state(relationship_keys, readback_key_set)
     return {
         "schema": "monitor_opportunities.memory_sync_receipt.v1",
         "collection": MORNING_COLLECTION,
@@ -551,7 +552,9 @@ def sync_run_to_memory(
         "readback_missing_keys": missing_keys,
         "readback_count": len(readback_keys),
         "readback_found": not missing_keys,
-        "relationship_readback_found": all(key in readback_key_set for key in relationship_keys),
+        "relationship_signal_count": len(relationship_keys),
+        "relationship_readback_state": relationship_readback_state,
+        "relationship_readback_found": relationship_readback_state == "FOUND",
         "readback_external_effects_false": all(
             item.get("external_effects") is False for item in readback_documents
         ),
@@ -559,3 +562,14 @@ def sync_run_to_memory(
         "relationship_signals_included": include_relationship_signals,
         "external_effects": False,
     }
+
+
+def _relationship_readback_state(
+    relationship_keys: list[str],
+    readback_key_set: set[str],
+) -> str:
+    if not relationship_keys:
+        return "NO_RELATIONSHIP_SIGNALS"
+    if all(key in readback_key_set for key in relationship_keys):
+        return "FOUND"
+    return "MISSING_RELATIONSHIP_KEYS"

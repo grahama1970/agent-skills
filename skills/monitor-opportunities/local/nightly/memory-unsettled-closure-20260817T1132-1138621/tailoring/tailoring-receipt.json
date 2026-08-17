@@ -1,0 +1,34 @@
+{
+  "claim_snapshot_sha256": "6b88c7385229972ed72c9178e029cad570d39c8c5e1ad24cc19b04a7e9eda3d9",
+  "docx_hash_normalization": "Minimal writer emits no dynamic metadata; hash is deterministic for identical lines.",
+  "external_effects": false,
+  "generated_at": "2026-08-17T11:29:46.922264Z",
+  "inferred": [
+    "Single-column DOCX is parser-sensitive and safer than table or text-box layout."
+  ],
+  "live": true,
+  "mocked": false,
+  "non_claims": [
+    "This receipt proves local claim-bound rendering only, not employer selection."
+  ],
+  "not_claimed": [
+    "No employer ranking weights are known.",
+    "No recruiter workflow is known.",
+    "No candidate fact outside approved claim wording was rendered.",
+    "This receipt proves local claim-bound rendering only, not employer selection."
+  ],
+  "observed": [
+    "Source provider: ops_linkedin_authorized_read_only",
+    "Primary evidence: https://www.linkedin.com/jobs/view/4446275712/"
+  ],
+  "posting_digest": "af6000c0bccaf6e09b4da14fba0de05f39e7538a8a97a990bed0990c76cf7d8d",
+  "presentation_diff_sha256": "06913914245f80111ffeac0674ea344886d3039255391494b5f4673dee797ebf",
+  "resume_docx_sha256": "a2609077ce8a63701072f3a0270883b322697a926afa164343269f914e6f6f3a",
+  "resume_txt_sha256": "11595e7705872cb02acb14db3972083a88ac809937c71e85c8e976712bab2b54",
+  "schema": "monitor_opportunities.tailoring_receipt.v1",
+  "screening_interface_profile_sha256": "49c1aea3d4c09eacc1f1ead2d223134db93a411f3810fddaf5c1379cd590665c",
+  "unknown": [
+    "Employer ranking weights, knockout logic, and recruiter workflow are unknown."
+  ],
+  "variant_id": "resume:eaace78547791313"
+}

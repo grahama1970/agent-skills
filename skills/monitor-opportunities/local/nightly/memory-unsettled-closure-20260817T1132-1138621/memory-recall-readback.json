@@ -1,0 +1,18 @@
+{
+  "confidence": 0.733,
+  "errors": [],
+  "found": true,
+  "meta_took_ms": 27,
+  "schema": "monitor_opportunities.memory_recall_readback.v1",
+  "should_scan": false,
+  "status_code": 200,
+  "top_keys": [
+    "2026-08-17-run-summary-050183db486da25e",
+    "2026-08-13-run-summary-248d4c0c19779e4b",
+    "2026-08-16-run-summary-c2f9ef7ec9b22a73",
+    "2026-08-14-run-summary-66dc9bdef4a9c60a",
+    "2026-08-14-run-summary-2ca75ee99fc21198"
+  ],
+  "top_text": "Run mo_050183db486da25e shortlisted 8 opportunities.\nLane A: MATCHES (35/257)\nLane B: MATCHES (10/13)\nLane C: MATCHES (1/1)\nHidden action-worthy artifacts: 0.\nRun directory (frozen report receipt): skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621",
+  "wall_ms": 39.8
+}

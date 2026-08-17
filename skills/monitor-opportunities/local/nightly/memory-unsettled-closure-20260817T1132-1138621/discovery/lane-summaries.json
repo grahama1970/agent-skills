@@ -1,0 +1,66 @@
+[
+  {
+    "candidates_observed": 257,
+    "lane": "A",
+    "result_status": "MATCHES",
+    "searched": true,
+    "source_receipt_ids": [
+      "src:a:hiddenjobs.dev:4254e0a64de17433",
+      "src:a:indeed:895e8193d06b79b7",
+      "src:a:duckduckgo:6b6239492ae56e07",
+      "src:a:linkedin:5f202c870ad7dcdd",
+      "src:a:greenhouse:ef6fb71a87805596",
+      "src:a:greenhouse:f2bceb1931b8d43d",
+      "src:a:ashby:1cbb67767b7b11f6",
+      "src:a:ashby:fff35d51a5efa5c6",
+      "src:a:ashby:b93ac814ce6e3541",
+      "src:a:ashby:0527bf0c43f0196c",
+      "src:a:ashby:4fa23db854876afa",
+      "src:a:greenhouse:1683b70142214f9b",
+      "src:a:greenhouse:14a4e0785f8a4cb7",
+      "src:a:greenhouse:dff1dd08226a3439",
+      "src:a:ashby:ec69d8f59d4d8faf",
+      "src:a:ashby:203415b41f9c219e",
+      "src:a:ashby:f38994d95a31074f",
+      "src:a:ashby:6fbd6c7875bb759a",
+      "src:a:ashby:ae540d19c4540a14",
+      "src:a:ashby:9ccae16cf8b8fdd5",
+      "src:a:ashby:378b4a9c4ed80e80",
+      "src:a:ashby:02e5d9224502b94d",
+      "src:a:ashby:3486d1105fa91b06",
+      "src:a:ashby:850f14345ff0b33d",
+      "src:a:ashby:c485a44c72e0cfa8",
+      "src:a:ashby:43b7d8b81025c611",
+      "src:a:ashby:b4615e77f9d6f7b2",
+      "src:a:ashby:a84188a65678fdc4",
+      "src:a:ashby:81a6dac6e68c3c07",
+      "src:a:lever:3fa73a1bdc04a836",
+      "src:a:greenhouse:6a038047f495e8f1",
+      "src:a:greenhouse:3a364a49884e9e13",
+      "src:a:greenhouse:e55a131bf3336030",
+      "src:a:builtin:898d0a7bf2beee03",
+      "src:a:builtin:d7411fec7320b083"
+    ]
+  },
+  {
+    "candidates_observed": 13,
+    "lane": "B",
+    "result_status": "MATCHES",
+    "searched": true,
+    "source_receipt_ids": [
+      "src:b:darpa:ea9d496175155443",
+      "src:b:sam.gov:a3a8fe36b26e2e4f",
+      "src:b:sam.gov:e823df13669ad64d"
+    ]
+  },
+  {
+    "candidates_observed": 1,
+    "lane": "C",
+    "result_status": "MATCHES",
+    "searched": true,
+    "source_receipt_ids": [
+      "src:c:client-research:61009f7a9bcd5f41",
+      "src:c:primary-company-source:83a52d52c6cc2fe5"
+    ]
+  }
+]

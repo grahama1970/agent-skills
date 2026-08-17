@@ -1,0 +1,4324 @@
+{
+  "application_packets": [
+    {
+      "action_worthy": true,
+      "application_id": "application:4643d7cf04130f70",
+      "approval_payload_digest": "f24d4ad9cf592e94903f7c0e283e66f84d48d567ebec0edebf027ba80b9bf5fb",
+      "approval_status": "NOT_AUTHORIZED",
+      "attachment_digest": "e4ae2611522e9b72b5ba65bae0172aa67a0cd7eec1d2bc82b4194813ebcb31a9",
+      "claim_snapshot_digest": "6b88c7385229972ed72c9178e029cad570d39c8c5e1ad24cc19b04a7e9eda3d9",
+      "created_at": "2026-08-17T11:29:46.927818Z",
+      "external_effects": false,
+      "field_answer_digest": "7468572dc8e3990e2fb72c1bdcb08c7d28778865570bfd1759f9c50ad316bc50",
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "outreach_digest": "7afc99b5ab7189e683c645b3e941ae5b32c9bc64ceff0f796d3f20df4479847e",
+      "packet_id": "application-packet:ad299fe68517d930",
+      "packet_ref": "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/application-packets/application-packet-ad299fe68517d930.json",
+      "policy_observations": [
+        "Stage 0 packet is local and read-only.",
+        "Every free-text and sensitive field remains human_required unless exact approved answer exists.",
+        "Authorization binds this exact packet digest and is not reusable after drift.",
+        "No application submit, Gmail send, or LinkedIn platform action is performed."
+      ],
+      "policy_observations_digest": "822ac53e25dd98b756890d0d2b06501893ff69ecdcf432aaf70649f96c36a507",
+      "posting_digest": "98734d7d2135b6b8c831de90060f0bd51fbdc21fd9a155776d25042a78bdf755",
+      "resume_artifacts": [
+        {
+          "exists": true,
+          "path": "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/tailoring/resume.txt",
+          "sha256": "11595e7705872cb02acb14db3972083a88ac809937c71e85c8e976712bab2b54"
+        },
+        {
+          "exists": true,
+          "path": "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/tailoring/resume.docx",
+          "sha256": "a2609077ce8a63701072f3a0270883b322697a926afa164343269f914e6f6f3a"
+        }
+      ],
+      "resume_digest": "e4ae2611522e9b72b5ba65bae0172aa67a0cd7eec1d2bc82b4194813ebcb31a9",
+      "resume_variant_id": "resume:eaace78547791313",
+      "schema": "monitor_opportunities.application_packet.v1",
+      "screening_interface_profile_digest": "03404d67fefd8db8ef2dc4248cad00a8ba46e3d65154444f56af82031bccba1d",
+      "visible_in_report": true
+    }
+  ],
+  "applications": [
+    {
+      "action_worthy": true,
+      "application_id": "application:4643d7cf04130f70",
+      "ats_provider": "greenhouse",
+      "authorized": false,
+      "fields": [
+        {
+          "automated_answer": null,
+          "disposition": "human_required",
+          "field_type": "free_text",
+          "name": "Why this role?",
+          "required": true
+        }
+      ],
+      "form_schema_digest": "2f6f311d081b2b6a3a4366ece282f7bb0ae10ead0bccc744eea369a4389fdc4a",
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "state": "BLOCKED_STAGE_0",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "application_id": "application:b00f18111289fa09",
+      "ats_provider": "greenhouse",
+      "authorized": false,
+      "fields": [
+        {
+          "automated_answer": null,
+          "disposition": "human_required",
+          "field_type": "free_text",
+          "name": "Why this role?",
+          "required": true
+        }
+      ],
+      "form_schema_digest": "0bad06188448ee2b1451f11e4cc424190792326c65ff953e66b317a1fb11653a",
+      "opportunity_id": "candidate:a:linkedin:c95cee7cc94b6048",
+      "state": "BLOCKED_STAGE_0",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "application_id": "application:af2c8c2c7b542de6",
+      "ats_provider": "greenhouse",
+      "authorized": false,
+      "fields": [
+        {
+          "automated_answer": null,
+          "disposition": "human_required",
+          "field_type": "free_text",
+          "name": "Why this role?",
+          "required": true
+        }
+      ],
+      "form_schema_digest": "e6bf9258275a23b1f6aa63c73f8c94c8be40ecd5bff9971969fd22b7eac56358",
+      "opportunity_id": "candidate:a:linkedin:10257292d60b155d",
+      "state": "BLOCKED_STAGE_0",
+      "visible_in_report": true
+    }
+  ],
+  "artifact_accounting": {
+    "action_worthy_total": 29,
+    "hidden_ids": [],
+    "hidden_total": 0,
+    "visible_total": 29
+  },
+  "capability_authority": {
+    "ats_form_inspect": "BLOCKED_STAGE_0",
+    "ats_form_prefill": "BLOCKED_STAGE_0",
+    "ats_form_submit": "BLOCKED_STAGE_0",
+    "gmail_mailbox_draft_create": "BLOCKED_STAGE_0",
+    "linkedin_human_handoff_ready": "BLOCKED_STAGE_0",
+    "local_report": "ALLOWED",
+    "local_resume_variant": "ALLOWED"
+  },
+  "contract_version": "0.2.0",
+  "decision_actions": [
+    {
+      "action": "KEEP",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "REJECT",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "DEFER",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "ATTEND_MEETUP",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "WATCH_MEETUP",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "SKIP_MEETUP",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "opportunity"
+    },
+    {
+      "action": "RECONNECT_CONTACT",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "relationship_signal"
+    },
+    {
+      "action": "DEFER_CONTACT",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "relationship_signal"
+    },
+    {
+      "action": "ACCEPT_RESUME_VARIANT",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "resume_variant"
+    },
+    {
+      "action": "PROPOSE_CLAIM_AMENDMENT",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "resume_variant"
+    },
+    {
+      "action": "WITHHOLD_APPLICATION",
+      "effects_external": false,
+      "enabled": true,
+      "target_type": "application"
+    },
+    {
+      "action": "AUTHORIZE_APPLICATION_PAYLOAD",
+      "effects_external": false,
+      "enabled": false,
+      "target_type": "application"
+    },
+    {
+      "action": "MARK_HUMAN_SENT_GMAIL",
+      "effects_external": false,
+      "enabled": false,
+      "target_type": "outreach_packet"
+    },
+    {
+      "action": "MARK_HUMAN_SENT_LINKEDIN",
+      "effects_external": false,
+      "enabled": false,
+      "target_type": "outreach_packet"
+    }
+  ],
+  "eligibility_rejections": [
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:927e84d534129848",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Program Manager, Detection & Enforcement, Youth Safety",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:0f032566797ffb59",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Security Analyst",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:15e1553cf86d4c36",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Implementation Specialist, CMMC",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d9e910039ee387d5",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Senior Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:53ca83145b2ac3dc",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Senior Associate, PCI Assurance",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Weaviate",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:199edae4aef153d0",
+      "source_receipt_id": "src:a:ashby:b4615e77f9d6f7b2",
+      "title": "Director of Product",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:a24304712f921461",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:2d2af50ef212a3fd",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Back End Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:ad920ed0da45cf45",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Software Engineering Intern",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:e8a550a8e152cce6",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Director, Corporate Legal (AGC)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:86c9464839d16622",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Don’t See a Perfect Role? Apply Anyway!",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:42a5e42e178ca6b6",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "SVP, Platform (Engineering & Product)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:d091941a7edb71d3",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Advertising Operations Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:222afb7b560747ae",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Applied AI/ML Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:3c7394a4f3b17a2c",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Success Manager, UKI",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:bb1813664fdec275",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Senior AI Product Engineer 2, Audit",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:b0d17103345dc969",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Sales Development Representative, Inbound",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a0dbb5e0230610a0",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Lead Software Engineer, Platform ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:0e1e925904884736",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Partner Development Representative",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:018d5ec6c8d752aa",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Regional Security Manager, Bay Area",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c3a8bae836cd6402",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Forward Deployed Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:7cb28efdf7130f7a",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (AI Infrastructure Engineer)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:547d7d6b6edb4fd7",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Senior Product Design ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:f0e6243e405bb104",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Account Executive, Early Stage - EMEA",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:ad171622a1be0030",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Engagement Manager, AI Solutions - Federal",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:3db81d43699c8c78",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Don’t See Your Role?",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Pinecone",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:35a806ac8d01b7b2",
+      "source_receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "title": "Senior Account Executive - Enterprise",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:d3fb4377f53d35f8",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Lead Product Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:b8aa38418f950bc8",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Account Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:b3d73eaa4a7a476c",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Founding Engineer, Open Source",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:3adc2a3d2cfe1b0d",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Deployed Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:56b24662daf4fafa",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Senior Platform AI Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:8b93a3b80d979b58",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Research Engineer, Post-Training",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:b9527b9de2473431",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "AI Product Engineer, Evidence",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:682a296a7a401a6a",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Mid-Market Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:02f138a30c585544",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Growth ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:47ebcd6509fce53f",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Solutions Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:1b826def7be228e3",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Staff Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d6c5e75d6cedade9",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "AI engineer (UK) ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:565b7722f70e8184",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "AI Research Scientist",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:7eae89e1f449e3ed",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Member of Technical Staff, Frontend Product",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a2465f9222bb2a4b",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (Machine Learning Engineer, Search)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c7988f6bb38bdde1",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Backend/AI Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Pinecone",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a626d25545e52477",
+      "source_receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "title": "Senior/Staff Software Engineer, Search & Retrieval Infrastructure",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:2dc237f6a08b60bd",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Machine Learning / Data Scientist",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:fb9fd8a95ba38e46",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Designer, Creative Services",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:2560f15b88043ad8",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Director, Research - Evaluation & Training",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:1d5655b9a0c64fbc",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Field Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:0f0829cfaef03b2d",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Customer Success Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:3c58edc6b5033074",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Founding Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:e130f12091cb8cae",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Account Manager, Advertising Solutions",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:b53b7b826644ba5f",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Associate Product Marketing Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Pinecone",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a071f1a0019c758e",
+      "source_receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "title": "Senior/Staff Software Engineer, Database Team",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:8e9c2785be8f5255",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Security engineer, detection and response (UK)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Instabase",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:93fefc2638203e86",
+      "source_receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "title": "Software Engineer - Agent Harness",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:9b372d2411b5ec6d",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Deployed Engineer - Europe",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:e1a5db2cee10edf2",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Applied AI Engineer - Enterprise Solutions",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Pinecone",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:d55129a8603841f9",
+      "source_receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "title": "Technical Product Marketing Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c71018acad5bded3",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Senior IT Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Instabase",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:78ab9a60998b9610",
+      "source_receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "title": "Full-Stack Engineer, Core Services (Senior Level)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:c5ecb88d6604ae27",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Solutions Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:cf156c2890d623bb",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Mid-Market Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Unstructured",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:1eff5acc2756e742",
+      "source_receipt_id": "src:a:ashby:fff35d51a5efa5c6",
+      "title": "Navy Account Executive - Public Sector ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:2f8d9f98273a9d2d",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Account Manager, Renewals & Expansion",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:613e0c8e661120e4",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Account Executive, SMB",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c32caa9e13e6df63",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "AI engineer ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:535a9c2f4bf3ebc7",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "AI Sales Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:85a7357f84d89167",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (Search Engine Developer, Search Core)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:1aad7062d1de1612",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Oracle ERP Fusion Functional Analyst",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:f667bfff3aa7f9c9",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Client Infrastructure",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:92d16229efa2ebab",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Forward Deployed Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:4613cb6adf39e2d3",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Accounting Manager, Technical Accounting & Financial Reporting",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c1b2e05e4567c5e1",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Senior Fullstack Engineer,  AI Observability & Evals Platform ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:366240737b2fb23e",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Enterprise Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:68b3a2572bd9d513",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Success Manager, Mid-Market North Central & Northwest",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:1e699fd1528ff8ee",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "JavaScript Engineer (Open Source Team) ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:91eb13ba9c9c4f84",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Account Executive- (Expression of Interest) APJ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:5207649d15aae142",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Senior Account Executive, Growth Stage",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:6c56b1eab2a5c7c4",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Senior Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:9ef201c40cfc2571",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Data Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:3e78a8600d1ef59f",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Senior Software Engineer 2",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:f40f2c4331b0908d",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Founding Customer Success Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:2e532f67c28060b6",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "GTM Recruiter ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:4cf7cbec7c4c2378",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Product Marketing Manager, Partnerships",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:31ef95f641a9c1a2",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Director of Strategic Partnerships",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:1c638038e072dbf7",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "Implementation Engineer, TPRM",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:d269f56a70b63175",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Enterprise Account Manager (India)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a1a0159142e68e05",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Software engineer, generative AI (UK)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:43722c3c6612f3ca",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Director, Research - Human Data Systems",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:0b597114a45865b3",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Sales Solutions Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:bf1d9fa8024c1148",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Solutions Engineer ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:fc0a9768f4c32b6d",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Pentest Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:e2fcfd9c3ddc9f82",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (Software Engineer, Monetization)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:b363a04df40c29b4",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Generalist",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:34d31a963ab6f55d",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Enterprise Account Executive (Missouri)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:c6432242648a4195",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Solutions Engineer Post-Sales",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:dab69005e17ba939",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Field Marketing Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:6eba769504f589a9",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Commercial Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:88fcc205c95f411d",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Machine Learning Researcher",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:88a1c1505a36ca7d",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Success Analytics Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:7c550259e2c74fbc",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Engineering Lead",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:346640f329286fef",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Customer Success & Enterprise Support Lead, APAC ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:9a61550fd43476b3",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Data Science Graduate Student Intern",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c5c62a1efdc232dd",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Security engineer, application security",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:3ca654125a20fc1e",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Founding Pre-Sales Solutions Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:f91760aff5544db0",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Growth Account Executive",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a28a2326a6074c12",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Member of Technical Staff, Infrastructure",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d00fb2c918c0b9d4",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Python OSS Engineer ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:dc06745f9d47bf52",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Deep Learning Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:778903a6ba4d7ea6",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Software engineer, generative AI",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:004de08806c16448",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:a24452bb746c4014",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Data Science PhD Intern",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a2b8ba1f78b47843",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Software Engineer, Frontend",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:ce48dfd776a1d119",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Software Engineering Manager, AI Observability & Evals Platform (New York, NY)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:16ae29126a6e9351",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Software engineer, connectors & MCP",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Instabase",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:c1ddd993476accd9",
+      "source_receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "title": "Software Engineer, Distributed Systems & AI Agents (Senior Level)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:65dfe19f75deb0d3",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Applied AI Engineer, Federal - Top Secret Clearance",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:897d72e6c876b83d",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, ML Research ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:16945420c0fe74db",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "QA/DevOps Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:7270a1d123f26beb",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Product Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d64d8524aa5e8b25",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "AI Content Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Instabase",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:ed080230b58b0767",
+      "source_receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "title": "Senior Customer Engagement Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:564fc566819d28a6",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Director of Engineering, Safety",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:23c633c3ea919ef8",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Security engineer, detection and response",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Dust",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d3b3cf109dcce0d7",
+      "source_receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "title": "Senior AI Support Engineer (Paris)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:cd424341d191d849",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Success Manager, Enterprise (New York)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:b4a311663ad0426a",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Engineering Manager, Platform Security",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:78dd45fbd91d1cb6",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Software engineer, agents",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:890802fbdc71483e",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Senior Data Engineer, Ads",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:5d438f6a7e014228",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Associate Product Counsel, Safety",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:830cdb89c0a3cf07",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Enterprise Account Executive - EMEA",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:fc57e013639ff4f6",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Growth Marketing Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:78c8e4fc3cee0ed8",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Product ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:32a3dfaad4d58ce7",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Founding GTM",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Instabase",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:ae24f671bf9ef14d",
+      "source_receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "title": "Technical Lead Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:d2455c5fd66d66ca",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Senior Technical Support Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:ca2347cd97bdad90",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Engineering Manager, Safety",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:3fc5f433a5b26247",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Founding Business Operations",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:647e8bafb10032ea",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Principal Product Manager, Agentic AI Platform",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Docugami",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:b08a189471198ea7",
+      "source_receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "title": "Head of Sales",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Pinecone",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:b8745bb123a36f95",
+      "source_receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "title": "Business Development Representative",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:98a8131debe55532",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (AI Inference Engineer)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:24f3e70685c5f847",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Account Executive, Mid-Market",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a5782c0d146cced9",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (Backend/Infrastructure Engineer, Search)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:40c6200fc70112ed",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Product Marketer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:5ee6fc910062bdb3",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Partner Account Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:6a800a91010a66ab",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Infrastructure",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:9a0e6e325eafce12",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Senior Full-Stack Software Engineer, Ads",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:5a4ea1146756360a",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Oracle ERP Fusion Technical Developer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:b817def4b60bcf2a",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "AI Support Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:203d625ecba3ba76",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Head of Partnerships - Japan",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:18a75267e94cb391",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Member of Technical Staff, Backend",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:ec017a6ed5aed649",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Account Executive, Enterprise",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:bb3c21320e8176c8",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Growth Associate",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:b5671601584628aa",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Enterprise ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:642eb8224b2625a2",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "Senior Full Stack Engineer - Contract-to-Hire",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:12eb4b0cb69f9bde",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Product Designer, Growth",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:52895c734454b07c",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Senior Associate, InfoSec Solutions ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:bb1d0555ba0fcb8e",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Manager, Sales - London ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:2ab00936291ea606",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "General Application - Cognition",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Unstructured",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:12fb0c277606387f",
+      "source_receipt_id": "src:a:ashby:fff35d51a5efa5c6",
+      "title": "Business Development Representative ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Nanonets",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:b615a8518375f9d6",
+      "source_receipt_id": "src:a:ashby:4fa23db854876afa",
+      "title": "Customer Success Manager (India)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:daaf90038bf601af",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Director, Research - Frontier Benchmarks",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:58a948c8ac9ca19d",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Manager, AI Engineering - Analytics",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:88a341223f725343",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Account Executive-  Data as a Service",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:604a84a1b1d810d3",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "Outbound Marketing Development Representative",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:4ec8e99b3e4a93f8",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "Software Engineer, Risk Management",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Drata",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:88454666ced169ed",
+      "source_receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "title": "Senior Solutions Engineer, Enterprise - West",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:43dc21b5e362a4b7",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Commercial Counsel",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:92dbb6fa789e4548",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Machine Learning Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:90ce6598dbf03a4a",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Manager, Safety Analytics",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:764d157e1962de21",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Software Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:aa620bfd258b8720",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Senior Frontend Engineer, AI Observability & Evals Platform ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:8b8a8b9be70c84e8",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Revenue Operations Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:46a7dc979f3439c5",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Product Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:cb97fce81ffcdbfb",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Product Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:f16d30f50eb270dc",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Engineering Manager, Revenue",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:3423c309989f8206",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "Enterprise Account Executive (San Francisco Bay Area)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Perplexity",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:7406a0fcf6416421",
+      "source_receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "title": "Member of Technical Staff (Forward Deployed Engineer, Applied AI)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Thoropass",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:6bf3e2a0b6861e5e",
+      "source_receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "title": "FP&A Analyst",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:8797a70a4139ef48",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Account Executive, Geo Enterprise - San Francisco",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cognition",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:e13413b1aabac2fe",
+      "source_receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "title": "Applied AI Transformation Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:6ed23de07cedc478",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Campaign Program Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LlamaIndex",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:28cb106ba4ba26d0",
+      "source_receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "title": "Technical Sourcer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Secureframe",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:9b5b4a576a6ae900",
+      "source_receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "title": "Account Executive, CMMC",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:d70af1f4f13ba24e",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Founding Product Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Vanta",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:c643399f9d0edede",
+      "source_receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "title": "Business Development Representative ",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:ceabafc89702fd30",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Commercial Policy Lead, Brand Safety & Malware",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:a52c2bfcc7f48f04",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Growth Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Discord",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:46528ce7f3e06644",
+      "source_receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "title": "Engineering Manager, Notifications",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Cursor",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:6f8f2c354d20ff40",
+      "source_receipt_id": "src:a:ashby:f38994d95a31074f",
+      "title": "Software Engineer, Core Services",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Reducto",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:80001b82bf967862",
+      "source_receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "title": "Forward Deployed Engineer, Infrastructure Specialist",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Extend",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:8c5780ab59cb2670",
+      "source_receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "title": "Forward Deployed Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "LangChain",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:6060c8da6fbf036d",
+      "source_receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "title": "FullStack Engineer,  AI Observability & Evals Platform (LangSmith)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Abnormal",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:6fb1598f98ce8158",
+      "source_receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "title": "Customer Success Manager, Fed/SLED",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Writer",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:26b6c28ded07d2f9",
+      "source_receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "title": "Software engineer, agents (UK)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Datalab (marker)",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:1a225ea12f944ba4",
+      "source_receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "title": "Research Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:192844d65b6bcfc2",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "Product Manager, Risk Management",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Snorkel AI",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:0105df4aca1a42bf",
+      "source_receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "title": "Director, Forward Deployed Researcher - Data as a Service",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Hyperproof",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:69981ebb619ac59c",
+      "source_receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "title": "Senior DevSecOps Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Staff Data Engineer with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:fd41fac9e94dc4bd",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Staff Data Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Fleet AI, Inc.",
+      "reason_code": "REJECT_ROLE_TYPE",
+      "rejection_id": "reject:be5009de1a4683f4",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Former Founder",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "AI Principal Engineer with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:3da0dac9fbafcaaa",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "AI Principal Engineer",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Sr. ML Scientist with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:67da457c9b0173d7",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Sr. ML Scientist",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "AI Product Manager with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:e256c53efce91695",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "AI Product Manager",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "SpartanX.ai",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:fde5c6423c517017",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "The Opportunity",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "AI Engineering Lead with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:51cd18a698b05dea",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "AI Engineering Lead",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Senior Director, Applied AI with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:4a590b60e4c91a78",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Senior Director, Applied AI",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Associate Director, AI Security Frontier Engineering with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:058685958e0d1e19",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Associate Director, AI Security Frontier Engineering",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "ServiceNow- ServiceNow Moveworks AI Architect Manager - Tech Cons - Open Location with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:edaa7afba83283f2",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "ServiceNow- ServiceNow Moveworks AI Architect Manager - Tech Cons - Open Location",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "A",
+      "organization": "Senior Associate, Data Strategy Enablement & Innovation with verification",
+      "reason_code": "HUMAN_REVIEW_LOCATION_AMBIGUOUS",
+      "rejection_id": "reject:6d7310a2a67d2f95",
+      "source_receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "title": "Senior Associate, Data Strategy Enablement & Innovation",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "B",
+      "organization": "Federal (SAM.gov)",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:4ed1fd2f6142139e",
+      "source_receipt_id": "",
+      "title": "NGA - Boosting Innovative GEOINT - Science & Technology Broad Agency Announcement (BIG-ST BAA)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "B",
+      "organization": "Federal (SAM.gov)",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:481b131b1f0c65ec",
+      "source_receipt_id": "",
+      "title": "TACTICAL Broad Agency Announcement (BAA)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": false,
+      "lane": "B",
+      "organization": "Federal (SAM.gov)",
+      "reason_code": "REJECT_STALE_AGE",
+      "rejection_id": "reject:7796a19fa2dfdd54",
+      "source_receipt_id": "",
+      "title": "Sources Sought: Call For Technology Independent Verification &Validation (IV&V) 27-1: Spectrum Proof",
+      "visible_in_report": true
+    }
+  ],
+  "generated_at": "2026-08-17T11:29:46.927971Z",
+  "immutable_goal": {
+    "goal_hash": "90cf53882cc3b05fee87ce4ebb9d04c752671f2460edffefb0cc74d00b71bb76",
+    "text": "Daily top opportunities that are highly targeted, delivered in an interactive report/interview, with human-authorized application preparation using a custom targeted resume given the algorithm likely employed by the employer or client."
+  },
+  "interview_prep": [
+    {
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:arcos:acert-architect"
+          ],
+          "source_refs": [
+            "src:a:linkedin:5f202c870ad7dcdd"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:a:linkedin:c95cee7cc94b6048",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:arcos:acert-architect"
+          ],
+          "source_refs": [
+            "src:a:linkedin:5f202c870ad7dcdd"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:a:linkedin:10257292d60b155d",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:arcos:acert-architect"
+          ],
+          "source_refs": [
+            "src:a:linkedin:5f202c870ad7dcdd"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:c:86fab11acc1b848f",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:pdf-oxide:document-extraction"
+          ],
+          "source_refs": [
+            "src:c:primary-company-source:83a52d52c6cc2fe5"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:b:b1665d7276fb224e",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:pdf-oxide:document-extraction"
+          ],
+          "source_refs": [
+            "src:b:darpa:ea9d496175155443"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:b:sam:268bb52639084b8f839905193dede5aa",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:pdf-oxide:document-extraction"
+          ],
+          "source_refs": [
+            "unknown"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:b:sam:f09034fca4234513a25a5d8e2f9b82f7",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:pdf-oxide:document-extraction"
+          ],
+          "source_refs": [
+            "unknown"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    },
+    {
+      "opportunity_id": "candidate:b:sam:54cce880c49b4f62a322076fcf6fbda8",
+      "talking_points": [
+        {
+          "claim_keys": [
+            "claim:pdf-oxide:document-extraction"
+          ],
+          "source_refs": [
+            "unknown"
+          ],
+          "text": "Explain receipt-gated, claim-bound work with explicit source boundaries."
+        }
+      ]
+    }
+  ],
+  "lane_coverage": [
+    {
+      "candidates_admitted": 35,
+      "candidates_observed": 257,
+      "lane": "A",
+      "limitations": [],
+      "result_status": "MATCHES",
+      "searched": true,
+      "source_receipt_ids": [
+        "src:a:hiddenjobs.dev:4254e0a64de17433",
+        "src:a:indeed:895e8193d06b79b7",
+        "src:a:duckduckgo:6b6239492ae56e07",
+        "src:a:linkedin:5f202c870ad7dcdd",
+        "src:a:greenhouse:ef6fb71a87805596",
+        "src:a:greenhouse:f2bceb1931b8d43d",
+        "src:a:ashby:1cbb67767b7b11f6",
+        "src:a:ashby:fff35d51a5efa5c6",
+        "src:a:ashby:b93ac814ce6e3541",
+        "src:a:ashby:0527bf0c43f0196c",
+        "src:a:ashby:4fa23db854876afa",
+        "src:a:greenhouse:1683b70142214f9b",
+        "src:a:greenhouse:14a4e0785f8a4cb7",
+        "src:a:greenhouse:dff1dd08226a3439",
+        "src:a:ashby:ec69d8f59d4d8faf",
+        "src:a:ashby:203415b41f9c219e",
+        "src:a:ashby:f38994d95a31074f",
+        "src:a:ashby:6fbd6c7875bb759a",
+        "src:a:ashby:ae540d19c4540a14",
+        "src:a:ashby:9ccae16cf8b8fdd5",
+        "src:a:ashby:378b4a9c4ed80e80",
+        "src:a:ashby:02e5d9224502b94d",
+        "src:a:ashby:3486d1105fa91b06",
+        "src:a:ashby:850f14345ff0b33d",
+        "src:a:ashby:c485a44c72e0cfa8",
+        "src:a:ashby:43b7d8b81025c611",
+        "src:a:ashby:b4615e77f9d6f7b2",
+        "src:a:ashby:a84188a65678fdc4",
+        "src:a:ashby:81a6dac6e68c3c07",
+        "src:a:lever:3fa73a1bdc04a836",
+        "src:a:greenhouse:6a038047f495e8f1",
+        "src:a:greenhouse:3a364a49884e9e13",
+        "src:a:greenhouse:e55a131bf3336030",
+        "src:a:builtin:898d0a7bf2beee03",
+        "src:a:builtin:d7411fec7320b083"
+      ]
+    },
+    {
+      "candidates_admitted": 10,
+      "candidates_observed": 13,
+      "lane": "B",
+      "limitations": [],
+      "result_status": "MATCHES",
+      "searched": true,
+      "source_receipt_ids": [
+        "src:b:darpa:ea9d496175155443",
+        "src:b:sam.gov:a3a8fe36b26e2e4f",
+        "src:b:sam.gov:e823df13669ad64d"
+      ]
+    },
+    {
+      "candidates_admitted": 1,
+      "candidates_observed": 1,
+      "lane": "C",
+      "limitations": [],
+      "result_status": "MATCHES",
+      "searched": true,
+      "source_receipt_ids": [
+        "src:c:client-research:61009f7a9bcd5f41",
+        "src:c:primary-company-source:83a52d52c6cc2fe5"
+      ]
+    }
+  ],
+  "non_claims": [
+    "Stage 0 run proves local read-only artifacts for this invocation only.",
+    "No Gmail send, LinkedIn platform access, ATS, Memory, or external application effect was executed.",
+    "Outreach packets are local human-transmit text until a permitting Ask roundtable and capability-specific promotion exist.",
+    "Employer/client ranking weights and workflows remain unknown."
+  ],
+  "operational_readiness": "STAGE_0_READY",
+  "opportunities": [
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "eligibility_state": "ELIGIBLE_WNY_ONSITE",
+      "fit_score": 0.93,
+      "lane": "A",
+      "location": {
+        "display": "Buffalo, NY (On-site)",
+        "relocation_required": false,
+        "workplace_type": "WNY_ONSITE"
+      },
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "opportunity_type": "employment_posting",
+      "organization": "Glint Tech Solutions",
+      "posting_url": "https://www.linkedin.com/jobs/view/4446275712/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4446275712/",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "src:a:linkedin:5f202c870ad7dcdd"
+        ],
+        "inferred": [
+          "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
+          "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn."
+        ],
+        "observed": [
+          "ops-linkedin authorized read-only LinkedIn evidence observed: https://www.linkedin.com/jobs/view/4446275712/",
+          "Automation policy: linkedin_authorized_read_only_no_actions",
+          "LinkedIn evidence marks this as a profile/recommendation-based relevance signal."
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "src:a:linkedin:5f202c870ad7dcdd"
+      ],
+      "status": "SHORTLISTED",
+      "title": "AI & Platform Software Engineer",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback.",
+        "Ranking includes LinkedIn profile/recommendation-based relevance evidence."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "eligibility_state": "ELIGIBLE_WNY_ONSITE",
+      "fit_score": 0.93,
+      "lane": "A",
+      "location": {
+        "display": "Buffalo, NY (Remote)",
+        "relocation_required": false,
+        "workplace_type": "WNY_ONSITE"
+      },
+      "opportunity_id": "candidate:a:linkedin:c95cee7cc94b6048",
+      "opportunity_type": "employment_posting",
+      "organization": "Glint Tech Solutions",
+      "posting_url": "https://www.linkedin.com/jobs/view/4446266826/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4446266826/",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "src:a:linkedin:5f202c870ad7dcdd"
+        ],
+        "inferred": [
+          "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
+          "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn."
+        ],
+        "observed": [
+          "ops-linkedin authorized read-only LinkedIn evidence observed: https://www.linkedin.com/jobs/view/4446266826/",
+          "Automation policy: linkedin_authorized_read_only_no_actions",
+          "LinkedIn evidence marks this as a profile/recommendation-based relevance signal."
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "src:a:linkedin:5f202c870ad7dcdd"
+      ],
+      "status": "SHORTLISTED",
+      "title": "GenAI Solutions Architect",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback.",
+        "Ranking includes LinkedIn profile/recommendation-based relevance evidence."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "eligibility_state": "ELIGIBLE_WNY_ONSITE",
+      "fit_score": 0.93,
+      "lane": "A",
+      "location": {
+        "display": "Buffalo-Niagara Falls Area (On-site)",
+        "relocation_required": false,
+        "workplace_type": "WNY_ONSITE"
+      },
+      "opportunity_id": "candidate:a:linkedin:10257292d60b155d",
+      "opportunity_type": "employment_posting",
+      "organization": "Sports Careers",
+      "posting_url": "https://www.linkedin.com/jobs/view/4453386547/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4453386547/",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "src:a:linkedin:5f202c870ad7dcdd"
+        ],
+        "inferred": [
+          "Use this as a relevance signal only; leave LinkedIn and inspect primary employer/client sources separately.",
+          "Do not connect, message, click apply, scrape, or otherwise automate LinkedIn."
+        ],
+        "observed": [
+          "ops-linkedin authorized read-only LinkedIn evidence observed: https://www.linkedin.com/jobs/view/4453386547/",
+          "Automation policy: linkedin_authorized_read_only_no_actions",
+          "LinkedIn evidence marks this as a profile/recommendation-based relevance signal."
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "src:a:linkedin:5f202c870ad7dcdd"
+      ],
+      "status": "SHORTLISTED",
+      "title": "Director, Data Platform",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback.",
+        "Ranking includes LinkedIn profile/recommendation-based relevance evidence."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "eligibility_state": "ELIGIBLE_COMMERCIAL_SIGNAL",
+      "fit_score": 0.65,
+      "lane": "C",
+      "location": {
+        "display": "Commercial signal; delivery model unknown",
+        "relocation_required": false,
+        "workplace_type": "NOT_APPLICABLE"
+      },
+      "opportunity_id": "candidate:c:86fab11acc1b848f",
+      "opportunity_type": "commercial_signal",
+      "organization": "University at Buffalo UBIT",
+      "posting_url": "https://www.buffalo.edu/ubit.html",
+      "primary_evidence_url": "https://www.buffalo.edu/ubit.html",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "src:c:primary-company-source:83a52d52c6cc2fe5"
+        ],
+        "inferred": [
+          "Use a capability profile; do not send outreach automatically."
+        ],
+        "observed": [
+          "Primary-source need signal observed: https://www.buffalo.edu/ubit.html"
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "src:c:primary-company-source:83a52d52c6cc2fe5"
+      ],
+      "status": "SHORTLISTED",
+      "title": "Technology modernization signal",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "eligibility_state": "ELIGIBLE_FEDERAL_NOTICE",
+      "fit_score": 0.62,
+      "lane": "B",
+      "location": {
+        "display": "Federal notice or R&D signal; delivery model not applicable",
+        "relocation_required": false,
+        "workplace_type": "NOT_APPLICABLE"
+      },
+      "opportunity_id": "candidate:b:b1665d7276fb224e",
+      "opportunity_type": "federal_notice",
+      "organization": "DARPA R&D Opportunities",
+      "posting_url": "https://www.darpa.mil/work-with-us/opportunities",
+      "primary_evidence_url": "https://www.darpa.mil/work-with-us/opportunities",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "src:b:darpa:ea9d496175155443"
+        ],
+        "inferred": [
+          "Treat as a federal notice/signal; do not coerce into an employment application."
+        ],
+        "observed": [
+          "Federal primary source observed: https://www.darpa.mil/work-with-us/opportunities"
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "src:b:darpa:ea9d496175155443"
+      ],
+      "status": "SHORTLISTED",
+      "title": "DARPA primary-source R&D opportunity signal",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "eligibility_state": "ELIGIBLE_FEDERAL_NOTICE",
+      "fit_score": 0.7100000000000001,
+      "lane": "B",
+      "location": {
+        "display": "Federal notice; delivery model not applicable",
+        "relocation_required": false,
+        "workplace_type": "NOT_APPLICABLE"
+      },
+      "opportunity_id": "candidate:b:sam:268bb52639084b8f839905193dede5aa",
+      "opportunity_type": "federal_notice",
+      "organization": "Federal (SAM.gov)",
+      "posting_url": "https://sam.gov/opp/268bb52639084b8f839905193dede5aa/view",
+      "primary_evidence_url": "https://sam.gov/opp/268bb52639084b8f839905193dede5aa/view",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "unknown"
+        ],
+        "inferred": [
+          "Treat as a federal notice/signal; do not coerce into an employment application."
+        ],
+        "observed": [
+          "Federal primary source observed: https://sam.gov/opp/268bb52639084b8f839905193dede5aa/view"
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "unknown"
+      ],
+      "status": "SHORTLISTED",
+      "title": "DA10 -- Greater Los Angeles Artificial Intelligence Threat Detection",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "eligibility_state": "ELIGIBLE_FEDERAL_NOTICE",
+      "fit_score": 0.7100000000000001,
+      "lane": "B",
+      "location": {
+        "display": "Federal notice; delivery model not applicable",
+        "relocation_required": false,
+        "workplace_type": "NOT_APPLICABLE"
+      },
+      "opportunity_id": "candidate:b:sam:f09034fca4234513a25a5d8e2f9b82f7",
+      "opportunity_type": "federal_notice",
+      "organization": "Federal (SAM.gov)",
+      "posting_url": "https://sam.gov/opp/f09034fca4234513a25a5d8e2f9b82f7/view",
+      "primary_evidence_url": "https://sam.gov/opp/f09034fca4234513a25a5d8e2f9b82f7/view",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "unknown"
+        ],
+        "inferred": [
+          "Treat as a federal notice/signal; do not coerce into an employment application."
+        ],
+        "observed": [
+          "Federal primary source observed: https://sam.gov/opp/f09034fca4234513a25a5d8e2f9b82f7/view"
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "unknown"
+      ],
+      "status": "SHORTLISTED",
+      "title": "FDA Sources Sought - NextGen Cyber Engineering, Operations AI and Unified Services",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback."
+      ]
+    },
+    {
+      "action_worthy": true,
+      "apply_url": null,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "eligibility_state": "ELIGIBLE_FEDERAL_NOTICE",
+      "fit_score": 0.7100000000000001,
+      "lane": "B",
+      "location": {
+        "display": "Federal notice; delivery model not applicable",
+        "relocation_required": false,
+        "workplace_type": "NOT_APPLICABLE"
+      },
+      "opportunity_id": "candidate:b:sam:54cce880c49b4f62a322076fcf6fbda8",
+      "opportunity_type": "federal_notice",
+      "organization": "Federal (SAM.gov)",
+      "posting_url": "https://sam.gov/opp/54cce880c49b4f62a322076fcf6fbda8/view",
+      "primary_evidence_url": "https://sam.gov/opp/54cce880c49b4f62a322076fcf6fbda8/view",
+      "screening_interface_profile": {
+        "confidence": 0.6,
+        "evidence_refs": [
+          "unknown"
+        ],
+        "inferred": [
+          "Treat as a federal notice/signal; do not coerce into an employment application."
+        ],
+        "observed": [
+          "Federal primary source observed: https://sam.gov/opp/54cce880c49b4f62a322076fcf6fbda8/view"
+        ],
+        "unknowns": [
+          "Employer/client ranking weights and workflow remain unknown."
+        ]
+      },
+      "source_receipt_ids": [
+        "unknown"
+      ],
+      "status": "SHORTLISTED",
+      "title": "MMIII Data Aggregation and Visualization Request for Information (RFI)",
+      "visible_in_report": true,
+      "why_candidate": [
+        "Ranked after deterministic eligibility gating and source receipt readback."
+      ]
+    }
+  ],
+  "outreach_packets": [
+    {
+      "action_worthy": true,
+      "body": "I found the AI & Platform Software Engineer opportunity at Glint Tech Solutions and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 397,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "packet_id": "outreach:ee64997f999af358",
+      "payload_digest": "20a95da11ade1d7b6f48c40f898c93aa3bb82b0b233bae729717468e95828594",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Glint Tech Solutions",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the AI & Platform Software Engineer opportunity at Glint Tech Solutions.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 338,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "packet_id": "outreach:2ba2f35563f62904",
+      "payload_digest": "81ea8d44faeb78ef1c05df6d9a835f6d6f251d9582ff3ce4a531974c55e559af",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the GenAI Solutions Architect opportunity at Glint Tech Solutions and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 391,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:c95cee7cc94b6048",
+      "packet_id": "outreach:70ca7ee41d359803",
+      "payload_digest": "b14811f51ba36c80d57c0412727c460e2b2f5b2f60af7e2d8f14ab8d9fa15995",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Glint Tech Solutions",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the GenAI Solutions Architect opportunity at Glint Tech Solutions.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 332,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:c95cee7cc94b6048",
+      "packet_id": "outreach:540345acc82fa5f0",
+      "payload_digest": "bb44ef9b3b91512b5f5b0022a29469d608ee4ef67e2c903203757f6cb4ddfb79",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the Director, Data Platform opportunity at Sports Careers and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 383,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:10257292d60b155d",
+      "packet_id": "outreach:a258b9b652ede537",
+      "payload_digest": "34c311f776b96ee5437e8d7e13c63c89ca571a4b0b2e98ce480051265d0dcabd",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Sports Careers",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the Director, Data Platform opportunity at Sports Careers.\n\nRelevant approved claims:\n- Led ACERT architecture work for DARPA ARCOS, turning complex aerospace engineering documentation into queryable graph evidence. [claim:arcos:acert-architect]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 324,
+      "claim_keys": [
+        "claim:arcos:acert-architect"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:a:linkedin:10257292d60b155d",
+      "packet_id": "outreach:0f9d9e2883c6beae",
+      "payload_digest": "7ea7c2d475d3a607615ae8a5cad3a41b222ff19f0385edcf4e10941f5528cf6f",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the Technology modernization signal opportunity at University at Buffalo UBIT and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 391,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:c:86fab11acc1b848f",
+      "packet_id": "outreach:8823c7e30dd5d243",
+      "payload_digest": "ff7031d1aea90ff40cec2169c96cfac00622f5d331ce32fb2dc6efd1d2713807",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for University at Buffalo UBIT",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the Technology modernization signal opportunity at University at Buffalo UBIT.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 332,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:c:86fab11acc1b848f",
+      "packet_id": "outreach:8dae939a5fd80af4",
+      "payload_digest": "dfcec4acbfdd655dc7b4f031b4dc9a701baf71645422b969efcb99cfaa66926c",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the DARPA primary-source R&D opportunity signal opportunity at DARPA R&D Opportunities and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 400,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:b1665d7276fb224e",
+      "packet_id": "outreach:7fe9128ef201b163",
+      "payload_digest": "cb5960e5fcff21b7f99f9a1b9fd7f71e3c46e7096098a1b9cd454e6a04f9a4f5",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for DARPA R&D Opportunities",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the DARPA primary-source R&D opportunity signal opportunity at DARPA R&D Opportunities.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 341,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:b1665d7276fb224e",
+      "packet_id": "outreach:a6ee4dcabcdc9530",
+      "payload_digest": "affdefdd4a8102b7a49df695f7b3ca9098c465597cb516ecaec4b4b670f7ef0e",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the DA10 -- Greater Los Angeles Artificial Intelligence Threat Detection opportunity at Federal (SAM.gov) and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 419,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:268bb52639084b8f839905193dede5aa",
+      "packet_id": "outreach:dfd4980bf4ad2e2e",
+      "payload_digest": "751df85c46f737e1d31053eb2d9ae8775b8ff207278ab0f84b7a64df0a9d9346",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Federal (SAM.gov)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the DA10 -- Greater Los Angeles Artificial Intelligence Threat Detection opportunity at Federal (SAM.gov).\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 360,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:268bb52639084b8f839905193dede5aa",
+      "packet_id": "outreach:df6ff49f2f25723d",
+      "payload_digest": "8c58772e90d46fec881c8fed835b0563c164a4ab8890518dfa32970d9a36690d",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the FDA Sources Sought - NextGen Cyber Engineering, Operations AI and Unified Services opportunity at Federal (SAM.gov) and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 433,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:f09034fca4234513a25a5d8e2f9b82f7",
+      "packet_id": "outreach:828e7b6b6206fb3e",
+      "payload_digest": "d97967808c192e33e025988871c574167984d424168200a43a26c8e264fcda7f",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Federal (SAM.gov)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the FDA Sources Sought - NextGen Cyber Engineering, Operations AI and Unified Services opportunity at Federal (SAM.gov).\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 374,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:f09034fca4234513a25a5d8e2f9b82f7",
+      "packet_id": "outreach:3d4f5d88e194a266",
+      "payload_digest": "80faf66e5dbebcdb16324b6d8c929acc9257ce88a68106e9353ae5fc57a5d6a6",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the MMIII Data Aggregation and Visualization Request for Information (RFI) opportunity at Federal (SAM.gov) and would like to share a concise, claim-bound fit summary.\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "GMAIL",
+      "character_count": 421,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the subject and body in the morning report.",
+        "Choose the recipient in Gmail from known contact provenance; do not infer a recipient.",
+        "Create or edit the draft manually, then send only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:54cce880c49b4f62a322076fcf6fbda8",
+      "packet_id": "outreach:3d67e26ac3778a2c",
+      "payload_digest": "52043128cd0e2bd047fb3bdbe4d4dddd10a5a51e70b4a7e635e1301da25af4ab",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": "Relevant background for Federal (SAM.gov)",
+      "visible_in_report": true
+    },
+    {
+      "action_worthy": true,
+      "body": "I found the MMIII Data Aggregation and Visualization Request for Information (RFI) opportunity at Federal (SAM.gov).\n\nRelevant approved claims:\n- Built document extraction systems that preserve source evidence and support deterministic review workflows. [claim:pdf-oxide:document-extraction]\n\nHuman transmission note: Graham reviews and sends this text manually.",
+      "candidate_transmits": true,
+      "channel": "LINKEDIN",
+      "character_count": 362,
+      "claim_keys": [
+        "claim:pdf-oxide:document-extraction"
+      ],
+      "contact_provenance": "CONTACT_UNKNOWN",
+      "draft_id": null,
+      "effect_receipt_digest": null,
+      "effect_status": "WOULD_PRESENT_STAGE0",
+      "human_send_steps": [
+        "Review the body in the morning report.",
+        "Open LinkedIn manually; the skill does not log in, browse, connect, message, or post.",
+        "Paste or adapt the text only if Graham decides to transmit."
+      ],
+      "mailbox_draft_ref": null,
+      "opportunity_id": "candidate:b:sam:54cce880c49b4f62a322076fcf6fbda8",
+      "packet_id": "outreach:06227071b584662b",
+      "payload_digest": "2ac5e48832a4fc021af2a15339b63768925cb2f0455a3ad4a48231548e4b05ac",
+      "readiness_state": "BLOCKED_ROUNDTABLE",
+      "recipient": "CONTACT_UNKNOWN",
+      "reviewed_payload_digest": null,
+      "revision_note": null,
+      "roundtable_receipt_digest": null,
+      "roundtable_status": "NOT_RUN",
+      "roundtable_verdict": null,
+      "sendable": false,
+      "subject": null,
+      "visible_in_report": true
+    }
+  ],
+  "relationship_signals": [],
+  "resume_variants": [
+    {
+      "action_worthy": true,
+      "artifact_refs": [
+        "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/tailoring/resume.txt",
+        "skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/tailoring/resume.docx"
+      ],
+      "claim_keys": [
+        "claim:arcos:acert-architect",
+        "claim:pdf-oxide:document-extraction",
+        "claim:memory:retrieval-platform"
+      ],
+      "claim_snapshot_sha256": "6b88c7385229972ed72c9178e029cad570d39c8c5e1ad24cc19b04a7e9eda3d9",
+      "opportunity_id": "candidate:a:linkedin:4464fce65b1c49d7",
+      "presentation_diff": {
+        "allowed_changes": [
+          "CLAIM_SELECTION",
+          "CLAIM_ORDER",
+          "SECTION_ORDER",
+          "HEADING",
+          "APPROVED_ALIAS",
+          "TARGET_SUMMARY",
+          "LAYOUT_OR_FORMAT"
+        ],
+        "prohibited_changes": []
+      },
+      "status": "WOULD_PRESENT_STAGE0",
+      "variant_id": "resume:eaace78547791313",
+      "visible_in_report": true
+    }
+  ],
+  "run_id": "mo_050183db486da25e",
+  "schema": "monitor_opportunities.report.v1",
+  "source_receipts": [
+    {
+      "automation_policy": null,
+      "content_sha256": "380605fd145e7de16325ad9be9128268aa681d72a8e711e72896c96722f28cc0",
+      "content_type": "text/html",
+      "evidence_refs": [
+        "https://hiddenjobs.dev/"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Aggregator/locator evidence is hint-only; candidates require primary-source readback."
+      ],
+      "observed_at": "2026-08-17T11:29:20.298344Z",
+      "provider": "hiddenjobs.dev",
+      "receipt_id": "src:a:hiddenjobs.dev:4254e0a64de17433",
+      "request_summary": "GET https://hiddenjobs.dev/ source-locator hint only; no candidates admitted",
+      "response_bytes": 154332,
+      "response_status": 200,
+      "result_status": "NO_MATCHES",
+      "source_class": "source_locator",
+      "target": "Hidden Jobs"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "505f713a0eaf433303b5957e237f0d9bbeee5ce0c2b9792fc9611ac50f02c36e",
+      "content_type": "text/html;charset=utf-8",
+      "evidence_refs": [
+        "https://www.indeed.com/hire/resources/howtohub/optimize-jobs-from-your-career-site-or-ats-on-indeed"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Aggregator/locator evidence is hint-only; candidates require primary-source readback."
+      ],
+      "observed_at": "2026-08-17T11:29:20.606059Z",
+      "provider": "indeed",
+      "receipt_id": "src:a:indeed:895e8193d06b79b7",
+      "request_summary": "GET https://www.indeed.com/hire/resources/howtohub/optimize-jobs-from-your-career-site-or-ats-on-indeed source-locator hint only; no candidates admitted",
+      "response_bytes": 238505,
+      "response_status": 200,
+      "result_status": "NO_MATCHES",
+      "source_class": "source_locator",
+      "target": "Indeed indexed ATS guidance"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "a383f2c8a2643f09dc2bd4bec7befc7b3a9aeedfc0cc13dbaedb5fe29859acc7",
+      "content_type": "text/html; charset=UTF-8",
+      "evidence_refs": [
+        "https://html.duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Aggregator/locator evidence is hint-only; candidates require primary-source readback."
+      ],
+      "observed_at": "2026-08-17T11:29:21.803039Z",
+      "provider": "duckduckgo",
+      "receipt_id": "src:a:duckduckgo:6b6239492ae56e07",
+      "request_summary": "GET https://html.duckduckgo.com/html/?q=agentic+compliance+AI+agents+GRC+hiring source-locator hint only; no candidates admitted",
+      "response_bytes": 14275,
+      "response_status": 202,
+      "result_status": "NO_MATCHES",
+      "source_class": "source_locator",
+      "target": "Agentic compliance hiring signals"
+    },
+    {
+      "automation_policy": "linkedin_authorized_read_only_no_actions",
+      "content_sha256": "b3e3d0ddc608a27ca3c9714fe0714e65dd317d284b51aadf504b14d2ba79ccd7",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "file:///home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/local/nightly/latest/browser-capture/linkedin-top-applicant-evidence.json"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Human-supplied LinkedIn evidence is a relevance signal only.",
+        "LinkedIn is not logged into, scraped, clicked, connected, messaged, or otherwise automated.",
+        "ops-linkedin read one human-authorized LinkedIn opportunity tab; no apply/connect/message/post action was taken.",
+        "Automation policy: linkedin_authorized_read_only_no_actions."
+      ],
+      "observed_at": "2026-08-17T11:29:22.104006Z",
+      "provider": "linkedin",
+      "receipt_id": "src:a:linkedin:5f202c870ad7dcdd",
+      "request_summary": "Read ops-linkedin authorized read-only evidence artifact linkedin-top-applicant-evidence.json; the capture used a human-supplied tab id and performed no LinkedIn actions",
+      "response_bytes": 6512,
+      "response_status": null,
+      "result_status": "MATCHES",
+      "source_class": "ops_linkedin_authorized_read_only",
+      "target": "ops-linkedin authorized read-only opportunity capture"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "f831eb6669e5f7e47741a25760d0114a14b5a9fcee484410c72a6aeb2d70406f",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/discord/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:discord:greenhouse"
+      ],
+      "observed_at": "2026-08-17T11:29:22.104411Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:ef6fb71a87805596",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/discord/jobs?content=true with no credentials; response capped",
+      "response_bytes": 455618,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Discord"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "5531c18cb25a0a97b979fad5975c15b755f6f99b9989499762d6a8c2a7b90a9d",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/hyperproof/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:hyperproof"
+      ],
+      "observed_at": "2026-08-17T11:29:22.391705Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:f2bceb1931b8d43d",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/hyperproof/jobs?content=true with no credentials; response capped",
+      "response_bytes": 122253,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Hyperproof"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "0b60e360878df0e17c1d365581a64c7a964ec3fcc5afe83275ddc848cad1baf2",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/reducto"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:reducto"
+      ],
+      "observed_at": "2026-08-17T11:29:22.457484Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:1cbb67767b7b11f6",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/reducto with no credentials; response capped",
+      "response_bytes": 479991,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Reducto"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "12595b9992c34d103a83a3d9ba21a41520f1df3cdf8e67200780cc922feb13b6",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/unstructured"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:unstructured"
+      ],
+      "observed_at": "2026-08-17T11:29:22.614825Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:fff35d51a5efa5c6",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/unstructured with no credentials; response capped",
+      "response_bytes": 67642,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Unstructured"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "99cdc4c6318356cd69298710adf9eb1df0c808183029075fc20cc09dee909c67",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/datalab"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:datalab"
+      ],
+      "observed_at": "2026-08-17T11:29:22.716992Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:b93ac814ce6e3541",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/datalab with no credentials; response capped",
+      "response_bytes": 88051,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Datalab (marker)"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "d04a14a5312eb4261e4d81d9ab268f456dc7f805f9b6fc97facc884c2c8efcf5",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/extend"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:extend"
+      ],
+      "observed_at": "2026-08-17T11:29:22.814416Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:0527bf0c43f0196c",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/extend with no credentials; response capped",
+      "response_bytes": 123960,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Extend"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "f7df26578749287627bf233f88b6711254bb5a13243d81ad21ab3731a0d4cafb",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/nanonets"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:nanonets"
+      ],
+      "observed_at": "2026-08-17T11:29:22.865829Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:4fa23db854876afa",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/nanonets with no credentials; response capped",
+      "response_bytes": 103986,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Nanonets"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "266b9af84bedba9ed0eacbd78fd2793bfd6acf2946916ee039e86aee848e367e",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/docugami/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:docugami"
+      ],
+      "observed_at": "2026-08-17T11:29:22.985078Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:1683b70142214f9b",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/docugami/jobs?content=true with no credentials; response capped",
+      "response_bytes": 117359,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Docugami"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "b20af48161426284493a96d4dfe90920b728965622fef7dfb898030d77dfcc04",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/instabase/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:instabase"
+      ],
+      "observed_at": "2026-08-17T11:29:23.039597Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:14a4e0785f8a4cb7",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/instabase/jobs?content=true with no credentials; response capped",
+      "response_bytes": 59443,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Instabase"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "b06fa87452648cacd348346761f50761aefee882e052cc90b663ae957ced545d",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/snorkelai/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:snorkelai"
+      ],
+      "observed_at": "2026-08-17T11:29:23.096481Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:dff1dd08226a3439",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/snorkelai/jobs?content=true with no credentials; response capped",
+      "response_bytes": 451478,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Snorkel AI"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "5b99c1f6b5a2c43eaa38a1469d79899328a1d9c20f0e8776003ce30acf6f2a81",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/sierra"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:sierra",
+        "Response exceeded bounded parser limit."
+      ],
+      "observed_at": "2026-08-17T11:29:23.165556Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:ec69d8f59d4d8faf",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/sierra with no credentials; response capped",
+      "response_bytes": 3352187,
+      "response_status": 200,
+      "result_status": "INVALID_RESPONSE",
+      "source_class": "employer_ats",
+      "target": "Sierra"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "41f24f813222a400d9e58c34391ec186f7d46078f7ee674165e24f4692088928",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/harvey"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:harvey",
+        "Response exceeded bounded parser limit."
+      ],
+      "observed_at": "2026-08-17T11:29:23.284968Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:203415b41f9c219e",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/harvey with no credentials; response capped",
+      "response_bytes": 5187447,
+      "response_status": 200,
+      "result_status": "INVALID_RESPONSE",
+      "source_class": "employer_ats",
+      "target": "Harvey"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "77822de9a50f2691b61a14632ff79a70e9f815d2e8aec2fa4989a1a899d4506c",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/cursor"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:cursor"
+      ],
+      "observed_at": "2026-08-17T11:29:23.459711Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:f38994d95a31074f",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/cursor with no credentials; response capped",
+      "response_bytes": 986501,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Cursor"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "7369a62b61f34950b184eff8aad6bdf6b552b40ee0938bf1c6bd87657d5c47b2",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/cognition"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:cognition"
+      ],
+      "observed_at": "2026-08-17T11:29:23.541103Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:6fbd6c7875bb759a",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/cognition with no credentials; response capped",
+      "response_bytes": 868543,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Cognition"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "9afd43ff9a30115c0b98d30e9415dc2af690e3f413bbf14e873dc3d34cdb4cc0",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/perplexity"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:perplexity"
+      ],
+      "observed_at": "2026-08-17T11:29:23.610007Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:ae540d19c4540a14",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/perplexity with no credentials; response capped",
+      "response_bytes": 829104,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Perplexity"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "3e9f309084b8f4f55ca99ea07502eb85e5b321a369e9feb3c0ac8872a91cc0fc",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/writer"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:writer"
+      ],
+      "observed_at": "2026-08-17T11:29:23.687861Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:9ccae16cf8b8fdd5",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/writer with no credentials; response capped",
+      "response_bytes": 770664,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Writer"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "56c364969c80c3386e521ac0ba7409ea547eb8f92d93fbd4387f1b8e4ba39fc7",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/elevenlabs"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:elevenlabs",
+        "Response exceeded bounded parser limit."
+      ],
+      "observed_at": "2026-08-17T11:29:23.742678Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:378b4a9c4ed80e80",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/elevenlabs with no credentials; response capped",
+      "response_bytes": 3421733,
+      "response_status": 200,
+      "result_status": "INVALID_RESPONSE",
+      "source_class": "employer_ats",
+      "target": "ElevenLabs"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "6ac318aeeb2e4b8eeb033d38f5b477e5816f5733be9dab527f14783356cc2eaf",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/langchain"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:langchain"
+      ],
+      "observed_at": "2026-08-17T11:29:23.865925Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:02e5d9224502b94d",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/langchain with no credentials; response capped",
+      "response_bytes": 1394109,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "LangChain"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "a04d5d485dbcaf9f9d10e976b8f8a7e6e241df342527ffab9dfd79bbac39ce1d",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/llamaindex"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:llamaindex"
+      ],
+      "observed_at": "2026-08-17T11:29:23.947723Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:3486d1105fa91b06",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/llamaindex with no credentials; response capped",
+      "response_bytes": 140825,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "LlamaIndex"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "71bc7fcedf7531921c6436e840f1cb08292f37e287627f01a3cfd2504b9a57c2",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/decagon"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:decagon",
+        "Response exceeded bounded parser limit."
+      ],
+      "observed_at": "2026-08-17T11:29:24.001495Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:850f14345ff0b33d",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/decagon with no credentials; response capped",
+      "response_bytes": 1666761,
+      "response_status": 200,
+      "result_status": "INVALID_RESPONSE",
+      "source_class": "employer_ats",
+      "target": "Decagon"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "db99f81aaa7e3637cd768882e30a054eb0bf4bf5d1b86e8379f5a35532523826",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/dust"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:dust"
+      ],
+      "observed_at": "2026-08-17T11:29:24.082674Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:c485a44c72e0cfa8",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/dust with no credentials; response capped",
+      "response_bytes": 478441,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Dust"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "b39ec42b321aea37a0254729431b6165656828bccba3b0a102ef86fd381359cb",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/pinecone"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:pinecone"
+      ],
+      "observed_at": "2026-08-17T11:29:24.152211Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:43b7d8b81025c611",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/pinecone with no credentials; response capped",
+      "response_bytes": 90235,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Pinecone"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "f16b46cacf97401e27adc49ee766108d1c1484093c5d10afb1cc0d8356b8621e",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/weaviate"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:weaviate"
+      ],
+      "observed_at": "2026-08-17T11:29:24.191219Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:b4615e77f9d6f7b2",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/weaviate with no credentials; response capped",
+      "response_bytes": 16469,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Weaviate"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "1fcebbff815f635ac0f9e42acab108a6c332c095ec69d7b6fe90d60f385434a5",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/vanta"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:vanta"
+      ],
+      "observed_at": "2026-08-17T11:29:24.224836Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:a84188a65678fdc4",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/vanta with no credentials; response capped",
+      "response_bytes": 1470964,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Vanta"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "a630451866f4266e60a1b8122fc13543de9b66c39c499ff61d89422ce0ec522a",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.ashbyhq.com/posting-api/job-board/drata"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:drata"
+      ],
+      "observed_at": "2026-08-17T11:29:24.305122Z",
+      "provider": "ashby",
+      "receipt_id": "src:a:ashby:81a6dac6e68c3c07",
+      "request_summary": "GET https://api.ashbyhq.com/posting-api/job-board/drata with no credentials; response capped",
+      "response_bytes": 1216375,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Drata"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "2cc6cc281d32a7f4aca9148c95f244a06cd149759812c857275cce64700a9531",
+      "content_type": "application/json; charset=utf-8",
+      "evidence_refs": [
+        "https://api.lever.co/v0/postings/secureframe?mode=json"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:secureframe"
+      ],
+      "observed_at": "2026-08-17T11:29:24.386852Z",
+      "provider": "lever",
+      "receipt_id": "src:a:lever:3fa73a1bdc04a836",
+      "request_summary": "GET https://api.lever.co/v0/postings/secureframe?mode=json with no credentials; response capped",
+      "response_bytes": 213629,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Secureframe"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "9ee1ed13307cc9be403b7e02089521a539447acb4517197d7dbbd520bace9dde",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/thoropass/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:thoropass"
+      ],
+      "observed_at": "2026-08-17T11:29:26.525950Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:6a038047f495e8f1",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/thoropass/jobs?content=true with no credentials; response capped",
+      "response_bytes": 88671,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Thoropass"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "e209b2d1c2866ae630e8b95f587a892a814ffdd14f86dfa38d970323b164723e",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/onetrust/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:onetrust",
+        "Response exceeded bounded parser limit."
+      ],
+      "observed_at": "2026-08-17T11:29:26.642575Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:3a364a49884e9e13",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/onetrust/jobs?content=true with no credentials; response capped",
+      "response_bytes": 2795751,
+      "response_status": 200,
+      "result_status": "INVALID_RESPONSE",
+      "source_class": "employer_ats",
+      "target": "OneTrust"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "6e0c1e54958ed88412ae2ced44a36be83edf1b48a2bed478bfe7794e1215119e",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://boards-api.greenhouse.io/v1/boards/abnormalsecurity/jobs?content=true"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:abnormalsecurity"
+      ],
+      "observed_at": "2026-08-17T11:29:26.872230Z",
+      "provider": "greenhouse",
+      "receipt_id": "src:a:greenhouse:e55a131bf3336030",
+      "request_summary": "GET https://boards-api.greenhouse.io/v1/boards/abnormalsecurity/jobs?content=true with no credentials; response capped",
+      "response_bytes": 615644,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "employer_ats",
+      "target": "Abnormal Security"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "93e3ed54c60ae0577e73c796f6fb4621ec0a8835791a3047031a96208c49669b",
+      "content_type": "text/html; charset=utf-8",
+      "evidence_refs": [
+        "https://builtin.com/jobs/remote?search=AI+architect"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:builtin:remote-ai"
+      ],
+      "observed_at": "2026-08-17T11:29:26.950899Z",
+      "provider": "builtin",
+      "receipt_id": "src:a:builtin:898d0a7bf2beee03",
+      "request_summary": "GET https://builtin.com/jobs/remote?search=AI+architect with no credentials; JSON-LD ItemList parse",
+      "response_bytes": 347380,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "job_board",
+      "target": "Built In (remote AI search)"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "835bd95df7b489a97981a3e91be0fae194c3ff96ad00d3d435ac3173f1e3a173",
+      "content_type": "text/html; charset=utf-8",
+      "evidence_refs": [
+        "https://builtin.com/jobs/remote?search=machine+learning+engineer+LLM"
+      ],
+      "lane": "A",
+      "limitations": [
+        "Reviewed registry entry: employment:builtin:remote-ml"
+      ],
+      "observed_at": "2026-08-17T11:29:27.803834Z",
+      "provider": "builtin",
+      "receipt_id": "src:a:builtin:d7411fec7320b083",
+      "request_summary": "GET https://builtin.com/jobs/remote?search=machine+learning+engineer+LLM with no credentials; JSON-LD ItemList parse",
+      "response_bytes": 150315,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "job_board",
+      "target": "Built In (remote ML/agents search)"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "f98a5841cf2402fd7513f260334a190d632a5d38896686b222d2eb908897e0a1",
+      "content_type": "text/html",
+      "evidence_refs": [
+        "https://www.darpa.mil/work-with-us/opportunities"
+      ],
+      "lane": "B",
+      "limitations": [
+        "Reviewed registry entry: federal:darpa:opportunities"
+      ],
+      "observed_at": "2026-08-17T11:29:28.112550Z",
+      "provider": "darpa",
+      "receipt_id": "src:b:darpa:ea9d496175155443",
+      "request_summary": "GET https://www.darpa.mil/work-with-us/opportunities federal primary source; no credentials",
+      "response_bytes": 38838,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "federal_feed",
+      "target": "DARPA R&D Opportunities"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "b186300b38cc919c929f332a07735a95954a5b13245dd863baf7e7d7990a2f69",
+      "content_type": "application/json",
+      "evidence_refs": [
+        "https://api.sam.gov/prod/opportunities/v2/search"
+      ],
+      "lane": "B",
+      "limitations": [
+        "Reviewed registry entry: federal:sam:opportunities"
+      ],
+      "observed_at": "2026-08-17T11:29:28.363032Z",
+      "provider": "sam.gov",
+      "receipt_id": "src:b:sam.gov:a3a8fe36b26e2e4f",
+      "request_summary": "SAM.gov opportunity probe; credential value redacted",
+      "response_bytes": 2043,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "federal_feed",
+      "target": "SAM.gov Opportunities"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": null,
+      "content_type": null,
+      "evidence_refs": [
+        "sam_website_capture:40"
+      ],
+      "lane": "B",
+      "limitations": [
+        "40 notices captured; 12 on-mandate after relevance gate"
+      ],
+      "observed_at": "2026-08-17T11:29:28.742936Z",
+      "provider": "sam.gov",
+      "receipt_id": "src:b:sam.gov:e823df13669ad64d",
+      "request_summary": "read-only surf capture of SAM.gov opportunity search",
+      "response_bytes": 0,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "sam.gov_website",
+      "target": "SAM.gov website capture"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": null,
+      "content_type": null,
+      "evidence_refs": [
+        "client_research_hits:15"
+      ],
+      "lane": "C",
+      "limitations": [],
+      "observed_at": "2026-08-17T11:29:40.524932Z",
+      "provider": "client-research",
+      "receipt_id": "src:c:client-research:61009f7a9bcd5f41",
+      "request_summary": "brave-search client-services research: 3 queries",
+      "response_bytes": 0,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "source_locator",
+      "target": "Client-services prospects"
+    },
+    {
+      "automation_policy": null,
+      "content_sha256": "69aeab45bf580fc5561c6d3ba0a2726fe10b21f3795e61cacc5d2b31f8123137",
+      "content_type": "text/html; charset=UTF-8",
+      "evidence_refs": [
+        "https://www.buffalo.edu/ubit.html"
+      ],
+      "lane": "C",
+      "limitations": [
+        "Reviewed registry entry: commercial:ub:ubit"
+      ],
+      "observed_at": "2026-08-17T11:29:46.573283Z",
+      "provider": "primary-company-source",
+      "receipt_id": "src:c:primary-company-source:83a52d52c6cc2fe5",
+      "request_summary": "GET https://www.buffalo.edu/ubit.html primary source; no credentials",
+      "response_bytes": 137867,
+      "response_status": 200,
+      "result_status": "MATCHES",
+      "source_class": "primary_company_source",
+      "target": "University at Buffalo UBIT"
+    }
+  ],
+  "stage": "STAGE_0_RESEARCH_ONLY"
+}

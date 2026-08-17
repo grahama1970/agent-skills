@@ -1,0 +1,37 @@
+{
+  "collection": "morning_opportunities",
+  "external_effects": false,
+  "memory_url": "http://127.0.0.1:8601",
+  "readback_count": 9,
+  "readback_external_effects_false": true,
+  "readback_found": true,
+  "readback_keys": [
+    "2026-08-17-candidate-a-linkedin-4464fce65b1c49d7",
+    "2026-08-17-candidate-a-linkedin-c95cee7cc94b6048",
+    "2026-08-17-candidate-a-linkedin-10257292d60b155d",
+    "2026-08-17-candidate-c-86fab11acc1b848f",
+    "2026-08-17-candidate-b-b1665d7276fb224e",
+    "2026-08-17-candidate-b-sam-268bb52639084b8f839905193dede5aa",
+    "2026-08-17-candidate-b-sam-f09034fca4234513a25a5d8e2f9b82f7",
+    "2026-08-17-candidate-b-sam-54cce880c49b4f62a322076fcf6fbda8",
+    "2026-08-17-run-summary-050183db486da25e"
+  ],
+  "readback_missing_keys": [],
+  "relationship_readback_found": false,
+  "relationship_readback_state": "NO_RELATIONSHIP_SIGNALS",
+  "relationship_signal_count": 0,
+  "relationship_signals_included": true,
+  "schema": "monitor_opportunities.memory_sync_receipt.v1",
+  "status": "PASS",
+  "stored_keys": [
+    "2026-08-17-candidate-a-linkedin-4464fce65b1c49d7",
+    "2026-08-17-candidate-a-linkedin-c95cee7cc94b6048",
+    "2026-08-17-candidate-a-linkedin-10257292d60b155d",
+    "2026-08-17-candidate-c-86fab11acc1b848f",
+    "2026-08-17-candidate-b-b1665d7276fb224e",
+    "2026-08-17-candidate-b-sam-268bb52639084b8f839905193dede5aa",
+    "2026-08-17-candidate-b-sam-f09034fca4234513a25a5d8e2f9b82f7",
+    "2026-08-17-candidate-b-sam-54cce880c49b4f62a322076fcf6fbda8",
+    "2026-08-17-run-summary-050183db486da25e"
+  ]
+}

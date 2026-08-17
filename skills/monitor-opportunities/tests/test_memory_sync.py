@@ -13,6 +13,7 @@ import pytest
 from monitor_opportunities.memory_sync import (
     MORNING_COLLECTION,
     MemorySyncError,
+    _relationship_readback_state,
     attach_memory_recall_provenance,
     governed_memory_recall,
     governed_recall_queries,
@@ -128,6 +129,12 @@ def test_relationship_signals_can_be_excluded_from_memory_documents() -> None:
     documents = morning_documents(report, "/tmp/run", include_relationship_signals=False)
     assert all(doc["schema"] != "monitor_opportunities.relationship_signal.v1" for doc in documents)
     assert documents[-1]["schema"] == "monitor_opportunities.morning_summary.v1"
+
+
+def test_relationship_readback_state_distinguishes_empty_from_found() -> None:
+    assert _relationship_readback_state([], set()) == "NO_RELATIONSHIP_SIGNALS"
+    assert _relationship_readback_state(["rel-a"], {"rel-a"}) == "FOUND"
+    assert _relationship_readback_state(["rel-a"], set()) == "MISSING_RELATIONSHIP_KEYS"
 
 
 def test_missing_run_id_fails_closed() -> None:
