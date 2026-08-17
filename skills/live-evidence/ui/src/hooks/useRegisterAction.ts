@@ -36,12 +36,12 @@ function flush() {
 }
 
 export function useRegisterAction(action: ActionDefinition) {
-  const registered = useRef(false);
+  const registeredKey = useRef<string | null>(null);
   const key = keyOf(action);
 
   useEffect(() => {
-    if (registered.current || queued.has(key) || flushed.has(key)) return;
-    registered.current = true;
+    if (registeredKey.current === key || queued.has(key) || flushed.has(key)) return;
+    registeredKey.current = key;
     pending.push(action);
     queued.add(key);
     if (timer) clearTimeout(timer);

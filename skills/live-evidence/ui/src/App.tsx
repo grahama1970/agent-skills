@@ -1,126 +1,140 @@
-import { AlertTriangle, MessageSquareText } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { AmbientHUD } from "@/components/AmbientHUD";
+import { LiveMeetingSurface } from "@/components/LiveMeetingSurface";
 import { MemoryVault } from "@/components/MemoryVault";
-import { SessionControls } from "@/components/SessionControls";
 import { TranscriptDrawer } from "@/components/TranscriptDrawer";
 import { useLiveEvidence } from "@/hooks/useLiveEvidence";
-import { useRegisterAction } from "@/hooks/useRegisterAction";
 
 export default function App() {
   const { snapshot, connected, error, busy, actions } = useLiveEvidence();
-  const [hiddenHudCards, setHiddenHudCards] = useState<Set<string>>(new Set());
   const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const [vaultOpen, setVaultOpen] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
-  const activeHudCards = useMemo(() => {
-    const sorted = snapshot.cards
-      .filter((card) => !card.dismissed && !hiddenHudCards.has(card.card_id))
+  const visibleCards = useMemo(() => {
+    return snapshot.cards
+      .filter((card) => !card.dismissed)
       .sort((left, right) => {
         if (left.pinned !== right.pinned) return left.pinned ? -1 : 1;
         return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
       });
-    return sorted.slice(0, 2);
-  }, [hiddenHudCards, snapshot.cards]);
+  }, [snapshot.cards]);
 
-  useRegisterAction({
-    element_id: "live-evidence:transcript:toggle",
-    app: "live-evidence",
-    action: "LIVE_EVIDENCE_TRANSCRIPT_TOGGLE",
-    label: "Toggle transcript drawer",
-    description: "Open or close the live transcript drawer during a call",
-  });
+  const activeCard = visibleCards.find((card) => card.card_id === selectedCardId) ?? visibleCards[0];
+
+  useEffect(() => {
+    if (!activeCard) {
+      setSelectedCardId(null);
+      return;
+    }
+    if (!selectedCardId || !visibleCards.some((card) => card.card_id === selectedCardId)) {
+      setSelectedCardId(activeCard.card_id);
+    }
+  }, [activeCard, selectedCardId, visibleCards]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement instanceof HTMLSelectElement
+      ) {
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
         event.preventDefault();
         setTranscriptOpen((value) => !value);
+        return;
       }
-      if (event.key === "Escape") {
-        setHiddenHudCards((current) => {
-          const next = new Set(current);
-          activeHudCards.forEach((card) => next.add(card.card_id));
-          return next;
-        });
+      if (event.key === "ArrowDown" || event.key === "j") {
+        event.preventDefault();
+        if (visibleCards.length === 0) return;
+        const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
+        setSelectedCardId(visibleCards[Math.min(index + 1, visibleCards.length - 1)].card_id);
+        return;
+      }
+      if (event.key === "ArrowUp" || event.key === "k") {
+        event.preventDefault();
+        if (visibleCards.length === 0) return;
+        const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
+        setSelectedCardId(visibleCards[Math.max(index - 1, 0)].card_id);
+        return;
+      }
+      if (event.key === " ") {
+        event.preventDefault();
+        if (activeCard) void actions.pin(activeCard.card_id);
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("active-insight-stage")?.focus();
+        return;
+      }
+      if (event.key === "Escape" || event.key === "d") {
+        event.preventDefault();
+        if (activeCard) {
+          void actions.dismiss(activeCard.card_id);
+          return;
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeHudCards]);
+  }, [actions, activeCard, visibleCards]);
 
   return (
-    <div className="min-h-screen bg-[#060b0d] text-[var(--foreground)]">
-      <main className="min-h-screen px-4 py-4 sm:px-5 lg:px-7 lg:py-6">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4">
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] pb-4 pr-0 lg:pr-96">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-base font-semibold text-white">Live Evidence</h1>
-                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-100">
-                  {snapshot.session.status}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-slate-300">
-                  {connected ? "stream connected" : "stream reconnecting"}
-                </span>
-              </div>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">
-                Local call companion for surfacing Memory and source evidence while audio is flowing.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                data-qid="live-evidence:transcript:toggle"
-                data-qs-action="LIVE_EVIDENCE_TRANSCRIPT_TOGGLE"
-                title="Toggle transcript drawer"
-                type="button"
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.045] px-3 text-xs text-slate-200 transition hover:border-white/20 hover:bg-white/[0.075] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
-                onClick={() => setTranscriptOpen((value) => !value)}
-              >
-                <MessageSquareText aria-hidden="true" className="size-3.5 text-cyan-300" />
-                Transcript
-              </button>
-              <SessionControls
-                status={snapshot.session.status}
-                busy={busy}
-                onStart={() => void actions.start()}
-                onPause={() => void actions.pause()}
-                onStop={() => void actions.stop()}
-              />
-            </div>
-          </header>
-
-          {error ? (
-            <div
-              role="status"
-              className="flex items-center gap-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.08] px-3 py-2 text-xs text-amber-100 lg:mr-96"
-            >
-              <AlertTriangle aria-hidden="true" className="size-3.5" />
-              {error}
-            </div>
-          ) : null}
-
-          <MemoryVault
-            cards={snapshot.cards}
-            transcript={snapshot.transcript}
-            lanes={snapshot.lanes}
-            session={snapshot.session}
-            currentThread={snapshot.current_thread}
-            busy={busy}
-            onSearch={(query, lane) => void actions.search(query, lane)}
-          />
-        </div>
-      </main>
-
-      <AmbientHUD
-        cards={activeHudCards}
+    <div className="min-h-screen bg-[#090a0f] text-[var(--foreground)]">
+      <LiveMeetingSurface
+        cards={visibleCards}
+        activeCard={activeCard}
+        selectedCardId={activeCard?.card_id ?? null}
         connected={connected}
-        status={snapshot.session.status}
+        busy={busy}
+        currentThread={snapshot.current_thread}
+        lanes={snapshot.lanes}
+        session={snapshot.session}
+        transcriptCount={snapshot.transcript.length}
+        vaultOpen={vaultOpen}
+        onSelectCard={setSelectedCardId}
+        onPin={(cardId) => void actions.pin(cardId)}
         onDismiss={(cardId) => {
-          setHiddenHudCards((current) => new Set(current).add(cardId));
+          void actions.dismiss(cardId);
         }}
+        onOpenTranscript={() => setTranscriptOpen(true)}
+        onToggleVault={() => setVaultOpen((value) => !value)}
+        onStart={() => void actions.start()}
+        onPause={() => void actions.pause()}
+        onStop={() => void actions.stop()}
       />
+
+      {error ? (
+        <div
+          role="status"
+          className="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.10] px-3 py-2 text-xs text-amber-100 shadow-2xl shadow-black/40"
+        >
+          <AlertTriangle aria-hidden="true" className="size-3.5" />
+          {error}
+        </div>
+      ) : null}
+
+      {vaultOpen ? (
+        <div className="vault-overlay">
+          <div className="vault-panel">
+            <MemoryVault
+              cards={snapshot.cards}
+              transcript={snapshot.transcript}
+              lanes={snapshot.lanes}
+              session={snapshot.session}
+              currentThread={snapshot.current_thread}
+              busy={busy}
+              onSearch={(query, lane) => void actions.search(query, lane)}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <TranscriptDrawer
         open={transcriptOpen}
         transcript={snapshot.transcript}
