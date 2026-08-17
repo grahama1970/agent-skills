@@ -187,6 +187,45 @@ def answer_for_question(question_id: str) -> str:
     return "Use the Two Sum interpretation with distinct indices, exactly one answer, and return the two indices."
 
 
+def run_ui_cdp(repo_root: Path, backend_url: str, output_dir: Path, name: str) -> str | None:
+    hook = Path.home() / ".codex" / "hooks" / "verify-ui-cdp.sh"
+    if not hook.is_file():
+        return None
+    env = os.environ.copy()
+    for key in ("VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT", "PYTHONHOME", "PYTHONPATH", "PYTHONNOUSERSITE"):
+        env.pop(key, None)
+    python_wrapper_dir = output_dir / "cdp-python-bin"
+    python_wrapper_dir.mkdir(exist_ok=True)
+    python3_link = python_wrapper_dir / "python3"
+    if not python3_link.exists():
+        python3_link.symlink_to("/usr/bin/python3")
+    surf_python = Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/surf/.venv/bin")
+    path_parts = [str(python_wrapper_dir)]
+    if surf_python.is_dir():
+        path_parts.append(str(surf_python))
+    path_parts.append(env.get("PATH", ""))
+    env["PATH"] = os.pathsep.join(path_parts)
+    result = subprocess.run(
+        [str(hook), "--url", backend_url, "--name", name],
+        cwd=repo_root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=60,
+    )
+    (output_dir / "ui-cdp.stdout.json").write_text(result.stdout, encoding="utf-8")
+    (output_dir / "ui-cdp.stderr.log").write_text(result.stderr, encoding="utf-8")
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "UI CDP verification failed")
+    marker = repo_root / ".codex" / "ui-verification" / "latest.json"
+    if not marker.is_file():
+        raise RuntimeError("UI CDP verification did not write .codex/ui-verification/latest.json")
+    marker_copy = output_dir / "ui-cdp-latest.json"
+    shutil.copy2(marker, marker_copy)
+    return str(marker_copy)
+
+
 def post_clarifications(
     client: httpx.Client,
     card_id: str,
@@ -307,6 +346,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ask-mode", choices=("fixture", "real"), default="fixture")
     parser.add_argument("--ask-handler", default="gpt-5.5-high")
     parser.add_argument("--ask-timeout", type=float, default=600.0)
+    parser.add_argument("--ui-cdp", action="store_true", help="Capture the running UI after the answer card is visible.")
+    parser.add_argument("--ui-name", default="live-evidence-docker-pipewire-leetcode-gate")
     return parser.parse_args()
 
 
@@ -314,6 +355,7 @@ def main() -> int:
     args = parse_args()
     root = Path(__file__).resolve().parents[1]
     skills_root = root.parent
+    repo_root = root.parents[1]
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     output_dir = Path(args.output_dir).expanduser().resolve() / run_id
     output_dir.mkdir(parents=True, exist_ok=False)
@@ -416,6 +458,7 @@ def main() -> int:
                 final_state = get_state(client)
                 final_state_path = output_dir / "final-state.json"
                 final_state_path.write_text(json.dumps(final_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                ui_cdp_marker = run_ui_cdp(repo_root, backend_url, output_dir, args.ui_name) if args.ui_cdp else None
                 transcript = final_state.get("transcript") or []
                 gate_metadata = (_gate_source(phase_a_card) or {}).get("metadata") or {}
                 answer_metadata = ask_sources[0].get("metadata") or {}
@@ -429,6 +472,7 @@ def main() -> int:
                         "phase_a_state": str(phase_a_state_path),
                         "final_state": str(final_state_path),
                         "server_log": str(server_log),
+                        "ui_cdp_marker": ui_cdp_marker,
                         "checks": {
                             "legacy_bridge_harness_returncode": bridge_result.get("returncode"),
                             "bridge_pipewire_audio_captured": (bridge_receipt.get("acceptance") or {}).get("pipewire_audio_captured"),
@@ -442,6 +486,7 @@ def main() -> int:
                             "phase_b_ask_invocation_count": 1,
                             "transcript_sha256_preserved": gate_metadata.get("transcript_sha256") == answer_metadata.get("transcript_sha256"),
                             "solver_prompt_hash_recorded": bool(answer_metadata.get("solver_prompt_sha256")),
+                            "ui_cdp_marker": bool(ui_cdp_marker),
                         },
                         "clarification_card_id": phase_a_card.get("card_id"),
                         "phase_a_clarification_question_ids": clarification_ids(phase_a_card),
