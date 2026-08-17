@@ -11,6 +11,8 @@ import asyncio
 import json
 import re
 import subprocess
+
+from .subprocess_env import child_env
 from pathlib import Path
 from time import monotonic
 from typing import Any
@@ -74,6 +76,7 @@ class ExternalSkillClient:
                 capture_output=True,
                 text=True,
                 timeout=max(self._settings.subprocess_timeout_s, 30.0),
+                env=child_env(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             return ExternalResult(

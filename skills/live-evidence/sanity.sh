@@ -4,7 +4,10 @@ unset VIRTUAL_ENV
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export LIVE_EVIDENCE_DATA_DIR="${LIVE_EVIDENCE_DATA_DIR:-${TMPDIR:-/tmp}/live-evidence-sanity-data}"
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/live-evidence/runtime-venv}"
+# Local cache first. This previously defaulted to /mnt/storage12tb, which is
+# rotational=1 and 87% full, while the NVMe root had 1.2T free. Override by
+# exporting UV_PROJECT_ENVIRONMENT explicitly.
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv}"
 export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
 mkdir -p "$LIVE_EVIDENCE_DATA_DIR"
 

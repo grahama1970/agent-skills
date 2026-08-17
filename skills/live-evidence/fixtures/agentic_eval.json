@@ -197,6 +197,39 @@
         "exit_code": 0,
         "stdout_contains": ["invalid skill rejected: PASS"]
       }
+    },
+    {
+      "name": "runtime-never-defaults-onto-a-rotational-disk",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_runtime_disk.py"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "run.sh default venv is not hardcoded to /mnt/storage12tb: PASS",
+          "sanity.sh default venv is not hardcoded to /mnt/storage12tb: PASS",
+          "run.sh does not prefer the slow disk when writable: PASS",
+          "effective venv is not on a rotational device: PASS",
+          "runtime disk eval: PASS"
+        ]
+      }
+    },
+    {
+      "name": "sibling-runners-do-not-inherit-and-rebuild-the-server-venv",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_runtime_disk.py"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "runner env strips UV_PROJECT_ENVIRONMENT: PASS",
+          "runner env strips VIRTUAL_ENV: PASS",
+          "runner env preserves unrelated variables: PASS",
+          "negative control detects a known rotational disk: PASS"
+        ]
+      }
     }
   ]
 }

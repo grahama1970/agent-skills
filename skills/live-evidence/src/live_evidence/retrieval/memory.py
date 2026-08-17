@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import json
 import subprocess
+
+from .subprocess_env import child_env
 from pathlib import Path
 from time import monotonic
 from typing import Any
@@ -241,6 +243,7 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
+                env=child_env(),
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             logger.warning("memory code search degraded: {}", type(exc).__name__)
@@ -271,6 +274,7 @@ class MemoryEvidenceClient:
                 capture_output=True,
                 text=True,
                 timeout=self._settings.subprocess_timeout_s,
+                env=child_env(),
             )
         except (OSError, subprocess.TimeoutExpired):
             return None

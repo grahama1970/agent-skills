@@ -10,11 +10,13 @@ prepare_python_environment() {
     return 2
   fi
   if [[ -z "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
-    if [[ -d /mnt/storage12tb/skills && -w /mnt/storage12tb/skills ]]; then
-      export UV_PROJECT_ENVIRONMENT="/mnt/storage12tb/skills/live-evidence/runtime-venv"
-    else
-      export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv"
-    fi
+    # Local cache first. This previously preferred /mnt/storage12tb whenever it
+    # was writable, which put the runtime venv on /dev/sda1 (rotational=1, 87%
+    # full) while /dev/nvme0n1p2 (rotational=0) had 1.2T free. Every interpreter
+    # start and per-question runner spawn paid seek latency on a spinning disk
+    # for a latency-critical live app. Set UV_PROJECT_ENVIRONMENT explicitly to
+    # override.
+    export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv"
   fi
   export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
   mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
