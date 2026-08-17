@@ -1,0 +1,4 @@
+interface:
+  display_name: "Transcript to LeetCode"
+  short_description: "Reconstruct coding questions before solving"
+  default_prompt: "Use $transcript-to-leetcode to reconstruct the coding problem in this transcript, ask only the blocking clarifying questions, then provide tested code."
