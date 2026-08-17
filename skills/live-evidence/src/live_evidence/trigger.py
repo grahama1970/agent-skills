@@ -311,4 +311,19 @@ def _dedupe_key(tokens: list[str], *, code_related: bool) -> str:
 
 def _has_code_action(text: str) -> bool:
     tokens = {token.casefold() for token in tokenize(text)}
-    return bool(tokens & {"find", "makes", "minimum", "output", "return", "remove", "removal", "stack"})
+    return bool(
+        tokens
+        & {
+            "before",
+            "closing",
+            "find",
+            "makes",
+            "minimum",
+            "opening",
+            "output",
+            "return",
+            "remove",
+            "removal",
+            "stack",
+        }
+    )

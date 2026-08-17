@@ -44,7 +44,9 @@ class RuntimeState:
         """Start or restart a session."""
 
         async with self._lock:
-            if self._session.status is SessionStatus.PAUSED:
+            if not consent_confirmed:
+                snapshot = self._snapshot_unlocked()
+            elif self._session.status is SessionStatus.PAUSED:
                 self._session.status = SessionStatus.LISTENING
                 self._session.consent_confirmed = (
                     self._session.consent_confirmed or consent_confirmed

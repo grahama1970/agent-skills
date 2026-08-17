@@ -256,6 +256,21 @@ def assert_card_has(card: dict[str, Any], *, lane: str | None = None, path_fragm
         raise RuntimeError(f"card missing path fragment {path_fragment}: {card}")
 
 
+def assert_ask_receipt_backed(card: dict[str, Any]) -> None:
+    """Require Ask cards to preserve the actual run artifact identity."""
+
+    for source in card.get("sources") or []:
+        metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+        if (
+            source.get("lane") == "ask"
+            and metadata.get("run_dir")
+            and metadata.get("response_path")
+            and metadata.get("response_sha256")
+        ):
+            return
+    raise RuntimeError(f"card missing Ask run-dir/response hash metadata: {card}")
+
+
 def assert_runner_called(log_path: Path, expected: str) -> None:
     text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
     if expected not in text:
@@ -444,6 +459,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 )
                 state = wait_for_cards(client, 1)
                 assert_card_has(state["cards"][0], lane="ask", path_fragment="ask-run")
+                assert_ask_receipt_backed(state["cards"][0])
                 projected = [event for event in state.get("transcript") or [] if event.get("event_id") == turn_id]
                 if len(projected) != 1 or projected[0].get("kind") != "final" or projected[0].get("end_ms") != 3_200:
                     raise RuntimeError(f"stabilized/final projection regression: {projected}")
@@ -611,6 +627,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         "step5_memory_runner_boundary": True,
                         "step6_current_checkout_rg_after_start": True,
                         "step7_ask_run_dir_fixture_only": True,
+                        "step7_ask_response_hash_preserved": True,
                         "step8_source_bound_cards": True,
                         "step8_manual_lanes_derived_query_only": True,
                         "youtube_derived_ripgrep_relevance": True,
@@ -631,6 +648,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                             "punctuation-poor ASR chunks select one bounded retrieval question instead of the full transcript",
                             "YouTube-like parenthesis transcript retrieves the domain source instead of generic filler matches",
                             "Ask lane preserves a run directory and surfaces fixture-only response text",
+                            "Ask lane preserves the response artifact hash on the evidence card",
                             "manual Brave/Dogpile lanes receive a derived question, not transcript history",
                         ],
                         "does_not_prove": [

@@ -187,6 +187,10 @@ def state_acceptance(state: dict[str, Any]) -> dict[str, int]:
         card for card in cards
         if any(source.get("lane") == "ask" for source in card.get("sources") or [])
     ]
+    ask_receipt_cards = [
+        card for card in ask_cards
+        if any(_ask_source_has_receipt(source) for source in card.get("sources") or [])
+    ]
     source_cards = [
         card for card in cards
         if any(source.get("lane") in {"ripgrep", "code", "memory"} for source in card.get("sources") or [])
@@ -196,7 +200,18 @@ def state_acceptance(state: dict[str, Any]) -> dict[str, int]:
         "evidence_cards": len(cards),
         "source_backed_cards": len(source_cards),
         "ask_backed_cards": len(ask_cards),
+        "ask_receipt_backed_cards": len(ask_receipt_cards),
     }
+
+
+def _ask_source_has_receipt(source: dict[str, Any]) -> bool:
+    metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+    return (
+        source.get("lane") == "ask"
+        and bool(metadata.get("run_dir"))
+        and bool(metadata.get("response_path"))
+        and bool(metadata.get("response_sha256"))
+    )
 
 
 def wait_for_evidence_state(
@@ -216,7 +231,7 @@ def wait_for_evidence_state(
             counts["pipewire_transcript_events"] > 0
             and counts["evidence_cards"] > 0
             and counts["source_backed_cards"] > 0
-            and (counts["ask_backed_cards"] > 0 if require_ask else True)
+            and (counts["ask_receipt_backed_cards"] > 0 if require_ask else True)
         ):
             return last_state
         time.sleep(2.0)
@@ -405,7 +420,7 @@ def main() -> int:
             and acceptance["pipewire_transcript_events"] > 0
             and acceptance["evidence_cards"] > 0
             and acceptance["source_backed_cards"] > 0
-            and (acceptance["ask_backed_cards"] > 0 if not args.no_require_ask else True)
+            and (acceptance["ask_receipt_backed_cards"] > 0 if not args.no_require_ask else True)
         )
         receipt.update(
             {

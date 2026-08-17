@@ -190,6 +190,10 @@ def test_real_stt_valid_parentheses_question_is_actionable() -> None:
     assert decision.code_related is True
 
 
+def test_selected_valid_parentheses_ordering_question_is_actionable() -> None:
+    assert is_code_question("A opening parentheses always has to come before closing, right?")
+
+
 def test_shared_code_question_classifier_matches_interview_prompt() -> None:
     assert is_code_question(
         "Given a valid parenthesis string with lowercase characters, how would you "

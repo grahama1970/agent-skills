@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import asyncio
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -74,6 +75,11 @@ def test_ask_solution_reads_response_from_run_receipt(tmp_path: Path) -> None:
     assert result.sources[0].lane is RetrievalLane.ASK
     assert result.sources[0].path == str(run_dir.resolve())
     assert result.sources[0].metadata["seed_source_count"] == 1
+    response_path = run_dir / "node-artifacts" / "handler-fixture" / "response.md"
+    assert result.sources[0].metadata["response_path"] == str(response_path)
+    assert result.sources[0].metadata["response_sha256"] == hashlib.sha256(
+        response_path.read_bytes()
+    ).hexdigest()
     assert "target_symbol" in result.sources[0].excerpt
 
 

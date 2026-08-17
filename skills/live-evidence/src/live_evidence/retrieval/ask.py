@@ -8,6 +8,7 @@ the Ask run directory as the solution receipt.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import subprocess
@@ -101,7 +102,7 @@ class AskSolutionClient:
 
         payload = _parse_json_output(result.stdout)
         run_dir = _find_run_dir(payload)
-        response = _read_ask_response(run_dir) if run_dir else ""
+        response_path, response = _read_ask_response(run_dir) if run_dir else (None, "")
         if not response:
             response = _response_from_payload(payload) or result.stdout.strip()
         response = " ".join(response.split())
@@ -124,6 +125,8 @@ class AskSolutionClient:
             metadata={
                 "handler": self._settings.ask_handler,
                 "run_dir": str(run_dir) if run_dir else None,
+                "response_path": str(response_path) if response_path else None,
+                "response_sha256": _sha256_file(response_path) if response_path else None,
                 "seed_source_count": len(evidence),
                 "query": query[:500],
             },
@@ -235,9 +238,9 @@ def _find_run_dir(payload: Any) -> Path | None:
     return None
 
 
-def _read_ask_response(run_dir: Path | None) -> str:
+def _read_ask_response(run_dir: Path | None) -> tuple[Path | None, str]:
     if run_dir is None or not run_dir.is_dir():
-        return ""
+        return None, ""
     candidates = sorted(run_dir.glob("node-artifacts/handler-*/response.md"))
     candidates.extend(sorted(run_dir.glob("node-artifacts/*/response.md")))
     for path in candidates:
@@ -246,8 +249,21 @@ def _read_ask_response(run_dir: Path | None) -> str:
         except OSError:
             continue
         if text:
-            return text
-    return ""
+            return path, text
+    return None, ""
+
+
+def _sha256_file(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError:
+        return None
+    return digest.hexdigest()
 
 
 def _response_from_payload(payload: Any) -> str:

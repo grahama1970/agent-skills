@@ -121,6 +121,19 @@ def assert_top_card(card: dict[str, Any], *, lane: str, path_fragment: str | Non
         raise RuntimeError(f"card missing source path fragment {path_fragment!r}: {card}")
 
 
+def assert_ask_receipt_backed(card: dict[str, Any]) -> None:
+    for source in card.get("sources") or []:
+        metadata = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+        if (
+            source.get("lane") == "ask"
+            and metadata.get("run_dir")
+            and metadata.get("response_path")
+            and metadata.get("response_sha256")
+        ):
+            return
+    raise RuntimeError(f"card missing Ask run-dir/response hash metadata: {card}")
+
+
 def assert_card_text(card: dict[str, Any], expected: list[str]) -> None:
     visible = " ".join(
         str(card.get(field) or "") for field in ("talking_point", "proof", "qualifier")
@@ -216,6 +229,7 @@ def main() -> int:
                 )
                 state = wait_for_cards(client, 1)
                 assert_top_card(state["cards"][0], lane="ask")
+                assert_ask_receipt_backed(state["cards"][0])
                 ask_prompt_path = ask_run_dir / "argv.txt"
                 if not ask_prompt_path.is_file():
                     raise RuntimeError("Ask fixture runner was not invoked for YouTube-derived prompt")
@@ -285,6 +299,7 @@ def main() -> int:
                     "checks": {
                         "interviewer_prompt_to_ask_card": True,
                         "ask_prompt_contains_question_and_evidence": True,
+                        "ask_response_hash_preserved": True,
                         "answer_text_surfaced_in_card": True,
                         "candidate_turn_suppressed": True,
                         "follow_up_to_source_backed_ask_card": True,
