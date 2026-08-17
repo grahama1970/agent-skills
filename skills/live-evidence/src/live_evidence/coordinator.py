@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 from time import monotonic
 
 from loguru import logger
 
 from .config import AppSettings, InterviewProfile
 from .models import (
+    CardStatus,
     EvidenceCard,
     EvidenceSource,
+    Freshness,
     LaneState,
     ManualSearchRequest,
     RetrievalLane,
@@ -21,8 +25,10 @@ from .persistence import SessionJournal
 from .retrieval import (
     AskSolutionClient,
     ExternalSkillClient,
+    LeetCodeGateResult,
     MemoryEvidenceClient,
     RipgrepEvidenceClient,
+    TranscriptToLeetCodeClient,
     rank_sources,
 )
 from .state import RuntimeState
@@ -50,6 +56,7 @@ class EvidenceCoordinator:
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
         self._external = ExternalSkillClient(settings)
         self._ask = AskSolutionClient(settings)
+        self._leetcode = TranscriptToLeetCodeClient(settings)
         self._summarizer = ExtractiveSummarizer()
         self._tasks: set[asyncio.Task[None]] = set()
         self._trigger_lock = asyncio.Lock()
@@ -75,6 +82,7 @@ class EvidenceCoordinator:
             thread=candidate_thread(candidate, self._profile),
             reason=candidate.trigger_reason,
             code_related=is_code_question(candidate.normalized_question),
+            question_payload=candidate.model_dump(mode="json", by_alias=True),
         )
         await self._state.set_thread(decision.thread)
         task = asyncio.create_task(self._retrieve(decision))
@@ -204,10 +212,38 @@ class EvidenceCoordinator:
 
         ranked = rank_sources(sources, decision.query, self._profile)
         ask_sources: list[EvidenceSource] = []
+        gate: LeetCodeGateResult | None = None
         if decision.code_related:
-            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
+            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Checking coding-question contract")
+            gate = await self._leetcode.analyze(_gate_input(decision))
+            await self._journal.append(self._state.session_id(), "leetcode_analysis", gate.payload or _gate_failure_payload(gate))
+            if not gate.solution_allowed:
+                await self._state.set_lane(
+                    RetrievalLane.ASK,
+                    LaneState.BLOCKED,
+                    _gate_lane_detail(gate),
+                    latency_ms=gate.latency_ms,
+                    result_count=len(gate.clarifying_questions),
+                )
+                card = _leetcode_gate_card(decision, gate, ranked, self._settings)
+                snapshot = await self._state.add_card(card)
+                await self._journal.append(snapshot.session.session_id, "evidence_card", card)
+                logger.info(
+                    "leetcode gate blocked ask status={} questions={}",
+                    gate.status,
+                    len(gate.clarifying_questions),
+                )
+                if memory_result is None:
+                    try:
+                        late_memory_result = await memory_task
+                    except Exception as exc:
+                        late_memory_result = exc
+                    await self._apply_memory_result(late_memory_result)
+                return
+            solver_prompt = gate.solver_prompt or decision.query
+            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving gated code question")
             async with self._ask_lock:
-                ask_result = await self._ask.solve(decision.query, ranked[:4])
+                ask_result = await self._ask.solve(solver_prompt, ranked[:4])
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if ask_result.ok else LaneState.DEGRADED,
@@ -216,6 +252,7 @@ class EvidenceCoordinator:
                 result_count=len(ask_result.sources),
             )
             ask_sources = ask_result.sources
+            _attach_gate_metadata(ask_sources, gate)
 
         card_sources = _card_sources_for_decision(decision, ranked, ask_sources, self._profile)
         card = self._summarizer.build(decision.query, decision.thread, card_sources)
@@ -233,6 +270,61 @@ class EvidenceCoordinator:
             except Exception as exc:
                 late_memory_result = exc
             await self._apply_memory_result(late_memory_result)
+
+    async def submit_clarification(
+        self,
+        card_id: str,
+        answers: dict[str, str],
+    ) -> EvidenceCard:
+        """Resume one blocked coding-question gate with explicit answers."""
+
+        snapshot = await self._state.snapshot()
+        card = next((item for item in snapshot.cards if item.card_id == card_id), None)
+        if card is None:
+            raise KeyError(f"card not found: {card_id}")
+        gate_source = _leetcode_source(card)
+        if gate_source is None:
+            raise ValueError("card is not a transcript-to-leetcode clarification card")
+        analysis_input = gate_source.metadata.get("analysis_input")
+        if not isinstance(analysis_input, dict):
+            raise ValueError("clarification card is missing analysis input")
+        seed_sources = _seed_sources_from_metadata(gate_source.metadata)
+        await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Rechecking clarified coding contract")
+        gate = await self._leetcode.analyze(analysis_input, answers=answers)
+        await self._journal.append(snapshot.session.session_id, "leetcode_analysis", gate.payload or _gate_failure_payload(gate))
+        if not gate.solution_allowed:
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.BLOCKED,
+                _gate_lane_detail(gate),
+                latency_ms=gate.latency_ms,
+                result_count=len(gate.clarifying_questions),
+            )
+            blocked = _leetcode_gate_card(
+                _decision_from_gate_card(card, analysis_input),
+                gate,
+                seed_sources,
+                self._settings,
+            )
+            next_snapshot = await self._state.add_card(blocked)
+            await self._journal.append(next_snapshot.session.session_id, "evidence_card", blocked)
+            return blocked
+
+        await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving clarified code question")
+        async with self._ask_lock:
+            ask_result = await self._ask.solve(gate.solver_prompt or card.query, seed_sources[:4])
+        await self._state.set_lane(
+            RetrievalLane.ASK,
+            LaneState.OK if ask_result.ok else LaneState.DEGRADED,
+            ask_result.detail,
+            latency_ms=ask_result.latency_ms,
+            result_count=len(ask_result.sources),
+        )
+        _attach_gate_metadata(ask_result.sources, gate)
+        answer_card = self._summarizer.build(card.query, card.thread, [*ask_result.sources, *seed_sources])
+        next_snapshot = await self._state.add_card(answer_card)
+        await self._journal.append(next_snapshot.session.session_id, "evidence_card", answer_card)
+        return answer_card
 
     async def close(self) -> None:
         """Cancel unfinished retrieval tasks during service shutdown."""
@@ -354,3 +446,149 @@ def _card_sources_for_decision(
     if not decision.code_related:
         return ranked_sources
     return rank_sources([*ask_sources, *ranked_sources], decision.query, profile)
+
+
+def _gate_input(decision: TriggerDecision) -> dict[str, object]:
+    if decision.question_payload:
+        return decision.question_payload
+    return {
+        "schema": "live_evidence.question_candidate.v1",
+        "question_id": decision.event_id,
+        "normalized_question": decision.query,
+        "speaker": "interviewer",
+        "source_event_ids": [decision.event_id],
+        "source_spans": [
+            {
+                "event_id": decision.event_id,
+                "sequence": 0,
+                "start_offset": 0,
+                "end_offset": len(decision.query),
+            }
+        ],
+        "start_sequence": 0,
+        "end_sequence": 0,
+        "trigger_reason": decision.reason,
+        "fingerprint": hashlib.sha256(decision.query.encode("utf-8")).hexdigest()[:24],
+    }
+
+
+def _gate_failure_payload(gate: LeetCodeGateResult) -> dict[str, object]:
+    return {
+        "schema": "transcript_to_leetcode.analysis_failure.v1",
+        "status": gate.status,
+        "solution_allowed": False,
+        "detail": gate.detail,
+        "latency_ms": gate.latency_ms,
+    }
+
+
+def _gate_lane_detail(gate: LeetCodeGateResult) -> str:
+    if gate.status == "no_coding_question":
+        return "No answerable coding contract established"
+    if gate.clarifying_questions:
+        ids = ", ".join(str(item.get("id")) for item in gate.clarifying_questions[:3])
+        return f"Clarification required: {ids}"
+    return f"Clarification required: {gate.detail}"
+
+
+def _leetcode_gate_card(
+    decision: TriggerDecision,
+    gate: LeetCodeGateResult,
+    seed_sources: list[EvidenceSource],
+    settings: AppSettings,
+) -> EvidenceCard:
+    questions = [
+        f"{index}. {item.get('id')}: {item.get('question')}"
+        for index, item in enumerate(gate.clarifying_questions[:3], start=1)
+    ]
+    if gate.status == "no_coding_question":
+        talking_point = "Contract not established; do not call Ask for this transcript window."
+        qualifier = "No stable coding question was reconstructed from the accepted interviewer span."
+    elif questions:
+        talking_point = "Clarification required before solving."
+        qualifier = "Ask is blocked until these question IDs are answered; do not infer LeetCode defaults."
+    else:
+        talking_point = "Coding contract gate degraded before Ask."
+        qualifier = "The analyzer did not authorize a solution, so raw Ask is blocked."
+    proof = " ".join(questions)[:1_200] if questions else gate.detail[:1_200]
+    source = EvidenceSource(
+        lane=RetrievalLane.ASK,
+        label="transcript-to-leetcode gate",
+        excerpt=json.dumps(gate.payload or _gate_failure_payload(gate), sort_keys=True)[:4_000],
+        score=0.0,
+        freshness=Freshness.UNKNOWN,
+        repository="transcript-to-leetcode",
+        path=str(settings.leetcode_runner) if settings.leetcode_runner else "skills/transcript-to-leetcode/run.sh",
+        metadata={
+            "gate_status": gate.status,
+            "solution_allowed": gate.solution_allowed,
+            "transcript_sha256": gate.transcript_sha256,
+            "clarifying_questions": gate.clarifying_questions,
+            "solver_prompt_sha256": gate.solver_prompt_sha256,
+            "analysis_input": _gate_input(decision),
+            "analysis": gate.payload,
+            "seed_sources": [source.model_dump(mode="json") for source in seed_sources[:4]],
+        },
+    )
+    return EvidenceCard(
+        query=decision.query,
+        thread=decision.thread,
+        question=decision.query,
+        answer=talking_point,
+        evidence=f"status={gate.status}; transcript_sha256={gate.transcript_sha256 or 'unavailable'}",
+        talking_point=talking_point,
+        proof=proof or "transcript-to-leetcode did not authorize a solver prompt.",
+        qualifier=qualifier,
+        confidence=0.0,
+        status=CardStatus.INSUFFICIENT,
+        sources=[source],
+        lanes=[RetrievalLane.ASK],
+    )
+
+
+def _attach_gate_metadata(sources: list[EvidenceSource], gate: LeetCodeGateResult | None) -> None:
+    if gate is None:
+        return
+    for source in sources:
+        if source.lane is not RetrievalLane.ASK:
+            continue
+        source.metadata["leetcode_gate_status"] = gate.status
+        source.metadata["transcript_sha256"] = gate.transcript_sha256
+        source.metadata["solver_prompt_sha256"] = gate.solver_prompt_sha256
+
+
+def _leetcode_source(card: EvidenceCard) -> EvidenceSource | None:
+    for source in card.sources:
+        if (
+            source.lane is RetrievalLane.ASK
+            and source.repository == "transcript-to-leetcode"
+            and source.metadata.get("solution_allowed") is False
+        ):
+            return source
+    return None
+
+
+def _seed_sources_from_metadata(metadata: dict[str, object]) -> list[EvidenceSource]:
+    payload = metadata.get("seed_sources")
+    if not isinstance(payload, list):
+        return []
+    sources: list[EvidenceSource] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        try:
+            sources.append(EvidenceSource.model_validate(item))
+        except ValueError:
+            continue
+    return sources
+
+
+def _decision_from_gate_card(card: EvidenceCard, analysis_input: dict[str, object]) -> TriggerDecision:
+    return TriggerDecision(
+        event_id=str(analysis_input.get("question_id") or card.card_id),
+        query=card.query,
+        thread=card.thread,
+        reason="code-question",
+        code_related=True,
+        question_payload=analysis_input,
+    )

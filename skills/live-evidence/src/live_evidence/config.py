@@ -105,6 +105,7 @@ class AppSettings(BaseModel):
     ask_handler: str = "gpt-5.5-high"
     ask_allow_provider_calls: bool = False
     ask_timeout_s: float = Field(default=45.0, gt=1.0, le=600.0)
+    leetcode_runner: Path | None = None
     brave_runner: Path | None = None
     dogpile_runner: Path | None = None
     allow_remote_bind: bool = False
@@ -142,6 +143,11 @@ class AppSettings(BaseModel):
             "memory",
         )
         ask_runner = _runner_from_env_only("LIVE_EVIDENCE_ASK_RUNNER")
+        leetcode_runner = _runner_from_env_or_sibling(
+            root,
+            "LIVE_EVIDENCE_LEETCODE_RUNNER",
+            "transcript-to-leetcode",
+        )
         brave_runner = _runner_from_env_or_sibling(
             root,
             "LIVE_EVIDENCE_BRAVE_RUNNER",
@@ -171,6 +177,7 @@ class AppSettings(BaseModel):
                 os.getenv("LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS", "false")
             ),
             ask_timeout_s=float(os.getenv("LIVE_EVIDENCE_ASK_TIMEOUT", "45")),
+            leetcode_runner=leetcode_runner,
             brave_runner=brave_runner,
             dogpile_runner=dogpile_runner,
             allow_remote_bind=_truthy(
@@ -254,6 +261,7 @@ def public_settings(settings: AppSettings, profile: InterviewProfile) -> dict[st
         "repo_count": len(settings.repo_roots),
         "memory_configured": bool(settings.memory_url),
         "ask_configured": bool(settings.ask_runner),
+        "leetcode_gate_configured": bool(settings.leetcode_runner),
         "external_search_enabled": bool(settings.brave_runner or settings.dogpile_runner),
         "remote_bind_allowed": settings.allow_remote_bind,
     }

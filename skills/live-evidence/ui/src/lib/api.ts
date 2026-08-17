@@ -29,6 +29,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ query, lane }),
     }),
+  clarify: (cardId: string, answers: Record<string, string>) =>
+    request<EvidenceCard>(`/api/cards/${cardId}/clarifications`, {
+      method: "POST",
+      body: JSON.stringify({ answers }),
+    }),
   pin: (cardId: string) => request<AppSnapshot>(`/api/cards/${cardId}/pin`, { method: "POST" }),
   dismiss: (cardId: string) =>
     request<AppSnapshot>(`/api/cards/${cardId}/dismiss`, { method: "POST" }),

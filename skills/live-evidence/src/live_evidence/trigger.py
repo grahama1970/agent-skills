@@ -9,6 +9,7 @@ activation behavior inspectable.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 from time import monotonic
 
 from .config import InterviewProfile
@@ -134,6 +135,7 @@ class TriggerDecision:
     thread: str
     reason: str
     code_related: bool = False
+    question_payload: dict[str, Any] | None = None
 
 
 class TriggerEngine:

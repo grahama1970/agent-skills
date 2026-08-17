@@ -17,6 +17,7 @@ const LANE_META: Record<RetrievalLane, { label: string; icon: typeof DatabaseZap
 function stateColor(state: LaneActivity["state"]): string {
   if (state === "ok") return "bg-emerald-300";
   if (state === "running") return "bg-[var(--accent)] animate-pulse";
+  if (state === "blocked") return "bg-sky-300";
   if (state === "degraded" || state === "error") return "bg-amber-300";
   return "bg-white/25";
 }

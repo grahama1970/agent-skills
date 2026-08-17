@@ -216,6 +216,11 @@ class RuntimeState:
 
         return self._session.status
 
+    def session_id(self) -> str:
+        """Return the current session id for append-only journal writes."""
+
+        return self._session.session_id
+
     def _initial_lanes(self) -> dict[RetrievalLane, LaneActivity]:
         """Create the truthful initial state for every retrieval lane."""
 

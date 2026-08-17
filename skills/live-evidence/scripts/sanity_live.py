@@ -80,7 +80,7 @@ def main() -> int:
                 else:
                     raise RuntimeError(f"server did not start; log={log_path.read_text()}")
 
-                start = client.post("/api/session/start", json={"consent_confirmed": False})
+                start = client.post("/api/session/start", json={"consent_confirmed": True})
                 start.raise_for_status()
                 event = {
                     "schema": "live_evidence.transcript_event.v1",
