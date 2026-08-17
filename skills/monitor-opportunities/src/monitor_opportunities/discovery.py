@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -888,10 +889,53 @@ def _add_registry_evidence(receipt: dict[str, Any], target: dict[str, Any], *url
             receipt["evidence_refs"].append(url)
 
 
+FIXTURE_DATE_FIELDS = ("published_at", "updated_at", "observed_at")
+
+
+def _parse_fixture_date(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def shift_fixture_dates(rows: list[dict[str, Any]], now: datetime | None = None) -> timedelta:
+    """Re-date fixture rows relative to now, preserving the gaps between them.
+
+    A fixture is dated when it is authored, so the recency gate silently ages it
+    out: on 2026-08-17 every candidate in the committed discovery fixture was
+    exactly 14 days old, the shortlist came back empty, and 17 tests that need
+    one report-visible opportunity failed for a reason that had nothing to do
+    with the code under test. Shifting by (now - newest) keeps every relative
+    age intact, so a row authored as deliberately stale stays stale.
+    """
+
+    now = now or datetime.now(timezone.utc)
+    stamps = [
+        parsed
+        for row in rows
+        for field in FIXTURE_DATE_FIELDS
+        if (parsed := _parse_fixture_date(row.get(field))) is not None
+    ]
+    if not stamps:
+        return timedelta(0)
+    offset = now - max(stamps)
+    for row in rows:
+        for field in FIXTURE_DATE_FIELDS:
+            parsed = _parse_fixture_date(row.get(field))
+            if parsed is not None:
+                row[field] = (parsed + offset).isoformat().replace("+00:00", "Z")
+    return offset
+
+
 def _fixture_sweep(fixture_dir: Path, lanes: set[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     fixture = read_json(fixture_dir / "discovery-run.json")
     receipts = [row for row in fixture["source_receipts"] if row["lane"] in lanes]
     candidates = [row for row in fixture["candidates"] if row["lane"] in lanes]
+    shift_fixture_dates(candidates + receipts)
     attempted = {row["lane"] for row in receipts}
     for lane in sorted(lanes - attempted):
         receipt = _base_receipt(lane, "fixture", f"lane-{lane}", "fixture")
