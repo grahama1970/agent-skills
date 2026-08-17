@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, CircleHelp, Clipboard, Clock3, Target, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, CircleHelp, Clipboard, Clock3, PencilLine, Target, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
@@ -102,8 +102,9 @@ function ChecklistItem({
   status,
   note,
   activeNext,
+  activeEditing,
   onToggle,
-  onNoteChange,
+  onEdit,
 }: {
   cardId: string;
   item: ClarifyItem;
@@ -111,17 +112,28 @@ function ChecklistItem({
   status: ClarifyStatus;
   note: string;
   activeNext: boolean;
+  activeEditing: boolean;
   onToggle: (id: string) => void;
-  onNoteChange: (id: string, value: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const qid = `live-evidence:clarify:item:${cardId}:${item.id}`;
+  const editQid = `live-evidence:clarify:edit-note:${cardId}:${item.id}`;
   const noteQid = `live-evidence:clarify:note:${cardId}:${item.id}`;
+  const answer = note.trim();
   useRegisterAction({
     element_id: qid,
     app: "live-evidence",
     action: "LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE",
     label: `Toggle clarification ${index}`,
     description: "Cycle a clarification item between unanswered, confirmed, and alternate contract",
+    params: { card_id: cardId, item_id: item.id },
+  });
+  useRegisterAction({
+    element_id: editQid,
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_CLARIFY_NOTE_EDIT",
+    label: `Edit clarification note ${index}`,
+    description: "Open the manual clarification note editor for one item",
     params: { card_id: cardId, item_id: item.id },
   });
   useRegisterAction({
@@ -146,29 +158,36 @@ function ChecklistItem({
           {index}. {item.label}
         </span>
         <span className="anchor-subtext">{item.question}</span>
-        <input
-          data-qid={noteQid}
-          data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE"
-          title={`Answer note for ${item.label}`}
-          className="clarify-note-input"
-          value={note}
-          onChange={(event) => onNoteChange(item.id, event.target.value)}
-          placeholder="Answer / note..."
-          aria-label={`Answer note for ${item.label}`}
-        />
+        <span className="clarify-answer-chip" data-state={answer ? "answered" : "pending"}>
+          {answer || "Listening for answer"}
+        </span>
       </span>
-      <button
-        data-qid={qid}
-        data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
-        type="button"
-        title={`Cycle clarification status for ${item.label}`}
-        className="clarify-status-icon"
-        onClick={() => onToggle(item.id)}
-        aria-label={`Cycle clarification ${index}: ${statusLabel(status, activeNext)}`}
-        aria-pressed={status !== "unanswered"}
-      >
-        <StatusIcon status={status} activeNext={activeNext} />
-      </button>
+      <span className="clarify-card-actions">
+        <button
+          data-qid={editQid}
+          data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_EDIT"
+          type="button"
+          title={`Edit answer note for ${item.label}`}
+          className={`clarify-edit-button ${activeEditing ? "is-active" : ""}`}
+          onClick={() => onEdit(item.id)}
+          aria-label={`Edit answer note for ${item.label}`}
+          aria-pressed={activeEditing}
+        >
+          <PencilLine aria-hidden="true" className="size-3.5" />
+        </button>
+        <button
+          data-qid={qid}
+          data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"
+          type="button"
+          title={`Cycle clarification status for ${item.label}`}
+          className="clarify-status-icon"
+          onClick={() => onToggle(item.id)}
+          aria-label={`Cycle clarification ${index}: ${statusLabel(status, activeNext)}`}
+          aria-pressed={status !== "unanswered"}
+        >
+          <StatusIcon status={status} activeNext={activeNext} />
+        </button>
+      </span>
     </article>
   );
 }
@@ -180,10 +199,13 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
   const [copied, setCopied] = useState(false);
   const [statuses, setStatuses] = useState<Record<string, ClarifyStatus>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const copyQid = `live-evidence:clarify:copy:${card.card_id}`;
   const completeQid = `live-evidence:clarify:complete:${card.card_id}`;
+  const closeNoteQid = `live-evidence:clarify:note-editor-close:${card.card_id}`;
   const timerState = completed ? "complete" : seconds <= 0 ? "expired" : seconds <= 10 ? "urgent" : seconds <= 20 ? "warning" : "normal";
   const activeNextId = useMemo(() => items.find((item) => (statuses[item.id] ?? "unanswered") === "unanswered")?.id ?? null, [items, statuses]);
+  const editingItem = items.find((item) => item.id === editingNoteId);
 
   useRegisterAction({
     element_id: copyQid,
@@ -201,6 +223,14 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
     description: "Mark the current card as ready to move from clarification to solution",
     params: { card_id: card.card_id },
   });
+  useRegisterAction({
+    element_id: closeNoteQid,
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_CLARIFY_NOTE_EDITOR_CLOSE",
+    label: "Close clarification note editor",
+    description: "Close the manual clarification note editor and return to the compact grid",
+    params: { card_id: card.card_id },
+  });
 
   useEffect(() => {
     setSeconds(45);
@@ -208,6 +238,7 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
     setCopied(false);
     setStatuses({});
     setNotes({});
+    setEditingNoteId(null);
   }, [card.card_id]);
 
   useEffect(() => {
@@ -222,6 +253,10 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
 
   const updateNote = (id: string, value: string) => {
     setNotes((current) => ({ ...current, [id]: value }));
+  };
+
+  const editNote = (id: string) => {
+    setEditingNoteId((current) => (current === id ? null : id));
   };
 
   const copyQuestions = async () => {
@@ -290,11 +325,38 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
             status={statuses[item.id] ?? "unanswered"}
             note={notes[item.id] ?? ""}
             activeNext={item.id === activeNextId}
+            activeEditing={item.id === editingNoteId}
             onToggle={toggleItem}
-            onNoteChange={updateNote}
+            onEdit={editNote}
           />
         ))}
       </div>
+      {editingItem ? (
+        <div className="clarify-note-editor">
+          <label htmlFor={`clarify-note-editor-${card.card_id}-${editingItem.id}`}>Manual note: {editingItem.label}</label>
+          <div className="clarify-note-editor-row">
+            <input
+              id={`clarify-note-editor-${card.card_id}-${editingItem.id}`}
+              data-qid={`live-evidence:clarify:note:${card.card_id}:${editingItem.id}`}
+              data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE"
+              title={`Answer note for ${editingItem.label}`}
+              value={notes[editingItem.id] ?? ""}
+              onChange={(event) => updateNote(editingItem.id, event.target.value)}
+              placeholder="Only type here when the call allows it."
+              aria-label={`Answer note for ${editingItem.label}`}
+            />
+            <button
+              data-qid={closeNoteQid}
+              data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_EDITOR_CLOSE"
+              title="Close clarification note editor"
+              type="button"
+              onClick={() => setEditingNoteId(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

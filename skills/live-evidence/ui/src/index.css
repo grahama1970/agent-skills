@@ -349,7 +349,7 @@ kbd {
 }
 
 .meeting-shell.compact-mode .clarify-anchor-card {
-  min-height: 76px;
+  min-height: 66px;
   padding: 9px 10px;
 }
 
@@ -371,9 +371,12 @@ kbd {
   font-size: 14px;
 }
 
-.meeting-shell.compact-mode .clarify-note-input {
-  width: 100%;
+.meeting-shell.compact-mode .clarify-answer-chip {
   margin-top: 5px;
+}
+
+.meeting-shell.compact-mode .clarify-note-editor {
+  display: none;
 }
 
 @supports not (backdrop-filter: blur(12px)) {
@@ -650,7 +653,7 @@ kbd {
 .clarify-anchor-card {
   display: flex;
   min-width: 0;
-  min-height: 82px;
+  min-height: 72px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -723,26 +726,123 @@ kbd {
   white-space: nowrap;
 }
 
-.clarify-note-input {
-  width: min(100%, 24rem);
-  margin-top: 7px;
-  border: 0;
-  border-bottom: 1px dashed #3a4152;
-  border-radius: 0;
-  background: transparent;
-  padding: 3px 2px;
-  color: #f8fafc;
-  font-size: 11px;
+.clarify-answer-chip {
+  display: inline-flex;
+  width: fit-content;
+  max-width: min(100%, 18rem);
+  margin-top: 6px;
+  overflow: hidden;
+  border: 1px solid #2d3342;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  padding: 2px 7px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.clarify-answer-chip[data-state="answered"] {
+  border-color: rgba(16, 185, 129, 0.36);
+  background: rgba(16, 185, 129, 0.12);
+  color: #86efac;
+  text-transform: none;
+}
+
+.clarify-card-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.clarify-edit-button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #262b3a;
+  border-radius: 999px;
+  background: #11131a;
+  color: #94a3b8;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.clarify-edit-button:hover,
+.clarify-edit-button:focus-visible,
+.clarify-edit-button.is-active {
+  border-color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+  color: #bfdbfe;
+  transform: scale(1.04);
+}
+
+.clarify-note-editor {
+  margin-top: 10px;
+  border: 1px solid #2d3342;
+  border-radius: 6px;
+  background: rgba(9, 10, 15, 0.42);
+  padding: 10px;
+}
+
+.clarify-note-editor label {
+  display: block;
+  margin-bottom: 7px;
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.clarify-note-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clarify-note-editor input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #2d3342;
+  border-radius: 5px;
+  background: #11131a;
+  padding: 7px 9px;
+  color: #f8fafc;
+  font-size: 12px;
   outline: none;
 }
 
-.clarify-note-input::placeholder {
+.clarify-note-editor input::placeholder {
   color: #64748b;
 }
 
-.clarify-note-input:focus {
-  border-bottom-color: #60a5fa;
+.clarify-note-editor input:focus {
+  border-color: #60a5fa;
+}
+
+.clarify-note-editor button {
+  border: 1px solid #2d3342;
+  border-radius: 5px;
+  background: #181b24;
+  padding: 7px 10px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.clarify-note-editor button:hover,
+.clarify-note-editor button:focus-visible {
+  border-color: #60a5fa;
+  color: #bfdbfe;
 }
 
 .clarify-status {
