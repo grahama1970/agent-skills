@@ -12,7 +12,11 @@
       "name": "verify-entrypoint-local-http-ripgrep-ui",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh verify"],
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh verify"
+      ],
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
@@ -26,7 +30,11 @@
       "name": "interview-loop-question-to-scannable-cards",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-interview-loop"],
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-interview-loop"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
@@ -44,7 +52,11 @@
       "name": "youtube-derived-coding-interview-ask-cards",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-youtube-interview"],
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-youtube-interview"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
@@ -180,29 +192,44 @@
       "name": "listener-requires-explicit-consent",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"],
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"
+      ],
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 2,
-        "stderr_contains": ["live modes require --consent-confirmed"]
+        "stderr_contains": [
+          "live modes require --consent-confirmed"
+        ]
       }
     },
     {
       "name": "invalid-skill-contract-rejected",
       "type": "adversarial",
       "real_world": true,
-      "command": ["bash", "-c", "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adversarial"],
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adversarial"
+      ],
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["invalid skill rejected: PASS"]
+        "stdout_contains": [
+          "invalid skill rejected: PASS"
+        ]
       }
     },
     {
       "name": "runtime-never-defaults-onto-a-rotational-disk",
       "type": "adversarial",
       "real_world": true,
-      "command": ["python3", "../scripts/eval_runtime_disk.py"],
+      "command": [
+        "python3",
+        "../scripts/eval_runtime_disk.py"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
@@ -219,7 +246,10 @@
       "name": "sibling-runners-do-not-inherit-and-rebuild-the-server-venv",
       "type": "adversarial",
       "real_world": true,
-      "command": ["python3", "../scripts/eval_runtime_disk.py"],
+      "command": [
+        "python3",
+        "../scripts/eval_runtime_disk.py"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
@@ -230,6 +260,26 @@
           "negative control detects a known rotational disk: PASS"
         ]
       }
+    },
+    {
+      "name": "live-youtube-pipewire-audio-to-card",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 1200,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/live-evidence\" && bash run.sh eval-live-youtube-oracle"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "receipt"
+        ]
+      },
+      "proves": "Real audio reaches a card: the YouTube interview WAV is played into PipeWire, captured by pw-record, transcribed by RealtimeSTT in the GPU container, and projected as a source-backed evidence card. Every other case in this suite posts transcript TEXT to the API and therefore proves nothing about the audio half.",
+      "does_not_prove": "Browser playback from youtube.com (a stored WAV of the same video is played), live Ask provider quality, or real Memory relevance (Memory is deliberately degraded)."
     }
   ]
 }

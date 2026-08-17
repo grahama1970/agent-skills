@@ -101,6 +101,11 @@ export function MemoryVaultRecord({ record }: { record: MemoryRecord }) {
       </div>
 
       <div className="mt-4 border-t border-white/[0.07] pt-3">
+        {record.sourceExcerpt ? (
+          <div className="mb-1 line-clamp-2 font-mono text-[10px] leading-4 text-slate-300">
+            {record.sourceExcerpt}
+          </div>
+        ) : null}
         <div className="mb-2 truncate font-mono text-[10px] text-slate-500" title={record.sourceText}>
           {record.sourceText}
         </div>

@@ -13,6 +13,7 @@ export interface MemoryRecord {
   title: string;
   content: string;
   sourceText: string;
+  sourceExcerpt: string;
   sourceHref?: string;
   tags: string[];
   createdAt: string;
@@ -63,6 +64,7 @@ export function recordsFrom(cards: EvidenceCard[], session: SessionInfo, current
         title: card.question || card.query,
         content: `${card.answer || card.talking_point} ${card.evidence || card.proof} ${card.qualifier}`.trim(),
         sourceText: sourceText(primarySource),
+        sourceExcerpt: primarySource?.excerpt ?? "",
         sourceHref: sourceHref(primarySource),
         tags,
         createdAt: new Intl.DateTimeFormat(undefined, {

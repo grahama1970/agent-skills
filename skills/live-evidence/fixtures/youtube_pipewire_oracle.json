@@ -1,0 +1,34 @@
+{
+  "schema": "live_evidence.youtube_pipewire_oracle.v1",
+  "name": "youtube-parentheses-live-oracle",
+  "source": {
+    "url": "https://youtu.be/c6zu897JVQY",
+    "title": "Google Coding Interview With a Meta Software Engineer",
+    "committed_text_policy": "short expected terms only; no full transcript"
+  },
+  "transcript_required_term_groups": [
+    ["opening", "parentheses", "closing"],
+    ["minimum", "parentheses"],
+    ["valid", "string"]
+  ],
+  "selected_query": {
+    "required_terms": ["opening", "parentheses", "always", "come", "before", "closing"],
+    "max_chars": 220,
+    "forbidden_terms": ["yeah that makes sense", "maintenance packet", "webgpt opinion"]
+  },
+  "card": {
+    "required_source_path_fragments": ["valid_parentheses.py"],
+    "required_source_excerpt_terms": ["is_valid_parentheses"],
+    "required_text_terms": ["opening", "parentheses"],
+    "forbidden_text_terms": [
+      "maintenance packet",
+      "webgpt opinion",
+      "skill_maintainer_cycle.py",
+      "sweep_task_monitor.py"
+    ]
+  },
+  "gate": {
+    "raw_ask_without_gate_allowed": false,
+    "blocked_gate_must_show_seed_source": true
+  }
+}
