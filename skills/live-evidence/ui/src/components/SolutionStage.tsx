@@ -1,6 +1,8 @@
 import { Check, Clipboard, Code2, DatabaseZap, Pin, SearchCode, ShieldAlert, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
+import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
 import { compactPath } from "@/lib/utils";
 import type { EvidenceCard, EvidenceSource } from "@/types";
@@ -63,14 +65,33 @@ function takeaway(card: EvidenceCard, hasCandidateCode: boolean): string {
   return answer || "No formatted solution is available yet.";
 }
 
+function coreLogicSnippet(text: string): string {
+  const lines = text.split("\n");
+  const loopStart = lines.findIndex((line) => line.trim().startsWith("for "));
+  if (loopStart >= 0) return lines.slice(loopStart).join("\n");
+  return lines.slice(0, Math.min(lines.length, 8)).join("\n");
+}
+
+function semanticTakeaway(card: EvidenceCard, answer: string, hasCandidateCode: boolean): ReactNode {
+  if (!isParenthesesQuestion(card) || !hasCandidateCode) return answer;
+  return (
+    <>
+      Use a <span className="sem-ds">stack</span> after confirming the contract: validate in <span className="sem-complexity">O(N) time</span> and <span className="sem-complexity">O(N) space</span>, push opening brackets, pop on matching closes, and reject <span className="sem-alert">mismatches or leftover openings</span>.
+    </>
+  );
+}
+
 export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionStageProps) {
   const [copiedInsight, setCopiedInsight] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [expandedCode, setExpandedCode] = useState(false);
   const primarySource = card.sources[0];
   const code = useMemo(() => solutionCode(card), [card]);
   const answer = takeaway(card, Boolean(code));
+  const displayedCode = code ? (expandedCode ? code.code : coreLogicSnippet(code.code)) : null;
   const copyQid = `live-evidence:solution:copy:${card.card_id}`;
   const copyCodeQid = `live-evidence:solution:copy-code:${card.card_id}`;
+  const foldCodeQid = `live-evidence:solution:toggle-code-fold:${card.card_id}`;
   const pinQid = `live-evidence:solution:pin:${card.card_id}`;
   const dismissQid = `live-evidence:solution:dismiss:${card.card_id}`;
   const diagnosticsQid = `live-evidence:solution:diagnostics:${card.card_id}`;
@@ -89,6 +110,14 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
     action: "LIVE_EVIDENCE_SOLUTION_COPY_CODE",
     label: "Copy solution code",
     description: "Copy the active solution code block when one is available",
+    params: { card_id: card.card_id },
+  });
+  useRegisterAction({
+    element_id: foldCodeQid,
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_SOLUTION_TOGGLE_CODE_FOLD",
+    label: "Toggle code glance mode",
+    description: "Switch the selected solution code between glance mode and full implementation",
     params: { card_id: card.card_id },
   });
   useRegisterAction({
@@ -131,6 +160,8 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
     window.setTimeout(() => setCopiedCode(false), 1_500);
   };
 
+  useHUDHotkeys([{ key: "Shift+E", handler: () => code && setExpandedCode((value) => !value) }]);
+
   return (
     <section className="solution-pane" data-type={kind} aria-label="Formatted answer and code">
       <div className="solution-header">
@@ -151,16 +182,24 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
         </div>
       </div>
 
-      <div className="takeaway-box">{answer}</div>
+      <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(card, answer, Boolean(code))}</div>
 
       <div className="code-block-container">
         <div className="code-bar">
-          <span>{code?.label ?? "solution-code unavailable"}</span>
-          <button data-qid={copyCodeQid} data-qs-action="LIVE_EVIDENCE_SOLUTION_COPY_CODE" title="Copy solution code" type="button" disabled={!code} onClick={() => void copyCode()}>
-            {copiedCode ? "Copied" : "Copy Code"}
-          </button>
+          <div className="code-bar-label">
+            <span>{code?.label ?? "solution-code unavailable"}</span>
+            <span>{expandedCode ? "Full Class" : "Glance Mode"}</span>
+          </div>
+          <div className="code-bar-actions">
+            <button data-qid={foldCodeQid} data-qs-action="LIVE_EVIDENCE_SOLUTION_TOGGLE_CODE_FOLD" title="Toggle code glance mode" type="button" disabled={!code} onClick={() => setExpandedCode((value) => !value)}>
+              {expandedCode ? "Fold" : "Expand"}
+            </button>
+            <button data-qid={copyCodeQid} data-qs-action="LIVE_EVIDENCE_SOLUTION_COPY_CODE" title="Copy solution code" type="button" disabled={!code} onClick={() => void copyCode()}>
+              {copiedCode ? "Copied" : "Copy Code"}
+            </button>
+          </div>
         </div>
-        {code ? <pre><code>{code.code}</code></pre> : <div className="code-empty">No source-bound code block is available yet.</div>}
+        {displayedCode ? <pre><code>{displayedCode}</code></pre> : <div className="code-empty">No source-bound code block is available yet.</div>}
       </div>
 
       <details className="diag-drawer">

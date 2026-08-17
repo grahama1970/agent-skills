@@ -1,6 +1,6 @@
-import { Archive, Brain, FileText, Radio } from "lucide-react";
+import { Archive, Brain, FileText, MessageCircle, Radio } from "lucide-react";
 
-import { ClarificationCard } from "@/components/ClarificationCard";
+import { activeClarificationPrompt, ClarificationCard } from "@/components/ClarificationCard";
 import { SessionControls } from "@/components/SessionControls";
 import { SolutionStage } from "@/components/SolutionStage";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
@@ -65,6 +65,21 @@ function liveStatusLabel(session: SessionInfo, connected: boolean): string {
   if (connected && session.status === "listening") return "Listening";
   if (!connected) return "Reconnecting";
   return session.status;
+}
+
+function SpeechTeleprompterBar({ prompt }: { prompt: string }) {
+  return (
+    <div className="teleprompter-bar" data-aoi="AOI_PROMPTER" aria-label="Say aloud prompt">
+      <div className="teleprompter-copy">
+        <span className="teleprompter-label">
+          <MessageCircle aria-hidden="true" className="size-3.5" />
+          Say aloud
+        </span>
+        <span className="teleprompter-prompt">"{prompt}"</span>
+      </div>
+      <span className="teleprompter-anchor">Glance Anchor</span>
+    </div>
+  );
 }
 
 function QuietHeader({
@@ -283,9 +298,14 @@ function ActiveInsightStage({
 }
 
 export function LiveMeetingSurface(props: LiveMeetingSurfaceProps) {
+  const shimmerKey = props.selectedCardId ?? props.activeCard?.card_id ?? "empty";
+  const sayAloudPrompt = props.activeCard ? activeClarificationPrompt(props.activeCard) : "Wait for a stable question before answering.";
+
   return (
     <div className="meeting-shell" data-listening={props.session.status === "listening" ? "true" : "false"}>
+      <div key={shimmerKey} className="top-shimmer-alert shimmer-active" aria-hidden="true" />
       <QuietHeader {...props} />
+      <SpeechTeleprompterBar prompt={sayAloudPrompt} />
       <div className="app-layout">
         <LiveCardStream cards={props.cards} selectedCardId={props.selectedCardId} onSelectCard={props.onSelectCard} />
         <ActiveInsightStage card={props.activeCard} busy={props.busy} onPin={props.onPin} onDismiss={props.onDismiss} />

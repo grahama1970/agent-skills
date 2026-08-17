@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleHelp, Clipboard, Clock3 } from "lucide-react";
+import { CheckCircle2, Circle, CircleHelp, Clipboard, Clock3, Target, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
@@ -71,6 +71,10 @@ function clarificationItems(card: EvidenceCard): ClarifyItem[] {
   ];
 }
 
+export function activeClarificationPrompt(card: EvidenceCard): string {
+  return clarificationItems(card)[0]?.question ?? "Confirm the problem contract before answering.";
+}
+
 function nextStatus(status: ClarifyStatus): ClarifyStatus {
   if (status === "unanswered") return "confirmed";
   if (status === "confirmed") return "denied";
@@ -82,6 +86,13 @@ function statusLabel(status: ClarifyStatus, activeNext: boolean): string {
   if (status === "confirmed") return "Confirmed";
   if (status === "denied") return "Alt Contract";
   return "Unanswered";
+}
+
+function StatusIcon({ status, activeNext }: { status: ClarifyStatus; activeNext: boolean }) {
+  if (activeNext) return <Target aria-hidden="true" className="size-4 text-amber-300" />;
+  if (status === "confirmed") return <CheckCircle2 aria-hidden="true" className="size-4 text-emerald-300" />;
+  if (status === "denied") return <XCircle aria-hidden="true" className="size-4 text-rose-300" />;
+  return <Circle aria-hidden="true" className="size-4 text-slate-600" />;
 }
 
 function ChecklistItem({
@@ -128,7 +139,9 @@ function ChecklistItem({
         </span>
         <span className="anchor-subtext">{item.question}</span>
       </span>
-      <span className="clarify-status">{statusLabel(status, activeNext)}</span>
+      <span className="clarify-status-icon" aria-label={statusLabel(status, activeNext)}>
+        <StatusIcon status={status} activeNext={activeNext} />
+      </span>
     </button>
   );
 }
