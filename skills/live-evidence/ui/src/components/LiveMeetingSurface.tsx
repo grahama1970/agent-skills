@@ -1,6 +1,7 @@
 import { Archive, Brain, Check, Clipboard, Code2, DatabaseZap, FileText, Pin, Radio, SearchCode, ShieldAlert, X } from "lucide-react";
 import { useState } from "react";
 
+import { ClarificationCard } from "@/components/ClarificationCard";
 import { SessionControls } from "@/components/SessionControls";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
 import { compactPath } from "@/lib/utils";
@@ -306,9 +307,11 @@ function ActiveInsightStage({
 
         <div className="question-anchor">"{question}"</div>
 
-        <section className="hero-answer-card" data-type={kind} aria-label="Direct answer">
+        <ClarificationCard card={card} />
+
+        <section className="hero-answer-card muted-solution" data-type={kind} aria-label="Direct answer">
           <div className="flex items-center justify-between gap-3">
-            <h2>Direct Answer</h2>
+            <h2>Step 2: Core Algorithm & Strategy</h2>
             <div className="stage-actions">
               <button
                 data-qid={pinQid}

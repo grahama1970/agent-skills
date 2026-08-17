@@ -62,7 +62,7 @@ export default function App() {
         setSelectedCardId(visibleCards[Math.max(index - 1, 0)].card_id);
         return;
       }
-      if (event.key === " ") {
+      if (event.key === " " && !event.shiftKey) {
         event.preventDefault();
         if (activeCard) void actions.pin(activeCard.card_id);
         return;
