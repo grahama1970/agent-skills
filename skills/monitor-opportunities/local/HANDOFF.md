@@ -1,5 +1,135 @@
 # Handoff Report: monitor-opportunities
 
+**Timestamp**: 2026-08-17T09:19:18-04:00
+**Active Agent**: Codex
+**Canonical workspace**: `/home/graham/workspace/experiments/agent-skills`
+
+## 0. 2026-08-17 canonical handoff update
+
+This section is the current handoff snapshot for the canonical workspace. Older
+sections below are historical and may describe superseded state.
+
+### Operational state
+
+- Stage remains `STAGE_0_RESEARCH_ONLY`.
+- The immutable goal is not met. The skill can produce a Stage 0 opportunity
+  report and local preparation artifacts, but it has not proven the complete
+  daily best-in-class lead, consulting, contact-expansion, and human-authorized
+  application-preparation loop.
+- `./skills/monitor-opportunities/run.sh status --json` in the canonical
+  workspace reports `operational_readiness: NOT_ESTABLISHED`,
+  `external_effects: false`, and `apply` in `not_implemented_commands`.
+- A live Stage 0 run receipt exists at
+  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/run-receipt.json`.
+  It reports `run_id: mo_050183db486da25e`, `live: true`,
+  `mocked: false`, `external_effects: false`, and
+  `terminal_state: AWAITING_HUMAN`.
+- The frozen report exists at
+  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/report/index.html`
+  with source JSON at
+  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/report/report.json`.
+  The report JSON has 8 opportunities, `action_worthy_total: 29`,
+  `visible_total: 29`, `hidden_total: 0`, and
+  `operational_readiness: STAGE_0_READY`.
+- The status command and the latest run report disagree on readiness. Treat the
+  run receipt as evidence for that specific run only; do not infer cron or
+  full immutable-goal readiness from it while `status` still says
+  `NOT_ESTABLISHED`.
+
+### Evidence gathered this handoff
+
+- Handoff automation expected by `$handoff` is missing:
+  `.pi/skills/handoff/run.sh` does not exist in this repository.
+- Canonical local verification command:
+  `./skills/monitor-opportunities/run.sh verify --out /tmp/monitor-opportunities-handoff-verify-canonical-20260817T091856`
+  returned `overall: PASS`, `live: true`, `mocked: false`,
+  `network_used: false`, `external_effects: false`, with 9/9 fixture
+  cases passing. This proves only the local Stage 0 report kernel; it does not
+  prove live discovery, ranking, resume generation, scheduling, or external
+  effects.
+- Memory sync receipt:
+  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/memory-sync-receipt.json`
+  reports `status: PASS`, `readback_count: 9`,
+  `readback_missing_keys: []`, `relationship_signal_count: 0`,
+  `relationship_readback_state: NO_RELATIONSHIP_SIGNALS`, and
+  `relationship_readback_found: false`.
+- Memory recall readback:
+  `skills/monitor-opportunities/local/nightly/memory-unsettled-closure-20260817T1132-1138621/memory-recall-readback.json`
+  reports `found: true`, `meta_took_ms: 27`, `wall_ms: 39.8`, and top key
+  `2026-08-17-run-summary-050183db486da25e`.
+
+### What is working
+
+- The Stage 0 report kernel validates hidden-artifact, feed-health,
+  relocation, outreach-sendability, ATS authorization, human-required-field,
+  shortlist-limit, and unknown-source-status negative gates.
+- Required-source enforcement and API website fallback are represented in the
+  live run receipt phases for LinkedIn top-applicant, Indeed, HiddenJobs,
+  Greenhouse, Ashby, SAM.gov, DARPA, and client research.
+- Claim-bound local tailoring produced a tailoring receipt with
+  `external_effects: false`, `live: true`, `mocked: false`, and explicit
+  non-claims about unknown employer weights and recruiter workflow.
+- The latest report preserved the visibility invariant: every action-worthy
+  artifact is visible in the report and `hidden_total` is zero.
+- Memory write/readback for the run summary is working fast enough in this
+  receipt: `/recall` returned the current run summary in 39.8 ms wall time.
+
+### What is still broken or incomplete
+
+- Contact and relationship expansion is still not producing live value in the
+  current run. The latest report has `relationship_visible_count: 0`, and the
+  memory-sync receipt has `relationship_signal_count: 0` with
+  `NO_RELATIONSHIP_SIGNALS`.
+- Meetup/source-intelligence capture for Buffalo-area groups is not proven in
+  this handoff run. The next run needs real read-only Meetup evidence or a
+  source-capture lane that can emit relationship/event/company-sponsor signals.
+- `monitor-contacts` composition is not yet sufficient as a standard discovery
+  step. Candidates only become relationship-rich when evidence already carries
+  contacts; the run does not yet reliably expand from known contacts, adjacent
+  ARCOS/formal-methods people, GitHub repositories, LinkedIn-visible
+  second/third-degree paths, or event co-presence into report-visible graph
+  records.
+- `status --json` still reports `NOT_ESTABLISHED`, so a project agent should
+  not claim cron readiness solely from the latest run receipt.
+- `apply` is not implemented in the canonical tree. This is acceptable under
+  the no-auto-apply policy, but the command surface should make the human-gated
+  application-preparation path unambiguous.
+- The canonical worktree has many pre-existing modified files under
+  `skills/monitor-opportunities/`. Do not reset, stash, clean, or overwrite
+  them. Use path-scoped diffs and commits only.
+
+### Next deterministic order
+
+1. Add or repair the live relationship expansion slice first. It should ingest
+   `monitor-contacts` recall results and source-intelligence artifacts, then
+   emit report-visible `relationship_signal` records with provenance and graph
+   edges.
+2. Add an `$agentic-evals` regression for the current failure signature:
+   relationship evidence expected but `relationship_signal_count: 0` and
+   `relationship_visible_count: 0`.
+3. Add or repair the Meetup Buffalo source-intelligence capture lane. Evidence
+   should preserve group URL, category, sponsor/company signal, event title,
+   event date, attendee/contact path when visible, source limitations, and
+   why attendance/reconnect is or is not worth human time.
+4. Add GitHub repository intelligence as a contact-expansion input. The Randi
+   Tinney style case should analyze repository ownership, contributors,
+   READMEs, issues, commits, organizations, emails if public, and project
+   relevance without inventing contact claims.
+5. Re-run `run.sh run` with fresh local read-only evidence, then run
+   `memory-sync`, then prove `/memory recall` finds both the run summary and at
+   least one relationship graph document when evidence supports it.
+6. Only after the contact lane produces live graph records, re-check
+   scheduler/cron readiness with `run.sh nightly` or the exact scheduler
+   command and read back the cron receipt.
+
+### Commit and branch notes
+
+- The pushed receipt commit on `agent-skills@main` for the latest memory-ready
+  run is `0328ebe20c72f305ed551f09cca16bc3c022674f`.
+- The canonical local branch also has `290d481c68` at the top of the
+  path-scoped log for `skills/monitor-opportunities`; do not treat branch shape
+  alone as proof of operational state. Use the receipts and commands above.
+
 **Timestamp**: 2026-08-05T08:25:00-04:00
 **Active Agent**: Claude (Claude Code)
 
