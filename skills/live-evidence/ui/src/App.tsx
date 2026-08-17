@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LiveMeetingSurface } from "@/components/LiveMeetingSurface";
 import { MemoryVault } from "@/components/MemoryVault";
 import { TranscriptDrawer } from "@/components/TranscriptDrawer";
+import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useLiveEvidence } from "@/hooks/useLiveEvidence";
 
 export default function App() {
@@ -33,56 +34,32 @@ export default function App() {
     }
   }, [activeCard, selectedCardId, visibleCards]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      if (
-        activeElement instanceof HTMLInputElement ||
-        activeElement instanceof HTMLTextAreaElement ||
-        activeElement instanceof HTMLSelectElement
-      ) {
-        return;
-      }
-      if ((event.metaKey || event.ctrlKey) && event.key === "\\") {
-        event.preventDefault();
-        setTranscriptOpen((value) => !value);
-        return;
-      }
-      if (event.key === "ArrowDown" || event.key === "j") {
-        event.preventDefault();
-        if (visibleCards.length === 0) return;
-        const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
-        setSelectedCardId(visibleCards[Math.min(index + 1, visibleCards.length - 1)].card_id);
-        return;
-      }
-      if (event.key === "ArrowUp" || event.key === "k") {
-        event.preventDefault();
-        if (visibleCards.length === 0) return;
-        const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
-        setSelectedCardId(visibleCards[Math.max(index - 1, 0)].card_id);
-        return;
-      }
-      if (event.key === " " && !event.shiftKey) {
-        event.preventDefault();
-        if (activeCard) void actions.pin(activeCard.card_id);
-        return;
-      }
-      if (event.key === "Enter") {
-        event.preventDefault();
-        document.getElementById("active-insight-stage")?.focus();
-        return;
-      }
-      if (event.key === "Escape" || event.key === "d") {
-        event.preventDefault();
-        if (activeCard) {
-          void actions.dismiss(activeCard.card_id);
-          return;
-        }
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [actions, activeCard, visibleCards]);
+  const selectRelativeCard = (direction: 1 | -1) => {
+    if (visibleCards.length === 0) return;
+    const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
+    const nextIndex = direction > 0 ? Math.min(index + 1, visibleCards.length - 1) : Math.max(index - 1, 0);
+    setSelectedCardId(visibleCards[nextIndex].card_id);
+  };
+
+  useHUDHotkeys([
+    { key: "Cmd+\\", handler: () => setTranscriptOpen((value) => !value) },
+    { key: "Ctrl+\\", handler: () => setTranscriptOpen((value) => !value) },
+    { key: "ArrowDown", handler: () => selectRelativeCard(1) },
+    { key: "j", handler: () => selectRelativeCard(1) },
+    { key: "ArrowUp", handler: () => selectRelativeCard(-1) },
+    { key: "k", handler: () => selectRelativeCard(-1) },
+    { key: "Space", handler: () => activeCard && void actions.pin(activeCard.card_id) },
+    { key: "Enter", handler: () => document.getElementById("active-insight-stage")?.focus() },
+    { key: "Escape", handler: () => activeCard && void actions.dismiss(activeCard.card_id) },
+    { key: "d", handler: () => activeCard && void actions.dismiss(activeCard.card_id) },
+    {
+      key: "Shift+C",
+      handler: () => {
+        const button = document.querySelector<HTMLButtonElement>('[data-qs-action="LIVE_EVIDENCE_SOLUTION_COPY_CODE"]:not(:disabled)');
+        button?.click();
+      },
+    },
+  ]);
 
   return (
     <div className="min-h-screen bg-[#090a0f] text-[var(--foreground)]">

@@ -1,8 +1,8 @@
-import { Archive, Brain, Check, Clipboard, Code2, DatabaseZap, FileText, Pin, Radio, SearchCode, ShieldAlert, X } from "lucide-react";
-import { useState } from "react";
+import { Archive, Brain, FileText, Radio } from "lucide-react";
 
 import { ClarificationCard } from "@/components/ClarificationCard";
 import { SessionControls } from "@/components/SessionControls";
+import { SolutionStage } from "@/components/SolutionStage";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
 import { compactPath } from "@/lib/utils";
 import type { EvidenceCard, LaneActivity, SessionInfo } from "@/types";
@@ -123,6 +123,14 @@ function QuietHeader({
         </div>
       </div>
 
+      <div className="hud-hotkeys" aria-label="HUD keyboard shortcuts">
+        <kbd>Space</kbd> Pin
+        <span>|</span>
+        <kbd>1-4</kbd> Clarify
+        <span>|</span>
+        <kbd>Shift+C</kbd> Copy Code
+      </div>
+
       <div className="flex items-center gap-2">
         <span className="hidden font-mono text-[10px] text-slate-500 sm:inline">{transcriptCount} turns</span>
         <button
@@ -227,51 +235,6 @@ function ActiveInsightStage({
   onPin: (cardId: string) => void;
   onDismiss: (cardId: string) => void;
 }) {
-  const [copied, setCopied] = useState(false);
-  const copyQid = card ? `live-evidence:stage:copy:${card.card_id}` : "live-evidence:stage:copy:none";
-  const pinQid = card ? `live-evidence:stage:pin:${card.card_id}` : "live-evidence:stage:pin:none";
-  const dismissQid = card ? `live-evidence:stage:dismiss:${card.card_id}` : "live-evidence:stage:dismiss:none";
-
-  useRegisterAction({
-    element_id: copyQid,
-    app: "live-evidence",
-    action: "LIVE_EVIDENCE_STAGE_COPY",
-    label: "Copy active insight",
-    description: "Copy the active meeting answer and evidence source",
-    params: card ? { card_id: card.card_id } : undefined,
-  });
-  useRegisterAction({
-    element_id: pinQid,
-    app: "live-evidence",
-    action: "LIVE_EVIDENCE_STAGE_PIN",
-    label: "Pin active insight",
-    description: "Pin or release the selected live evidence card",
-    params: card ? { card_id: card.card_id } : undefined,
-  });
-  useRegisterAction({
-    element_id: dismissQid,
-    app: "live-evidence",
-    action: "LIVE_EVIDENCE_STAGE_DISMISS",
-    label: "Dismiss active insight",
-    description: "Dismiss the selected live evidence card",
-    params: card ? { card_id: card.card_id } : undefined,
-  });
-
-  const copyInsight = async () => {
-    if (!card) return;
-    try {
-      await navigator.clipboard.writeText(
-        `Question: ${card.question || card.query}\n\nAnswer: ${card.answer || card.talking_point}\n\nEvidence: ${
-          card.evidence || card.proof
-        }\n\nSource: ${sourceLabel(card)}\n\nQualifier: ${card.qualifier}`,
-      );
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1_500);
-    } catch {
-      setCopied(false);
-    }
-  };
-
   if (!card) {
     return (
       <main id="active-insight-stage" className="main-stage" tabIndex={-1}>
@@ -288,9 +251,6 @@ function ActiveInsightStage({
 
   const kind = cardKind(card);
   const question = card.question || card.query;
-  const answer = card.answer || card.talking_point;
-  const evidence = card.evidence || card.proof;
-  const primarySource = card.sources[0];
 
   return (
     <main id="active-insight-stage" className="main-stage" tabIndex={-1}>
@@ -308,79 +268,7 @@ function ActiveInsightStage({
         <div className="question-anchor">"{question}"</div>
 
         <ClarificationCard card={card} />
-
-        <section className="hero-answer-card muted-solution" data-type={kind} aria-label="Direct answer">
-          <div className="flex items-center justify-between gap-3">
-            <h2>Step 2: Core Algorithm & Strategy</h2>
-            <div className="stage-actions">
-              <button
-                data-qid={pinQid}
-                data-qs-action="LIVE_EVIDENCE_STAGE_PIN"
-                title={card.pinned ? "Unpin card" : "Pin card"}
-                type="button"
-                disabled={busy}
-                onClick={() => onPin(card.card_id)}
-                aria-label={card.pinned ? "Unpin card" : "Pin card"}
-              >
-                <Pin aria-hidden="true" className="size-3.5" />
-              </button>
-              <button
-                data-qid={copyQid}
-                data-qs-action="LIVE_EVIDENCE_STAGE_COPY"
-                title="Copy active insight"
-                type="button"
-                onClick={copyInsight}
-                aria-label="Copy active insight"
-              >
-                {copied ? <Check aria-hidden="true" className="size-3.5 text-emerald-300" /> : <Clipboard aria-hidden="true" className="size-3.5" />}
-              </button>
-              <button
-                data-qid={dismissQid}
-                data-qs-action="LIVE_EVIDENCE_STAGE_DISMISS"
-                title="Dismiss card"
-                type="button"
-                disabled={busy}
-                onClick={() => onDismiss(card.card_id)}
-                aria-label="Dismiss card"
-              >
-                <X aria-hidden="true" className="size-3.5" />
-              </button>
-            </div>
-          </div>
-          <p>{answer}</p>
-        </section>
-
-        <section className="evidence-section" aria-label="Reasoning and source evidence">
-          <div className="evidence-box">
-            <h3>
-              <ShieldAlert aria-hidden="true" className="size-3.5" />
-              Use With Caution
-            </h3>
-            <p>{card.qualifier}</p>
-          </div>
-          <div className="evidence-box">
-            <h3>
-              <DatabaseZap aria-hidden="true" className="size-3.5" />
-              Evidence
-            </h3>
-            <p>{evidence}</p>
-          </div>
-          <div className="evidence-box source-box">
-            <h3>
-              <SearchCode aria-hidden="true" className="size-3.5" />
-              Source
-            </h3>
-            <code>{sourceLabel(card)}</code>
-            {primarySource?.excerpt ? <pre>{primarySource.excerpt}</pre> : null}
-          </div>
-          <div className="evidence-box">
-            <h3>
-              <Code2 aria-hidden="true" className="size-3.5" />
-              Confidence
-            </h3>
-            <p>{Math.round(card.confidence * 100)}% evidence confidence from {card.sources.length} source(s).</p>
-          </div>
-        </section>
+        <SolutionStage card={card} busy={busy} kind={kind} onPin={onPin} onDismiss={onDismiss} />
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import { CheckCircle2, CircleHelp, Clipboard, Clock3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useRegisterAction } from "@/hooks/useRegisterAction";
 import type { EvidenceCard } from "@/types";
 
@@ -171,28 +172,13 @@ export function ClarificationCard({ card }: ClarificationCardProps) {
     window.setTimeout(() => setCopied(false), 1_500);
   };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const active = document.activeElement;
-      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement) return;
-      if (event.shiftKey && event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        void copyQuestions();
-      }
-      if (event.shiftKey && event.code === "Space") {
-        event.preventDefault();
-        setCompleted(true);
-      }
-      if (/^[1-4]$/.test(event.key)) {
-        const item = items[Number(event.key) - 1];
-        if (!item) return;
-        event.preventDefault();
-        toggleItem(item.id);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [items]);
+  useHUDHotkeys([
+    { key: "Shift+Space", handler: () => setCompleted(true) },
+    { key: "1", handler: () => items[0] && toggleItem(items[0].id) },
+    { key: "2", handler: () => items[1] && toggleItem(items[1].id) },
+    { key: "3", handler: () => items[2] && toggleItem(items[2].id) },
+    { key: "4", handler: () => items[3] && toggleItem(items[3].id) },
+  ]);
 
   return (
     <section className={`hero-clarify-card ${completed ? "phase-completed" : "phase-active"}`} aria-label="Clarifying questions">
