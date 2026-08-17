@@ -73,8 +73,12 @@ class EvidenceCoordinator:
             thread=candidate_thread(candidate, self._profile),
             reason=candidate.trigger_reason,
         )
+        # Claim the revision this retrieval answers BEFORE dispatching it. A
+        # later turn bumps the revision, so a slow result can be recognised as
+        # stale at publication time instead of overwriting a newer answer.
+        question_id, question_revision = await self._state.revise_question(decision.query)
         await self._state.set_thread(decision.thread)
-        task = asyncio.create_task(self._retrieve(decision))
+        task = asyncio.create_task(self._retrieve(decision, question_id, question_revision))
         self._tasks.add(task)
         task.add_done_callback(self._task_done)
 
@@ -186,7 +190,12 @@ class EvidenceCoordinator:
         await self._journal.append(snapshot.session.session_id, "evidence_card", card)
         return card
 
-    async def _retrieve(self, decision: TriggerDecision) -> None:
+    async def _retrieve(
+        self,
+        decision: TriggerDecision,
+        question_id: str,
+        question_revision: int,
+    ) -> None:
         await self._state.set_lane(RetrievalLane.MEMORY, LaneState.RUNNING, decision.reason)
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
@@ -307,12 +316,32 @@ class EvidenceCoordinator:
                     ]
                 }
             )
-        snapshot = await self._state.add_card(card)
+        card = card.model_copy(
+            update={"question_id": question_id, "question_revision": question_revision}
+        )
+        snapshot = await self._state.publish_card_fenced(card)
+        if snapshot is None:
+            # The question moved on while this ran. Keep the work as an audit
+            # event rather than discarding it silently, and never let it reach
+            # the active card.
+            await self._journal.append(
+                self._state.session_id(),
+                "evidence_card_discarded_stale_revision",
+                card,
+            )
+            logger.info(
+                "discarded stale result question_id={} revision={} latency_ms={}",
+                question_id,
+                question_revision,
+                int((monotonic() - started) * 1000),
+            )
+            return
         await self._journal.append(snapshot.session.session_id, "evidence_card", card)
         logger.info(
-            "evidence card status={} sources={} latency_ms={}",
+            "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,
             len(card.sources),
+            question_revision,
             int((monotonic() - started) * 1000),
         )
 

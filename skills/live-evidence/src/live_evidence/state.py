@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from uuid import uuid4
 from collections.abc import AsyncIterator
 from datetime import timezone
 
@@ -45,6 +46,13 @@ class RuntimeState:
         self._transcript: list[TranscriptEvent] = []
         self._cards: list[EvidenceCard] = []
         self._lanes = self._initial_lanes()
+        # Single active question. Retrieval plus a solver call runs for tens of
+        # seconds, which is long enough for speech to change the question
+        # underneath it, so every answer is fenced against the revision that
+        # asked for it.
+        self._active_question_id: str | None = None
+        self._active_question_revision: int = 0
+        self._active_question_answered: bool = False
 
     async def snapshot(self) -> AppSnapshot:
         """Return an immutable validated UI projection."""
@@ -177,6 +185,76 @@ class RuntimeState:
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
 
+    async def revise_question(self, normalized_question: str) -> tuple[str, int]:
+        """Open or revise the single active question, returning (id, revision).
+
+        Single-active-question invariant with an explicit close condition:
+
+        - A candidate arriving while the active question is still UNANSWERED is
+          treated as a correction and bumps its revision. That is the case the
+          fence exists for: the speaker restated or added a constraint while
+          retrieval was still running.
+        - Once a question has been answered, the next candidate opens a NEW
+          question id. Otherwise every question in a session collapses into one
+          record and each answered card is evicted by the next turn.
+
+        Probabilistic multi-thread identity is deliberately out of scope; this
+        rule is temporal, not semantic.
+        """
+
+        async with self._lock:
+            if self._active_question_id is None or self._active_question_answered:
+                self._active_question_id = uuid4().hex
+                self._active_question_revision = 1
+                self._active_question_answered = False
+            else:
+                self._active_question_revision += 1
+            return self._active_question_id, self._active_question_revision
+
+    async def close_question(self) -> None:
+        """Retire the active question so the next candidate allocates a new id."""
+
+        async with self._lock:
+            self._active_question_id = None
+            self._active_question_revision = 0
+            self._active_question_answered = False
+
+    async def publish_card_fenced(self, card: EvidenceCard) -> AppSnapshot | None:
+        """Publish only if the card still answers the current question revision.
+
+        Compare-and-swap, not last-writer-wins: a solver that started against
+        revision N must not overwrite a card belonging to revision N+1 merely
+        because it finished later. Returns None when the result is stale, and
+        callers must treat None as "discarded" rather than ignoring it.
+
+        Fails closed: a card carrying no question identity, or arriving after the
+        question was closed, is discarded rather than published.
+        """
+
+        async with self._lock:
+            if card.question_id is None:
+                return None
+            if card.question_id != self._active_question_id:
+                return None
+            if card.question_revision != self._active_question_revision:
+                return None
+            # Exactly one active card per question_id: a revision supersedes the
+            # previous answer in place instead of growing the stream.
+            self._cards = [
+                item for item in self._cards if item.question_id != card.question_id
+            ]
+            self._cards.insert(0, card)
+            if len(self._cards) > self._settings.max_cards:
+                pinned = [item for item in self._cards if item.pinned]
+                unpinned = [item for item in self._cards if not item.pinned]
+                self._cards = (pinned + unpinned)[: self._settings.max_cards]
+            # Answered: the next candidate opens a new question rather than
+            # revising this one and evicting the card just published.
+            self._active_question_answered = True
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return snapshot
+
     async def add_card(self, card: EvidenceCard) -> AppSnapshot:
         """Add a new card, preserving pinned cards when trimming history."""
 
@@ -234,6 +312,15 @@ class RuntimeState:
         """Return the current status for low-cost coordinator routing."""
 
         return self._session.status
+
+    def session_id(self) -> str:
+        """Return the current session id for journalling outside a snapshot.
+
+        The stale-result path has no published snapshot to read the id from, and
+        that path must still be journalled rather than dropped.
+        """
+
+        return self._session.session_id
 
     def _initial_lanes(self) -> dict[RetrievalLane, LaneActivity]:
         """Create the truthful initial state for every retrieval lane."""

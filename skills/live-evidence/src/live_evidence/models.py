@@ -280,6 +280,12 @@ class EvidenceCard(BaseModel):
     sources: list[EvidenceSource] = Field(default_factory=list, max_length=8)
     lanes: list[RetrievalLane] = Field(default_factory=list)
     clarifications: list[ClarificationItem] = Field(default_factory=list, max_length=6)
+    # Question identity, so an answer can be fenced against the question that
+    # asked for it. Retrieval plus a solver call runs for tens of seconds, which
+    # is long enough for ordinary speech to change the question underneath it;
+    # without these a slow result publishes over a newer question.
+    question_id: str | None = Field(default=None, min_length=8, max_length=64)
+    question_revision: int = Field(default=0, ge=0)
     pinned: bool = False
     dismissed: bool = False
 
