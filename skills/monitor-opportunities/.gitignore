@@ -1,3 +1,8 @@
 local/nightly/
 local/review/
 local/env
+local/inbound/
+local/outreach/
+local/resume/
+local/*.md
+!local/HANDOFF.md
