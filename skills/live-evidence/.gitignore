@@ -18,3 +18,8 @@ weights/
 *.wav
 *.pcm
 *.mp3
+
+# Editor/script backups. Untracked files make the skill tree dirty, and a dirty
+# tree is what blocked the monitor-opportunities nightly for a day.
+*.bak-*
+*.bak
