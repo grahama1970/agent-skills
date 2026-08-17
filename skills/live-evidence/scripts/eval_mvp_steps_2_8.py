@@ -256,6 +256,14 @@ def assert_card_has(card: dict[str, Any], *, lane: str | None = None, path_fragm
         raise RuntimeError(f"card missing path fragment {path_fragment}: {card}")
 
 
+def assert_card_contains_source(card: dict[str, Any], *, lane: str, path_fragment: str) -> None:
+    serialized = json.dumps(card)
+    if path_fragment not in serialized:
+        raise RuntimeError(f"card missing path fragment {path_fragment}: {card}")
+    if f'"lane": "{lane}"' not in serialized:
+        raise RuntimeError(f"card missing lane {lane}: {card}")
+
+
 def assert_ask_receipt_backed(card: dict[str, Any]) -> None:
     """Require Ask cards to preserve the actual run artifact identity."""
 
@@ -419,6 +427,10 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 else:
                     raise RuntimeError(f"server did not start; log={log_path.read_text()}")
                 client.post("/api/session/start", json={"consent_confirmed": True}).raise_for_status()
+                answerable_code_prompt = (
+                    "Can you implement a function and solve Two Sum given an array and target, "
+                    "return two distinct indices, exactly one solution exists?"
+                )
 
                 stt_available = importlib.util.find_spec("RealtimeSTT") is not None
                 stt_status = "available" if stt_available else "blocked_live_dependency"
@@ -455,7 +467,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                     event_id=turn_id,
                     start_ms=1_000,
                     end_ms=3_200,
-                    text="Can you explain what function should return for a valid string using a stack in memory-alpha source-bound evidence-card answers?",
+                    text=answerable_code_prompt,
                 )
                 state = wait_for_cards(client, 1)
                 assert_card_has(state["cards"][0], lane="ask", path_fragment="ask-run")
@@ -477,7 +489,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                     client,
                     speaker="interviewer",
                     sequence=50,
-                    text="Can you explain what function should return for a valid string using a stack in memory-alpha source-bound evidence-card answers?",
+                    text=answerable_code_prompt,
                 )
                 assert_no_new_cards(client, 1, delay_s=0.4)
 
@@ -543,7 +555,14 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                 )
                 burst_state = wait_for_cards(client, before_burst_count + 1)
                 youtube_card = burst_state["cards"][0]
-                assert_card_has(youtube_card, lane="ripgrep", path_fragment="valid_parentheses.py")
+                assert_card_contains_source(youtube_card, lane="ripgrep", path_fragment="valid_parentheses.py")
+                gate_sources = [
+                    source
+                    for source in youtube_card.get("sources") or []
+                    if source.get("repository") == "transcript-to-leetcode"
+                ]
+                if not gate_sources or gate_sources[0].get("metadata", {}).get("gate_status") != "no_coding_question":
+                    raise RuntimeError(f"YouTube-like fragment did not fail closed through transcript gate: {youtube_card}")
                 if youtube_card.get("query") != "A opening parentheses always has to come before closing, right?":
                     raise RuntimeError(
                         "initial YouTube transcript query did not select one most relevant question: "
@@ -568,8 +587,24 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         text=variant,
                     )
                 assert_no_new_cards(client, before_burst_count + 1, delay_s=0.8)
+                collapse_state = client.get("/api/state").json()
+                matching_transcript = [
+                    event
+                    for event in collapse_state.get("transcript") or []
+                    if "opening parentheses" in str(event.get("text") or "").casefold()
+                ]
+                if len(matching_transcript) != 1:
+                    raise RuntimeError(f"progressive YouTube transcript was not collapsed: {matching_transcript}")
+                if (
+                    str(matching_transcript[0].get("text") or "")
+                    .casefold()
+                    .count("a opening parentheses")
+                    != 1
+                ):
+                    raise RuntimeError(f"progressive transcript still repeated itself: {matching_transcript}")
                 print("initial transcript query selects one relevant question: PASS")
                 print("youtube-derived overlapping transcript collapses to one card: PASS")
+                print("youtube-derived progressive transcript projection collapses repeats: PASS")
 
                 ripgrep_card = client.post(
                     "/api/search",
@@ -632,6 +667,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                         "step8_manual_lanes_derived_query_only": True,
                         "youtube_derived_ripgrep_relevance": True,
                         "youtube_derived_overlapping_transcript_collapse": True,
+                        "youtube_derived_progressive_transcript_projection_collapse": True,
                         "initial_transcript_query_selects_one_relevant_question": True,
                         "punctuation_poor_asr_query_selects_one_relevant_question": True,
                     },
@@ -644,6 +680,7 @@ def run_eval(root: Path, *, samples: int, seed: int, receipt_path: Path | None) 
                             "memory runner is called through code-search and code-node subprocess boundaries",
                             "ripgrep sees source created after service startup",
                             "overlapping YouTube-like transcript variants produce one automatic evidence card",
+                            "progressive YouTube-like transcript restatements collapse to one visible transcript row",
                             "initial YouTube-like transcript query is one selected question, not the full transcript chunk",
                             "punctuation-poor ASR chunks select one bounded retrieval question instead of the full transcript",
                             "YouTube-like parenthesis transcript retrieves the domain source instead of generic filler matches",

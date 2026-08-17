@@ -130,6 +130,34 @@ def test_growing_stabilized_updates_replace_previous_event() -> None:
     assert final.candidate.source_event_ids == ["event-final-4"]
 
 
+def test_progressive_parenthesis_asr_updates_replace_previous_event() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+    variants = [
+        "A opening parenthesis",
+        "A opening parenthesis always has to come",
+        "A opening parenthesis always has to come before closing, right?",
+    ]
+
+    outcomes = [
+        builder.ingest(turn(index, text, kind=TranscriptKind.STABILIZED))
+        for index, text in enumerate(variants, start=1)
+    ]
+
+    assert [outcome.candidate for outcome in outcomes[:-1]] == [None, None]
+    assert outcomes[-1].candidate is None
+
+    final = builder.ingest(
+        turn(
+            4,
+            f"{variants[-1]} So if we iterate through the string, a stack can track it.",
+        )
+    )
+
+    assert final.candidate is not None
+    assert final.candidate.normalized_question == variants[-1]
+    assert final.candidate.source_event_ids == ["event-0003", "event-0004"]
+
+
 def test_watch_term_stabilized_discussion_waits_for_final() -> None:
     builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
 

@@ -76,7 +76,10 @@ class MemoryEvidenceClient:
         code_sources, code_detail = await code_task
         sources = _dedupe_sources([*recall_sources, *code_sources])
         latency_ms = int((monotonic() - started) * 1000)
-        details = [detail for detail in (recall_detail, code_detail) if detail]
+        if code_sources and not recall_sources:
+            details = [detail for detail in (code_detail, recall_detail) if detail]
+        else:
+            details = [detail for detail in (recall_detail, code_detail) if detail]
         ok = bool(sources)
         return MemoryRetrievalResult(
             sources=sources,
@@ -89,13 +92,16 @@ class MemoryEvidenceClient:
         selected_profile = None
         if not _skip_intent_profile(self._profile):
             selected_profile = await self._intent_profile(query)
-        profiles = _unique_text(
-            [
-                selected_profile or "",
-                "procedural_memory",
-                "temporal_project_state",
-            ]
-        )
+        profiles: list[str | None] = [
+            None,
+            *_unique_text(
+                [
+                    selected_profile or "",
+                    "procedural_memory",
+                    "temporal_project_state",
+                ]
+            ),
+        ]
         payloads = await asyncio.gather(
             *(self._post_recall(query, profile) for profile in profiles),
             return_exceptions=True,
@@ -104,9 +110,19 @@ class MemoryEvidenceClient:
         errors: list[str] = []
         for profile, payload in zip(profiles, payloads, strict=True):
             if isinstance(payload, Exception):
-                errors.append(f"{profile}:{_exception_summary(payload)}")
+                errors.append(f"{profile or 'raw'}:{_exception_summary(payload)}")
                 continue
             sources.extend(_memory_items_to_sources(payload, profile, self._profile))
+        if not sources and self._profile.memory_collections:
+            fallback_payloads = await asyncio.gather(
+                *(self._post_recall(query, profile, use_profile_collections=False) for profile in profiles),
+                return_exceptions=True,
+            )
+            for profile, payload in zip(profiles, fallback_payloads, strict=True):
+                if isinstance(payload, Exception):
+                    errors.append(f"{profile or 'raw'}:fallback:{_exception_summary(payload)}")
+                    continue
+                sources.extend(_memory_items_to_sources(payload, profile, self._profile))
         route = f"intent={selected_profile}" if selected_profile else "intent=degraded"
         if sources:
             return sources, f"Hybrid recall {len(sources)} ({route})"
@@ -146,26 +162,38 @@ class MemoryEvidenceClient:
             return None
         return clean
 
-    async def _post_recall(self, query: str, profile: str) -> dict[str, Any]:
+    async def _post_recall(
+        self,
+        query: str,
+        profile: str | None,
+        *,
+        use_profile_collections: bool = True,
+    ) -> dict[str, Any]:
         url = f"{self._settings.memory_url}/recall"
         request = {
             "q": query,
-            "recall_profile": profile,
             "k": 6,
             "scope": self._profile.memory_scope,
-            "collections": self._profile.memory_collections,
         }
+        if profile:
+            request["recall_profile"] = profile
+        if use_profile_collections:
+            request["collections"] = self._profile.memory_collections
         async with httpx.AsyncClient(timeout=self._timeout, trust_env=False) as client:
             response = await client.post(url, json=request, headers={"X-Caller-Skill": "live-evidence"})
             if response.status_code in {400, 404, 422}:
+                fallback_request = {
+                    "q": query,
+                    "k": 8,
+                    "scope": self._profile.memory_scope,
+                }
+                if profile:
+                    fallback_request["recall_profile"] = profile
+                if use_profile_collections:
+                    fallback_request["collections"] = self._profile.memory_collections
                 fallback = await client.post(
                     url,
-                    json={
-                        "q": query,
-                        "k": 8,
-                        "scope": self._profile.memory_scope,
-                        "collections": self._profile.memory_collections,
-                    },
+                    json=fallback_request,
                     headers={"X-Caller-Skill": "live-evidence"},
                 )
                 fallback.raise_for_status()
@@ -356,7 +384,7 @@ def _parse_json_output(stdout: str) -> dict[str, Any]:
 
 def _memory_items_to_sources(
     payload: dict[str, Any],
-    profile: str,
+    profile: str | None,
     interview_profile: InterviewProfile,
 ) -> list[EvidenceSource]:
     if not _memory_payload_has_usable_evidence(payload):
@@ -383,33 +411,36 @@ def _memory_items_to_sources(
         if not excerpt or not any((path, repository, url, key)):
             continue
         score = max(_memory_item_score(item), 0.94 - index * 0.03)
-        sources.append(
-            EvidenceSource(
-                lane=RetrievalLane.MEMORY,
-                label=_memory_label(item, profile),
-                excerpt=excerpt[:4_000],
-                score=score,
-                freshness=Freshness.UNKNOWN,
-                repository=repository or None,
-                branch=_first_text(item, "branch") or None,
-                commit=_first_text(item, "commit", "source_commit") or None,
-                path=path or None,
-                line_start=_optional_int(item.get("start_line")),
-                line_end=_optional_int(item.get("end_line")),
-                url=url or None,
-                metadata={
-                    "_key": key or None,
-                    "profile": profile,
-                    "tags": item.get("tags", []),
-                    "source": item.get("_source") or item.get("source"),
-                    "source_ref": item.get("source_ref"),
-                    "canonical_ref": item.get("canonical_ref"),
-                    "topic_id": item.get("topic_id"),
-                    "topic_kind": item.get("topic_kind"),
-                    "recall_rank": index,
-                },
+        try:
+            sources.append(
+                EvidenceSource(
+                    lane=RetrievalLane.MEMORY,
+                    label=_memory_label(item, profile)[:240],
+                    excerpt=excerpt[:4_000],
+                    score=score,
+                    freshness=Freshness.UNKNOWN,
+                    repository=repository or None,
+                    branch=_first_text(item, "branch") or None,
+                    commit=_first_text(item, "commit", "source_commit") or None,
+                    path=path or None,
+                    line_start=_optional_int(item.get("start_line")),
+                    line_end=_optional_int(item.get("end_line")),
+                    url=url or None,
+                    metadata={
+                        "_key": key or None,
+                        "profile": profile or "raw",
+                        "tags": item.get("tags", []),
+                        "source": item.get("_source") or item.get("source"),
+                        "source_ref": item.get("source_ref"),
+                        "canonical_ref": item.get("canonical_ref"),
+                        "topic_id": item.get("topic_id"),
+                        "topic_kind": item.get("topic_kind") or item.get("kind"),
+                        "recall_rank": index,
+                    },
+                )
             )
-        )
+        except ValueError as exc:
+            logger.warning("memory item skipped by evidence contract: {}", exc)
     return sources
 
 
@@ -422,12 +453,12 @@ def _skip_intent_profile(profile: InterviewProfile) -> bool:
     }
 
 
-def _memory_label(item: dict[str, Any], profile: str) -> str:
+def _memory_label(item: dict[str, Any], profile: str | None) -> str:
     title = _first_text(item, "title", "name")
-    topic_kind = _first_text(item, "topic_kind")
-    if title and topic_kind == "leetcode_problem":
+    topic_kind = _first_text(item, "topic_kind", "kind")
+    if title and topic_kind in {"leetcode_problem", "leetcode_problem_index"}:
         return title
-    return _first_text(item, "problem", "title", "name", "topic_id") or f"Memory · {profile}"
+    return _first_text(item, "problem", "title", "name", "topic_id") or f"Memory · {profile or 'raw'}"
 
 
 def _memory_excerpt(item: dict[str, Any]) -> str:

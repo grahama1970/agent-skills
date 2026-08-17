@@ -126,10 +126,31 @@
           "step6 current checkout ripgrep after startup: PASS",
           "initial transcript query selects one relevant question: PASS",
           "youtube-derived overlapping transcript collapses to one card: PASS",
+          "youtube-derived progressive transcript projection collapses repeats: PASS",
           "youtube-derived ripgrep relevance gate: PASS",
           "step7 ask fixture-only run-dir surfaced: PASS",
           "step8 source-bound cards and manual derived-query lanes: PASS",
           "mvp steps 2-8 receipt:"
+        ]
+      }
+    },
+    {
+      "name": "leetcode-public-github-corpus-memory-recall",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/live-evidence/agentic-eval-venv LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-public-corpus"
+      ],
+      "timeout_seconds": 360,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "leetcode-public-corpus",
+          "live-evidence-leetcode-public-two-sum",
+          "live-evidence-leetcode-public-longest-substring-without-repeating-characters"
         ]
       }
     },

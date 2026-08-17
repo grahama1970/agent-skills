@@ -29,13 +29,19 @@ def make_settings(tmp_path: Path) -> AppSettings:
     )
 
 
-def post_turn(client: TestClient, sequence: int, text: str, speaker: str = "interviewer") -> None:
+def post_turn(
+    client: TestClient,
+    sequence: int,
+    text: str,
+    speaker: str = "interviewer",
+    kind: str = "final",
+) -> None:
     response = client.post(
         "/api/transcript",
         json={
             "schema": "live_evidence.transcript_event.v1",
             "speaker": speaker,
-            "kind": "final",
+            "kind": kind,
             "source": "api",
             "sequence": sequence,
             "text": text,
@@ -78,3 +84,27 @@ def test_split_interviewer_question_creates_one_joined_card(tmp_path: Path) -> N
     assert card["question"] == card["query"]
     assert card["status"] == "insufficient"
     assert len(payload["transcript"]) == 2
+
+
+def test_progressive_stt_restatement_collapses_visible_transcript(tmp_path: Path) -> None:
+    app = create_app(make_settings(tmp_path))
+    with TestClient(app) as client:
+        client.post("/api/session/start", json={"consent_confirmed": True}).raise_for_status()
+
+        variants = [
+            "A opening parenthesis",
+            "A opening parenthesis always has to come",
+            "A opening parenthesis always has to come before closing, right?",
+        ]
+        for index, text in enumerate(variants, start=1):
+            post_turn(client, index, text, kind="stabilized")
+
+        payload = client.get("/api/state").json()
+
+    matching = [
+        event
+        for event in payload["transcript"]
+        if "opening parenthesis" in event["text"].casefold()
+    ]
+    assert len(matching) == 1
+    assert matching[0]["text"] == variants[-1]

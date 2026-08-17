@@ -18,6 +18,7 @@ from .models import (
     TranscriptEvent,
     utc_now,
 )
+from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
 
 class RuntimeState:
@@ -121,7 +122,20 @@ class RuntimeState:
                 replaced = True
                 break
             if not replaced:
-                self._transcript.append(event)
+                replacement_index = None
+                if event.kind.value in {"stabilized", "final"}:
+                    for index in range(len(self._transcript) - 1, -1, -1):
+                        item = self._transcript[index]
+                        if is_progressive_restatement(item, event):
+                            replacement_index = index
+                            break
+                if replacement_index is None:
+                    self._transcript.append(event)
+                else:
+                    self._transcript[replacement_index] = richer_transcript_event(
+                        self._transcript[replacement_index],
+                        event,
+                    )
             self._transcript = self._transcript[-self._settings.max_transcript_events :]
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)

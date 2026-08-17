@@ -177,6 +177,16 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_leetcode_memory_recall.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-leetcode-public-corpus)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_leetcode_public_corpus.py" "$SCRIPT_DIR" "$@"
+    ;;
+  ingest-leetcode-public-repos)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/ingest_leetcode_public_repos.py" "$@"
+    ;;
 esac
 
 if [[ $# -eq 0 ]]; then
