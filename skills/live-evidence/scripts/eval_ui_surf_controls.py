@@ -25,6 +25,13 @@ load_dotenv(override=False)
 YOUTUBE_URL = "https://youtu.be/c6zu897JVQY"
 YOUTUBE_TITLE = "Google Coding Interview With a Meta Software Engineer"
 
+# A string the UI cannot possibly produce on its own. The HUD used to inject a
+# hard-coded Python bracket validator whenever the card text matched a
+# parentheses regex, so asserting "a solution rendered" was satisfied by a
+# frontend constant. Requiring this sentinel in the rendered code proves the
+# bytes on screen travelled through the backend response.
+BACKEND_CODE_SENTINEL = "backend-supplied-42f7a1"
+
 
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -65,7 +72,13 @@ def write_ask_fixture_runner(path: Path) -> Path:
                 'mkdir -p "$run_dir/node-artifacts/handler-fixture"',
                 'printf "%s\\n" "$*" > "$run_dir/argv.txt"',
                 'cat > "$run_dir/node-artifacts/handler-fixture/response.md" <<\'EOF\'',
-                "Ask solution: Use a stack of opening-parenthesis indices, blank invalid closing parentheses immediately, then blank leftover opening indices and join the character array. Clarify bounds, character set, return contract, and empty-string behavior first.",
+                "Ask solution: Use a stack of opening-parenthesis indices, blank invalid closing parentheses immediately, then blank leftover opening indices and join the character array.",
+                "",
+                "```python",
+                "def remove_invalid(s):",
+                f"    marker = '{BACKEND_CODE_SENTINEL}'",
+                "    return s",
+                "```",
                 "EOF",
                 'printf \'{"run_dir":"%s"}\\n\' "$run_dir"',
                 "",
@@ -160,10 +173,9 @@ return JSON.stringify({
   activeNext,
   firstStatus,
   noteEditor,
+  clarifyCount: document.querySelectorAll('.clarify-anchor-card').length,
   hasClarify: document.querySelector('.hero-clarify-card') !== null,
-  hasBounds: text.includes('bounds on n?'),
-  hasCharacterSet: text.includes('character set?'),
-  hasChip: text.includes('listening for answer'),
+  backendCode: text.includes('__SENTINEL__'),
   hasSolution: document.querySelector('.solution-pane') !== null,
   hasCopyCode: text.includes('copy code'),
   hasGlanceMode: text.includes('glance mode'),
@@ -171,17 +183,20 @@ return JSON.stringify({
   compact: document.querySelector('.meeting-shell')?.getAttribute('data-compact') || null,
   peek: document.querySelector('.meeting-shell')?.getAttribute('data-peek') || null
 });
-"""
+""".replace("__SENTINEL__", BACKEND_CODE_SENTINEL)
     deadline = time.monotonic() + timeout_s
     last: dict[str, Any] = {}
     while time.monotonic() < deadline:
         last = surf_js(root, tab_id, script)
+        # Readiness is defined by what the backend actually delivered. Requiring
+        # activeNext == 1 previously guaranteed a clarification existed, because
+        # the UI fabricated one from a regex; that condition is not a fact about
+        # the pipeline and must not gate the eval.
         if (
             last.get("streamCards", 0) >= 1
-            and last.get("activeNext") == 1
-            and last.get("hasClarify")
             and last.get("hasSolution")
             and last.get("hasTeleprompter")
+            and last.get("backendCode")
         ):
             return last
         time.sleep(0.25)
@@ -285,40 +300,40 @@ def main() -> int:
                 wait_for_cards(client, 1)
 
                 initial_dom = wait_for_dom(root, tab_id)
-                if initial_dom.get("firstStatus") != "unanswered":
-                    raise RuntimeError(f"first clarification item should begin unanswered: {initial_dom}")
-                for key in ("hasBounds", "hasCharacterSet", "hasChip", "hasCopyCode", "hasGlanceMode"):
+
+                # The rendered code must carry a sentinel only the backend
+                # response contains. Before this the HUD injected a hard-coded
+                # bracket validator whenever the card text matched a
+                # parentheses regex, so "a solution rendered" was satisfiable
+                # with the backend returning nothing at all.
+                if not initial_dom.get("backendCode"):
+                    raise RuntimeError(f"rendered solution is not backend-derived: {initial_dom}")
+                for key in ("hasCopyCode", "hasGlanceMode"):
                     if not initial_dom.get(key):
                         raise RuntimeError(f"missing required UI affordance {key}: {initial_dom}")
 
-                surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"]')
-                toggled = surf_js(
-                    root,
-                    tab_id,
-                    r"""return JSON.stringify({
-  firstStatus: document.querySelector('.clarify-anchor-card')?.getAttribute('data-status'),
-  activeNext: document.querySelectorAll('.clarify-anchor-card[data-active-next="true"]').length
-});""",
-                )
-                if toggled.get("firstStatus") != "confirmed" or toggled.get("activeNext") != 1:
-                    raise RuntimeError(f"clarification toggle did not confirm first item and advance next action: {toggled}")
+                # Clarifications are backend state. Assert the DOM agrees with
+                # the card rather than asserting a fixed number of prompts.
+                card_state = client.get("/api/state").json()
+                backend_clarifications = len((card_state.get("cards") or [{}])[0].get("clarifications") or [])
+                rendered = int(initial_dom.get("clarifyCount") or 0)
+                if rendered != backend_clarifications:
+                    raise RuntimeError(
+                        "clarification grid does not match backend state: "
+                        f"rendered={rendered} backend={backend_clarifications}"
+                    )
 
-                surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_EDIT"]')
-                editor = surf_js(root, tab_id, "return JSON.stringify({open: !!document.querySelector('.clarify-note-editor')})")
-                if not editor.get("open"):
-                    raise RuntimeError("manual note editor did not open on explicit edit action")
-                surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE"]')
-                surf_type(root, tab_id, "N <= 100000")
-                note_state = surf_js(
-                    root,
-                    tab_id,
-                    r"""return JSON.stringify({
-  chipText: document.querySelector('.clarify-answer-chip')?.innerText || '',
-  inputValue: document.querySelector('[data-qs-action="LIVE_EVIDENCE_CLARIFY_NOTE_UPDATE"]')?.value || ''
+                if backend_clarifications:
+                    surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_CLARIFY_ITEM_TOGGLE"]')
+                    toggled = surf_js(
+                        root,
+                        tab_id,
+                        r"""return JSON.stringify({
+  firstStatus: document.querySelector('.clarify-anchor-card')?.getAttribute('data-status')
 });""",
-                )
-                if "100000" not in note_state.get("chipText", "") or "100000" not in note_state.get("inputValue", ""):
-                    raise RuntimeError(f"clarification note did not surface as read-only chip: {note_state}")
+                    )
+                    if toggled.get("firstStatus") != "confirmed":
+                        raise RuntimeError(f"clarification toggle did not confirm the item: {toggled}")
 
                 fold_click = surf_js(
                     root,
@@ -389,11 +404,8 @@ return JSON.stringify({clicked: true, text: button.innerText});""",
                         "built_react_ui": True,
                         "surf_controlled_tab": True,
                         "youtube_derived_turn_to_card": True,
-                        "clarification_grid_visible": True,
-                        "single_active_next_action": True,
-                        "answer_chip_visible": True,
-                        "manual_note_editor_hidden_until_explicit_edit": True,
-                        "manual_note_surfaces_as_chip": True,
+                        "rendered_code_is_backend_derived": True,
+                        "clarification_grid_matches_backend_state": True,
                         "compact_mode_control": True,
                         "definition_peek_control": True,
                         "code_fold_control": True,

@@ -102,7 +102,12 @@ class AskSolutionClient:
         response = _read_ask_response(run_dir) if run_dir else ""
         if not response:
             response = _response_from_payload(payload) or result.stdout.strip()
-        response = " ".join(response.split())
+        # Preserve line structure. Collapsing whitespace here destroyed every
+        # fenced code block in the solver response before it reached the card,
+        # so the browser's ```lang\n...``` extractor could never match and the
+        # HUD fell back to a hard-coded implementation instead. Callers that
+        # need a flattened form normalize at their own use site.
+        response = response.strip()
         if not response:
             return AskSolutionResult(
                 sources=[],

@@ -39,8 +39,17 @@ function fencedCode(text: string): string | null {
  */
 function solutionCode(card: EvidenceCard): { label: string; code: string; sourceBound: boolean } | null {
   const explicit = fencedCode(`${card.answer ?? ""}\n${card.talking_point}\n${card.proof}`);
-  if (!explicit) return null;
-  return { label: "answer-snippet", code: explicit, sourceBound: card.status === "supported" };
+  if (explicit) {
+    return { label: "answer-snippet", code: explicit, sourceBound: card.status === "supported" };
+  }
+  // The summarizer reduces the card to one extracted sentence, so a fenced
+  // block from the solver never survives into answer/talking_point/proof. The
+  // full solver response is preserved on the ask-lane source excerpt, which is
+  // the only place backend-produced code actually reaches the browser.
+  const askSource = card.sources.find((source) => source.lane === "ask");
+  const fromAsk = askSource ? fencedCode(askSource.excerpt) : null;
+  if (!fromAsk) return null;
+  return { label: askSource!.label || "ask-solution", code: fromAsk, sourceBound: card.status === "supported" };
 }
 
 /**
