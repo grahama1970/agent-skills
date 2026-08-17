@@ -51,6 +51,15 @@ REPOSITORY_TERMS = (
     "sparta explorer", "sparta-public", "pdf_oxide", "pdf oxide", "extractor",
     "graph-memory-operator",
 )
+# Employers the candidate actually worked for. A leadership verb scoped to an
+# employer is an ordinary employment claim ("Led X at Y"), which is what a
+# resume is made of. The panel's blanket ban on leadership verbs would forbid
+# every resume line anyone writes about private-sector work; the real hazard is
+# a leadership verb next to an AGENCY with no employer named, which reads as
+# "the agency contracted me".
+EMPLOYER_TERMS = (
+    "cs group", "realpie", "dentsu", "dentsu america",
+)
 METRIC_PATTERN = re.compile(r"\b\d+(?:\.\d+)?\s*(?:%|percent|x|ms|s|k|m|b|hours?|days?|people|engineers?)\b", re.I)
 ATTESTED_RESUME_OPENERS = ("experience with", "background in", "experience in", "background with")
 
@@ -66,8 +75,20 @@ def tier_of(claim: dict[str, Any]) -> int:
 
 
 def _contains_any(text: str, terms: tuple[str, ...]) -> list[str]:
+    """Whole-word/phrase matches only.
+
+    Substring matching reads "ran" inside "software-assurance" and "ai" inside
+    unrelated words; relevance.py documents the same trap. Every term is matched
+    at word boundaries.
+    """
+
     low = text.lower()
-    return [term for term in terms if term in low]
+    found = []
+    for term in terms:
+        pattern = r"(?<![\w-])" + re.escape(term) + r"(?![\w-])"
+        if re.search(pattern, low):
+            found.append(term)
+    return found
 
 
 def firewall_violation(text: str) -> dict[str, Any] | None:
@@ -107,7 +128,7 @@ def check_wording(claim: dict[str, Any], wording: dict[str, Any], channel: str) 
         })
     elif tier == 2 and channel == RESUME:
         low = text.lower().strip()
-        if not low.startswith(ATTESTED_RESUME_OPENERS):
+        if not low.startswith(ATTESTED_RESUME_OPENERS) and not _contains_any(text, EMPLOYER_TERMS):
             violations.append({
                 "rule": "tier2_resume_requires_experience_framing",
                 "why": (
@@ -116,9 +137,16 @@ def check_wording(claim: dict[str, Any], wording: dict[str, Any], channel: str) 
                 ),
             })
         verbs = _contains_any(text, LEADERSHIP_VERBS)
-        if verbs:
-            violations.append({"rule": "tier2_leadership_verb", "found": verbs,
-                               "why": "A leadership verb converts attested history into an achievement claim."})
+        employers = _contains_any(text, EMPLOYER_TERMS)
+        if verbs and not employers:
+            violations.append({
+                "rule": "tier2_leadership_verb_without_employer",
+                "found": verbs,
+                "why": (
+                    "A leadership verb with no employer named reads as though the agency or program "
+                    "engaged the candidate directly. Name the employer: 'Led X at <employer> ...'."
+                ),
+            })
         if METRIC_PATTERN.search(text):
             violations.append({"rule": "tier2_metric", "found": METRIC_PATTERN.search(text).group(0),
                                "why": "A metric on attested history cannot be checked by anyone."})
