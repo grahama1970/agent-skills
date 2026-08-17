@@ -51,6 +51,10 @@ class SessionStatus(StrEnum):
     """Operator-controlled session states."""
 
     IDLE = "idle"
+    # Session exists but consent was never confirmed, so no audio capture is
+    # authorized. Distinct from LISTENING so the HUD cannot show "listening"
+    # over a session that is not permitted to capture anything.
+    ARMED = "armed"
     LISTENING = "listening"
     PAUSED = "paused"
     STOPPED = "stopped"

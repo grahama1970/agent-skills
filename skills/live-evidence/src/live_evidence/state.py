@@ -21,6 +21,17 @@ from .models import (
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
 
+def _status_for_consent(consent_confirmed: bool) -> SessionStatus:
+    """Never report LISTENING for a session that may not capture audio.
+
+    The browser Start control posts consent_confirmed=false, so before this the
+    HUD showed "listening" over a session with no recording authorization. Only
+    an explicitly consented session may present as listening.
+    """
+
+    return SessionStatus.LISTENING if consent_confirmed else SessionStatus.ARMED
+
+
 class RuntimeState:
     """Own the mutable in-process projection used by the API and UI."""
 
@@ -46,17 +57,18 @@ class RuntimeState:
 
         async with self._lock:
             if self._session.status is SessionStatus.PAUSED:
-                self._session.status = SessionStatus.LISTENING
                 self._session.consent_confirmed = (
                     self._session.consent_confirmed or consent_confirmed
                 )
-            elif self._session.status is SessionStatus.LISTENING:
+                self._session.status = _status_for_consent(self._session.consent_confirmed)
+            elif self._session.status in (SessionStatus.LISTENING, SessionStatus.ARMED):
                 self._session.consent_confirmed = (
                     self._session.consent_confirmed or consent_confirmed
                 )
+                self._session.status = _status_for_consent(self._session.consent_confirmed)
             else:
                 self._session = SessionInfo(
-                    status=SessionStatus.LISTENING,
+                    status=_status_for_consent(consent_confirmed),
                     started_at=utc_now(),
                     consent_confirmed=consent_confirmed,
                     profile_name=self._profile.name,

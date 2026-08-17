@@ -33,6 +33,10 @@ function laneTone(state: LaneActivity["state"]): string {
 
 function liveStatusLabel(session: SessionInfo, connected: boolean): string {
   if (connected && session.status === "listening") return "Listening";
+  // An armed session exists but consent was never confirmed, so no audio
+  // capture is authorized. Saying "Listening" here would misrepresent both what
+  // the system is doing and what the human agreed to.
+  if (connected && session.status === "armed") return "Armed · consent needed";
   if (!connected) return "Reconnecting";
   return session.status;
 }
