@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "skill": "best-practices-delivery-proof",
+  "trials": 3,
+  "proof_scope": "deterministic gates over this skill's own contract file and the load-bearing quotes it anchors in composed skills; no live browser transport is exercised",
+  "claims": {
+    "proves": "the seven-rule contract is present and intact, its sanity gate fails closed when a rule is removed, and the cross-skill quotes it depends on (the ask read-whole-file instruction, the ChatGPT acceptance signature) still exist where this skill says they do",
+    "does_not_prove": "that an agent following the rules delivers correctly on a live browser lane; that requires the ask/surf live fixtures this skill's rules were derived from"
+  },
+  "cases": [
+    {
+      "name": "contract-and-cross-skill-anchors-verify",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/verify_contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS: frontmatter, all seven rules"
+        ]
+      }
+    },
+    {
+      "name": "dropping-a-rule-fails-the-gate-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && if python3 scripts/verify_contract.py --mutate-drop-rule 3 >/dev/null 2>&1; then echo GATE_DID_NOT_FAIL; exit 1; else echo GATE_FAILED_CLOSED; fi"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GATE_FAILED_CLOSED"
+        ]
+      }
+    },
+    {
+      "name": "a-random-rule-drop-is-caught-each-run",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && N=$((RANDOM % 7 + 1)); if python3 scripts/verify_contract.py --mutate-drop-rule $N >/dev/null 2>&1; then echo GATE_MISSED_RULE_$N; exit 1; else echo GATE_CAUGHT_RULE_$N; fi"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GATE_CAUGHT_RULE_"
+        ]
+      }
+    }
+  ]
+}

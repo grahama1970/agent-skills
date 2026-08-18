@@ -10,7 +10,12 @@ description: >
   which five browser submits failed and the agent twice reported delivery that
   had not happened — every rule below is paid for by a specific receipt from
   that session.
+metadata:
+  short-description: Destination-receipt discipline for delivery claims
 triggers:
+  - why do I have to threaten you
+  - do the work or be canceled
+  - threaten the agent
   - delivery proof
   - did it actually send
   - read-back verification
