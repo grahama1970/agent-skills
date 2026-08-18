@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Live VS Code agent-human collaboration: drive the debugger-vscode-bridge on the multi-file variable_state module (entry main.py -> report.py -> bug in tally.py), run the real program to a breakpoint at the bug, read the paused frame, explain the defect from that state, then move to the next breakpoint. Capability-gated: a live run needs a VS Code window with the bridge active on a TRUSTED workspace, else the case is BLOCKED (never a false PASS).",
+  "claims": {
+    "proves": "when a live trusted VS Code bridge is present, the driver runs a real debug session to two breakpoints and reads the paused state that exposes the state-leak bug; and that the driver fails closed (BRIDGE_BLOCKED, exit 3) when no live bridge answers",
+    "does_not_prove": "single-session step/continue continuity across both stops, or human confirmation/correction altering the next action -- those need the session-control actions verified live and a human in the loop"
+  },
+  "cases": [
+    {
+      "name": "live-vscode-collaboration-session",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Set a breakpoint at the polluted result (main.py:21), run to it via the bridge and read second=36; then move to the root cause (tally.py:12) and read the shared mutable default. Requires DEBUGGER_VSCODE_WORKSPACE to point at an open+trusted VS Code folder holding the module; otherwise BLOCKED.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/vscode_bridge_session.py --wait-seconds 30"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PAUSE main.py", "EXPLAIN", "PAUSE tally.py", "SESSION-OK visited=2"]
+      }
+    },
+    {
+      "name": "fails-closed-without-live-bridge",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "With a workspace that is not open in any VS Code window, the driver must fail closed -- report BRIDGE_BLOCKED and exit 3 -- rather than hang or fabricate a stop. This is the always-runnable half of the capability gate.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"$(mktemp -d)\"; uv run --project .. python ../scripts/vscode_bridge_session.py --workspace \"$WS\" --wait-seconds 6"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BRIDGE_BLOCKED"]
+      }
+    }
+  ]
+}
