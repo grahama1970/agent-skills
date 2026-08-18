@@ -78,6 +78,40 @@ _MEETUP_PAGE_EXTRACT_JS = (
     "})()"
 )
 
+# Meetup exists in this sweep to find PEOPLE, not calendar entries: whoever has
+# signed up to a Buffalo-area event is a named, locatable contact. The capture
+# used to stop at the group page and read marketing copy, so it produced zero
+# contacts. An event page in the human's own authenticated session lists
+# attendees by name with profile links; reading that page is the same read-only
+# act as reading the group page it links from. No RSVP, no join, no message.
+_MEETUP_ATTENDEE_EXTRACT_JS = (
+    "(function(){"
+    "var out=[],seen={};"
+    "var anchors=[].slice.call(document.querySelectorAll('a[href*=\"/members/\"]'));"
+    "for(var i=0;i<anchors.length;i++){"
+    "var a=anchors[i];"
+    "var raw=(a.innerText||'').trim();"
+    "if(!raw) continue;"
+    "var lines=raw.split(String.fromCharCode(10)).map(function(x){return x.trim();}).filter(Boolean);"
+    "var role='', name='';"
+    "for(var j=0;j<lines.length;j++){"
+    "if(/^(Host|Co-?Host|Organizer|Super Organizer|Member|Assistant Organizer|Event Organizer)$/i.test(lines[j])){"
+    "if(!role) role=lines[j];"
+    "} else if(!name){ name=lines[j]; }"
+    "}"
+    "if(!name || name.length>80) continue;"
+    "var key=name.toLowerCase();"
+    "if(seen[key]) continue; seen[key]=1;"
+    "out.push({name:name, role:role||'attendee', profile_url:a.href});"
+    "}"
+    "var t=document.body.innerText||'';"
+    "var countMatch=t.match(/([0-9,]+)\\s+(?:attendees|going|members)/i);"
+    "return JSON.stringify({url:location.href, title:document.title,"
+    "attendee_count_text: countMatch?countMatch[0]:null,"
+    "attendees: out.slice(0,60)});"
+    "})()"
+)
+
 _HIDDENJOBS_URL = "https://hiddenjobs.dev/"
 _INDEED_AI_BUFFALO_URL = "https://www.indeed.com/jobs?q=AI&l=Buffalo%2C%20NY"
 
@@ -1024,6 +1058,35 @@ def _meetup_page_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
+def _meetup_event_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
+    """Attendees visible on one event page. {} when the page shows none."""
+
+    raw = _surf(surf_run, "js", "--tab-id", tab_id, _MEETUP_ATTENDEE_EXTRACT_JS, timeout=30)
+    parsed = json.loads(json.loads(raw))
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _meetup_event_urls(links: list[str], limit: int) -> list[str]:
+    """Event permalinks from a group page, newest-first as rendered."""
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for link in links:
+        url = str(link).split("?")[0]
+        if "/events/" not in url:
+            continue
+        tail = [part for part in url.split("/") if part]
+        if not tail or not tail[-1].isdigit():
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        out.append(url)
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _meetup_group_url(url: str) -> str | None:
     from urllib.parse import urlparse
 
@@ -1132,9 +1195,12 @@ def capture_meetup_buffalo(
     """Read-only Meetup capture for Buffalo source-intel networking.
 
     Visits the Technology and Career & Business category pages plus known
-    high-signal seed groups, extracts visible page text and group links, then
-    writes evidence consumed by run --meetup-evidence. No GraphQL, RSVP, join,
-    message, attendee scrape, or other platform action is attempted.
+    high-signal seed groups, then follows each group's own event links to record
+    WHO HAS SIGNED UP - the named, locatable contacts that are the entire reason
+    Meetup is swept. Writes evidence consumed by run --meetup-evidence.
+
+    Every step is a page read in the human's authenticated session. No GraphQL,
+    no RSVP, no join, no message, no connection request, no platform action.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     receipt: dict[str, Any] = {
@@ -1142,7 +1208,7 @@ def capture_meetup_buffalo(
         "source": "meetup_buffalo",
         "captured_at": utc_now(),
         "external_effects": False,
-        "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+        "automation_policy": "meetup_authorized_read_only_attendee_names_no_rsvp_no_message",
         "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
     }
     tab_id = ""
@@ -1154,6 +1220,7 @@ def capture_meetup_buffalo(
         max_group_failures = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")))
         category_wait_seconds = os.environ.get("MONITOR_MEETUP_CATEGORY_WAIT_SECONDS", "4")
         group_wait_seconds = os.environ.get("MONITOR_MEETUP_GROUP_WAIT_SECONDS", "3")
+        max_events_per_group = max(0, int(os.environ.get("MONITOR_MEETUP_EVENTS_PER_GROUP", "2")))
         receipt["max_group_pages"] = max_group_pages
         receipt["category_wait_seconds"] = category_wait_seconds
         receipt["group_wait_seconds"] = group_wait_seconds
@@ -1209,8 +1276,47 @@ def capture_meetup_buffalo(
                         )
                     continue
                 text = str(snapshot.get("text") or "")
+                # Follow the group's own event links and record who signed up.
+                # This is the only reason Meetup is in the sweep.
+                attendees: list[dict[str, Any]] = []
+                events_read: list[str] = []
+                for event_url in _meetup_event_urls(
+                    [str(link) for link in (snapshot.get("links") or [])], max_events_per_group
+                ):
+                    try:
+                        _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(event_url), timeout=20)
+                        _surf_pause(surf_run, group_wait_seconds)
+                        event_snapshot = _meetup_event_snapshot(surf_run, tab_id)
+                    except (
+                        BrowserCaptureError,
+                        subprocess.TimeoutExpired,
+                        TimeoutError,
+                        ValueError,
+                        json.JSONDecodeError,
+                    ) as exc:
+                        logger.warning("Meetup attendee capture skipped for {}: {}", event_url, exc)
+                        continue
+                    events_read.append(event_url)
+                    for person in event_snapshot.get("attendees") or []:
+                        name = str(person.get("name") or "").strip()
+                        if not name:
+                            continue
+                        attendees.append(
+                            {
+                                "name": name,
+                                "role": str(person.get("role") or "attendee"),
+                                "profile_url": str(person.get("profile_url") or ""),
+                                "event_url": event_url,
+                                "event_title": str(event_snapshot.get("title") or ""),
+                                "group_url": group_url,
+                                "observed_at": utc_now(),
+                            }
+                        )
                 groups.append(
                     {
+                        "attendees": attendees,
+                        "attendee_count": len(attendees),
+                        "events_read": events_read,
                         "source": "human_authorized_meetup_tab",
                         "observed_at": utc_now(),
                         "name": _meetup_name_from_snapshot(snapshot, group_url),
@@ -1227,7 +1333,7 @@ def capture_meetup_buffalo(
             "schema_version": "monitor_opportunities.meetup_capture.v1",
             "source": "human_authorized_meetup_tab",
             "capture_method": "surf_read_only_visible_pages",
-            "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+            "automation_policy": "meetup_authorized_read_only_attendee_names_no_rsvp_no_message",
             "external_effects": False,
             "observed_at": utc_now(),
             "category_pages": category_pages,
@@ -1309,7 +1415,7 @@ def _meetup_capture_worker(
                 "source": "meetup_buffalo",
                 "captured_at": utc_now(),
                 "external_effects": False,
-                "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+                "automation_policy": "meetup_authorized_read_only_attendee_names_no_rsvp_no_message",
                 "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
                 "status": "FAILED",
                 "error": str(exc),
@@ -1347,7 +1453,7 @@ def capture_meetup_buffalo_isolated(
             "source": "meetup_buffalo",
             "captured_at": utc_now(),
             "external_effects": False,
-            "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+            "automation_policy": "meetup_authorized_read_only_attendee_names_no_rsvp_no_message",
             "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
             "status": "FAILED",
             "error": f"Meetup Buffalo capture exceeded isolated timeout {timeout_seconds}s",
@@ -1369,7 +1475,7 @@ def capture_meetup_buffalo_isolated(
         "source": "meetup_buffalo",
         "captured_at": utc_now(),
         "external_effects": False,
-        "automation_policy": "meetup_authorized_read_only_no_rsvp_no_message",
+        "automation_policy": "meetup_authorized_read_only_attendee_names_no_rsvp_no_message",
         "category_ids": [row[0] for row in _MEETUP_CATEGORY_URLS],
         "status": "FAILED",
         "error": f"Meetup Buffalo capture exited {proc.exitcode} without a receipt",
