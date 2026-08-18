@@ -647,6 +647,82 @@ def relationship_signals_from_memory(
     return signals
 
 
+def relationship_signals_from_meetup_attendees(
+    meetup_evidence: dict[str, Any],
+    *,
+    limit: int = 40,
+) -> list[dict[str, Any]]:
+    """Turn people who signed up to a Buffalo event into reconnect candidates.
+
+    Capturing attendees is only half the point: a name sitting in a capture file
+    is not a lead. Each attendee becomes an ``event_copresence`` signal carrying
+    the event that puts them and Graham in the same room, so the morning digest
+    can say WHY this person is worth a message this week.
+
+    Organizers rank above members on purpose - a host chose the topic, knows the
+    room, and is the person worth meeting. Nothing here contacts anyone; the
+    human decides whether to attend or reach out.
+    """
+
+    signals: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for group in meetup_evidence.get("groups") or []:
+        group_url = str(group.get("url") or "").strip()
+        group_name = str(group.get("name") or "").strip() or group_url
+        location = str(group.get("location") or "").strip()
+        for attendee in group.get("attendees") or []:
+            name = str(attendee.get("name") or "").strip()
+            if not name or len(name) > 80:
+                continue
+            role = str(attendee.get("role") or "attendee").strip()
+            event_title = str(attendee.get("event_title") or "").strip()
+            event_url = str(attendee.get("event_url") or "").strip()
+            profile_url = str(attendee.get("profile_url") or "").strip()
+            key = relationship_signal_key(event_url or group_url, name, group_name)
+            if key in seen:
+                continue
+            seen.add(key)
+            organizer = bool(re.search(r"host|organizer", role, re.I))
+            evidence_refs = [ref for ref in (event_url, profile_url, group_url) if ref]
+            signals.append(
+                {
+                    "signal_id": key,
+                    "source_opportunity_id": f"meetup:{group_url}" if group_url else "meetup:unknown-group",
+                    "signal_type": "event_copresence",
+                    "subject": name,
+                    "organization": group_name,
+                    "relationship_path": ["Graham Anderson", group_name, name],
+                    "contact_path": _contact_path_edges(
+                        ["Graham Anderson", group_name, name],
+                        relationship="event_copresence",
+                        evidence_refs=evidence_refs,
+                        limitations=[
+                            "Meetup signup does not prove attendance, employer, or willingness to be contacted.",
+                            "Names come from the public event page; identity mapping to LinkedIn is the human's call.",
+                        ],
+                    ),
+                    "evidence_refs": evidence_refs,
+                    "source_receipt_ids": [],
+                    "provenance": (
+                        f"Signed up to \"{event_title}\" via {group_name}"
+                        + (f" ({location})" if location else "")
+                        + f"; listed as {role}"
+                    ),
+                    "recommended_action": "human_decide_attend_watch_or_skip",
+                    "organizer": organizer,
+                    "event_title": event_title,
+                    "event_url": event_url,
+                    "profile_url": profile_url,
+                    "external_effects": False,
+                    "action_worthy": True,
+                    "visible_in_report": True,
+                }
+            )
+    # Organizers first: the person who convened the room is the one worth meeting.
+    signals.sort(key=lambda row: (not row["organizer"], row["subject"].lower()))
+    return signals[:limit]
+
+
 def relationship_signals_from_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Normalize warm/direct/adjacent contact evidence from opportunity candidates.
 

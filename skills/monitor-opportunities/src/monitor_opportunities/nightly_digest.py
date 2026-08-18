@@ -212,7 +212,10 @@ def run_digest_phase(
         # employer queue". Fail-soft, written to its own artifact and surfaced
         # in the digest.
         try:
-            from .contact_changes import relationship_signals_from_candidates
+            from .contact_changes import (
+                relationship_signals_from_candidates,
+                relationship_signals_from_meetup_attendees,
+            )
             from .prospect_queue import build_prospect_queue
 
             sam_evidence = None
@@ -220,6 +223,27 @@ def run_digest_phase(
             if sam_path.exists():
                 sam_evidence = json.loads(sam_path.read_text(encoding="utf-8"))
             relationship_signals = relationship_signals_from_candidates(shortlist_rows)
+            # People who signed up to a Buffalo event are the reason Meetup is
+            # swept at all. Without this the attendees sat in a capture file and
+            # never reached the digest.
+            meetup_path = capture_dir / "meetup" / "meetup-buffalo-evidence.json"
+            if meetup_path.exists():
+                try:
+                    meetup_signals = relationship_signals_from_meetup_attendees(
+                        json.loads(meetup_path.read_text(encoding="utf-8"))
+                    )
+                except (ValueError, OSError) as exc:
+                    logger.warning("meetup attendee signals skipped: {}", exc)
+                    meetup_signals = []
+                known = {row.get("signal_id") for row in relationship_signals}
+                relationship_signals.extend(
+                    row for row in meetup_signals if row.get("signal_id") not in known
+                )
+                steps["meetup_attendee_signals"] = {
+                    "signals": len(meetup_signals),
+                    "organizers": sum(1 for row in meetup_signals if row.get("organizer")),
+                    "evidence": str(meetup_path),
+                }
             report_manifest_path = out / "report-manifest.json"
             if report_manifest_path.exists():
                 report_manifest = json.loads(report_manifest_path.read_text(encoding="utf-8"))
