@@ -6,6 +6,7 @@ from __future__ import annotations
 import bdb
 import json
 import linecache
+import re
 import runpy
 import sys
 import time
@@ -26,6 +27,37 @@ def safe_repr(value: Any, limit: int) -> str:
     if len(text) > limit:
         return text[: limit - 3] + "..."
     return text
+
+
+# A captured local is written verbatim into a proof artifact that may be
+# attached to a ticket or shown in chat, so secret-shaped state has to be
+# redacted at the capturer, not downstream (#1440). Two independent signals:
+# the variable NAME reads like a credential, or the rendered VALUE matches a
+# well-known token shape regardless of name (so a `canary` holding a real key
+# is still caught).
+_SECRET_NAME = re.compile(
+    r"(?i)(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key|"
+    r"auth(orization)?|bearer|credential|private[_-]?key|session[_-]?key)"
+)
+_SECRET_VALUE = re.compile(
+    r"(sk-[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{12,}|"
+    r"xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|"
+    r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{4,})"
+)
+
+
+def redact_secret(name: str, rendered: str) -> str:
+    """Return a redaction marker when a captured value looks secret, else the value.
+
+    Redacting keeps the fact that the variable existed and was captured (its
+    name and that it was present) while removing the sensitive bytes, so the
+    proof still demonstrates the stop without leaking the credential.
+    """
+    if _SECRET_NAME.search(name or ""):
+        return f"<redacted: secret-like name {name!r}>"
+    if _SECRET_VALUE.search(rendered or ""):
+        return "<redacted: secret-like value>"
+    return rendered
 
 
 def parse_breakpoint(raw: str) -> tuple[str, int]:
@@ -68,7 +100,7 @@ class CaptureDebugger(bdb.Bdb):
         lineno = frame.f_lineno
         source = linecache.getline(filename, lineno).strip()
         locals_snapshot = {
-            key: safe_repr(value, self.repr_limit)
+            key: redact_secret(key, safe_repr(value, self.repr_limit))
             for key, value in sorted(frame.f_locals.items())
             if not key.startswith("__") and (self.capture_all_locals or key in self.local_names)
         }
@@ -82,7 +114,7 @@ class CaptureDebugger(bdb.Bdb):
                 continue
             try:
                 value = eval(expr, frame.f_globals, frame.f_locals)  # noqa: S307 - debugger watch expression
-                watch_results[expr] = {"ok": "true", "value": safe_repr(value, self.repr_limit)}
+                watch_results[expr] = {"ok": "true", "value": redact_secret(expr, safe_repr(value, self.repr_limit))}
             except Exception as exc:
                 logger.error("watch expression failed at {}:{}: {} -> {}", filename, lineno, expr, exc)
                 watch_results[expr] = {
