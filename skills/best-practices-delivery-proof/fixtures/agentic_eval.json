@@ -16,7 +16,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && python3 scripts/verify_contract.py check"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/verify_contract.py check"
       ],
       "expected": {
         "exit_code": 0,
@@ -40,7 +40,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && if python3 scripts/verify_contract.py check --mutate-drop-rule 3 >/dev/null 2>&1; then echo GATE_DID_NOT_FAIL; exit 1; else echo GATE_FAILED_CLOSED; fi"
+        "cd .. && if UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/verify_contract.py check --mutate-drop-rule 3 >/dev/null 2>&1; then echo GATE_DID_NOT_FAIL; exit 1; else echo GATE_FAILED_CLOSED; fi"
       ],
       "expected": {
         "exit_code": 0,
@@ -65,7 +65,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && N=$((RANDOM % 7 + 1)); if python3 scripts/verify_contract.py check --mutate-drop-rule $N >/dev/null 2>&1; then echo GATE_MISSED_RULE_$N; exit 1; else echo GATE_CAUGHT_RULE_$N; fi"
+        "cd .. && N=$((RANDOM % 7 + 1)); if UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/verify_contract.py check --mutate-drop-rule $N >/dev/null 2>&1; then echo GATE_MISSED_RULE_$N; exit 1; else echo GATE_CAUGHT_RULE_$N; fi"
       ],
       "expected": {
         "exit_code": 0,
@@ -113,7 +113,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && python3 scripts/verify_contract.py attest >/dev/null && printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; A=$?; python3 -c \"import json;p='fixtures/.read-attestation.json';d=json.load(open(p));d['contracts'][0]['sha256']='0'*64;json.dump(d,open(p,'w'))\"; printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; S=$?; python3 scripts/verify_contract.py attest >/dev/null; if [ \"$A\" -eq 0 ] && [ \"$S\" -eq 2 ]; then echo ATTESTATION_GATES_AND_VOIDS; else echo ATTESTATION_CONTRACT_BROKEN A=$A S=$S; exit 1; fi"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/verify_contract.py attest >/dev/null && printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; A=$?; python3 -c \"import json;p='fixtures/.read-attestation.json';d=json.load(open(p));d['contracts'][0]['sha256']='0'*64;json.dump(d,open(p,'w'))\"; printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; S=$?; UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/verify_contract.py attest >/dev/null; if [ \"$A\" -eq 0 ] && [ \"$S\" -eq 2 ]; then echo ATTESTATION_GATES_AND_VOIDS; else echo ATTESTATION_CONTRACT_BROKEN A=$A S=$S; exit 1; fi"
       ],
       "expected": {
         "exit_code": 0,
@@ -145,7 +145,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && python3 scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1; test $? -eq 2 && python3 scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1 | grep -q UNCHANGED_RETRY_AFTER_FAILURE && echo REGRESSION_GUARD_FIRES"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1; test $? -eq 2 && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1 | grep -q UNCHANGED_RETRY_AFTER_FAILURE && echo REGRESSION_GUARD_FIRES"
       ],
       "expected": {
         "exit_code": 0,
@@ -170,7 +170,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && OUT=$(python3 scripts/assess.py --input fixtures/incidents/false-delivery-reports.json --require-destination-receipts 2>&1); test $? -eq 2 && echo \"$OUT\" | grep -q SELF_STATUS_IS_NOT_DESTINATION_RECEIPT && echo \"$OUT\" | grep -q SUBMITTED_NO_RESPONSE_NOT_PROMOTED_TO_RESPONSE && echo FALSE_CLAIM_GUARD_FIRES"
+        "cd .. && OUT=$(UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/best-practices-delivery-proof/.venv uv run --project . python scripts/assess.py --input fixtures/incidents/false-delivery-reports.json --require-destination-receipts 2>&1); test $? -eq 2 && echo \"$OUT\" | grep -q SELF_STATUS_IS_NOT_DESTINATION_RECEIPT && echo \"$OUT\" | grep -q SUBMITTED_NO_RESPONSE_NOT_PROMOTED_TO_RESPONSE && echo FALSE_CLAIM_GUARD_FIRES"
       ],
       "expected": {
         "exit_code": 0,

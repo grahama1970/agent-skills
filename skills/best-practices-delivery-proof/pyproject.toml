@@ -1,0 +1,14 @@
+[project]
+name = "best-practices-delivery-proof"
+version = "0.1.0"
+description = "Delivery-proof discipline: contract verifier, transcript assessor, and read-gate attestations"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "pyyaml>=6.0",
+]
+
+# scripts/enforce_read_gate.py is intentionally NOT covered by this project:
+# it is a PreToolUse harness hook invoked with bare python3 outside any venv,
+# so it must remain stdlib-only. Its import list (json, re, sys, hashlib,
+# pathlib) is pinned by the effect-family eval case.

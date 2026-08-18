@@ -181,3 +181,21 @@ capabilities:
   deck-architecture-laws: [best-practices-pitchdeck]
   sectioning-contract: [best-practices-pitchdeck]
   slide-plan-review: [best-practices-pitchdeck]
+  delivery-claim-receipt-contract:
+    description: Destination-receipt requirements for any claim that an external effect occurred
+    providers: [best-practices-delivery-proof]
+  self-status-is-not-delivery-rule:
+    description: Transport self-status (argv, wrapper flags, prepared prompts) never proves delivery
+    providers: [best-practices-delivery-proof]
+  bounded-escalation-ladder:
+    description: Receipt-gated escalation for failed external operations with a defined stop
+    providers: [best-practices-delivery-proof]
+  stale-artifact-shadowing-guard:
+    description: One attempt one artifact root; stale receipts cannot impersonate live runs
+    providers: [best-practices-delivery-proof]
+  self-kill-footgun-procedures:
+    description: Kill procedures that cannot match the invoking shell or strand lock-holding children
+    providers: [best-practices-delivery-proof]
+  human-named-target-authority-rule:
+    description: A human-named delivery target is binding; undeliverable means NEEDS_ATTENTION, never reroute
+    providers: [best-practices-delivery-proof]

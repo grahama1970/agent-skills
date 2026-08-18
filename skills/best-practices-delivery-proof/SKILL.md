@@ -10,6 +10,7 @@ description: >
   which five browser submits failed and the agent twice reported delivery that
   had not happened — every rule below is paid for by a specific receipt from
   that session.
+runtime_self_improvement: basic
 metadata:
   short-description: Destination-receipt discipline for delivery claims
 triggers:
