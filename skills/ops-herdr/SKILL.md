@@ -46,6 +46,45 @@ disciplines:
 
 Use this skill when subagent work should be visible, attachable, and recoverable in Herdr instead of hidden in opaque background jobs.
 
+## Upstream Herdr (read this before trusting any command below)
+
+Herdr is third-party software that ships breaking CLI changes between releases.
+This skill is a wrapper; upstream is the authority on command shape.
+
+| What | Where |
+|------|-------|
+| CLI reference (authoritative for flags) | https://herdr.dev/docs/cli-reference/ |
+| Quick start / concepts | https://herdr.dev/docs/quick-start/ |
+| Source and issues | https://github.com/herdrdev/herdr |
+| Live schema on this machine | `herdr api schema --json` |
+| Installed version | `herdr status` (client + server + protocol) |
+
+Verified against **Herdr 0.8.0, protocol 19**.
+
+`herdr api schema --json` is the ground truth for socket request methods,
+parameter shapes, and response fields; `herdr <group> --help` is ground truth
+for CLI flags. Prefer both over this file and over the docs site, which can lag
+the installed binary.
+
+Before debugging a failing Herdr call, run `herdr <group> --help` and compare it
+to the argv this skill builds. A wrong flag surfaces as `unknown option: --x`
+with exit 2, and a removed subcommand prints the group usage — neither is a
+Herdr outage.
+
+### Known drift as of 0.8.0
+
+`scripts/cli.py` still builds pre-0.8 argv in three places, so these commands
+fail against the installed binary until they are ported:
+
+| Skill command | Sends | 0.8.0 expects |
+|---------------|-------|----------------|
+| `agent start` | `--cwd --workspace --tab --split -- <cmd>` | `--kind <KIND> --pane <PANE_ID>` on an existing idle pane |
+| `agent send` | `herdr agent send` | `herdr agent prompt <target> <text> [--wait] [--until STATUS]` |
+| `agent wait` | `--status <state>` | `--until <state>` (repeatable) |
+
+`doctor`, `install-integrations`, `workstation create/focus/inspect/remove`,
+`agent read`, and `agent report` were probed against 0.8.0 and still work.
+
 ## Boundary
 
 Herdr is the live terminal/session fabric. It manages workspaces, tabs, panes, provider agents, agent state, pane reads, and pane input.

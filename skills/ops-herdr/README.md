@@ -4,6 +4,13 @@
 
 `ops-herdr` is a skill for turning long-running project-agent work into visible Herdr workstations.
 
+Herdr is third-party and changes its CLI between releases. Upstream is authoritative:
+[CLI reference](https://herdr.dev/docs/cli-reference/) ·
+[quick start](https://herdr.dev/docs/quick-start/) ·
+[source](https://github.com/herdrdev/herdr). On this machine, `herdr api schema --json`
+and `herdr <group> --help` beat both this file and the docs site. See the "Known drift"
+table in SKILL.md for commands that are stale against the installed binary.
+
 It is designed for the pattern we discussed:
 
 ```text
