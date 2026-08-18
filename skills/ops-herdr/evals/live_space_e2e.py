@@ -41,6 +41,10 @@ from ops_herdr_core import (  # noqa: E402
     utc_stamp,
     write_json,
 )
+from ops_herdr_topology import (  # noqa: E402
+    materialize_grid,
+    plan_grid,
+)
 
 LABEL_PREFIX = "ops-herdr-live-eval"
 
@@ -156,7 +160,41 @@ def run_eval(*, herdr_bin: str, session: str | None, with_agent: str | None) -> 
         else:
             fail(checks, "pane_move.old_id_alias", f"{down} no longer resolves (exit {alias.returncode})")
 
-        # 6. optional: attach a real agent to a real pane on the 0.8 contract.
+        # 6. a planned grid must materialize as a real rectangle, not slivers.
+        for rows, columns in ((2, 2), (3, 3)):
+            grid_tab = create_tab(
+                workspace_id=topology.workspace_id, label=f"grid-{rows}x{columns}", cwd=cwd,
+                session=session, herdr_bin=herdr_bin, env_values=[], dry_run=False,
+            )
+            plan = plan_grid(rows, columns)
+            panes = materialize_grid(
+                tab=grid_tab, plan=plan, cwd=cwd, session=session, herdr_bin=herdr_bin,
+            )
+            name = f"grid_{rows}x{columns}"
+            if len(panes) == rows * columns:
+                ok(checks, f"{name}.cell_count", f"{len(panes)} panes")
+            else:
+                fail(checks, f"{name}.cell_count", f"expected {rows * columns}, got {len(panes)}")
+
+            layout = pane_layout(pane_id=grid_tab.root_pane_id, session=session, herdr_bin=herdr_bin)
+            rects = {
+                entry["pane_id"]: entry["rect"]
+                for entry in layout.get("panes", [])
+                if isinstance(entry, dict) and "rect" in entry
+            }
+            xs = sorted({r["x"] for r in rects.values()})
+            ys = sorted({r["y"] for r in rects.values()})
+            if len(xs) == columns and len(ys) == rows:
+                fmt = f"{len(xs)} columns x {len(ys)} rows at x={xs} y={ys}"
+                ok(checks, f"{name}.geometry", fmt)
+            else:
+                fail(checks, f"{name}.geometry", f"expected {columns} distinct x and {rows} distinct y, got x={xs} y={ys}")
+            if rects and min(r["width"] for r in rects.values()) > 0 and min(r["height"] for r in rects.values()) > 0:
+                ok(checks, f"{name}.no_zero_cells", "every cell has non-zero width and height")
+            else:
+                fail(checks, f"{name}.no_zero_cells", f"a cell rendered at zero size: {rects}")
+
+        # 7. optional: attach a real agent to a real pane on the 0.8 contract.
         if with_agent:
             if with_agent not in AGENT_KINDS:
                 fail(checks, "agent_start.kind", f"{with_agent} not in Herdr's kind enum")

@@ -130,6 +130,33 @@ Run through the skill wrapper:
 ./run.sh workstation remove .herdr-workstations/<run>/workstation.json
 ```
 
+## Grids of agents
+
+```bash
+./run.sh space plan --grid 3x3                 # offline: print the split plan
+./run.sh space plan --count 3                  # -> 1x3, not a 2x2 with a dead cell
+./run.sh space launch --repo ~/agent-skills --label review --grid 2x2 \
+  --agent backend=codex --agent frontend=claude --agent tests=codex --agent reviewer=opencode
+./run.sh space launch --repo . --label probe --count 2 --dry-run
+```
+
+`--count` picks the most balanced rectangle (`1, 2, 3, 4, 6, 9 -> 1x1, 1x2, 1x3,
+2x2, 2x3, 3x3`); `--grid ROWSxCOLS` is explicit and preferred for automation.
+Agents are assigned to cells row-major and are optional — a launch with no
+`--agent` just builds the topology.
+
+The planner partitions the rectangle recursively along its longer dimension, so a
+grid is balanced rather than a stack of slivers, and it produces exactly
+`cells - 1` splits. Rectangles are capped at 8x8; a cell rendered at zero size is
+not a useful success state.
+
+Order is fixed and not negotiable: **create the workspace, create the tab, run
+every split, verify the layout against the plan, and only then attach agents.**
+`agent start` binds to a pane already at a shell prompt, so splitting underneath a
+live agent is not an option. `materialize_grid` raises when Herdr's own layout
+readback disagrees with the plan; a zero exit from `pane split` is not evidence
+the grid exists.
+
 ## Durable communication pattern
 
 Preferred subagent coordination:

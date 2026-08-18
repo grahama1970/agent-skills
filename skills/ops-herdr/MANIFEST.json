@@ -17,19 +17,19 @@
       "sha256": "ef82fa6835bea0863590ea68fd2503de5403b0540afcc238bd61e476aba3c99c"
     },
     {
-      "bytes": 7931,
+      "bytes": 9316,
       "path": "SKILL.md",
-      "sha256": "ce3a6239a250b764ec50ccc1d82567a906fa9e43108d1b62a96b0369f7f7ed99"
+      "sha256": "71ecaef55a565e6758e6bbbe76b19239da6a4586ed530c50cfaef617b4d6577e"
     },
     {
-      "bytes": 10837,
+      "bytes": 12812,
       "path": "evals/live_space_e2e.py",
-      "sha256": "0eabbefa595c11ef05323f3c8818ba7c0a47be85bbc2eb0c0dbfccd7e72b4d86"
+      "sha256": "d154d911b43e5cb65699ab58e288e0e8da9bdce0dc7cf29faf3628b04ab43d87"
     },
     {
-      "bytes": 2366,
+      "bytes": 4737,
       "path": "fixtures/agentic_eval.json",
-      "sha256": "1cd7640c7522097398c80260e28809bc99b1a56cb30b5c5ff424a80ee0cb0f43"
+      "sha256": "85c422731a4da2335f10aa1fcb84769d07e70fbf3e8856d84c615530fb8fcdfc"
     },
     {
       "bytes": 269,
@@ -57,9 +57,9 @@
       "sha256": "ac0a0df6e770a02719e90ebfb45477fdff32f91fba82fbc699e84be5f19881cf"
     },
     {
-      "bytes": 31751,
+      "bytes": 31836,
       "path": "scripts/cli.py",
-      "sha256": "57bcbd88c600d2c6774a24285046e6d6ec6a2963fe3f1acdfa4fff2766f19c8f"
+      "sha256": "dbe040385bbe2fb5ca5e93911a9c6750bbdc1cac7da15f3956ee7b689596f4eb"
     },
     {
       "bytes": 21191,
@@ -70,13 +70,23 @@
       "bytes": 10923,
       "path": "scripts/ops_herdr_loops.py",
       "sha256": "b7a8fe7837770e08b107abca49633b5ec09ff547093dca194dbe86c39fb0546a"
+    },
+    {
+      "bytes": 6756,
+      "path": "scripts/ops_herdr_topology.py",
+      "sha256": "87cb9a5cfc15702ae33c13368f2d76ba26aae50218c950166d9e29531833c490"
+    },
+    {
+      "bytes": 7794,
+      "path": "scripts/space_cli.py",
+      "sha256": "fafd718ee06372fcc81f2537d996c3beb369d2983c5131591daaf4f2ef88ba75"
     }
   ],
   "target_repo_path": "skills/ops-herdr",
   "validation": {
     "cli_verify": "verify ok",
     "function_docstrings_missing": [],
-    "max_python_file_lines": 666,
+    "max_python_file_lines": 668,
     "py_compile": true
   }
 }

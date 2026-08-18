@@ -46,6 +46,7 @@ from ops_herdr_core import (  # noqa: E402
     write_json,
     load_manifest,
 )
+from space_cli import space_app  # noqa: E402
 from ops_herdr_loops import (  # noqa: E402
     LoopTask,
     build_creator_prompt,
@@ -67,6 +68,7 @@ batch_app = typer.Typer(help="Run bounded creator/reviewer batches in Herdr work
 app.add_typer(workstation_app, name="workstation")
 app.add_typer(agent_app, name="agent")
 app.add_typer(batch_app, name="batch")
+app.add_typer(space_app, name="space")
 
 StatusValue = Annotated[str, typer.Option(help="Agent state: idle, working, blocked, done, or unknown.")]
 
