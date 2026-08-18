@@ -39,13 +39,34 @@ app = typer.Typer(help="Compile /ask requests into strict Tau DAGs.")
 ASK_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BROWSER_AVAILABILITY_SCRIPT = ASK_ROOT / "scripts" / "probe_browser_provider_availability.py"
 
-BROWSER_FRESH_URLS = {
+# Provider entry URLs. These drift, and a wrong one does not fail loudly: it
+# lands on a valid page of the same product that happens to be a different
+# origin with a different session, so the composer accepts text and silently
+# refuses to submit. That is exactly how webkimi failed until 2026-08-17 --
+# kimi.com is the Mainland-China product behind a WeChat/+86 login wall
+# ("Outside Mainland China, visit kimi.ai") while the account is signed in on
+# kimi.ai.
+#
+# Every entry is overridable so the next drift is a config change, not a source
+# edit -- overriding the surf-side default means patching a VENDORED file, which
+# is strictly worse. Set ASK_BROWSER_URL_<HANDLER>, e.g.
+#   ASK_BROWSER_URL_WEBKIMI=https://www.kimi.ai/
+#
+# Put these in an env file BOTH runtimes read, not in ~/.zshrc: the surf native
+# messaging host is spawned by Chrome and cron lanes run without a login shell,
+# so a ~/.zshrc export reaches interactive `run.sh` calls and nothing else.
+_BROWSER_FRESH_URL_DEFAULTS = {
     "webgpt": "https://chatgpt.com/",
     "webclaude": "https://claude.ai/new",
-    "webkimi": "https://www.kimi.com/",
+    "webkimi": "https://www.kimi.ai/",
     "webgemini": "https://gemini.google.com/app",
     "webgrok": "https://grok.com/",
     "webdeepseek": "https://chat.deepseek.com/",
+}
+
+BROWSER_FRESH_URLS = {
+    handler: os.environ.get(f"ASK_BROWSER_URL_{handler.upper()}", default).strip() or default
+    for handler, default in _BROWSER_FRESH_URL_DEFAULTS.items()
 }
 BROWSER_BACKENDS = {
     "webgpt": "webgpt",

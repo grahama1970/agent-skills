@@ -358,7 +358,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('review this patch for bugs')\nassert order[0]=='claude-fable-low', order\nassert order.index('claude-opus-4-8-high') < order.index('webclaude'), order\nprint('LOCAL_MODEL_PREFERRED')\""
+        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _fallback_provider_order as f\norder=f('review this patch for bugs')\n# The contract is the one in this case's name: a LOCAL claude leads and every\n# local claude outranks the browser seat. Pinning a specific id made this fail\n# the moment c32beb9f33 moved the lead to claude-opus-5-high, which was the\n# intended change -- the eval was asserting a model roster, not the rule.\nlocal_claude=[m for m in order if m.startswith('claude-')]\nassert local_claude, order\nassert order[0] in local_claude, order\nassert order.index(local_claude[-1]) < order.index('webclaude'), order\nprint('LOCAL_MODEL_PREFERRED')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -761,19 +761,22 @@
       }
     },
     {
-      "name": "a-real-two-seat-roundtable-is-compliant",
-      "type": "positive",
+      "name": "a-real-two-seat-roundtable-is-below-quorum",
+      "type": "adversarial",
       "real_world": true,
       "timeout_seconds": 300,
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh panel-audit '/mnt/storage12tb/skills/ask/outputs/monitor-opportunities-next-steps-20260815/ask-tau-roundtable-review-this-monitor-o-4d4f989989e1' --mode roundtable"
+        "cd .. && ./run.sh panel-audit '/mnt/storage12tb/skills/ask/outputs/monitor-opportunities-next-steps-20260815/ask-tau-roundtable-review-this-monitor-o-4d4f989989e1' --mode roundtable; test $? -eq 1 && echo TWO_SEAT_PANEL_REFUSED"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "COMPLIANT",
+          "VIOLATIONS",
+          "roundtable_quorum",
+          "TWO_SEAT_PANEL_REFUSED",
+          "one shared packet",
           "all seats answered"
         ]
       }

@@ -7,7 +7,7 @@ state is preserved on the tab so iterative calls form a coherent dialogue.
 
 Contract:
 - A controlled Kimi tab id is required. If neither tab_id nor url is given,
-  we try to auto-resolve by listing kimi.com tabs via `surf tab.list`;
+  we try to auto-resolve by listing kimi.ai tabs via `surf tab.list`;
   we refuse to proceed (with a clear instruction) if 0 or >1 candidates
   exist. We never silently pick.
 - `surf kimi.submit --no-activate` enforces the sentinel proof contract:
@@ -78,7 +78,7 @@ def resolve_kimi_tab(
     Priority:
       1. explicit_tab_id (passed via --kimi-tab-id) — used as-is.
       2. explicit_url — resolved via surf tab.list matching.
-      3. auto-resolve via `surf tab.list` filtered to kimi.com:
+      3. auto-resolve via `surf tab.list` filtered to kimi.ai:
          - exactly 1 candidate → use it
          - 0 or >1 candidates → raise KimiTabError
     """
@@ -122,7 +122,11 @@ def resolve_kimi_tab(
         if len(parts) < 3:
             continue
         tab_id, title, url = parts[0], parts[1], parts[2]
-        if "kimi.com" not in url:
+        # kimi.ai is the signed-in origin for this account; kimi.com is the
+        # Mainland-China product behind its own login wall. Accept both when
+        # resolving an existing tab -- a kimi.com tab the human signed into is
+        # still usable -- but new tabs are opened on kimi.ai (BROWSER_FRESH_URLS).
+        if "kimi.ai" not in url and "kimi.com" not in url:
             continue
         if "/chat" not in url and "/agent" not in url:
             continue
@@ -136,7 +140,7 @@ def resolve_kimi_tab(
     if not candidates:
         raise KimiTabError(
             "No open Kimi tab to control.\n"
-            "Open exactly one kimi.com/chat tab in your Chrome (signed in), "
+            "Open exactly one kimi.ai/chat tab in your Chrome (signed in), "
             "then either retry, or pass --kimi-tab-id with the id from the "
             "Tab ID Viewer extension."
         )
@@ -144,7 +148,7 @@ def resolve_kimi_tab(
     raise KimiTabError(
         "Multiple Kimi tabs are open; refusing to guess.\n"
         "Pass --kimi-tab-id with the id you want to control, "
-        "or close all but one kimi.com/chat tab and retry.\n"
+        "or close all but one kimi.ai/chat tab and retry.\n"
         f"Candidates:\n{listing}"
     )
 

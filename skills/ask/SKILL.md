@@ -450,16 +450,28 @@ run directory and answers from artifacts:
 | `seat_status` | every seat accounted for from its own artifacts |
 | `no_silent_consensus` | no agreement claimed over a seat that never answered |
 | `isolation` | no candidate was shown a rival's response |
+| `roundtable_quorum` | three seats **answered**, or the run reports the shortfall |
 | `competition_outcome` | two candidates **answered**, and no winner without evidence |
+
+`roundtable_quorum` runs in `--mode roundtable`, `competition_outcome` in
+`--mode compete`; the first four checks run in both.
 
 Equal context is measured on the task body, not raw bytes: `Handler:`,
 `Model:`, `Seat:`, `node_id:` and `Browser model preference:` are per-seat
 addressing and may differ. Everything else that differs is a tailored packet.
 
-`competition_outcome` counts candidates that **answered**. A run that dispatched
-two seats and received one is a single opinion; the live run on 2026-08-16 did
-exactly that while its scorecard read `candidates: 2`, and stayed honest only
-because it also reported `NEEDS_ATTENTION`.
+Both floors count seats that **answered**, never seats dispatched. A run that
+dispatched two seats and received one is a single opinion; the live run on
+2026-08-16 did exactly that while its scorecard read `candidates: 2`, and
+stayed honest only because it also reported `NEEDS_ATTENTION`.
+
+The floors differ because the modes differ. A competition at two candidates is
+a real head-to-head. A roundtable at two has no majority to hold and no dissent
+to attribute, so it collapses to one opinion as soon as a seat drops — hence
+three, and hence seating five so three can still answer. The numbers live in
+`ROUNDTABLE_MIN_ANSWERING` / `COMPETITION_MIN_ANSWERING` in
+`src/ask/panel_compliance.py`; `prove-workflow` imports them rather than
+restating them.
 
 ### webclaude is testing-only
 

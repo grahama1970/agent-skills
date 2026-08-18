@@ -35,6 +35,28 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _seat_stem(value: str) -> str:
+    """Reduce a handler or provider identifier to the thing worth comparing.
+
+    The substitution check below asks "did a different model answer than the one
+    this seat asked for". It was comparing raw strings, so a seat answering
+    through its own transport looked like a substitution: the lane is
+    `handler-webgemini` and the recorded provider is `gemini.submit`, and neither
+    string contains the other. Every healthy webgemini run was reported as
+    "answered by gemini.submit with no record of substitution" -- a violation
+    invented by the comparison, not observed in the run.
+
+    Strip the transport verb and the `web` handler prefix so the comparison is
+    between providers. A genuine substitution (claude-fable-low answered by
+    claude-opus-4-8-high) still differs after normalisation and is still caught.
+    """
+    v = str(value or "").strip().lower()
+    v = re.sub(r"\.(submit|chat|send)$", "", v)
+    if v.startswith("web"):
+        v = v[3:]
+    return re.sub(r"[^a-z0-9]", "", v)
+
+
 def _run_dir_of(payload: dict) -> Path | None:
     receipt = str((payload.get("execution") or {}).get("receipt_dir") or "")
     if not receipt:
@@ -107,7 +129,13 @@ def probe(handler: str, *, timeout: int = 900) -> dict:
         requested_base = lane["lane"].replace("handler-", "")
         if lane["status"] == "PASS" and lane["models"]:
             answered = lane["models"][-1]
-            if answered and answered not in requested_base and requested_base not in answered:
+            answered_stem = _seat_stem(answered)
+            requested_stem = _seat_stem(requested_base)
+            substituted = bool(answered_stem) and bool(requested_stem) \
+                and answered_stem != requested_stem \
+                and answered_stem not in requested_stem \
+                and requested_stem not in answered_stem
+            if substituted:
                 # A substitution is honest when the receipt itself records it.
                 # stderr is not enough: it is not part of the artifact a
                 # reader inherits.

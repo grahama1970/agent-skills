@@ -4,13 +4,64 @@
 Not the honesty contract -- that one passes when a seat names a blocker. This
 one only passes when the work got done, because that is what "works as
 expected" means.
+
+For a panel, "the work got done" is a quorum of seats returning the token:
+three for a roundtable, two for a competition. The bar is imported from
+panel_compliance so this harness cannot certify a run the audit would reject.
 """
 from __future__ import annotations
 
-import argparse, json, re, subprocess, sys, uuid
+import argparse, json, os, re, signal, subprocess, sys, uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from ask.panel_compliance import (  # noqa: E402
+    COMPETITION_MIN_ANSWERING,
+    ROUNDTABLE_MIN_ANSWERING,
+)
+
+#: Seats that must return the token, by mode. Imported rather than restated so
+#: the bar this harness proves is the same one panel_compliance enforces --
+#: two copies of the number drift, and the harness would then certify runs the
+#: audit rejects.
+REQUIRED_SEATS = {
+    "roundtable": ROUNDTABLE_MIN_ANSWERING,
+    "compete": COMPETITION_MIN_ANSWERING,
+}
+
+#: A roundtable is proved against the full preferred roster, not against the
+#: quorum. Dispatching exactly three and demanding three makes every trial a
+#: perfect run; the roster is what Ask actually seats, so it is what gets
+#: proved.
+DEFAULT_HANDLERS = {
+    "roundtable": ["webgpt", "webkimi", "webgemini", "webgrok", "webdeepseek"],
+    "compete": ["webgpt", "webkimi", "webgemini"],
+}
+
+
+def _kill_group(proc: "subprocess.Popen") -> None:
+    """TERM then KILL the child's whole process group.
+
+    start_new_session=True made the child a group leader, so signalling -pgid
+    reaches every descendant -- the browser submit and the node CLI holding the
+    Surf lock included -- instead of only the shell we spawned.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+    except (ProcessLookupError, PermissionError):
+        return
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(pgid, sig)
+        except (ProcessLookupError, PermissionError):
+            return
+        try:
+            proc.wait(timeout=10)
+            return
+        except subprocess.TimeoutExpired:
+            continue
 
 
 def run(mode: str, handlers: list[str], timeout: int) -> dict:
@@ -41,7 +92,29 @@ def run(mode: str, handlers: list[str], timeout: int) -> dict:
         cmd += ["--handler", h]
     cmd += ["--execute", "--json"]
 
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(ROOT))
+    # Run the DAG in its own process group and kill the GROUP on timeout.
+    #
+    # subprocess.run(timeout=...) kills only the direct child. Observed
+    # 2026-08-17: this harness timed out at 1500s, and the tree underneath it --
+    # tau_dag_cli -> kimi-submit.sh -> timeout(4860s) -> node cli.cjs kimi_tab --
+    # stayed alive holding the Surf browser lock, so every later probe failed
+    # with surf_browser_lock_timeout against an owner whose parent was gone.
+    # A stranded lease is worse than a failed run: it breaks the next run too.
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(ROOT),
+        start_new_session=True,
+    )
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _kill_group(proc)
+        out, err = proc.communicate()
+        raise
+    proc = subprocess.CompletedProcess(cmd, proc.returncode, out, err)
     m = re.search(r"^\{", proc.stdout, re.M)
     if not m:
         return {"ok": False, "reason": "no JSON result", "stderr": proc.stderr[-500:]}
@@ -61,7 +134,7 @@ def run(mode: str, handlers: list[str], timeout: int) -> dict:
                           "failure_code": rc.get("failure_code"),
                           "answered": token in body, "bytes": len(body)})
     answered = [s for s in seats if s["answered"]]
-    need = 2 if mode in {"roundtable", "compete"} else 1
+    need = REQUIRED_SEATS.get(mode, 1)
     return {
         "ok": len(answered) >= need,
         "mode": mode, "handlers": handlers, "token": token,
@@ -77,14 +150,18 @@ def main(argv=None) -> int:
     # has to be answered per provider, not for webgpt and then assumed.
     ap.add_argument("mode")
     ap.add_argument("--handler", action="append", default=[])
-    ap.add_argument("--timeout", type=int, default=1500)
+    # A panel seats five providers against one browser and one surf lock, so it
+    # cannot finish inside a single seat's budget.
+    ap.add_argument("--timeout", type=int, default=None)
     args = ap.parse_args(argv)
-    defaults = {"roundtable": ["webgpt", "webkimi"], "compete": ["webgpt", "webkimi"]}
-    handlers = args.handler or defaults.get(args.mode, [args.mode])
+    handlers = args.handler or DEFAULT_HANDLERS.get(args.mode, [args.mode])
+    timeout = args.timeout if args.timeout is not None else (
+        2400 if args.mode in REQUIRED_SEATS else 1500
+    )
     try:
-        r = run(args.mode, handlers, args.timeout)
+        r = run(args.mode, handlers, timeout)
     except subprocess.TimeoutExpired:
-        r = {"ok": False, "mode": args.mode, "reason": f"timed out after {args.timeout}s", "seats": []}
+        r = {"ok": False, "mode": args.mode, "reason": f"timed out after {timeout}s", "seats": []}
     print(json.dumps(r, indent=2))
     print(("WORKS: " if r["ok"] else "DOES_NOT_WORK: ") +
           f"{r.get('answered',0)}/{r.get('required','?')} seat(s) returned the token")

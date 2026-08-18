@@ -1630,7 +1630,7 @@ def main(
     ),
     gemini_tab_id: str = typer.Option("", "--gemini-tab-id", help="Chrome tab id to control for --oracle-backend webgemini. Optional: auto-resolved from a single open gemini.google.com tab."),
     gemini_url: str = typer.Option("", "--gemini-url", help="Gemini conversation URL to resolve to an open Chrome tab for --oracle-backend webgemini."),
-    kimi_tab_id: str = typer.Option("", "--kimi-tab-id", help="Chrome tab id to control for --oracle-backend webkimi. Optional: auto-resolved from a single open kimi.com tab."),
+    kimi_tab_id: str = typer.Option("", "--kimi-tab-id", help="Chrome tab id to control for --oracle-backend webkimi. Optional: auto-resolved from a single open kimi.ai tab."),
     kimi_url: str = typer.Option("", "--kimi-url", help="Kimi conversation URL to resolve to an open Chrome tab for --oracle-backend webkimi."),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):

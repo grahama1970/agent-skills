@@ -1,6 +1,6 @@
 # Project State: pi-skill-ask
 
-**Generated 2026-08-11T14:38:20.306477+00:00** from `/home/graham/workspace/experiments/agent-skills/skills/ask`.
+**Generated 2026-08-12T06:30:59.046091+00:00** from `/home/graham/workspace/experiments/agent-skills/skills/ask`.
 A dated assessment artifact, not rolling context — see `PROJECT_KNOWLEDGE.md`
 for current understanding. Claims below are `not established` unless a receipt
 is named.

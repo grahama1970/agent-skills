@@ -25,6 +25,12 @@ The rules that carry weight
     two seats died is the single most misleading artifact this system can
     produce, so it is a violation rather than a note.
 
+    **Quorum.** The floor is on seats that ANSWERED, never seats dispatched:
+    three for a roundtable, two for a competition. Below it a run must say so.
+    Without this, the previous rule is enforceable only on wording -- a panel
+    that never says "the panel agrees" could still present one surviving seat
+    as the panel's finding.
+
 Non-goal
     This judges process compliance, never semantic quality. A fully compliant
     roundtable can still be wrong; that is what the proof gates are for.
@@ -39,6 +45,22 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA = "ask.panel_compliance.v1"
+
+#: Answering seats a panel needs before its output means what it says.
+#:
+#: A roundtable needs three. At two, a panel that loses one seat is a single
+#: opinion, and even intact there is no majority to hold and no dissent to
+#: attribute -- "the panel agrees" reduces to one model talking, which is the
+#: exact artifact `check_no_silent_consensus` exists to refuse, arriving through
+#: the front door instead.
+#:
+#: A competition needs two, and two is genuinely enough: isolated candidates in
+#: a head-to-head is a real bakeoff, and `best-practices-competition` already
+#: refuses to pick a winner on a tie.
+#:
+#: Both floors count seats that ANSWERED, never seats dispatched.
+ROUNDTABLE_MIN_ANSWERING = 3
+COMPETITION_MIN_ANSWERING = 2
 
 #: Lines that legitimately differ per seat: addressing and model selection.
 #: Everything else in a packet is task content and must be identical.
@@ -194,6 +216,45 @@ def check_no_silent_consensus(run_dir: Path) -> dict[str, Any]:
     }
 
 
+def check_roundtable_quorum(run_dir: Path) -> dict[str, Any]:
+    """Three answering seats minimum, or the run must say it fell short.
+
+    Same shape as the competition floor and for the same reason: a seat that
+    never answered is not a seat. A run honestly reporting NEEDS_ATTENTION or
+    BLOCKED is not in violation -- it already says it did not get a panel. The
+    violation is presenting a sub-quorum panel as a panel result.
+    """
+    statuses = [seat_status(lane) for lane in _lane_dirs(run_dir)]
+    answered = [s["seat"] for s in statuses if s["responded"]]
+    join_status = ""
+    receipt_path = run_dir / "node-artifacts" / "join" / "node-receipt.json"
+    try:
+        join_status = str(json.loads(receipt_path.read_text(encoding="utf-8")).get("status") or "")
+    except (OSError, ValueError):
+        join_status = ""
+    short = len(answered) < ROUNDTABLE_MIN_ANSWERING
+    disclosed = join_status in {"NEEDS_ATTENTION", "BLOCKED"}
+    return {
+        "rule": "roundtable_quorum",
+        "source": (
+            f"best-practices-roundtable: >={ROUNDTABLE_MIN_ANSWERING} ANSWERING seats, "
+            "or report the shortfall"
+        ),
+        "seats_dispatched": len(statuses),
+        "seats_answered": len(answered),
+        "answered": answered,
+        "required": ROUNDTABLE_MIN_ANSWERING,
+        "status": join_status,
+        "compliant": not short or disclosed,
+        "detail": (
+            f"{len(answered)} of {len(statuses)} seats answered, quorum is "
+            f"{ROUNDTABLE_MIN_ANSWERING}"
+            if short
+            else f"{len(answered)} seats answered"
+        ),
+    }
+
+
 def check_competition_outcome(run_dir: Path) -> dict[str, Any]:
     """Two candidates minimum, and never a fabricated winner."""
     scorecard: dict[str, Any] = {}
@@ -211,19 +272,27 @@ def check_competition_outcome(run_dir: Path) -> dict[str, Any]:
     # seats lets a one-opinion run present itself as a competition: the live
     # run on 2026-08-16 dispatched two and had one answer, while the scorecard
     # still read "candidates: 2". The floor must be measured on answers.
-    single_opinion = len(answered) < 2 and status not in {"NEEDS_ATTENTION", "BLOCKED"}
+    single_opinion = (
+        len(answered) < COMPETITION_MIN_ANSWERING
+        and status not in {"NEEDS_ATTENTION", "BLOCKED"}
+    )
     return {
         "rule": "competition_outcome",
-        "source": "best-practices-competition: >=2 ANSWERING candidates; no winner without evidence",
+        "source": (
+            f"best-practices-competition: >={COMPETITION_MIN_ANSWERING} ANSWERING "
+            "candidates; no winner without evidence"
+        ),
         "candidates_dispatched": len(candidates),
         "candidates_answered": len(answered),
+        "required": COMPETITION_MIN_ANSWERING,
         "winner": winner,
         "status": status,
         "compliant": not fabricated and not single_opinion,
         "detail": (
             "winner named with no candidate response"
             if fabricated
-            else "fewer than two candidates answered, so this is one opinion, not a competition"
+            else f"fewer than {COMPETITION_MIN_ANSWERING} candidates answered, "
+            "so this is one opinion, not a competition"
             if single_opinion
             else "outcome consistent with receipts"
         ),
@@ -241,6 +310,8 @@ def audit(run_dir: Path | str, *, mode: str = "roundtable") -> dict[str, Any]:
     ]
     if mode == "compete":
         checks.append(check_competition_outcome(root))
+    else:
+        checks.append(check_roundtable_quorum(root))
     violations = [c for c in checks if not c["compliant"]]
     return {
         "schema": SCHEMA,

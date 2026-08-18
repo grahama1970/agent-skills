@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "ask",
   "trials": 2,
-  "proof_scope": "live provider dispatch through the real Ask runtime",
+  "proof_scope": "live provider dispatch and live multi-seat panels through the real Ask runtime",
   "claims": {
-    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, and that no seat dispatches a nonexistent model",
-    "does_not_prove": "that any given provider is available at run time, browser seat completion, or semantic correctness of any response"
+    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, that no seat dispatches a nonexistent model, that a live roundtable reaches three ANSWERING seats and passes its own compliance audit, that a live competition reaches two answering candidates, that a two-seat panel is refused rather than reported as a panel, and that an MVP unblock dispatches isolated candidates against a real blocker and passes the best-practices-competition audit while refusing a solo candidate",
+    "does_not_prove": "that any given provider is available at run time, or semantic correctness of any response. Quorum is a floor on delivery, not on quality: three seats returning the token proves the transport seats a panel, never that the panel is right."
   },
   "cases": [
     {
@@ -113,24 +113,6 @@
         "exit_code": 0,
         "stdout_contains": [
           "SEAT_HONEST"
-        ]
-      }
-    },
-    {
-      "name": "live-ask-webgpt-returns-the-token",
-      "type": "positive",
-      "real_world": true,
-      "non_deterministic": true,
-      "timeout_seconds": 1700,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh prove-workflow webgpt"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "WORKS:"
         ]
       }
     },
@@ -282,7 +264,7 @@
       "command": [
         "bash",
         "-c",
-        "cd ../../surf && printf 'What animal is in the attached image? Answer with the single species name only.' > /tmp/ask-eval-vision.md && ./run.sh deepseek.submit --input /tmp/ask-eval-vision.md --output /tmp/ask-eval-vision-out.md --mode Vision --attach-file ../ask/fixtures/lion.jpg --timeout 400 >/dev/null 2>&1; grep -qi lion /tmp/ask-eval-vision-out.md && echo VISION_READ_THE_IMAGE"
+        "cd ../../surf && IN=$(mktemp) && OUT=$(mktemp) && rm -f \"$OUT\" && printf 'What animal is in the attached image? Answer with the single species name only.' > \"$IN\" && ./run.sh deepseek.submit --input \"$IN\" --output \"$OUT\" --mode Vision --attach-file ../ask/fixtures/lion.jpg --timeout 400 >/dev/null 2>&1; test -s \"$OUT\" && grep -qi lion \"$OUT\" && echo VISION_READ_THE_IMAGE"
       ],
       "expected": {
         "exit_code": 0,
@@ -305,6 +287,101 @@
         "exit_code": 0,
         "stdout_contains": [
           "HOST_ON_MAIN"
+        ]
+      }
+    },
+    {
+      "name": "live-a-roundtable-reaches-quorum-and-passes-its-own-audit",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && OUT=$(./run.sh prove-workflow roundtable 2>&1); echo \"$OUT\" | tail -1; echo \"$OUT\" | grep -q 'WORKS:' || exit 1; DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);print(json.loads(t[m.start():t.rindex(chr(125))+1]).get('run_dir',''))\" 2>/dev/null); [ -d \"$DIR\" ] || { echo NO_RUN_DIR; exit 1; }; ./run.sh panel-audit \"$DIR\" --mode roundtable"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:",
+          "COMPLIANT",
+          "equal_context",
+          "roundtable_quorum"
+        ]
+      }
+    },
+    {
+      "name": "live-a-roundtable-below-quorum-is-not-reported-as-a-panel",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && OUT=$(./run.sh prove-workflow roundtable --handler webgpt --handler webkimi 2>&1); echo \"$OUT\" | grep -q 'DOES_NOT_WORK' || { echo 'TWO_SEATS_PASSED_AS_A_PANEL'; exit 1; }; DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);print(json.loads(t[m.start():t.rindex(chr(125))+1]).get('run_dir',''))\" 2>/dev/null); [ -d \"$DIR\" ] || { echo NO_RUN_DIR; exit 1; }; ./run.sh panel-audit \"$DIR\" --mode roundtable | grep -q 'roundtable_quorum' && echo QUORUM_ENFORCED_ON_A_LIVE_RUN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "QUORUM_ENFORCED_ON_A_LIVE_RUN"
+        ]
+      }
+    },
+    {
+      "name": "live-a-competition-gets-two-isolated-candidates-answering",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh prove-workflow compete"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKS:"
+        ]
+      }
+    },
+    {
+      "name": "live-an-mvp-unblock-competition-produces-a-judged-winner",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2700,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp',failure_code='surf_browser_lock_timeout',message='a lane timed out waiting for the transport lock')\" >/dev/null 2>&1 && OUT=$(ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp --failure-code surf_browser_lock_timeout --handler webgpt --handler webgemini --handler webgrok --execute 2>/dev/null) && DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);d=json.loads(t[m.start():t.rindex(chr(125))+1]);print(str((d.get('execution') or {}).get('receipt_dir') or '').replace('/tau-receipts',''))\") && [ -d \"$DIR\" ] && ./run.sh panel-audit \"$DIR\" --mode compete"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPLIANT",
+          "competition_outcome",
+          "isolation",
+          "equal_context"
+        ]
+      }
+    },
+    {
+      "name": "live-an-mvp-competition-with-one-candidate-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp-solo',failure_code='eval_solo_code')\" >/dev/null 2>&1; ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp-solo --failure-code eval_solo_code --handler webgpt --execute 2>&1 | grep -q 'at least 2 isolated candidates' && echo SOLO_MVP_COMPETITION_REFUSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SOLO_MVP_COMPETITION_REFUSED"
         ]
       }
     },
