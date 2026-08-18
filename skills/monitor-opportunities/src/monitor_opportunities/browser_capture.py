@@ -1216,7 +1216,15 @@ def capture_meetup_buffalo(
     group_capture_failures: list[dict[str, str]] = []
     skipped_group_urls: list[str] = []
     try:
-        wall_timeout = max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "90")))
+        # An explicit budget is honoured verbatim; only the DEFAULT scales with
+        # how much work the lane was asked to do.
+        events_per_group_env = max(0, int(os.environ.get("MONITOR_MEETUP_EVENTS_PER_GROUP", "2")))
+        configured_timeout = os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS")
+        wall_timeout = (
+            max(1, int(configured_timeout))
+            if configured_timeout
+            else max(150, 50 + max_group_pages * 12 * (1 + events_per_group_env))
+        )
         max_group_failures = max(1, int(os.environ.get("MONITOR_MEETUP_MAX_GROUP_FAILURES", "3")))
         category_wait_seconds = os.environ.get("MONITOR_MEETUP_CATEGORY_WAIT_SECONDS", "4")
         group_wait_seconds = os.environ.get("MONITOR_MEETUP_GROUP_WAIT_SECONDS", "3")
@@ -1433,7 +1441,17 @@ def capture_meetup_buffalo_isolated(
     """Run Meetup capture in a killable child so browser stalls cannot hang cron."""
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    timeout_seconds = timeout_seconds or max(1, int(os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", "120")))
+    # The budget has to cover what the lane actually does. Attendee capture adds
+    # an event-page visit per event per group, so a flat 120s silently zeroed the
+    # whole lane on 2026-08-18 (meetup_isolated_capture_timeout, groups_captured 0)
+    # and with it the attendee signals and LinkedIn resolution downstream.
+    # Roughly 12s per group page plus 12s per event page, floored at 180s.
+    events_per_group = max(0, int(os.environ.get("MONITOR_MEETUP_EVENTS_PER_GROUP", "2")))
+    configured = os.environ.get("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS")
+    timeout_seconds = timeout_seconds or (
+        max(1, int(configured)) if configured
+        else max(180, 60 + max_group_pages * 12 * (1 + events_per_group))
+    )
     ctx = multiprocessing.get_context("fork")
     queue: multiprocessing.Queue = ctx.Queue()
     proc = ctx.Process(
