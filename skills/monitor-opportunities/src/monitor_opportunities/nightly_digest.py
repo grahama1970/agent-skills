@@ -206,6 +206,44 @@ def run_digest_phase(
             logger.warning("contact-change detection skipped: {}", exc)
             steps["contact_changes"] = {"error": str(exc)}
 
+        # QUALIFICATION GAPS - what each shortlisted posting demands, and which
+        # of those an approved claim can actually answer. Without this the human
+        # never learns WHY a tailored resume is thin: the corpus, not the match.
+        try:
+            from .qualification_match import qualification_report
+
+            claim_path = out / "claim-snapshot.json"
+            if claim_path.exists() and shortlist_rows:
+                claim_snapshot = json.loads(claim_path.read_text(encoding="utf-8"))
+                reports = [qualification_report(row, claim_snapshot) for row in shortlist_rows[:8]]
+                totals = {
+                    "requirements_read": sum(r["counts"]["requirements_read"] for r in reports),
+                    "answerable": sum(r["counts"]["answerable_from_approved_claim"] for r in reports),
+                    "not_evidenced": sum(r["counts"]["not_evidenced"] for r in reports),
+                    "hard_blockers": sum(r["counts"]["hard_blockers"] for r in reports),
+                }
+                (out / "qualification-gaps.json").write_text(
+                    json.dumps(
+                        {
+                            "schema": "monitor_opportunities.qualification_gaps.v1",
+                            "totals": totals,
+                            "reports": reports,
+                            "external_effects": False,
+                        },
+                        indent=2,
+                        sort_keys=True,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                steps["qualification_gaps"] = {
+                    **totals,
+                    "artifact": str(out / "qualification-gaps.json"),
+                }
+        except Exception as exc:  # noqa: BLE001 - never fail the run over analysis
+            logger.warning("qualification gap analysis skipped: {}", exc)
+            steps["qualification_gaps"] = {"error": str(exc)}
+
         # CONSULTING/PROSPECT QUEUE — federal buyers + commercial signals. This
         # was built and unit-tested but never wired into the nightly, so it had
         # produced nothing every run despite being "equally important to the

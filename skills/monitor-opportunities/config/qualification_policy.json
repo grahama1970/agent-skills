@@ -1,0 +1,100 @@
+{
+  "schema": "monitor_opportunities.qualification_policy.v1",
+  "note": "Vocabulary for reading a posting's stated requirements. Phrases are matched whole, case-insensitively, against requirement bullets. Nothing here asserts anything about the candidate; it only classifies what the EMPLOYER asked for.",
+  "requirement_headings": [
+    "qualifications",
+    "minimum qualifications",
+    "basic qualifications",
+    "required qualifications",
+    "preferred qualifications",
+    "requirements",
+    "what you'll need",
+    "what you need",
+    "what we're looking for",
+    "who you are",
+    "your experience",
+    "skills and experience"
+  ],
+  "preferred_headings": [
+    "preferred qualifications",
+    "nice to have",
+    "nice-to-have",
+    "bonus points",
+    "preferred"
+  ],
+  "hard_blockers": {
+    "clearance": [
+      "security clearance",
+      "active clearance",
+      "ts/sci",
+      "top secret",
+      "secret clearance",
+      "polygraph",
+      "public trust"
+    ],
+    "citizenship": [
+      "u.s. citizen",
+      "us citizen",
+      "citizenship required",
+      "green card",
+      "permanent resident"
+    ],
+    "degree": [
+      "bachelor's degree required",
+      "master's degree required",
+      "phd required",
+      "ph.d. required",
+      "advanced degree required"
+    ],
+    "onsite": [
+      "on-site five days",
+      "onsite 5 days",
+      "must relocate",
+      "relocation required",
+      "in-office daily"
+    ]
+  },
+  "linkedin_missing_markers": [
+    "missing qualifications",
+    "you may be missing",
+    "not a match",
+    "add these skills",
+    "skills you're missing"
+  ],
+  "match": {
+    "method": "lexical",
+    "note": "Term overlap against approved claim wordings and their evidence, not embedding cosine. A qualification is a term, not a vibe: employer screening is lexical, and a matched term is auditable where a similarity score is not. The embedding version was calibrated on seven hand-picked pairs, which is anecdote, and it hid its reasoning.",
+    "min_shared_terms": 2,
+    "stopwords": [
+      "and",
+      "the",
+      "with",
+      "for",
+      "you",
+      "your",
+      "our",
+      "will",
+      "have",
+      "must",
+      "should",
+      "experience",
+      "years",
+      "strong",
+      "ability",
+      "including",
+      "such",
+      "that",
+      "this",
+      "from",
+      "work",
+      "working",
+      "team",
+      "teams",
+      "role",
+      "candidate",
+      "plus",
+      "using",
+      "across"
+    ]
+  }
+}
