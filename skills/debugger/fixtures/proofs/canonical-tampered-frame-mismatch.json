@@ -1,0 +1,47 @@
+{
+  "analysis": {
+    "conclusion": "HOSTILE FIXTURE: the breakpoint hit is in one file but the stopped frame is borrowed from a different source/session.",
+    "nextEdit": ""
+  },
+  "assessment": {
+    "limitations": [],
+    "proofValid": true,
+    "variableInspectionValid": true
+  },
+  "breakpoints": [
+    {
+      "file": "/tmp/project/service.py",
+      "hit": true,
+      "line": 2,
+      "source": "label = value",
+      "verified": true
+    }
+  ],
+  "captures": {
+    "locals": {
+      "value": "14"
+    },
+    "requestedLocals": ["value"],
+    "watches": {}
+  },
+  "debugger": {
+    "adapter": "Python bdb",
+    "mode": "python-bdb"
+  },
+  "producer": {
+    "name": "fixture"
+  },
+  "repro": {
+    "command": ["python", "service.py"]
+  },
+  "schema": "debugger.proof.v1",
+  "stopped": {
+    "frame": {
+      "file": "/tmp/other/unrelated.py",
+      "function": "classify",
+      "line": 2
+    },
+    "hit": true,
+    "reason": "breakpoint"
+  }
+}

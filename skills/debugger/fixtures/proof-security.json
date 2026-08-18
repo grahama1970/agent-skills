@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 3,
+  "eval_tier": "standard",
+  "proof_scope": "Proof integrity: the proof validator recomputes validity from the artifact's own structural evidence, so a producer cannot certify its own success. A hand-edited proofValid=true over a stop that never happened, or a frame borrowed from an unrelated source, is rejected; a genuinely captured proof still validates.",
+  "claims": {
+    "proves": "validate_debugger_proof.py rejects a tampered proofValid=true and a frame that matches no breakpoint that hit, while accepting a real bdb capture",
+    "does_not_prove": "source-hash re-establishment, session correlation, or hash-chained event continuity -- those need producer-emitted provenance not yet present and remain open on #1436"
+  },
+  "cases": [
+    {
+      "name": "reject-hand-edited-proofvalid",
+      "type": "adversarial",
+      "required": true,
+      "description": "A canonical proof with proofValid hand-edited to true but stopped.hit=false and no breakpoint hit must be rejected under --expect-valid by independent recomputation.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-tampered-proofvalid.json --expect-valid"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["not supported by independent evidence"]
+      }
+    },
+    {
+      "name": "reject-borrowed-frame",
+      "type": "adversarial",
+      "required": true,
+      "description": "A proof whose stopped frame is in a different file than the breakpoint that hit must be rejected: the frame does not correspond to the requested breakpoint.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-tampered-frame-mismatch.json --expect-valid"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["matches no breakpoint that hit"]
+      }
+    },
+    {
+      "name": "accept-genuine-capture",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A real bdb capture on the variable_state module produces a proof whose independent recomputation agrees with the producer, so it validates.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$D/\"; export PYTHONPATH=\"$D\"; uv run --project .. python ../scripts/capture_breakpoints.py --break \"$D/main.py:21\" --local first --local second --out \"$D/proof.json\" -- \"$D/main.py\"; uv run --project .. python ../scripts/validate_debugger_proof.py \"$D/proof.json\" --expect-valid"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["proof validation passed"]
+      }
+    }
+  ]
+}

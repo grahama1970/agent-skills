@@ -1,0 +1,44 @@
+{
+  "analysis": {
+    "conclusion": "HOSTILE FIXTURE: proofValid was hand-edited to true over a stop that never happened.",
+    "nextEdit": ""
+  },
+  "assessment": {
+    "limitations": [],
+    "proofValid": true,
+    "variableInspectionValid": true
+  },
+  "breakpoints": [
+    {
+      "file": "/tmp/sample.py",
+      "hit": false,
+      "line": 2,
+      "verified": true
+    }
+  ],
+  "captures": {
+    "locals": {},
+    "requestedLocals": ["value"],
+    "watches": {}
+  },
+  "debugger": {
+    "adapter": "Python bdb",
+    "mode": "python-bdb"
+  },
+  "producer": {
+    "name": "fixture"
+  },
+  "repro": {
+    "command": ["python", "sample.py"]
+  },
+  "schema": "debugger.proof.v1",
+  "stopped": {
+    "frame": {
+      "file": "/tmp/sample.py",
+      "function": "classify",
+      "line": 2
+    },
+    "hit": false,
+    "reason": "not-hit"
+  }
+}

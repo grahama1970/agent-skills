@@ -11,6 +11,17 @@ VALIDATOR="$SCRIPT_DIR/scripts/validate_debugger_proof.py"
 
 "${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/canonical-valid.json" --expect-valid
 "${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/canonical-invalid-no-state.json" --expect-invalid
+
+# A producer may not certify its own success: a hand-edited proofValid=true
+# over a stop that never happened, or a frame borrowed from an unrelated
+# source, must be rejected by independent recomputation (#1436). These fail
+# closed under --expect-valid and are caught under --expect-invalid.
+"${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/canonical-tampered-proofvalid.json" --expect-invalid
+"${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/canonical-tampered-frame-mismatch.json" --expect-invalid
+if "${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/canonical-tampered-proofvalid.json" --expect-valid 2>/dev/null; then
+  echo "proof-independence failed: tampered proofValid=true was accepted" >&2
+  exit 1
+fi
 "${PYTHON[@]}" "$VALIDATOR" "$SCRIPT_DIR/fixtures/proofs/vscode-bridge-status-valid.json" \
   --expect-valid \
   --canonical-out "$WORK_DIR/vscode-canonical.json"

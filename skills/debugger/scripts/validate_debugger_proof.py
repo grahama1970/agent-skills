@@ -268,6 +268,43 @@ def validate_canonical(proof: dict[str, Any]) -> None:
     require(isinstance(proof["analysis"].get("conclusion"), str) and proof["analysis"]["conclusion"], "analysis.conclusion is required")
 
 
+def independent_assessment(proof: dict[str, Any]) -> tuple[bool, bool, list[str]]:
+    """Recompute validity from the artifact's own structural evidence.
+
+    ``assessment.proofValid`` is a producer CLAIM, not truth: bridge
+    normalization can copy a producer's self-reported flag straight into the
+    hit/validity fields. This derives an independent verdict from the parts of
+    the proof that are expensive to fake together -- a stop actually occurred,
+    at least one breakpoint actually hit, and the stopped frame landed in the
+    same source *file* as a breakpoint that hit -- so a hand-edited
+    ``proofValid: true`` over a stop that never happened cannot pass.
+
+    Line numbers are deliberately NOT required to match: adapters relocate a
+    breakpoint from a ``def``/``class`` line to the first executable statement
+    (see #1353), so requiring requested-line equality would reject legitimate
+    relocated breakpoints. File identity (by basename) is the relocation-safe
+    invariant.
+    """
+    reasons: list[str] = []
+    stopped = proof.get("stopped", {}) if isinstance(proof.get("stopped"), dict) else {}
+    stopped_hit = stopped.get("hit") is True
+    if not stopped_hit:
+        reasons.append("stopped.hit is not true")
+    bps = proof.get("breakpoints", []) or []
+    hit_files = {Path(str(bp.get("file", ""))).name for bp in bps if isinstance(bp, dict) and bp.get("hit") is True}
+    if not hit_files:
+        reasons.append("no breakpoint is marked hit")
+    frame = stopped.get("frame", {}) if isinstance(stopped.get("frame"), dict) else {}
+    frame_file = Path(str(frame.get("file", ""))).name
+    frame_matches = bool(frame_file) and frame_file in hit_files
+    if hit_files and not frame_matches:
+        reasons.append(f"stopped frame file {frame.get('file')!r} matches no breakpoint that hit")
+    captures = proof.get("captures", {}) if isinstance(proof.get("captures"), dict) else {}
+    has_state = bool(captures.get("locals")) or bool(captures.get("watches"))
+    proof_valid = stopped_hit and bool(hit_files) and frame_matches
+    return proof_valid, has_state, reasons
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("artifact", type=Path)
@@ -280,7 +317,21 @@ def main() -> int:
     try:
         proof = normalize(read_artifact(args.artifact))
         validate_canonical(proof)
+        independent_valid, independent_state, independent_reasons = independent_assessment(proof)
+        # The producer's self-reported proofValid may never exceed what the
+        # structural evidence independently supports. This is the check that
+        # stops a debugger from certifying its own success.
+        if bool(proof["assessment"].get("proofValid")) and not independent_valid:
+            raise ProofError(
+                "producer proofValid=true is not supported by independent evidence: "
+                + "; ".join(independent_reasons)
+            )
         if args.expect_valid:
+            require(
+                independent_valid,
+                "independent evidence does not support a valid stop: " + "; ".join(independent_reasons),
+            )
+            require(independent_state, "no captured variable state supports variableInspectionValid")
             require(bool(proof["assessment"]["proofValid"]), "expected proofValid=true")
             require(bool(proof["assessment"]["variableInspectionValid"]), "expected variableInspectionValid=true")
             require(bool(proof["stopped"]["hit"]), "expected stopped.hit=true")
