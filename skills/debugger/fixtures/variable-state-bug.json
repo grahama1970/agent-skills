@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 3,
+  "eval_tier": "standard",
+  "proof_scope": "A multi-file Python module (scenarios/variable_state/) has a shared-mutable-default state leak. These cases prove the debugger can set a breakpoint at the error, run to it, and surface the exact paused variable state that reveals the bug -- the machinery an agent uses to describe what is wrong -- and that an unreachable breakpoint is not accepted as proof.",
+  "claims": {
+    "proves": "the debugger stops at a chosen line across a multi-file module and captures the paused frame's variable state, which exposes a cross-call state leak (second==36, expected 30; seen already polluted when the second report begins)",
+    "does_not_prove": "VS Code bridge session control, stepping, or human interaction -- those are covered by the capability-gated matrix (#1441)"
+  },
+  "cases": [
+    {
+      "name": "breakpoint-reaches-bug-final-value",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Set a breakpoint in main where both report aggregates are bound, run to it, and read the frame: second is 36 where 30 was expected. This is the paused state an agent would describe.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$D/\"; export PYTHONPATH=\"$D\"; uv run --project .. python ../scripts/capture_breakpoints.py --break \"$D/main.py:21\" --local first --local second --out \"$D/proof.json\" -- \"$D/main.py\"; python3 ../scenarios/variable_state/check.py \"$D/proof.json\" final"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["BUG-CONFIRMED second=36 expected=30"]
+      }
+    },
+    {
+      "name": "breakpoint-exposes-cross-call-state-leak",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Set the breakpoint on the tally return line for the whole run and read seen at each hit. The second report's first call already carries the first report's values (seen==[1, 2, 3, 10]) -- the shared mutable default is directly visible in the paused frame.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$D/\"; export PYTHONPATH=\"$D\"; uv run --project .. python ../scripts/capture_breakpoints.py --break \"$D/tally.py:12\" --local seen --local value --out \"$D/proof.json\" -- \"$D/main.py\"; python3 ../scenarios/variable_state/check.py \"$D/proof.json\" leak"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["LEAK-CONFIRMED"]
+      }
+    },
+    {
+      "name": "unreachable-breakpoint-is-not-proof",
+      "type": "negative",
+      "required": true,
+      "description": "A breakpoint on a line that never executes yields zero hits. The capturer must fail closed (exit non-zero) rather than emit a proof for a breakpoint that never fired -- a breakpoint you never reached tells you nothing about the state at it.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$D/\"; export PYTHONPATH=\"$D\"; uv run --project .. python ../scripts/capture_breakpoints.py --break \"$D/main.py:14\" --local sentinel --out \"$D/proof.json\" -- \"$D/main.py\""
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["0 breakpoint hit"]
+      }
+    }
+  ]
+}
