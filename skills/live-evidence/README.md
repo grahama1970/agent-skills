@@ -1,5 +1,6 @@
 # Live Evidence
 
+> **Disciplines:** human-collaboration · research-retrieval · ui-design-engineering
 A local-first interview and meeting copilot for Graham's actual problem: stay
 present in the conversation while the system quietly retrieves the strongest
 supporting evidence from Graph Memory and current source code.

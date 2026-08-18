@@ -1,5 +1,6 @@
 # best-practices-python
 
+> **Disciplines:** engineering-standards · developer-tooling
 Human-facing reference for the `best-practices-python` skill.
 
 Agents should read `SKILL.md` first. The skill defines this repo's Python defaults:

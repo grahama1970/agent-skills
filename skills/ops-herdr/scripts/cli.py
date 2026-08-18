@@ -24,6 +24,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from ops_herdr_core import (  # noqa: E402
     append_event,
+    load_dotenv_once,
     create_tab,
     create_workspace,
     create_worktree_workspace,
@@ -44,6 +45,10 @@ from ops_herdr_loops import (  # noqa: E402
     load_loop_tasks,
     run_one_loop,
 )
+
+# Idempotent: core loads .env on import; this keeps the entrypoint explicit for
+# direct `python scripts/cli.py` invocations.
+load_dotenv_once()
 
 logger.remove()
 logger.add(sys.stderr, format="{time:HH:mm:ss} | {level:<7} | {message}", level="INFO")

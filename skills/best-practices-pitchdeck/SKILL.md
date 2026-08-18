@@ -33,6 +33,9 @@ taxonomy:
   - precision
   - fragility
   - design
+disciplines:
+  - engineering-standards
+  - content-creation
 ---
 
 # Pitch Deck Architecture

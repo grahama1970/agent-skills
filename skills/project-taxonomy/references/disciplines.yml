@@ -112,6 +112,7 @@ skills:
   best-practices-kde: [engineering-standards, ui-design-engineering]
   best-practices-kling-contact-sheet: [engineering-standards, content-creation]
   best-practices-opportunities: [engineering-standards, research-retrieval]
+  best-practices-pitchdeck: [engineering-standards, content-creation]
   best-practices-plan: [engineering-standards, agentic-orchestration]
   best-practices-port: [engineering-standards, developer-tooling]
   best-practices-project-state: [engineering-standards, observability-operations]
@@ -137,6 +138,7 @@ skills:
   bootcamp: [human-collaboration, persona-simulation]
   brave-search: [research-retrieval]
   browser-oracle: [browser-automation, agentic-orchestration]
+  captcha: [compliance-security, browser-automation, agentic-orchestration]
   casting-agent: [content-creation, research-retrieval, persona-simulation]
   ccopy: [developer-tooling]
   checkpoint: [memory-knowledge, observability-operations]
@@ -278,6 +280,7 @@ skills:
   learn-timeout: [ml-training, observability-operations]
   learn-voice: [ml-training, voice-audio]
   lie-detector: [evaluation-quality, compliance-security]
+  live-evidence: [human-collaboration, research-retrieval, ui-design-engineering]
   llm-eval-lab: [evaluation-quality, model-ops]
   local-page-analysis-capture: [browser-automation, ui-design-engineering]
   loop: [agentic-orchestration]
@@ -323,6 +326,7 @@ skills:
   ops-f36-plant: [observability-operations, compliance-security]
   ops-google: [observability-operations, model-ops]
   ops-herdr: [agentic-orchestration, observability-operations]
+  ops-huggingface: [data-engineering, observability-operations]
   ops-llm: [observability-operations, model-ops]
   ops-nzbgeek: [data-engineering, observability-operations]
   ops-pi-term: [observability-operations, ui-design-engineering]
@@ -331,6 +335,7 @@ skills:
   ops-stitch: [ui-design-engineering, developer-tooling]
   ops-streamdeck: [developer-tooling, observability-operations]
   ops-workstation: [observability-operations]
+  ops-worktrees: [developer-tooling, observability-operations]
   orchestrate: [agentic-orchestration]
   orpheus-tts-voice-trainer: [ml-training, voice-audio]
   paper-lab: [content-creation, evaluation-quality]
@@ -432,6 +437,7 @@ skills:
 # area_crosswalk maps each research area to the disciplines it may contain;
 # a labeled skill whose disciplines share nothing with its area's row is a
 # review-queue candidate (see references/portfolio/discipline-area-disagreements.csv).
+  writing-style: [developer-tooling]
 area_crosswalk:
   agent-systems:
   - agentic-orchestration

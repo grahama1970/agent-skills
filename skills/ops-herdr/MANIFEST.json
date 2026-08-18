@@ -17,9 +17,9 @@
       "sha256": "a91727aded995aa45f4fe10710cea50b7ed80c0cbf098701111f407bcf936d4c"
     },
     {
-      "bytes": 243,
+      "bytes": 269,
       "path": "pyproject.toml",
-      "sha256": "f4982f53ecaa024e727ec970ea66d4c9387d3e6402c7ff8bf8a62993b6363a23"
+      "sha256": "25f57dc60d92e987c9a40ca8962efd8d23c8bdc13763c0329130a2ff15cb63b8"
     },
     {
       "bytes": 761,
@@ -42,26 +42,26 @@
       "sha256": "22cac5c9b7773261852eb95d23e31f647073d4f0cd056408b854b0802be8a485"
     },
     {
-      "bytes": 22493,
+      "bytes": 22661,
       "path": "scripts/cli.py",
-      "sha256": "6e5816ea7e5e6571e7c1def412382e6de6bd08724c1fc2906e74030738a8bb45"
+      "sha256": "64778f70e9fad75048f949b32e59456fcdf6e0ebad8f284c26bf6d8f698fe140"
     },
     {
-      "bytes": 8997,
+      "bytes": 9986,
       "path": "scripts/ops_herdr_core.py",
-      "sha256": "991f2bfc71d367d559b76d216a93b007b616472a10dca3092254c0beac5dfc0d"
+      "sha256": "d1fb5c8e00632d3e1543c4b44a23d218d846fac98a98adcb5734bee6f43b37f2"
     },
     {
-      "bytes": 9434,
+      "bytes": 9601,
       "path": "scripts/ops_herdr_loops.py",
-      "sha256": "05e1abda3bf8e82bf5574f77c8de082d32673bf34f81d5ae7613c557eeeec1e2"
+      "sha256": "905aeaa96d7948697bd60753e59c0726b37f3ddb46f8e3017557561435a933ba"
     }
   ],
   "target_repo_path": "skills/ops-herdr",
   "validation": {
     "cli_verify": "verify ok",
     "function_docstrings_missing": [],
-    "max_python_file_lines": 452,
+    "max_python_file_lines": 457,
     "py_compile": true
   }
 }

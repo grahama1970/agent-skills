@@ -1,5 +1,6 @@
 # captcha
 
+> **Disciplines:** compliance-security · browser-automation · agentic-orchestration
 A receipt-backed security-evaluation wrapper around the ReCAP agent. The skill
 is intentionally narrower than upstream ReCAP: it permits only synthetic
 `dynamic` CAPTCHA challenges and a local model endpoint on literal loopback.

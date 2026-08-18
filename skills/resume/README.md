@@ -1,5 +1,6 @@
 # Resume skill
 
+> **Disciplines:** content-creation · evaluation-quality
 A small, deterministic boundary around the repository's canonical `RESUME.md`:
 validate the source, compile claim-bound, evidence-referenced variants for one
 opportunity, and hand the resulting manifest to `/monitor-opportunities`.

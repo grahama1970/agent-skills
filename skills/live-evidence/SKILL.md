@@ -42,7 +42,6 @@ disciplines:
   - human-collaboration
   - research-retrieval
   - ui-design-engineering
-  - memory-knowledge
 ---
 
 # Live Evidence

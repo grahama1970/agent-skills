@@ -18,6 +18,7 @@ from typing import Any
 
 from ops_herdr_core import (
     create_tab,
+    load_dotenv_once,
     create_workspace,
     ensure_dir,
     manifest_path_from_run_dir,
@@ -28,6 +29,10 @@ from ops_herdr_core import (
     utc_stamp,
     write_json,
 )
+
+# Idempotent: core loads .env on import; repeated here so importing this module
+# alone still reads a populated environment.
+load_dotenv_once()
 
 
 @dataclasses.dataclass(slots=True)

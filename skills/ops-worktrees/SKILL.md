@@ -23,6 +23,9 @@ provides:
 composes:
   - cleanup
   - agentic-evals
+disciplines:
+  - developer-tooling
+  - observability-operations
 ---
 
 # ops-worktrees

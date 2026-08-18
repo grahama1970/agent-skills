@@ -122,6 +122,21 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  ops-herdr-orchestration:
+    providers:
+      - ops-herdr
+  visible-subagent-runtime:
+    providers:
+      - ops-herdr
+  dynamic-agent-workspaces:
+    providers:
+      - ops-herdr
+  pane-agent-communication:
+    providers:
+      - ops-herdr
+  creator-reviewer-loop-runtime:
+    providers:
+      - ops-herdr
   live-transcription:
     providers:
       - live-evidence

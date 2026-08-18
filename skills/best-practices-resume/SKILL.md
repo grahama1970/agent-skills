@@ -32,11 +32,11 @@ runtime_self_improvement: none
 taxonomy:
   - precision
   - validation
+domains:
+  - marketing
 disciplines:
   - engineering-standards
   - content-creation
-domains:
-  - marketing
 ---
 
 # Best Practices: Resume

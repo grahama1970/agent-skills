@@ -23,11 +23,11 @@ composes:
   - agentic-evals
 complies:
   - best-practices-skills
+domains:
+  - marketing
 disciplines:
   - engineering-standards
   - content-creation
-domains:
-  - marketing
 ---
 
 # Slide Design Best Practices

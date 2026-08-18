@@ -1,5 +1,6 @@
 # monitor-opportunities
 
+> **Disciplines:** research-retrieval · observability-operations
 A nightly, human-in-the-loop pipeline that finds highly-targeted **jobs and consulting
 prospects** for Graham Anderson (Principal AI Architect, Buffalo NY), tailors a
 claim-bound resume for the top ones, learns each employer's application form, and tracks

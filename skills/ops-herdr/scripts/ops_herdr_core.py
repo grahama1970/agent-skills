@@ -14,10 +14,40 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Iterable
 
 from loguru import logger
+
+SKILLS_DIR = Path(__file__).resolve().parents[2]
+
+
+def load_dotenv_once() -> None:
+    """Load .env before any HERDR_* lookup, without clobbering the live pane env.
+
+    Herdr exports HERDR_ENV, HERDR_SESSION, and HERDR_PANE_ID into the panes it
+    manages. Those must win over any .env on disk, so both the shared helper and
+    the fallback load with override=False.
+    """
+    if str(SKILLS_DIR) not in sys.path:
+        sys.path.append(str(SKILLS_DIR))
+    try:
+        from dotenv_helper import load_env
+
+        load_env()
+        return
+    except Exception as exc:  # noqa: BLE001 - dotenv is optional, never fatal.
+        logger.debug("shared dotenv helper unavailable: {}", exc)
+    try:
+        from dotenv import find_dotenv, load_dotenv
+
+        load_dotenv(find_dotenv(usecwd=True) or None, override=False)
+    except Exception as exc:  # noqa: BLE001 - dotenv is optional, never fatal.
+        logger.debug("dotenv unavailable: {}", exc)
+
+
+load_dotenv_once()
 
 
 @dataclasses.dataclass(slots=True)

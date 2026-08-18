@@ -55,10 +55,10 @@ taxonomy:
   - claim-boundary
 metadata:
   short-description: Claim-bound README-to-PPTX compiler
-disciplines:
-  - content-creation
 domains:
   - marketing
+disciplines:
+  - content-creation
 ---
 
 # README to Pitch Deck
