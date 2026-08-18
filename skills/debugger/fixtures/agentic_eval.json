@@ -2,21 +2,52 @@
   "version": 2,
   "skill": "debugger",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "eval_tier": "standard",
+  "proof_scope": "debugger baseline: the documented aggregate gate runs end-to-end, a live bdb breakpoint capture on a fresh target yields a valid proof, and the ladder validator rejects an out-of-order ladder receipt",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the debugger's live breakpoint-capture path produces a debugger.proof.v1 the proof validator accepts, and the ladder validator bites on an invalid receipt rather than passing prose",
+    "does_not_prove": "VS Code bridge session control, Remote SSH authority, or human-agent collaboration -- those require live VS Code EDH / Remote SSH / human capabilities and are covered by the capability-gated matrix (#1441)"
   },
   "cases": [
     {
-      "name": "sanity",
+      "name": "sanity-gate-end-to-end",
       "type": "positive",
+      "required": true,
+      "description": "The documented aggregate gate runs from a clean state: live bdb breakpoint capture, proof validation, the unreachable-breakpoint negative control, the file-not-mutated safety boundary, and the ladder gate. Proves no SKILL.md/sanity reference points at a missing file.",
+      "command": ["bash", "../sanity.sh"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["LADDER SANITY OK"]
+      }
+    },
+    {
+      "name": "live-bdb-breakpoint-capture",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Real live path with no stub inputs: create a fresh target outside the fixture tree, launch it under the bdb-based capturer, stop at a real breakpoint, capture a local, and validate the emitted proof independently.",
       "command": [
         "bash",
-        "../sanity.sh"
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; T=\"$D/rw_target.py\"; P=\"$D/rw_proof.json\"; printf 'def classify(n):\\n    label = \"big\" if n > 10 else \"small\"\\n    return label\\n\\nassert classify(14) == \"big\"\\n' > \"$T\"; uv run --project .. python ../scripts/capture_breakpoints.py --break \"$T:3\" --local label --out \"$P\" -- \"$T\"; uv run --project .. python ../scripts/validate_debugger_proof.py \"$P\" --expect-valid; rm -rf \"$D\""
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "ladder-validator-rejects-out-of-order-receipt",
+      "type": "negative",
+      "required": true,
+      "description": "A deliberately invalid debugger helper output (a ladder receipt that jumps to a breakpoint without dispatching first) must be rejected under --expect-valid, proving the gate bites on bad input instead of trusting prose.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_ladder.py ladders/canonical-invalid-skips-dispatch.json --expect-valid"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["LADDER REJECTED"]
       }
     }
   ]

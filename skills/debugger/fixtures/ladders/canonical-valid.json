@@ -1,0 +1,34 @@
+{
+  "attempts": 2,
+  "outcome": "resolved",
+  "rungs": [
+    {
+      "artifact": "FIXTURE_DIR/dagrun.json",
+      "cited": {
+        "field": "recommended_action.type",
+        "value": "repair_then_retry_or_reroute"
+      },
+      "layer": "tau_dag_error",
+      "resolved": false,
+      "rung": "dispatch"
+    },
+    {
+      "proof": "FIXTURE_DIR/proof.json",
+      "resolved": false,
+      "rung": "breakpoint"
+    },
+    {
+      "query": "chatgpt dom sentinel capture",
+      "resolved": true,
+      "results": [
+        {
+          "url": "https://example.com/a"
+        }
+      ],
+      "rung": "research",
+      "tool": "brave-search"
+    }
+  ],
+  "schema": "debugger.ladder.v1",
+  "symptom": "roundtable seat webgpt returns no sentinel"
+}

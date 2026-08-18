@@ -1,0 +1,23 @@
+{
+  "attempts": 2,
+  "outcome": "resolved",
+  "rungs": [
+    {
+      "artifact": "FIXTURE_DIR/dagrun.json",
+      "cited": {
+        "field": "verdict",
+        "value": "X"
+      },
+      "layer": "tau_dag_error",
+      "resolved": false,
+      "rung": "dispatch"
+    },
+    {
+      "proof": "FIXTURE_DIR/proof.json",
+      "resolved": true,
+      "rung": "breakpoint"
+    }
+  ],
+  "schema": "debugger.ladder.v1",
+  "symptom": "roundtable seat webgpt returns no sentinel"
+}

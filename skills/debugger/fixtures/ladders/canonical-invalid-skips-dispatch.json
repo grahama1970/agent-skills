@@ -1,0 +1,13 @@
+{
+  "attempts": 1,
+  "outcome": "resolved",
+  "rungs": [
+    {
+      "proof": "FIXTURE_DIR/proof.json",
+      "resolved": true,
+      "rung": "breakpoint"
+    }
+  ],
+  "schema": "debugger.ladder.v1",
+  "symptom": "roundtable seat webgpt returns no sentinel"
+}

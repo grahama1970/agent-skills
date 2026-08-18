@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grahama1970.github.io/agent-skills/schemas/debugger.ladder.v1.schema.json",
+  "title": "Debugger Escalation Ladder v1",
+  "description": "Receipt proving a stuck state was worked in ladder order: dispatch to the artifact that owns the symptom, then a breakpoint, then research. Each rung must cite an artifact that exists; a rung may only be entered after the previous rung ran and failed to resolve.",
+  "type": "object",
+  "required": ["schema", "symptom", "attempts", "rungs", "outcome"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {"const": "debugger.ladder.v1"},
+    "symptom": {
+      "type": "string",
+      "minLength": 12,
+      "description": "The stuck state in concrete terms. A vague symptom cannot select a dispatch layer."
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Focused fix attempts made before this ladder. At two or more, the research rung is mandatory."
+    },
+    "rungs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rung"}
+    },
+    "outcome": {"enum": ["resolved", "needs_attention"]}
+  },
+  "$defs": {
+    "rung": {
+      "type": "object",
+      "required": ["rung", "resolved"],
+      "additionalProperties": true,
+      "properties": {
+        "rung": {"enum": ["dispatch", "breakpoint", "research"]},
+        "resolved": {
+          "type": "boolean",
+          "description": "Whether this rung explained the stuck state. Only the final rung may be true."
+        },
+        "layer": {
+          "enum": [
+            "tau_dag_error",
+            "tau_receipt_alerts",
+            "ask_lane_diagnostics",
+            "surf_live_dom",
+            "seam_violation",
+            "none_exists"
+          ],
+          "description": "Dispatch rung only: which artifact owns this symptom."
+        },
+        "artifact": {
+          "type": "string",
+          "description": "Path to the evidence read. Must exist on disk."
+        },
+        "cited": {
+          "type": "object",
+          "required": ["field", "value"],
+          "description": "The specific field read from the artifact. Reading without citing is a guess wearing a receipt.",
+          "properties": {
+            "field": {"type": "string", "minLength": 1},
+            "value": {}
+          }
+        },
+        "proof": {
+          "type": "string",
+          "description": "Breakpoint rung only: path to a debugger.proof.v1 artifact."
+        },
+        "tool": {
+          "enum": ["brave-search", "dogpile", "github-search"],
+          "description": "Research rung only."
+        },
+        "query": {"type": "string", "minLength": 3},
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["url"],
+            "properties": {"url": {"type": "string", "minLength": 8}}
+          }
+        }
+      }
+    }
+  }
+}

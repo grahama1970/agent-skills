@@ -1,0 +1,123 @@
+# Escalation ladder as a tau.dag_contract.v1.
+#
+# Use this when the stuck work is ALREADY running under Tau and you want the
+# rungs scheduled, receipted, and resumable. It is not the enforcement
+# mechanism: `scripts/validate_debugger_ladder.py` is, and it runs with no Tau
+# checkout at all. The DAG calls that validator; it does not reimplement it.
+#
+# Why both. The validator answers "is this ladder receipt honest?" and works
+# everywhere, which matters because $debugger is project-agnostic by contract.
+# The DAG answers "who runs the next rung, with what retry budget, and what
+# blocks dispatch" -- orchestration the validator has no opinion about.
+#
+# Replace goal_hash, target, and the run directory. Everything else is the
+# ladder itself and should not be edited per-run.
+schema: tau.dag_contract.v1
+dag_id: debugger-escalation-ladder
+goal:
+  goal_id: REPLACE-stuck-state-id
+  goal_version: 1
+  goal_hash: sha256:REPLACE
+target:
+  repo: REPLACE/repo
+  target: REPLACE-symptom
+entry_node: dispatch
+terminal_nodes:
+  - human
+limits:
+  resume: true
+  default_timeout_seconds: 600
+  # Three rungs plus one repair each. A budget larger than this is how a
+  # ladder degenerates back into retry-until-lucky.
+  max_total_attempts: 6
+nodes:
+  - id: dispatch
+    agent: investigator
+    executor: local
+    max_attempts: 1
+    command_spec: command-specs/dispatch.json
+    required_evidence:
+      - ladder-receipt.json
+    extensions:
+      role: investigator
+      emits:
+        - tau.agent_handoff.v1
+
+  - id: breakpoint
+    agent: investigator
+    executor: local
+    max_attempts: 2
+    command_spec: command-specs/breakpoint.json
+    required_evidence:
+      - debugger-proof.json
+      - ladder-receipt.json
+    extensions:
+      role: investigator
+      required_skills:
+        - debugger
+      skill_gates:
+        debugger:
+          required_checks:
+            - breakpoint-verified
+            - stopped-at-expected-line
+            - variables-inspected
+
+  - id: research
+    agent: researcher
+    executor: local
+    max_attempts: 1
+    command_spec: command-specs/research.json
+    required_evidence:
+      - ladder-receipt.json
+    extensions:
+      role: researcher
+
+  # The gate. Every path to a terminal node runs through it, so a ladder
+  # cannot reach `human` without its receipt validating.
+  - id: ladder-gate
+    agent: validator
+    executor: local
+    max_attempts: 1
+    command_spec: command-specs/ladder-gate.json
+    required_evidence:
+      - ladder-validation.json
+    extensions:
+      role: validator
+
+  - id: human
+    agent: human
+    executor: human
+
+edges:
+  - from: dispatch
+    to: ladder-gate
+    condition: rung_resolved
+  - from: dispatch
+    to: breakpoint
+    condition: rung_unresolved
+  - from: breakpoint
+    to: ladder-gate
+    condition: rung_resolved
+  - from: breakpoint
+    to: research
+    condition: rung_unresolved
+  - from: research
+    to: ladder-gate
+  - from: ladder-gate
+    to: human
+
+required_evidence:
+  - ladder-receipt.json
+  - ladder-validation.json
+
+fail_closed_on:
+  - goal_hash_mismatch
+  - target_changed
+  - missing_required_evidence
+  - evidence_receipt_unreadable
+  - evidence_receipt_verdict_failed
+  - max_attempts_exceeded
+  # Tau's own name for the research rung rule. The remaining ladder invariants
+  # (rung skipped, artifact missing) are enforced by the validator the
+  # ladder-gate node runs -- invented codes are rejected before dispatch.
+  - brave_search_required_after_two_attempts

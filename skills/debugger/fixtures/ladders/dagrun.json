@@ -1,0 +1,1 @@
+{"schema":"tau.dag_error.v1","verdict":"DAG_CONTRACT_INVALID","failure_code":"dag_contract_invalid","recommended_action":{"type":"repair_then_retry_or_reroute","next_agent":"goal-guardian","reason":"Repair the DAG contract."}}
