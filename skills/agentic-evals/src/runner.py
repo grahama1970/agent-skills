@@ -8,11 +8,15 @@ with a non-zero CLI exit.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import re
+import signal
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -29,6 +33,164 @@ VALID_CASE_TYPES = {"positive", "negative", "adversarial"}
 EVAL_FIXTURES = ("fixtures/agentic_eval.json", "fixtures/eval.json")
 EVAL_PROVIDER_SKILLS = {"agentic-evals", "eval-skills"}
 TRIAL_ENV_SCRUB_KEYS = ("UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV", "PYTHONPYCACHEPREFIX")
+
+#: Captured streams are evidence, not logs. Bound them so one chatty case cannot
+#: make a report unreadable or unwritable, and scrub obvious secrets before they
+#: are persisted into a report that gets attached to tickets.
+MAX_STREAM_CHARS = 20000
+_SECRET_RE = re.compile(
+    r"(?i)\b(token|secret|api[_-]?key|password|passwd|authorization|bearer)\b(\s*[=:]\s*|\s+)(\S+)"
+)
+
+#: Outcomes are distinguished because they mean different things to a release
+#: gate: FAIL is a defect, BLOCKED is an unmet precondition, NOT_TESTED is
+#: absence of evidence. Only PASS on a required case contributes to READY.
+OUTCOME_PASS = "PASS"
+OUTCOME_FAIL = "FAIL"
+OUTCOME_BLOCKED = "BLOCKED"
+OUTCOME_NOT_TESTED = "NOT_TESTED"
+OUTCOME_SKIPPED = "SKIPPED"
+
+
+def _redact(text: str) -> str:
+    return _SECRET_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}[REDACTED]", text or "")
+
+
+def _bound(text: str) -> str:
+    text = _redact(text or "")
+    if len(text) <= MAX_STREAM_CHARS:
+        return text
+    half = MAX_STREAM_CHARS // 2
+    dropped = len(text) - MAX_STREAM_CHARS
+    return f"{text[:half]}\n...[{dropped} chars omitted]...\n{text[-half:]}"
+
+
+def _sha256_file(path: Path) -> str | None:
+    try:
+        return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def _json_pointer(doc: Any, pointer: str) -> Any:
+    """RFC6901 lookup. Raises KeyError with the failing segment."""
+    if pointer in ("", "/"):
+        return doc
+    node = doc
+    for raw in pointer.lstrip("/").split("/"):
+        token = raw.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, list):
+            node = node[int(token)]
+        else:
+            node = node[token]
+    return node
+
+
+def _resolve(cwd: Path, raw: str) -> Path:
+    candidate = Path(raw)
+    return candidate if candidate.is_absolute() else (cwd / candidate)
+
+
+def _artifact_value(cwd: Path, spec: dict[str, Any]) -> Any:
+    path = _resolve(cwd, spec["path"])
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    return _json_pointer(doc, spec.get("json_pointer", ""))
+
+
+def check_artifacts(case: dict[str, Any], cwd: Path) -> tuple[list[str], dict[str, str]]:
+    """Assert on files the case produced, not on what it printed.
+
+    stdout substring matching cannot express "these two receipts name the same
+    session" or "the run left no artifact behind", which is what a real E2E case
+    needs to prove.
+    """
+    specs = case.get("expected", {}).get("artifacts") or []
+    problems: list[str] = []
+    hashes: dict[str, str] = {}
+    for spec in specs:
+        raw = spec.get("path")
+        if not raw:
+            problems.append("artifact spec missing 'path'")
+            continue
+        path = _resolve(cwd, raw)
+        if spec.get("absent"):
+            if path.exists():
+                problems.append(f"{raw}: expected absent, but it exists")
+            continue
+        if not path.is_file():
+            problems.append(f"{raw}: missing")
+            continue
+        digest = _sha256_file(path)
+        if digest:
+            hashes[raw] = digest
+        if "sha256" in spec and digest != spec["sha256"]:
+            problems.append(f"{raw}: sha256 {digest} != {spec['sha256']}")
+        if spec.get("min_bytes") is not None and path.stat().st_size < int(spec["min_bytes"]):
+            problems.append(f"{raw}: {path.stat().st_size} bytes < min_bytes {spec['min_bytes']}")
+        wants_value = "equals" in spec or "json_pointer" in spec or "equals_artifact" in spec
+        if not wants_value:
+            continue
+        try:
+            value = _artifact_value(cwd, spec)
+        except (OSError, ValueError, KeyError, IndexError) as exc:
+            problems.append(f"{raw}: cannot read {spec.get('json_pointer', '')!r}: {exc}")
+            continue
+        if "equals" in spec and value != spec["equals"]:
+            problems.append(f"{raw}{spec.get('json_pointer', '')}: {value!r} != {spec['equals']!r}")
+        other = spec.get("equals_artifact")
+        if other:
+            try:
+                other_value = _artifact_value(cwd, other)
+            except (OSError, ValueError, KeyError, IndexError) as exc:
+                problems.append(f"{other.get('path')}: cannot read for cross-check: {exc}")
+                continue
+            if value != other_value:
+                problems.append(
+                    f"cross-artifact mismatch: {raw}{spec.get('json_pointer', '')}={value!r} "
+                    f"!= {other['path']}{other.get('json_pointer', '')}={other_value!r}"
+                )
+    return problems, hashes
+
+
+def _pids_in_group(pgid: int) -> list[int]:
+    survivors: list[int] = []
+    proc_root = Path("/proc")
+    if not proc_root.is_dir():
+        return survivors
+    for entry in proc_root.iterdir():
+        if not entry.name.isdigit():
+            continue
+        pid = int(entry.name)
+        try:
+            if os.getpgid(pid) == pgid:
+                survivors.append(pid)
+        except (ProcessLookupError, PermissionError, OSError):
+            continue
+    return survivors
+
+
+def _terminate_group(proc: subprocess.Popen) -> list[int]:
+    """Kill the trial's whole process group and report survivors.
+
+    subprocess timeouts kill only the direct child. A timed-out case that leaves
+    a grandchild holding a lock silently corrupts every later case in a serial
+    run, so teardown is verified rather than assumed.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+    except (ProcessLookupError, PermissionError, OSError):
+        return []
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(pgid, sig)
+        except (ProcessLookupError, PermissionError, OSError):
+            break
+        try:
+            proc.wait(timeout=5)
+            break
+        except subprocess.TimeoutExpired:
+            continue
+    return [pid for pid in _pids_in_group(pgid) if pid != os.getpid()]
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
@@ -216,64 +378,130 @@ def trial_environment() -> dict[str, str]:
 
 def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str, Any]:
     started = time.monotonic()
+    proc = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=cwd,
+        env=trial_environment(),
+        text=True,
+        start_new_session=True,
+    )
+    timed_out = False
+    survivors: list[int] = []
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            cwd=cwd,
-            env=trial_environment(),
-            text=True,
-            timeout=timeout_seconds,
-            check=False,
-        )
-        return {
-            "exit_code": result.returncode,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "duration_ms": round((time.monotonic() - started) * 1000, 3),
-            "timed_out": False,
-        }
-    except subprocess.TimeoutExpired as exc:
-        return {
-            "exit_code": None,
-            "stdout": _stream_text(exc.stdout),
-            "stderr": _stream_text(exc.stderr),
-            "duration_ms": round((time.monotonic() - started) * 1000, 3),
-            "timed_out": True,
-        }
+        out, err = proc.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        survivors = _terminate_group(proc)
+        try:
+            out, err = proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            out, err = "", ""
+    return {
+        "exit_code": None if timed_out else proc.returncode,
+        "stdout": _bound(_stream_text(out)),
+        "stderr": _bound(_stream_text(err)),
+        "duration_ms": round((time.monotonic() - started) * 1000, 3),
+        "timed_out": timed_out,
+        "orphan_pids_after_teardown": survivors,
+    }
 
 
 def trial_passed(case: dict[str, Any], trial: dict[str, Any]) -> bool:
+    """Back-compatible boolean view of trial_outcome."""
+    return trial_outcome(case, trial, Path(trial.get("_cwd", ".")))[0] == OUTCOME_PASS
+
+
+def trial_outcome(case: dict[str, Any], trial: dict[str, Any], cwd: Path) -> tuple[str, list[str]]:
+    """Classify one trial, and say why when it is not a pass."""
+    if trial["timed_out"]:
+        detail = [f"timed out after {round(trial['duration_ms'] / 1000)}s"]
+        if trial.get("orphan_pids_after_teardown"):
+            detail.append(
+                "process group survived teardown: "
+                + ", ".join(str(pid) for pid in trial["orphan_pids_after_teardown"])
+            )
+        return OUTCOME_FAIL, detail
+    if trial.get("orphan_pids_after_teardown"):
+        return OUTCOME_FAIL, [
+            "process group survived teardown: "
+            + ", ".join(str(pid) for pid in trial["orphan_pids_after_teardown"])
+        ]
+    for marker in case.get("blocked_when_stdout_contains", []) or []:
+        if marker in trial["stdout"] or marker in trial["stderr"]:
+            return OUTCOME_BLOCKED, [f"precondition unmet: saw {marker!r}"]
     expected = case["expected"]
+    problems: list[str] = []
     if trial["exit_code"] != expected["exit_code"]:
-        return False
+        problems.append(f"exit_code {trial['exit_code']} != {expected['exit_code']}")
     for needle in expected.get("stdout_contains", []):
         if needle not in trial["stdout"]:
-            return False
+            problems.append(f"stdout missing {needle!r}")
     for needle in expected.get("stderr_contains", []):
         if needle not in trial["stderr"]:
-            return False
-    return not trial["timed_out"]
+            problems.append(f"stderr missing {needle!r}")
+    for needle in expected.get("stdout_excludes", []) or []:
+        if needle in trial["stdout"]:
+            problems.append(f"stdout unexpectedly contains {needle!r}")
+    artifact_problems, hashes = check_artifacts(case, cwd)
+    problems.extend(artifact_problems)
+    if hashes:
+        trial["artifact_hashes"] = hashes
+    return (OUTCOME_PASS if not problems else OUTCOME_FAIL), problems
+
+
+def case_outcome(trial_outcomes: list[str]) -> str:
+    if not trial_outcomes:
+        return OUTCOME_NOT_TESTED
+    if all(outcome == OUTCOME_PASS for outcome in trial_outcomes):
+        return OUTCOME_PASS
+    if any(outcome == OUTCOME_FAIL for outcome in trial_outcomes):
+        return OUTCOME_FAIL
+    return OUTCOME_BLOCKED
 
 
 def readiness_for(case_reports: list[dict[str, Any]]) -> str:
+    """READY means every REQUIRED case passed every trial.
+
+    A required BLOCKED case is an unmet precondition, so it cannot contribute to
+    READY -- otherwise a suite that never exercised its own subject reports the
+    same state as one that passed.
+    """
     if not case_reports:
         return "NOT_ESTABLISHED"
-    fully_passed = [case["pass_rate"] == 1.0 for case in case_reports]
-    any_passed = any(case["passed_trials"] > 0 for case in case_reports)
-    if all(fully_passed):
+    required = [c for c in case_reports if c.get("required", True)]
+    scored = required or case_reports
+    if all(c.get("outcome", OUTCOME_NOT_TESTED) == OUTCOME_PASS for c in scored):
         return "READY"
-    if any_passed:
+    if any(c["passed_trials"] > 0 for c in scored):
         return "USABLE_WITH_GAPS"
     return "NOT_READY"
+
+
+def _repo_provenance(cwd: Path) -> dict[str, Any]:
+    def _git(*args: str) -> str | None:
+        try:
+            out = subprocess.run(
+                ["git", *args], cwd=cwd, capture_output=True, text=True, timeout=10, check=False
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        value = out.stdout.strip()
+        return value or None
+
+    return {"sha": _git("rev-parse", "HEAD"), "ref": _git("rev-parse", "--abbrev-ref", "HEAD")}
 
 
 def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
     manifest = load_manifest(path)
     trials = manifest.get("trials", 3)
     cwd = path.parent
+    run_id = uuid.uuid4().hex[:12]
     cases = []
-    for case in manifest["cases"]:
+    raw_cases = manifest["cases"]
+    for index, case in enumerate(raw_cases):
+        case_id = f"{run_id}-c{index:03d}"
         # A case may declare its own timeout (real-world cases that run a live
         # nightly need minutes, not the 30s default that fits unit-test cases).
         case_timeout = case.get("timeout_seconds", timeout_seconds)
@@ -281,35 +509,68 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
             case_timeout = max(0.1, float(case_timeout))
         except (TypeError, ValueError):
             case_timeout = timeout_seconds
-        results = [run_trial(case["command"], cwd, case_timeout) for _ in range(trials)]
-        passed = [trial_passed(case, result) for result in results]
-        passed_trials = sum(passed)
+        results = []
+        outcomes = []
+        problems: list[str] = []
+        for trial_index in range(trials):
+            trial = run_trial(case["command"], cwd, case_timeout)
+            trial["trial_id"] = f"{case_id}-t{trial_index:02d}"
+            outcome, why = trial_outcome(case, trial, cwd)
+            trial["outcome"] = outcome
+            trial["problems"] = why
+            outcomes.append(outcome)
+            problems.extend(why)
+            results.append(trial)
+        passed_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_PASS)
         cases.append(
             {
                 "name": case["name"],
                 "type": case["type"],
+                "case_id": case_id,
+                "required": bool(case.get("required", True)),
+                "outcome": case_outcome(outcomes),
+                "problems": sorted(set(problems)),
+                "argv": list(case["command"]),
                 "passed_trials": passed_trials,
                 "total_trials": trials,
-                "pass_rate": round(passed_trials / trials, 4),
-                "avg_latency_ms": round(mean(result["duration_ms"] for result in results), 3),
+                "pass_rate": round(passed_trials / trials, 4) if trials else 0.0,
+                "avg_latency_ms": round(mean(result["duration_ms"] for result in results), 3)
+                if results
+                else 0.0,
                 "trials": results,
             }
         )
+    # The manifest's own proof scope and claims are the honest description of
+    # what this suite proves. Overwriting them with a generic "fixture wiring
+    # smoke" claim made every report -- including live-provider suites --
+    # understate or misstate its own evidence.
+    default_claims = {
+        "proves": "declared local commands met explicit fixture expectations across repeated trials",
+        "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness",
+    }
+    live = bool(manifest.get("live", any(c.get("real_world") for c in raw_cases)))
     return {
-        "schema": "agentic_evals.report.v1",
+        "schema": "agentic_evals.report.v2",
         "source": str(path),
-        "mocked": False,
+        "run_id": run_id,
+        "fixture_sha256": _sha256_file(path),
+        "repo": _repo_provenance(cwd),
+        "mocked": bool(manifest.get("mocked", False)),
         "fixture_backed": True,
-        "live": False,
-        "proof_scope": "fixture wiring smoke",
-        "claims": {
-            "proves": "declared local commands met explicit fixture expectations across repeated trials",
-            "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness",
-        },
-        "what_was_exercised": "local commands declared in the fixture manifest",
-        "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+        "live": live,
+        "proof_scope": manifest.get("proof_scope") or "fixture wiring smoke",
+        "claims": manifest.get("claims") or default_claims,
+        "what_was_exercised": manifest.get("what_was_exercised")
+        or "local commands declared in the fixture manifest",
+        "what_remains_unverified": manifest.get("what_remains_unverified")
+        or "semantic correctness, live services, LLM judge behavior, and release readiness",
         "readiness": readiness_for(cases),
         "case_count": len(cases),
+        "required_case_count": sum(1 for c in cases if c["required"]),
+        "outcome_counts": {
+            outcome: sum(1 for c in cases if c["outcome"] == outcome)
+            for outcome in (OUTCOME_PASS, OUTCOME_FAIL, OUTCOME_BLOCKED, OUTCOME_NOT_TESTED)
+        },
         "trial_count": sum(case["total_trials"] for case in cases),
         "cases": cases,
     }
@@ -623,14 +884,35 @@ def run(
     manifest: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
     output: Path | None = typer.Option(None, "--output", "-o", help="Optional path for the JSON report."),
     timeout_seconds: float = typer.Option(30.0, "--timeout-seconds", min=0.1),
+    report_only: bool = typer.Option(
+        False,
+        "--report-only",
+        help="Emit the report and exit 0 even when required cases failed.",
+    ),
 ) -> None:
-    """Run an agentic evaluation manifest."""
+    """Run an agentic evaluation manifest.
+
+    Exits non-zero unless every required case reached READY. A runner that exits
+    0 on USABLE_WITH_GAPS lets an outer CI job go green over failed cases, which
+    is the failure this gate exists to prevent. Use --report-only when you want
+    the report without the gate.
+    """
     report = evaluate_manifest(manifest, timeout_seconds)
     payload = json.dumps(report, indent=2)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(payload + "\n", encoding="utf-8")
+        # Atomic: a killed run must not leave a half-written report that a
+        # downstream reader would parse as truth.
+        tmp = output.with_suffix(output.suffix + ".partial")
+        tmp.write_text(payload + "\n", encoding="utf-8")
+        os.replace(tmp, output)
     typer.echo(payload)
+    if report["readiness"] != "READY" and not report_only:
+        failed = [c["name"] for c in report["cases"] if c["outcome"] != OUTCOME_PASS and c["required"]]
+        logger.error(
+            "readiness={} required_not_passing={}", report["readiness"], ", ".join(failed) or "none"
+        )
+        raise typer.Exit(1)
 
 
 @app.command("apply-scaffolds")

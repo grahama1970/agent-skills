@@ -1,0 +1,115 @@
+{
+  "version": 2,
+  "skill": "agentic-evals",
+  "trials": 2,
+  "eval_kind": "runner_selftest",
+  "proof_scope": "the runner's own fail-closed gate, outcome taxonomy, artifact assertions, and process-group teardown (issue #1430)",
+  "claims": {
+    "proves": "that run exits non-zero unless required cases are READY, that --report-only opts out, that BLOCKED never reaches READY, that cross-artifact equality is asserted without stdout parsing, that a timed-out case leaves no child process, and that manifest proof scope/claims survive into the report",
+    "does_not_prove": "anything about any evaluated skill; these cases exercise the runner itself"
+  },
+  "cases": [
+    {
+      "name": "a-failed-required-case-makes-run-exit-non-zero",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; $R run \"$D/f.json\" >/dev/null 2>&1; test $? -ne 0 && echo GATE_FAILS_CLOSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GATE_FAILS_CLOSED"
+        ]
+      }
+    },
+    {
+      "name": "report-only-exits-zero-on-the-same-manifest",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; $R run \"$D/f.json\" --report-only >/dev/null 2>&1; test $? -eq 0 && echo REPORT_ONLY_EXITS_ZERO"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REPORT_ONLY_EXITS_ZERO"
+        ]
+      }
+    },
+    {
+      "name": "a-timed-out-case-leaves-no-child-process",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"t\",\"type\":\"adversarial\",\"timeout_seconds\":3,\"command\":[\"bash\",\"-c\",\"sleep 300 & sleep 300\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/t.json\"; $R run \"$D/t.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);t=d[\\\"cases\\\"][0][\\\"trials\\\"][0];assert t[\\\"timed_out\\\"], t;assert t[\\\"orphan_pids_after_teardown\\\"]==[], t;print(\\\"NO_ORPHANS_AFTER_TIMEOUT\\\")\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO_ORPHANS_AFTER_TIMEOUT"
+        ]
+      }
+    },
+    {
+      "name": "a-required-blocked-case-does-not-reach-ready",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"b\",\"type\":\"positive\",\"blocked_when_stdout_contains\":[\"NO_CREDENTIAL\"],\"command\":[\"bash\",\"-c\",\"echo NO_CREDENTIAL\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/b.json\"; $R run \"$D/b.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d[\\\"readiness\\\"]!=\\\"READY\\\", d[\\\"readiness\\\"];assert d[\\\"cases\\\"][0][\\\"outcome\\\"]==\\\"BLOCKED\\\", d;print(\\\"BLOCKED_DOES_NOT_REACH_READY\\\")\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BLOCKED_DOES_NOT_REACH_READY"
+        ]
+      }
+    },
+    {
+      "name": "cross-artifact-equality-is-asserted-without-stdout",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"sessionId\":\"S-1\"}' > \"$D/a.json\"; printf '{\"sessionId\":\"S-1\"}' > \"$D/ok.json\"; printf '{\"sessionId\":\"S-2\"}' > \"$D/bad.json\"; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"m\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0,\"artifacts\":[{\"path\":\"a.json\",\"json_pointer\":\"/sessionId\",\"equals_artifact\":{\"path\":\"ok.json\",\"json_pointer\":\"/sessionId\"}}]}},{\"name\":\"x\",\"type\":\"adversarial\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0,\"artifacts\":[{\"path\":\"a.json\",\"json_pointer\":\"/sessionId\",\"equals_artifact\":{\"path\":\"bad.json\",\"json_pointer\":\"/sessionId\"}}]}}]}' > \"$D/x.json\"; $R run \"$D/x.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);o=[c[\\\"outcome\\\"] for c in d[\\\"cases\\\"]];assert o==[\\\"PASS\\\",\\\"FAIL\\\"], o;print(\\\"CROSS_ARTIFACT_ASSERTED\\\")\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CROSS_ARTIFACT_ASSERTED"
+        ]
+      }
+    },
+    {
+      "name": "the-report-preserves-the-manifest-proof-scope",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d) && R=\"$(cd \"$(dirname \"$0\")\" 2>/dev/null; pwd)\"; R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"proof_scope\":\"SCOPE-SENTINEL\",\"claims\":{\"proves\":\"P-SENTINEL\",\"does_not_prove\":\"n\"},\"cases\":[{\"name\":\"p\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/p.json\"; $R run \"$D/p.json\" 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d[\\\"proof_scope\\\"]==\\\"SCOPE-SENTINEL\\\", d[\\\"proof_scope\\\"];assert d[\\\"claims\\\"][\\\"proves\\\"]==\\\"P-SENTINEL\\\", d[\\\"claims\\\"];print(\\\"MANIFEST_CLAIMS_PRESERVED\\\")\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MANIFEST_CLAIMS_PRESERVED"
+        ]
+      }
+    }
+  ]
+}

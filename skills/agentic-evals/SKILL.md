@@ -145,10 +145,72 @@ evaluation:
 
 ## Readiness Mapping
 
-- `READY`: every case passes every trial.
-- `USABLE_WITH_GAPS`: at least one trial passes and at least one trial fails.
-- `NOT_READY`: trials ran but no case fully passed.
+Readiness is scored over **required** cases only (`"required": false` opts a case
+out). A required `BLOCKED` case cannot reach `READY`: an unmet precondition is
+absence of evidence, not evidence of success.
+
+- `READY`: every required case passed every trial.
+- `USABLE_WITH_GAPS`: at least one trial passed and at least one did not.
+- `NOT_READY`: trials ran but no required case fully passed.
 - `NOT_ESTABLISHED`: no cases were executed.
+
+## Fail-closed exit
+
+`run` exits **non-zero unless readiness is `READY`**. A runner that exits 0 on
+`USABLE_WITH_GAPS` lets an outer CI job go green over failed cases, which is the
+whole failure this gate exists to prevent. Pass `--report-only` when you want the
+report without the gate.
+
+## Case outcomes
+
+Each case reports one `outcome`, because these mean different things to a gate:
+
+| Outcome | Meaning |
+| --- | --- |
+| `PASS` | every trial met every expectation |
+| `FAIL` | a defect, or a timeout, or a trial that left a child process behind |
+| `BLOCKED` | a precondition was unmet; declare markers via `blocked_when_stdout_contains` |
+| `NOT_TESTED` | no trials ran |
+
+## Artifact assertions
+
+stdout substring matching cannot express "these two receipts name the same
+session" or "the run left nothing behind". Declare `expected.artifacts`:
+
+```json
+"expected": {
+  "exit_code": 0,
+  "artifacts": [
+    {"path": "out/session.json", "json_pointer": "/sessionId",
+     "equals_artifact": {"path": "out/detach.json", "json_pointer": "/sessionId"}},
+    {"path": "out/attach.json", "json_pointer": "/phase", "equals": "attach"},
+    {"path": "out/tmp.lock", "absent": true},
+    {"path": "out/report.json", "min_bytes": 32, "sha256": "sha256:..."}
+  ]
+}
+```
+
+Paths resolve relative to the fixture directory. Verified artifact hashes are
+recorded on the trial.
+
+## Process-group teardown
+
+Each trial runs in its own process group. On timeout the runner kills the
+**group**, then re-reads `/proc` and records any survivor in
+`orphan_pids_after_teardown`; a non-empty list fails the trial. A timed-out case
+that strands a grandchild holding a lock silently corrupts every later case in a
+serial run, so teardown is verified rather than assumed.
+
+## Report provenance
+
+The report is `agentic_evals.report.v2` and carries `run_id`, per-case `case_id`,
+per-trial `trial_id`, the exact `argv`, `fixture_sha256`, and `repo.sha`/`repo.ref`
+when available. It preserves the manifest's own `proof_scope` and `claims`
+instead of substituting a generic fixture-only claim, and reports `live: true`
+when the manifest declares it or any case is `real_world`. Reports are written
+atomically.
+
+Self-tests for every behavior above: `fixtures/runner_selftest.json`.
 
 ## Composition
 
