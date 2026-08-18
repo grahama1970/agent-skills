@@ -597,7 +597,7 @@ def ask(
     elif hybrid:
         if run_state:
             run_state.step_started("hybrid_recall", scope=scope, k=k)
-        log.info("Hybrid querying memory: q=%r scope=%r k=%d", question, scope, k)
+        log.info("Hybrid querying memory: q={} scope={} k={}", question, scope, k)
         hybrid_result = ask_hybrid(question, scope, k, use_bridges=use_bridges)
         result["items"] = hybrid_result["items"]
         result["bridges_found"] = hybrid_result.get("bridges_found", [])
@@ -612,13 +612,13 @@ def ask(
     else:
         if run_state:
             run_state.step_started("memory_recall", scope=scope, k=k)
-        log.info("Querying memory: q=%r scope=%r k=%d", question, scope, k)
+        log.info("Querying memory: q={} scope={} k={}", question, scope, k)
         recall_result = run_memory_recall(question, scope, k)
 
         if recall_result["returncode"] == 0:
             items = parse_memory_output(recall_result["stdout"])
             result["items"].extend(items)
-            log.info("Direct recall: %d items found", len(items))
+            log.info("Direct recall: {} items found", len(items))
             if run_state:
                 run_state.step_finished("memory_recall", returncode=0, items_count=len(items))
         else:
@@ -635,11 +635,11 @@ def ask(
                 run_state.step_started("bridge_traversal")
             bridges = extract_bridges(question)
             result["bridges_found"] = bridges
-            log.info("Bridge traversal: found bridges %s", bridges)
+            log.info("Bridge traversal: found bridges {}", bridges)
 
             for bridge in bridges:
                 bridge_query = f"{question} {bridge.lower()}"
-                log.debug("Bridge recall: bridge=%s q=%r", bridge, bridge_query)
+                log.debug("Bridge recall: bridge={} q={}", bridge, bridge_query)
                 bridge_result = run_memory_recall(bridge_query, scope, k=3, timeout=10)
 
                 if bridge_result["returncode"] == 0:
@@ -652,9 +652,9 @@ def ask(
                             result["items"].append(item)
                             existing_problems.add(item.get("problem", ""))
                             added += 1
-                    log.debug("Bridge %s: %d new items (from %d total)", bridge, added, len(bridge_items))
+                    log.debug("Bridge {}: {} new items (from {} total)", bridge, added, len(bridge_items))
                 else:
-                    log.warning("Bridge recall for %s failed: code=%d", bridge, bridge_result["returncode"])
+                    log.warning("Bridge recall for {} failed: code={}", bridge, bridge_result["returncode"])
             if run_state:
                 run_state.step_finished("bridge_traversal", bridges=bridges, items_count=len(result["items"]))
 
@@ -1519,7 +1519,7 @@ def _record_ask_telemetry(
             )
             response.raise_for_status()
     except Exception as exc:
-        log.warning("Failed to store ask telemetry: %s", exc)
+        log.warning("Failed to store ask telemetry: {}", exc)
 @app.command()
 def main(
     question_parts: list[str] = typer.Argument(..., help="Question to ask. Supports: Brandon what should we do?"),

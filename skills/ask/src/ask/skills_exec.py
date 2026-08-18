@@ -96,7 +96,7 @@ def parse_json_output(stdout: str) -> Optional[dict]:
         except json.JSONDecodeError:
             pass
 
-    log.debug("Could not parse JSON from output (%d bytes): %s", len(stdout), stdout[:100])
+    log.debug("Could not parse JSON from output ({} bytes): {}", len(stdout), stdout[:100])
     return None
 
 

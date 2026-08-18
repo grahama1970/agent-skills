@@ -120,7 +120,7 @@ def store_persona_profile(
 
     result = run_skill("memory", args, timeout=30)
     if result["returncode"] != 0:
-        log.error("Failed to store persona profile: %s", result["stderr"][:200])
+        log.error("Failed to store persona profile: {}", result["stderr"][:200])
         return False
     return True
 
@@ -162,7 +162,7 @@ def run_interview(questions: list[dict], title: str = "Learning Preferences") ->
             if response and "answers" in response:
                 return response["answers"]
 
-        log.warning("Interview failed or timed out: %s", result.get("stderr", "")[:100])
+        log.warning("Interview failed or timed out: {}", result.get("stderr", "")[:100])
         return {}
 
     finally:
@@ -255,7 +255,7 @@ def discover_colleagues(
     ], timeout=timeout)
 
     if result["returncode"] != 0:
-        log.warning("Dogpile colleague search failed: %s", result["stderr"][:100])
+        log.warning("Dogpile colleague search failed: {}", result["stderr"][:100])
         return []
 
     # Parse output for person names
@@ -305,7 +305,7 @@ def discover_colleagues(
         if len(colleagues) >= max_colleagues:
             break
 
-    log.info("Discovered %d colleagues for '%s': %s",
+    log.info("Discovered {} colleagues for '{}': {}",
              len(colleagues), persona_name, [c["name"] for c in colleagues])
     return colleagues
 

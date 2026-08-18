@@ -161,7 +161,7 @@ class AskMonitor:
             log.debug("Registered task '%s' with task-monitor (depth=%s, eta=%s)",
                       self.name, self.depth, eta_display)
         except Exception as e:
-            log.error("Could not register with task-monitor: %s", e)
+            log.error("Could not register with task-monitor: {}", e)
 
     def start_step(self, step: str):
         """Mark a step as running."""
@@ -169,7 +169,7 @@ class AskMonitor:
         self.step_status[step] = "running"
         self._step_start = time.time()
         self._update_state()
-        log.debug("Step started: %s", step)
+        log.debug("Step started: {}", step)
 
     def complete_step(self, step: str, success: bool = True):
         """Mark a step as done."""
@@ -178,7 +178,7 @@ class AskMonitor:
         self.step_times[step] = round(elapsed, 1)
         self.completed_steps += 1
         self._update_state()
-        log.debug("Step completed: %s (%.1fs, success=%s)", step, elapsed, success)
+        log.debug("Step completed: {} (%.1fs, success={})", step, elapsed, success)
 
     def log_error(self, step: str, message: str):
         """Log an error for a step."""
@@ -187,7 +187,7 @@ class AskMonitor:
             "message": message[:200],
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         })
-        log.warning("Monitor error [%s]: %s", step, message[:100])
+        log.warning("Monitor error [{}]: {}", step, message[:100])
 
     def update_stats(self, **kwargs):
         """Update stats counters."""
@@ -216,7 +216,7 @@ class AskMonitor:
         self.substep_label = label
         self._last_heartbeat = time.time()
         self._update_state()
-        log.debug("Substeps started: %s (%d items)", label, total)
+        log.debug("Substeps started: {} ({} items)", label, total)
 
     def advance_substep(self, label: str = ""):
         """Advance to the next sub-step item.
@@ -228,7 +228,7 @@ class AskMonitor:
         if label:
             self.substep_label = label
         self._heartbeat()
-        log.debug("Substep %d/%d: %s", self.substep_current, self.substep_total, label[:50])
+        log.debug("Substep {}/{}: {}", self.substep_current, self.substep_total, label[:50])
 
     def _heartbeat(self, force: bool = False):
         """Emit a heartbeat update if enough time has passed.
@@ -328,7 +328,7 @@ class AskMonitor:
             tmp.write_text(json.dumps(state, indent=2))
             os.replace(tmp, self.state_file)
         except Exception as e:
-            log.error("Could not write state file: %s", e)
+            log.error("Could not write state file: {}", e)
 
         # Optional API push
         if self.api_url:

@@ -59,7 +59,7 @@ def get_all_persona_profiles(scope: str = NIGHTLY_SCOPE) -> list[dict]:
     result = run_memory_recall("persona profile", scope, k=50, timeout=30)
 
     if result["returncode"] != 0:
-        log.error("Failed to recall persona profiles: %s", result["stderr"][:100])
+        log.error("Failed to recall persona profiles: {}", result["stderr"][:100])
         return []
 
     items = parse_memory_output(result["stdout"])
@@ -79,7 +79,7 @@ def get_all_persona_profiles(scope: str = NIGHTLY_SCOPE) -> list[dict]:
                 # Not valid JSON, skip
                 pass
 
-    log.info("Found %d persona profiles in scope '%s'", len(profiles), scope)
+    log.info("Found {} persona profiles in scope '{}'", len(profiles), scope)
     return profiles
 
 
@@ -117,7 +117,7 @@ def find_new_content(persona_name: str, since: datetime) -> dict:
             yt_result["stdout"]
         )
         result["new_videos"] = urls[:NIGHTLY_MAX_VIDEOS]
-        log.info("Found %d potential new videos", len(result["new_videos"]))
+        log.info("Found {} potential new videos", len(result["new_videos"]))
 
     # Search ArXiv for new papers (if persona has academic papers)
     arxiv_result = run_skill("arxiv", [
@@ -133,7 +133,7 @@ def find_new_content(persona_name: str, since: datetime) -> dict:
         arxiv_ids = re.findall(r'arXiv:(\d+\.\d+)', arxiv_result["stdout"])
         for arxiv_id in arxiv_ids[:NIGHTLY_MAX_PAPERS]:
             result["new_papers"].append({"arxiv_id": arxiv_id})
-        log.info("Found %d potential new papers", len(result["new_papers"]))
+        log.info("Found {} potential new papers", len(result["new_papers"]))
 
     return result
 

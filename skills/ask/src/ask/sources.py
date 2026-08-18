@@ -69,7 +69,7 @@ def download_book_nzb(nzb_link: str, title: str, monitor_progress: bool = True) 
     Returns:
         Dict with success, path, error
     """
-    log.info("Downloading book NZB: %s", title[:50])
+    log.info("Downloading book NZB: {}", title[:50])
 
     args = ["download", nzb_link]
     if monitor_progress:
@@ -120,7 +120,7 @@ def extract_book_content(file_path: str, max_pages: int = 100) -> Optional[str]:
     Returns:
         Extracted text content or None
     """
-    log.info("Extracting book content from: %s", file_path)
+    log.info("Extracting book content from: {}", file_path)
 
     result = run_skill("extractor", [
         file_path,
@@ -155,7 +155,7 @@ def query_feed_items(query: str, limit: int = 10) -> list[dict]:
     """
     result = run_memory_recall(query, scope="feed", k=limit, collections="feed_items")
     if result["returncode"] != 0:
-        log.error("Feed recall failed: %s", result["stderr"][:200])
+        log.error("Feed recall failed: {}", result["stderr"][:200])
         return []
 
     items = parse_memory_output(result["stdout"])
@@ -193,7 +193,7 @@ def extract_arxiv_paper(arxiv_id: str, scope: str, context: str = "", skip_inter
     Returns:
         Dict with success, qra_count, error
     """
-    log.info("Extracting arXiv paper %s to scope %s", arxiv_id, scope)
+    log.info("Extracting arXiv paper {} to scope {}", arxiv_id, scope)
 
     args = [
         "learn", arxiv_id,
@@ -218,9 +218,9 @@ def extract_arxiv_paper(arxiv_id: str, scope: str, context: str = "", skip_inter
         if stored_match:
             qra_count = int(stored_match.group(1))
 
-        log.info("ArXiv paper %s extracted: %d QRA pairs", arxiv_id, qra_count)
+        log.info("ArXiv paper {} extracted: {} QRA pairs", arxiv_id, qra_count)
         return {"success": True, "qra_count": qra_count, "arxiv_id": arxiv_id}
 
     error = result["stderr"][:200] if result["stderr"] else "unknown error"
-    log.warning("ArXiv paper %s extraction failed: %s", arxiv_id, error)
+    log.warning("ArXiv paper {} extraction failed: {}", arxiv_id, error)
     return {"success": False, "error": error, "arxiv_id": arxiv_id}

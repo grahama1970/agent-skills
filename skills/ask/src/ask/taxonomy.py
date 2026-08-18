@@ -30,12 +30,12 @@ def extract_bridges_from_content(
     analysis_text = f"{topic}\n\n{text[:2000]}".strip()
     result = run_skill("taxonomy", ["bridges", analysis_text, "--fast"], timeout=15)
     if result["returncode"] != 0:
-        log.error("Taxonomy bridge extraction failed: %s", result["stderr"][:200])
+        log.error("Taxonomy bridge extraction failed: {}", result["stderr"][:200])
         return []
 
     bridges = [bridge.strip() for bridge in result["stdout"].strip().split(",") if bridge.strip()]
     if bridges:
-        log.debug("Extracted bridges from %s: %s", content_type, bridges)
+        log.debug("Extracted bridges from {}: {}", content_type, bridges)
     return bridges
 
 
@@ -59,5 +59,5 @@ def aggregate_bridges(bridge_lists: list[list[str]], min_count: int = 2) -> list
     threshold = min(min_count, max(1, len(bridge_lists) // 2))
 
     result = [bridge for bridge, count in counts.items() if count >= threshold]
-    log.debug("Aggregated bridges: %s (threshold=%d)", result, threshold)
+    log.debug("Aggregated bridges: {} (threshold={})", result, threshold)
     return result

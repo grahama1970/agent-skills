@@ -63,13 +63,13 @@ def memory_api_fallback(problem: str, solution: str, scope: str, timeout: int = 
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = json.loads(resp.read().decode("utf-8"))
             ok = body.get("meta", {}).get("ok", False)
-            log.debug("Memory API fallback: ok=%s, response=%s", ok, json.dumps(body)[:200])
+            log.debug("Memory API fallback: ok={}, response={}", ok, json.dumps(body)[:200])
             return ok
     except urllib.error.URLError as e:
-        log.error("Memory API fallback failed: %s", e)
+        log.error("Memory API fallback failed: {}", e)
         return False
     except Exception as e:
-        log.error("Memory API fallback error: %s", e)
+        log.error("Memory API fallback error: {}", e)
         return False
 
 
@@ -111,10 +111,10 @@ def run_extractor_qra(
         return 0
 
     if len(text.strip()) < 50:
-        log.debug("Skipping too-short text: %s", label[:40])
+        log.debug("Skipping too-short text: {}", label[:40])
         return 0
 
-    log.debug("extractor qra processing: %s (%d chars)", label, len(text))
+    log.debug("extractor qra processing: {} ({} chars)", label, len(text))
 
     # Extract Federated Taxonomy bridges from this content
     bridges = extract_bridges_from_content(text, content_type=content_type, topic=topic)
@@ -144,7 +144,7 @@ def run_extractor_qra(
             if qra_data and isinstance(qra_data, dict):
                 extracted = qra_data.get("stored", 0) or qra_data.get("extracted", 0)
             bridge_info = f" [{', '.join(bridges)}]" if bridges else ""
-            log.debug("doc2qra stored %d pairs from '%s'%s", extracted, label[:40], bridge_info)
+            log.debug("doc2qra stored {} pairs from '{}'{}", extracted, label[:40], bridge_info)
             print(f"    Processed: {label[:50]}{bridge_info}")
             return extracted
         else:
@@ -203,7 +203,7 @@ def extract_and_store(
                    + len(transcripts) + len(web_content)
                    + len(downloaded_books) + len(feed_items))
     _step_print(6, total_steps, f"Extracting knowledge (extractor_qra) from {doc_sources} sources...")
-    log.info("Step 6: extractor_qra extraction, %d dogpile + %d books + %d transcripts + %d web",
+    log.info("Step 6: extractor_qra extraction, {} dogpile + {} books + {} transcripts + {} web",
              len(dogpile_content), len(books_to_process), len(transcripts), len(web_content))
 
     monitor.start_substeps(doc_sources, "Extracting QRA pairs")
@@ -320,7 +320,7 @@ def extract_and_store(
     bridge_summary = f" | Bridges: {', '.join(aggregated_bridges)}" if aggregated_bridges else ""
     print(f"    Total QRA pairs extracted: {qra_total}{bridge_summary}")
     if aggregated_bridges:
-        log.info("Aggregated taxonomy bridges: %s", aggregated_bridges)
+        log.info("Aggregated taxonomy bridges: {}", aggregated_bridges)
     monitor.update_stats(qra_extracted=qra_total)
     monitor.complete_step("extractor_qra", success=True)
 
@@ -368,7 +368,7 @@ def _store_summary(
     """Step 7: Store learning summary to memory."""
     monitor.start_step("store")
     _step_print(7, total_steps, "Storing learning summary to memory...")
-    log.info("Step 7: Storing to memory, scope=%r", scope)
+    log.info("Step 7: Storing to memory, scope={}", scope)
 
     has_new_content = (
         stats["dogpile_sections"] > 0
@@ -458,27 +458,27 @@ def _store_summary(
             if learn_data and isinstance(learn_data, dict):
                 embedding_ok = learn_data.get("meta", {}).get("embedding_created", False)
                 if learn_data.get("errors"):
-                    log.warning("Memory learn had errors: %s", learn_data["errors"])
+                    log.warning("Memory learn had errors: {}", learn_data["errors"])
 
             stats["stored"] = qra_total + 1
             embed_status = "with embedding" if embedding_ok else "WITHOUT embedding"
             bridge_tags = f", bridges: {aggregated_bridges}" if aggregated_bridges else ""
             print(f"    Stored learning summary to scope '{scope}' ({embed_status}{bridge_tags})")
-            log.info("Memory learn: stored to scope=%r, embedding_created=%s, bridges=%s", scope, embedding_ok, aggregated_bridges)
+            log.info("Memory learn: stored to scope={}, embedding_created={}, bridges={}", scope, embedding_ok, aggregated_bridges)
             monitor.update_stats(items_stored=stats["stored"])
             monitor.complete_step("store", success=True)
         else:
-            log.warning("Memory CLI failed (code=%d), trying direct API fallback",
+            log.warning("Memory CLI failed (code={}), trying direct API fallback",
                         learn_result["returncode"])
             api_ok = memory_api_fallback(summary_problem, summary_solution, scope)
             if api_ok:
                 stats["stored"] = qra_total + 1
                 print(f"    Stored learning summary to scope '{scope}' (via API fallback)")
-                log.info("Memory API fallback: stored to scope=%r", scope)
+                log.info("Memory API fallback: stored to scope={}", scope)
                 monitor.update_stats(items_stored=stats["stored"])
                 monitor.complete_step("store", success=True)
             else:
-                log.error("Memory learn failed: code=%d stderr=%s",
+                log.error("Memory learn failed: code={} stderr={}",
                            learn_result["returncode"], learn_result["stderr"][:100])
                 print(f"    Memory storage failed: {learn_result['stderr'][:60]}")
                 monitor.log_error("store", learn_result["stderr"][:200])
@@ -542,7 +542,7 @@ def _store_persona_and_colleagues(
                 ], timeout=30)
 
                 if result["returncode"] == 0:
-                    log.debug("Stored colleague relationship: %s \u2194 %s", topic, colleague["name"])
+                    log.debug("Stored colleague relationship: {} \u2194 {}", topic, colleague["name"])
                 else:
                     log.warning("Failed to store colleague relationship")
 

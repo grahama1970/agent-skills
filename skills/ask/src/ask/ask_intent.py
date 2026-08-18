@@ -84,7 +84,7 @@ def check_cache(query: str) -> Optional[IntentResult]:
     try:
         result = run_skill("memory", ["recall", "-q", cache_query, "--scope", "os", "--k", "1"], timeout=5)
         if result["returncode"] != 0 or not result["stdout"].strip():
-            log.error("Intent cache recall failed: %s", result["stderr"][:200])
+            log.error("Intent cache recall failed: {}", result["stderr"][:200])
             return None
 
         data = parse_json_output(result["stdout"])
@@ -98,7 +98,7 @@ def check_cache(query: str) -> Optional[IntentResult]:
 
         cached = json.loads(solution)
         if "intent" in cached and "confidence" in cached:
-            log.debug("Cache hit for %r: %s", query, cached["intent"])
+            log.debug("Cache hit for {}: {}", query, cached["intent"])
             return IntentResult(
                 intent=cached["intent"],
                 confidence=cached["confidence"],
@@ -107,7 +107,7 @@ def check_cache(query: str) -> Optional[IntentResult]:
                 subsystem=cached.get("subsystem"),
             )
     except (json.JSONDecodeError, KeyError, OSError) as exc:
-        log.error("Intent cache parse failed: %s", exc)
+        log.error("Intent cache parse failed: {}", exc)
 
     return None
 
@@ -123,7 +123,7 @@ def store_cache(query: str, result: IntentResult) -> None:
         timeout=10,
     )
     if cache_result["returncode"] != 0:
-        log.error("Intent cache store failed: %s", cache_result["stderr"][:200])
+        log.error("Intent cache store failed: {}", cache_result["stderr"][:200])
 
 
 # ---------------------------------------------------------------------------
@@ -294,7 +294,7 @@ def classify_heuristic(query: str) -> IntentResult:
         best_intent = "TOPIC_QUERY"
         best_score = 0.3
 
-    log.debug("Heuristic scores: %s → %s (%.2f)", scores, best_intent, best_score)
+    log.debug("Heuristic scores: {} → {} (%.2f)", scores, best_intent, best_score)
 
     return IntentResult(
         intent=best_intent,
@@ -386,11 +386,11 @@ def classify_llm(query: str) -> IntentResult:
             parsed = _parse_intent_json(outcome["final_text"])
             if parsed is not None:
                 return parsed
-        log.warning("tau intent classification degraded: %s", outcome["scheduler_status"])
+        log.warning("tau intent classification degraded: {}", outcome["scheduler_status"])
     except TauHarnessUnavailable as e:
-        log.warning("tau harness unavailable for intent classification: %s", e)
+        log.warning("tau harness unavailable for intent classification: {}", e)
     except (json.JSONDecodeError, ValueError, OSError) as e:
-        log.warning("tau intent classification error: %s", e)
+        log.warning("tau intent classification error: {}", e)
 
     return IntentResult(intent="TOPIC_QUERY", confidence=0.4, stage="llm")
 
@@ -417,9 +417,9 @@ def _classify_llm_direct_deprecated(prompt: str) -> IntentResult:
         if parsed is not None:
             return parsed
     except httpx.HTTPStatusError as e:
-        log.warning("scillm classification HTTP error: %s", e.response.status_code)
+        log.warning("scillm classification HTTP error: {}", e.response.status_code)
     except (httpx.TimeoutException, json.JSONDecodeError, ValueError, OSError) as e:
-        log.warning("LLM classification error: %s", e)
+        log.warning("LLM classification error: {}", e)
 
     return IntentResult(intent="TOPIC_QUERY", confidence=0.4, stage="llm")
 
@@ -447,7 +447,7 @@ def classify_intent(query: str, scope: Optional[str] = None) -> IntentResult:
     # Stage 1: Memory cache
     cached = check_cache(query)
     if cached and cached.confidence >= HEURISTIC_CONFIDENCE_THRESHOLD:
-        log.info("Intent (cache, %.0fms): %s [%.2f]",
+        log.info("Intent (cache, %.0fms): {} [%.2f]",
                  (time.monotonic() - start) * 1000, cached.intent, cached.confidence)
         return cached
 
@@ -456,7 +456,7 @@ def classify_intent(query: str, scope: Optional[str] = None) -> IntentResult:
     if heuristic.confidence >= HEURISTIC_CONFIDENCE_THRESHOLD:
         # Cache the result
         store_cache(query, heuristic)
-        log.info("Intent (heuristic, %.0fms): %s [%.2f]",
+        log.info("Intent (heuristic, %.0fms): {} [%.2f]",
                  (time.monotonic() - start) * 1000, heuristic.intent, heuristic.confidence)
         return heuristic
 
@@ -464,7 +464,7 @@ def classify_intent(query: str, scope: Optional[str] = None) -> IntentResult:
     llm_result = classify_llm(query)
     # Cache the LLM result
     store_cache(query, llm_result)
-    log.info("Intent (llm, %.0fms): %s [%.2f]",
+    log.info("Intent (llm, %.0fms): {} [%.2f]",
              (time.monotonic() - start) * 1000, llm_result.intent, llm_result.confidence)
     return llm_result
 

@@ -94,8 +94,8 @@ def _synthesise(
             # Track how many meta items were filtered
             meta_count = len(result["items"]) - len(ranked)
             if meta_count > 0:
-                log.debug("Filtered %d meta items from synthesis", meta_count)
-        log.info("Synthesised answer from %d items", len(result["items"]))
+                log.debug("Filtered {} meta items from synthesis", meta_count)
+        log.info("Synthesised answer from {} items", len(result["items"]))
     else:
         if oracle_model:
             result["answer"] = "[no memory context retrieved; passing original question directly to oracle]"

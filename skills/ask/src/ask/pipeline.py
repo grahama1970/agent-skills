@@ -182,7 +182,7 @@ def learn(
     if run_state:
         run_state.step_started("learn_memory_check", scope=scope)
     step_print(1, total_steps, "Checking memory for existing knowledge...")
-    log.info("Step 1: Memory recall for topic=%r scope=%r", topic, scope)
+    log.info("Step 1: Memory recall for topic={} scope={}", topic, scope)
 
     recall_result = run_skill("memory", [
         "recall",
@@ -201,12 +201,12 @@ def learn(
                 print(f"      - {problem}")
         else:
             print("    No existing knowledge \u2014 starting fresh")
-        log.info("Memory recall: %d existing items", len(items))
+        log.info("Memory recall: {} existing items", len(items))
         monitor.complete_step("memory_check", success=True)
         if run_state:
             run_state.step_finished("learn_memory_check", returncode=0, items_count=len(items))
     else:
-        log.warning("Memory recall failed: code=%d stderr=%s",
+        log.warning("Memory recall failed: code={} stderr={}",
                      recall_result["returncode"], recall_result["stderr"][:100])
         print(f"    Memory unavailable: {recall_result['stderr'][:80]}")
         monitor.log_error("memory_check", recall_result["stderr"][:200])
@@ -227,7 +227,7 @@ def learn(
 
     if not youtube_only:
         step_print(2, total_steps, f"Deep research via /dogpile: \"{topic}\"...")
-        log.info("Step 2: Dogpile discovery for topic=%r", topic)
+        log.info("Step 2: Dogpile discovery for topic={}", topic)
 
         dogpile_result = run_skill("dogpile", [
             "search", topic,
@@ -237,7 +237,7 @@ def learn(
         dogpile_success = False
         if dogpile_result["returncode"] == 0 and dogpile_result["stdout"].strip():
             report_text = dogpile_result["stdout"]
-            log.info("Dogpile returned %d bytes of content", len(report_text))
+            log.info("Dogpile returned {} bytes of content", len(report_text))
 
             parsed = parse_dogpile_report(report_text)
 
@@ -246,13 +246,13 @@ def learn(
                 print(f"    Found {len(dogpile_youtube_urls)} YouTube videos:")
                 for yt in dogpile_youtube_urls[:5]:
                     print(f"      - {yt['title'][:60]}")
-                log.info("Dogpile found %d YouTube URLs", len(dogpile_youtube_urls))
+                log.info("Dogpile found {} YouTube URLs", len(dogpile_youtube_urls))
 
             dogpile_content = parsed["content_sections"]
             section_names = list(dogpile_content.keys())
             if section_names:
                 print(f"    Content sections: {', '.join(section_names)}")
-                log.info("Dogpile content sections: %s", section_names)
+                log.info("Dogpile content sections: {}", section_names)
 
             if parsed["arxiv_papers"]:
                 print(f"    ArXiv papers: {len(parsed['arxiv_papers'])}")
@@ -267,7 +267,7 @@ def learn(
                 print(f"    Web URLs for fetching: {len(dogpile_web_urls)}")
                 for web in dogpile_web_urls[:3]:
                     print(f"      - {web['domain']}: {web['title'][:40]}")
-                log.info("Dogpile found %d web URLs for fetching", len(dogpile_web_urls))
+                log.info("Dogpile found {} web URLs for fetching", len(dogpile_web_urls))
 
             dogpile_success = bool(dogpile_content or dogpile_youtube_urls)
             stats["dogpile_sections"] = len(dogpile_content)
@@ -276,7 +276,7 @@ def learn(
             log.warning("Dogpile skill not found, will use discover-books")
             print("    /dogpile not available \u2014 using discover-books")
         else:
-            log.warning("Dogpile failed (code=%d): %s",
+            log.warning("Dogpile failed (code={}): {}",
                         dogpile_result["returncode"],
                         dogpile_result["stderr"][:200] if dogpile_result["stderr"] else "unknown")
             print("    Dogpile failed \u2014 using discover-books")
@@ -284,7 +284,7 @@ def learn(
 
         # Always use discover-books for personas (not just as fallback)
         if max_books > 0 and (is_persona or not dogpile_success):
-            log.info("Using discover-books for topic=%r max_books=%d", topic, max_books)
+            log.info("Using discover-books for topic={} max_books={}", topic, max_books)
             print(f"    Searching for books about {topic}...")
 
             book_result = run_skill("discover-books", [
@@ -336,7 +336,7 @@ def learn(
                 source = item.get("source_key", "unknown")
                 print(f"      - [{source}] {title}")
             feed_items = feed_results
-            log.info("RSS feed query found %d items for topic '%s'", len(feed_results), topic)
+            log.info("RSS feed query found {} items for topic '{}'", len(feed_results), topic)
         else:
             print("    No relevant RSS feed items found")
 
@@ -364,7 +364,7 @@ def learn(
                         print(f"        Failed: {extract_result.get('error', 'unknown')[:40]}")
                         monitor.log_error("arxiv", f"{arxiv_id}: {extract_result.get('error', '')[:100]}")
 
-            log.info("ArXiv extraction: %d papers extracted", stats["arxiv_extracted"])
+            log.info("ArXiv extraction: {} papers extracted", stats["arxiv_extracted"])
         elif arxiv_papers:
             print(f"    Found {len(arxiv_papers)} ArXiv papers (skipping extraction - depth={depth})")
 
@@ -401,7 +401,7 @@ def learn(
 
     if download_books_enabled and books_to_process and not youtube_only:
         step_print(3, total_steps, f"Downloading books via NZBGeek ({len(books_to_process)} discovered)...")
-        log.info("Step 3: Book download, %d books discovered", len(books_to_process))
+        log.info("Step 3: Book download, {} books discovered", len(books_to_process))
 
         monitor.start_substeps(len(books_to_process), "Downloading books")
 
@@ -506,7 +506,7 @@ def learn(
                 new_count = len(all_youtube_urls) - len(dogpile_youtube_urls) - len(youtube_urls or [])
                 if new_count > 0:
                     print(f"    Found {new_count} additional lectures via search")
-                    log.info("YouTube search found %d additional videos for persona", new_count)
+                    log.info("YouTube search found {} additional videos for persona", new_count)
 
         seen_urls = set(all_youtube_urls)
         for yt in dogpile_youtube_urls:
@@ -516,7 +516,7 @@ def learn(
                 seen_urls.add(url)
 
         step_print(4, total_steps, f"Ingesting YouTube content ({len(all_youtube_urls)} URLs)...")
-        log.info("Step 4: YouTube ingestion, %d URLs (%d from dogpile, %d manual)",
+        log.info("Step 4: YouTube ingestion, {} URLs ({} from dogpile, {} manual)",
                  len(all_youtube_urls), len(dogpile_youtube_urls), len(youtube_urls or []))
 
         if all_youtube_urls:
@@ -526,7 +526,7 @@ def learn(
             for url in urls_to_process:
                 print(f"    Processing: {url}")
                 monitor.advance_substep(url[:50])
-                log.debug("Ingesting YouTube URL: %s", url)
+                log.debug("Ingesting YouTube URL: {}", url)
                 yt_result = run_skill("ingest-youtube", [url], timeout=120)
 
                 stdout = yt_result.get("stdout", "").strip()
@@ -538,30 +538,30 @@ def learn(
 
                     if yt_errors:
                         for yt_err in yt_errors[:3]:
-                            log.warning("YouTube error for %s: %s", url, str(yt_err)[:120])
+                            log.warning("YouTube error for {}: {}", url, str(yt_err)[:120])
 
                     if full_text:
                         transcripts.append({"source": url, "text": full_text[:10000], "type": "youtube"})
                         stats["youtube_ingested"] += 1
                         status = "partial" if yt_result["returncode"] != 0 else "full"
                         print(f"      Got transcript ({len(full_text)} chars, {status})")
-                        log.info("YouTube transcript: %d chars from %s (code=%d)",
+                        log.info("YouTube transcript: {} chars from {} (code={})",
                                  len(full_text), url, yt_result["returncode"])
                     else:
                         err_summary = yt_errors[0] if yt_errors else "no transcript text"
                         print(f"      No transcript: {str(err_summary)[:60]}")
-                        log.warning("YouTube had no full_text: errors=%s", yt_errors)
+                        log.warning("YouTube had no full_text: errors={}", yt_errors)
                         stats["errors"].append(f"youtube:{url}:no_transcript")
                         monitor.log_error("ingest_youtube", f"{url}: {str(err_summary)[:100]}")
                 elif stdout and len(stdout) > 100:
                     transcripts.append({"source": url, "text": stdout[:10000], "type": "youtube"})
                     stats["youtube_ingested"] += 1
                     print(f"      Got transcript ({len(stdout)} chars, raw text)")
-                    log.info("YouTube raw text: %d chars from %s", len(stdout), url)
+                    log.info("YouTube raw text: {} chars from {}", len(stdout), url)
                 else:
                     err = yt_result["stderr"][:80] if yt_result["stderr"] else "unknown error"
                     print(f"      Failed: {err}")
-                    log.error("YouTube ingestion failed for %s: code=%d err=%s",
+                    log.error("YouTube ingestion failed for {}: code={} err={}",
                               url, yt_result["returncode"], err)
                     stats["errors"].append(f"youtube:{url}:{err}")
                     monitor.log_error("ingest_youtube", f"{url}: {err}")
@@ -591,7 +591,7 @@ def learn(
     max_web_pages = 5 if depth == "deep" else 3
     if dogpile_web_urls and not books_only:
         step_print(5, total_steps, f"Fetching web content ({len(dogpile_web_urls)} URLs)...")
-        log.info("Step 5: Fetching %d web URLs", len(dogpile_web_urls))
+        log.info("Step 5: Fetching {} web URLs", len(dogpile_web_urls))
 
         urls_to_fetch = dogpile_web_urls[:max_web_pages]
         monitor.start_substeps(len(urls_to_fetch), "Web articles")
@@ -603,7 +603,7 @@ def learn(
             domain = web_info.get("domain", "unknown")
 
             print(f"    Fetching: {domain} - {title[:40]}...")
-            log.debug("Fetching web URL: %s", url)
+            log.debug("Fetching web URL: {}", url)
 
             fetch_result = run_skill("fetcher", [url, "--format", "markdown"], timeout=60)
 
@@ -616,13 +616,13 @@ def learn(
                     })
                     stats["web_fetched"] += 1
                     print(f"      Got content ({len(content)} chars)")
-                    log.info("Web fetched: %d chars from %s", len(content), url)
+                    log.info("Web fetched: {} chars from {}", len(content), url)
                 else:
                     print(f"      Content too short ({len(content)} chars)")
             else:
                 err = fetch_result["stderr"][:60] if fetch_result["stderr"] else "fetch failed"
                 print(f"      Failed: {err}")
-                log.warning("Web fetch failed for %s: %s", url, err)
+                log.warning("Web fetch failed for {}: {}", url, err)
 
         monitor.update_stats(web_fetched=stats["web_fetched"])
         monitor.complete_step("fetch_web", success=True)
@@ -658,9 +658,9 @@ def learn(
                         title = movie.get("title", "Unknown")
                         year = movie.get("year", "")
                         print(f"      Movie: {title} ({year})")
-                        log.info("Discovered movie for persona: %s (%s)", title, year)
+                        log.info("Discovered movie for persona: {} ({})", title, year)
         elif not movie_result.get("skipped"):
-            log.warning("Movie discovery failed: %s",
+            log.warning("Movie discovery failed: {}",
                         movie_result["stderr"][:100] if movie_result["stderr"] else "unknown")
             print("    Movie discovery unavailable")
 
@@ -716,7 +716,7 @@ def learn(
             print(f"     - {err[:80]}")
     print()
 
-    log.info("Learn complete: topic=%r elapsed=%.1fs stored=%d errors=%d",
+    log.info("Learn complete: topic={} elapsed=%.1fs stored={} errors={}",
              topic, elapsed, stats["stored"], len(stats["errors"]))
 
     success = len(stats["errors"]) == 0

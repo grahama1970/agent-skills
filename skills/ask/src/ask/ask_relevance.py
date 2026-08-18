@@ -64,7 +64,7 @@ def _try_evidence_case(question: str, scope: str) -> dict | None:
         log.debug("create-evidence-case skill not installed — skipping evidence fallback")
         return None
 
-    log.info("Building evidence case for: %s", question[:80])
+    log.info("Building evidence case for: {}", question[:80])
     print(f"\n  No direct knowledge found. Building evidence case...")
     print(f"  (query: {question[:60]})")
 
@@ -75,7 +75,7 @@ def _try_evidence_case(question: str, scope: str) -> dict | None:
             env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
         )
         if proc.returncode != 0:
-            log.warning("evidence case failed: rc=%d", proc.returncode)
+            log.warning("evidence case failed: rc={}", proc.returncode)
             return None
 
         stdout = proc.stdout.strip()
@@ -95,5 +95,5 @@ def _try_evidence_case(question: str, scope: str) -> dict | None:
         return case
 
     except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
-        log.warning("evidence case subprocess failed: %s", exc)
+        log.warning("evidence case subprocess failed: {}", exc)
         return None

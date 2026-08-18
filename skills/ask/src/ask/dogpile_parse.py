@@ -76,7 +76,7 @@ def extract_web_urls(text: str, max_urls: int = 10) -> list[dict]:
                 break
 
         except Exception as exc:
-            log.error("Failed to parse dogpile URL %r: %s", url, exc)
+            log.error("Failed to parse dogpile URL {}: {}", url, exc)
             continue
 
     return urls
@@ -201,7 +201,7 @@ def parse_dogpile_report(report: str) -> dict:
         filtered[key] = text
     result["content_sections"] = filtered
 
-    log.debug("Parsed dogpile report: %d YouTube URLs, %d content sections, %d ArXiv papers",
+    log.debug("Parsed dogpile report: {} YouTube URLs, {} content sections, {} ArXiv papers",
               len(result["youtube_urls"]), len(result["content_sections"]),
               len(result["arxiv_papers"]))
 

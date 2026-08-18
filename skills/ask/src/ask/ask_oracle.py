@@ -654,7 +654,7 @@ def _apply_oracle_synthesis(
             "basis": "memory",
             "rule": "memory citations support knowledge answers but not code/review safety claims",
         }
-        log.info("Oracle synthesis complete: model=%s reasoning=%s", model, reasoning_effort)
+        log.info("Oracle synthesis complete: model={} reasoning={}", model, reasoning_effort)
     except BrowserReviewBundleError as exc:
         result["answer"] = str(exc)
         result["oracle"] = {
@@ -690,7 +690,7 @@ def _apply_oracle_synthesis(
                     "the prompt."
                 ),
             )
-        log.warning("Web review bundle rejected for project agent: %s", exc)
+        log.warning("Web review bundle rejected for project agent: {}", exc)
         return
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
         result["oracle"] = {
@@ -723,7 +723,7 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_profiles"] = persona_profiles
         result["oracle"]["iterations_requested"] = iterations
         result["answer"] = fallback_answer
-        log.warning("Oracle synthesis failed; using non-oracle answer: %s", exc)
+        log.warning("Oracle synthesis failed; using non-oracle answer: {}", exc)
 
 
 def _run_structured_review_protocol(

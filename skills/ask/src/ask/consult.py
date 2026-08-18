@@ -53,7 +53,7 @@ def recall_memory(query: str, scope: str, k: int = 5, timeout: int = 15) -> list
     """Recall from memory through the memory skill."""
     result = run_memory_recall(query, scope, k=k, timeout=timeout)
     if result["returncode"] != 0:
-        log.error("memory recall failed: %s", result["stderr"][:200])
+        log.error("memory recall failed: {}", result["stderr"][:200])
         return []
     return parse_memory_output(result["stdout"])
 
@@ -228,7 +228,7 @@ def generate_response(user_prompt: str, system_prompt: str = "", timeout: int = 
         timeout_seconds=timeout,
     )
     if text is None:
-        log.error("tau persona consult turn failed (profile %s)", CONSULT_PROFILE)
+        log.error("tau persona consult turn failed (profile {})", CONSULT_PROFILE)
     return text
 
 

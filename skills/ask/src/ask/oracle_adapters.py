@@ -85,7 +85,7 @@ def _record_subagent_heartbeat(
             )
             response.raise_for_status()
     except Exception as exc:
-        log.error("Failed to store subagent heartbeat: %s", exc)
+        log.error("Failed to store subagent heartbeat: {}", exc)
 
 _META_TAGS = frozenset({
     "routing", "global_standard", "pi_harness", "found_false_default",
@@ -713,7 +713,7 @@ def _mirror_subagent_event(
             subagent=subagent,
         )
     except Exception as exc:
-        log.warning("Failed to mirror subagent event into ask run state: %s", exc)
+        log.warning("Failed to mirror subagent event into ask run state: {}", exc)
 
 
 def _safe_child_payload(kind: str, payload: dict[str, Any]) -> dict[str, Any]:

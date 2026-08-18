@@ -112,7 +112,7 @@ class SessionWriter:
             )
             return filepath
         except OSError as exc:
-            log.error("Failed to write session: %s", exc)
+            log.error("Failed to write session: {}", exc)
             return None
 
     def __enter__(self):

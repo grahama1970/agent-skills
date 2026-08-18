@@ -58,7 +58,7 @@ def recall_os(
     if result["returncode"] == 0:
         return parse_memory_output(result["stdout"])
 
-    log.error("OS recall failed: %s", result["stderr"][:200])
+    log.error("OS recall failed: {}", result["stderr"][:200])
     return []
 
 
@@ -129,7 +129,7 @@ def get_health_data(subsystem: str, timeout: int = 30) -> dict:
         return {"error": f"Unknown subsystem: {subsystem}", "available": list(HEALTH_DISPATCH.keys())}
 
     skill_name, args = HEALTH_DISPATCH[subsystem]
-    log.info("Health dispatch: %s %s", skill_name, args)
+    log.info("Health dispatch: {} {}", skill_name, args)
 
     result = run_skill(skill_name, args, timeout=timeout)
 

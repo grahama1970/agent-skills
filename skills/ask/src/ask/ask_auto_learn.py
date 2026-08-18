@@ -61,7 +61,7 @@ def _auto_learn(
 
     # Re-query after learning
     if learn_stats.get("stored", 0) > 0:
-        log.info("Auto-learn stored %d items -- re-querying memory", learn_stats["stored"])
+        log.info("Auto-learn stored {} items -- re-querying memory", learn_stats["stored"])
         print("\n  Re-querying after learning...")
 
         time.sleep(2)
@@ -70,7 +70,7 @@ def _auto_learn(
         if requery_result["returncode"] == 0:
             new_items = parse_memory_output(requery_result["stdout"])
             result["items"].extend(new_items)
-            log.info("Re-query: %d items found after auto-learn", len(new_items))
+            log.info("Re-query: {} items found after auto-learn", len(new_items))
         else:
             log.warning("Re-query failed after auto-learn")
 

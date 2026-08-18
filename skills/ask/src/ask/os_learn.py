@@ -68,7 +68,7 @@ def parse_skill_md(path: Path) -> Optional[dict]:
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError as e:
-        log.debug("Cannot read %s: %s", path, e)
+        log.debug("Cannot read {}: {}", path, e)
         return None
 
     # Split frontmatter from body
@@ -101,7 +101,7 @@ def crawl_skills(max_skills: int = 200) -> list[dict]:
     """Parse all SKILL.md files under .pi/skills/."""
     skills = []
     if not SKILLS_ROOT.is_dir():
-        log.warning("Skills directory not found: %s", SKILLS_ROOT)
+        log.warning("Skills directory not found: {}", SKILLS_ROOT)
         return skills
 
     skill_dirs = sorted(SKILLS_ROOT.iterdir())
@@ -114,7 +114,7 @@ def crawl_skills(max_skills: int = 200) -> list[dict]:
             if parsed:
                 skills.append(parsed)
 
-    log.info("Crawled %d skills from %s", len(skills), SKILLS_ROOT)
+    log.info("Crawled {} skills from {}", len(skills), SKILLS_ROOT)
     return skills
 
 
@@ -122,7 +122,7 @@ def crawl_packages(max_packages: int = 10) -> list[dict]:
     """Walk package.json workspaces, extract package metadata + README summaries."""
     packages = []
     if not PACKAGES_ROOT.is_dir():
-        log.warning("Packages directory not found: %s", PACKAGES_ROOT)
+        log.warning("Packages directory not found: {}", PACKAGES_ROOT)
         return packages
 
     pkg_dirs = sorted(PACKAGES_ROOT.iterdir())
@@ -158,7 +158,7 @@ def crawl_packages(max_packages: int = 10) -> list[dict]:
             "source": "package",
         })
 
-    log.info("Crawled %d packages from %s", len(packages), PACKAGES_ROOT)
+    log.info("Crawled {} packages from {}", len(packages), PACKAGES_ROOT)
     return packages
 
 
@@ -213,7 +213,7 @@ def crawl_config() -> list[dict]:
             except OSError:
                 pass
 
-    log.info("Crawled %d config items", len(configs))
+    log.info("Crawled {} config items", len(configs))
     return configs
 
 
@@ -245,7 +245,7 @@ def build_capability_graph(skills: list[dict]) -> dict:
             for c in composes:
                 edges.append((name, c, "composes"))
 
-    log.info("Capability graph: %d providers, %d composers, %d edges",
+    log.info("Capability graph: {} providers, {} composers, {} edges",
              len(providers), len(composers), len(edges))
 
     return {
@@ -389,7 +389,7 @@ def generate_os_qra(
                 "tags": ["source:graph"],
             })
 
-    log.info("Generated %d QRA triples", len(all_qras))
+    log.info("Generated {} QRA triples", len(all_qras))
     return all_qras
 
 
@@ -426,7 +426,7 @@ def store_qra_to_memory(
             stats["stored"] += 1
         else:
             stats["errors"] += 1
-            log.error("Memory store failed for %r: %s", problem[:60], result["stderr"][:100])
+            log.error("Memory store failed for {}: {}", problem[:60], result["stderr"][:100])
 
     return stats
 

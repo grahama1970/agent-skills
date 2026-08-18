@@ -29,7 +29,7 @@ def extract_bridges(question: str) -> list[str]:
 
     if result["returncode"] == 0 and result["stdout"].strip():
         bridges = [b.strip() for b in result["stdout"].strip().split(",") if b.strip()]
-        log.debug("Extracted bridges: %s", bridges)
+        log.debug("Extracted bridges: {}", bridges)
         return bridges
     log.debug("No bridges extracted from question")
     return []
@@ -139,7 +139,7 @@ def find_relevant_personas(
         return []
 
     bridge_query = f"persona expert {' '.join(bridges)}"
-    log.info("Persona routing: searching for experts with bridges %s", bridges)
+    log.info("Persona routing: searching for experts with bridges {}", bridges)
 
     result = run_memory_recall(
         bridge_query,
@@ -149,7 +149,7 @@ def find_relevant_personas(
     )
 
     if result["returncode"] != 0:
-        log.warning("Persona search failed: %s", result["stderr"][:100])
+        log.warning("Persona search failed: {}", result["stderr"][:100])
         return []
 
     items = parse_memory_output(result["stdout"])
@@ -204,7 +204,7 @@ def find_relevant_personas(
             })
 
     personas.sort(key=lambda p: p["score"], reverse=True)
-    log.info("Persona routing: found %d relevant personas", len(personas[:limit]))
+    log.info("Persona routing: found {} relevant personas", len(personas[:limit]))
     return personas[:limit]
 
 

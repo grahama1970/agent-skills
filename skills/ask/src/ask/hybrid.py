@@ -149,10 +149,10 @@ def ask_hybrid(
         bridges = extract_bridges(question)
         result["bridges_found"] = bridges
         tags = [f"bridge:{b}" for b in bridges]
-        log.info("Hybrid recall: extracted bridges %s -> tags %s", bridges, tags)
+        log.info("Hybrid recall: extracted bridges {} -> tags {}", bridges, tags)
 
     # Phase 1 — QRA recall (lessons)
-    log.info("Hybrid Phase 1: QRA recall (lessons) q=%r k=%d", question, k)
+    log.info("Hybrid Phase 1: QRA recall (lessons) q={} k={}", question, k)
     qra_result = run_memory_recall(
         question, scope, k=k,
         collections="lessons",
@@ -163,11 +163,11 @@ def ask_hybrid(
     if qra_result["returncode"] == 0:
         qra_items = parse_memory_output(qra_result["stdout"])
         result["qra_count"] = len(qra_items)
-        log.info("QRA recall: %d items", len(qra_items))
+        log.info("QRA recall: {} items", len(qra_items))
 
     # Phase 2 — RAG recall (doc_chunks)
     rag_k = k // 2 + 1
-    log.info("Hybrid Phase 2: RAG recall (doc_chunks) q=%r k=%d", question, rag_k)
+    log.info("Hybrid Phase 2: RAG recall (doc_chunks) q={} k={}", question, rag_k)
     rag_result = run_memory_recall(
         question, scope, k=rag_k,
         collections="doc_chunks",
@@ -177,7 +177,7 @@ def ask_hybrid(
     if rag_result["returncode"] == 0:
         rag_items = parse_memory_output(rag_result["stdout"])
         result["rag_count"] = len(rag_items)
-        log.info("RAG recall: %d items", len(rag_items))
+        log.info("RAG recall: {} items", len(rag_items))
 
     # Phase 3 — merge
     result["items"] = merge_hybrid_results(qra_items, rag_items, qra_weight)
@@ -229,6 +229,6 @@ def learn_back(result: dict, persona_id: str, scope: str) -> None:
         "--tag", f"persona:{persona_id}",
     ], timeout=15)
     if memory_result["returncode"] == 0:
-        log.info("Learn-back stored for %s: %s", persona_id, question[:60])
+        log.info("Learn-back stored for {}: {}", persona_id, question[:60])
     else:
-        log.error("Learn-back failed: %s", memory_result["stderr"][:100])
+        log.error("Learn-back failed: {}", memory_result["stderr"][:100])
