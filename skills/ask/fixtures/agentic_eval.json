@@ -814,6 +814,186 @@
           "LIVENESS_GUARD_OK"
         ]
       }
+    },
+    {
+      "name": "targets-list-readiness-matrix",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh targets list --readiness --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ask.capability_report.v1",
+          "ask.cli",
+          "tau.harness",
+          "browser.webgpt"
+        ]
+      }
+    },
+    {
+      "name": "targets-doctor-unknown-selector-refuses",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh targets doctor browser:does-not-exist --json 2>&1 || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "no target matches",
+          "addressable:"
+        ]
+      }
+    },
+    {
+      "name": "chains-show-deep-review-safety",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh chains show deep-review-safety --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"name\": \"deep-review-safety\"",
+          "\"parallel_reviewers\": 5",
+          "\"deep_reviewers\": 5",
+          "\"oracle_backend\": \"scillm\""
+        ]
+      }
+    },
+    {
+      "name": "chains-validate-all-saved-specs",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh chains validate --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "\"deep-review-safety\""
+        ]
+      }
+    },
+    {
+      "name": "runs-list-empty-or-populated-json",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh runs list --limit 3 --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"runs\":"
+        ]
+      }
+    },
+    {
+      "name": "runs-show-unknown-run-refuses",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh runs show eval-run-that-does-not-exist --json 2>&1 || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "no run found for"
+        ]
+      }
+    },
+    {
+      "name": "status-reports-live-memory-state",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh status --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"scope\": \"ask\"",
+          "\"total_items\":",
+          "\"items\":"
+        ]
+      }
+    },
+    {
+      "name": "doctor-reports-real-prerequisite-state",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh doctor --json 2>&1 || true); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);assert d.get('status') in {'pass','fail'},d;names={c.get('name') for c in d.get('checks') or []};assert {'run_sh','artifact_root_writable','runtime_artifact_schema'}<=names,names;assert isinstance(d.get('runtime_schema'),dict),d;print('DOCTOR_STATUS='+d['status'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DOCTOR_STATUS="
+        ]
+      }
+    },
+    {
+      "name": "os-health-live-memory-probe",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh os health 'Is memory healthy?' --subsystem memory --json 2>&1 || true); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);assert d.get('subsystem')=='memory',d;h=d.get('health_data') or {};assert h.get('subsystem')=='memory',h;assert h.get('status') in {'ok','error'},h;print('OS_HEALTH_STATE='+h['status'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OS_HEALTH_STATE="
+        ]
+      }
+    },
+    {
+      "name": "cli-replacement-preferred-roster-compiles",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh tau-dag 'Review this implementation for defects.' --repo agent-skills --target eval-cli-roster --immutable-goal 'Each seat returns findings or a named blocker.' --dag-template roundtable --topology concurrent --handler webgpt --handler webgrok --handler webkimi --handler webdeepseek --handler webgemini --handler claude-fable-low --json 2>&1); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);e=['webgpt','webgrok','webkimi','webdeepseek','webgemini','claude-fable-low'];h=(d.get('provider_gate') or {}).get('handlers') or [];assert h==e,(h,e);nodes=[str(n.get('node_id') or n.get('id')) for n in ((d.get('bundle') or {}).get('dag') or {}).get('nodes',[])];assert all('handler-'+x in nodes for x in e),nodes;print('CLI_ROSTER_COMPILED')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLI_ROSTER_COMPILED"
+        ]
+      }
     }
   ]
 }

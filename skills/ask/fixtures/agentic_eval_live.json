@@ -402,6 +402,116 @@
           "HANDOFF_CHAIN_READABLE"
         ]
       }
+    },
+    {
+      "name": "ask-primary-live-answer-receipt-backend",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh ask 'Reply with exactly ASK-PRIMARY-OK and no other text.' --oracle --oracle-backend scillm --oracle-timeout 600 --json 2>&1); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);a=str(d.get('answer') or '');o=d.get('oracle') or {};r=d.get('route_decision') or {};assert 'ASK-PRIMARY-OK' in a,a;assert d.get('ask_id'),d;assert d.get('runtime_artifacts'),d;assert o.get('backend')=='scillm',o;assert o.get('model_served'),o;assert r.get('selected_backend')=='scillm',r;print('ASK_PRIMARY_RECEIPT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_PRIMARY_RECEIPT_OK"
+        ]
+      }
+    },
+    {
+      "name": "ask-primary-no-seat-fails-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh ask 'Reply with exactly SHOULD-NOT-APPEAR.' --oracle --oracle-backend webkimi --kimi-tab-id 999999999 --oracle-timeout 90 --json 2>&1 || true); printf '%s\\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);a=str(d.get('answer') or '').strip();assert 'SHOULD-NOT-APPEAR' not in a,a;o=d.get('oracle') or {};err=o.get('error') or d.get('error') or {};n=d.get('needs_attention') or {};blocker=err.get('type') or err.get('message') or n.get('reason');assert blocker,d;assert not a,a;print('ASK_NO_SEAT_BLOCKED BLOCKER='+str(blocker)[:60])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_NO_SEAT_BLOCKED",
+          "BLOCKER="
+        ]
+      }
+    },
+    {
+      "name": "intent-llm-stage-contract",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "Q=\"Explain the relationship between metacognition and transfer learning nonce-$RANDOM-$RANDOM\"; OUT=$(cd .. && ./run.sh intent \"$Q\" --json 2>&1); printf '%s\\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);assert d.get('intent') in {'TOPIC_QUERY','TOPIC_LEARN'},d;assert d.get('stage')=='llm',d;c=d.get('confidence');assert isinstance(c,(int,float)) and 0.5<=c<=1,d;print('INTENT_LLM_CONTRACT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "INTENT_LLM_CONTRACT_OK"
+        ]
+      }
+    },
+    {
+      "name": "targets-doctor-live-seat-truthful",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh targets doctor browser:webgpt --live --json 2>&1 || true); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);caps=d.get('capabilities') or [];c=next(x for x in caps if x.get('capability_id')=='browser.webgpt');assert isinstance(c.get('state'),str) and c['state'],c;assert isinstance(c.get('reason_code'),str) and c['reason_code'],c;print('TARGET_DOCTOR_STATE='+c['state']+' REASON='+c['reason_code'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TARGET_DOCTOR_STATE=",
+          "REASON="
+        ]
+      }
+    },
+    {
+      "name": "cli-replacement-webclaude-preferred-last",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh tau-dag 'Review this patch for bugs.' --repo agent-skills --target eval-webclaude-policy --immutable-goal 'Return findings or a named blocker.' --dag-template roundtable --handler webclaude --handler webgpt --handler-project webclaude=eval-missing-binding --execute --local-fixture --json 2>&1 || true); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);s=d.get('browser_provider_selection') or {};o=s.get('fallback_order') or [];assert o and o[-1]=='webclaude',o;local=[x for x in o if str(x).startswith('claude-')];assert local and all(o.index(x)<o.index('webclaude') for x in local),o;print('CLI_WEBCLAUDE_LAST')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLI_WEBCLAUDE_LAST"
+        ]
+      }
+    },
+    {
+      "name": "cli-replacement-live-web-question-browser-first",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(cd .. && ./run.sh tau-dag 'Research current web sources for this claim.' --repo agent-skills --target eval-web-first --immutable-goal 'Use current sources or return a named blocker.' --dag-template roundtable --handler webgpt --handler webgemini --handler-project webgpt=eval-missing-binding --execute --local-fixture --json 2>&1 || true); printf '%s\n' \"$OUT\" | python3 -c \"import json,sys;t=sys.stdin.read();d=json.loads(t[t.find('{'):t.rfind('}')+1]);o=(d.get('browser_provider_selection') or {}).get('fallback_order') or [];assert o and o[0]=='webgpt',o;assert o.index('webgemini')<o.index('claude-fable-low'),o;print('CLI_BROWSER_FIRST_FOR_WEB')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLI_BROWSER_FIRST_FOR_WEB"
+        ]
+      }
     }
   ]
 }
