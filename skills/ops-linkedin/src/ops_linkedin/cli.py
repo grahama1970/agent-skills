@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 from loguru import logger
@@ -156,6 +156,26 @@ def attest_command(
         raise typer.Exit(code=3) from exc
 
     _write_json(completed, output)
+
+
+@app.command("resolve-leads")
+def resolve_leads(
+    name: Annotated[str, typer.Argument(help="Person's name as observed, e.g. from a Meetup attendee list.")],
+    context: Annotated[str, typer.Option(help="Where they were observed: group, event title, topic.")] = "",
+    location: Annotated[str, typer.Option(help="Geographic hint used in the public search.")] = "Buffalo",
+    count: Annotated[int, typer.Option(help="Maximum candidates to return.")] = 5,
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Optional candidates path.")] = None,
+) -> None:
+    """Rank CANDIDATE LinkedIn profiles for a name. Never asserts an identity.
+
+    Public web search only. Every row is a hypothesis the human confirms; a
+    same-name mismatch would send a stranger a message that reads as though
+    Graham knows them.
+    """
+
+    from .lead_resolver import resolve_candidates
+
+    _write_json(resolve_candidates(name, context=context, location=location, count=count), output)
 
 
 def main() -> None:

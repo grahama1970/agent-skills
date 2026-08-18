@@ -244,6 +244,15 @@ def run_digest_phase(
                     "organizers": sum(1 for row in meetup_signals if row.get("organizer")),
                     "evidence": str(meetup_path),
                 }
+                # A name is not yet reachable. Compose ops-linkedin to attach
+                # CANDIDATE profiles so the human can confirm one, never assert.
+                try:
+                    from .linkedin_leads import attach_linkedin_candidates
+
+                    steps["linkedin_lead_resolution"] = attach_linkedin_candidates(meetup_signals)
+                except Exception as exc:  # noqa: BLE001 - never fail the run over enrichment
+                    logger.warning("linkedin lead resolution skipped: {}", exc)
+                    steps["linkedin_lead_resolution"] = {"error": str(exc)}
             report_manifest_path = out / "report-manifest.json"
             if report_manifest_path.exists():
                 report_manifest = json.loads(report_manifest_path.read_text(encoding="utf-8"))
