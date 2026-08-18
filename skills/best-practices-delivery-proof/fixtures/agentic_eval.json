@@ -68,12 +68,29 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; U=$?; printf '{\"tool_input\":{\"command\":\"ls -la\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; N=$?; if [ \"$U\" -eq 2 ] && [ \"$N\" -eq 0 ]; then echo HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY; else echo HOOK_CONTRACT_BROKEN U=$U N=$N; exit 1; fi"
+        "cd .. && A=fixtures/.read-attestation.json; [ -f $A ] && mv $A $A.hold; printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; U=$?; printf '{\"tool_input\":{\"command\":\"ls -la\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; N=$?; [ -f $A.hold ] && mv $A.hold $A; if [ \"$U\" -eq 2 ] && [ \"$N\" -eq 0 ]; then echo HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY; else echo HOOK_CONTRACT_BROKEN U=$U N=$N; exit 1; fi"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY"
+        ]
+      }
+    },
+    {
+      "name": "attestation-gates-and-voids-on-drift",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 90,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/verify_contract.py attest >/dev/null && printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; A=$?; python3 -c \"import json;p='fixtures/.read-attestation.json';d=json.load(open(p));d['contracts'][0]['sha256']='0'*64;json.dump(d,open(p,'w'))\"; printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; S=$?; python3 scripts/verify_contract.py attest >/dev/null; if [ \"$A\" -eq 0 ] && [ \"$S\" -eq 2 ]; then echo ATTESTATION_GATES_AND_VOIDS; else echo ATTESTATION_CONTRACT_BROKEN A=$A S=$S; exit 1; fi"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ATTESTATION_GATES_AND_VOIDS"
         ]
       }
     }

@@ -100,6 +100,44 @@ def read_list() -> None:
         raise typer.Exit(1)
 
 
+ATTEST_PATH = SKILL_DIR / "fixtures" / ".read-attestation.json"
+
+
+@app.command("attest")
+def attest() -> None:
+    """Write a digest-bound attestation that the reading list was read.
+
+    Records each contract's path, sha256, and line count with a timestamp.
+    The PreToolUse read gate accepts a current attestation (digests still
+    matching) in place of transcript coverage — durable across session resume
+    and compaction, void the moment a contract changes.
+    """
+    import hashlib
+    import json
+    import time
+
+    front = yaml.safe_load((SKILL_DIR / "SKILL.md").read_text().split("---\n", 2)[1])
+    entries = []
+    for name in ["best-practices-delivery-proof"] + list(front.get("composes") or []):
+        path = SKILLS_ROOT / name / "SKILL.md"
+        if not path.exists():
+            typer.echo(f"FAIL: composed skill has no SKILL.md: {name}", err=True)
+            raise typer.Exit(1)
+        raw = path.read_bytes()
+        entries.append({
+            "path": str(path),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "lines": raw.decode(errors="replace").count("\n") + 1,
+        })
+    ATTEST_PATH.parent.mkdir(exist_ok=True)
+    ATTEST_PATH.write_text(json.dumps({
+        "schema": "delivery_proof.read_attestation.v1",
+        "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "contracts": entries,
+    }, indent=2) + "\n")
+    typer.echo(f"ATTESTED {len(entries)} contracts -> {ATTEST_PATH}")
+
+
 @app.command("check")
 def check_cmd(mutate_drop_rule: int = typer.Option(0, help="Self-test: drop rule N and expect failure.")) -> None:
     text = (SKILL_DIR / "SKILL.md").read_text()

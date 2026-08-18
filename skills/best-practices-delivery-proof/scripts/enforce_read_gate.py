@@ -84,6 +84,35 @@ def covered(transcript_path: str, target: Path) -> bool:
     return reach >= total
 
 
+ATTEST_PATH = SKILLS_ROOT / "best-practices-delivery-proof" / "fixtures" / ".read-attestation.json"
+
+
+def attestation_current() -> bool:
+    """A digest-bound attestation covers the reading list while digests match.
+
+    Durable across session resume/compaction (Rule 2 amendment); void the
+    moment any attested contract's content changes.
+    """
+    import hashlib
+
+    try:
+        data = json.loads(ATTEST_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return False
+    attested = {e.get("path"): e.get("sha256") for e in data.get("contracts", [])}
+    for target in READ_LIST:
+        digest = attested.get(str(target))
+        if not digest:
+            return False
+        try:
+            current = hashlib.sha256(target.read_bytes()).hexdigest()
+        except OSError:
+            return False
+        if current != digest:
+            return False
+    return True
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
@@ -91,6 +120,8 @@ def main() -> int:
         return 0
     command = (payload.get("tool_input") or {}).get("command") or ""
     if not DELIVERY.search(command):
+        return 0
+    if attestation_current():
         return 0
     transcript = payload.get("transcript_path") or ""
     missing = [str(p) for p in READ_LIST if not covered(transcript, p)]
@@ -102,7 +133,9 @@ def main() -> int:
         "end to end (offset reads for files over 2000 lines), then rerun:\n  "
         + "\n  ".join(missing)
         + "\nList with line counts: python3 skills/best-practices-delivery-proof/"
-        "scripts/verify_contract.py read-list",
+        "scripts/verify_contract.py read-list\n"
+        "After reading, persist the proof: python3 skills/best-practices-delivery-proof/"
+        "scripts/verify_contract.py attest",
         file=sys.stderr,
     )
     return 2

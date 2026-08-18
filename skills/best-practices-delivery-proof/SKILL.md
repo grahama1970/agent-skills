@@ -86,6 +86,13 @@ Things that are NOT delivery proof, each observed lying on 2026-08-18:
   the whole time; the agent said "generating" without opening it)
 - a stale meta/receipt at a shared output path (see Rule 4)
 
+Claim-to-status compatibility is part of the receipt: surf's `proof_status`
+vocabulary maps onto what may be claimed. `response_proven` supports a
+response claim; `submitted_no_response_proof` supports ONLY "submitted";
+`not_submitted`, `delivery_not_proven`, `wrong_tab`, `degraded_focus`, and
+`rate_limited` support no success claim at all. A final report citing a
+receipt whose status is weaker than the claim is the same lie with paperwork.
+
 ## Rule 2 — Read the owning contract in full before acting
 
 When a skill owns the workflow, Read its entire SKILL.md before the first
@@ -106,6 +113,14 @@ It prints one line per contract — absolute path and line count — so "I read
 it" has a checkable meaning: one Read call per listed path, covering all its
 lines. A grep, a head, or a partial offset read of a listed contract does not
 discharge the obligation.
+
+Transcript history is not durable: resumed or compacted sessions lose Read
+entries. After completing the reads, write a digest-bound attestation —
+`verify_contract.py attest` records each contract's path, sha256, and line
+count with a timestamp. The read gate accepts a current attestation (digests
+still matching) in place of transcript coverage; a contract whose digest
+changed since attestation must be re-read. An attestation is proof the
+contracts were read AS THEY WERE, never a waiver for what they became.
 
 The 2026-08-18 cost of skipping this: the agent drove raw `surf` under `/ask`
 (forbidden at the contract's line 1481), missed that a human-named tab requires
@@ -138,7 +153,11 @@ The ladder, each rung entered only with the previous rung's receipt in hand:
    how many times, and what happens after. Open-ended retrying is thrashing.
 
 Submitting the same prompt to the same tab a third time with no new evidence is
-not persistence; it is the spiral this ladder exists to prevent.
+not persistence; it is the spiral this ladder exists to prevent. Record each
+attempt's fingerprint — operation, transport layer, rung, the ONE variable
+changed, and the failure receipt — and refuse an unchanged fingerprint at the
+same layer; after two failures the debugger ladder's research rung is
+mandatory before any third attempt.
 
 ## Rule 4 — One attempt, one artifact root
 
@@ -147,7 +166,10 @@ failed attempt's `meta.json` sat beside a later attempt's receipt at the same
 path; the agent read the stale failure and spent minutes debugging a run that
 was healthy. Give every attempt its own output root (attempt-numbered or
 timestamped). When reading an artifact, check its timestamp against the attempt
-you think produced it.
+you think produced it. Receipts are non-replayable: a receipt must name its
+attempt, its target, its producer, and its observation time, and a receipt
+created before the attempt started proves nothing about it — that is how a
+stale failure meta impersonated a live run.
 
 ## Rule 5 — Kill procedures that do not kill you or strand locks
 
@@ -176,7 +198,9 @@ decides. Silently rerouting to a destination the agent prefers (a fresh tab, a
 different pane) converts a transport failure into a broken promise: on
 2026-08-18 the agent rerouted to `--create-tab` on its own authority and the
 human, watching the named tab, correctly read every subsequent progress report
-as false.
+as false. Target identity is part of the proof: a receipt from a different
+tab, pane, branch, or account — however green — proves nothing about the named
+target, so the destination read-back must echo the identity the human named.
 
 ## Rule 7 — Pressure is a signal the receipts were late
 
