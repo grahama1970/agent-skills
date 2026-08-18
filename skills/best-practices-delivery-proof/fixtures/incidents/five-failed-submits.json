@@ -1,0 +1,11 @@
+{
+  "incident": "2026-08-18: five browser submits to tab 837399875, identical failure, no variable changed between attempts 1-4",
+  "attempts": [
+    {"operation": "webgpt.submit", "transport": "surf-cdp", "target_id": "837399875", "outcome": "failed", "variable_changed": null},
+    {"operation": "webgpt.submit", "transport": "surf-cdp", "target_id": "837399875", "outcome": "failed", "variable_changed": null},
+    {"operation": "webgpt.submit", "transport": "surf-cdp", "target_id": "837399875", "outcome": "failed", "variable_changed": null},
+    {"operation": "webgpt.submit", "transport": "surf-cdp", "target_id": "837399875", "outcome": "failed", "variable_changed": null}
+  ],
+  "claims": [],
+  "kill_commands": ["pkill -f kimi-submit.sh"]
+}

@@ -1,0 +1,12 @@
+{
+  "incident": "2026-08-18: delivery reported twice from transport self-status while the destination tab held nothing",
+  "attempts": [
+    {"operation": "webgpt.submit", "transport": "surf-cdp", "target_id": "837399875", "outcome": "failed", "variable_changed": null}
+  ],
+  "claims": [
+    {"text": "submitted and generating in the tab", "named_target": "837399875",
+     "receipt": {"source": "argv", "proof_status": "submitted_no_response_proof", "target_id": "837399875"}},
+    {"text": "the prompt is in flight", "named_target": "837399875", "receipt": {}}
+  ],
+  "kill_commands": []
+}

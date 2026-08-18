@@ -23,7 +23,14 @@
         "stdout_contains": [
           "PASS: frontmatter, all seven rules"
         ]
-      }
+      },
+      "supports_claims": [
+        "delivery-proof.contract-read-gate"
+      ],
+      "seams": [
+        "contracts.read_attestation"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "dropping-a-rule-fails-the-gate-closed",
@@ -40,7 +47,14 @@
         "stdout_contains": [
           "GATE_FAILED_CLOSED"
         ]
-      }
+      },
+      "supports_claims": [
+        "delivery-proof.contract-read-gate"
+      ],
+      "seams": [
+        "contracts.read_attestation"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "a-random-rule-drop-is-caught-each-run",
@@ -58,7 +72,14 @@
         "stdout_contains": [
           "GATE_CAUGHT_RULE_"
         ]
-      }
+      },
+      "supports_claims": [
+        "delivery-proof.contract-read-gate"
+      ],
+      "seams": [
+        "contracts.read_attestation"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "read-gate-hook-blocks-unread-delivery-and-passes-covered",
@@ -75,7 +96,14 @@
         "stdout_contains": [
           "HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY"
         ]
-      }
+      },
+      "supports_claims": [
+        "delivery-proof.effect-command-coverage"
+      ],
+      "seams": [
+        "hook.effect_classification"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "attestation-gates-and-voids-on-drift",
@@ -92,7 +120,209 @@
         "stdout_contains": [
           "ATTESTATION_GATES_AND_VOIDS"
         ]
+      },
+      "supports_claims": [
+        "delivery-proof.contract-read-gate"
+      ],
+      "seams": [
+        "contracts.read_attestation"
+      ],
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "regression-five-failed-submits-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "delivery-proof.bounded-escalation-and-isolation"
+      ],
+      "seams": [
+        "retry.escalation_state",
+        "attempt.artifact_and_process_ownership"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1; test $? -eq 2 && python3 scripts/assess.py --input fixtures/incidents/five-failed-submits.json --require-escalation-ladder 2>&1 | grep -q UNCHANGED_RETRY_AFTER_FAILURE && echo REGRESSION_GUARD_FIRES"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REGRESSION_GUARD_FIRES"
+        ]
       }
+    },
+    {
+      "name": "regression-false-delivery-claim-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "delivery-proof.claim-receipt-binding"
+      ],
+      "seams": [
+        "delivery.destination_receipt",
+        "claim.receipt_binding"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && OUT=$(python3 scripts/assess.py --input fixtures/incidents/false-delivery-reports.json --require-destination-receipts 2>&1); test $? -eq 2 && echo \"$OUT\" | grep -q SELF_STATUS_IS_NOT_DESTINATION_RECEIPT && echo \"$OUT\" | grep -q SUBMITTED_NO_RESPONSE_NOT_PROMOTED_TO_RESPONSE && echo FALSE_CLAIM_GUARD_FIRES"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FALSE_CLAIM_GUARD_FIRES"
+        ]
+      }
+    },
+    {
+      "name": "effect-family-matrix-governs-and-ignores-near-matches",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "delivery-proof.effect-command-coverage"
+      ],
+      "seams": [
+        "hook.effect_classification"
+      ],
+      "timeout_seconds": 90,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && A=fixtures/.read-attestation.json; [ -f $A ] && mv $A $A.hold; R=0; for CMD in 'git push origin main' 'run.sh herdr send memory hi'; do printf '{\"tool_input\":{\"command\":\"%s\"},\"transcript_path\":\"/nonexistent\"}' \"$CMD\" | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; [ $? -ne 2 ] && R=1; done; for CMD in 'echo git pushing is fun' 'grep webgpt.submit file.md' 'git pushup'; do printf '{\"tool_input\":{\"command\":\"%s\"},\"transcript_path\":\"/nonexistent\"}' \"$CMD\" | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; [ $? -ne 0 ] && R=1; done; [ -f $A.hold ] && mv $A.hold $A; [ $R -eq 0 ] && echo EFFECT_MATRIX_GOVERNED || { echo EFFECT_MATRIX_BROKEN; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EFFECT_MATRIX_GOVERNED"
+        ]
+      }
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "delivery-proof.contract-read-gate",
+      "criticality": "critical",
+      "description": "Covered external-effect commands are blocked until every transitive contract has a complete, current, digest-bound read attestation.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "delivery-proof.effect-command-coverage",
+      "criticality": "critical",
+      "description": "The hook governs browser-submit, pane-send, and push families and passes harmless near-matches.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "delivery-proof.claim-receipt-binding",
+      "criticality": "critical",
+      "description": "A delivery/response claim is accepted only with a fresh destination receipt whose target and proof_status support that exact claim.",
+      "evidence_required": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ],
+      "exemptions": [
+        {
+          "evidence_class": "live_e2e",
+          "reason_code": "live_guard_not_yet_built",
+          "justification": "The live browser round that binds a final claim to a destination receipt (webgpt-proposed case delivery-proof.live.browser-destination-proof) is designed but not yet implemented; the deterministic incident guards cover the failure mode observed 2026-08-18.",
+          "owner": "graham",
+          "expires": "2026-09-15"
+        }
+      ]
+    },
+    {
+      "id": "delivery-proof.bounded-escalation-and-isolation",
+      "criticality": "critical",
+      "description": "Failed operations cannot be repeated unchanged, skip rungs, reuse stale artifacts, or leave unowned lock-holding children.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "contracts.read_attestation",
+      "claim_id": "delivery-proof.contract-read-gate",
+      "seam_type": "harness_state_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a partial or stale contract read is accepted as complete"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "hook.effect_classification",
+      "claim_id": "delivery-proof.effect-command-coverage",
+      "seam_type": "command_to_policy_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a governed effect bypasses the hook through an unrecognized command form",
+        "a harmless near-match is blocked"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "delivery.destination_receipt",
+      "claim_id": "delivery-proof.claim-receipt-binding",
+      "seam_type": "external_effect_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "self-status or a wrong-target receipt is accepted as destination proof"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "claim.receipt_binding",
+      "claim_id": "delivery-proof.claim-receipt-binding",
+      "seam_type": "evidence_to_report_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a final report promotes submitted_no_response_proof into a response claim"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "retry.escalation_state",
+      "claim_id": "delivery-proof.bounded-escalation-and-isolation",
+      "seam_type": "state_machine_boundary",
+      "criticality": "high",
+      "failure_modes": [
+        "an unchanged failed operation is retried instead of escalated"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "attempt.artifact_and_process_ownership",
+      "claim_id": "delivery-proof.bounded-escalation-and-isolation",
+      "seam_type": "lifecycle_boundary",
+      "criticality": "high",
+      "failure_modes": [
+        "pattern kills match the invoking shell",
+        "stale shared artifacts replay a previous attempt"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
     }
   ]
 }

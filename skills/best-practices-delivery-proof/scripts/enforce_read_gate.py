@@ -29,12 +29,16 @@ from pathlib import Path
 
 SKILLS_ROOT = Path(__file__).resolve().parents[2]
 
-# Commands that constitute a browser delivery attempt.
+# Effect families that constitute a delivery attempt (hardening: browser
+# submits were the only governed family; pane sends and pushes are external
+# effects with the same false-delivery failure mode).
 DELIVERY = re.compile(
     r"(webgpt|kimi|gemini|grok|deepseek|claude)\.submit"
     r"|tau-dag .*--execute"
     r"|run\.sh (webgpt|webkimi|webgemini|webgrok|webclaude) "
     r"|run\.sh compete .*--execute"
+    r"|\bherdr (send|pane run)\b"
+    r"|\bgit push\b"
 )
 
 READ_LIST = [
@@ -119,6 +123,11 @@ def main() -> int:
     except json.JSONDecodeError:
         return 0
     command = (payload.get("tool_input") or {}).get("command") or ""
+    # A read-only leading program cannot deliver anything; mentioning a submit
+    # command inside grep/echo text is a harmless near-match, not an effect.
+    first = command.strip().split()[0] if command.strip() else ""
+    if first.rsplit("/", 1)[-1] in {"grep", "rg", "cat", "echo", "printf", "head", "tail", "sed", "awk", "less", "man", "wc"}:
+        return 0
     if not DELIVERY.search(command):
         return 0
     if attestation_current():

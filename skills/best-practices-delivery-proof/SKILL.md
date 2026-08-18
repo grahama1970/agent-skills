@@ -237,6 +237,16 @@ The enforcement ladder, weakest to strongest:
    The hook runs outside the model. An agent cannot rationalize past it,
    because the harness, not the agent, decides whether the command runs.
 
+## Assessing a transcript for violations
+
+`scripts/assess.py --input <incident.json>` applies the six violation patterns
+(unsupported delivery claim, self-status receipt, incompatible proof_status,
+unchanged retry, stale attempt artifact, unsafe pattern kill) to a structured
+incident record and exits non-zero with named diagnostics. The two committed
+incident fixtures are the 2026-08-18 failures themselves; the eval gate runs
+assess against both as retained regression guards, so editing the detector to
+stop firing on them is caught as a regression, not accepted as a fix.
+
 ## Related skills
 
 - `$ask` — owns browser-handler orchestration; its SKILL.md is the canonical
