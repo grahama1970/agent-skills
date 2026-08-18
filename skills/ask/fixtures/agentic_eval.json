@@ -450,7 +450,13 @@
         "stdout_contains": [
           "SILENT_CONSENSUS_CAUGHT"
         ]
-      }
+      },
+      "supports_claims": [
+        "ask.panel.quorum_and_selection"
+      ],
+      "seams": [
+        "panel.selection_and_quorum"
+      ]
     },
     {
       "name": "competition-candidates-stay-isolated",
@@ -779,7 +785,13 @@
           "one shared packet",
           "all seats answered"
         ]
-      }
+      },
+      "supports_claims": [
+        "ask.panel.quorum_and_selection"
+      ],
+      "seams": [
+        "panel.selection_and_quorum"
+      ]
     },
     {
       "name": "mvp-packet-carries-the-fail-now-contract",
@@ -993,7 +1005,197 @@
         "stdout_contains": [
           "CLI_ROSTER_COMPILED"
         ]
-      }
+      },
+      "supports_claims": [
+        "ask.panel.quorum_and_selection"
+      ],
+      "seams": [
+        "panel.selection_and_quorum"
+      ]
+    },
+    {
+      "name": "incident-arg-order-swallow-refused-before-browser",
+      "type": "adversarial",
+      "real_world": true,
+      "supports_claims": [
+        "ask.preflight.fails_before_browser"
+      ],
+      "seams": [
+        "browser.prompt_preflight"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf 'evidence body' > /tmp/ask-eval-swallow.md && ./run.sh webgpt --execute Review this bundle --attach-file /tmp/ask-eval-swallow.md 2>&1 | grep -q 'Pre-dispatch browser preflight blocked' && echo SWALLOWED_FLAG_REFUSED_BEFORE_BROWSER"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SWALLOWED_FLAG_REFUSED_BEFORE_BROWSER"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "incident-missing-sentinel-recovers-via-provider-extract",
+      "type": "adversarial",
+      "real_world": true,
+      "supports_claims": [
+        "ask.recovery.provider_owned_extract"
+      ],
+      "seams": [
+        "browser.sentinel_recovery"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/ask/.venv uv run --project . python -c \"import argparse,importlib.util,sys;from pathlib import Path;spec=importlib.util.spec_from_file_location('w','scripts/tau_roundtable_worker.py');w=importlib.util.module_from_spec(spec);sys.modules['w']=w;spec.loader.exec_module(w);a=argparse.Namespace(handler='webgpt',surf_run='surf/run.sh',timeout=300,stable_polls=2);cmd=w._browser_provider_extract_command(a,failure_code=w.MISSING_SENTINEL,browser_oracle={'tab_id':'1'},submit_meta={'status':'missing_sentinel','submitted_to_chatgpt':True,'sentinel':'<<<S>>>','controlled_tab_id':'1'},response_path=Path('/tmp/r.md'),raw_path=Path('/tmp/r.raw.md'),meta_path=Path('/tmp/r.meta.json'));assert cmd and cmd[1]=='webgpt.extract' and '--sentinel' in cmd,cmd;print('RECOVERY_IS_PROVIDER_EXTRACT')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOVERY_IS_PROVIDER_EXTRACT"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "incident-lock-blocker-is-transport-not-throttle",
+      "type": "adversarial",
+      "real_world": true,
+      "supports_claims": [
+        "ask.classifier.transport_vs_provider"
+      ],
+      "seams": [
+        "classifier.failure_codes"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/ask/.venv uv run --project . python -c \"import importlib.util,sys;spec=importlib.util.spec_from_file_location('w','scripts/tau_roundtable_worker.py');w=importlib.util.module_from_spec(spec);sys.modules['w']=w;spec.loader.exec_module(w);e='SURF_BROWSER_LOCK_BLOCKED blocker surf_browser_lock_timeout Error: Timed out waiting for browser lock after 72s. owner_pid=1341609';c=w._classify_browser_failure(handler='webgpt',failure=e,response_text='',raw_text='',prompt_text='',submit_meta={},commands=[]);assert c==w.SURF_BROWSER_LOCK_TIMEOUT,c;i=w._fallback_instruction(c,has_bundle=False,can_attach=True,handler='webgpt');assert 'no-lock' in i.lower(),i;print('LOCK_IS_TRANSPORT_BLOCKER_NO_LOCK_FORBIDDEN')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LOCK_IS_TRANSPORT_BLOCKER_NO_LOCK_FORBIDDEN"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "incident-kimi-context-length-not-misread-as-cooldown",
+      "type": "adversarial",
+      "real_world": true,
+      "supports_claims": [
+        "ask.classifier.transport_vs_provider"
+      ],
+      "seams": [
+        "classifier.failure_codes"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/ask/.venv uv run --project . python -c \"import importlib.util,sys;spec=importlib.util.spec_from_file_location('w','scripts/tau_roundtable_worker.py');w=importlib.util.module_from_spec(spec);sys.modules['w']=w;spec.loader.exec_module(w);n='Your conversation with Kimi is getting too long. Try starting a new session. please try again later.';c=w._classify_browser_failure(handler='webkimi',failure=n,response_text='',raw_text='',prompt_text='',submit_meta={},commands=[]);assert c==w.KIMI_CONVERSATION_TOO_LONG_BLOCKER,c;assert c!=w.BROWSER_PROVIDER_RATE_LIMITED;print('CONTEXT_LENGTH_IS_ITS_OWN_BLOCKER')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CONTEXT_LENGTH_IS_ITS_OWN_BLOCKER"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "ask.preflight.fails_before_browser",
+      "criticality": "critical",
+      "description": "Malformed prompts and path-bearing bundles are refused before any tab is bound or provider contacted.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.recovery.provider_owned_extract",
+      "criticality": "critical",
+      "description": "A submitted round that misses its sentinel recovers via the provider's own extract command with the round's sentinel, never a resubmit or generic page read.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.classifier.transport_vs_provider",
+      "criticality": "critical",
+      "description": "Lock contention, provider capacity, and context-length refusals classify to distinct failure codes with distinct recovery instructions.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.panel.quorum_and_selection",
+      "criticality": "critical",
+      "description": "Panels count answering seats, refuse silent consensus, and compile the preferred roster with webclaude last.",
+      "evidence_required": [
+        "deterministic"
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "browser.prompt_preflight",
+      "claim_id": "ask.preflight.fails_before_browser",
+      "seam_type": "command_to_transport_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "flags after the question are swallowed into prompt text and submitted",
+        "a path-bearing bundle reaches a provider tab"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "browser.sentinel_recovery",
+      "claim_id": "ask.recovery.provider_owned_extract",
+      "seam_type": "external_effect_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a completed answer in the tab is abandoned and the round resubmitted",
+        "a generic page read replaces the provider extractor"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "classifier.failure_codes",
+      "claim_id": "ask.classifier.transport_vs_provider",
+      "seam_type": "evidence_to_report_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "lock contention read as provider throttling",
+        "a context-length refusal waited out as a cooldown"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "panel.selection_and_quorum",
+      "claim_id": "ask.panel.quorum_and_selection",
+      "seam_type": "state_machine_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "one surviving seat presented as the panel's finding",
+        "a named seat silently substituted"
+      ],
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }
