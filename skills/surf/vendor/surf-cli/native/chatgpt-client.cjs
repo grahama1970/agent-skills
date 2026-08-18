@@ -1126,6 +1126,102 @@ async function readDirectAssistantSnapshot(cdp, sentinel, signal) {
   return normalizeDirectAssistantSnapshot(value);
 }
 
+
+// ChatGPT collapses long code blocks in the DOM ("Show more"), and the
+// collapsed portion is NOT in the DOM at all -- textContent of the assistant
+// turn returns only the rendered slice plus the trailing sentinel. Observed
+// 2026-08-18: three complete answers (18.8k, 17.2k, 2.5k chars) captured as
+// 1.1-3.0k truncated-mid-JSON with the sentinel intact, because the sentinel
+// renders after the collapsed block. The authoritative text lives in the
+// conversation backend API, readable inside the authenticated tab. This
+// helper fetches it; callers upgrade a DOM capture when the API text carries
+// the same sentinel and is strictly longer. Fail-open: any API drift (404 on
+// endpoint, no token) returns null and the DOM capture stands.
+function buildBackendApiScheduleExpression(sentinel) {
+  const wanted = JSON.stringify(String(sentinel || ""));
+  return `(() => {
+    window.__surfBackendApiText = "__pending";
+    (async () => {
+      try {
+        const convId = (location.pathname.split('/c/')[1] || '').split(/[?#]/)[0];
+        if (!convId) { window.__surfBackendApiText = ""; return; }
+        const session = await fetch('/api/auth/session', { credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        const token = session && session.accessToken;
+        if (!token) { window.__surfBackendApiText = ""; return; }
+        const resp = await fetch('/backend-api/conversation/' + convId, {
+          credentials: 'include',
+          headers: { accept: 'application/json', authorization: 'Bearer ' + token },
+        });
+        if (!resp.ok) { window.__surfBackendApiText = ""; return; }
+        const data = await resp.json();
+        const messages = Object.values(data.mapping || {})
+          .map((n) => n.message)
+          .filter((m) => m && m.author && m.author.role === 'assistant'
+            && m.content && Array.isArray(m.content.parts));
+        messages.sort((a, b) => (a.create_time || 0) - (b.create_time || 0));
+        const wantedSentinel = ${wanted};
+        let text = "";
+        if (wantedSentinel) {
+          for (let i = messages.length - 1; i >= 0; i--) {
+            const candidate = messages[i].content.parts.join('\\n');
+            if (candidate.includes(wantedSentinel)) { text = candidate; break; }
+          }
+        } else if (messages.length) {
+          text = messages[messages.length - 1].content.parts.join('\\n');
+        }
+        window.__surfBackendApiText = text;
+      } catch (_e) {
+        window.__surfBackendApiText = "";
+      }
+    })();
+    return true;
+  })()`;
+}
+
+async function fetchAssistantTextViaBackendApi(cdp, sentinel) {
+  // Two-phase because CHATGPT_EVALUATE may not await promises: phase 1
+  // schedules the authenticated fetch and parks the result on window; phase 2
+  // polls for it. Bounded at ~6s; every failure returns null (fail-open).
+  const schedule = buildBackendApiScheduleExpression(sentinel);
+  try {
+    await evaluate(cdp, schedule);
+    const deadline = Date.now() + 6000;
+    while (Date.now() < deadline) {
+      const value = await evaluate(cdp, "window.__surfBackendApiText");
+      if (value !== "__pending") {
+        return typeof value === "string" && value ? value : null;
+      }
+      await delay(250);
+    }
+  } catch (_error) {
+    return null;
+  }
+  return null;
+}
+
+// Upgrade a sentinel-proven DOM capture with the backend-API text when the DOM
+// was a collapsed render. The upgrade is accepted only when the API text
+// contains the SAME sentinel and is strictly longer than the DOM text, so a
+// stale or different turn can never replace a proven capture.
+async function upgradeCollapsedDomCapture(cdp, result) {
+  if (!result || !result.text || !result.sentinel || result.hasSentinel !== true) {
+    return result;
+  }
+  const apiText = await fetchAssistantTextViaBackendApi(cdp, result.sentinel);
+  if (apiText && apiText.includes(result.sentinel) && apiText.length > result.text.length) {
+    return {
+      ...result,
+      text: apiText,
+      source: "backend-api",
+      domTruncationDetected: true,
+      domChars: result.text.length,
+      apiChars: apiText.length,
+    };
+  }
+  return result;
+}
+
 async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, signal) {
   throwIfAborted(signal);
   const sentinel = options.sentinel || null;
@@ -1233,7 +1329,7 @@ async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, s
     const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
     const stopGateOk = !snapshot.stopVisible || (sentinel && hasSentinel);
     if (currentText && hasSentinel && stopGateOk && (sentinel ? stableEnough : snapshot.finished || stableEnough)) {
-      return {
+      return await upgradeCollapsedDomCapture(cdp, {
         text: currentText,
         messageId: snapshot.messageId || null,
         turnIndex: snapshot.turnIndex,
@@ -1246,7 +1342,7 @@ async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, s
         backgroundHiddenPolls: snapshot.documentHidden === true ? pollCount : 0,
         backgroundPollCount: pollCount,
         hiddenRecoveryUsed: false,
-      };
+      });
     }
 
     await delay(400, signal);
@@ -1388,6 +1484,9 @@ async function extractAssistantResponse(options) {
       controlledTabId: tabId,
       messageId: response.messageId || null,
       responseSource: response.source || "assistant-dom",
+      domTruncationDetected: response.domTruncationDetected === true,
+      domChars: response.domChars,
+      apiChars: response.apiChars,
       sentinel,
       hasSentinel: response.hasSentinel === true || (sentinel ? response.text.includes(sentinel) : true),
       pageTextContainsSentinel: response.pageTextContainsSentinel === true,
@@ -1596,6 +1695,9 @@ async function query(options) {
 }
 
 module.exports = {
+  buildBackendApiScheduleExpression,
+  fetchAssistantTextViaBackendApi,
+  upgradeCollapsedDomCapture,
   query,
   extractAssistantResponse,
   hasRequiredCookies,

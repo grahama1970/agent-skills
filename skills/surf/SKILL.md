@@ -180,6 +180,34 @@ cd ../..
 ./run.sh tab.list --json
 ```
 
+### Tab Age
+
+Chrome exposes no tab creation time — `tab.list` returns only id, title, url,
+active, and windowId — so age is observed and remembered rather than read:
+
+```bash
+./run.sh tab.age                  # oldest first, human readable
+./run.sh tab.age --json           # tabs with age_seconds / age_source
+./run.sh tab.list --with-age      # same annotation on a normal listing
+```
+
+Each tab gains `first_seen`, `age_seconds`, `age_human`, and `age_source`.
+
+**`age_source` is the field that matters.** `observed` means the tab appeared
+after the ledger existed, so its age is accurate to the gap between scans.
+`at_least` means the tab was already open when the ledger was first written, so
+its real age is unknown and only a lower bound is reported (rendered with a
+`>=` prefix). Treating a lower bound as exact is how a week-old tab gets called
+fresh. Calling either command updates the ledger, so ages sharpen over time and
+closed tabs are forgotten.
+
+Age is the first thing to check when a provider lane starts failing: a reviewer
+tab open for days carries conversation state, may be sitting on a rate-limit
+banner, and is the usual cause before anything in the transport is at fault.
+The ledger lives at `~/.surf/tab-first-seen.json` (`SURF_TAB_AGE_LEDGER`
+overrides). It is diagnostic, never a proof boundary — a ledger that cannot be
+written is reported, not fatal.
+
 ### Capability And Result Contracts
 
 Before diagnosing provider breakage after a Surf update, capture the versioned
@@ -610,6 +638,20 @@ wrapper that consumes it:
 When a completed answer is visible in the controlled tab but the submit wrapper
 was interrupted or did not parse it, use `webgpt.extract` with the exact
 sentinel from the failed round rather than submitting a new prompt.
+
+ChatGPT collapses long code blocks in the DOM ("Show more"), and the collapsed
+portion is not in the DOM at all — a sentinel-proven capture can therefore be
+a truncated slice with the sentinel intact, cut mid-JSON, because the sentinel
+renders after the collapsed block (observed 2026-08-18: three complete answers
+of 18.8k/17.2k/2.5k chars captured as 1.1–3.0k). Surf upgrades such captures
+automatically: after sentinel proof, it reads the same conversation through
+ChatGPT's authenticated backend API inside the controlled tab and replaces the
+DOM text only when the API text carries the SAME sentinel and is strictly
+longer. The receipt then records `source: backend-api`,
+`domTruncationDetected: true`, `domChars`, and `apiChars`. Any API drift fails
+open to the DOM capture. A `webgpt.extract` targeting an OLDER turn's sentinel
+still only matches when that turn is the latest assistant turn — recovering a
+non-latest turn remains unsupported.
 
 #### WebGPT image mockups
 
