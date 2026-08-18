@@ -1,0 +1,39 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: positive-negative
+metadata:
+  title: Validation contract
+  description: Behaviors the generated artifact must replicate and avoid
+left:
+  heading: REPLICATE
+  accent: green
+  items:
+    - Typed input schema
+    - Deterministic output
+    - Real browser verification
+    - Validation receipt
+    - Visible failure status
+right:
+  heading: AVOID
+  accent: red
+  items:
+    - Stringly typed payloads
+    - Unverified screenshots
+    - External SVG dependencies
+    - JavaScript in README assets
+    - Silent fallback behavior
+caption: GENERATE, VERIFY, THEN PUBLISH
+timeline:
+  cycle_ms: 3000
+  events:
+    - target: left-glow
+      recipe: halo-pulse
+      start_ms: 0
+      end_ms: 3000
+      peak_opacity: 0.35
+    - target: right-glow
+      recipe: halo-pulse
+      start_ms: 0
+      end_ms: 3000
+      delay_ms: 1500
+      peak_opacity: 0.35

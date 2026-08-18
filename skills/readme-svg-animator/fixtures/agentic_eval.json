@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "skill": "readme-svg-animator",
+  "trials": 3,
+  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, and unsafe-input rejection",
+  "claims": {
+    "proves": "the skill can generate and validate its bundled scenes and rejects a script-bearing SVG through its real CLI",
+    "does_not_prove": "all arbitrary diagram layouts, every browser, future GitHub proxy behavior, or exact font availability on remote viewers"
+  },
+  "cases": [
+    {
+      "name": "real-sanity",
+      "type": "positive",
+      "command": ["skills/readme-svg-animator/sanity.sh"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["SANITY PASS"]
+      }
+    },
+    {
+      "name": "unsafe-svg-fails-closed",
+      "type": "negative",
+      "command": [
+        "skills/readme-svg-animator/run.sh",
+        "validate",
+        "skills/readme-svg-animator/tests/fixtures/unsafe-script.svg"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["FAIL"]
+      }
+    }
+  ],
+  "eval_kind": "skill_behavior"
+}

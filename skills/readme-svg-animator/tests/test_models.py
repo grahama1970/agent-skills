@@ -1,0 +1,26 @@
+"""Model and boundary tests for bundled themes and semantic scenes."""
+
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from readme_svg_animator.io import load_scene, load_theme, skill_root
+from readme_svg_animator.models import Timeline, TimelineEvent
+
+
+def test_bundled_theme_and_scenes_validate() -> None:
+    root = skill_root()
+    theme = load_theme("fixing-opus-neon-v1")
+    assert theme.canvas.view_box == (0.0, 0.0, 1920.0, 1080.0)
+    for name in ("positive-negative", "fanout-anatomy"):
+        scene = load_scene(root / "assets" / "templates" / f"{name}.yml")
+        assert scene.template == name
+
+
+def test_timeline_rejects_out_of_cycle_event() -> None:
+    with pytest.raises(ValidationError):
+        Timeline(
+            cycle_ms=1000,
+            events=(TimelineEvent(target="x", recipe="fade", start_ms=0, end_ms=1001),),
+        )

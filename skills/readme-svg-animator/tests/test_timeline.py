@@ -1,0 +1,24 @@
+"""Deterministic timeline arithmetic and CSS compilation tests."""
+
+from readme_svg_animator.io import load_theme
+from readme_svg_animator.models import Timeline, TimelineEvent
+from readme_svg_animator.timeline import compile_timeline, percent
+
+
+def test_percent_is_compact_and_deterministic() -> None:
+    assert percent(150, 12000) == "1.25"
+    assert percent(900, 12000) == "7.5"
+    assert percent(12000, 12000) == "100"
+
+
+def test_draw_stroke_uses_normalized_path_contract() -> None:
+    theme = load_theme("fixing-opus-neon-v1")
+    timeline = Timeline(
+        cycle_ms=12000,
+        events=(TimelineEvent(target="connector-0", recipe="draw-stroke", start_ms=900, end_ms=1350),),
+    )
+    compiled = compile_timeline(timeline, theme.animation)
+    assert "stroke-dasharray:1" in compiled.css
+    assert "stroke-dashoffset:1" in compiled.css
+    assert "stroke-dashoffset:0" in compiled.css
+    assert compiled.classes_by_target["connector-0"] == ("rsa_a000",)

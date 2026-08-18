@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+  <title>Unsafe test</title>
+  <desc>Must fail validation</desc>
+  <script>alert('unsafe')</script>
+  <rect width="100" height="100" fill="#0d1117"/>
+</svg>

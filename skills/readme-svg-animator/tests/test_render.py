@@ -1,0 +1,20 @@
+"""Real deterministic SVG generation tests for each bundled template."""
+
+from defusedxml import ElementTree as SafeElementTree
+
+from readme_svg_animator.io import load_scene, load_theme, skill_root
+from readme_svg_animator.render import render_scene
+
+
+def test_bundled_templates_render_deterministically() -> None:
+    root = skill_root()
+    for name in ("positive-negative", "fanout-anatomy"):
+        scene = load_scene(root / "assets" / "templates" / f"{name}.yml")
+        theme = load_theme(scene.theme)
+        first = render_scene(scene, theme)
+        second = render_scene(scene, theme)
+        assert first == second
+        parsed = SafeElementTree.fromstring(first)
+        assert parsed.attrib["role"] == "img"
+        assert "@media (prefers-reduced-motion: no-preference)" in first
+        assert "<script" not in first

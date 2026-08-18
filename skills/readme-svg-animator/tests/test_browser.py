@@ -1,0 +1,27 @@
+"""Non-mocked Chromium README img-mode animation verification."""
+
+import shutil
+from pathlib import Path
+
+import pytest
+
+from readme_svg_animator.browser import verify_readme_image
+from readme_svg_animator.io import load_scene, load_theme, skill_root
+from readme_svg_animator.render import render_scene
+
+
+@pytest.mark.browser
+def test_real_chromium_observes_animation(tmp_path: Path) -> None:
+    if not any(shutil.which(name) for name in ("chromium", "chromium-browser", "google-chrome")):
+        pytest.skip("Chromium executable is unavailable")
+    root = skill_root()
+    scene = load_scene(root / "assets" / "templates" / "positive-negative.yml")
+    theme = load_theme(scene.theme)
+    svg = tmp_path / "animated.svg"
+    svg.write_text(render_scene(scene, theme), encoding="utf-8")
+    evidence = verify_readme_image(svg)
+    assert evidence.status == "PASS", evidence.details
+    assert evidence.loaded is True
+    assert evidence.animation_observed is True
+    assert evidence.natural_width == 1920
+    assert evidence.natural_height == 1080

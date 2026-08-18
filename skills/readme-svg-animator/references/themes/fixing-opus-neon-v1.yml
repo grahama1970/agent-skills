@@ -1,0 +1,63 @@
+schema_version: 1
+name: fixing-opus-neon-v1
+provenance:
+  repository: disler/fixing-smartass-opus-5
+  commit: 5a349e87201c1987f22191fbac4ca772822aa352
+  license: MIT
+canvas:
+  width: 1920
+  height: 1080
+  view_box: [0, 0, 1920, 1080]
+  background: "#0d1117"
+  radius: 24
+fonts:
+  display: [Play, Trebuchet MS, Segoe UI, system-ui, sans-serif]
+  mono: [JetBrains Mono, ui-monospace, SF Mono, Menlo, Consolas, monospace]
+palette:
+  cyan: "#00F3FF"
+  green: "#00FF10"
+  amber: "#FFB020"
+  red: "#EF4444"
+  orange: "#E5683C"
+  white: "#FFFFFF"
+  dark_text: "#0A0E14"
+  deep_panel: "#08121A"
+opacity:
+  panel_fill: 0.78
+  soft_panel_accent: 0.10
+  secondary_text: 0.55
+  secondary_border: 0.20
+  halo_peak: 0.35
+strokes:
+  thin: 3
+  normal: 4
+  emphasis: 5
+  icon: 6
+  linecap: round
+  linejoin: round
+shadows:
+  text: "drop-shadow(2px 2px 4px rgba(0,0,0,.8))"
+  strong: "drop-shadow(3px 3px 6px rgba(0,0,0,.9))"
+radii:
+  canvas: 24
+  outer_card: 24
+  card: 18
+  chip: 14
+  small: 10
+  pill: 35
+typography:
+  title_size: 46
+  heading_size: 38
+  body_size: 34
+  supporting_size: 26
+  caption_size: 30
+  title_tracking: 6
+  heading_tracking: 2
+  caption_tracking: 3
+animation:
+  ambient_cycle_ms: 3000
+  narrative_cycle_ms: 12000
+  hero_cycle_ms: 14000
+  enter_easing: "cubic-bezier(.33,1,.68,1)"
+  morph_easing: "cubic-bezier(.65,0,.35,1)"
+  pulse_easing: ease-in-out
