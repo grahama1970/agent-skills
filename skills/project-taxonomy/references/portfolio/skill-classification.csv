@@ -17,7 +17,6 @@ clipboard-file,core,capability,support-enabler,,,,,,,False,high,curated-or-expli
 cui-marker,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
 dashboard,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
 dum-dum,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
-herdr-workstation,core,capability,support-enabler,,,,,,,True,high,curated-or-explicit,none
 monitor-website,monitor,monitor,support-enabler,,,,,,,True,high,curated-or-explicit,none
 monitor-workstation,monitor,monitor,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-buzz,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
@@ -26,6 +25,7 @@ ops-discord,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,non
 ops-docker,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-f36-plant,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-google,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
+ops-herdr,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-nzbgeek,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-streamdeck,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none
 ops-workstation,ops,operator,support-enabler,,,,,,,True,high,curated-or-explicit,none

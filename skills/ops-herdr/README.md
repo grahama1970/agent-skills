@@ -1,8 +1,8 @@
-# herdr-workstation
+# ops-herdr
 
 > **Disciplines:** agentic-orchestration · observability-operations
 
-`herdr-workstation` is a skill for turning long-running project-agent work into visible Herdr workstations.
+`ops-herdr` is a skill for turning long-running project-agent work into visible Herdr workstations.
 
 It is designed for the pattern we discussed:
 
@@ -33,7 +33,7 @@ Use this skill when a main project agent needs to:
 ## Install dependencies
 
 ```bash
-cd skills/herdr-workstation
+cd skills/ops-herdr
 uv sync
 ```
 

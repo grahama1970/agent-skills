@@ -1,5 +1,5 @@
 [project]
-name = "herdr-workstation"
+name = "ops-herdr"
 version = "0.1.0"
 description = "Visible Herdr workstations for project-agent subagents"
 requires-python = ">=3.11,<3.13"

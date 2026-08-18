@@ -1,5 +1,5 @@
 {
-  "artifact": "herdr-workstation-skill",
+  "artifact": "ops-herdr-skill",
   "complies": [
     "best-practices-python",
     "best-practices-skills"
@@ -7,19 +7,19 @@
   "created_at": "2026-07-01",
   "files": [
     {
-      "bytes": 2729,
+      "bytes": 2775,
       "path": "README.md",
-      "sha256": "cb3df6561cb5855b60e7d399cfd6fa3056c294c18a15afd98b2035b564a81874"
+      "sha256": "56f7153671ad5a780faa70fb17943c60d3bd619b8cd605e4afc50a0c467ec46a"
     },
     {
-      "bytes": 4171,
+      "bytes": 4268,
       "path": "SKILL.md",
-      "sha256": "a62ccee885d782eae0aea83a2f8441af5d77597027cf318ff9ea5d81b082fa9f"
+      "sha256": "a91727aded995aa45f4fe10710cea50b7ed80c0cbf098701111f407bcf936d4c"
     },
     {
-      "bytes": 238,
+      "bytes": 243,
       "path": "pyproject.toml",
-      "sha256": "bdd0fac079d0b3b28b1ecb1be6454351cf13a0a83e587dd1db6375ec9196127c"
+      "sha256": "f4982f53ecaa024e727ec970ea66d4c9387d3e6402c7ff8bf8a62993b6363a23"
     },
     {
       "bytes": 761,
@@ -32,9 +32,9 @@
       "sha256": "6f611a9e55f6f4aa03365d9d00b2f2a55b1bd99187d6a87313e19fc3104e5f9e"
     },
     {
-      "bytes": 174,
+      "bytes": 271,
       "path": "run.sh",
-      "sha256": "1885322cedf0e45dd9f40dfc90ec31e6170f5cba6c00a7c85ee1fa0b5d98cb3a"
+      "sha256": "07ce2af7e5a59a121eb3042e9312129d8f33f55d3997be5e58e887df237c818e"
     },
     {
       "bytes": 335,
@@ -42,22 +42,22 @@
       "sha256": "22cac5c9b7773261852eb95d23e31f647073d4f0cd056408b854b0802be8a485"
     },
     {
-      "bytes": 22509,
+      "bytes": 22493,
       "path": "scripts/cli.py",
-      "sha256": "aca242b94e55f72683b91f4317d4d638b63d454ba1fadcf4f80af73df4c2c63a"
+      "sha256": "6e5816ea7e5e6571e7c1def412382e6de6bd08724c1fc2906e74030738a8bb45"
     },
     {
-      "bytes": 8789,
-      "path": "scripts/herdr_workstation_core.py",
-      "sha256": "aa44b56c5d073ba4a23b98043883e1f96350bda7237e43e1e5d76f2811494211"
+      "bytes": 8997,
+      "path": "scripts/ops_herdr_core.py",
+      "sha256": "991f2bfc71d367d559b76d216a93b007b616472a10dca3092254c0beac5dfc0d"
     },
     {
-      "bytes": 9442,
-      "path": "scripts/herdr_workstation_loops.py",
-      "sha256": "56e999734c5360721c0e7dfa4c4e289fd6e59d0af35822b1c1118a65536abe3d"
+      "bytes": 9434,
+      "path": "scripts/ops_herdr_loops.py",
+      "sha256": "05e1abda3bf8e82bf5574f77c8de082d32673bf34f81d5ae7613c557eeeec1e2"
     }
   ],
-  "target_repo_path": "skills/herdr-workstation",
+  "target_repo_path": "skills/ops-herdr",
   "validation": {
     "cli_verify": "verify ok",
     "function_docstrings_missing": [],

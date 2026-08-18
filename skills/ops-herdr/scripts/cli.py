@@ -22,7 +22,7 @@ from loguru import logger
 SCRIPT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from herdr_workstation_core import (  # noqa: E402
+from ops_herdr_core import (  # noqa: E402
     append_event,
     create_tab,
     create_workspace,
@@ -38,7 +38,7 @@ from herdr_workstation_core import (  # noqa: E402
     write_json,
     load_manifest,
 )
-from herdr_workstation_loops import (  # noqa: E402
+from ops_herdr_loops import (  # noqa: E402
     LoopTask,
     build_creator_prompt,
     load_loop_tasks,

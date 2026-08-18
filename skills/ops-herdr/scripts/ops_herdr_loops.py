@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from herdr_workstation_core import (
+from ops_herdr_core import (
     create_tab,
     create_workspace,
     ensure_dir,

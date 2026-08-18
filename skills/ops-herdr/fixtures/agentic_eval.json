@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "skill": "herdr-workstation",
+  "skill": "ops-herdr",
   "trials": 3,
   "proof_scope": "fixture wiring smoke",
   "claims": {

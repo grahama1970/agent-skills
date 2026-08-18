@@ -1,5 +1,5 @@
 ---
-name: herdr-workstation
+name: ops-herdr
 description: >
   Use this skill when a project agent needs to spin up, inspect, communicate with,
   or remove Herdr-managed workstations for long-running multi-agent tasks. It
@@ -15,8 +15,10 @@ triggers:
   - communicate with herdr agent
   - petey qbert dewey herdr
   - creator reviewer loop herdr
+  - ops herdr
+  - herdr operations
 provides:
-  - herdr-workstation-orchestration
+  - ops-herdr-orchestration
   - visible-subagent-runtime
   - dynamic-agent-workspaces
   - pane-agent-communication
@@ -40,7 +42,7 @@ disciplines:
   - observability-operations
 ---
 
-# Herdr Workstation
+# Herdr Ops
 
 Use this skill when subagent work should be visible, attachable, and recoverable in Herdr instead of hidden in opaque background jobs.
 
