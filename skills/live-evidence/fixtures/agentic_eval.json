@@ -280,6 +280,49 @@
       },
       "proves": "Real audio reaches a card: the YouTube interview WAV is played into PipeWire, captured by pw-record, transcribed by RealtimeSTT in the GPU container, and projected as a source-backed evidence card. Every other case in this suite posts transcript TEXT to the API and therefore proves nothing about the audio half.",
       "does_not_prove": "Browser playback from youtube.com (a stored WAV of the same video is played), live Ask provider quality, or real Memory relevance (Memory is deliberately degraded)."
+    },
+    {
+      "name": "stale-answer-discarded-by-revision-fence",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-revision-fence"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "realistic-length event produced a card (window not annihilated): PASS",
+          "exactly one active card for the question: PASS",
+          "active card is the corrected revision: PASS",
+          "stale revision-1 result journaled as discarded, not lost: PASS",
+          "revision fence: PASS"
+        ]
+      }
+    },
+    {
+      "name": "salient-fact-durable-write-proven-by-fresh-process-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-salient-fact-memory"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "write confirmed by readback, not by response body: PASS",
+          "fresh process finds exactly one record: PASS",
+          "record carries the runtime nonce: PASS",
+          "replay does not duplicate: PASS",
+          "negative control: non-final turn is not written: PASS",
+          "salient fact memory: PASS"
+        ]
+      }
     }
   ]
 }

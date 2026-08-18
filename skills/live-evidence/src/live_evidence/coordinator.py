@@ -20,6 +20,7 @@ from .models import (
 )
 from .readiness import ReadinessVerdict
 from .resolver import GateEvent, StreamingResolver
+from .salient_facts import SalientFactWriter, extract_decision
 from .persistence import SessionJournal
 from .retrieval import (
     AskSolutionClient,
@@ -54,6 +55,7 @@ class EvidenceCoordinator:
         self._ask = AskSolutionClient(settings)
         self._summarizer = ExtractiveSummarizer()
         self._resolver = StreamingResolver()
+        self._facts = SalientFactWriter(settings.memory_url)
         self._tasks: set[asyncio.Task[None]] = set()
 
     async def accept_transcript(self, event: TranscriptEvent) -> None:
@@ -63,6 +65,16 @@ class EvidenceCoordinator:
         await self._journal.append(snapshot.session.session_id, "transcript", event)
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
+        # Salient-fact capture runs beside question handling, never inside it:
+        # an explicit decision is a record to remember, not a question to
+        # answer, and its durable write must not block or join the
+        # revision-fenced card path. Consent is already enforced above -- an
+        # ARMED session returns before reaching this line.
+        fact = extract_decision(event, self._state.session_id())
+        if fact is not None:
+            fact_task = asyncio.create_task(self._write_salient_fact(fact))
+            self._tasks.add(fact_task)
+            fact_task.add_done_callback(self._task_done)
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
             return
@@ -81,6 +93,28 @@ class EvidenceCoordinator:
         task = asyncio.create_task(self._retrieve(decision, question_id, question_revision))
         self._tasks.add(task)
         task.add_done_callback(self._task_done)
+
+    async def _write_salient_fact(self, fact) -> None:
+        """Persist one explicit decision; trust only the readback.
+
+        An unconfirmed write degrades the Memory lane and journals the full
+        source-bound fact rather than dropping it, so nothing is silently
+        lost and nothing unverified is presented as remembered.
+        """
+
+        confirmed, detail = await self._facts.write_and_confirm(fact)
+        session_id = self._state.session_id()
+        if confirmed:
+            await self._journal.append(session_id, "salient_fact_write_confirmed", fact)
+            logger.info("salient fact confirmed fact_id={} ({})", fact.fact_id[:12], detail)
+            return
+        await self._journal.append(session_id, "salient_fact_write_unconfirmed", fact)
+        await self._state.set_lane(
+            RetrievalLane.MEMORY,
+            LaneState.DEGRADED,
+            f"Fact write unconfirmed: {detail}",
+        )
+        logger.warning("salient fact UNCONFIRMED fact_id={} ({})", fact.fact_id[:12], detail)
 
     async def _resolve_readiness(self, query: str) -> ReadinessVerdict | None:
         """Run the stage-1 gate, surfacing the decision as soon as it streams.

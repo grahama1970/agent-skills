@@ -92,44 +92,43 @@ class TriggerOutcome:
 class ReadinessTrigger:
     """Cheap floor deciding when the resolver is worth calling.
 
-    Fires on a speech pause or on accumulated new text, never on punctuation.
+    Fires on accumulated new text only, never on punctuation or pauses.
     A false positive costs one resolver call, which the resolver then rejects;
     a false negative silently drops a question. The thresholds are therefore
     tuned to fail toward calling.
     """
 
+    # char_delta is deliberately the ONLY trigger. Both pause-detection
+    # approaches were measured dead on this event stream and are removed rather
+    # than left as tunable knobs (external review, 2026-08-17):
+    #   - arrival gaps never fire: the STT emits on a decoder cadence at
+    #     8.4 events/sec whether or not anyone is speaking, so silence in the
+    #     audio produces no gap between events;
+    #   - text stability never fires: the rolling buffer jitters
+    #     115->117->115 chars as the decoder revises, so it is never stable
+    #     even during real silence.
+    # Genuine pause triggering requires the capture bridge to emit the STT
+    # engine's own VAD boundaries with sample offsets; no downstream heuristic
+    # can reconstruct it. Do not reintroduce a "silence" or "stability"
+    # threshold here -- it will look tunable and structurally cannot work.
     min_new_chars: int = 120
-    # Speech pauses are detected as text STABILITY, not as gaps between events.
-    # Measured on live capture: events arrive at 8.4/sec on a decoder cadence
-    # whether or not anyone is speaking, so an arrival-gap trigger never fires
-    # (0 of 8 fires across three configurations). A buffer that stops changing
-    # is the only pause signal this stream actually carries.
-    stable_for_s: float = 1.5
     min_interval_s: float = 3.0
 
     _consulted_len: int = field(default=0, init=False)
     _last_consult_at: float | None = field(default=None, init=False)
     _last_event_at: float | None = field(default=None, init=False)
-    _last_text: str = field(default="", init=False)
-    _last_change_at: float | None = field(default=None, init=False)
 
     def observe(self, buffer_text: str, now: float) -> TriggerOutcome:
         """Record an event arrival and report whether to consult the resolver."""
 
         gap_s = 0.0 if self._last_event_at is None else max(0.0, now - self._last_event_at)
         self._last_event_at = now
-        if buffer_text != self._last_text:
-            self._last_text = buffer_text
-            self._last_change_at = now
-        stable_s = 0.0 if self._last_change_at is None else max(0.0, now - self._last_change_at)
         new_chars = max(0, len(buffer_text) - self._consulted_len)
 
         if new_chars <= 0:
             return TriggerOutcome(False, "no_new_text", new_chars, gap_s)
         if self._last_consult_at is not None and (now - self._last_consult_at) < self.min_interval_s:
             return TriggerOutcome(False, "rate_limited", new_chars, gap_s)
-        if stable_s >= self.stable_for_s:
-            return self._fire(buffer_text, now, "speech_settled", new_chars, gap_s)
         if new_chars >= self.min_new_chars:
             return self._fire(buffer_text, now, "char_delta", new_chars, gap_s)
         return TriggerOutcome(False, "accumulating", new_chars, gap_s)
