@@ -118,6 +118,10 @@ def poll_status(workspace: Path, output: str, deadline: float, probe_seconds: fl
     workspace -- fail fast as BLOCKED rather than burning the whole deadline.
     Once the extension has engaged, wait the full deadline for the stop.
     """
+    # States the bridge writes while it is still working the request; anything
+    # else (stopped / stopped-not-proof / error / failed / terminated) is a
+    # terminal outcome to return to the caller.
+    nonterminal = {"pending", "no-file", "starting", "launching", "running", "continuing"}
     status_path = workspace / output
     try:
         initial_stamp = json.loads(status_path.read_text()).get("updatedAt")
@@ -130,9 +134,12 @@ def poll_status(workspace: Path, output: str, deadline: float, probe_seconds: fl
             status = json.loads(status_path.read_text())
         except (OSError, json.JSONDecodeError):
             status = {"status": "no-file"}
-        if status.get("status") not in ("pending", "no-file"):
+        state = status.get("status")
+        if state not in nonterminal:
             return status
-        if not engaged and status.get("updatedAt") != initial_stamp:
+        # The extension moving the status off the requester's initial 'pending'
+        # (a new updatedAt, or any working state) means a live bridge engaged.
+        if not engaged and (status.get("updatedAt") != initial_stamp or state != "pending"):
             engaged = True
         if not engaged and time.time() > probe_deadline:
             return None
