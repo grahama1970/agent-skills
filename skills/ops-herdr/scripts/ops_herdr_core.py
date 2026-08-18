@@ -22,6 +22,19 @@ from loguru import logger
 
 SKILLS_DIR = Path(__file__).resolve().parents[2]
 
+# Verified against Herdr 0.8.0 / protocol 19. `herdr api schema --json` reports the
+# protocol; `herdr <group> --help` reports flags. Both outrank this file.
+PROTOCOL_MIN = 19
+
+# `herdr agent start --kind` enum, from `herdr agent start --help` on 0.8.0.
+AGENT_KINDS = frozenset(
+    {
+        "pi", "claude", "codex", "gemini", "cursor", "devin", "agy", "cline", "omp",
+        "mastracode", "opencode", "copilot", "kimi", "kiro", "droid", "amp", "grok",
+        "hermes", "kilo", "qodercli", "maki",
+    }
+)
+
 
 def load_dotenv_once() -> None:
     """Load .env before any HERDR_* lookup, without clobbering the live pane env.
@@ -242,6 +255,93 @@ def status_object(result: CommandResult) -> dict[str, Any]:
     }
 
 
+class HerdrContractError(RuntimeError):
+    """Raised when Herdr's response or protocol does not match this skill's contract."""
+
+
+def result_body(parsed: Any, *, context: str) -> dict[str, Any]:
+    """Return the `result` object of a Herdr response or fail loudly.
+
+    Herdr replies are {"id": ..., "result": {...}}. Reaching into `result` by an
+    exact path is required for move responses, where a recursive id search would
+    happily return `previous_pane_id` instead of the new `pane.pane_id`.
+    """
+    if not isinstance(parsed, dict):
+        raise HerdrContractError(f"{context}: expected a JSON object, got {parsed!r}")
+    body = parsed.get("result")
+    if not isinstance(body, dict):
+        raise HerdrContractError(f"{context}: response has no 'result' object: {parsed!r}")
+    return body
+
+
+def exact_str(body: dict[str, Any], path: tuple[str, ...], *, context: str) -> str:
+    """Read a required string from an exact response path."""
+    node: Any = body
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            raise HerdrContractError(f"{context}: missing {'.'.join(path)} in {body!r}")
+        node = node[key]
+    if not isinstance(node, str) or not node:
+        raise HerdrContractError(f"{context}: {'.'.join(path)} is not a non-empty string: {node!r}")
+    return node
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class WorkspaceTopology:
+    """Identifiers Herdr returns when it creates a workspace."""
+
+    workspace_id: str
+    root_tab_id: str
+    root_pane_id: str
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class TabTopology:
+    """Identifiers Herdr returns when it creates a tab."""
+
+    tab_id: str
+    root_pane_id: str
+
+
+def check_protocol(
+    *,
+    herdr_bin: str = "herdr",
+    session: str | None = None,
+    minimum: int = PROTOCOL_MIN,
+) -> dict[str, Any]:
+    """Assert the installed Herdr speaks a protocol this skill was built against.
+
+    Herdr changes CLI flags between releases; `herdr api schema --json` carries the
+    protocol number and is the cheapest machine-readable compatibility signal.
+    """
+    result = run_herdr(["api", "schema", "--json"], herdr_bin=herdr_bin, session=session, check=False)
+    if result.returncode != 0:
+        return {"ok": False, "protocol": None, "minimum": minimum, "reason": "api_schema_unavailable"}
+    parsed = result.parsed
+    protocol = parsed.get("protocol") if isinstance(parsed, dict) else None
+    if not isinstance(protocol, int):
+        return {"ok": False, "protocol": None, "minimum": minimum, "reason": "protocol_missing"}
+    ok = protocol >= minimum
+    return {
+        "ok": ok,
+        "protocol": protocol,
+        "minimum": minimum,
+        "reason": "ok" if ok else "protocol_below_minimum",
+    }
+
+
+def require_protocol(*, herdr_bin: str = "herdr", session: str | None = None) -> dict[str, Any]:
+    """Fail closed before any topology mutation when the protocol is unsupported."""
+    status = check_protocol(herdr_bin=herdr_bin, session=session)
+    if not status["ok"]:
+        raise HerdrContractError(
+            f"Herdr protocol check failed ({status['reason']}); "
+            f"found {status['protocol']}, need >= {status['minimum']}. "
+            "Compare `herdr api schema --json` and `herdr <group> --help` with this skill's contract."
+        )
+    return status
+
+
 def create_workspace(
     *,
     label: str,
@@ -250,15 +350,21 @@ def create_workspace(
     herdr_bin: str,
     env_values: list[str],
     dry_run: bool,
-) -> str:
-    """Create one Herdr workspace and return its identifier."""
+) -> WorkspaceTopology:
+    """Create one Herdr workspace and return its workspace, root tab, and root pane."""
     args = ["workspace", "create", "--cwd", str(cwd), "--label", label, "--no-focus"]
     for env_value in env_values:
         args.extend(["--env", env_value])
     result = run_herdr(args, herdr_bin=herdr_bin, session=session, dry_run=dry_run)
     if dry_run:
-        return f"dry-workspace-{slugify(label)}"
-    return require_id("workspace", result.parsed, ("workspace_id", "id"))
+        slug = slugify(label)
+        return WorkspaceTopology(f"dry-workspace-{slug}", f"dry-tab-{slug}", f"dry-pane-{slug}")
+    body = result_body(result.parsed, context="workspace create")
+    return WorkspaceTopology(
+        workspace_id=exact_str(body, ("workspace", "workspace_id"), context="workspace create"),
+        root_tab_id=exact_str(body, ("tab", "tab_id"), context="workspace create"),
+        root_pane_id=exact_str(body, ("root_pane", "pane_id"), context="workspace create"),
+    )
 
 
 def create_tab(
@@ -270,15 +376,192 @@ def create_tab(
     herdr_bin: str,
     env_values: list[str],
     dry_run: bool,
-) -> str:
-    """Create one Herdr tab and return its identifier."""
+) -> TabTopology:
+    """Create one Herdr tab and return its tab id and root pane id."""
     args = ["tab", "create", "--workspace", workspace_id, "--cwd", str(cwd), "--label", label, "--no-focus"]
     for env_value in env_values:
         args.extend(["--env", env_value])
     result = run_herdr(args, herdr_bin=herdr_bin, session=session, dry_run=dry_run)
     if dry_run:
-        return f"dry-tab-{slugify(label)}"
-    return require_id("tab", result.parsed, ("tab_id", "id"))
+        slug = slugify(label)
+        return TabTopology(f"dry-tab-{slug}", f"dry-pane-{slug}")
+    body = result_body(result.parsed, context="tab create")
+    return TabTopology(
+        tab_id=exact_str(body, ("tab", "tab_id"), context="tab create"),
+        root_pane_id=exact_str(body, ("root_pane", "pane_id"), context="tab create"),
+    )
+
+
+def split_pane(
+    *,
+    pane_id: str,
+    direction: str,
+    cwd: Path | None = None,
+    env_values: list[str] | None = None,
+    ratio: float | None = None,
+    session: str | None = None,
+    herdr_bin: str = "herdr",
+    dry_run: bool = False,
+) -> str:
+    """Split a pane and return the new pane id from the exact response path."""
+    if direction not in {"right", "down"}:
+        raise ValueError(f"direction must be 'right' or 'down', got {direction!r}")
+    args = ["pane", "split", pane_id, "--direction", direction, "--no-focus"]
+    if ratio is not None:
+        args.extend(["--ratio", str(ratio)])
+    if cwd:
+        args.extend(["--cwd", str(cwd)])
+    for env_value in env_values or []:
+        args.extend(["--env", env_value])
+    result = run_herdr(args, herdr_bin=herdr_bin, session=session, dry_run=dry_run)
+    if dry_run:
+        return f"dry-pane-{slugify(pane_id + direction)}"
+    body = result_body(result.parsed, context="pane split")
+    return exact_str(body, ("pane", "pane_id"), context="pane split")
+
+
+def pane_layout(
+    *,
+    pane_id: str,
+    session: str | None = None,
+    herdr_bin: str = "herdr",
+) -> dict[str, Any]:
+    """Read the layout of the tab containing a pane.
+
+    Herdr 0.8.0 takes `--pane <ID>` (not a positional, and not a tab id) and returns
+    a flat `layout` with a `panes` list of leaves plus a `splits` list -- not a
+    nested tree.
+    """
+    result = run_herdr(["pane", "layout", "--pane", pane_id], herdr_bin=herdr_bin, session=session)
+    body = result_body(result.parsed, context="pane layout")
+    layout = body.get("layout")
+    if not isinstance(layout, dict):
+        raise HerdrContractError(f"pane layout: response has no layout object: {body!r}")
+    return layout
+
+
+def layout_pane_ids(layout: dict[str, Any]) -> list[str]:
+    """Return the leaf pane ids of a layout, in Herdr's own order."""
+    panes = layout.get("panes")
+    if not isinstance(panes, list):
+        raise HerdrContractError(f"pane layout: 'panes' is not a list: {layout!r}")
+    ids = [p.get("pane_id") for p in panes if isinstance(p, dict)]
+    if not all(isinstance(i, str) and i for i in ids):
+        raise HerdrContractError(f"pane layout: a pane entry has no pane_id: {panes!r}")
+    return ids
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class PaneMove:
+    """Typed view of Herdr's PaneMoveResult.
+
+    Herdr keeps the terminal alive across a cross-workspace move and retains the
+    old pane id as an alias, so `terminal_id` is the durable identity and
+    `pane_id` is only the current location.
+    """
+
+    pane_id: str
+    previous_pane_id: str
+    terminal_id: str
+    workspace_id: str
+    tab_id: str
+    previous_workspace_id: str | None
+    previous_tab_id: str | None
+    created_workspace_id: str | None
+    created_tab_id: str | None
+    closed_workspace_id: str | None
+    closed_tab_id: str | None
+    changed: bool
+
+    def id_map(self) -> dict[str, str]:
+        """Return the old-to-new pane id mapping monitors need after a move."""
+        return {self.previous_pane_id: self.pane_id}
+
+
+def _opt_str(body: dict[str, Any], *path: str) -> str | None:
+    """Read an optional string from an exact path, tolerating nulls."""
+    node: Any = body
+    for key in path:
+        if not isinstance(node, dict):
+            return None
+        node = node.get(key)
+    return node if isinstance(node, str) and node else None
+
+
+def move_pane(
+    *,
+    pane_id: str,
+    new_workspace: bool = False,
+    workspace_id: str | None = None,
+    new_tab: bool = False,
+    tab_id: str | None = None,
+    target_pane: str | None = None,
+    split: str | None = None,
+    ratio: float | None = None,
+    label: str | None = None,
+    tab_label: str | None = None,
+    focus: bool = False,
+    session: str | None = None,
+    herdr_bin: str = "herdr",
+    dry_run: bool = False,
+) -> PaneMove:
+    """Move a pane and return the typed move result.
+
+    Exactly one destination must be supplied; Herdr rejects the rest. The response
+    is parsed by exact path because it carries `previous_pane_id`,
+    `previous_tab_id`, and `previous_workspace_id` alongside the new ids.
+    """
+    destinations = [bool(new_workspace), bool(new_tab), bool(tab_id)]
+    if sum(destinations) != 1:
+        raise ValueError("supply exactly one of new_workspace, new_tab, or tab_id")
+    args = ["pane", "move", pane_id]
+    if new_workspace:
+        args.append("--new-workspace")
+        if label:
+            args.extend(["--label", label])
+        if tab_label:
+            args.extend(["--tab-label", tab_label])
+    elif new_tab:
+        args.append("--new-tab")
+        if workspace_id:
+            args.extend(["--workspace", workspace_id])
+        if label:
+            args.extend(["--label", label])
+    else:
+        args.extend(["--tab", str(tab_id)])
+        if target_pane:
+            args.extend(["--target-pane", target_pane])
+        if split:
+            args.extend(["--split", split])
+        if ratio is not None:
+            args.extend(["--ratio", str(ratio)])
+    args.append("--focus" if focus else "--no-focus")
+    result = run_herdr(args, herdr_bin=herdr_bin, session=session, dry_run=dry_run)
+    if dry_run:
+        return PaneMove(
+            pane_id=f"dry-moved-{slugify(pane_id)}", previous_pane_id=pane_id,
+            terminal_id="dry-terminal", workspace_id="dry-workspace", tab_id="dry-tab",
+            previous_workspace_id=None, previous_tab_id=None, created_workspace_id=None,
+            created_tab_id=None, closed_workspace_id=None, closed_tab_id=None, changed=True,
+        )
+    body = result_body(result.parsed, context="pane move")
+    move = body.get("move_result")
+    if not isinstance(move, dict):
+        raise HerdrContractError(f"pane move: response has no move_result object: {body!r}")
+    return PaneMove(
+        pane_id=exact_str(move, ("pane", "pane_id"), context="pane move"),
+        previous_pane_id=exact_str(move, ("previous_pane_id",), context="pane move"),
+        terminal_id=exact_str(move, ("pane", "terminal_id"), context="pane move"),
+        workspace_id=exact_str(move, ("pane", "workspace_id"), context="pane move"),
+        tab_id=exact_str(move, ("pane", "tab_id"), context="pane move"),
+        previous_workspace_id=_opt_str(move, "previous_workspace_id"),
+        previous_tab_id=_opt_str(move, "previous_tab_id"),
+        created_workspace_id=_opt_str(move, "created_workspace", "workspace_id"),
+        created_tab_id=_opt_str(move, "created_tab", "tab_id"),
+        closed_workspace_id=_opt_str(move, "closed_workspace_id"),
+        closed_tab_id=_opt_str(move, "closed_tab_id"),
+        changed=bool(move.get("changed")),
+    )
 
 
 def create_worktree_workspace(

@@ -2,22 +2,58 @@
   "version": 2,
   "skill": "ops-herdr",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "live Herdr topology contract plus fail-closed guards",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "against the Herdr running on this machine: workspace/tab creation return root topology ids, splits return new pane ids, the layout reads back the panes we created, a cross-workspace pane move preserves the terminal and reports an old-to-new id map, and the unknown-kind / empty-prompt / unsupported-protocol paths all fail closed",
+    "does_not_prove": "provider agent behaviour after attach, multi-pane whole-tab movement, monitor-herdr state reconciliation, or that any grid is visually usable"
   },
   "cases": [
     {
       "name": "sanity",
       "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
+      "command": ["bash", "../sanity.sh"],
+      "expected": {"exit_code": 0, "stdout_contains": ["verify ok"]}
+    },
+    {
+      "name": "live-herdr-topology-and-move",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && uv run --project . python evals/live_space_e2e.py"],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "pane_move.terminal_preserved",
+          "pane_move.id_map",
+          "pane_layout.leaves",
+          "workspace_create.root_pane_id"
+        ]
       }
+    },
+    {
+      "name": "live-doctor-reports-protocol",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && ./run.sh doctor --json"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"protocol\"", "\"minimum\": 19"]}
+    },
+    {
+      "name": "agent-start-rejects-kind-outside-herdr-enum",
+      "type": "negative",
+      "command": ["bash", "-c", "cd .. && ./run.sh agent start /nonexistent-manifest --name probe --role probe --kind definitely-not-a-kind"],
+      "expected": {"exit_code": 2}
+    },
+    {
+      "name": "agent-send-refuses-empty-prompt",
+      "type": "adversarial",
+      "command": ["bash", "-c", "cd .. && ./run.sh agent send probe-target --text ''"],
+      "expected": {"exit_code": 2}
+    },
+    {
+      "name": "protocol-gate-blocks-mutation-when-herdr-unusable",
+      "type": "adversarial",
+      "command": ["bash", "-c", "cd .. && ./run.sh workstation create --repo . --label protocol-gate-probe --herdr-bin false"],
+      "expected": {"exit_code": 1}
     }
   ]
 }

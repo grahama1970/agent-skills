@@ -70,18 +70,20 @@ MANIFEST=.herdr-workstations/<run-id>/workstation.json
 ./run.sh agent start "$MANIFEST" \
   --name qbert-codex \
   --role qbert \
-  --command codex
+  --kind codex
 
 ./run.sh agent start "$MANIFEST" \
   --name petey-opencode \
   --role petey \
-  --command opencode \
+  --kind opencode \
   --split right
 ```
 
 Send instructions:
 
 ```bash
+# Waits for a settled state by default, so a prompt that is pasted but never
+# executed fails loudly instead of silently.
 ./run.sh agent send qbert-codex \
   --text 'Read .runs/1842/work-orders/qbert.md and stay blocked until Petey writes PASS.'
 
@@ -115,6 +117,17 @@ Remove the workstation:
 ```
 
 The batch command creates one Herdr workstation per task and waits for receipt JSON files written by the agents.
+
+## Moving a running agent
+
+```bash
+./run.sh agent move "$MANIFEST" --name qbert-codex --new-space qbert-focus
+```
+
+The terminal survives the move and Herdr keeps the old pane id as an alias, so
+the emitted `herdr.space_operation_receipt.v1` carries the old-to-new `id_map`
+that a monitor needs to migrate cooldown and stopped-state instead of treating
+the agent as newly discovered.
 
 ## Source of truth
 

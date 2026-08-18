@@ -7,14 +7,29 @@
   "created_at": "2026-07-01",
   "files": [
     {
-      "bytes": 3226,
-      "path": "README.md",
-      "sha256": "0f3f89737c8ed0ab007deb083af36f4da9eec9e30dbe9397602bd7b9897b64e8"
+      "bytes": 274,
+      "path": ".gitignore",
+      "sha256": "10e98f8d0ee7a8de6b2c503daba12913f1b51f2c734ae1674bba49c9527abf01"
     },
     {
-      "bytes": 6109,
+      "bytes": 3726,
+      "path": "README.md",
+      "sha256": "ef82fa6835bea0863590ea68fd2503de5403b0540afcc238bd61e476aba3c99c"
+    },
+    {
+      "bytes": 7931,
       "path": "SKILL.md",
-      "sha256": "9945dd26b4b4bacf25db730361ff4f5c96106aed4e8f2fcaebdc50734c8530bb"
+      "sha256": "ce3a6239a250b764ec50ccc1d82567a906fa9e43108d1b62a96b0369f7f7ed99"
+    },
+    {
+      "bytes": 10837,
+      "path": "evals/live_space_e2e.py",
+      "sha256": "0eabbefa595c11ef05323f3c8818ba7c0a47be85bbc2eb0c0dbfccd7e72b4d86"
+    },
+    {
+      "bytes": 2366,
+      "path": "fixtures/agentic_eval.json",
+      "sha256": "1cd7640c7522097398c80260e28809bc99b1a56cb30b5c5ff424a80ee0cb0f43"
     },
     {
       "bytes": 269,
@@ -37,31 +52,31 @@
       "sha256": "07ce2af7e5a59a121eb3042e9312129d8f33f55d3997be5e58e887df237c818e"
     },
     {
-      "bytes": 335,
+      "bytes": 1363,
       "path": "sanity.sh",
-      "sha256": "22cac5c9b7773261852eb95d23e31f647073d4f0cd056408b854b0802be8a485"
+      "sha256": "ac0a0df6e770a02719e90ebfb45477fdff32f91fba82fbc699e84be5f19881cf"
     },
     {
-      "bytes": 22661,
+      "bytes": 31751,
       "path": "scripts/cli.py",
-      "sha256": "64778f70e9fad75048f949b32e59456fcdf6e0ebad8f284c26bf6d8f698fe140"
+      "sha256": "57bcbd88c600d2c6774a24285046e6d6ec6a2963fe3f1acdfa4fff2766f19c8f"
     },
     {
-      "bytes": 9986,
+      "bytes": 21191,
       "path": "scripts/ops_herdr_core.py",
-      "sha256": "d1fb5c8e00632d3e1543c4b44a23d218d846fac98a98adcb5734bee6f43b37f2"
+      "sha256": "550bac06cb56e25a49baa96595ab038cea85bb92ff83930450c35dfee42c5d55"
     },
     {
-      "bytes": 9601,
+      "bytes": 10923,
       "path": "scripts/ops_herdr_loops.py",
-      "sha256": "905aeaa96d7948697bd60753e59c0726b37f3ddb46f8e3017557561435a933ba"
+      "sha256": "b7a8fe7837770e08b107abca49633b5ec09ff547093dca194dbe86c39fb0546a"
     }
   ],
   "target_repo_path": "skills/ops-herdr",
   "validation": {
     "cli_verify": "verify ok",
     "function_docstrings_missing": [],
-    "max_python_file_lines": 457,
+    "max_python_file_lines": 666,
     "py_compile": true
   }
 }

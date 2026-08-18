@@ -71,19 +71,25 @@ to the argv this skill builds. A wrong flag surfaces as `unknown option: --x`
 with exit 2, and a removed subcommand prints the group usage — neither is a
 Herdr outage.
 
-### Known drift as of 0.8.0
+### Contract this skill builds against (0.8.0)
 
-`scripts/cli.py` still builds pre-0.8 argv in three places, so these commands
-fail against the installed binary until they are ported:
+`scripts/ops_herdr_core.py` pins `PROTOCOL_MIN = 19` and every topology mutation
+calls `require_protocol()` first, so an incompatible Herdr fails closed instead of
+half-building a workspace.
 
-| Skill command | Sends | 0.8.0 expects |
-|---------------|-------|----------------|
-| `agent start` | `--cwd --workspace --tab --split -- <cmd>` | `--kind <KIND> --pane <PANE_ID>` on an existing idle pane |
-| `agent send` | `herdr agent send` | `herdr agent prompt <target> <text> [--wait] [--until STATUS]` |
-| `agent wait` | `--status <state>` | `--until <state>` (repeatable) |
+| Concern | 0.8.0 contract |
+|---|---|
+| Start an agent | `agent start <name> --kind KIND --pane PANE_ID` on a pane already at a shell prompt |
+| Submit a prompt | `agent prompt <target> <text> [--wait] [--until STATUS]` |
+| Wait for state | `agent wait <target> [--until STATUS]... [--timeout MS]` |
+| Create workspace | returns `.result.workspace.workspace_id`, `.result.tab.tab_id`, `.result.root_pane.pane_id` |
+| Create tab | returns `.result.tab.tab_id` and `.result.root_pane.pane_id` |
+| Split a pane | returns `.result.pane.pane_id` |
+| Read layout | `pane layout --pane ID`; returns a flat `panes` list, not a tree |
+| Move a pane | `.result.move_result.pane.pane_id` plus `previous_pane_id`; terminal survives, old id stays an alias |
+| Whole-tab move | not available. `tab.move` exists on the socket but is `{tab_id, insert_index}`, i.e. reordering within one workspace. Move a single-pane tab with `pane move --new-tab --workspace ID`. |
 
-`doctor`, `install-integrations`, `workstation create/focus/inspect/remove`,
-`agent read`, and `agent report` were probed against 0.8.0 and still work.
+Topology is always built before agents attach, never split afterwards.
 
 ## Boundary
 
@@ -111,12 +117,15 @@ Use headless execution for tiny deterministic helpers, one-shot transforms, and 
 Run through the skill wrapper:
 
 ```bash
-./run.sh doctor
+./run.sh doctor                       # includes the protocol assertion
 ./run.sh workstation create --repo ~/agent-skills --label ms-qra-gap-1842
-./run.sh agent start .herdr-workstations/<run>/workstation.json --name qbert-codex --role qbert --command codex
-./run.sh agent start .herdr-workstations/<run>/workstation.json --name petey-opencode --role petey --command opencode --split right
-./run.sh agent send qbert-codex --file .runs/<run>/work-orders/qbert.md
+./run.sh agent start .herdr-workstations/<run>/workstation.json --name qbert-codex --role qbert --kind codex
+./run.sh agent start .herdr-workstations/<run>/workstation.json --name petey-opencode --role petey --kind opencode --split right
+./run.sh agent send qbert-codex --file .runs/<run>/work-orders/qbert.md   # waits for submission by default
+./run.sh agent send qbert-codex --text 'ack' --no-wait
 ./run.sh agent read petey-opencode --lines 120
+./run.sh agent wait qbert-codex --until blocked --until done
+./run.sh agent move .herdr-workstations/<run>/workstation.json --name qbert-codex --new-space qbert-focus
 ./run.sh agent report --agent Qbert --state blocked --custom-status waiting-petey-pass
 ./run.sh workstation remove .herdr-workstations/<run>/workstation.json
 ```
@@ -143,15 +152,28 @@ A single workstation can run different providers in different panes:
 
 ```bash
 ./run.sh install-integrations codex opencode claude kimi
-./run.sh agent start workstation.json --name qbert-codex --role qbert --command codex
-./run.sh agent start workstation.json --name petey-opencode --role petey --command opencode --split right
+./run.sh agent start workstation.json --name qbert-codex --role qbert --kind codex
+./run.sh agent start workstation.json --name petey-opencode --role petey --kind opencode --split right
 ```
 
 ## Verification
 
 ```bash
-./sanity.sh
+./sanity.sh                                              # static + live topology gate
+OPS_HERDR_SKIP_LIVE=1 ./sanity.sh                        # static only
 ./run.sh verify
+uv run --project . python evals/live_space_e2e.py        # live topology + move readback
+uv run --project . python evals/live_space_e2e.py --with-agent codex   # also attaches a real agent
+../agentic-evals/run.sh run fixtures/agentic_eval.json   # regression gate
 ```
 
-`sanity.sh` compiles the Python modules and runs CLI self-checks without requiring a live Herdr server.
+`sanity.sh` compiles the modules, runs the CLI self-check, and — when Herdr is
+reachable — builds a real workspace/tab/split topology, moves a live pane across
+workspaces, asserts the terminal id survived, and closes what it created. It
+skips the live half with a message when Herdr is down, so it never fails for
+being offline.
+
+`fixtures/agentic_eval.json` is the regression gate for this contract: three
+trials over the live topology proof, the live protocol report, plus negative and
+adversarial cases for an unknown agent kind, an empty prompt, and an unusable
+Herdr. `--with-agent` is opt-in because attaching a provider consumes a session.

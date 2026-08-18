@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import shlex
 import shutil
 import sys
 from pathlib import Path
@@ -23,8 +22,16 @@ SCRIPT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from ops_herdr_core import (  # noqa: E402
+    AGENT_KINDS,
+    HerdrContractError,
+    PaneMove,
     append_event,
+    check_protocol,
     load_dotenv_once,
+    move_pane,
+    result_body,
+    require_protocol,
+    split_pane,
     create_tab,
     create_workspace,
     create_worktree_workspace,
@@ -84,11 +91,13 @@ def doctor(
     binary = shutil.which(herdr_bin) or herdr_bin
     version = run_herdr(["--version"], herdr_bin=herdr_bin, session=session, check=False)
     status = run_herdr(["status"], herdr_bin=herdr_bin, session=session, check=False)
+    protocol = check_protocol(herdr_bin=herdr_bin, session=session)
     payload = {
         "herdr_bin": binary,
         "version": status_object(version),
         "status": status_object(status),
-        "ok": version.returncode == 0 and status.returncode == 0,
+        "protocol": protocol,
+        "ok": version.returncode == 0 and status.returncode == 0 and protocol["ok"],
     }
     if json_output:
         print_json(payload)
@@ -96,6 +105,7 @@ def doctor(
         typer.echo("Herdr available" if payload["ok"] else "Herdr not fully reachable")
         typer.echo(f"binary: {binary}")
         typer.echo(version.stdout.strip() or version.stderr.strip())
+        typer.echo(f"protocol: {protocol['protocol']} (need >= {protocol['minimum']}) {protocol['reason']}")
 
 
 @app.command("install-integrations")
@@ -143,6 +153,10 @@ def workstation_create(
     run_dir = ensure_dir(run_root.expanduser().resolve() / run_id)
     actual_cwd = repo
     worktree_output: Any | None = None
+    if not dry_run:
+        require_protocol(herdr_bin=herdr_bin, session=session)
+    root_pane_id: str | None = None
+    root_tab_id: str | None = None
     if use_worktree:
         branch = branch or f"herdr/{slugify(label)}-{utc_stamp().lower()}"
         workspace_id, actual_worktree_path, worktree_output = create_worktree_workspace(
@@ -157,9 +171,13 @@ def workstation_create(
         )
         actual_cwd = actual_worktree_path or repo
     else:
-        workspace_id = create_workspace(label=label, cwd=repo, session=session, herdr_bin=herdr_bin, env_values=env_values, dry_run=dry_run)
-    tab_ids = {
-        tab_label: create_tab(
+        topology = create_workspace(label=label, cwd=repo, session=session, herdr_bin=herdr_bin, env_values=env_values, dry_run=dry_run)
+        workspace_id = topology.workspace_id
+        root_tab_id = topology.root_tab_id
+        root_pane_id = topology.root_pane_id
+    tabs: dict[str, dict[str, Any]] = {}
+    for tab_label in tab_labels:
+        tab = create_tab(
             workspace_id=workspace_id,
             label=tab_label,
             cwd=actual_cwd,
@@ -168,10 +186,9 @@ def workstation_create(
             env_values=env_values,
             dry_run=dry_run,
         )
-        for tab_label in tab_labels
-    }
+        tabs[tab_label] = {"tab_id": tab.tab_id, "root_pane_id": tab.root_pane_id, "panes": [tab.root_pane_id]}
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "herdr-workstation",
         "run_id": run_id,
         "created_at": utc_stamp(),
@@ -183,7 +200,9 @@ def workstation_create(
         "run_dir": str(run_dir),
         "events_jsonl": str(run_dir / "events.jsonl"),
         "workspace_id": workspace_id,
-        "tabs": tab_ids,
+        "root_tab_id": root_tab_id,
+        "root_pane_id": root_pane_id,
+        "tabs": tabs,
         "agents": {},
         "worktree": {"enabled": use_worktree, "branch": branch, "base": base, "path": str(actual_cwd) if use_worktree else None, "raw": worktree_output},
     }
@@ -250,47 +269,109 @@ def workstation_remove(
     print_json(data) if json_output else typer.echo(f"removed {workspace_id}")
 
 
+def tab_entry(data: dict[str, Any], tab: str) -> dict[str, Any]:
+    """Return a manifest tab record, upgrading schema v1 {label: tab_id} in place."""
+    tabs = data.get("tabs", {})
+    if tab not in tabs:
+        raise typer.BadParameter(f"unknown tab {tab!r}; have {sorted(tabs)}")
+    entry = tabs[tab]
+    if isinstance(entry, str):  # schema v1 manifest: no root pane was recorded
+        entry = {"tab_id": entry, "root_pane_id": None, "panes": []}
+        tabs[tab] = entry
+    return entry
+
+
+def resolve_target_pane(
+    entry: dict[str, Any],
+    *,
+    split: Optional[str],
+    cwd: str,
+    env_values: list[str],
+    herdr_bin: str,
+    session: str | None,
+) -> str:
+    """Return an idle pane for `agent start`, splitting when the tab is occupied.
+
+    Herdr 0.8.0 attaches an agent to an EXISTING pane at a shell prompt, so the
+    pane must be built before the agent is started, never after.
+    """
+    panes: list[str] = [p for p in entry.get("panes", []) if isinstance(p, str)]
+    occupied: list[str] = [p for p in entry.get("occupied", []) if isinstance(p, str)]
+    free = [p for p in panes if p not in occupied]
+    if free and not split:
+        return free[0]
+    anchor = (panes[-1] if panes else entry.get("root_pane_id"))
+    if not anchor:
+        raise typer.BadParameter(
+            "manifest has no pane to split from; recreate the workstation with this "
+            "version so root pane ids are recorded (schema_version 2)"
+        )
+    pane = split_pane(
+        pane_id=anchor,
+        direction=split or "right",
+        cwd=Path(cwd),
+        env_values=env_values,
+        session=session,
+        herdr_bin=herdr_bin,
+    )
+    panes.append(pane)
+    entry["panes"] = panes
+    return pane
+
+
 @agent_app.command("start")
 def agent_start(
     manifest: Annotated[Path, typer.Argument(help="Path to workstation.json or run dir.")],
     name: Annotated[str, typer.Option(help="Unique Herdr agent name.")],
     role: Annotated[str, typer.Option(help="Semantic role, e.g. petey, qbert, creator.")],
-    command: Annotated[str, typer.Option(help="Provider command, e.g. 'codex' or 'opencode'.")],
+    kind: Annotated[str, typer.Option(help=f"Herdr agent kind. One of: {', '.join(sorted(AGENT_KINDS))}.")],
     tab: Annotated[str, typer.Option(help="Target tab label from the manifest.")] = "agents",
-    split: Annotated[Optional[str], typer.Option(help="Optional split direction: right or down.")] = None,
+    split: Annotated[Optional[str], typer.Option(help="Split direction for a new pane: right or down.")] = None,
     work_order: Annotated[Optional[Path], typer.Option(help="Durable work-order path for the agent.")] = None,
-    env: Annotated[Optional[list[str]], typer.Option("--env", help="Additional KEY=VALUE env.")] = None,
-    no_focus: Annotated[bool, typer.Option("--no-focus/--focus", help="Do not steal focus.")] = True,
+    env: Annotated[Optional[list[str]], typer.Option("--env", help="Additional KEY=VALUE env for the pane.")] = None,
+    agent_arg: Annotated[Optional[list[str]], typer.Option("--agent-arg", help="Extra argument passed to the agent after `--`.")] = None,
+    timeout_ms: Annotated[int, typer.Option(help="Interactive readiness timeout in ms (3000-300000).")] = 30000,
     herdr_bin: Annotated[str, typer.Option(help="Herdr binary path.")] = "herdr",
     session: Annotated[Optional[str], typer.Option(help="Named Herdr session override.")] = None,
     json_output: Annotated[bool, typer.Option("--json", help="Print JSON manifest.")] = True,
 ) -> None:
-    """Start one named provider agent inside a workstation pane."""
+    """Start one named provider agent on a pane inside a workstation.
+
+    Herdr 0.8.0 contract: `agent start <name> --kind KIND --pane PANE_ID`. The pane
+    is created and carries the TAU_* environment; the agent then attaches to it.
+    """
+    if kind not in AGENT_KINDS:
+        raise typer.BadParameter(f"unknown kind {kind!r}; Herdr accepts {', '.join(sorted(AGENT_KINDS))}")
     manifest_path = manifest_path_from_run_dir(manifest) if manifest.is_dir() else manifest
     data = load_manifest(manifest_path)
     active_session = session or data.get("session")
-    tab_id = data.get("tabs", {}).get(tab)
-    if not tab_id:
-        raise typer.BadParameter(f"unknown tab {tab!r}; have {sorted(data.get('tabs', {}))}")
+    require_protocol(herdr_bin=herdr_bin, session=active_session)
+    entry = tab_entry(data, tab)
     run_dir = Path(data["run_dir"])
-    args = [
-        "agent", "start", name, "--cwd", data["cwd"], "--workspace", data["workspace_id"], "--tab", tab_id,
-        "--env", f"TAU_ROLE={role}", "--env", f"TAU_AGENT_NAME={name}", "--env", f"TAU_RUN_DIR={run_dir}",
-    ]
+    pane_env = [f"TAU_ROLE={role}", f"TAU_AGENT_NAME={name}", f"TAU_RUN_DIR={run_dir}"]
     if work_order:
-        args.extend(["--env", f"TAU_WORK_ORDER={work_order.expanduser().resolve()}"])
-    for env_value in parse_env_options(env):
-        args.extend(["--env", env_value])
-    args.append("--no-focus" if no_focus else "--focus")
-    if split:
-        args.extend(["--split", split])
-    args.append("--")
-    args.extend(shlex.split(command))
+        pane_env.append(f"TAU_WORK_ORDER={work_order.expanduser().resolve()}")
+    pane_env.extend(parse_env_options(env))
+    pane_id = resolve_target_pane(
+        entry,
+        split=split,
+        cwd=data["cwd"],
+        env_values=pane_env,
+        herdr_bin=herdr_bin,
+        session=active_session,
+    )
+    args = ["agent", "start", name, "--kind", kind, "--pane", pane_id, "--timeout", str(timeout_ms)]
+    if agent_arg:
+        args.append("--")
+        args.extend(agent_arg)
     result = run_herdr(args, herdr_bin=herdr_bin, session=active_session)
+    entry.setdefault("occupied", []).append(pane_id)
     data.setdefault("agents", {})[name] = {
         "role": role,
-        "command": command,
+        "kind": kind,
         "tab": tab,
+        "pane_id": pane_id,
+        "previous_pane_ids": [],
         "started_at": utc_stamp(),
         "work_order": str(work_order.expanduser().resolve()) if work_order else None,
         "last_start_result": status_object(result),
@@ -301,27 +382,52 @@ def agent_start(
 
 @agent_app.command("send")
 def agent_send(
-    target: Annotated[str, typer.Argument(help="Agent target name, label, terminal id, or pane id.")],
+    target: Annotated[str, typer.Argument(help="Agent target name or pane id hosting an agent.")],
     text: Annotated[Optional[str], typer.Option(help="Text to send. Use --file for longer prompts.")] = None,
     file: Annotated[Optional[Path], typer.Option(help="Prompt file to send.")] = None,
-    newline: Annotated[bool, typer.Option("--newline/--no-newline", help="Append newline to submit the prompt.")] = True,
+    wait: Annotated[bool, typer.Option("--wait/--no-wait", help="Confirm submission by waiting for a settled state.")] = True,
+    until: Annotated[Optional[list[str]], typer.Option("--until", help="State to match after --wait; repeatable.")] = None,
+    timeout_ms: Annotated[int, typer.Option(help="Wait timeout in milliseconds.")] = 120000,
     events: Annotated[Optional[Path], typer.Option(help="Optional JSONL event path to append.")] = None,
     from_agent: Annotated[Optional[str], typer.Option(help="Optional sending role/name for event log.")] = None,
     herdr_bin: Annotated[str, typer.Option(help="Herdr binary path.")] = "herdr",
     session: Annotated[Optional[str], typer.Option(help="Named Herdr session.")] = None,
 ) -> None:
-    """Send a live instruction to a Herdr agent terminal stream."""
+    """Submit a prompt to a Herdr agent and confirm it was actually submitted.
+
+    Herdr 0.8.0 contract: `agent prompt <target> <text> [--wait] [--until STATUS]`.
+    `--wait` is the default because a send that is pasted but never executed is
+    the failure this skill exists to avoid; pass `--no-wait` only for fire-and-forget
+    notifications.
+    """
     if file:
         payload = file.expanduser().read_text(encoding="utf-8")
     elif text is not None:
         payload = text
     else:
         payload = sys.stdin.read()
-    if newline and not payload.endswith("\n"):
-        payload += "\n"
-    run_herdr(["agent", "send", target, payload], herdr_bin=herdr_bin, session=session)
+    payload = payload.rstrip("\n")
+    if not payload.strip():
+        raise typer.BadParameter("refusing to submit an empty prompt")
+    args = ["agent", "prompt", target, payload]
+    if wait:
+        args.append("--wait")
+        for state in until or ["idle", "done", "blocked"]:
+            args.extend(["--until", state])
+        args.extend(["--timeout", str(timeout_ms)])
+    result = run_herdr(args, herdr_bin=herdr_bin, session=session)
+    record = {
+        "ts": utc_stamp(),
+        "from": from_agent,
+        "target": target,
+        "kind": "prompt",
+        "chars": len(payload),
+        "submit_confirmed": wait and result.returncode == 0,
+        "waited_for": (until or ["idle", "done", "blocked"]) if wait else [],
+    }
     if events:
-        append_event(events.expanduser(), {"ts": utc_stamp(), "from": from_agent, "target": target, "kind": "send", "chars": len(payload)})
+        append_event(events.expanduser(), record)
+    print_json(record)
 
 
 @agent_app.command("read")
@@ -343,14 +449,20 @@ def agent_read(
 
 @agent_app.command("wait")
 def agent_wait(
-    target: Annotated[str, typer.Argument(help="Agent target name, label, terminal id, or pane id.")],
-    status: StatusValue = "blocked",
+    target: Annotated[str, typer.Argument(help="Agent target name or pane id hosting an agent.")],
+    until: Annotated[Optional[list[str]], typer.Option("--until", help="State to match; repeatable. Default: idle, done, blocked.")] = None,
     timeout_s: Annotated[int, typer.Option(help="Timeout in seconds.")] = 600,
     herdr_bin: Annotated[str, typer.Option(help="Herdr binary path.")] = "herdr",
     session: Annotated[Optional[str], typer.Option(help="Named Herdr session.")] = None,
 ) -> None:
-    """Wait until a Herdr agent reaches the requested state."""
-    result = run_herdr(["agent", "wait", target, "--status", status, "--timeout", str(timeout_s * 1000)], herdr_bin=herdr_bin, session=session)
+    """Wait until a Herdr agent reaches one of the requested states.
+
+    Herdr 0.8.0 uses `--until` (repeatable); the pre-0.8 `--status` flag is gone.
+    """
+    args = ["agent", "wait", target, "--timeout", str(timeout_s * 1000)]
+    for state in until or []:
+        args.extend(["--until", state])
+    result = run_herdr(args, herdr_bin=herdr_bin, session=session)
     typer.echo(result.stdout.rstrip())
 
 
@@ -381,6 +493,93 @@ def agent_report(
     typer.echo(result.stdout.rstrip())
 
 
+@agent_app.command("move")
+def agent_move(
+    manifest: Annotated[Path, typer.Argument(help="Path to workstation.json or run dir.")],
+    name: Annotated[str, typer.Option(help="Agent name recorded in the manifest.")],
+    new_space: Annotated[Optional[str], typer.Option(help="Move into a brand new workspace with this label.")] = None,
+    workspace: Annotated[Optional[str], typer.Option(help="Move into a new tab in this existing workspace id.")] = None,
+    tab: Annotated[Optional[str], typer.Option(help="Move into this existing tab id.")] = None,
+    tab_label: Annotated[Optional[str], typer.Option(help="Label for the created tab.")] = None,
+    split: Annotated[Optional[str], typer.Option(help="Split direction when landing in an existing tab: right or down.")] = None,
+    target_pane: Annotated[Optional[str], typer.Option(help="Pane to split against in the destination tab.")] = None,
+    focus: Annotated[bool, typer.Option("--focus/--no-focus", help="Focus the destination after moving.")] = False,
+    herdr_bin: Annotated[str, typer.Option(help="Herdr binary path.")] = "herdr",
+    session: Annotated[Optional[str], typer.Option(help="Named Herdr session override.")] = None,
+) -> None:
+    """Move a running agent's pane to another space and emit a reconciliation receipt.
+
+    The terminal survives a cross-workspace move and Herdr keeps the old pane id as
+    an alias, so the receipt records the old-to-new mapping that monitor-herdr needs
+    to migrate cooldown and stopped-state instead of treating the agent as new.
+    """
+    manifest_path = manifest_path_from_run_dir(manifest) if manifest.is_dir() else manifest
+    data = load_manifest(manifest_path)
+    active_session = session or data.get("session")
+    require_protocol(herdr_bin=herdr_bin, session=active_session)
+    agent = data.get("agents", {}).get(name)
+    if not agent:
+        raise typer.BadParameter(f"unknown agent {name!r}; have {sorted(data.get('agents', {}))}")
+    pane_id = agent.get("pane_id")
+    if not pane_id:
+        raise typer.BadParameter(f"agent {name!r} has no recorded pane_id; restart it with this version")
+    before = {
+        "workspace_id": data.get("workspace_id"),
+        "tab_id": (tab_entry(data, agent["tab"]) or {}).get("tab_id"),
+        "pane_id": pane_id,
+        "agent_name": name,
+    }
+    move: PaneMove = move_pane(
+        pane_id=pane_id,
+        new_workspace=bool(new_space),
+        new_tab=bool(workspace) and not tab,
+        workspace_id=workspace,
+        tab_id=tab,
+        target_pane=target_pane,
+        split=split,
+        label=new_space or tab_label,
+        tab_label=tab_label if new_space else None,
+        focus=focus,
+        session=active_session,
+        herdr_bin=herdr_bin,
+    )
+    agent["previous_pane_ids"] = [*agent.get("previous_pane_ids", []), move.previous_pane_id]
+    agent["pane_id"] = move.pane_id
+    agent["terminal_id"] = move.terminal_id
+    agent["workspace_id"] = move.workspace_id
+    agent["tab_id"] = move.tab_id
+    entry = tab_entry(data, agent["tab"])
+    entry["panes"] = [move.pane_id if p == move.previous_pane_id else p for p in entry.get("panes", [])]
+    entry["occupied"] = [move.pane_id if p == move.previous_pane_id else p for p in entry.get("occupied", [])]
+    save_manifest(manifest_path, data)
+
+    receipt = {
+        "schema": "herdr.space_operation_receipt.v1",
+        "operation": "move-pane",
+        "created_at": utc_stamp(),
+        "agent": name,
+        "before": before,
+        "after": {
+            "workspace_id": move.workspace_id,
+            "tab_id": move.tab_id,
+            "pane_id": move.pane_id,
+            "terminal_id": move.terminal_id,
+            "agent_name": name,
+        },
+        "id_map": move.id_map(),
+        "created_workspace_id": move.created_workspace_id,
+        "created_tab_id": move.created_tab_id,
+        "closed_workspace_id": move.closed_workspace_id,
+        "closed_tab_id": move.closed_tab_id,
+        "changed": move.changed,
+        "status": "completed" if move.changed else "noop",
+    }
+    receipt_path = Path(data["run_dir"]) / "receipts" / f"move-{slugify(name)}-{utc_stamp()}.json"
+    write_json(receipt_path, receipt)
+    receipt["receipt_path"] = str(receipt_path)
+    print_json(receipt)
+
+
 @agent_app.command("notify")
 def agent_notify(
     target: Annotated[str, typer.Argument(help="Target agent to notify.")],
@@ -394,7 +593,7 @@ def agent_notify(
     """Send a bounded notification and append a durable JSONL event."""
     event = {"ts": utc_stamp(), "from": from_agent, "target": target, "kind": kind, "message": message}
     append_event(events.expanduser(), event)
-    run_herdr(["agent", "send", target, f"Notification from {from_agent}: {message}\n"], herdr_bin=herdr_bin, session=session)
+    run_herdr(["agent", "prompt", target, f"Notification from {from_agent}: {message}"], herdr_bin=herdr_bin, session=session)
     print_json(event)
 
 
@@ -450,6 +649,16 @@ def verify() -> None:
     prompt = build_creator_prompt(task, 1, Path("work.md"), Path("receipt.json"), "none")
     if "TAU_CREATOR_RECEIPT_WRITTEN" not in prompt:
         raise typer.Exit(code=3)
+    # A malformed Herdr reply must fail closed, never fall through to a recursive
+    # id search that could return previous_pane_id as if it were the new pane.
+    try:
+        result_body({"id": "x"}, context="verify")
+    except HerdrContractError:
+        pass
+    else:
+        raise typer.Exit(code=4)
+    if "codex" not in AGENT_KINDS or "definitely-not-a-kind" in AGENT_KINDS:
+        raise typer.Exit(code=5)
     typer.echo("verify ok")
 
 

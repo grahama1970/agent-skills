@@ -1,0 +1,6 @@
+# Both of these are symlinks to /mnt/storage12tb per the storage policy.
+# The root .gitignore patterns end in "/" and so match directories only, not
+# symlinks -- without these entries `git add skills/ops-herdr` commits a
+# machine-specific absolute symlink.
+.venv
+outputs

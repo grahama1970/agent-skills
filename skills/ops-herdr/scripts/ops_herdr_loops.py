@@ -11,14 +11,16 @@ import asyncio
 import dataclasses
 import json
 import os
-import shlex
 import time
 from pathlib import Path
 from typing import Any
 
 from ops_herdr_core import (
+    AGENT_KINDS,
     create_tab,
     load_dotenv_once,
+    require_protocol,
+    split_pane,
     create_workspace,
     ensure_dir,
     manifest_path_from_run_dir,
@@ -33,6 +35,27 @@ from ops_herdr_core import (
 # Idempotent: core loads .env on import; repeated here so importing this module
 # alone still reads a populated environment.
 load_dotenv_once()
+
+
+def submit_prompt(
+    target: str,
+    text: str,
+    *,
+    herdr_bin: str = "herdr",
+    session: str | None = None,
+    timeout_ms: int = 120000,
+) -> None:
+    """Submit a loop prompt and block until Herdr observes a settled state.
+
+    A prompt that is pasted into the composer but never executed looks identical
+    to a delivered one, so the loop waits for confirmation rather than assuming it.
+    """
+    args = [
+        "agent", "prompt", target, text,
+        "--wait", "--until", "idle", "--until", "done", "--until", "blocked",
+        "--timeout", str(timeout_ms),
+    ]
+    run_herdr(args, herdr_bin=herdr_bin, session=session)
 
 
 @dataclasses.dataclass(slots=True)
@@ -168,40 +191,26 @@ def start_loop_agent(
     *,
     name: str,
     role: str,
-    command: str,
-    split: str | None,
-    repo: Path,
-    workspace_id: str,
-    tab_id: str,
+    kind: str,
+    pane_id: str,
     run_dir: Path,
     work_order: Path,
     session: str | None,
     herdr_bin: str,
+    timeout_ms: int = 30000,
 ) -> None:
-    """Start one loop agent in the requested Herdr workspace tab."""
-    args = [
-        "agent",
-        "start",
-        name,
-        "--cwd",
-        str(repo),
-        "--workspace",
-        workspace_id,
-        "--tab",
-        tab_id,
-        "--env",
-        f"TAU_ROLE={role}",
-        "--env",
-        f"TAU_RUN_DIR={run_dir}",
-        "--env",
-        f"TAU_WORK_ORDER={work_order}",
-        "--no-focus",
-    ]
-    if split:
-        args.extend(["--split", split])
-    args.append("--")
-    args.extend(shlex.split(command))
-    run_herdr(args, herdr_bin=herdr_bin, session=session)
+    """Attach one loop agent to an existing idle pane.
+
+    Herdr 0.8.0 starts an agent on a pane that already exists and is at a shell
+    prompt, so the pane (and its TAU_* environment) is built by the caller first.
+    """
+    if kind not in AGENT_KINDS:
+        raise ValueError(f"unknown Herdr agent kind {kind!r}; accepts {', '.join(sorted(AGENT_KINDS))}")
+    run_herdr(
+        ["agent", "start", name, "--kind", kind, "--pane", pane_id, "--timeout", str(timeout_ms)],
+        herdr_bin=herdr_bin,
+        session=session,
+    )
 
 
 async def run_one_loop(
@@ -220,11 +229,27 @@ async def run_one_loop(
     run_id = f"{utc_stamp()}-{slugify(task.task_id)}"
     run_dir = ensure_dir(run_root / run_id)
     work_order = write_work_order(run_dir, task)
-    workspace_id = create_workspace(label=label, cwd=repo, session=session, herdr_bin=herdr_bin, env_values=[], dry_run=False)
-    agents_tab = create_tab(workspace_id=workspace_id, label="agents", cwd=repo, session=session, herdr_bin=herdr_bin, env_values=[], dry_run=False)
-    logs_tab = create_tab(workspace_id=workspace_id, label="receipts-logs", cwd=repo, session=session, herdr_bin=herdr_bin, env_values=[], dry_run=False)
+    require_protocol(herdr_bin=herdr_bin, session=session)
+    topology = create_workspace(label=label, cwd=repo, session=session, herdr_bin=herdr_bin, env_values=[], dry_run=False)
+    workspace_id = topology.workspace_id
+    agent_env = [f"TAU_RUN_DIR={run_dir}", f"TAU_WORK_ORDER={work_order}"]
+    agents_tab = create_tab(
+        workspace_id=workspace_id, label="agents", cwd=repo, session=session,
+        herdr_bin=herdr_bin, env_values=[*agent_env, "TAU_ROLE=creator"], dry_run=False,
+    )
+    logs_tab = create_tab(
+        workspace_id=workspace_id, label="receipts-logs", cwd=repo, session=session,
+        herdr_bin=herdr_bin, env_values=agent_env, dry_run=False,
+    )
+    # Build the full topology before any agent attaches: `agent start` needs an
+    # existing pane at a shell prompt, so splitting afterwards is not an option.
+    creator_pane = agents_tab.root_pane_id
+    reviewer_pane = split_pane(
+        pane_id=creator_pane, direction="right", cwd=repo,
+        env_values=[*agent_env, "TAU_ROLE=reviewer"], session=session, herdr_bin=herdr_bin,
+    )
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "herdr-loop-workstation",
         "run_id": run_id,
         "created_at": utc_stamp(),
@@ -234,24 +259,27 @@ async def run_one_loop(
         "cwd": str(repo),
         "run_dir": str(run_dir),
         "workspace_id": workspace_id,
-        "tabs": {"agents": agents_tab, "receipts-logs": logs_tab},
+        "tabs": {
+            "agents": {"tab_id": agents_tab.tab_id, "root_pane_id": agents_tab.root_pane_id, "panes": [creator_pane, reviewer_pane]},
+            "receipts-logs": {"tab_id": logs_tab.tab_id, "root_pane_id": logs_tab.root_pane_id, "panes": [logs_tab.root_pane_id]},
+        },
         "task": dataclasses.asdict(task),
         "events_jsonl": str(run_dir / "events.jsonl"),
     }
     save_manifest(manifest_path_from_run_dir(run_dir), manifest)
     creator_name = f"{slugify(task.task_id)}-creator"
     reviewer_name = f"{slugify(task.task_id)}-reviewer"
-    start_loop_agent(name=creator_name, role="creator", command=creator_cmd, split=None, repo=repo, workspace_id=workspace_id, tab_id=agents_tab, run_dir=run_dir, work_order=work_order, session=session, herdr_bin=herdr_bin)
-    start_loop_agent(name=reviewer_name, role="reviewer", command=reviewer_cmd, split="right", repo=repo, workspace_id=workspace_id, tab_id=agents_tab, run_dir=run_dir, work_order=work_order, session=session, herdr_bin=herdr_bin)
+    start_loop_agent(name=creator_name, role="creator", kind=creator_cmd, pane_id=creator_pane, run_dir=run_dir, work_order=work_order, session=session, herdr_bin=herdr_bin)
+    start_loop_agent(name=reviewer_name, role="reviewer", kind=reviewer_cmd, pane_id=reviewer_pane, run_dir=run_dir, work_order=work_order, session=session, herdr_bin=herdr_bin)
     feedback = "none"
     for iteration in range(1, task.max_iterations + 1):
         creator_receipt = run_dir / "receipts" / f"creator-{iteration}.json"
         reviewer_receipt = run_dir / "receipts" / f"reviewer-{iteration}.json"
-        run_herdr(["agent", "send", creator_name, build_creator_prompt(task, iteration, work_order, creator_receipt, feedback) + "\n"], herdr_bin=herdr_bin, session=session)
+        submit_prompt(creator_name, build_creator_prompt(task, iteration, work_order, creator_receipt, feedback), herdr_bin=herdr_bin, session=session)
         creator_data = await wait_for_receipt(creator_receipt, timeout_s=receipt_timeout_s)
         if creator_data.get("status") == "BLOCKED":
             return finish(run_dir, task.task_id, run_id, "BLOCKED", iteration, "creator")
-        run_herdr(["agent", "send", reviewer_name, build_reviewer_prompt(task, iteration, work_order, creator_receipt, reviewer_receipt) + "\n"], herdr_bin=herdr_bin, session=session)
+        submit_prompt(reviewer_name, build_reviewer_prompt(task, iteration, work_order, creator_receipt, reviewer_receipt), herdr_bin=herdr_bin, session=session)
         reviewer_data = await wait_for_receipt(reviewer_receipt, timeout_s=receipt_timeout_s)
         verdict = reviewer_data.get("verdict")
         if verdict == "PASS":
