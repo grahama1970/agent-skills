@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -24,6 +25,11 @@ from typing import Any
 import typer
 from dotenv import load_dotenv
 from loguru import logger
+
+import claims as claims_mod
+import coverage as coverage_mod
+import evidence as evidence_mod
+import regressions as regressions_mod
 
 load_dotenv(override=False)
 
@@ -206,8 +212,33 @@ def load_manifest(path: Path) -> dict[str, Any]:
         raise typer.BadParameter("trials must be a positive integer")
     for case in cases:
         validate_case(case)
+    class_problems: list[str] = []
+    for case in cases:
+        class_problems.extend(evidence_mod.validate_evidence_class(case))
+    class_problems.extend(claims_mod.validate_claims(manifest))
+    class_problems.extend(coverage_mod.validate_seams(manifest))
+    class_problems.extend(_supports_claims_problems(manifest, cases))
+    if class_problems:
+        raise typer.BadParameter("; ".join(class_problems))
     _assert_not_slop(manifest, cases, trials)
     return manifest
+
+
+def _supports_claims_problems(manifest: dict[str, Any], cases: list[dict[str, Any]]) -> list[str]:
+    """Every case's supports_claims must reference a declared capability claim.
+
+    A case that supports an undeclared claim is a typo that would silently leave
+    a real claim unproven, so it fails closed rather than being ignored.
+    """
+    declared = {c.get("id") for c in (manifest.get("capability_claims") or [])}
+    problems: list[str] = []
+    for case in cases:
+        for cid in case.get("supports_claims") or []:
+            if cid not in declared:
+                problems.append(
+                    f"case {case['name']!r} supports_claims references undeclared claim {cid!r}"
+                )
+    return problems
 
 
 _TRIVIAL_PROGRAMS = frozenset({"echo", "true", ":", "printf", "test", "[", "cat", "ls", "pwd", "head"})
@@ -479,6 +510,19 @@ def readiness_for(case_reports: list[dict[str, Any]]) -> str:
     return "NOT_READY"
 
 
+_READINESS_RANK = {
+    "READY": 3,
+    "USABLE_WITH_GAPS": 2,
+    "NOT_READY": 1,
+    "NOT_ESTABLISHED": 0,
+}
+
+
+def _worse_readiness(a: str, b: str) -> str:
+    """Return the weaker of two readiness states (lowest rank wins)."""
+    return a if _READINESS_RANK.get(a, 0) <= _READINESS_RANK.get(b, 0) else b
+
+
 def _repo_provenance(cwd: Path) -> dict[str, Any]:
     def _git(*args: str) -> str | None:
         try:
@@ -522,6 +566,7 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
             problems.extend(why)
             results.append(trial)
         passed_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_PASS)
+        qual = evidence_mod.qualify(case)
         cases.append(
             {
                 "name": case["name"],
@@ -531,6 +576,12 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
                 "outcome": case_outcome(outcomes),
                 "problems": sorted(set(problems)),
                 "argv": list(case["command"]),
+                "declared_evidence_class": qual["declared"],
+                "effective_evidence_class": qual["effective"],
+                "live_qualified": qual["live_qualified"],
+                "evidence_disqualifiers": qual["reasons"],
+                "supports_claims": case.get("supports_claims") or [],
+                "seams": case.get("seams") or [],
                 "passed_trials": passed_trials,
                 "total_trials": trials,
                 "pass_rate": round(passed_trials / trials, 4) if trials else 0.0,
@@ -549,6 +600,19 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
         "does_not_prove": "semantic correctness, live services, LLM judge behavior, or release readiness",
     }
     live = bool(manifest.get("live", any(c.get("real_world") for c in raw_cases)))
+    now_iso = datetime.now(timezone.utc).isoformat()
+    enriched = [
+        claims_mod.enrich_case(report, spec, evidence_mod.qualify(spec))
+        for report, spec in zip(cases, raw_cases)
+    ]
+    capability_readiness = claims_mod.compute_readiness(manifest, enriched, now_iso)
+    case_readiness = readiness_for(cases)
+    effective = case_readiness
+    if capability_readiness is not None:
+        # When capability claims are declared the gate is the WORSE of the two:
+        # twenty green deterministic cases cannot make a claim with an unmet
+        # required live slot report READY.
+        effective = _worse_readiness(case_readiness, capability_readiness["aggregate_readiness"])
     return {
         "schema": "agentic_evals.report.v2",
         "source": str(path),
@@ -564,7 +628,10 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
         or "local commands declared in the fixture manifest",
         "what_remains_unverified": manifest.get("what_remains_unverified")
         or "semantic correctness, live services, LLM judge behavior, and release readiness",
-        "readiness": readiness_for(cases),
+        "readiness": effective,
+        "case_readiness": case_readiness,
+        "capability_readiness": capability_readiness,
+        "generated_at": now_iso,
         "case_count": len(cases),
         "required_case_count": sum(1 for c in cases if c["required"]),
         "outcome_counts": {
@@ -979,10 +1046,129 @@ def audit_skills(
     typer.echo(payload)
 
 
+regressions_app = typer.Typer(no_args_is_help=True, help="Incident -> retained regression lifecycle (#1447).")
+coverage_app = typer.Typer(no_args_is_help=True, help="Risk-based seam-coverage sufficiency audit (#1448).")
+app.add_typer(regressions_app, name="regressions")
+app.add_typer(coverage_app, name="coverage")
+
+
+def _emit(report: dict[str, Any], output: Path | None) -> None:
+    payload = json.dumps(report, indent=2)
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        tmp = output.with_suffix(output.suffix + ".partial")
+        tmp.write_text(payload + "\n", encoding="utf-8")
+        os.replace(tmp, output)
+    typer.echo(payload)
+
+
+@regressions_app.command("audit")
+def regressions_audit(
+    skills_root: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+    freshness_days: int = typer.Option(regressions_mod.DEFAULT_FRESHNESS_DAYS, "--freshness-days", min=1),
+) -> None:
+    """Audit every skill's regression registry: unprotected, vacuous, stale, unmapped."""
+    now = regressions_mod.now_utc()
+    root = skills_root.resolve()
+    skills = sorted(p for p in root.iterdir() if (p / "SKILL.md").exists())
+    reports = [regressions_mod.audit_skill(s, now, freshness_days) for s in skills]
+    with_registry = [r for r in reports if r["has_registry"]]
+    report = {
+        "schema": "agentic_evals.regressions_audit.v1",
+        "mocked": False,
+        "live": False,
+        "proof_scope": "static incident-regression registry audit",
+        "skills_root": str(root),
+        "generated_at": now.isoformat(),
+        "freshness_days": freshness_days,
+        "summary": {
+            "skills_with_registry": len(with_registry),
+            "total_regressions": sum(r["summary"]["total"] for r in with_registry),
+            "unprotected": sum(r["summary"].get("unprotected", 0) for r in with_registry),
+            "never_proven_fail_before_fix": sum(
+                r["summary"].get("never_proven_fail_before_fix", 0) for r in with_registry
+            ),
+            "stale_live_proof": sum(r["summary"].get("stale_live_proof", 0) for r in with_registry),
+            "unmapped_incidents": sum(r["summary"].get("unmapped_incidents", 0) for r in with_registry),
+        },
+        "skills": with_registry,
+    }
+    _emit(report, output)
+
+
+@regressions_app.command("show")
+def regressions_show(
+    skill_dir: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+    freshness_days: int = typer.Option(regressions_mod.DEFAULT_FRESHNESS_DAYS, "--freshness-days", min=1),
+) -> None:
+    """Show one skill's regression registry audit."""
+    _emit(regressions_mod.audit_skill(skill_dir.resolve(), regressions_mod.now_utc(), freshness_days), output)
+
+
+@regressions_app.command("verify")
+def regressions_verify(
+    skill_dir: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+    timeout_seconds: float = typer.Option(120.0, "--timeout-seconds", min=0.1),
+    report_only: bool = typer.Option(False, "--report-only"),
+) -> None:
+    """Re-run each regression's fail-before-fix proof and confirm non-vacuity.
+
+    Exits non-zero if any ACTIVE regression's guard fails to demonstrate
+    fail-before-fix behaviour, unless --report-only.
+    """
+    resolved = skill_dir.resolve()
+    registry = regressions_mod.load_registry(resolved)
+    if registry is None:
+        raise typer.BadParameter(f"no regression registry at {regressions_mod.registry_path(resolved)}")
+    problems = regressions_mod.validate_registry(registry)
+    if problems:
+        raise typer.BadParameter("; ".join(problems))
+    results = []
+    for rec in registry.get("regressions", []):
+        if rec.get("status") != regressions_mod.STATUS_ACTIVE:
+            continue
+        results.append(regressions_mod.verify_regression(resolved, rec, timeout_seconds))
+    unproven = [r for r in results if r["fail_before_fix_verified"] is False]
+    report = {
+        "schema": "agentic_evals.regressions_verify.v1",
+        "skill": resolved.name,
+        "generated_at": regressions_mod.now_utc().isoformat(),
+        "verified": sum(1 for r in results if r["fail_before_fix_verified"] is True),
+        "unproven": len(unproven),
+        "no_proof_command": sum(1 for r in results if r["fail_before_fix_verified"] is None),
+        "results": results,
+    }
+    _emit(report, output)
+    if unproven and not report_only:
+        logger.error("regressions with un-proven fail-before-fix: {}", ", ".join(r["regression_id"] for r in unproven))
+        raise typer.Exit(1)
+
+
+@coverage_app.command("audit")
+def coverage_audit(
+    skills_root: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Audit seam-coverage sufficiency across skills that declare seams."""
+    _emit(coverage_mod.audit_root(skills_root.resolve(), regressions_mod.now_utc()), output)
+
+
+@coverage_app.command("show")
+def coverage_show(
+    skill_dir: Path = typer.Argument(..., exists=True, file_okay=False, readable=True),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Show one skill's seam-coverage sufficiency audit."""
+    _emit(coverage_mod.audit_skill(skill_dir.resolve(), regressions_mod.now_utc()), output)
+
+
 @app.command("schema")
 def schema() -> None:
     """Print the report schema identifier."""
-    typer.echo("agentic_evals.report.v1")
+    typer.echo("agentic_evals.report.v2")
 
 
 if __name__ == "__main__":

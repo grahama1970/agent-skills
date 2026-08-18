@@ -57,7 +57,104 @@ unless the fixture commands themselves exercise those live paths.
 ./run.sh audit-skills ../ --output /tmp/agentic-evals-baseline-gap-report.json
 ./run.sh scaffold-fixture ../some-skill --output ../some-skill/fixtures/agentic_eval.json
 ./run.sh apply-scaffolds ../ --write --output /tmp/agentic-evals-apply-scaffolds.json
+# claim / evidence / regression / coverage (issues #1445-#1448)
+./run.sh regressions audit ../ --output /tmp/agentic-evals-regressions.json
+./run.sh regressions show . && ./run.sh regressions verify .
+./run.sh coverage audit ../ --output /tmp/agentic-evals-coverage.json
+./run.sh coverage show .
 ```
+
+## Claim-based readiness (#1445)
+
+**Deterministic tests prove mechanisms; real E2Es prove capabilities.** A pile
+of passing deterministic cases must never look like readiness for a live
+capability that was never exercised. Readiness is therefore computed **per
+declared capability claim**, then aggregated — not from a case count.
+
+Declare `capability_claims` (kept separate from the `claims` proof-scope prose
+so v2 fixtures stay valid). Each case that supports a claim tags itself:
+
+```json
+{
+  "capability_claims": [
+    {"id": "ask.roundtable.mixed_provider", "description": "...",
+     "criticality": "critical",
+     "evidence_required": {"deterministic": true, "live_e2e": true}}
+  ],
+  "cases": [
+    {"name": "roundtable-live", "type": "positive", "evidence_class": "live_e2e",
+     "supports_claims": ["ask.roundtable.mixed_provider"],
+     "command": ["bash", "run.sh", "..."],
+     "expected": {"exit_code": 0, "artifacts": [{"path": "out/join.json", "json_pointer": "/settled", "equals": true}]}}
+  ]
+}
+```
+
+Evidence classes: `deterministic`, `property_or_fuzz`,
+`fault_injected_deterministic`, `live_e2e`, `adversarial_live_e2e`,
+`human_evaluation`. Per-claim verdicts: `PROVEN`, `PARTIALLY_PROVEN`,
+`BLOCKED_EXTERNAL`, `FAILED`, `NOT_ESTABLISHED`. A skill is `READY` only when
+every **required critical** claim is `PROVEN` under its own evidence
+requirements. When claims are declared, `run`'s gate is the *worse* of the
+case-based and claim-based readiness, so twenty green deterministic cases with
+an unmet required `live_e2e` slot cannot reach `READY`. A live case supporting
+more than one claim must carry independent per-claim artifacts, else it counts
+for none of them. `report["capability_readiness"]` holds the per-claim breakdown.
+
+## Real end-to-end evidence contract (#1446)
+
+`evidence_class` is not inferred from a command containing `run.sh` or `curl`.
+A case that declares a live class (`live_e2e`/`adversarial_live_e2e`) is
+**qualified** structurally and **downgraded** (never silently accepted) if it:
+
+- feeds itself `fixtures/`/stub/`mocked` inputs as the boundary authority;
+- does not reach a substantive production entrypoint; or
+- has no independent readback oracle (`expected.artifacts`, `readback: true`,
+  or `stdout_excludes`) — an exit code plus the command's own success prose is
+  not proof.
+
+A downgraded case becomes `fault_injected_deterministic` (fault on a real path)
+or `deterministic`, and the report records `evidence_disqualifiers`. A required
+live slot met only by a `BLOCKED_EXTERNAL` case leaves the claim non-`PROVEN`.
+
+**Exemptions** are explicit and expiring. A claim may carry `exemptions` naming
+`evidence_class`, `reason_code`, `justification`, `owner`, and `expires`. A
+valid exemption is surfaced in the report (`exempt_evidence`) but never makes a
+claim `PROVEN`; an expired or incomplete exemption is ignored. No blanket
+`eval_not_required` satisfies an executable operational capability.
+
+## Incident → retained regression (#1447)
+
+A live failure becomes permanent evidence in `fixtures/regressions.json`
+(`agentic_evals.regressions.v1`). Each record links the incident to the claims
+and seams it threatened, names the retained guard case (`retained_case` /
+`retained_fixture`), and carries a `fail_before_fix.proof_command`.
+
+- `regressions show <skill>` / `regressions audit <root>` report: unprotected
+  regressions (retained case missing/renamed), never-proven (possibly vacuous)
+  regressions, stale live proof, retired regressions, and **open incidents with
+  no regression mapping**.
+- `regressions verify <skill>` **re-runs each proof command** and confirms the
+  guard actually fails against the broken behaviour (exits non-zero) — a
+  non-vacuity proof, not a self-reported flag. It exits non-zero if any active
+  regression's guard cannot demonstrate fail-before-fix.
+
+Fixing a bug by editing the eval expectation to match broken output is exactly
+what the non-vacuity proof catches. Retiring a regression requires a
+`retirement` reason.
+
+## Risk-based coverage sufficiency (#1448)
+
+Counting cases is gameable. `coverage audit`/`coverage show` ask, per declared
+`seam`: is there at least one case *capable of detecting a regression* at that
+seam, in each evidence class the seam's risk requires? Declare `seams` with
+`seam_id`, `seam_type`, `criticality`, and `required_evidence`; tag cases with
+`seams`. A case covers a seam only when it lists that seam **and** carries an
+oracle that can fail — a bare `exit 0` positive is `weak_only` and does not
+count. The audit reports covered/uncovered seams, weak-only coverage, live vs
+deterministic coverage, mapped incident regressions, and prioritized next
+evals. Coverage (a capable guard is declared) and freshness (a live proof is
+current) are separate dimensions; the runner does not run the seam cases here.
 
 ## Fixture Contract
 

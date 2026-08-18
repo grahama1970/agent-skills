@@ -22,15 +22,21 @@ import json
 import sys
 
 report = json.load(open(sys.argv[1], encoding="utf-8"))
-assert report["schema"] == "agentic_evals.report.v1"
+assert report["schema"] == "agentic_evals.report.v2"
 assert report["readiness"] == "READY"
 assert report["mocked"] is False
 assert report["fixture_backed"] is True
-assert report["live"] is False
-assert report["proof_scope"] == "fixture wiring smoke"
-assert report["case_count"] == 2
-assert report["trial_count"] == 6
+# The skill's own fixture now holds itself to the capability contract it
+# enforces on others (#1445-#1448): live, claim-annotated, and READY only when
+# every critical claim is PROVEN through real run.sh invocations.
+assert report["live"] is True
+assert report["case_count"] == 5
+assert report["trial_count"] == 10
 assert all(case["pass_rate"] == 1.0 for case in report["cases"])
+cap = report["capability_readiness"]
+assert cap is not None and cap["aggregate_readiness"] == "READY"
+assert cap["critical_claims_proven"] == cap["critical_claim_count"] == 4
+assert {c["verdict"] for c in cap["claims"]} == {"PROVEN"}
 PY
 
 cat > "$TIMEOUT_FIXTURE" <<'EOF'
@@ -54,7 +60,9 @@ cat > "$TIMEOUT_FIXTURE" <<'EOF'
   ]
 }
 EOF
-"$SCRIPT_DIR/run.sh" run "$TIMEOUT_FIXTURE" --timeout-seconds 0.1 --output "$TIMEOUT_OUT" >/dev/null
+# This case is designed to time out (NOT_READY), so opt out of the fail-closed
+# gate; the assertions below inspect the produced report.
+"$SCRIPT_DIR/run.sh" run "$TIMEOUT_FIXTURE" --timeout-seconds 0.1 --report-only --output "$TIMEOUT_OUT" >/dev/null
 uv run --project "$SCRIPT_DIR" python - "$TIMEOUT_OUT" <<'PY'
 import json
 import sys
@@ -222,3 +230,8 @@ assert report["summary"]["created"] == 1
 assert report["results"][0]["case"] == "skill-contract-validation"
 PY
 "$SCRIPT_DIR/run.sh" run "$AUDIT_ROOT/static-missing/fixtures/agentic_eval.json" >/dev/null
+
+# Claim/evidence/regression/coverage gates (#1445-#1448): retained negative
+# controls that must turn the gate RED on weakened input, plus live
+# fail-before-fix verification of the committed regression registry.
+"$SCRIPT_DIR/tests/harden_selftests.sh"

@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "skill": "selftest-claims",
+  "eval_kind": "runner_selftest",
+  "trials": 2,
+  "proof_scope": "#1445: passing deterministic cases cannot satisfy a required live_e2e slot",
+  "capability_claims": [
+    {
+      "id": "demo.core",
+      "description": "core capability requiring both deterministic and live proof",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true, "live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "det-1",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["demo.core"],
+      "command": ["true"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "det-2",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": ["demo.core"],
+      "command": ["false"],
+      "expected": {"exit_code": 1}
+    }
+  ]
+}

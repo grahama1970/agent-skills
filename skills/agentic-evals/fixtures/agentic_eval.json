@@ -1,37 +1,109 @@
 {
   "version": 2,
   "skill": "agentic-evals",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "the runner's own gates exercised through run.sh against crafted manifests, plus a real report-artifact readback; dogfoods claim-based readiness (#1445), the real-E2E contract (#1446), and seam coverage (#1448)",
   "claims": {
-    "proves": "the agentic-evals runner can execute positive and negative command expectations from a local fixture",
-    "does_not_prove": "per-skill semantic correctness, live service behavior, or full repository eval readiness"
+    "proves": "agentic-evals holds its own fail-closed, teardown, claim-separation, evidence-qualification, and report-emission capabilities to the same evidence contract it enforces on other skills",
+    "does_not_prove": "the browser/persistence incidents backfilled as gaps in other skills, which require live provider/session boundaries"
   },
-  "cases": [
+  "what_was_exercised": "run.sh invoked against fault-injected manifests and one passing manifest whose emitted report is read back as an artifact",
+  "what_remains_unverified": "cross-skill live browser and persistence capabilities (tracked as UNMAPPED incidents in fixtures/regressions.json)",
+  "capability_claims": [
     {
-      "name": "happy-path",
-      "type": "positive",
-      "command": [
-        "echo",
-        "success"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "success"
-        ]
-      }
+      "id": "ae.gate.fail_closed",
+      "description": "run exits non-zero unless every required case is READY, and --report-only opts out",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
     },
     {
-      "name": "negative",
-      "type": "negative",
-      "command": [
-        "false"
-      ],
-      "expected": {
-        "exit_code": 1
-      }
+      "id": "ae.gate.process_teardown",
+      "description": "a timed-out case terminates its process group and leaves no orphan",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
+    },
+    {
+      "id": "ae.claims.class_separation",
+      "description": "passing deterministic cases cannot satisfy a required live_e2e slot (#1445)",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
+    },
+    {
+      "id": "ae.evidence.real_e2e_contract",
+      "description": "a live_e2e case with no independent readback is downgraded and cannot satisfy a live slot (#1446)",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
+    },
+    {
+      "id": "ae.report.readable_artifact",
+      "description": "run emits a machine-readable report whose readiness field an independent reader can verify",
+      "criticality": "important",
+      "evidence_required": {"live_e2e": true}
     }
   ],
-  "eval_kind": "runner_selftest"
+  "seams": [
+    {"seam_id": "runner.gate", "claim_id": "ae.gate.fail_closed", "seam_type": "filesystem/process", "criticality": "critical", "failure_modes": ["exits 0 on non-READY"], "required_evidence": ["fault_injected_deterministic"]},
+    {"seam_id": "runner.process", "claim_id": "ae.gate.process_teardown", "seam_type": "scheduler/concurrency", "criticality": "critical", "failure_modes": ["orphan after timeout"], "required_evidence": ["fault_injected_deterministic"]},
+    {"seam_id": "runner.claims", "claim_id": "ae.claims.class_separation", "seam_type": "pure deterministic transform", "criticality": "critical", "failure_modes": ["deterministic counted as live"], "required_evidence": ["fault_injected_deterministic"]},
+    {"seam_id": "runner.evidence", "claim_id": "ae.evidence.real_e2e_contract", "seam_type": "pure deterministic transform", "criticality": "critical", "failure_modes": ["smoke counted as live"], "required_evidence": ["fault_injected_deterministic"]},
+    {"seam_id": "runner.report", "claim_id": "ae.report.readable_artifact", "seam_type": "filesystem/process", "criticality": "important", "failure_modes": ["unreadable/absent report"], "required_evidence": ["live_e2e"]}
+  ],
+  "cases": [
+    {
+      "name": "gate-fails-closed-on-failed-required-case",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["ae.gate.fail_closed"],
+      "seams": ["runner.gate"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; $R run \"$D/f.json\" >/dev/null 2>&1; test $? -ne 0 && $R run \"$D/f.json\" --report-only >/dev/null 2>&1 && echo GATE_OK"],
+      "expected": {"exit_code": 0, "stdout_contains": ["GATE_OK"]}
+    },
+    {
+      "name": "timed-out-case-leaves-no-orphan",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["ae.gate.process_teardown"],
+      "seams": ["runner.process"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"t\",\"type\":\"adversarial\",\"timeout_seconds\":3,\"command\":[\"bash\",\"-c\",\"sleep 300 & sleep 300\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/t.json\"; $R run \"$D/t.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;t=json.load(sys.stdin)['cases'][0]['trials'][0];assert t['timed_out'] and t['orphan_pids_after_teardown']==[];print('NO_ORPHAN')\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["NO_ORPHAN"]}
+    },
+    {
+      "name": "deterministic-passes-cannot-satisfy-required-live",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["ae.claims.class_separation"],
+      "seams": ["runner.claims"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/det_only_missing_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);c=d['capability_readiness']['claims'][0];assert d['readiness']!='READY' and c['verdict']=='PARTIALLY_PROVEN' and c['missing_evidence']==['live_e2e'];print('CLASS_SEPARATION_OK')\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["CLASS_SEPARATION_OK"]}
+    },
+    {
+      "name": "pseudo-live-without-readback-is-downgraded",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["ae.evidence.real_e2e_contract"],
+      "seams": ["runner.evidence"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/pseudo_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);case=d['cases'][0];assert case['live_qualified'] is False and case['effective_evidence_class']=='fault_injected_deterministic' and d['readiness']!='READY';print('REAL_E2E_CONTRACT_OK')\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["REAL_E2E_CONTRACT_OK"]}
+    },
+    {
+      "name": "run-emits-a-readable-report-artifact",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ae.report.readable_artifact"],
+      "seams": ["runner.report"],
+      "timeout_seconds": 180,
+      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"p\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/p.json\"; mkdir -p out; $R run \"$D/p.json\" --output out/report.json >/dev/null 2>&1"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "out/report.json", "json_pointer": "/readiness", "equals": "READY"}]}
+    }
+  ]
 }

@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "skill": "selftest-evidence",
+  "eval_kind": "runner_selftest",
+  "trials": 2,
+  "proof_scope": "#1446: a case declaring live_e2e with only an exit code (no independent readback) is downgraded and cannot satisfy a required live slot",
+  "capability_claims": [
+    {
+      "id": "demo.pseudo",
+      "description": "capability whose only live case is a self-reporting smoke",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "pseudo-live-no-readback",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": ["demo.pseudo"],
+      "command": ["bash", "prod.sh"],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}

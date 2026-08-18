@@ -1,0 +1,144 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "version": 1,
+  "skill": "agentic-evals",
+  "note": "Each record ties a real incident to a retained guard and an executable fail-before-fix proof. `regressions verify` re-runs every proof_command and confirms the guard catches the broken behaviour (exits non-zero), proving the guard is non-vacuous rather than trusting the `proven` flag.",
+  "incidents": [
+    {
+      "id": "ask-stale-browser-tab",
+      "issue": "grahama1970/agent-skills#ask-browser-transport",
+      "class": "browser/UI transport",
+      "summary": "WebGPT lane submitted into a stale/closed tab and reported success with no terminal receipt",
+      "note": "Real browser incident. Retained regression belongs in skills/ask; surfaced here as an UNMAPPED incident until backfilled, which is exactly what the audit should report."
+    },
+    {
+      "id": "live-evidence-resume-duplication",
+      "issue": "grahama1970/agent-skills#live-evidence-persistence",
+      "class": "restart/resume/idempotency",
+      "summary": "Persistent transcription session resumed after restart and re-emitted an already-accepted effect",
+      "note": "Real persistence/concurrency incident. Retained regression belongs in skills/live-evidence; surfaced as UNMAPPED until backfilled."
+    }
+  ],
+  "regressions": [
+    {
+      "regression_id": "runner-fail-open-1430",
+      "claim_ids": ["agentic-evals.gate.fail_closed"],
+      "seam_ids": ["runner.gate"],
+      "incident": {"issue": "grahama1970/agent-skills#1430", "date": "2026-08-11"},
+      "failure_code": "gate_exits_zero_on_non_ready",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "runner_selftest.json",
+      "retained_case": "a-failed-required-case-makes-run-exit-non-zero",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash", "-c",
+          "D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; ./run.sh run \"$D/f.json\" >/dev/null 2>&1"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-08-18",
+        "rationale": "A required case fails; the guard must make the runner exit non-zero. If the fail-closed guard were removed the runner would exit 0 and this proof would pass, exposing the vacuity."
+      },
+      "repair_revision": "issue #1430",
+      "first_added": "2026-08-18",
+      "last_proven": "2026-08-18",
+      "status": "ACTIVE"
+    },
+    {
+      "regression_id": "orphan-after-timeout-1430",
+      "claim_ids": ["agentic-evals.gate.process_teardown"],
+      "seam_ids": ["runner.process"],
+      "incident": {"issue": "grahama1970/agent-skills#1430", "date": "2026-08-11"},
+      "failure_code": "timed_out_case_leaves_child_process",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "runner_selftest.json",
+      "retained_case": "a-timed-out-case-leaves-no-child-process",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash", "-c",
+          "D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"t\",\"type\":\"adversarial\",\"timeout_seconds\":2,\"command\":[\"bash\",\"-c\",\"sleep 300 & sleep 300\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/t.json\"; ./run.sh run \"$D/t.json\" >/dev/null 2>&1"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-08-18",
+        "rationale": "A case that times out and spawns children must FAIL (a non-READY gate exits non-zero). The guard also proves teardown left no orphan."
+      },
+      "repair_revision": "issue #1430",
+      "first_added": "2026-08-18",
+      "last_proven": "2026-08-18",
+      "status": "ACTIVE"
+    },
+    {
+      "regression_id": "blocked-reaches-ready-1430",
+      "claim_ids": ["agentic-evals.gate.blocked_not_ready"],
+      "seam_ids": ["runner.gate"],
+      "incident": {"issue": "grahama1970/agent-skills#1430", "date": "2026-08-11"},
+      "failure_code": "required_blocked_case_counts_as_ready",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "runner_selftest.json",
+      "retained_case": "a-required-blocked-case-does-not-reach-ready",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash", "-c",
+          "D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"b\",\"type\":\"positive\",\"blocked_when_stdout_contains\":[\"NO_CREDENTIAL\"],\"command\":[\"bash\",\"-c\",\"echo NO_CREDENTIAL\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/b.json\"; ./run.sh run \"$D/b.json\" >/dev/null 2>&1"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-08-18",
+        "rationale": "A required BLOCKED case must not reach READY, so the gate exits non-zero. If BLOCKED were treated as PASS this proof would exit 0."
+      },
+      "repair_revision": "issue #1430",
+      "first_added": "2026-08-18",
+      "last_proven": "2026-08-18",
+      "status": "ACTIVE"
+    },
+    {
+      "regression_id": "deterministic-satisfies-live-1445",
+      "claim_ids": ["agentic-evals.claims.class_separation"],
+      "seam_ids": ["runner.claims"],
+      "incident": {"issue": "grahama1970/agent-skills#1445", "date": "2026-08-18"},
+      "failure_code": "deterministic_case_satisfies_required_live_slot",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "selftest/det_only_missing_live.json",
+      "retained_case": "det-1",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash", "-c",
+          "./run.sh run fixtures/selftest/det_only_missing_live.json >/dev/null 2>&1"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-08-18",
+        "rationale": "Two passing deterministic cases and a required live_e2e slot: the claim gate must keep this below READY, so the runner exits non-zero. If deterministic passes filled the live slot this would exit 0."
+      },
+      "repair_revision": "issue #1445",
+      "first_added": "2026-08-18",
+      "last_proven": "2026-08-18",
+      "status": "ACTIVE"
+    },
+    {
+      "regression_id": "pseudo-live-satisfies-live-1446",
+      "claim_ids": ["agentic-evals.evidence.real_e2e_contract"],
+      "seam_ids": ["runner.evidence"],
+      "incident": {"issue": "grahama1970/agent-skills#1446", "date": "2026-08-18"},
+      "failure_code": "self_reporting_smoke_counts_as_live_e2e",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "selftest/pseudo_live.json",
+      "retained_case": "pseudo-live-no-readback",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash", "-c",
+          "./run.sh run fixtures/selftest/pseudo_live.json >/dev/null 2>&1"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-08-18",
+        "rationale": "A case declaring live_e2e with only an exit code (no independent readback) is downgraded and cannot satisfy the required live slot, so the runner exits non-zero. If exit-code-only counted as live this would exit 0."
+      },
+      "repair_revision": "issue #1446",
+      "first_added": "2026-08-18",
+      "last_proven": "2026-08-18",
+      "status": "ACTIVE"
+    }
+  ]
+}

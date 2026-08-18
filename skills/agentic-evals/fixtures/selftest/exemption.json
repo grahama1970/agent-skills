@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "skill": "selftest-evidence",
+  "eval_kind": "runner_selftest",
+  "trials": 2,
+  "proof_scope": "#1446: a valid exemption is surfaced and expiring but never launders a missing live proof into PROVEN/READY; an expired exemption is ignored",
+  "capability_claims": [
+    {
+      "id": "demo.exempt.valid",
+      "description": "live boundary that cannot be safely automated; carries an unexpired exemption",
+      "criticality": "important",
+      "evidence_required": {"deterministic": true, "live_e2e": true},
+      "exemptions": [
+        {
+          "evidence_class": "live_e2e",
+          "reason_code": "unsafe_to_automate",
+          "justification": "exercising the boundary sends real irreversible external effects",
+          "owner": "graham@grahama.co",
+          "manual_proof": "operator runs the live path pre-release and attaches the receipt",
+          "review_date": "2099-01-01",
+          "expires": "2099-12-31",
+          "forfeits": "cannot claim live capability readiness while exempt"
+        }
+      ]
+    },
+    {
+      "id": "demo.exempt.expired",
+      "description": "same shape but the exemption has lapsed, so the live slot is simply missing",
+      "criticality": "important",
+      "evidence_required": {"deterministic": true, "live_e2e": true},
+      "exemptions": [
+        {
+          "evidence_class": "live_e2e",
+          "reason_code": "unsafe_to_automate",
+          "justification": "lapsed exemption must not keep counting",
+          "owner": "graham@grahama.co",
+          "review_date": "2000-01-01",
+          "expires": "2000-12-31"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "det-valid",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["demo.exempt.valid"],
+      "command": ["true"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "det-expired",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": ["demo.exempt.expired"],
+      "command": ["false"],
+      "expected": {"exit_code": 1}
+    }
+  ]
+}

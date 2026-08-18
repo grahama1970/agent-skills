@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "skill": "selftest-evidence",
+  "eval_kind": "runner_selftest",
+  "trials": 2,
+  "proof_scope": "#1445/#1446: a required live slot met only by a BLOCKED_EXTERNAL case leaves the claim non-PROVEN and never READY",
+  "capability_claims": [
+    {
+      "id": "demo.blocked",
+      "description": "capability whose live boundary is unavailable this campaign",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "live-blocked-external",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": ["demo.blocked"],
+      "blocked_when_stdout_contains": ["PROVIDER_UNAVAILABLE"],
+      "command": ["bash", "-c", "echo PROVIDER_UNAVAILABLE; bash prod.sh"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [{"path": "receipt.json", "json_pointer": "/phase", "equals": "settled"}]
+      }
+    }
+  ]
+}
