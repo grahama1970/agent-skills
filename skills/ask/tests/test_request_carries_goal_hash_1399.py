@@ -1,0 +1,112 @@
+"""The compiled request must carry the goal the workers need (#1399).
+
+A tau-dag run with --immutable-goal executed its handler and then died at the
+JOIN node: `goal.goal_hash is required`. The compiler derived the hash for
+dag.json but request.json — the file workers read as `start` — carried only the
+immutable_goal string and no goal object, so the join handoff had nothing to
+stamp. The failure landed at the terminal node, after all provider spend, on a
+run whose handler had already answered.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SKILL_ROOT / "src"))
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+
+from ask.tau_dag import TauDagCompileInput, compile_tau_dag_bundle  # noqa: E402
+
+
+@pytest.fixture
+def bundle(tmp_path: Path) -> dict:
+    payload = TauDagCompileInput(
+        request="Objective: identify additional agentic-eval cases",
+        repo="local/agent-skills",
+        target="ticket-1399",
+        immutable_goal="Produce a prioritized list of additional agentic-eval cases",
+        solver_models=(),
+        reviewer_model="",
+        criteria=(),
+        handlers=("webgpt",),
+        topology="sequential",
+        output_root=tmp_path,
+    )
+    return compile_tau_dag_bundle(payload)
+
+
+def _read(bundle: dict, name: str) -> dict:
+    return json.loads((Path(bundle["run_dir"]) / name).read_text(encoding="utf-8"))
+
+
+def test_request_carries_a_goal_object(bundle: dict) -> None:
+    goal = _read(bundle, "request.json").get("goal")
+    assert isinstance(goal, dict), "workers read request.json as `start`; goal must exist"
+    assert goal.get("goal_hash"), "a goal without its hash cannot satisfy the handoff seam"
+
+
+def test_request_and_dag_agree_on_the_hash(bundle: dict) -> None:
+    """Two copies of the goal is how they drifted; they must be derived once."""
+    request_goal = _read(bundle, "request.json")["goal"]
+    dag_goal = _read(bundle, "dag.json")["goal"]
+    assert request_goal["goal_hash"] == dag_goal["goal_hash"]
+    assert request_goal["goal_id"] == dag_goal["goal_id"]
+
+
+def test_the_join_handoff_seam_accepts_the_compiled_goal(bundle: dict) -> None:
+    """The exact seam that raised in #1399, fed the compiled payload."""
+    import tau_roundtable_worker as worker
+
+    goal = _read(bundle, "request.json")["goal"]
+    evidence = [
+        {"kind": "roundtable_join_receipt", "goal_hash": goal["goal_hash"]},
+        {"kind": "handler_response_index", "goal_hash": goal["goal_hash"]},
+    ]
+    contract = worker.HandoffContract(
+        schema="tau.agent_handoff.v1",
+        goal=goal,
+        result={"status": "PASS", "summary": "joined", "evidence": evidence},
+    )
+    contract.validate()
+
+
+def test_a_goalless_request_still_fails_the_seam() -> None:
+    """Guards the assertion itself: the seam must not have gone permissive."""
+    import tau_roundtable_worker as worker
+
+    contract = worker.HandoffContract(
+        schema="tau.agent_handoff.v1",
+        goal={},
+        result={"status": "PASS", "summary": "x", "evidence": [{"kind": "roundtable_join_receipt"}]},
+    )
+    with pytest.raises(worker.SeamContractError) as excinfo:
+        contract.validate()
+    assert "goal.goal_hash is required" in str(excinfo.value)
+
+
+def test_the_hash_is_stable_for_the_same_goal(tmp_path: Path) -> None:
+    """A hash that moves between compiles would break resume and reviewer checks."""
+    def _compile(root: Path) -> str:
+        payload = TauDagCompileInput(
+            request="same request",
+            repo="local/agent-skills",
+            target="stable",
+            immutable_goal="same goal",
+            solver_models=(),
+            reviewer_model="",
+            criteria=(),
+            handlers=("webgpt",),
+            topology="sequential",
+            output_root=root,
+        )
+        bundle = compile_tau_dag_bundle(payload)
+        return json.loads(
+            (Path(bundle["run_dir"]) / "request.json").read_text(encoding="utf-8")
+        )["goal"]["goal_hash"]
+
+    assert _compile(tmp_path / "a") == _compile(tmp_path / "b")

@@ -1,0 +1,16 @@
+{
+  "dag_template": "",
+  "goal": {
+    "goal_hash": "sha256:fixture",
+    "goal_id": "ask-fixture",
+    "goal_version": 1,
+    "immutable_goal": "fixture goal"
+  },
+  "immutable_goal": "fixture goal",
+  "repo": "local/agent-skills",
+  "request": "one_handler fixture request",
+  "schema": "ask.tau_dag_request.v1",
+  "target": "fixture-one_handler",
+  "topology": "sequential",
+  "workflow_mode": ""
+}

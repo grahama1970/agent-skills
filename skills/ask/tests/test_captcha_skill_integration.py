@@ -1,0 +1,23 @@
+"""Ask composition contract for the authorization-gated captcha skill."""
+
+import ask.ask_dag as ask_dag
+
+
+def test_ask_discovers_runnable_captcha_skill() -> None:
+    assert "captcha" in ask_dag.available_skill_run_skills()
+
+
+def test_ask_drafts_captcha_as_skill_run_node() -> None:
+    dag = ask_dag.draft_ask_dag_from_question(
+        "Use $captcha for an authorized local ReCAP security evaluation.",
+        mentioned_skills=["captcha"],
+        prefer_agent_coding=False,
+    )
+
+    captcha_nodes = [
+        node
+        for node in dag["nodes"]
+        if node["type"] == "skill.run" and node["input"].get("skill") == "captcha"
+    ]
+    assert len(captcha_nodes) == 1
+    assert captcha_nodes[0]["input"]["args"] == []

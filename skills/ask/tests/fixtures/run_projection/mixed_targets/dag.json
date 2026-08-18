@@ -1,0 +1,31 @@
+{
+  "goal": {
+    "goal_hash": "sha256:fixture",
+    "goal_id": "ask-fixture",
+    "goal_version": 1,
+    "immutable_goal": "fixture goal"
+  },
+  "nodes": [
+    {
+      "agent": "handler-webgpt",
+      "executor": "local",
+      "id": "handler-webgpt"
+    },
+    {
+      "agent": "handler-gpt-5.5-high",
+      "executor": "local",
+      "id": "handler-gpt-5.5-high"
+    },
+    {
+      "agent": "handler-session-memory",
+      "executor": "local",
+      "id": "handler-session-memory"
+    },
+    {
+      "agent": "join",
+      "executor": "local",
+      "id": "join"
+    }
+  ],
+  "schema": "tau.dag_contract.v1"
+}

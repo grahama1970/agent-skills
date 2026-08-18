@@ -1,0 +1,6 @@
+{
+  "failure_code": "degraded_join",
+  "ok": false,
+  "provider_live": false,
+  "status": "DEGRADED"
+}
