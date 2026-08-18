@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -429,6 +431,47 @@ def _scheduler_execution_equivalence_preflight(
 
 def _default_nightly_out(workdir: Path) -> Path:
     return workdir / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
+
+
+NIGHTLY_RUNS_KEPT = 60
+
+
+def _new_nightly_run_dir(skill_dir: Path) -> Path:
+    """A dated directory per run, with `latest` pointing at the newest.
+
+    Writing every run into a fixed `latest/` destroyed the previous night's
+    receipts, so on 2026-08-18 the only recoverable evidence for a week of
+    nightlies was a single file: there was no way to answer whether a run that
+    exited 0 had actually delivered anything. Each run now gets its own dated
+    directory and `latest` becomes a symlink, so readers keep working and
+    history survives.
+    """
+
+    root = skill_dir / "local" / "nightly"
+    root.mkdir(parents=True, exist_ok=True)
+    run_dir = root / datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    link = root / "latest"
+    try:
+        if link.is_symlink() or link.exists():
+            if link.is_symlink() or link.is_file():
+                link.unlink()
+            else:
+                shutil.rmtree(link)
+        link.symlink_to(run_dir.name)
+    except OSError as exc:  # a broken link must never stop the run
+        logger.warning("could not update nightly latest symlink: {}", exc)
+    runs = sorted(
+        (d for d in root.glob("run-*") if d.is_dir()),
+        key=lambda d: d.name,
+        reverse=True,
+    )
+    for stale in runs[NIGHTLY_RUNS_KEPT:]:
+        try:
+            shutil.rmtree(stale)
+        except OSError:
+            pass
+    return run_dir
 
 
 def _scheduler_execution_equivalence_receipt(
@@ -1140,7 +1183,7 @@ def run_command(
     _configure_logging()
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
-        out = skill_dir / "local" / "nightly" / "latest"
+        out = _new_nightly_run_dir(skill_dir)
     if disable_relationship_signals:
         import os
 
@@ -1573,7 +1616,7 @@ def nightly(
 
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
-        out = skill_dir / "local" / "nightly" / "latest"
+        out = _new_nightly_run_dir(skill_dir)
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
 
