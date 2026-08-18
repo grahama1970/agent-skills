@@ -21,6 +21,10 @@ monitor = importlib.util.module_from_spec(SPEC)
 sys.modules["monitor_herdr"] = monitor
 SPEC.loader.exec_module(monitor)
 
+# send_prompt now lives in prompt_submission, so the transport it calls must be
+# patched on that module rather than on monitor_herdr.
+import prompt_submission  # noqa: E402
+
 
 class EvalHerdrClient:
     def __init__(
@@ -44,6 +48,7 @@ class EvalHerdrClient:
         self.enter_count = 0
         self.sent_text_count = 0
         self.read_count_by_pane: dict[str, int] = {}
+        self.state_change_seq_by_pane: dict[str, int] = {}
 
     def call(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -59,6 +64,12 @@ class EvalHerdrClient:
             return {"workspaces": [{"workspace_id": "w1", "label": "codex", "number": 1}]}
         if method == "pane.list":
             return {"panes": self.panes}
+        if method == "agent.list":
+            # Herdr exposes the lifecycle counter on agent.list only, never pane.list.
+            return {"agents": [
+                {**pane, "state_change_seq": self.state_change_seq_by_pane.get(str(pane.get("pane_id")), 1)}
+                for pane in self.panes
+            ]}
         if method == "pane.read":
             pane_id = str(params["pane_id"])
             self.read_count_by_pane[pane_id] = self.read_count_by_pane.get(pane_id, 0) + 1
@@ -124,11 +135,11 @@ def run_eval_tick(
     now_epoch: int = 1000,
 ) -> tuple[int, dict[str, Any]]:
     original_state = monitor.STATE_PATH
-    original_wait = monitor.wait_for_agent_idle
+    original_wait = prompt_submission.wait_for_agent_idle
     original_epoch = monitor.current_epoch
     try:
         monitor.STATE_PATH = tmp_path / "state.json"
-        monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+        prompt_submission.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
         monitor.current_epoch = lambda: now_epoch
         return monitor.tick_locked(
             client=client,
@@ -147,7 +158,7 @@ def run_eval_tick(
         )
     finally:
         monitor.STATE_PATH = original_state
-        monitor.wait_for_agent_idle = original_wait
+        prompt_submission.wait_for_agent_idle = original_wait
         monitor.current_epoch = original_epoch
 
 
@@ -393,3 +404,58 @@ def test_eval_invalid_receipt_appearing_before_send_does_not_suppress_prompt(tmp
     assert result["prompts"][0].get("skip_reason") != "pre_submit_stop_allowed"
     assert client.sent_text_count == 1
     assert client.enter_count == 1
+
+
+def test_eval_second_tick_does_not_respam_agent_that_did_nothing(tmp_path: Path) -> None:
+    """A stalled agent that ignored the first nudge is never nudged a second time."""
+    project = tmp_path / "stalled"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the feature.", encoding="utf-8")
+    text = "Status/Phase: paused\nImmutable Goal: NOT_MET\nwhat remains: finish the feature\n"
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "done", "cwd": str(project)}],
+        text_by_pane={"w1:p1": text},
+        confirm_submission=True,
+    )
+    client.state_change_seq_by_pane["w1:p1"] = 5
+
+    first_exit, first = run_eval_tick(tmp_path, client)
+    assert first_exit == 0
+    assert len(first["prompts"]) == 1, "first stall must be nudged"
+    assert first["prompts"][0]["submit_confirmed"] is True
+
+    # The agent never transitions and never writes anything new: freeze both signals.
+    client.state_change_seq_by_pane["w1:p1"] = 5
+    client.text_by_pane["w1:p1"] = text
+
+    second_exit, second = run_eval_tick(tmp_path, client, now_epoch=99999)
+
+    assert second_exit == 0
+    assert second["prompts"] == [], "unchanged agent must not be prompted again"
+    suppressed = [c for c in second["stopped_panes"] if c["pane_id"] == "w1:p1"]
+    assert suppressed and suppressed[0]["action"] == "observe_only"
+    assert suppressed[0]["classification"] == "no_change_since_last_prompt"
+
+
+def test_eval_agent_that_made_progress_is_nudged_again(tmp_path: Path) -> None:
+    """Suppression is scoped to no-change only; real progress re-arms the monitor."""
+    project = tmp_path / "progressing"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the feature.", encoding="utf-8")
+    text = "Status/Phase: paused\nImmutable Goal: NOT_MET\nwhat remains: finish the feature\n"
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "done", "cwd": str(project)}],
+        text_by_pane={"w1:p1": text},
+        confirm_submission=True,
+    )
+    client.state_change_seq_by_pane["w1:p1"] = 5
+
+    run_eval_tick(tmp_path, client)
+
+    # The agent actually ran a turn: Herdr's lifecycle counter advances.
+    client.state_change_seq_by_pane["w1:p1"] = 9
+    client.text_by_pane["w1:p1"] = text + "\nran one more command\nwhat remains: still more\n"
+
+    _, second = run_eval_tick(tmp_path, client, now_epoch=99999)
+
+    assert len(second["prompts"]) == 1, "an agent that progressed may be nudged again"

@@ -158,3 +158,81 @@ def test_status_reads_back_compact_cards(tmp_path: Path) -> None:
     s = client.status("run-1", d)
     assert s["all_terminal"] is True
     assert s["cards"][0]["permitted_operator_actions"] == ["cancel", "pause"]
+
+
+# --- #1221 proof 8: Herdr-side changes cannot manufacture Tau state ----------
+
+
+def test_pane_side_lifecycle_edit_cannot_forge_a_terminal_node(tmp_path: Path) -> None:
+    """Editing a pane/projection body without Tau's signature is refused."""
+    projection = _run_projection([_node("backend", lifecycle="model_turn_running")])
+    # Simulate someone changing only the Herdr-visible state to "finished".
+    projection["nodes"][0]["lifecycle"] = "completed"
+
+    with pytest.raises(client.ProjectionError) as exc:
+        client.load_run_projection(_write(tmp_path, projection))
+
+    assert exc.value.code == "node_projection_sha_mismatch"
+
+
+def test_killing_a_pane_does_not_advance_stored_tau_state(tmp_path: Path) -> None:
+    """A pane disappearing cannot roll the attached run forward or terminal."""
+    state_dir = tmp_path / "state"
+    live = _run_projection([_node("backend", lifecycle="model_turn_running", seq=5)])
+    attached = client.attach(client.load_run_projection(_write(tmp_path, live)), state_dir)
+    assert attached["cards"][0]["terminal"] is False
+
+    # "Pane killed": the Herdr side reports nothing new. Tau's journal is the
+    # only thing that can move the run, so a stale re-attach is refused and the
+    # stored state keeps its non-terminal truth.
+    regressed = _run_projection([_node("backend", lifecycle="completed", seq=1)])
+    with pytest.raises(client.ProjectionError) as exc:
+        client.attach(client.load_run_projection(_write(tmp_path, regressed)), state_dir)
+    assert exc.value.code == "stale_projection"
+
+    stored = json.loads((state_dir / "run-1.json").read_text(encoding="utf-8"))
+    assert stored["cards"][0]["lifecycle"] == "model_turn_running"
+    assert stored["cards"][0]["terminal"] is False
+
+
+def test_herdr_state_never_claims_authority_over_the_tau_journal(tmp_path: Path) -> None:
+    state = client.attach(
+        client.load_run_projection(_write(tmp_path, _run_projection([_node("backend")]))),
+        tmp_path / "state",
+    )
+
+    assert state["proof_boundary"] == {
+        "herdr_state_is_projection_only": True,
+        "tau_journal_is_authoritative": True,
+    }
+    assert state["cards"][0]["projection_only"] is True
+
+
+# --- #1221 proof 9: transport completion is not Tau settlement ---------------
+
+
+def test_transport_complete_while_tau_verifies_stays_non_terminal(tmp_path: Path) -> None:
+    """A finished provider/SciLLM turn must not read as a finished Tau node."""
+    node = _node("backend", lifecycle="verifying")
+    body = {k: v for k, v in node.items() if k != "sha256"}
+    # Transport says the model turn is done and settled.
+    body["transport_profile"] = {"profile_id": "claude-model-turn", "state": "complete"}
+    node = {**body, "sha256": client._canonical_sha256(body)}
+
+    state = client.attach(
+        client.load_run_projection(_write(tmp_path, _run_projection([node]))), tmp_path / "state"
+    )
+    card = state["cards"][0]
+
+    assert card["lifecycle"] == "verifying"
+    assert card["terminal"] is False, "Tau is still verifying; Herdr must not show terminal"
+    assert client.status("run-1", tmp_path / "state")["all_terminal"] is False
+
+
+def test_only_tau_terminal_lifecycles_mark_a_card_terminal(tmp_path: Path) -> None:
+    non_terminal = ("selected", "queued", "model_turn_running", "tool_running", "verifying", "repair_requested")
+    for lifecycle in non_terminal:
+        card = client._card(_node("backend", lifecycle=lifecycle))
+        assert card["terminal"] is False, lifecycle
+    for lifecycle in client.TERMINAL_LIFECYCLES:
+        assert client._card(_node("backend", lifecycle=lifecycle))["terminal"] is True, lifecycle

@@ -2,8 +2,10 @@
 name: monitor-herdr
 description: >
   Monitor Herdr-visible Codex/Claude agent panes for stalled, blocked, unknown,
-  or confused state, then ask each stalled agent whether it needs human
-  intervention or can self-unblock with brave-search or webgpt.
+  or confused state, nudge genuinely stalled agents back to work with their repo,
+  skill, and open tickets already resolved, and sweep stale disposable
+  workspaces. Never re-asks an agent that stated a blocker and never re-nudges a
+  pane that has not changed since the last prompt.
 triggers:
   - monitor confused agents
   - monitor stalled agents
@@ -51,6 +53,10 @@ prompt to selected stopped panes.
 skills/monitor-herdr/run.sh tick --space codex
 skills/monitor-herdr/run.sh tick --space codex --min-stopped-seconds 600
 skills/monitor-herdr/run.sh tick --space codex --apply
+skills/monitor-herdr/run.sh sweep-workspaces
+skills/monitor-herdr/run.sh sweep-workspaces --apply
+skills/monitor-herdr/run.sh tau-actions --run-id <tau-run-id>
+skills/monitor-herdr/run.sh tau-action --run-id <id> --node-id backend --action cancel
 skills/monitor-herdr/run.sh status
 skills/monitor-herdr/run.sh open-file /path/to/workspace/file.py
 skills/monitor-herdr/run.sh open-file src/app.py:42
@@ -59,11 +65,29 @@ skills/monitor-herdr/run.sh open-file --query "prompt builder" --dry-run
 skills/monitor-herdr/run.sh install-cron
 skills/monitor-herdr/run.sh install-cron --space codex --apply
 skills/monitor-herdr/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
+skills/monitor-herdr/run.sh reconcile-moves --receipts <run-dir>/receipts
+skills/monitor-herdr/run.sh reconcile-moves --receipts <run-dir>/receipts --apply
 skills/monitor-herdr/sanity.sh
 uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_real_world_e2e.py
 uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_herdr_e2e.py run --allow-live
 uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_herdr_e2e.py run --allow-live --allow-apply --require-prompt
 ```
+
+## Reconciling pane moves
+
+Monitor state is keyed by pane id, but a cross-workspace move changes that id
+while the terminal and the agent survive. Without reconciliation a moved agent
+looks brand new: its stopped-since timestamp is lost, its cooldown resets, and it
+can be re-prompted immediately after a move it never noticed.
+
+`reconcile-moves` consumes the `herdr.space_operation_receipt.v1` receipts written
+by `$ops-herdr agent move` and migrates `state.prompts[<old pane>]` onto the new
+id. It is dry-run by default and needs `--apply` to write. Chained moves collapse
+to the final id, and when both ids already carry state the entry with the more
+recent `last_prompt_epoch` wins, so a migration can never shorten a live cooldown.
+
+Durable identity is ordered: Tau lease, then the named Herdr agent, then the
+terminal id, then the pane id. Pane id is a location, not an identity.
 
 ## Runtime Contract
 
@@ -79,9 +103,13 @@ uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_her
 - `tick --min-stopped-seconds N` requires a stopped pane to have been stopped
   for at least `N` seconds before it is selected for prompting. When Herdr
   exposes an idle/stopped age field, the monitor uses that field. On Herdr
-  versions that expose only current state, including the installed `0.7.1`
+  versions that expose only current state, including the installed `0.8.0`
   server on this host, the monitor records the first observed stopped timestamp
   in its own state file and uses that observed age on later ticks.
+- Each tick calls `agent.list` once to index `state_change_seq` per pane. Herdr
+  exposes that lifecycle counter on `agent.list` only, never on `pane.list`. If
+  the call fails, change detection degrades to the transcript digest instead of
+  failing the tick.
 - The official Herdr CLI documents `pane run` as the command that submits text
   plus Enter. Use that path for live Codex/Claude prompt submission unless a
   future Herdr release exposes a better non-takeover agent prompt API.
@@ -266,6 +294,118 @@ complete `Unblock Attempts:` line showing `$brave-search` plus the project-bound
 browser-oracle reviewer receipt or `NOT_APPLICABLE` reasons, the monitor treats
 the blocker as legitimate human intervention and leaves the pane stopped unless
 current early-stop markers override that claim.
+
+## No-Change Suppression
+
+The monitor never sends the same nudge to an agent that did nothing with the
+last one. When it prompts a pane it records two signals: Herdr's per-agent
+`state_change_seq` at that moment, and a digest of the transcript region.
+
+On a later tick the pane is re-prompted only when at least one signal moved:
+
+- `state_change_seq` advanced — the agent actually ran a lifecycle transition;
+- the transcript digest changed — the agent produced new visible output.
+
+If both are identical, the pane is recorded as `no_change_since_last_prompt`
+with `action: observe_only` and nothing is sent. After repeated no-change
+rounds the classification escalates to `nudge_exhausted_no_change`, which stays
+observation-only until the pane genuinely changes. Cooldowns still apply on top
+of this; they bound how often a *progressing* agent is nudged, while this gate
+stops a stuck agent from ever being nudged twice for the same frozen state.
+
+Suppression is scoped to no-change only. An agent that made real progress and
+stopped again is a legitimate nudge candidate on the next tick.
+
+## Resolved Project Context
+
+The monitor resolves the pane's identity before prompting so a stalled agent
+never has to rediscover where it is. The nudge states the repo slug and branch,
+the project root, the owning skill when the pane is working inside
+`skills/<name>/`, and the open GitHub tickets for that scope.
+
+Tickets come from `gh issue list`, narrowed by the skill name when one is known,
+cached for 15 minutes in `~/.local/state/monitor-herdr/ticket-cache.json`, and
+fetched only for panes that will actually be prompted. Every step is fail-soft:
+a missing remote, missing `gh`, or a failed lookup produces less prompt context,
+never a skipped or failed tick.
+
+The nudge instructs the agent to lease, diagnose, fix, prove, and close the
+tickets it lists rather than re-triaging them, and to state a blocker once in
+its `Disposition:` line instead of writing a status essay.
+
+## Stale Workspace Sweep
+
+Eval and sanity runs leave disposable workspaces behind until real stalled
+agents are hard to find in the sidebar. `sweep-workspaces` reports them, and
+with `--apply` closes them through `workspace.close`.
+
+The sweep is fail-closed. A workspace is a candidate only when all of these
+hold, and each rejection reason is recorded in the receipt:
+
+- its label matches a disposable pattern (`rw-sanity-*`, `autoupdate`,
+  `monitor-herdr-disposable`, `*-disposable`, `tmp-*`), configurable through
+  `--stale-pattern`;
+- it is not the focused workspace;
+- its `agent_status` is not `working`, `blocked`, or `idle`;
+- its pane count is at or under `--max-pane-count` (default 8).
+
+Closes are bounded by `--max-closes` and the receipt reports `truncated` when
+the stale set was larger. Herdr's own guidance is that an agent must not close
+workspaces it did not create unless the human explicitly asked, so this command
+is never run automatically and is not part of the cron tick.
+
+## Tau Operator Actions
+
+For a pane attached to a live Tau run, normal control is a structured Tau
+action, not terminal typing. `tau-actions` lists what each node currently
+permits; `tau-action` submits one:
+
+```bash
+skills/monitor-herdr/run.sh tau-actions --run-id <tau-run-id>
+skills/monitor-herdr/run.sh tau-action --run-id <id> --node-id backend --action cancel
+skills/monitor-herdr/run.sh tau-action --run-id <id> --node-id backend \
+  --action add_next_turn_instruction --instruction "Run the failing test first."
+```
+
+The client composes `tau.operator_action_request.v1`, Tau decides, and the
+returned `tau.operator_action_receipt.v1` is validated before anything is
+reported: schema, `sha256`, `request_sha256` binding, run/node/goal identity,
+and a `journal_transition` whose `observed_seq` matches the request.
+
+`observed_journal_seq` comes from the attached projection, so a request built
+against a stale card is rejected by Tau's own optimistic-concurrency check
+(`operator_action_stale_journal_seq`) rather than racing it.
+
+Tau's typed outcomes are reported, not treated as failure: `applied`,
+`queued_for_next_turn`, `unsupported`, and `fork_required`. Note that
+`permitted_operator_actions` never advertises `pause`/`resume`, but Tau does
+answer them with a typed `unsupported`, so the client submits those rather than
+gating them locally and hiding the answer.
+
+**A failed structured action never falls back to terminal key injection.** Every
+refusal is a typed error carrying Tau's own code, and the CLI reports
+`terminal_fallback_attempted: false`. `tick --apply` remains a separate legacy
+watchdog path for opaque terminal agents, not an escape hatch for a rejected
+Tau action.
+
+Two live proofs back this. Both drive Tau; neither takes a SciLLM credential
+from the operator, because Tau owns the provider boundary and resolves its own.
+
+Typed-outcome coverage (real Tau runtime, journal, and applier; model turn uses
+tau's own `FakeProvider` because operator actions are journal-level):
+
+```bash
+uv run --project ~/workspace/experiments/tau \
+  python skills/monitor-herdr/scripts/live_tau_operator_action_proof.py
+```
+
+Fully live heterogeneous run — two distinct transport profiles in one workspace
+through settlement, plus a live operator action (#1221 proofs 4 and 5):
+
+```bash
+uv run --project ~/workspace/experiments/tau \
+  python skills/monitor-herdr/scripts/live_tau_heterogeneous_proof.py --live
+```
 
 ## Prompt Actions
 

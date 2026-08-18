@@ -4,6 +4,26 @@ from __future__ import annotations
 
 from typing import Any
 
+from project_context import context_lines
+
+
+def ticket_instruction(candidate: dict[str, Any]) -> str:
+    """State the pane's actual open tickets so the agent does not rediscover them."""
+    tickets = (candidate.get("project_context") or {}).get("open_tickets") or []
+    if not tickets:
+        return (
+            "If the transcript or project state names a GitHub issue, check it with the real $ticket "
+            "runtime; if it is open and in scope, lease it, diagnose it, fix it, attach proof, close it, "
+            "and read back the closed state."
+        )
+    rendered = ", ".join(f"#{item['number']}" for item in tickets if item.get("number"))
+    return (
+        f"These tickets are already open for this scope: {rendered}. Do not re-triage them from scratch — "
+        "use the real $ticket runtime to look up each one that is in scope for your immutable goal, then "
+        "lease it, diagnose it, fix it, attach deterministic proof, close it, and read back the closed "
+        "state. If a listed ticket is out of scope, say so once with its number and move on."
+    )
+
 
 def build_prompt(candidate: dict[str, Any]) -> str:
     reasons = ", ".join(str(item) for item in candidate.get("selection_reasons", [])) or "stopped"
@@ -15,6 +35,8 @@ def build_prompt(candidate: dict[str, Any]) -> str:
     goal_line = "not found in project files"
     if goal.get("found"):
         goal_line = f"{goal.get('source')}: {goal.get('excerpt')}"
+    resolved = context_lines(candidate.get("project_context") or {})
+    context_block = ("\n".join(resolved) + "\n") if resolved else ""
     if action == "needs_human":
         instruction = (
             "Answer directly first: Are you blocked, why did you stop, and have you completed your immutable goal? "
@@ -25,19 +47,20 @@ def build_prompt(candidate: dict[str, Any]) -> str:
         )
     else:
         instruction = (
-            "Answer directly first: Are you blocked, why did you stop early, have you completed your immutable goal, "
-            "and do you need $brave-search, $ask webgpt, or $ask webkimi to unblock yourself? "
-            "You stopped or went idle while the transcript still shows follow-up work or no real blocker. "
-            "Resume the task now. Pick the next concrete remaining action, run it, and continue until a real blocker or deterministic proof exists. "
-            "If the transcript or project state names a GitHub issue or $ticket, check it with the real $ticket runtime; if it is open and in scope, lease/diagnose/fix/prove it, attach proof, close it, and read back the closed state. "
+            "You stopped or went idle while the transcript still shows follow-up work and no real blocker. "
+            "Do not reply with a status essay and do not ask which task to pick — the context above is already resolved for you. "
+            "Resume the work now: pick the next concrete remaining action, run it, and keep going until a real blocker or deterministic proof exists. "
+            f"{ticket_instruction(candidate)} "
             "Use $brave-search for current external facts/docs before another stale retry. Use $ask webgpt or $ask webkimi with a concrete bundle when reviewer/oracle help would unblock you. "
-            "Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain."
+            "Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain. "
+            "State the blocker once, in the Disposition line, and stop — this monitor will not ask you again while nothing changes."
         )
     return (
         "RESTART CHECK FROM monitor-herdr\n\n"
         f"Herdr pane: {pane_id}\n"
         f"Agent: {agent}\n"
         f"Cwd: {cwd}\n"
+        f"{context_block}"
         f"Immutable goal evidence: {goal_line}\n"
         f"Reason: {reasons}\n\n"
         f"{instruction}\n\n"

@@ -62,9 +62,10 @@ also leaves it alone.
 | Pane condition | Monitor behavior |
 | --- | --- |
 | Goal completed with receipt evidence | Records and leaves alone |
-| Legitimate human blocker | Records and leaves stopped |
+| Legitimate human blocker | Records and leaves stopped; never re-asked |
 | Blocked, unknown, approval-like, or ambiguous | Observes only; never types |
 | No immutable goal and no early-stop evidence | Records and leaves alone |
+| Nothing changed since the last nudge | Observes only; never nudged twice for the same frozen state |
 | Likely early stop and positively prompt-ready | With `--apply`, sends one bounded prompt |
 | Transport call succeeds but submission not visible | Records `NEEDS_ATTENTION` |
 
@@ -91,6 +92,7 @@ Inspect current monitor state:
 
 ```bash
 skills/monitor-herdr/run.sh status
+skills/monitor-herdr/run.sh reconcile-moves --receipts <run-dir>/receipts --apply
 ```
 
 Status distinguishes the latest receipt from the latest cron-sourced receipt.
@@ -253,3 +255,17 @@ with a live action-log eval.
 Scheduler health is separate. Until an installed cron line produces a
 cron-sourced receipt, `status` reports scheduler health as `NEEDS_ATTENTION`
 even when manual live evals pass.
+
+## Module layout
+
+`monitor_herdr.py` is the tick/CLI surface. The pieces it grew too large to hold
+live beside it and are imported, not duplicated:
+
+| Module | Owns |
+|---|---|
+| `monitor_common.py` | state paths, timestamps, receipt writers, shared patterns |
+| `herdr_socket.py` | the Unix-socket client and pane/agent readers |
+| `pane_classification.py` | deciding whether a stopped pane is genuinely stalled |
+| `prompt_submission.py` | sending a recovery prompt and proving it was submitted |
+| `file_viewer.py` | the `open-file` plugin path |
+| `move_reconciliation.py` | `reconcile-moves` |

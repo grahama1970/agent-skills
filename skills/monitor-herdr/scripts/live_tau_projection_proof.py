@@ -15,6 +15,15 @@ import sys
 import time
 from pathlib import Path
 
+# Load .env before any os.environ lookup below; without it these proofs work only
+# when launched from a parent that already loaded it and read nothing standalone.
+try:
+    from dotenv import find_dotenv, load_dotenv
+
+    load_dotenv(find_dotenv(usecwd=True) or None, override=False)
+except Exception:  # noqa: BLE001 - dotenv is optional, never fatal.
+    pass
+
 HERDR_ROOT = Path(__file__).resolve().parent.parent
 TAU_SRC = Path(os.environ.get("TAU_REPO", str(Path.home() / "workspace/experiments/tau"))) / "src"
 sys.path.insert(0, str(TAU_SRC))

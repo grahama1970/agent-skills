@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "monitor-herdr",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "live monitor tick plus move-reconciliation contract",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "sanity (136 tests) passes; against live Herdr, a running agent moved by ops-herdr keeps its cooldown and no-change strikes when reconciled onto its new pane id; a dry run never writes; chained moves resolve to the final id; and the missing-receipts, malformed-receipt, empty-id-map and corrupt-state paths all fail closed",
+    "does_not_prove": "that a real stalled agent is correctly classified in production, nor any Tau projection behaviour"
   },
   "cases": [
     {
@@ -17,6 +17,108 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "timeout_seconds": 300
+    },
+    {
+      "name": "live-move-reconciliation-preserves-cooldown",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python evals/live_move_reconciliation.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "cooldown_preserved",
+          "strikes_preserved",
+          "state_rekeyed",
+          "dry_run_does_not_write"
+        ]
+      },
+      "timeout_seconds": 240
+    },
+    {
+      "name": "live-status-reports-scheduler-health",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh status"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"api\": \"herdr_socket\""
+        ]
+      },
+      "timeout_seconds": 240
+    },
+    {
+      "name": "reconcile-requires-receipts",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh reconcile-moves"
+      ],
+      "expected": {
+        "exit_code": 2
+      }
+    },
+    {
+      "name": "reconcile-rejects-malformed-receipt",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && d=$(mktemp -d) && mkdir -p \"$d/r\" \"$d/s\" && printf 'not json' > \"$d/r/broken.json\" && printf '{\"prompts\":{}}' > \"$d/s/state.json\" && ./run.sh reconcile-moves --receipts \"$d/r\" --state \"$d/s/state.json\""
+      ],
+      "expected": {
+        "exit_code": 1
+      }
+    },
+    {
+      "name": "reconcile-rejects-receipt-without-id-map",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && d=$(mktemp -d) && mkdir -p \"$d/r\" \"$d/s\" && printf '{\"schema\":\"herdr.space_operation_receipt.v1\",\"created_at\":\"x\",\"id_map\":{}}' > \"$d/r/r.json\" && printf '{\"prompts\":{}}' > \"$d/s/state.json\" && ./run.sh reconcile-moves --receipts \"$d/r\" --state \"$d/s/state.json\""
+      ],
+      "expected": {
+        "exit_code": 1
+      }
+    },
+    {
+      "name": "reconcile-refuses-corrupt-monitor-state",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && d=$(mktemp -d) && mkdir -p \"$d/r\" \"$d/s\" && printf '{\"schema\":\"herdr.space_operation_receipt.v1\",\"created_at\":\"2026-01-01\",\"id_map\":{\"a:1\":\"b:1\"}}' > \"$d/r/receipt.json\" && printf 'garbage' > \"$d/s/state.json\" && ./run.sh reconcile-moves --receipts \"$d/r\" --state \"$d/s/state.json\""
+      ],
+      "expected": {
+        "exit_code": 2
+      }
+    },
+    {
+      "name": "reconcile-collapses-chained-moves-to-final-id",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && d=$(mktemp -d) && mkdir -p \"$d/r\" \"$d/s\" && printf '{\"schema\":\"herdr.space_operation_receipt.v1\",\"created_at\":\"2026-01-01\",\"id_map\":{\"a:1\":\"b:1\"}}' > \"$d/r/1.json\" && printf '{\"schema\":\"herdr.space_operation_receipt.v1\",\"created_at\":\"2026-01-02\",\"id_map\":{\"b:1\":\"c:1\"}}' > \"$d/r/2.json\" && printf '{\"prompts\":{\"a:1\":{\"last_prompt_epoch\":5}}}' > \"$d/s/state.json\" && ./run.sh reconcile-moves --receipts \"$d/r\" --state \"$d/s/state.json\" --apply && grep -q '\"c:1\"' \"$d/s/state.json\" && ! grep -q '\"a:1\"' \"$d/s/state.json\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"a:1\": \"c:1\""
+        ]
       }
     }
   ]
