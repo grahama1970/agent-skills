@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Reveal-in-editor collaboration surface: the agent (or human) names a file and a line/function/class of the problem code, and the debugger opens it in the human's VS Code at that location -- so a stuck agent can point the human straight at the code, and the human can then ask for a debug session. Symbol resolution is deterministic; the live reveal is capability-gated on a display + the code CLI.",
+  "claims": {
+    "proves": "open_in_vscode.py resolves a function/class to its exact line (Python ast), rejects an unknown symbol, and reveals the file at that line in the running VS Code (title-confirmed) when a display is present",
+    "does_not_prove": "that the human actually looked, or multi-file cross-reference navigation beyond a single symbol"
+  },
+  "cases": [
+    {
+      "name": "resolve-function-to-line",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Resolve the buggy function running_total to its definition line via the Python ast, without opening anything (deterministic).",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/open_in_vscode.py ../scenarios/variable_state/tally.py --function running_total --print-only"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["RESOLVED tally.py:10 (running_total)"]
+      }
+    },
+    {
+      "name": "reject-unknown-symbol",
+      "type": "negative",
+      "required": true,
+      "description": "An unknown symbol must fail closed with SYMBOL_NOT_FOUND rather than opening a wrong or arbitrary location.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/open_in_vscode.py ../scenarios/variable_state/tally.py --function does_not_exist --print-only"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["SYMBOL_NOT_FOUND"]
+      }
+    },
+    {
+      "name": "live-reveal-in-vscode",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Open the buggy function in the running VS Code and confirm via the window title that the editor is showing the file. Capability-gated: BLOCKED without a display or the code CLI.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/open_in_vscode.py ../scenarios/variable_state/tally.py --function running_total"
+      ],
+      "timeout_seconds": 40,
+      "blocked_when_stdout_contains": ["REVEAL_UNAVAILABLE"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["REVEALED tally.py:10"]
+      }
+    }
+  ]
+}
