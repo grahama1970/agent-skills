@@ -86,3 +86,47 @@ def test_unproven_capture_is_never_upgraded(tmp_path: Path) -> None:
     out = run(tmp_path, {"apiValue": "x" * 500 + SENT,
                          "result": {"text": "draft", "sentinel": SENT, "hasSentinel": False}})
     assert out["text"] == "draft"
+
+
+EXTRACT_DRIVER = """
+const { extractAssistantResponse } = require(process.argv[2]);
+const scenario = JSON.parse(process.argv[3]);
+const cdpEvaluate = async (tabId, expression) => {
+  const e = String(expression);
+  if (e.includes("__pending")) return { result: { value: true } };
+  if (e.trim() === "window.__surfBackendApiText") {
+    return { result: { value: scenario.apiValue === null ? "" : scenario.apiValue } };
+  }
+  // Cloudflare check and any DOM snapshot: benign empty page.
+  return { result: { value: false } };
+};
+extractAssistantResponse({ tabId: 1, sentinel: scenario.sentinel, timeout: 1500, cdpEvaluate })
+  .then((out) => process.stdout.write(JSON.stringify(out)))
+  .catch((err) => { process.stdout.write(JSON.stringify({error: String(err.message)})); });
+"""
+
+
+def run_extract(tmp_path: Path, scenario: dict) -> dict:
+    driver = tmp_path / "extract-driver.cjs"
+    driver.write_text(EXTRACT_DRIVER, encoding="utf-8")
+    completed = subprocess.run(
+        ["node", str(driver), str(MODULE), json.dumps(scenario)],
+        check=True, capture_output=True, text=True,
+    )
+    return json.loads(completed.stdout)
+
+
+def test_extract_recovers_a_non_latest_turn_via_the_api(tmp_path: Path) -> None:
+    """The DOM wait only matches the latest turn; the API serves any turn."""
+    full = "an earlier round's complete answer " * 8 + SENT
+    out = run_extract(tmp_path, {"sentinel": SENT, "apiValue": full})
+    assert out.get("response") == full
+    assert out.get("responseSource") == "backend-api"
+    assert out.get("hasSentinel") is True
+
+
+def test_extract_falls_through_to_dom_wait_when_api_misses(tmp_path: Path) -> None:
+    out = run_extract(tmp_path, {"sentinel": SENT, "apiValue": None})
+    # DOM stub is an empty page, so the fallback times out -- proving the API
+    # miss did NOT fabricate a response.
+    assert "error" in out and "timeout" in out["error"].lower()

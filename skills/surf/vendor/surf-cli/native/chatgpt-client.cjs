@@ -1471,6 +1471,37 @@ async function extractAssistantResponse(options) {
   }
 
   if (wait || sentinel) {
+    // Extraction mode with a sentinel: the backend API can serve ANY turn
+    // carrying that sentinel, while the DOM wait only ever matches the latest
+    // assistant turn -- so a non-latest turn used to time out (observed
+    // 2026-08-18 recovering an earlier round). API first; DOM wait is the
+    // fallback when the API misses or drifts.
+    if (sentinel) {
+      const apiText = await fetchAssistantTextViaBackendApi(cdp, sentinel);
+      if (apiText && apiText.includes(sentinel)) {
+        return {
+          response: apiText,
+          tabId,
+          controlledTabId: tabId,
+          messageId: null,
+          responseSource: "backend-api",
+          domTruncationDetected: false,
+          domChars: undefined,
+          apiChars: apiText.length,
+          sentinel,
+          hasSentinel: true,
+          pageTextContainsSentinel: false,
+          stopVisible: false,
+          finished: true,
+          turnIndex: undefined,
+          documentHiddenAtCompletion: false,
+          visibilityStateAtCompletion: null,
+          backgroundHiddenPolls: 0,
+          backgroundPollCount: 0,
+          hiddenRecoveryUsed: false,
+        };
+      }
+    }
     const response = await waitForResponse(
       cdp,
       timeout,

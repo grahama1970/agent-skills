@@ -649,9 +649,10 @@ ChatGPT's authenticated backend API inside the controlled tab and replaces the
 DOM text only when the API text carries the SAME sentinel and is strictly
 longer. The receipt then records `source: backend-api`,
 `domTruncationDetected: true`, `domChars`, and `apiChars`. Any API drift fails
-open to the DOM capture. A `webgpt.extract` targeting an OLDER turn's sentinel
-still only matches when that turn is the latest assistant turn — recovering a
-non-latest turn remains unsupported.
+open to the DOM capture. In extraction mode the API is consulted FIRST, so
+`webgpt.extract` recovers ANY turn carrying the requested sentinel — including
+turns older than the latest — with `responseSource: backend-api`; the DOM wait
+remains the fallback when the API misses.
 
 #### WebGPT image mockups
 
