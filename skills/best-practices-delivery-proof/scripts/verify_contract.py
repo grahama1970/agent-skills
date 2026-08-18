@@ -77,8 +77,31 @@ def check(text: str) -> list[str]:
     return problems
 
 
-@app.command()
-def main(mutate_drop_rule: int = typer.Option(0, help="Self-test: drop rule N and expect failure.")) -> None:
+@app.command("read-list")
+def read_list() -> None:
+    """Print the mandatory reading list: every composed skill's full SKILL.md.
+
+    One line per contract: absolute path, line count. An agent activating this
+    skill must issue one full Read per listed path before its first delivery
+    command; the line count is what makes "I read it" checkable.
+    """
+    front = yaml.safe_load((SKILL_DIR / "SKILL.md").read_text().split("---\n", 2)[1])
+    missing = []
+    for name in ["best-practices-delivery-proof"] + list(front.get("composes") or []):
+        path = SKILLS_ROOT / name / "SKILL.md"
+        if not path.exists():
+            missing.append(name)
+            continue
+        lines = path.read_text(errors="replace").count("\n") + 1
+        typer.echo(f"{lines:6d}  {path}")
+    if missing:
+        for name in missing:
+            typer.echo(f"FAIL: composed skill has no SKILL.md: {name}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command("check")
+def check_cmd(mutate_drop_rule: int = typer.Option(0, help="Self-test: drop rule N and expect failure.")) -> None:
     text = (SKILL_DIR / "SKILL.md").read_text()
     if mutate_drop_rule:
         start = text.find(f"## Rule {mutate_drop_rule} ")

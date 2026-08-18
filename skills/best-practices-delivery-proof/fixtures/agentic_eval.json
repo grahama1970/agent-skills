@@ -16,7 +16,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && python3 scripts/verify_contract.py"
+        "cd .. && python3 scripts/verify_contract.py check"
       ],
       "expected": {
         "exit_code": 0,
@@ -33,7 +33,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && if python3 scripts/verify_contract.py --mutate-drop-rule 3 >/dev/null 2>&1; then echo GATE_DID_NOT_FAIL; exit 1; else echo GATE_FAILED_CLOSED; fi"
+        "cd .. && if python3 scripts/verify_contract.py check --mutate-drop-rule 3 >/dev/null 2>&1; then echo GATE_DID_NOT_FAIL; exit 1; else echo GATE_FAILED_CLOSED; fi"
       ],
       "expected": {
         "exit_code": 0,
@@ -51,12 +51,29 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && N=$((RANDOM % 7 + 1)); if python3 scripts/verify_contract.py --mutate-drop-rule $N >/dev/null 2>&1; then echo GATE_MISSED_RULE_$N; exit 1; else echo GATE_CAUGHT_RULE_$N; fi"
+        "cd .. && N=$((RANDOM % 7 + 1)); if python3 scripts/verify_contract.py check --mutate-drop-rule $N >/dev/null 2>&1; then echo GATE_MISSED_RULE_$N; exit 1; else echo GATE_CAUGHT_RULE_$N; fi"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "GATE_CAUGHT_RULE_"
+        ]
+      }
+    },
+    {
+      "name": "read-gate-hook-blocks-unread-delivery-and-passes-covered",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf '{\"tool_input\":{\"command\":\"./run.sh webgpt.submit --input x --tab-id 1\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; U=$?; printf '{\"tool_input\":{\"command\":\"ls -la\"},\"transcript_path\":\"/nonexistent\"}' | python3 scripts/enforce_read_gate.py >/dev/null 2>&1; N=$?; if [ \"$U\" -eq 2 ] && [ \"$N\" -eq 0 ]; then echo HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY; else echo HOOK_CONTRACT_BROKEN U=$U N=$N; exit 1; fi"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HOOK_BLOCKS_UNREAD_AND_IGNORES_NONDELIVERY"
         ]
       }
     }

@@ -92,6 +92,21 @@ When a skill owns the workflow, Read its entire SKILL.md before the first
 command — not Grep, not head, not memory of a previous session. `skills/ask`
 says it in its own first section: "read this whole file before acting."
 
+This obligation is transitive and MANDATORY: when this skill activates, the
+agent MUST Read the complete SKILL.md of every skill this task routes through —
+at minimum every entry in this skill's `composes:` list that the task touches
+(`ask`, `surf`, `debugger`, `agentic-evals`). Run the reading list and do not
+issue the first delivery command until every file on it has been Read in full:
+
+```bash
+python3 skills/best-practices-delivery-proof/scripts/verify_contract.py --read-list
+```
+
+It prints one line per contract — absolute path and line count — so "I read
+it" has a checkable meaning: one Read call per listed path, covering all its
+lines. A grep, a head, or a partial offset read of a listed contract does not
+discharge the obligation.
+
 The 2026-08-18 cost of skipping this: the agent drove raw `surf` under `/ask`
 (forbidden at the contract's line 1481), missed that a human-named tab requires
 `browser-oracle bind` + `--handler-project` + `--browser-tab-lifecycle
@@ -171,6 +186,32 @@ have: the destination read-back, verbatim, this turn. Nothing else. An agent
 whose claims are always accompanied by destination receipts never needs to be
 threatened, because there is nothing to distrust; requiring pressure to
 produce accuracy is the failure this skill exists to end.
+
+## Enforcement (the part that does not depend on the agent)
+
+Skill text is advisory; 2026-08-18 proved an agent under pressure skims it.
+The enforcement ladder, weakest to strongest:
+
+1. **The reading list is executable.** `scripts/verify_contract.py read-list`
+   prints every contract with its line count, so "I read it" is checkable.
+2. **The eval gate is mechanical.** `fixtures/agentic_eval.json` fails when a
+   rule is dropped or a cross-skill anchor drifts, on every run of
+   `$agentic-evals`, with a randomized mutation so it cannot be overfit.
+3. **The harness hook blocks the tool call itself.**
+   `scripts/enforce_read_gate.py` is a `PreToolUse` hook: when a Bash command
+   is a browser delivery (`*.submit`, `tau-dag --execute`, web-handler
+   shortcuts), it parses the session transcript for Read calls and blocks the
+   command (exit 2) unless the Read windows jointly cover every listed
+   contract end to end. The block message names exactly what to Read. Wire it
+   in `.claude/settings.json` (project or user):
+
+   ```json
+   {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command",
+     "command": "python3 \"$CLAUDE_PROJECT_DIR/skills/best-practices-delivery-proof/scripts/enforce_read_gate.py\""}]}]}}
+   ```
+
+   The hook runs outside the model. An agent cannot rationalize past it,
+   because the harness, not the agent, decides whether the command runs.
 
 ## Related skills
 
