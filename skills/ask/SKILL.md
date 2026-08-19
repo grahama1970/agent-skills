@@ -290,6 +290,7 @@ orchestration path.
 | One handler answers | `./run.sh tau-dag "<task>" --repo <repo> --target <target> --immutable-goal "<goal>" --handler <handler-or-model> --execute --json` |
 | Roundtable | `./run.sh tau-dag "<shared task>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template roundtable --handler <a> --handler <b> --topology concurrent --execute --json` |
 | Competition | `./run.sh compete "<isolated task>" --repo <repo> --target <target> --immutable-goal "<goal>" --handler <a> --handler <b> --criterion <criterion> --execute --json` |
+| One-shot (per-seat answers, no consensus) | `./run.sh one-shot "<question>" --handler <a> --handler <b> --handler <c>` — N independent single-call lanes run concurrently; each returns its own nonce-bound answer or a named blocker. Partial answers are DEGRADED-but-usable (exit 0 at or above `--min-answered`); a roundtable's quorum refusal never applies here. |
 | Creator then reviewer | `./run.sh tau-dag "<creator task then reviewer verdict>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template creator-reviewer --handler <creator> --handler <reviewer> --topology sequential --execute --json` |
 
 Handlers are peers even when their transports differ. Browser handlers

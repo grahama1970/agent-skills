@@ -23,9 +23,11 @@
         "exit_code": 0,
         "stdout_contains": [
           "ALL_SEATS_HONEST",
-          "LADDER:"
+          "LADDER_HONESTY:",
+          "LADDER_READINESS: READY"
         ]
-      }
+      },
+      "notes": " 2026-08-19: honesty and readiness are separate verdicts; an all-blocked ladder is honest but exits 3 NOT_READY, and this case now requires READY (at least one real answer)."
     },
     {
       "name": "live-mixed-seats-complete-a-compliant-task",
@@ -127,14 +129,15 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh live-seat-probe claude-fable-low --json 2>/dev/null | grep -c model_not_available || true"
+        "cd .. && n=$(./run.sh live-seat-probe claude-fable-low --json 2>/dev/null | grep -c model_not_available); [ \"$n\" -eq 0 ] || echo DISPATCHED_ANYWAY_${n}; [ \"$n\" -eq 0 ] && echo NO_DISPATCH_OF_NONEXISTENT_MODEL"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "0"
+          "NO_DISPATCH_OF_NONEXISTENT_MODEL"
         ]
-      }
+      },
+      "notes": "2026-08-19 false-green fix: '|| true' plus substring '0' also accepted counts like 10. Now the count is compared numerically to zero."
     },
     {
       "name": "a-non-selected-tab-is-hidden-so-seats-need-own-windows",
@@ -305,11 +308,15 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webclaude; true"
+        "cd .. && out=$(./run.sh prove-workflow webclaude 2>&1); echo \"$out\" | grep -qE 'failure_code|named_blocker|PASS' && echo WEBCLAUDE_ANSWERED_OR_NAMED_REASON || { echo \"$out\" | tail -5; exit 1; }"
       ],
       "expected": {
-        "exit_code": 0
-      }
+        "exit_code": 0,
+        "stdout_contains": [
+          "WEBCLAUDE_ANSWERED_OR_NAMED_REASON"
+        ]
+      },
+      "notes": "2026-08-19 false-green fix: the old command ended '; true' and asserted only exit 0, proving nothing. Now the output must actually contain a failure_code/named_blocker (or PASS when the seat's substitution answers); anything else fails with the tail shown."
     },
     {
       "name": "live-webdeepseek-reads-an-attached-image",
@@ -450,14 +457,15 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh tau-dag 'Reply with exactly: HANDOFF-EVAL' --repo local/agent-skills --target handoff-eval --immutable-goal 'Return the token.' --dag-template single-call --handler claude-opus-5-high --execute --json >/dev/null 2>&1; ./run.sh handoff | grep -q 'human' && echo HANDOFF_CHAIN_READABLE"
+        "cd .. && T=HANDOFF-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' \\n') && ./run.sh tau-dag \"Reply with exactly: $T\" --repo local/agent-skills --target handoff-eval --immutable-goal 'Return the token.' --dag-template single-call --handler claude-opus-5-high --ask-id handoff-eval-$T --execute --json >/dev/null 2>&1 && ./run.sh handoff | grep -q \"handoff-eval-$T\" && echo HANDOFF_CHAIN_READABLE_FOR_THIS_RUN"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "HANDOFF_CHAIN_READABLE"
+          "HANDOFF_CHAIN_READABLE_FOR_THIS_RUN"
         ]
-      }
+      },
+      "notes": "2026-08-19 false-green fix: the old command ignored the tau exit with ';' and grepped the global handoff view for the generic word 'human', so any old handoff satisfied it. Now the tau run must succeed and the handoff view must name this run's unique ask-id."
     },
     {
       "name": "ask-primary-live-answer-receipt-backend",
@@ -578,7 +586,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (one python -c command). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 && RD=$(ls -td /mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-compete-add2-eval-* | head -1) && ./run.sh panel-audit \"$RD\" --mode compete && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
+        "set -o pipefail; cd .. && AID=ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (one python -c command). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id \"$AID\" --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 && RD=/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/\"$AID\" && ./run.sh panel-audit \"$RD\" --mode compete && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
       ],
       "expected": {
         "exit_code": 0,
@@ -587,7 +595,64 @@
           "WINNER: handler-"
         ]
       },
-      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1."
+      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1. 2026-08-19 provenance fix: the audited run dir is the exact --ask-id of this invocation (no newest-dir glob), and pipefail stops a failed tau run from being masked by tail."
+    },
+    {
+      "name": "ladder-red-team-false-greens-stay-red",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && cat > $RT/fake-run.sh <<'EOF'\n#!/bin/bash\nseat=\"$2\"\ncase \"$FAKE_MODE\" in\n  blocker_no_code) echo \"{\\\"outcome\\\":\\\"named_blocker\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"failure_code\\\":null}]}\";;\n  answered_bad_exit) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"has_token\\\":true}]}\"; exit 1;;\n  answered_no_token) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"has_token\\\":false}]}\";;\n  wrong_seat) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-somebody-else\\\",\\\"has_token\\\":true}]}\";;\n  garbage) echo 'not json';;\n  all_blocked) echo \"{\\\"outcome\\\":\\\"named_blocker\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"failure_code\\\":\\\"provider_down\\\"}]}\";;\nesac\nEOF\nchmod +x $RT/fake-run.sh && fails=0 && for m in blocker_no_code answered_bad_exit answered_no_token wrong_seat garbage; do FAKE_MODE=$m uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/$m --run-sh $RT/fake-run.sh >/dev/null 2>&1; [ $? -eq 1 ] || { echo RED_PATH_WENT_GREEN_$m; fails=1; }; done; FAKE_MODE=all_blocked uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/ab --run-sh $RT/fake-run.sh >/dev/null 2>&1; [ $? -eq 3 ] || { echo ALL_BLOCKED_NOT_EXIT_3; fails=1; }; [ $fails -eq 0 ] && echo ALL_RED_PATHS_STAY_RED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_RED_PATHS_STAY_RED"
+        ]
+      },
+      "notes": "Red-before/green-after harness for the ladder itself (review 2026-08-19): a named blocker without a failure_code, an answered claim from a failing child, a tokenless answer, a wrong-seat receipt, and garbage output must each exit 1; an honest all-blocked run must exit 3 NOT_READY."
+    },
+    {
+      "name": "task-oracle-rejects-known-false-greens",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python - <<'EOF'\nimport sys; sys.path.insert(0, 'scripts')\nfrom live_task_probe import _floor_verdict\nN='TOKEN-x'\ngood='```python\\n# probe-nonce: TOKEN-x\\ndef add(a: float, b: float) -> float:\\n    \\\"\\\"\\\"Sum.\\\"\\\"\\\"\\n    return a + b\\n```'\nbad=[good.replace('a + b','a - b'), 'prose \\\"\\\"\\\"doc\\\"\\\"\\\" def f(a,b): return a+b',\n     good.replace('TOKEN-x','TOKEN-old'),\n     '```python\\n# probe-nonce: TOKEN-x\\ndef add(a: float, b: float) -> float: \\\"\\\"\\\"d\\\"\\\"\\\" return a+b\\n```']\nassert _floor_verdict(good, N) == [], 'good sample must pass'\nfor i, t in enumerate(bad):\n    assert _floor_verdict(t, N), f'false green {i} accepted'\nprint('ORACLE_REJECTS_FALSE_GREENS')\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ORACLE_REJECTS_FALSE_GREENS"
+        ]
+      },
+      "notes": "The task oracle executes the delivered function on vectors; return a-b, prose without a fence, a stale nonce, and a one-line syntax error must all be rejected while the compliant sample passes."
+    },
+    {
+      "name": "live-one-shot-asks-mixed-seats-and-returns-per-seat-answers",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1500,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant ./run.sh one-shot 'In one sentence: what is a DAG?' --handler webgpt --handler claude-opus-5-low --handler oc-deepseek --timeout 900 --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/one-shot-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_SHOT:",
+          "readiness READY",
+          "ANSWER "
+        ]
+      },
+      "notes": "The user's simple-concurrent-question shape: N independent single-call lanes, per-seat answers or named blockers, no consensus step. Nonce-bound: each answer must echo this run's token. A partial panel is DEGRADED-but-usable; only zero answers or a dishonest lane fails."
     }
   ]
 }

@@ -169,6 +169,7 @@ Commands:
   tau-dag <request> Compile a human request into a strict Tau DAG
   webgpt <question>  Shortcut: Tau single-call handler webgpt (also webclaude/webkimi/webgemini/webgrok)
   compete <request> Compile isolated competitors into a Tau compete DAG
+  one-shot <question> --handler A --handler B  Same question to N seats concurrently; answers per seat, no consensus
   browser-availability Probe provider tabs for visible rate/capacity blockers
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
@@ -504,6 +505,10 @@ case "${1:-help}" in
     eval-status)
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/eval_status.py" "$@"
+        ;;
+    one-shot)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/one_shot.py" "$@"
         ;;
     handoff)
         shift
