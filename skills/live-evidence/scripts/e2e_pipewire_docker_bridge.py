@@ -245,7 +245,12 @@ def parse_args() -> argparse.Namespace:
         "--source-wav",
         help="Optional local WAV to play through PipeWire. Omit to capture an already-playing desktop source.",
     )
-    parser.add_argument("--playback-target", default="59")
+    # Sink NAME, not a numeric node id: PipeWire node ids are not stable
+    # across boots. The previous default "59" pointed at a node that no
+    # longer existed, so playback fell back elsewhere while capture
+    # listened to this sink's monitor and recorded 107s of silence
+    # (RMS 0.0003 vs 0.058 healthy). Names route deterministically.
+    parser.add_argument("--playback-target", default="alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo")
     # Record the MICROPHONE SOURCE, never the sink. Binding a capture stream to
     # the sink (--capture-kind sink-monitor) wedged the Jabra SPEAK 510 on
     # 2026-08-17: the sink went to state suspended, the card needed a wpctl

@@ -35,6 +35,30 @@ def free_port() -> int:
         return int(sock.getsockname()[1])
 
 
+def create_virtual_sink(name: str) -> None:
+    """Create a null audio sink for a fully digital play/record loop.
+
+    Real-device transport is not evaluable deterministically here: recording the
+    Jabra's sink monitor wedged the device mid-meeting on 2026-08-17 (see the
+    bridge's --capture-kind warning), and mic capture depends on physical
+    speaker state plus the speakerphone's echo canceller, which silently eats
+    its own playback. A null sink has no hardware to wedge and no acoustics to
+    vary: what is played is exactly what the monitor yields (verified RMS
+    0.0504 vs source 0.058, with the Jabra left suspended throughout).
+    """
+
+    subprocess.run(
+        ["pw-cli", "create-node", "adapter",
+         "{ factory.name=support.null-audio-sink node.name=%s media.class=Audio/Sink "
+         "audio.position=[FL,FR] object.linger=true }" % name],
+        check=True, capture_output=True, text=True, timeout=15,
+    )
+
+
+def destroy_virtual_sink(name: str) -> None:
+    subprocess.run(["pw-cli", "destroy", name], check=False, capture_output=True, text=True, timeout=15)
+
+
 def default_source_wav() -> Path:
     for candidate in DEFAULT_WAV_CANDIDATES:
         if candidate.is_file():
@@ -170,6 +194,8 @@ def run_bridge(args: argparse.Namespace, *, backend_url: str, source_wav: Path, 
         args.playback_target,
         "--capture-target",
         args.capture_target,
+        "--capture-kind",
+        getattr(args, "capture_kind", "source"),
         "--docker-image",
         args.docker_image,
         "--output-dir",
@@ -301,7 +327,32 @@ def card_sources(card: dict[str, Any]) -> list[dict[str, Any]]:
     return [source for source in card.get("sources") or [] if isinstance(source, dict)]
 
 
-def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracle: dict[str, Any]) -> dict[str, Any]:
+CAPTURE_FIDELITY_THRESHOLD = 0.30
+
+
+def capture_fidelity(captured_blob: str, reference_text: str) -> float:
+    """Fraction of reference content words present in the captured transcript.
+
+    The content checks below are meaningless when the capture itself was
+    degraded: on 2026-08-17 sink contention turned a WAV that transcribes
+    cleanly when read directly (all required terms present) into 641 incoherent
+    50-char fragments, and the eval failed on transcript terms as if question
+    detection had broken. A fidelity gate distinguishes "the pipeline judged
+    badly" from "the pipeline never received the audio", which need different
+    responses. Content words only (4+ chars), so fillers cannot fake overlap.
+    """
+
+    reference_tokens = {
+        token for token in normalize(reference_text).split() if len(token) >= 4
+    }
+    if not reference_tokens:
+        return 1.0
+    captured = normalize(captured_blob)
+    present = sum(1 for token in reference_tokens if token in captured)
+    return present / len(reference_tokens)
+
+
+def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracle: dict[str, Any], reference_text: str = "") -> dict[str, Any]:
     transcript = state.get("transcript") if isinstance(state.get("transcript"), list) else []
     cards = state.get("cards") if isinstance(state.get("cards"), list) else []
     transcript_blob = text_blob([event.get("text") for event in transcript if isinstance(event, dict)])
@@ -366,7 +417,10 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
     raw_ask_without_gate = bool(ask_sources and not gate_sources)
 
     forbidden_card_terms = [normalize(term) for term in card_contract.get("forbidden_text_terms") or []]
+    fidelity = capture_fidelity(transcript_blob, reference_text) if reference_text else None
     checks = {
+        "capture_fidelity": fidelity,
+        "capture_fidelity_ok": fidelity is None or fidelity >= CAPTURE_FIDELITY_THRESHOLD,
         "bridge_pipewire_audio_captured": acceptance.get("pipewire_audio_captured") is True,
         "bridge_docker_realtimestt_process_ok": acceptance.get("docker_realtimestt_process_ok") is True,
         "bridge_pipewire_transcript_events": int(acceptance.get("pipewire_transcript_events") or 0),
@@ -393,8 +447,21 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         and checks["raw_ask_without_gate_absent"]
         and checks["blocked_gate_shows_seed_source"]
     )
+    if not checks["capture_fidelity_ok"]:
+        # The audio never arrived intact; content verdicts below would blame
+        # the wrong layer. Fail with the true reason instead.
+        return {
+            "status": "FAIL",
+            "failure_reason": "capture_fidelity_degraded",
+            "checks": checks,
+            "matching_card_ids": [],
+            "selected_query_card_ids": [],
+            "gate_source_count": len(gate_sources),
+            "ask_source_count": len(ask_sources),
+        }
     return {
         "status": "PASS" if pass_checks else "FAIL",
+        "failure_reason": None if pass_checks else "content_checks_failed",
         "checks": checks,
         "matching_card_ids": [card.get("card_id") for card in matching_source_cards],
         "selected_query_card_ids": [card.get("card_id") for card in query_cards],
@@ -410,8 +477,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-wav", default=None)
     parser.add_argument("--output-dir", default="/mnt/storage12tb/skills/live-evidence/agentic-evals/live-youtube-pipewire-oracle")
     parser.add_argument("--docker-image", default="live-evidence-realtimestt-gpu:local")
-    parser.add_argument("--playback-target", default="59")
+    # Sink NAME, not a numeric node id: PipeWire node ids are not stable
+    # across boots. The previous default "59" pointed at a node that no
+    # longer existed, so playback fell back elsewhere while capture
+    # listened to this sink's monitor and recorded 107s of silence
+    # (RMS 0.0003 vs 0.058 healthy). Names route deterministically.
+    parser.add_argument("--playback-target", default="alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo")
     parser.add_argument("--capture-target", default="alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo")
+    parser.add_argument(
+        "--real-device", action="store_true",
+        help="Route through the physical targets instead of a per-run null sink. "
+             "Opt-in: physical routing depends on speaker state and echo cancellation, "
+             "and monitor-capture on the Jabra has wedged the device mid-call.",
+    )
     parser.add_argument("--max-seconds", type=float, default=108.0)
     parser.add_argument("--tail-seconds", type=float, default=2.5)
     parser.add_argument("--model", default="base.en")
@@ -511,6 +589,15 @@ def main() -> int:
     root = Path(args.root).expanduser().resolve()
     repo_root = root.parents[1]
     skills_root = root.parent
+    virtual_sink: str | None = None
+    if not getattr(args, "real_device", False):
+        virtual_sink = f"le-eval-sink-{os.getpid()}"
+        create_virtual_sink(virtual_sink)
+        args.playback_target = virtual_sink
+        args.capture_target = virtual_sink
+        args.capture_kind = "sink-monitor"
+    else:
+        args.capture_kind = "source"
     source_wav = Path(args.source_wav).expanduser().resolve() if args.source_wav else default_source_wav()
     oracle_path = Path(args.oracle).expanduser().resolve()
     oracle = load_json(oracle_path)
@@ -577,7 +664,9 @@ def main() -> int:
                 final_state_path.write_text(json.dumps(final_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
                 bridge_invocation_path = output_dir / "bridge-invocation.json"
                 bridge_invocation_path.write_text(json.dumps(bridge_invocation, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-                oracle_result = evaluate_oracle(final_state, bridge_receipt, oracle)
+                reference_path = root / "fixtures" / "live_youtube_reference_transcript.txt"
+                reference_text = reference_path.read_text(encoding="utf-8") if reference_path.is_file() else ""
+                oracle_result = evaluate_oracle(final_state, bridge_receipt, oracle, reference_text)
                 oracle_result_path = output_dir / "oracle-result.json"
                 oracle_result_path.write_text(json.dumps(oracle_result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
                 ui_required_terms = [
@@ -642,6 +731,8 @@ def main() -> int:
     except Exception as exc:
         receipt["error"] = {"type": type(exc).__name__, "message": str(exc)}
     finally:
+        if virtual_sink:
+            destroy_virtual_sink(virtual_sink)
         if server_process and server_process.poll() is None:
             server_process.terminate()
             try:

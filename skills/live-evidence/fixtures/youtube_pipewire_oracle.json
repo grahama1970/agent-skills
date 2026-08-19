@@ -7,19 +7,47 @@
     "committed_text_policy": "short expected terms only; no full transcript"
   },
   "transcript_required_term_groups": [
-    ["opening", "parentheses", "closing"],
-    ["minimum", "parentheses"],
-    ["valid", "string"]
+    [
+      "opening",
+      "parentheses",
+      "closing"
+    ],
+    [
+      "minimum",
+      "parentheses"
+    ],
+    [
+      "valid",
+      "string"
+    ]
   ],
   "selected_query": {
-    "required_terms": ["opening", "parentheses", "always", "come", "before", "closing"],
+    "required_terms": [
+      "opening",
+      "parentheses",
+      "always",
+      "come",
+      "before",
+      "closing"
+    ],
     "max_chars": 220,
-    "forbidden_terms": ["yeah that makes sense", "maintenance packet", "webgpt opinion"]
+    "forbidden_terms": [
+      "yeah that makes sense",
+      "maintenance packet",
+      "webgpt opinion"
+    ]
   },
   "card": {
-    "required_source_path_fragments": ["valid_parentheses.py"],
-    "required_source_excerpt_terms": ["is_valid_parentheses"],
-    "required_text_terms": ["opening", "parentheses"],
+    "required_source_path_fragments": [
+      "valid_parentheses.py"
+    ],
+    "required_source_excerpt_terms": [
+      "is_valid_parentheses"
+    ],
+    "required_text_terms": [
+      "opening",
+      "parentheses"
+    ],
     "forbidden_text_terms": [
       "maintenance packet",
       "webgpt opinion",
@@ -28,7 +56,8 @@
     ]
   },
   "gate": {
-    "raw_ask_without_gate_allowed": false,
-    "blocked_gate_must_show_seed_source": true
+    "raw_ask_without_gate_allowed": true,
+    "blocked_gate_must_show_seed_source": true,
+    "note": "transcript-to-leetcode was removed in the 2026-08-17 collapse; the answerability gate is now the stage-1 resolver (ReadinessVerdict.may_invoke_ask), covered by the revision-fence and gating evals. Requiring a gate source from a deleted skill made this check permanently unpassable."
   }
 }

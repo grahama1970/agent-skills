@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from time import monotonic
 
 from loguru import logger
@@ -29,6 +30,7 @@ from .retrieval import (
     RipgrepEvidenceClient,
     rank_sources,
 )
+from .retrieval.external import derive_manual_search_query
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
 from .question_window import QuestionWindowBuilder, candidate_thread
@@ -234,9 +236,13 @@ class EvidenceCoordinator:
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
         started = monotonic()
+        # Stage 1 runs BEFORE retrieval so its canonical question can drive the
+        # search terms, the Ask seed, and the card, instead of the raw window.
+        verdict = await self._resolve_readiness(decision.query)
+        query = _bounded_query(decision.query, verdict)
         memory_result, ripgrep_result = await asyncio.gather(
-            self._memory.retrieve(decision.query),
-            self._ripgrep.retrieve(decision.query),
+            self._memory.retrieve(query),
+            self._ripgrep.retrieve(query),
             return_exceptions=True,
         )
 
@@ -296,13 +302,7 @@ class EvidenceCoordinator:
             )
             sources.extend(ripgrep_result.sources)
 
-        ranked = rank_sources(sources, decision.query, self._profile)
-
-        # Stage 1: decide whether a legitimate, COMPLETE question has been asked
-        # yet. This replaces routing on whether local code evidence happened to
-        # exist, which fired on any turn that retrieved incidental code and
-        # missed real questions with no local match.
-        verdict = await self._resolve_readiness(decision.query)
+        ranked = rank_sources(sources, query, self._profile)
 
         # When the resolver is unreachable or unconfigured we cannot judge
         # readiness at all, which is different from judging "not ready". Falling
@@ -311,12 +311,12 @@ class EvidenceCoordinator:
         may_ask = (
             verdict.may_invoke_ask
             if verdict is not None
-            else _should_solve_with_ask(decision.query, ranked)
+            else _should_solve_with_ask(query, ranked)
         )
 
         if may_ask:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
-            ask_result = await self._ask.solve(decision.query, ranked[:4])
+            ask_result = await self._ask.solve(query, ranked[:4])
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if ask_result.ok else LaneState.DEGRADED,
@@ -324,7 +324,7 @@ class EvidenceCoordinator:
                 latency_ms=ask_result.latency_ms,
                 result_count=len(ask_result.sources),
             )
-            ranked = rank_sources([*sources, *ask_result.sources], decision.query, self._profile)
+            ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
         elif verdict is not None:
             # A judged "not ready" holds the solver back and says why, so the
             # HUD never shows a confident answer to a truncated question.
@@ -334,7 +334,7 @@ class EvidenceCoordinator:
                 f"Holding: {verdict.blocking_reason}",
             )
 
-        card = self._summarizer.build(decision.query, decision.thread, ranked)
+        card = self._summarizer.build(query, decision.thread, ranked)
         if verdict is not None and verdict.clarifying_questions:
             card = card.model_copy(
                 update={
@@ -395,6 +395,49 @@ class EvidenceCoordinator:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
+
+
+_QUESTION_SENTENCE_RE = re.compile(r"([^.?!]{8,}\?)")
+
+
+def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:
+    """One bounded question for retrieval, Ask, and the card.
+
+    The collapse removed the sentence-selecting _best_retrieval_query on the
+    promise that stage-1's canonical_question would replace it, but the
+    coordinator kept feeding the raw rolling window downstream. Measured
+    consequence on the live YouTube eval: a 1200-char conversational blob as
+    the card query, and ripgrep terms so diluted that a fixture file literally
+    named valid_parentheses.py went unmatched (card: insufficient, lanes: []).
+
+    Preference order: the resolver's canonical question; else the last
+    question-shaped sentence (derive_manual_search_query, deterministic, works
+    offline -- on the same eval transcript it yields exactly "A opening
+    parentheses always has to come before closing, right?"); else the raw text.
+    """
+
+    if verdict is not None:
+        canonical = verdict.canonical_question.strip()
+        if canonical:
+            return canonical[:220]
+    # Accumulate trailing question sentences newest-first within the budget,
+    # not just the last one: a spoken turn is often a primary question followed
+    # by a confirmation tail ("What makes X valid? Y comes before Z, right?"),
+    # and keeping only the tail drops the actual question -- caught by
+    # eval_real_stt_window when a last-sentence-only fallback shipped here.
+    sentences = _QUESTION_SENTENCE_RE.findall(" ".join(raw.split()))
+    picked: list[str] = []
+    total = 0
+    for sentence in reversed(sentences):
+        sentence = sentence.strip()
+        if total + len(sentence) + 1 > 220:
+            break
+        picked.insert(0, sentence)
+        total += len(sentence) + 1
+    if picked:
+        return " ".join(picked)
+    derived = derive_manual_search_query(raw, max_chars=220)
+    return derived or raw
 
 
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
