@@ -110,9 +110,20 @@ def audit_skill(skill_dir: Path, now: datetime) -> dict[str, Any]:
     if not fixture.is_file():
         return {"skill": skill_dir.name, "has_fixture": False, "seams": [], "summary": {}}
     manifest = json.loads(fixture.read_text(encoding="utf-8"))
-    seams = manifest.get("seams") or []
-    cases = manifest.get("cases") or []
-    claims = manifest.get("capability_claims") or []
+    seams = list(manifest.get("seams") or [])
+    cases = list(manifest.get("cases") or [])
+    claims = list(manifest.get("capability_claims") or [])
+    # Live companion fixtures carry the cases that satisfy live_e2e slots; a
+    # skill's coverage is the union, or every live seam reads as a gap even
+    # when a live guard exists (agent-skills, 2026-08-19).
+    live_fixture = skill_dir / "fixtures" / "agentic_eval_live.json"
+    if live_fixture.is_file():
+        live = json.loads(live_fixture.read_text(encoding="utf-8"))
+        cases.extend(live.get("cases") or [])
+        seen_seams = {s.get("seam_id") for s in seams}
+        seams.extend(s for s in (live.get("seams") or []) if s.get("seam_id") not in seen_seams)
+        seen_claims = {c.get("id") for c in claims}
+        claims.extend(c for c in (live.get("capability_claims") or []) if c.get("id") not in seen_claims)
     reg_audit = regressions_mod.audit_skill(skill_dir, now)
     reg_by_seam: dict[str, list[str]] = {}
     for row in reg_audit.get("regressions", []):
