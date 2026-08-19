@@ -395,6 +395,29 @@
           "voice interruption redirect: PASS"
         ]
       }
+    },
+    {
+      "name": "review-dossier-deterministic-contract",
+      "type": "positive",
+      "real_world": false,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-review-dossier"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "answer span binds exact events and media timestamps: PASS",
+          "bundle digest deterministic across independent builds: PASS",
+          "supported claim without spans rejected: PASS",
+          "span bound to obsolete/unknown revision rejected: PASS",
+          "mutated transcript rejected on readback: PASS",
+          "review dossier: PASS"
+        ]
+      },
+      "notes": "#1451 required deterministic proof over the committed time-coded fixture journal. The live/browser clip-seek rung is a separate, still-open case."
     }
   ]
 }
