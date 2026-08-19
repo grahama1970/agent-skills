@@ -1,0 +1,27 @@
+{
+  "schema": "debugger.walkthrough.v1",
+  "title": "End-to-end conversational debug of the second-report state leak",
+  "mode": "blocked",
+  "launch": {
+    "module": "main",
+    "python": "/usr/bin/python3",
+    "config_name": "Debugger walkthrough ($debugger)",
+    "env": ["PYTHONPATH=${workspaceFolder}/skills/debugger/scenarios/variable_state"]
+  },
+  "stops": [
+    {
+      "file": "skills/debugger/scenarios/variable_state/main.py",
+      "line": 20,
+      "say": "Here at the first breakpoint the first report has already returned six, which is correct for one plus two plus three. We are about to run the second report over ten and twenty, which on its own should total thirty.",
+      "locals": ["first"],
+      "expect": {"first": "6"}
+    },
+    {
+      "file": "skills/debugger/scenarios/variable_state/main.py",
+      "line": 21,
+      "say": "And here at the second breakpoint the second report came back as thirty six instead of thirty. The six from the first report leaked in, because tally.running_total shares one mutable default list across every call.",
+      "locals": ["first", "second"],
+      "expect": {"first": "6", "second": "36"}
+    }
+  ]
+}

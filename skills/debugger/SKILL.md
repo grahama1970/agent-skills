@@ -528,11 +528,14 @@ and ask something, and she answers grounded in the paused state, then resumes.
   cu130 torch that the A5000 driver (CUDA 12.8) rejects, run the listener in the
   cu128 GPU container and point the driver at it with `DEBUGGER_STT_CMD`. Spoken
   navigation words are punctuation/case-normalized ("Continue." advances).
-- **Two voices.** Embry narrates and answers in her voice (the chatterbox
-  default); the project agent poses its own clarifying questions in a distinct
-  voice via the `ask: <question>` command, spoken with `DEBUGGER_AGENT_VOICE`
-  (e.g. `/voices/horus_ref.wav`). So the agent can interview Embry aloud with no
-  human present.
+- **Two voices, two models.** Embry narrates and answers in her voice (chatterbox
+  default) on `DEBUGGER_ASK_HANDLER` (demo default `gpt-5.5`, fast). Horus is a
+  full second agent: the `horus: <intent>` command has his **own** model
+  (`DEBUGGER_HORUS_HANDLER`, default `claude-fable-5` — Anthropic, for cross-vendor
+  diversity with Embry's OpenAI model) generate a grounded question from an intent
+  hint, spoken in his voice (`DEBUGGER_AGENT_VOICE`, e.g. `/voices/horus_ref.wav`).
+  So two agents on two models converse at the breakpoint with no human present.
+  (`ask: <verbatim text>` still exists for a scripted, fixed question.)
 - **Answers route through `/ask`** (`DEBUGGER_ASK_HANDLER`, e.g.
   `claude-fable-low`), grounded in the stop's locals **and the source of the
   module she is stopped in** (whole file when small, else a window around the

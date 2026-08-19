@@ -1,0 +1,56 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "The full end-to-end conversational walkthrough through the LIVE VS Code debugger bridge, with two distinct agents on two distinct models: the real debugger stops at two breakpoints in a real module, Embry explains each with the live paused state, then Horus interrupts with a question his own model generates (a followup tied to that breakpoint at stop 1, and 'what is the whole module for' at stop 2), and Embry answers each grounded in the paused state and the module source, before the walk completes. Horus's question comes from DEBUGGER_HORUS_HANDLER (claude-fable-5, Anthropic) and Embry's answer from DEBUGGER_ASK_HANDLER (gpt-5.5, OpenAI) -- cross-vendor model diversity. Capability-gated on a trusted, open VS Code workspace with the bridge extension. The spoken/two-voice/interrupt-sound/tonal-arc layer is proven by walkthrough-voice.json and live audible runs; this case asserts the conversational control flow and grounding over the real bridge.",
+  "claims": {
+    "proves": "vscode_walkthrough.py drives the live VS Code debugger to two real breakpoints (reading first=6, then first=6/second=36 off the paused frames), narrates each, and at each stop Horus (a second agent on a different model) generates and asks a grounded question which Embry answers via /ask grounded in the state and module source, then the walk completes",
+    "does_not_prove": "the exact wording of the model-generated question or answer (LLM, non-deterministic), audio playback quality, or live-microphone barge-in timing"
+  },
+  "cases": [
+    {
+      "name": "end-to-end-two-breakpoint-conversation-over-live-bridge",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Over the live bridge with two agents on two models: stop at main.py:20 (Embry explains, Horus[fable-5] asks a breakpoint-specific followup, Embry[gpt-5.5] answers), continue to main.py:21 (Embry explains, Horus asks what the whole module does, Embry answers), complete.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; REPO=\"$(cd ../../.. && pwd)\"; export DEBUGGER_VSCODE_WORKSPACE=\"${DEBUGGER_VSCODE_WORKSPACE:-$REPO}\"; export DEBUGGER_ASK_HANDLER=\"${DEBUGGER_ASK_HANDLER:-gpt-5.5}\"; export DEBUGGER_HORUS_HANDLER=\"${DEBUGGER_HORUS_HANDLER:-claude-fable-5}\"; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.e2e.json --commands 'horus: a short followup tied to this exact breakpoint and Embrys point; continue; horus: what this entire module is for; continue' --wait-seconds 45"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "STOP 1/2",
+          "first=6",
+          "HORUS asks:",
+          "Embry:",
+          "STOP 2/2",
+          "first=6, second=36",
+          "WALKTHROUGH-COMPLETE"
+        ]
+      }
+    },
+    {
+      "name": "fails-closed-without-live-bridge",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "Pointed at a workspace that is NOT open in VS Code, the end-to-end walkthrough fails closed (BRIDGE_BLOCKED, exit 3) before any conversation, rather than faking a debug session.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"$(mktemp -d)\"; mkdir -p \"$WS/skills/debugger/scenarios/variable_state\"; cp ../scenarios/variable_state/*.py \"$WS/skills/debugger/scenarios/variable_state/\"; DEBUGGER_VSCODE_WORKSPACE=\"$WS\" uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.e2e.json --commands 'continue; continue' --wait-seconds 6"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BRIDGE_BLOCKED"]
+      }
+    }
+  ]
+}
