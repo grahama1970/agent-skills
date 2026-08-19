@@ -30,6 +30,17 @@ to recite.
 - The UI Stop control propagates to the listener process and ends audio capture.
 - Ripgrep output is deadline- and match-bounded so a broad term cannot flood the interview surface.
 
+## Session purposes (#1449)
+
+Every session starts under a frozen purpose whose capability policy is
+enforced in the backend: `meeting` (evidence cards for your own conversation),
+`rehearsal` (practice-only, voice permitted, practice partition),
+`formal_assessment` (all assistance and effect capabilities fail closed),
+`interviewer_assist` (rubric coverage + follow-ups, no candidate answers), and
+`post_interview_review` (evidence-linked dossier, no hiring verdict). See
+SKILL.md for the policy table; these claims are distinct and non-transferable
+between purposes.
+
 ## Install
 
 ```bash

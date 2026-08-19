@@ -126,3 +126,25 @@ Do not mark the goal achieved when only these are true:
 After two focused attempts with the same blocker, stop and write a blocker
 report naming the failed command, exact error/output, changed files, receipt
 paths, current hypothesis, and one recommended next action.
+
+## Purpose Boundaries (#1449)
+
+The proof above is a `meeting`/`rehearsal`-purpose claim. Claims are distinct
+per frozen session purpose and must never be conflated:
+
+- `meeting`: live evidence cards for the human's own conversation (the primary
+  proof above).
+- `rehearsal`: practice-only; voice output permitted; artifacts live in a
+  practice partition and are never formal evidence.
+- `formal_assessment`: fails closed on candidate answer generation, manual and
+  automatic Ask, external search, debugger, voice output, and repository
+  mutation; nothing in the primary proof authorizes assisting an assessed
+  candidate.
+- `interviewer_assist`: rubric coverage and follow-up suggestions for the
+  interviewer; no candidate answer cards.
+- `post_interview_review`: evidence-linked dossier over a consented recording;
+  no hiring verdict.
+
+A capability disabled by the purpose's frozen policy is rejected in the
+backend on both automatic and manual routes; hiding a UI control is never the
+enforcement.
