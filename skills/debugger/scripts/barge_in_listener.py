@@ -7,11 +7,16 @@ continuous voice-activity detection; when the human says a stop word ("stop",
 that vscode_walkthrough.speak() polls, terminating playback mid-sentence. That
 is what lets the human interrupt Embry and tell her to stop.
 
-RealtimeSTT lives in the live-evidence venv, so launch this with that
-interpreter, e.g.:
+RealtimeSTT lives in the live-evidence venv. Launch with that interpreter --
+the one live-evidence's run.sh actually creates on the SSD cache, NOT the stale
+copy on the 12TB spinning disk:
 
-    /mnt/storage12tb/skills/live-evidence/.venv/bin/python \
+    ~/.cache/live-evidence/venv/bin/python \
         scripts/barge_in_listener.py /tmp/debugger-embry-stop.flag
+
+(That path is live-evidence/run.sh's default UV_PROJECT_ENVIRONMENT; the
+`/mnt/storage12tb/skills/live-evidence/.venv` copy is orphaned and its scipy is
+broken -- do not use it.)
 
 Prints BARGE-IN-LISTENING once the recorder is warm, and a BARGE-IN line each
 time it triggers. Ctrl-C to stop.
