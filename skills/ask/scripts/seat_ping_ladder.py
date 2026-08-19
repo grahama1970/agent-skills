@@ -80,12 +80,18 @@ def _verdict(payload: dict) -> tuple[str, str]:
     lanes = payload.get("lanes") or []
     requested = _norm(str(payload.get("requested_seat") or ""))
     # Identity binding: the receipt must be about the seat we asked for. The
-    # probe's lane ids look like handler-<seat> with dots normalized away.
+    # probe's lane ids look like handler-<seat> with dots normalized away --
+    # EXCEPT when the seat answered through its recorded substitution (e.g.
+    # webclaude -> claude-opus-5-high), where the lane carries the substitute
+    # and the probe's own top-level handler field carries the requested seat.
     if lanes and requested:
         lane_ids = [_norm(str(l.get("lane") or "")) for l in lanes]
         models = [_norm(str(m)) for l in lanes for m in (l.get("models") or [])]
-        if not any(requested in lid for lid in lane_ids) and not any(
-            requested in m or m in requested for m in models
+        probe_handler = _norm(str(payload.get("handler") or ""))
+        if (
+            not any(requested in lid for lid in lane_ids)
+            and not any(requested in m or m in requested for m in models)
+            and probe_handler != requested
         ):
             return "DISHONEST", f"receipt names {lane_ids or models}, not the requested seat"
     outcome = payload.get("outcome")
