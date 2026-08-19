@@ -555,6 +555,15 @@ def compete(
         str,
         typer.Option("--report-handler", help="Report seat (profile/model or browser handler) writing up the winner after the join."),
     ] = "",
+    reviewer: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--reviewer",
+            help="Per-lens review seat as handler=criterion (e.g. webgpt=security). "
+                 "Each reviewer reads EVERY competitor against only its criterion; "
+                 "the judge then synthesizes all reviews. Repeat per lens; requires --judge-handler.",
+        ),
+    ] = None,
     ask_id: Annotated[str | None, typer.Option("--ask-id", help="Stable artifact id.")] = None,
     output_root: Annotated[
         Path,
@@ -601,6 +610,7 @@ def compete(
         dag_template="compete",
         join_handler="join",
         judge_handler=judge_handler,
+        reviewers=reviewer,
         report_handler=report_handler,
         handler_projects=handler_project,
         handler_workspaces=handler_workspace,

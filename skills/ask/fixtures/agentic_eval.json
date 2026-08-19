@@ -1157,6 +1157,32 @@
         ]
       },
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "multistage-compete-compiles-reviewer-lenses-between-gate-and-judge",
+      "type": "positive",
+      "real_world": true,
+      "seams": [
+        "competition.isolation_and_judging",
+        "scheduler.lane_local_degradation"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged",
+        "ask.scheduler.lane_local_degradation"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && O=$(mktemp -d) && uv run --project . python -m ask.tau_dag_cli compete 'Solve problem X.' --repo local/agent-skills --target multistage-eval --immutable-goal 'A winner grounded in all reviews.' --handler webgpt --handler oc-deepseek --reviewer webgpt=security --reviewer webclaude=code-quality --reviewer webgemini=maintainability --judge-handler webgpt --criterion overall --ask-id multistage-eval-case --run-output-root $O >/dev/null && uv run --project . python - $O/multistage-eval-case/dag.json <<'EOF'\nimport json,sys\nd=json.load(open(sys.argv[1]))\nids=[n['id'] for n in d['nodes']]\nedges={(e['from'],e['to']) for e in d['edges']}\nrevs=['review-security','review-code-quality','review-maintainability']\nassert all(r in ids for r in revs), ids\nassert all(('join-gate',r) in edges and (r,'judge') in edges for r in revs), edges\nassert ('handler-webgpt','join-gate') in edges and ('handler-oc-deepseek','join-gate') in edges\nassert ('judge','join') in edges\nj=[n for n in d['nodes'] if n['id']=='judge'][0]\nassert set(j['depends_on'])==set(revs), j['depends_on']\nassert 'security' in j['context']['prompt_contract']['instruction']\nfor r in revs:\n    node=[n for n in d['nodes'] if n['id']==r][0]\n    assert node['context']['requires_verdict'] is False\n    assert 'ONLY' in node['context']['prompt_contract']['system']\nprint('MULTISTAGE_TOPOLOGY_COMPILED')\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MULTISTAGE_TOPOLOGY_COMPILED"
+        ]
+      },
+      "notes": "The ambiguous human shape 'A and B solve X, then per-lens reviews (security/quality/metric), then synthesize and pick a winner' compiles to creators -> join-gate -> review-<lens> nodes -> judge -> join. Reviewers must not pick winners (requires_verdict false, single-criterion system prompt); the judge synthesizes all reviews. Added 2026-08-19 after the request went NEEDS_INTERVIEW."
     }
   ],
   "capability_claims": [

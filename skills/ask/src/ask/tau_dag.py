@@ -248,6 +248,11 @@ class TauDagCompileInput:
     attachments: tuple[str, ...] = ()
     judge_handler: str = ""
     report_handler: str = ""
+    # Per-lens review stage between competitors and the judge: each entry is
+    # "handler=criterion" (e.g. webgpt=security). Every reviewer reads EVERY
+    # competitor submission against ONLY its own criterion; the judge then
+    # synthesizes competitor outputs plus all reviews. Requires judge_handler.
+    reviewers: tuple[str, ...] = ()
 
 
 def infer_compile_input(
@@ -265,6 +270,7 @@ def infer_compile_input(
     join_handler: str = "join",
     judge_handler: str = "",
     report_handler: str = "",
+    reviewers: list[str] | None = None,
     handler_projects: list[str] | None = None,
     handler_workspaces: list[str] | None = None,
     dag_template: str = "",
@@ -329,6 +335,11 @@ def infer_compile_input(
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
         judge_handler=_normalize_handler(judge_handler) if judge_handler else "",
         report_handler=_normalize_handler(report_handler) if report_handler else "",
+        reviewers=tuple(
+            f"{_normalize_handler(item.split('=', 1)[0])}={item.split('=', 1)[1].strip()}"
+            for item in (reviewers or [])
+            if "=" in item and item.split("=", 1)[1].strip()
+        ),
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
         handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
         handler_provider_hints=tuple(inferred_provider_hints[: len(inferred_handlers)]),
@@ -2369,6 +2380,86 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         join_node["context"]["join_semantics"]["selection_policy"] = (
             "judge_verdict_first_then_deterministic_receipts"
         )
+    reviewer_ids: list[str] = []
+    if is_compete and input.reviewers:
+        if not input.judge_handler:
+            raise TauDagError(
+                "reviewers require a judge_handler to synthesize the reviews; "
+                "pass --judge-handler or drop --reviewer"
+            )
+        for entry in input.reviewers:
+            reviewer_handler, criterion = entry.split("=", 1)
+            slug = re.sub(r"[^a-z0-9]+", "-", criterion.lower()).strip("-") or "criterion"
+            node_id = f"review-{slug}"
+            if any(n["id"] == node_id for n in extra_nodes):
+                raise TauDagError(f"duplicate review criterion {criterion!r}")
+            reviewer_ids.append(node_id)
+            extra_nodes.append(
+                {
+                    "id": node_id,
+                    "agent": node_id,
+                    "executor": "local",
+                    "max_attempts": 1,
+                    "command_spec": f"command-specs/{node_id}/tau-dispatch-command.json",
+                    "required_evidence": [
+                        "handler_response_receipt",
+                        "normalized_handler_receipt",
+                        "prior_handler_receipts",
+                    ],
+                    "depends_on": list(competitor_ids),
+                    "context": {
+                        "role": "compete_reviewer",
+                        "review_criterion": criterion,
+                        "workflow_mode": input.workflow_mode,
+                        **_dag_template_context(input),
+                        "handler": reviewer_handler,
+                        "provider_hint": "",
+                        "handler_policy": _handler_policy(reviewer_handler, workflow_mode=input.workflow_mode),
+                        "prompt_contract": {
+                            "system": (
+                                "You are a compete reviewer for exactly one criterion: "
+                                f"{criterion!r}. Review EVERY competitor submission below "
+                                "against ONLY that criterion."
+                            ),
+                            "instruction": (
+                                f"For each competitor, score it 0-10 on {criterion!r} with "
+                                "concrete evidence from its submission, one section per "
+                                "competitor named by its node id. Do NOT pick a winner and "
+                                "do NOT review any other criterion."
+                            ),
+                        },
+                        "browser_oracle_project": _handler_project(input, reviewer_handler)
+                        if _is_browser_handler(reviewer_handler)
+                        else None,
+                        "request": input.request,
+                        "immutable_goal": input.immutable_goal,
+                        "topology": input.topology,
+                        "prior_nodes": list(competitor_ids),
+                        "scheduler_dependencies": list(competitor_ids),
+                        "transport_resource": "surf_socket" if _is_browser_handler(reviewer_handler) else None,
+                        "requires_prior_receipts": True,
+                        "requires_verdict": False,
+                        "isolation_required": False,
+                    },
+                }
+            )
+        # The judge synthesizes competitors PLUS every review.
+        for node in extra_nodes:
+            if node["id"] == "judge":
+                node["depends_on"] = [*competitor_ids, *reviewer_ids]
+                node["context"]["prior_nodes"] = [*competitor_ids, *reviewer_ids]
+                node["context"]["scheduler_dependencies"] = [*competitor_ids, *reviewer_ids]
+                node["context"]["prompt_contract"]["instruction"] = (
+                    "Synthesize the per-criterion reviews in the prior receipts "
+                    f"(criteria: {', '.join(e.split('=', 1)[1] for e in input.reviewers)}) "
+                    "with your own reading of every competitor submission. Score each "
+                    "competitor, name concrete violations, and end with exactly one line "
+                    "'WINNER: <competitor-node-id>' choosing the best submission. "
+                    "Do not write code yourself."
+                )
+        join_node["context"]["join_semantics"]["requires_completed"] = [
+            *competitor_ids, *reviewer_ids, "judge",
+        ]
     if is_compete and input.report_handler:
         report_priors = ["join", *( ["judge"] if input.judge_handler else [] )]
         extra_nodes.append(
@@ -2456,7 +2547,20 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 }
             )
             edges.extend({"from": cid, "to": "join-gate"} for cid in competitor_ids)
-            if judge_present:
+            if reviewer_ids and judge_present:
+                # creators -> join-gate -> per-lens reviewers -> judge -> join
+                for rid in reviewer_ids:
+                    edges.append({"from": "join-gate", "to": rid})
+                    edges.append({"from": rid, "to": "judge"})
+                edges.append({"from": "judge", "to": "join"})
+                for node in extra_nodes:
+                    if node["id"] in reviewer_ids:
+                        node["depends_on"] = ["join-gate"]
+                        node["context"]["scheduler_dependencies"] = ["join-gate"]
+                    elif node["id"] == "judge":
+                        node["depends_on"] = list(reviewer_ids)
+                        node["context"]["scheduler_dependencies"] = list(reviewer_ids)
+            elif judge_present:
                 edges.append({"from": "join-gate", "to": "judge"})
                 edges.append({"from": "judge", "to": "join"})
                 for node in extra_nodes:
@@ -2535,6 +2639,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "nodes": [
             *handler_nodes,
             *[n for n in extra_nodes if n["id"] == "join-gate"],
+            *[n for n in extra_nodes if n["id"] in reviewer_ids],
             *[n for n in extra_nodes if n["id"] == "judge"],
             join_node,
             *[n for n in extra_nodes if n["id"] == "report"],
