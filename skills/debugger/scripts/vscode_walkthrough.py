@@ -101,29 +101,78 @@ def acknowledge_pause() -> None:
         return
 
 
+def _extract_ask_answer(payload: dict) -> str | None:
+    """Pull the answer text out of an /ask (Tau single-call) --json result.
+
+    Fail-closed on a degraded/failed run (answerability model, like Sparta chat):
+    a provider gate or degraded provider yields no answer, so Embry deflects
+    rather than inventing one.
+    """
+    if payload.get("provider_gate") and not payload.get("provider_live", True):
+        return None
+    if payload.get("degraded_providers"):
+        return None
+    join = payload.get("join_artifact_path")
+    if isinstance(join, str) and Path(join).is_file():
+        try:
+            payload = json.loads(Path(join).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+    best = None
+    def hunt(node):
+        nonlocal best
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in ("answer", "final_answer", "response", "content", "text") and isinstance(value, str) and len(value.strip()) > 15:
+                    best = value.strip()
+                    return
+                hunt(value)
+        elif isinstance(node, list):
+            for value in node:
+                hunt(value)
+    hunt(payload)
+    return best
+
+
 def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> str:
     """Answer a human question during the walkthrough, grounded in the paused state.
 
-    If DEBUGGER_ANSWER_URL is set, POST {question, context} to it and use the
-    returned `answer` (an LLM/Embry endpoint). Otherwise fall back to a concise
-    answer grounded in this stop's narration and observed variables -- honest and
-    source-bound rather than invented.
+    Routes through /ask (the sanctioned interface to Tau -- NOT scillm directly),
+    a single-call handler, with the paused state and narration in the prompt.
+    Following the Sparta Explorer chat pattern this is answerability-gated and
+    fail-closed: when /ask cannot produce a grounded answer (provider degraded
+    or gated), Embry deflects rather than inventing one. The spoken answer is the
+    same text (voice parity). Handler is configurable via DEBUGGER_ASK_HANDLER.
     """
-    url = os.environ.get("DEBUGGER_ANSWER_URL")
-    context = {"title": spec.get("title"), "say": stop.get("say"), "state": state_str,
-               "file": stop.get("file"), "mode": spec.get("mode")}
-    if url:
-        try:
-            import httpx
-            resp = httpx.post(url, json={"question": question, "context": context}, timeout=60.0)
-            resp.raise_for_status()
-            answer = (resp.json() or {}).get("answer")
-            if answer:
-                return str(answer)
-        except Exception:
-            pass
-    return (f"At this stop ({stop.get('file')}) the state is {state_str}. {stop.get('say')} "
-            f"Ask me to continue, repeat, or go back, or ask another question.")
+    # Opt-in: set DEBUGGER_ASK_HANDLER to a healthy /ask handler (e.g. webgpt or
+    # an API model) to route answers through Tau. Default 'none' gives the fast
+    # grounded deflect, so the loop never hangs on a degraded provider and evals
+    # stay fast; real answers are enabled explicitly when a provider is healthy.
+    handler = os.environ.get("DEBUGGER_ASK_HANDLER", "none").strip()
+    if handler in ("", "none"):
+        return (f"At this stop ({stop.get('file')}) the state is {state_str}. {stop.get('say')} "
+                f"Ask me to continue, repeat, go back, or ask something else. "
+                f"(Set DEBUGGER_ASK_HANDLER to a healthy /ask handler for a full answer.)")
+    prompt = (
+        f"You are Embry, walking a developer through code at a live debugger breakpoint. "
+        f"Stop: {stop.get('file')} -- {stop.get('say')} Observed paused state: {state_str}. "
+        f"Answer their question concisely and specifically, grounded only in this state; "
+        f"if you cannot answer from it, say so. Question: {question}"
+    )
+    try:
+        result = subprocess.run(
+            ["bash", str(SKILL.parent / "ask" / "run.sh"), handler, "--json", prompt],
+            capture_output=True, text=True, timeout=240,
+        )
+        payload = json.loads(result.stdout or "{}")
+        answer = _extract_ask_answer(payload)
+        if answer:
+            return answer
+    except Exception:
+        pass
+    # Fail-closed deflect: grounded, not invented (matches Sparta answerability).
+    return (f"I can't ground a full answer from here right now. At this stop ({stop.get('file')}) the state "
+            f"is {state_str}. {stop.get('say')} Ask me to continue, repeat, go back, or ask something else.")
 
 
 def remember_walkthrough(spec: dict, transcript: list[dict], key_seed: str) -> str | None:
