@@ -101,15 +101,41 @@ def acknowledge_pause() -> None:
         return
 
 
-def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> str:
+def _source_context(workspace: Path | None, stop: dict, line: int | None, max_full_lines: int = 200) -> str:
+    """The actual source at the breakpoint, so Embry can answer about the code.
+
+    Embry is stopped in a real file/module; a question like "what is this code
+    doing" or "where should the fix go" needs the source, not just the locals.
+    Returns the whole module when small, else a window around the paused line.
+    """
+    try:
+        if workspace is None:
+            return ""
+        path = Path(workspace) / stop.get("file", "")
+        if not path.is_file():
+            return ""
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        if len(lines) <= max_full_lines or not line:
+            body = "\n".join(lines)
+            return f"\nThe full module {stop.get('file')} she is stopped in:\n```\n{body}\n```\n"
+        lo, hi = max(0, line - 40), min(len(lines), line + 20)
+        body = "\n".join(f"{i+1}: {lines[i]}" for i in range(lo, hi))
+        return f"\nThe region of {stop.get('file')} around the paused line {line}:\n```\n{body}\n```\n"
+    except Exception:
+        return ""
+
+
+def answer_question(question: str, stop: dict, state_str: str, spec: dict,
+                    workspace: Path | None = None, line: int | None = None) -> str:
     """Answer a human question during the walkthrough, grounded in the paused state.
 
     Routes through /ask (the sanctioned interface to Tau -- NOT scillm directly),
-    a single-call handler, with the paused state and narration in the prompt.
-    Following the Sparta Explorer chat pattern this is answerability-gated and
-    fail-closed: when /ask cannot produce a grounded answer (provider degraded
-    or gated), Embry deflects rather than inventing one. The spoken answer is the
-    same text (voice parity). Handler is configurable via DEBUGGER_ASK_HANDLER.
+    a single-call handler, with the paused state, the narration, AND the source of
+    the module she is stopped in, so she can answer about the code itself (not only
+    the locals). Following the Sparta Explorer chat pattern this is answerability-
+    gated and fail-closed: when /ask cannot produce a grounded answer (provider
+    degraded or gated), Embry deflects rather than inventing one. The spoken answer
+    is the same text (voice parity). Handler is configurable via DEBUGGER_ASK_HANDLER.
     """
     # Route through /ask one-shot on the local Claude lane (claude-fable-low):
     # no browser, no Chrome contention, resolves via SciLLM inside Tau (per the
@@ -122,11 +148,13 @@ def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> st
         return (f"At this stop ({stop.get('file')}) the state is {state_str}. {stop.get('say')} "
                 f"Ask me to continue, repeat, go back, or ask something else. "
                 f"(Set DEBUGGER_ASK_HANDLER=claude-fable-low for a full spoken answer via /ask.)")
+    source = _source_context(workspace, stop, line)
     prompt = (
         f"You are Embry, walking a developer through code at a live debugger breakpoint. "
-        f"Stop: {stop.get('file')} -- {stop.get('say')} Observed paused state: {state_str}. "
-        f"Answer their question concisely and specifically, grounded only in this state; "
-        f"if you cannot answer from it, say so. Answer in 2-3 sentences. Question: {question}"
+        f"Stop: {stop.get('file')} -- {stop.get('say')} Observed paused state: {state_str}.{source}"
+        f"Answer their question concisely and specifically, grounded in this state and the "
+        f"source above; if you cannot answer from it, say so. Answer in 2-3 sentences. "
+        f"Question: {question}"
     )
     try:
         # Strip this process's uv/venv env so /ask uses its OWN project venv
@@ -541,7 +569,7 @@ def main() -> int:
                 print(f"  AGENT asks: {question}")
                 if args.speak:
                     speak(question, stop_flag=args.stop_flag, watch_stdin=watch_keys, voice=agent_voice)
-                answer = answer_question(question, stop, state_str, spec)
+                answer = answer_question(question, stop, state_str, spec, workspace=workspace, line=line)
                 print(f"  Embry: {answer}")
                 if args.speak:
                     speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
@@ -549,7 +577,7 @@ def main() -> int:
                 # A human-spoken/typed question: the human asks in their own voice,
                 # so only Embry's answer is synthesized (in her voice).
                 print(f"  Q: {cmd}")
-                answer = answer_question(cmd, stop, state_str, spec)
+                answer = answer_question(cmd, stop, state_str, spec, workspace=workspace, line=line)
                 print(f"  A: {answer}")
                 if args.speak:
                     speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
