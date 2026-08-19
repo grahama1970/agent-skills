@@ -106,6 +106,28 @@ Use `pw-cli list-objects Node` or `pactl list short sources` to identify a
 meeting/system source. Live Evidence stores transcript and evidence JSONL, not
 raw audio, unless a future explicitly authorized extension changes that policy.
 
+## Session purposes and capability policy (#1449)
+
+A session is started FOR something, and that purpose is authority, not a UI
+label. `POST /api/session/start` accepts `purpose`, `actor_role`, and an
+optional explicit `policy`; the resolved capability set is frozen at start and
+bound into a SHA-256 `policy_digest` that every card and journal record
+carries. Changing purpose, role, or policy after activity begins allocates a
+NEW session id -- a toggle can never silently widen a running session.
+
+| purpose | default stance |
+| --- | --- |
+| `meeting` | evidence + decision capture; external search permitted (manual lanes) |
+| `rehearsal` | coaching + voice permitted; session is machine-readably `practice_only` |
+| `formal_assessment` | FAILS CLOSED: no candidate answers, no manual/automatic Ask, no external search, no debugger, no voice, no repository mutation |
+| `interviewer_assist` | follow-up suggestions permitted; candidate answer generation disabled |
+| `post_interview_review` | post-hoc only; `capture_audio` disabled, so the session can never reach LISTENING |
+
+Enforcement lives in the backend choke points (coordinator gates, manual-route
+403s), never only in hidden React controls; `eval-session-policy` proves the
+fail-closed matrix over live HTTP, including UI-bypass calls. Consent remains a
+separate, prior gate that policy supplements and never replaces.
+
 ## Retrieval precedence
 
 1. `memory /intent` and `/recall` using supported HTTP boundaries.

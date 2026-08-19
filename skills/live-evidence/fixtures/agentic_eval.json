@@ -323,6 +323,30 @@
           "salient fact memory: PASS"
         ]
       }
+    },
+    {
+      "name": "session-capability-policy-fails-closed-in-backend",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-session-policy"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "formal_assessment: automatic Ask NEVER ran: PASS",
+          "formal_assessment: manual Ask rejected 403: PASS",
+          "formal_assessment: manual external search rejected 403: PASS",
+          "post-start widening allocates a new session id: PASS",
+          "rehearsal is machine-readably practice_only: PASS",
+          "post_interview_review never LISTENS even with consent: PASS",
+          "every journaled record binds a policy digest: PASS",
+          "session policy: PASS"
+        ]
+      }
     }
   ]
 }

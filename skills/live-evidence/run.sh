@@ -173,6 +173,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_two_stage_prompt_contract.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-session-policy)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_session_policy.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-revision-fence)
     shift || true
     prepare_python_environment

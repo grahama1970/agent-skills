@@ -113,7 +113,12 @@ def _register_api_routes(
 
     @app.post("/api/session/start", response_model=AppSnapshot)
     async def start_session(request: SessionStartRequest) -> AppSnapshot:
-        return await state.start_session(request.consent_confirmed)
+        return await state.start_session(
+            request.consent_confirmed,
+            purpose=request.purpose,
+            actor_role=request.actor_role,
+            policy=request.policy,
+        )
 
     @app.post("/api/session/pause", response_model=AppSnapshot)
     async def pause_session() -> AppSnapshot:
@@ -130,6 +135,17 @@ def _register_api_routes(
 
     @app.post("/api/search", response_model=EvidenceCard)
     async def manual_search(request: ManualSearchRequest) -> EvidenceCard:
+        # Backend policy enforcement (#1449): a disabled capability fails
+        # closed on the manual route too. Hiding the button is presentation;
+        # this is the authority, and it holds when a caller bypasses the UI.
+        policy = state.session_policy()
+        lane = request.lane.value
+        if lane in ("brave", "dogpile") and not policy.external_search:
+            raise HTTPException(status_code=403, detail="external_search disabled by session policy")
+        if lane == "ask" and not policy.candidate_answer_generation:
+            raise HTTPException(status_code=403, detail="candidate_answer_generation disabled by session policy")
+        if lane in ("memory", "ripgrep", "code") and not policy.retrieve_local_evidence:
+            raise HTTPException(status_code=403, detail="retrieve_local_evidence disabled by session policy")
         return await coordinator.manual_search(request)
 
     @app.post("/api/cards/{card_id}/pin", response_model=AppSnapshot)

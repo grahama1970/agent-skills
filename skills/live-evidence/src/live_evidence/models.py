@@ -8,6 +8,8 @@ human-facing summaries separate so relevance cannot silently become authority.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any, Literal
@@ -36,6 +38,89 @@ class TranscriptKind(StrEnum):
     INTERIM = "interim"
     STABILIZED = "stabilized"
     FINAL = "final"
+
+
+class SessionPurpose(StrEnum):
+    """What this session is FOR. Frozen at start; changing it is a new session."""
+
+    MEETING = "meeting"
+    REHEARSAL = "rehearsal"
+    FORMAL_ASSESSMENT = "formal_assessment"
+    INTERVIEWER_ASSIST = "interviewer_assist"
+    POST_INTERVIEW_REVIEW = "post_interview_review"
+
+
+class ActorRole(StrEnum):
+    """Who the operator is acting as in this session."""
+
+    PARTICIPANT = "participant"
+    CANDIDATE = "candidate"
+    INTERVIEWER = "interviewer"
+    REVIEWER = "reviewer"
+
+
+class CapabilityPolicy(BaseModel):
+    """Frozen per-session capability grants, enforced in the backend.
+
+    UI toggles are presentation; these fields are the authority (#1449). A
+    disabled capability fails closed on BOTH automatic and manual routes: a
+    formal-assessment session must reject a hand-typed manual Ask exactly as it
+    suppresses the automatic one.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    capture_audio: bool = True
+    retain_transcript: bool = True
+    retrieve_local_evidence: bool = True
+    external_search: bool = False
+    candidate_answer_generation: bool = True
+    interviewer_followup_suggestions: bool = False
+    debugger_invocation: bool = False
+    repository_mutation: bool = False
+    voice_output: bool = False
+
+
+POLICY_VERSION = 1
+
+# Purpose defaults (#1449). formal_assessment fails closed on every assistance
+# and effect capability; enabling one requires an explicit policy override at
+# session start, which changes the digest that every artifact binds.
+DEFAULT_POLICIES: dict[SessionPurpose, CapabilityPolicy] = {
+    SessionPurpose.MEETING: CapabilityPolicy(external_search=True),
+    SessionPurpose.REHEARSAL: CapabilityPolicy(voice_output=True),
+    SessionPurpose.FORMAL_ASSESSMENT: CapabilityPolicy(
+        external_search=False,
+        candidate_answer_generation=False,
+        interviewer_followup_suggestions=False,
+        debugger_invocation=False,
+        repository_mutation=False,
+        voice_output=False,
+    ),
+    SessionPurpose.INTERVIEWER_ASSIST: CapabilityPolicy(
+        candidate_answer_generation=False,
+        interviewer_followup_suggestions=True,
+    ),
+    SessionPurpose.POST_INTERVIEW_REVIEW: CapabilityPolicy(
+        capture_audio=False,
+        candidate_answer_generation=False,
+    ),
+}
+
+
+def policy_digest(purpose: SessionPurpose, actor_role: ActorRole, policy: CapabilityPolicy) -> str:
+    """Canonical digest binding purpose, role, version, and capabilities."""
+
+    canonical = json.dumps(
+        {
+            "purpose": purpose.value,
+            "actor_role": actor_role.value,
+            "policy_version": POLICY_VERSION,
+            "capabilities": policy.model_dump(),
+        },
+        sort_keys=True,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class TranscriptSource(StrEnum):
@@ -286,6 +371,8 @@ class EvidenceCard(BaseModel):
     # without these a slow result publishes over a newer question.
     question_id: str | None = Field(default=None, min_length=8, max_length=64)
     question_revision: int = Field(default=0, ge=0)
+    # Digest of the frozen session policy this card was produced under (#1449).
+    policy_digest: str | None = Field(default=None, min_length=64, max_length=64)
     pinned: bool = False
     dismissed: bool = False
 
@@ -331,6 +418,12 @@ class SessionInfo(BaseModel):
     stopped_at: datetime | None = None
     consent_confirmed: bool = False
     profile_name: str = "default"
+    purpose: SessionPurpose = SessionPurpose.MEETING
+    actor_role: ActorRole = ActorRole.PARTICIPANT
+    policy: CapabilityPolicy = Field(default_factory=CapabilityPolicy)
+    policy_version: int = POLICY_VERSION
+    policy_digest: str = ""
+    practice_only: bool = False
 
 
 class AppSnapshot(BaseModel):
@@ -358,6 +451,10 @@ class SessionStartRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     consent_confirmed: bool = False
+    purpose: SessionPurpose = SessionPurpose.MEETING
+    actor_role: ActorRole = ActorRole.PARTICIPANT
+    # Explicit capability override; omitted fields take the purpose default.
+    policy: CapabilityPolicy | None = None
 
 
 class ManualSearchRequest(BaseModel):

@@ -22,8 +22,20 @@ class SessionJournal:
         self._data_dir = data_dir
         self._lock = asyncio.Lock()
 
-    async def append(self, session_id: str, kind: str, payload: BaseModel | dict[str, Any]) -> Path:
-        """Append one validated record and return the journal path."""
+    async def append(
+        self,
+        session_id: str,
+        kind: str,
+        payload: BaseModel | dict[str, Any],
+        *,
+        policy_digest: str | None = None,
+    ) -> Path:
+        """Append one validated record and return the journal path.
+
+        policy_digest binds the record to the frozen session capability policy
+        it was produced under (#1449), so a reviewer can prove which authority
+        contract governed every journaled effect.
+        """
 
         if not session_id or any(char in session_id for char in {"/", "\\", ".."}):
             raise ValueError("invalid session_id")
@@ -32,6 +44,8 @@ class SessionJournal:
         target = session_dir / "session.jsonl"
         record_payload = payload.model_dump(mode="json") if isinstance(payload, BaseModel) else payload
         record = {"kind": kind, "payload": record_payload}
+        if policy_digest:
+            record["policy_digest"] = policy_digest
         encoded = json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n"
         async with self._lock:
             await asyncio.to_thread(_append_text, target, encoded)

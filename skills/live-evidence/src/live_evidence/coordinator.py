@@ -64,19 +64,25 @@ class EvidenceCoordinator:
         """Persist and project a transcript event, then schedule retrieval."""
 
         snapshot = await self._state.append_transcript(event)
-        await self._journal.append(snapshot.session.session_id, "transcript", event)
+        digest = self._state.session_policy_digest()
+        await self._journal.append(
+            snapshot.session.session_id, "transcript", event, policy_digest=digest
+        )
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
+        policy = self._state.session_policy()
         # Salient-fact capture runs beside question handling, never inside it:
         # an explicit decision is a record to remember, not a question to
         # answer, and its durable write must not block or join the
         # revision-fenced card path. Consent is already enforced above -- an
         # ARMED session returns before reaching this line.
-        fact = extract_decision(event, self._state.session_id())
+        fact = extract_decision(event, self._state.session_id()) if policy.retain_transcript else None
         if fact is not None:
             fact_task = asyncio.create_task(self._write_salient_fact(fact))
             self._tasks.add(fact_task)
             fact_task.add_done_callback(self._task_done)
+        if not policy.retrieve_local_evidence:
+            return
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
             return
@@ -107,10 +113,16 @@ class EvidenceCoordinator:
         confirmed, detail = await self._facts.write_and_confirm(fact)
         session_id = self._state.session_id()
         if confirmed:
-            await self._journal.append(session_id, "salient_fact_write_confirmed", fact)
+            await self._journal.append(
+                session_id, "salient_fact_write_confirmed", fact,
+                policy_digest=self._state.session_policy_digest(),
+            )
             logger.info("salient fact confirmed fact_id={} ({})", fact.fact_id[:12], detail)
             return
-        await self._journal.append(session_id, "salient_fact_write_unconfirmed", fact)
+        await self._journal.append(
+            session_id, "salient_fact_write_unconfirmed", fact,
+            policy_digest=self._state.session_policy_digest(),
+        )
         await self._state.set_lane(
             RetrievalLane.MEMORY,
             LaneState.DEGRADED,
@@ -222,8 +234,12 @@ class EvidenceCoordinator:
             )
             sources = rank_sources(result.sources, request.query, self._profile)
         card = self._summarizer.build(request.query, thread, sources)
+        card = card.model_copy(update={"policy_digest": self._state.session_policy_digest()})
         snapshot = await self._state.add_card(card)
-        await self._journal.append(snapshot.session.session_id, "evidence_card", card)
+        await self._journal.append(
+            snapshot.session.session_id, "evidence_card", card,
+            policy_digest=self._state.session_policy_digest(),
+        )
         return card
 
     async def _retrieve(
@@ -308,11 +324,20 @@ class EvidenceCoordinator:
         # readiness at all, which is different from judging "not ready". Falling
         # back to the legacy predicate keeps local/offline runs working instead
         # of silently disabling the Ask lane whenever SciLLM is absent.
+        policy = self._state.session_policy()
         may_ask = (
             verdict.may_invoke_ask
             if verdict is not None
             else _should_solve_with_ask(query, ranked)
         )
+        if not policy.candidate_answer_generation:
+            # Frozen session policy outranks the readiness verdict: a
+            # formal-assessment or interviewer-assist session never generates
+            # a candidate answer, however ready the question is (#1449).
+            may_ask = False
+            await self._state.set_lane(
+                RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
+            )
 
         if may_ask:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
@@ -351,7 +376,11 @@ class EvidenceCoordinator:
                 }
             )
         card = card.model_copy(
-            update={"question_id": question_id, "question_revision": question_revision}
+            update={
+                "question_id": question_id,
+                "question_revision": question_revision,
+                "policy_digest": self._state.session_policy_digest(),
+            }
         )
         snapshot = await self._state.publish_card_fenced(card)
         if snapshot is None:
@@ -362,6 +391,7 @@ class EvidenceCoordinator:
                 self._state.session_id(),
                 "evidence_card_discarded_stale_revision",
                 card,
+                policy_digest=self._state.session_policy_digest(),
             )
             logger.info(
                 "discarded stale result question_id={} revision={} latency_ms={}",
@@ -370,7 +400,12 @@ class EvidenceCoordinator:
                 int((monotonic() - started) * 1000),
             )
             return
-        await self._journal.append(snapshot.session.session_id, "evidence_card", card)
+        await self._journal.append(
+            snapshot.session.session_id,
+            "evidence_card",
+            card,
+            policy_digest=self._state.session_policy_digest(),
+        )
         logger.info(
             "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,

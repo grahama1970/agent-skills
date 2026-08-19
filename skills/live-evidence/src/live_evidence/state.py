@@ -18,19 +18,28 @@ from .models import (
     SessionStatus,
     TranscriptEvent,
     utc_now,
+    ActorRole,
+    CapabilityPolicy,
+    DEFAULT_POLICIES,
+    SessionPurpose,
+    policy_digest,
 )
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
 
-def _status_for_consent(consent_confirmed: bool) -> SessionStatus:
+def _status_for_session(consent_confirmed: bool, policy: CapabilityPolicy) -> SessionStatus:
     """Never report LISTENING for a session that may not capture audio.
 
-    The browser Start control posts consent_confirmed=false, so before this the
-    HUD showed "listening" over a session with no recording authorization. Only
-    an explicitly consented session may present as listening.
+    Two independent gates: consent (the human agreed) and the frozen policy's
+    capture_audio capability (this session KIND is allowed to capture --
+    post_interview_review, for example, is post-hoc and never listens). Either
+    one absent keeps the session ARMED, and the coordinator refuses retrieval
+    for any non-LISTENING session.
     """
 
-    return SessionStatus.LISTENING if consent_confirmed else SessionStatus.ARMED
+    if consent_confirmed and policy.capture_audio:
+        return SessionStatus.LISTENING
+    return SessionStatus.ARMED
 
 
 class RuntimeState:
@@ -60,34 +69,74 @@ class RuntimeState:
         async with self._lock:
             return self._snapshot_unlocked()
 
-    async def start_session(self, consent_confirmed: bool) -> AppSnapshot:
-        """Start or restart a session."""
+    async def start_session(
+        self,
+        consent_confirmed: bool,
+        purpose: SessionPurpose = SessionPurpose.MEETING,
+        actor_role: ActorRole = ActorRole.PARTICIPANT,
+        policy: CapabilityPolicy | None = None,
+    ) -> AppSnapshot:
+        """Start or restart a session under a frozen capability policy (#1449).
+
+        Purpose, actor role, and policy are bound into a digest at start.
+        Requesting a DIFFERENT identity after transcript activity begins does
+        not widen the running session: it allocates a new session id, so a UI
+        toggle can never silently upgrade a formal assessment into a coached
+        one. Consent remains a separate, prior gate that policy supplements.
+        """
+
+        resolved_policy = policy or DEFAULT_POLICIES[purpose]
+        digest = policy_digest(purpose, actor_role, resolved_policy)
+
+        def fresh_session() -> SessionInfo:
+            return SessionInfo(
+                status=_status_for_session(consent_confirmed, resolved_policy),
+                started_at=utc_now(),
+                consent_confirmed=consent_confirmed,
+                profile_name=self._profile.name,
+                purpose=purpose,
+                actor_role=actor_role,
+                policy=resolved_policy,
+                policy_digest=digest,
+                practice_only=purpose is SessionPurpose.REHEARSAL,
+            )
 
         async with self._lock:
-            if self._session.status is SessionStatus.PAUSED:
+            same_identity = self._session.policy_digest == digest
+            active = self._session.status in (
+                SessionStatus.PAUSED,
+                SessionStatus.LISTENING,
+                SessionStatus.ARMED,
+            )
+            if active and same_identity:
                 self._session.consent_confirmed = (
                     self._session.consent_confirmed or consent_confirmed
                 )
-                self._session.status = _status_for_consent(self._session.consent_confirmed)
-            elif self._session.status in (SessionStatus.LISTENING, SessionStatus.ARMED):
-                self._session.consent_confirmed = (
-                    self._session.consent_confirmed or consent_confirmed
+                self._session.status = _status_for_session(
+                    self._session.consent_confirmed, self._session.policy
                 )
-                self._session.status = _status_for_consent(self._session.consent_confirmed)
             else:
-                self._session = SessionInfo(
-                    status=_status_for_consent(consent_confirmed),
-                    started_at=utc_now(),
-                    consent_confirmed=consent_confirmed,
-                    profile_name=self._profile.name,
-                )
+                # Different identity (or idle/stopped): new session. Activity
+                # under the old identity stays bound to the old session id.
+                self._session = fresh_session()
                 self._thread = "Waiting for the conversation"
                 self._transcript = []
                 self._cards = []
                 self._lanes = self._initial_lanes()
+                self._active_question_id = None
+                self._active_question_revision = 0
+                self._active_question_answered = False
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
+
+    def session_policy(self) -> CapabilityPolicy:
+        """Frozen capability policy for coordinator/API enforcement."""
+
+        return self._session.policy
+
+    def session_policy_digest(self) -> str:
+        return self._session.policy_digest
 
     async def pause_session(self) -> AppSnapshot:
         """Pause automatic retrieval while preserving the transcript."""

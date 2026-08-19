@@ -77,6 +77,26 @@ export interface LaneActivity {
   updated_at: string;
 }
 
+export type SessionPurpose =
+  | "meeting"
+  | "rehearsal"
+  | "formal_assessment"
+  | "interviewer_assist"
+  | "post_interview_review";
+export type ActorRole = "participant" | "candidate" | "interviewer" | "reviewer";
+
+export interface CapabilityPolicy {
+  capture_audio: boolean;
+  retain_transcript: boolean;
+  retrieve_local_evidence: boolean;
+  external_search: boolean;
+  candidate_answer_generation: boolean;
+  interviewer_followup_suggestions: boolean;
+  debugger_invocation: boolean;
+  repository_mutation: boolean;
+  voice_output: boolean;
+}
+
 export interface SessionInfo {
   session_id: string;
   status: SessionStatus;
@@ -84,6 +104,12 @@ export interface SessionInfo {
   stopped_at?: string | null;
   consent_confirmed: boolean;
   profile_name: string;
+  purpose: SessionPurpose;
+  actor_role: ActorRole;
+  policy: CapabilityPolicy;
+  policy_version: number;
+  policy_digest: string;
+  practice_only: boolean;
 }
 
 export interface AppSnapshot {

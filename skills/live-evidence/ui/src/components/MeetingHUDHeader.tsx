@@ -31,8 +31,24 @@ function laneTone(state: LaneActivity["state"]): string {
   return "bg-slate-400";
 }
 
+export function sessionModeLabel(session: SessionInfo): string {
+  // The active purpose and any disabled assistive capability are surfaced
+  // prominently (#1449): the human must always see which authority contract
+  // this session runs under, and PRACTICE sessions must be visibly practice.
+  const disabled: string[] = [];
+  const policy = session.policy;
+  if (policy) {
+    if (!policy.candidate_answer_generation) disabled.push("no answers");
+    if (!policy.external_search) disabled.push("no web");
+    if (!policy.debugger_invocation) disabled.push("no debugger");
+    if (!policy.voice_output) disabled.push("no voice");
+  }
+  const mode = session.practice_only ? "REHEARSAL · PRACTICE ONLY" : (session.purpose || "meeting").replace(/_/g, " ").toUpperCase();
+  return disabled.length ? `${mode} · ${disabled.join(" · ")}` : mode;
+}
+
 function liveStatusLabel(session: SessionInfo, connected: boolean): string {
-  if (connected && session.status === "listening") return "Listening";
+  if (connected && session.status === "listening") return `Listening · ${sessionModeLabel(session)}`;
   // An armed session exists but consent was never confirmed, so no audio
   // capture is authorized. Saying "Listening" here would misrepresent both what
   // the system is doing and what the human agreed to.
