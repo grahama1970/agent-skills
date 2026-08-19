@@ -137,11 +137,14 @@ export type BridgeSessionState = {
   eventLogRef?: string;
 };
 
+export type BridgeEventOrigin = 'agent_request' | 'human_ui' | 'adapter' | 'unknown_external';
+
 export type BridgeSessionEvent = {
   schema: 'debugger.session_event.v1';
   sequence: number;
   sessionId: string;
   status: BridgeSessionStatus;
+  origin: BridgeEventOrigin;
   action?: BridgeAction;
   requestId?: string;
   requestHash?: string;

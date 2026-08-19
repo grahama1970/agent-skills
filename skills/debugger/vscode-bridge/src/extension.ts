@@ -683,6 +683,11 @@ function recordSessionEvent(state: BridgeSessionState, request: BridgeRequest | 
     sequence: events.length + 1,
     sessionId: state.vscodeSessionId,
     status,
+    // Origin is a claim we can defend: an event carrying a request is an agent
+    // action; without one it is external to the bridge. We never fabricate
+    // 'human_ui' -- an adapter stop and a human UI action are indistinguishable
+    // from a stopped event, so both record 'unknown_external' (#1435).
+    origin: request ? 'agent_request' : 'unknown_external',
     action: request?.action,
     requestId: request?.id,
     requestHash: request?.requestHash,
@@ -897,6 +902,32 @@ function waitForStoppedState(
   });
 }
 
+async function ingestExternalStop(
+  session: vscode.DebugSession,
+  body: { reason?: string; threadId?: number },
+) {
+  const threadId = body.threadId;
+  if (typeof threadId !== 'number') {
+    return;
+  }
+  try {
+    const stackTrace = await session.customRequest('stackTrace', { threadId, startFrame: 0, levels: 1 });
+    const frame = stackTrace?.stackFrames?.[0];
+    upsertSessionState(session, undefined, 'paused', {
+      selectedThreadId: threadId,
+      selectedFrameId: typeof frame?.id === 'number' ? frame.id : undefined,
+    });
+    const folder = firstWorkspaceFolder();
+    if (folder) {
+      await writeSessionEvents(folder, session.id);
+    }
+  } catch (error) {
+    channel.appendLine(
+      `Debugger bridge external stop capture failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
 async function handleDebugAdapterMessage(session: vscode.DebugSession, message: unknown) {
   if (isDebugAdapterEvent(message, 'process')) {
     const prior = sessionStates.get(session.id);
@@ -911,6 +942,12 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
   }
   const pending = pendingBySession.get(session.id);
   if (!pending) {
+    // #1435: a stop with no pending bridge capture is an external action -- the
+    // human pressed Step Over / Continue, or hit a manually-created breakpoint.
+    // Advance the shared session state so a later `inspect` sees the new frame
+    // and any agent command carrying the pre-action stop sequence is fenced as
+    // stale -- without continuing execution.
+    void ingestExternalStop(session, message.body as { reason?: string; threadId?: number });
     return;
   }
   clearPendingCapture(pending);
