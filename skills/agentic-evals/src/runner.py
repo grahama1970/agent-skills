@@ -431,8 +431,16 @@ def run_trial(command: list[str], cwd: Path, timeout_seconds: float) -> dict[str
             out, err = "", ""
     return {
         "exit_code": None if timed_out else proc.returncode,
+        # Persisted streams are redacted+bounded; the RAW streams ride along
+        # under _-prefixed keys for oracle matching only and are stripped
+        # before the report is written. Matching against redacted text caused
+        # a false FAIL (2026-08-19): output '...returned the token\nCOMPLIANT'
+        # had 'COMPLIANT' eaten by the secret redactor ('token' + whitespace +
+        # word), so the expected marker could never match.
         "stdout": _bound(_stream_text(out)),
         "stderr": _bound(_stream_text(err)),
+        "_stdout_raw": _stream_text(out),
+        "_stderr_raw": _stream_text(err),
         "duration_ms": round((time.monotonic() - started) * 1000, 3),
         "timed_out": timed_out,
         "orphan_pids_after_teardown": survivors,
@@ -459,21 +467,23 @@ def trial_outcome(case: dict[str, Any], trial: dict[str, Any], cwd: Path) -> tup
             "process group survived teardown: "
             + ", ".join(str(pid) for pid in trial["orphan_pids_after_teardown"])
         ]
+    stdout_for_match = trial.get("_stdout_raw", trial["stdout"])
+    stderr_for_match = trial.get("_stderr_raw", trial["stderr"])
     for marker in case.get("blocked_when_stdout_contains", []) or []:
-        if marker in trial["stdout"] or marker in trial["stderr"]:
+        if marker in stdout_for_match or marker in stderr_for_match:
             return OUTCOME_BLOCKED, [f"precondition unmet: saw {marker!r}"]
     expected = case["expected"]
     problems: list[str] = []
     if trial["exit_code"] != expected["exit_code"]:
         problems.append(f"exit_code {trial['exit_code']} != {expected['exit_code']}")
     for needle in expected.get("stdout_contains", []):
-        if needle not in trial["stdout"]:
+        if needle not in stdout_for_match:
             problems.append(f"stdout missing {needle!r}")
     for needle in expected.get("stderr_contains", []):
-        if needle not in trial["stderr"]:
+        if needle not in stderr_for_match:
             problems.append(f"stderr missing {needle!r}")
     for needle in expected.get("stdout_excludes", []) or []:
-        if needle in trial["stdout"]:
+        if needle in stdout_for_match:
             problems.append(f"stdout unexpectedly contains {needle!r}")
     artifact_problems, hashes = check_artifacts(case, cwd)
     problems.extend(artifact_problems)
@@ -562,6 +572,10 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
             outcome, why = trial_outcome(case, trial, cwd)
             trial["outcome"] = outcome
             trial["problems"] = why
+            # Raw streams were for oracle matching only; the persisted report
+            # keeps the redacted+bounded copies.
+            trial.pop("_stdout_raw", None)
+            trial.pop("_stderr_raw", None)
             outcomes.append(outcome)
             problems.extend(why)
             results.append(trial)
