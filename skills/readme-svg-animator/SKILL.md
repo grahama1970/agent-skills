@@ -56,7 +56,18 @@ Do not use it for raster illustration, interactive JavaScript visualization, or
 arbitrary untrusted HTML. It deliberately rejects scripts, event handlers,
 `foreignObject`, external URLs, DTDs, and unresolved references.
 
-## Workflow
+## Workflow — two stages, never one-shot
+
+Stage 1 (**draft**): author or edit the scene YAML, `render`, and show the human the
+real animated SVG — in a Chrome browser tab (serve the file over localhost; the
+browser extension rejects `file://`) or via `preview`. The draft render costs about a
+second and is deterministic, so the actual SVG is the design preview; do not
+substitute a chart approximation of it. Iterate on labels, palette, and timeline
+here until the human approves.
+
+Stage 2 (**finalize**): only after approval, run `verify --receipt --browser`, keep
+the receipt with the artifact, and emit the README `snippet`. Never present a
+Stage-1 draft as the deliverable.
 
 ```bash
 SKILL_DIR=skills/readme-svg-animator
