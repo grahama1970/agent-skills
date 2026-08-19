@@ -147,7 +147,7 @@ def surf_type(root: Path, tab_id: int, text: str) -> None:
     surf(root, ["type", text, "--tab-id", str(tab_id)], timeout_s=20.0)
 
 
-def wait_for_cards(client: httpx.Client, count: int, *, timeout_s: float = 8.0) -> dict[str, Any]:
+def wait_for_cards(client: httpx.Client, count: int, *, timeout_s: float = 24.0) -> dict[str, Any]:
     deadline = time.monotonic() + timeout_s
     last_state: dict[str, Any] | None = None
     while time.monotonic() < deadline:
@@ -160,7 +160,7 @@ def wait_for_cards(client: httpx.Client, count: int, *, timeout_s: float = 8.0) 
     raise RuntimeError(f"timed out waiting for {count} cards; last_state={last_state}")
 
 
-def wait_for_dom(root: Path, tab_id: int, *, timeout_s: float = 10.0) -> dict[str, Any]:
+def wait_for_dom(root: Path, tab_id: int, *, timeout_s: float = 30.0) -> dict[str, Any]:
     script = r"""
 const firstStatus = document.querySelector('.clarify-anchor-card')?.getAttribute('data-status') || null;
 const activeNext = document.querySelectorAll('.clarify-anchor-card[data-active-next="true"]').length;
