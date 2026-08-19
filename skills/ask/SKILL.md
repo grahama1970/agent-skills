@@ -300,6 +300,72 @@ and `$browser-oracle`. API/model handlers such as `gpt-5.5-high`,
 `chutes deepseek-ai/DeepSeek-V3.2-TEE` are routed by Tau. Project agents should
 not care which side is browser or API beyond naming the handler.
 
+### One-shot vs roundtable vs compete — good and bad examples
+
+Pick the mode from what the DELIVERABLE is, not from how many seats you want.
+
+**one-shot** — the deliverable is N independent answers, side by side.
+No consensus, no judge, no quorum: 1/3 answers is a usable result.
+
+```bash
+# GOOD: several perspectives on a question; you will read each answer yourself.
+./run.sh one-shot "How would you paginate this API?" \
+  --handler webgpt --handler webclaude --handler oc-deepseek
+```
+
+- BAD: using one-shot and then summarizing the answers into a "consensus"
+  yourself — that is a roundtable without its equal-packet and quorum
+  guarantees. Use roundtable.
+- BAD: using one-shot to "pick the best answer" — that is a competition
+  without isolation or an independent judge. Use compete.
+- BAD: treating a one-shot with 0 answers as a pass because every lane named
+  a blocker. It exits 3 NOT_READY; honesty is not readiness.
+
+**roundtable** — the deliverable is one deliberated position built over an
+identical packet, with quorum (three answering seats) and per-seat status.
+
+```bash
+# GOOD: a decision that benefits from cross-model deliberation and synthesis.
+./run.sh tau-dag "Should ask adopt lane-local retries? Argue and conclude." \
+  --repo local/agent-skills --target retry-policy \
+  --immutable-goal "A defensible recommendation with dissent recorded" \
+  --dag-template roundtable --topology concurrent \
+  --handler webgpt --handler webclaude --handler gpt-5.5-high --execute --json
+```
+
+- BAD: tailoring any seat's packet ("you are the security expert, others are
+  not told...") — equal context is the contract; a tailored packet is a
+  violation the evals catch.
+- BAD: reporting a 2-seat result as a panel. Below quorum the run must be
+  refused, not summarized.
+- BAD: declaring consensus while one seat is dead. Consensus over a dead
+  seat is a violation; the dead seat's failure_code must be surfaced.
+
+**compete** — the deliverable is a winner chosen by an INDEPENDENT judge from
+ISOLATED candidates, with receipts. Candidates never see each other.
+
+```bash
+# GOOD: multiple plausible implementations; local verification will follow.
+./run.sh compete "Implement the parser fix. Return APPROACH/CHANGES/RISKS/PROOF_COMMANDS." \
+  --repo local/agent-skills --target parser-fix \
+  --immutable-goal "A locally verifiable fix" \
+  --handler webgpt --handler webclaude --handler oc-deepseek \
+  --judge-handler claude-opus-5-low \
+  --criterion correctness --criterion minimality --execute --json
+# Then ALWAYS: ./run.sh panel-audit <run-dir> --mode compete
+#              ./run.sh judge-audit <run-dir> --run-winner-proof
+```
+
+- BAD: making a competitor seat the judge, or letting the judge's prose stand
+  unaudited — judge-audit exists because a scorecard is a claim until checked.
+- BAD: counting dispatched seats as candidates. One answer wearing a
+  competition's artifacts is a single opinion; panel-audit fails it.
+- BAD: sharing one candidate's output with another to "help them improve" —
+  that contaminates the competition; restart or convert to a roundtable.
+
+Before executing any multi-seat DAG, compile first (omit `--execute`), show
+the human the ASCII chart the CLI prints, and run only on their confirmation.
+
 ### Reasoning / Effort Selection
 
 For Tau handler DAGs, choose reasoning effort as part of the non-browser
