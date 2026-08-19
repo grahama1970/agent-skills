@@ -488,18 +488,25 @@ case "${1:-help}" in
         ;;
     prove-workflow)
         shift
+        # Probe commands test that /ask works, not answer quality (operator
+        # 2026-08-19): webgpt defaults to its cheapest reasoning here. An
+        # explicit SURF_WEBGPT_REASONING still overrides.
+        export SURF_WEBGPT_REASONING="${SURF_WEBGPT_REASONING:-Instant}"
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/prove_workflow.py" "$@"
         ;;
     live-seat-probe)
         shift
+        export SURF_WEBGPT_REASONING="${SURF_WEBGPT_REASONING:-Instant}"
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/live_seat_probe.py" "$@"
         ;;
     seat-ping-ladder)
         shift
+        export SURF_WEBGPT_REASONING="${SURF_WEBGPT_REASONING:-Instant}"
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/seat_ping_ladder.py" "$@"
         ;;
     task-probe)
         shift
+        export SURF_WEBGPT_REASONING="${SURF_WEBGPT_REASONING:-Instant}"
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/live_task_probe.py" "$@"
         ;;
     eval-status)

@@ -220,7 +220,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _provider_limit_is_attributable as attr\nclass I:\n    handler_projects=[]\npayload={'checked_tabs':[{'href':'https://chatgpt.com/c/stale','limited':True}]}\nassert attr(payload,'webgpt',I()) is False, 'an unbound stale tab removed the seat'\nclass B:\n    handler_projects=['webgpt=https://chatgpt.com/c/stale']\nassert attr(payload,'webgpt',B()) is True, 'the bound tab limit was ignored'\nprint('LIMIT_SCOPED_TO_OUR_TAB')\""
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask.tau_dag_cli import _provider_limit_is_attributable as attr\nclass I:\n    handler_projects=[]\npayload={'checked_tabs':[{'href':'https://chatgpt.com/c/stale','limited':True}]}\nassert attr(payload,'webgpt',I()) is False, 'an unbound stale tab removed the seat'\nclass B:\n    handler_projects=['webgpt=https://chatgpt.com/c/stale']\nassert attr(payload,'webgpt',B()) is True, 'the bound tab limit was ignored'\nprint('LIMIT_SCOPED_TO_OUR_TAB')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -243,7 +243,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . python -c \"import sys;sys.path.insert(0,'src')\nimport ask.tau_dag_cli as c\nclass I:\n    handlers=['webgpt']; workflow_mode='single'; handler_projects=[]\n# reuse-bound with nothing bound is what let 20 ambient tabs decide availability\nimport inspect\nsrc=inspect.getsource(c._provision_browser_lifecycle)\nassert 'unbound' in src, 'unbound runs no longer choose a fresh tab'\nprint('FRESH_TAB_WHEN_UNBOUND')\""
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && uv run --project . python -c \"import sys;sys.path.insert(0,'src')\nimport ask.tau_dag_cli as c\nclass I:\n    handlers=['webgpt']; workflow_mode='single'; handler_projects=[]\n# reuse-bound with nothing bound is what let 20 ambient tabs decide availability\nimport inspect\nsrc=inspect.getsource(c._provision_browser_lifecycle)\nassert 'unbound' in src, 'unbound runs no longer choose a fresh tab'\nprint('FRESH_TAB_WHEN_UNBOUND')\""
       ],
       "expected": {
         "exit_code": 0,
@@ -267,7 +267,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webgpt --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && O=$(mktemp -d) && ./run.sh live-seat-probe webgpt --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
@@ -477,7 +477,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && OUT=$(./run.sh prove-workflow roundtable --handler webgpt --handler webkimi 2>&1); echo \"$OUT\" | grep -q 'DOES_NOT_WORK' || { echo 'TWO_SEATS_PASSED_AS_A_PANEL'; exit 1; }; DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);print(json.loads(t[m.start():t.rindex(chr(125))+1]).get('run_dir',''))\" 2>/dev/null); [ -d \"$DIR\" ] || { echo NO_RUN_DIR; exit 1; }; ./run.sh panel-audit \"$DIR\" --mode roundtable | grep -q 'roundtable_quorum' && echo QUORUM_ENFORCED_ON_A_LIVE_RUN"
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && OUT=$(./run.sh prove-workflow roundtable --handler webgpt --handler webkimi 2>&1); echo \"$OUT\" | grep -q 'DOES_NOT_WORK' || { echo 'TWO_SEATS_PASSED_AS_A_PANEL'; exit 1; }; DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);print(json.loads(t[m.start():t.rindex(chr(125))+1]).get('run_dir',''))\" 2>/dev/null); [ -d \"$DIR\" ] || { echo NO_RUN_DIR; exit 1; }; ./run.sh panel-audit \"$DIR\" --mode roundtable | grep -q 'roundtable_quorum' && echo QUORUM_ENFORCED_ON_A_LIVE_RUN"
       ],
       "expected": {
         "exit_code": 0,
@@ -519,7 +519,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp',failure_code='surf_browser_lock_timeout',message='a lane timed out waiting for the transport lock')\" >/dev/null 2>&1 && OUT=$(ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp --failure-code surf_browser_lock_timeout --handler webgpt --handler webgemini --handler webgrok --execute 2>/dev/null) && DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);d=json.loads(t[m.start():t.rindex(chr(125))+1]);print(str((d.get('execution') or {}).get('receipt_dir') or '').replace('/tau-receipts',''))\") && [ -d \"$DIR\" ] && ./run.sh panel-audit \"$DIR\" --mode compete"
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp',failure_code='surf_browser_lock_timeout',message='a lane timed out waiting for the transport lock')\" >/dev/null 2>&1 && OUT=$(ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp --failure-code surf_browser_lock_timeout --handler webgpt --handler webgemini --handler webgrok --execute 2>/dev/null) && DIR=$(echo \"$OUT\" | python3 -c \"import json,re,sys;t=sys.stdin.read();m=re.search(r'^{',t,re.M);d=json.loads(t[m.start():t.rindex(chr(125))+1]);print(str((d.get('execution') or {}).get('receipt_dir') or '').replace('/tau-receipts',''))\") && [ -d \"$DIR\" ] && ./run.sh panel-audit \"$DIR\" --mode compete"
       ],
       "expected": {
         "exit_code": 0,
@@ -545,7 +545,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp-solo',failure_code='eval_solo_code')\" >/dev/null 2>&1; ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp-solo --failure-code eval_solo_code --handler webgpt --execute 2>&1 | grep -q 'at least 2 isolated candidates' && echo SOLO_MVP_COMPETITION_REFUSED"
+        "cd .. && export SURF_WEBGPT_REASONING=\"${SURF_WEBGPT_REASONING:-Instant}\" && L=$(mktemp) && ASK_BLOCKER_LEDGER=$L uv run --project . python -c \"import sys;sys.path.insert(0,'src');from ask import blocker_ledger as b;b.record(target='eval-mvp-solo',failure_code='eval_solo_code')\" >/dev/null 2>&1; ASK_BLOCKER_LEDGER=$L ./run.sh unblock --target eval-mvp-solo --failure-code eval_solo_code --handler webgpt --execute 2>&1 | grep -q 'at least 2 isolated candidates' && echo SOLO_MVP_COMPETITION_REFUSED"
       ],
       "expected": {
         "exit_code": 0,
