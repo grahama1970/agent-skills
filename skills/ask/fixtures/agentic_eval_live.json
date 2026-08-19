@@ -9,6 +9,62 @@
   },
   "cases": [
     {
+      "name": "live-all-seats-answer-or-name-blockers-concurrently",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 1500,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant ./run.sh seat-ping-ladder --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/seat-pings-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_HONEST",
+          "LADDER:"
+        ]
+      }
+    },
+    {
+      "name": "live-mixed-seats-complete-a-compliant-task",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2100,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python scripts/live_task_probe.py --handler webgpt --handler webclaude --handler gpt-5.5-low --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/task-probe-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_HONEST_ON_TASK",
+          "TASK_LADDER:"
+        ]
+      }
+    },
+    {
+      "name": "live-a-misnamed-model-self-corrects-and-never-blocks-the-panel",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2100,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python scripts/live_task_probe.py --handler webgpt --handler webclaude --handler deepseek-v4-flash --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/task-probe-defect-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_HONEST_ON_TASK"
+        ]
+      }
+    },
+    {
       "name": "live-a-local-seat-answers-or-names-its-blocker",
       "type": "positive",
       "real_world": true,

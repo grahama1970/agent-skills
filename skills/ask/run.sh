@@ -472,6 +472,18 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/live_seat_probe.py" "$@"
         ;;
+    seat-ping-ladder)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/seat_ping_ladder.py" "$@"
+        ;;
+    task-probe)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/live_task_probe.py" "$@"
+        ;;
+    eval-status)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/eval_status.py" "$@"
+        ;;
     handoff)
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/ask_handoff.py" "$@"
