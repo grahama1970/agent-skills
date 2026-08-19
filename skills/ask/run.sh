@@ -54,6 +54,7 @@ run_tau_handler_shortcut() {
     local execute=1
     local json_output=1
     local extra_args=()
+    local raw_request=0
     local request_parts=()
 
     while [ "$#" -gt 0 ]; do
@@ -100,6 +101,7 @@ run_tau_handler_shortcut() {
                 ;;
             --)
                 shift
+                raw_request=1
                 request_parts+=("$@")
                 break
                 ;;
@@ -112,6 +114,25 @@ run_tau_handler_shortcut() {
 
     if [ "${#request_parts[@]}" -eq 0 ]; then
         echo "Usage: ./run.sh ${handler} <question>" >&2
+        exit 2
+    fi
+
+    # Refuse silently swallowing option flags into the question text. Flags
+    # placed AFTER the free-text question land in the *) catch-all above and
+    # would ship to the provider as literal prompt words (observed 2026-08-19:
+    # five --attach-file flags became prompt text; zero files were attached,
+    # requested_attachment_paths=[] in the node receipt). Fail closed and name
+    # the fix; use '--' before the question to intentionally pass raw '--text'.
+    local misplaced_flags=()
+    local part
+    for part in "${request_parts[@]}"; do
+        case "$part" in
+            --*) misplaced_flags+=("$part") ;;
+        esac
+    done
+    if [ "${#misplaced_flags[@]}" -gt 0 ] && [ "${raw_request:-0}" -ne 1 ]; then
+        echo "error [shortcut_flags_after_question]: these look like option flags but arrived after the question text, so they would be sent to the provider as prompt words instead of taking effect: ${misplaced_flags[*]}" >&2
+        echo "Fix: put all options BEFORE the question (./run.sh ${handler} --attach-file f.md \"question...\"), or prefix the question with '--' if it intentionally contains literal '--' tokens." >&2
         exit 2
     fi
 

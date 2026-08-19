@@ -1027,7 +1027,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && printf 'evidence body' > /tmp/ask-eval-swallow.md && ./run.sh webgpt --execute Review this bundle --attach-file /tmp/ask-eval-swallow.md 2>&1 | grep -q 'Pre-dispatch browser preflight blocked' && echo SWALLOWED_FLAG_REFUSED_BEFORE_BROWSER"
+        "cd .. && printf 'evidence body' > /tmp/ask-eval-swallow.md && ./run.sh webgpt --execute Review this bundle --attach-file /tmp/ask-eval-swallow.md 2>&1 | grep -q 'shortcut_flags_after_question' && echo SWALLOWED_FLAG_REFUSED_BEFORE_BROWSER"
       ],
       "expected": {
         "exit_code": 0,
@@ -1035,7 +1035,8 @@
           "SWALLOWED_FLAG_REFUSED_BEFORE_BROWSER"
         ]
       },
-      "evidence_class": "fault_injected_deterministic"
+      "evidence_class": "fault_injected_deterministic",
+      "notes": "2026-08-19 hardening: flags after the question are now refused by run.sh itself (error [shortcut_flags_after_question]) before any compile or preflight, after five --attach-file flags were silently sent to webgpt as prompt words and zero files attached (requested_attachment_paths=[] in the node receipt). Previously this case only proved the downstream path-preflight caught the /tmp path; now the refusal is explicit and named."
     },
     {
       "name": "incident-missing-sentinel-recovers-via-provider-extract",
