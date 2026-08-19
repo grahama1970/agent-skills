@@ -184,6 +184,21 @@ def remember_walkthrough(spec: dict, transcript: list[dict], key_seed: str) -> s
         return None
 
 
+def _speech_clean(text: str) -> str:
+    """Strip Markdown so TTS reads a natural sentence, not "backtick seen backtick".
+
+    Answers from /ask carry Markdown (``code``, ## headers, **bold**, list
+    dashes); spoken literally they sound wrong. Narration is plain prose, so this
+    is a no-op there.
+    """
+    text = re.sub(r"`+", "", text)
+    text = re.sub(r"^\s*#{1,6}\s*", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\*{1,3}", "", text)
+    text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False) -> str:
     """Narrate a line aloud in the Embry voice via the chatterbox agent server.
 
@@ -197,7 +212,7 @@ def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False) ->
     out_map = os.environ.get("DEBUGGER_SPEAK_OUT_MAP", "/out:" + str(Path.home() / "workspace/experiments/chatterbox/logs"))
     try:
         import httpx
-        resp = httpx.post(url, json={"text": text}, timeout=90.0)
+        resp = httpx.post(url, json={"text": _speech_clean(text)}, timeout=90.0)
         resp.raise_for_status()
         audio = resp.json().get("audio")
         if not audio:
