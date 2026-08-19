@@ -65,13 +65,68 @@ def resolve_line(path: Path, *, line, function, klass) -> int | None:
     return None
 
 
-def speak(text: str) -> bool:
+def start_keyboard_interrupt(stop_flag: str):
+    """Touch the stop flag whenever the human presses Enter, in a background
+    thread, so Embry can be cut off mid-sentence by a keypress -- no STT needed.
+
+    Only runs on an interactive terminal; under an eval / pipe stdin is not a
+    tty and this is a no-op.
+    """
+    import threading
+    if not sys.stdin or not sys.stdin.isatty():
+        return None
+
+    def listen():
+        try:
+            for _ in sys.stdin:
+                Path(stop_flag).touch()
+                print("  [keypress → tell Embry to stop]", flush=True)
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=listen, daemon=True)
+    thread.start()
+    return thread
+
+
+def remember_walkthrough(spec: dict, transcript: list[dict], key_seed: str) -> str | None:
+    """Store the walkthrough conversation in /memory so Embry keeps the context.
+
+    Writes one document per walkthrough into the `debugger_walkthroughs`
+    collection with a deterministic _key, so re-running does not duplicate it and
+    a later session can recall what was walked through. Fail-soft: returns the
+    stored _key on success, None otherwise (the memory API is optional).
+    """
+    url = os.environ.get("DEBUGGER_MEMORY_URL", "http://127.0.0.1:8601")
+    try:
+        import hashlib
+        import httpx
+        key = hashlib.sha256(key_seed.encode()).hexdigest()[:16]
+        document = {
+            "_key": key,
+            "schema": "debugger.walkthrough_transcript.v1",
+            "title": spec["title"],
+            "mode": spec["mode"],
+            "turns": [
+                {"role": "embry", "file": t["file"], "line": t["line"], "say": t["say"], "state": t["locals"]}
+                for t in transcript
+            ],
+        }
+        resp = httpx.post(f"{url}/store", json={"collection": "debugger_walkthroughs", "document": document}, timeout=15.0)
+        resp.raise_for_status()
+        return key if resp.json().get("stored") else None
+    except Exception:
+        return None
+
+
+def speak(text: str, stop_flag: str | None = None) -> str:
     """Narrate a line aloud in the Embry voice via the chatterbox agent server.
 
-    Fail-soft: if the server is down or audio can't be played, the walkthrough
-    continues silently (the printed SAY line is the source of truth). The server
-    URL and the container->host path mapping for its output are configurable so
-    this stays decoupled from any one machine's layout.
+    Returns "spoken", "interrupted" (the human said stop), or "silent" (server
+    down / no audio). Playback is interruptible: while aplay runs, if `stop_flag`
+    (a file path a barge-in listener touches) appears, playback is killed so the
+    human can cut Embry off mid-sentence. Fail-soft otherwise -- the printed SAY
+    line is the source of truth.
     """
     url = os.environ.get("DEBUGGER_SPEAK_URL", "http://127.0.0.1:8018/synthesize")
     out_map = os.environ.get("DEBUGGER_SPEAK_OUT_MAP", "/out:" + str(Path.home() / "workspace/experiments/chatterbox/logs"))
@@ -81,15 +136,27 @@ def speak(text: str) -> bool:
         resp.raise_for_status()
         audio = resp.json().get("audio")
         if not audio:
-            return False
+            return "silent"
         src, dst = out_map.split(":", 1)
         host_path = audio.replace(src, dst, 1) if audio.startswith(src) else audio
         if not Path(host_path).is_file():
-            return False
-        subprocess.run(["aplay", "-q", host_path], check=False, capture_output=True, timeout=180)
-        return True
+            return "silent"
+        if stop_flag and Path(stop_flag).exists():
+            Path(stop_flag).unlink(missing_ok=True)
+        proc = subprocess.Popen(["aplay", "-q", host_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        while proc.poll() is None:
+            if stop_flag and Path(stop_flag).exists():
+                proc.terminate()
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                Path(stop_flag).unlink(missing_ok=True)
+                return "interrupted"
+            time.sleep(0.1)
+        return "spoken"
     except Exception:
-        return False
+        return "silent"
 
 
 def write_launch(workspace: Path, launch: dict, config_name: str) -> None:
@@ -163,6 +230,9 @@ def main() -> int:
     parser.add_argument("--transcript", type=Path, default=None)
     parser.add_argument("--wait-seconds", type=float, default=45.0)
     parser.add_argument("--speak", action="store_true", help="Narrate each stop aloud in the Embry voice (chatterbox).")
+    parser.add_argument("--remember", action="store_true", help="Store the walkthrough conversation in /memory so Embry keeps the context.")
+    parser.add_argument("--stop-flag", default=os.environ.get("DEBUGGER_STOP_FLAG", "/tmp/debugger-embry-stop.flag"),
+                        help="File a barge-in listener touches to interrupt Embry mid-sentence.")
     args = parser.parse_args()
 
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
@@ -178,6 +248,11 @@ def main() -> int:
     write_launch(workspace, spec["launch"], config_name)
     stops = spec["stops"]
     print(f"WALKTHROUGH mode={spec['mode']} stops={len(stops)} :: {spec['title']}")
+    if args.speak:
+        # Two interrupt channels, one stop flag: a keypress (works now) and the
+        # voice barge-in listener (scripts/barge_in_listener.py) both touch it.
+        if start_keyboard_interrupt(args.stop_flag) is not None:
+            print("(press Enter during narration to tell Embry to stop)")
 
     transcript: list[dict] = []
     for index, stop in enumerate(stops, start=1):
@@ -216,8 +291,12 @@ def main() -> int:
         print(f"\n── STOP {index}/{len(stops)} · {stop['file']}:{frame.get('line')} in {frame.get('name')!r} ──")
         print(f"SAY: {stop['say']}")
         print(f"STATE: {state_str}")
-        if args.speak and speak(stop["say"]):
-            print("  (narrated aloud in the Embry voice)")
+        if args.speak:
+            result = speak(stop["say"], stop_flag=args.stop_flag)
+            if result == "spoken":
+                print("  (narrated aloud in the Embry voice)")
+            elif result == "interrupted":
+                print("  (interrupted — Embry stopped)")
         for name, want in (stop.get("expect") or {}).items():
             got = locals_map.get(name)
             if got != want:
@@ -234,6 +313,12 @@ def main() -> int:
         })
 
     print(f"\nWALKTHROUGH-COMPLETE mode={spec['mode']} stops={len(stops)}")
+    if args.remember:
+        key = remember_walkthrough(spec, transcript, f"debugger-walkthrough:{spec['title']}:{spec['mode']}")
+        if key:
+            print(f"REMEMBERED /memory debugger_walkthroughs/{key}")
+        else:
+            print("REMEMBER-SKIPPED (memory API unavailable)", file=sys.stderr)
     if args.transcript:
         args.transcript.write_text(
             json.dumps({"schema": "debugger.walkthrough_transcript.v1", "title": spec["title"],
