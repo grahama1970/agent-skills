@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "The conversational walkthrough control loop: Embry talks at each stop, the human can interrupt her (mid-speech by keypress/voice, or at the pause), she acknowledges and pauses, and the human can ask a different question (which she answers grounded in the paused state) or navigate (continue/back/repeat/quit) before she resumes. Driven by scripted --commands so the loop is verifiable without a live human; capability-gated on a trusted VS Code bridge.",
+  "claims": {
+    "proves": "vscode_walkthrough.py runs a pause-and-listen loop: it narrates a stop, accepts an interrupt that makes Embry pause, answers a mid-walkthrough question grounded in the paused state, resumes on continue, and stops the whole walkthrough on quit",
+    "does_not_prove": "the correctness/quality of an LLM-generated answer, or live microphone barge-in (the mid-speech keypress/voice interrupt is exercised live separately; here the interrupt and commands are scripted)"
+  },
+  "cases": [
+    {
+      "name": "interrupt-question-resume",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "At stop 1 the human interrupts (Embry pauses), asks a different question (she answers from the paused state), then continues; the walkthrough resumes to stop 2 and completes.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; if [ -z \"$WS\" ]; then WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; fi; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.converse.json --workspace \"$WS\" --commands 'interrupt;what should second be?;continue;continue' --wait-seconds 30"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["STOP 1/2", "(interrupted — Embry pauses)", "Q: what should second be?", "A:", "STOP 2/2", "WALKTHROUGH-COMPLETE"]
+      }
+    },
+    {
+      "name": "human-quits-the-walkthrough",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "The human can stop the whole walkthrough at any pause with quit, not just skip one line.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; if [ -z \"$WS\" ]; then WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; fi; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.converse.json --workspace \"$WS\" --commands 'quit' --wait-seconds 30"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["STOP 1/2", "WALKTHROUGH-STOPPED by human"]
+      }
+    },
+    {
+      "name": "fails-closed-without-live-bridge",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "With a workspace not open in VS Code, the conversational walkthrough fails closed (BRIDGE_BLOCKED, exit 3).",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.converse.json --workspace \"$WS\" --commands 'continue;continue' --wait-seconds 6"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BRIDGE_BLOCKED"]
+      }
+    }
+  ]
+}

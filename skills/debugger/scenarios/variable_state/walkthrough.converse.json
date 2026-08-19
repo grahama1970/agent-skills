@@ -1,0 +1,22 @@
+{
+  "schema": "debugger.walkthrough.v1",
+  "title": "Conversational walk of the second-report state leak",
+  "mode": "review",
+  "launch": {"module": "main", "python": "/usr/bin/python3", "config_name": "Debugger walkthrough ($debugger)"},
+  "stops": [
+    {
+      "file": "main.py",
+      "line": 20,
+      "say": "The first report totalled six, which is correct. Now the second report runs over ten and twenty, which should total thirty.",
+      "locals": ["first"],
+      "expect": {"first": "6"}
+    },
+    {
+      "file": "main.py",
+      "line": 21,
+      "say": "And the result is thirty six, not thirty. The shared mutable default leaked the first report's values into the second.",
+      "locals": ["first", "second"],
+      "expect": {"first": "6", "second": "36"}
+    }
+  ]
+}
