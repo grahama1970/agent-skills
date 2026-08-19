@@ -93,6 +93,186 @@
           "10 passed"
         ]
       }
+    },
+    {
+      "name": "dream-workspace-ssr-render",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.ux.workspace_renders"
+      ],
+      "seams": [
+        "ui.dream_workspace.render"
+      ],
+      "command": [
+        "node",
+        "../ux/app/scripts/eval/render_dream_workspace.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKSPACE_RENDER_OK"
+        ]
+      }
+    },
+    {
+      "name": "dream-workspace-render-guard-non-vacuous",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.ux.workspace_renders"
+      ],
+      "seams": [
+        "ui.dream_workspace.render"
+      ],
+      "command": [
+        "bash",
+        "../ux/app/scripts/eval/prove_fail_before_fix.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAIL_BEFORE_FIX_PROVEN"
+        ]
+      }
+    },
+    {
+      "name": "dream-api-runs-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.ux.pipeline_api_serves_runs"
+      ],
+      "seams": [
+        "api.dream_router.runs"
+      ],
+      "command": [
+        "bash",
+        "../ux/app/scripts/eval/dream_api_probe.sh",
+        "runs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DREAM_API_RUNS_OK",
+          "surf_run_listed=true"
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "dream-api-asset-path-policy-refuses-outside-root",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.ux.pipeline_api_serves_runs"
+      ],
+      "seams": [
+        "api.dream_router.path_policy"
+      ],
+      "command": [
+        "bash",
+        "../ux/app/scripts/eval/dream_api_probe.sh",
+        "policy"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PATH_POLICY_REFUSED_OUTSIDE_ROOT code=403"
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "residue-board-media-mix-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "persona_dream.ux.board_media_stratified"
+      ],
+      "seams": [
+        "ui.residue_board.stratified_sample"
+      ],
+      "blocked_when_stdout_contains": [
+        "BLOCKED_MEMORY_API_UNREACHABLE"
+      ],
+      "command": [
+        "bash",
+        "../ux/app/scripts/eval/board_media_mix_live.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BOARD_MEDIA_MIX_OK"
+        ]
+      },
+      "readback": true
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "persona_dream.ux.workspace_renders",
+      "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "persona_dream.ux.pipeline_api_serves_runs",
+      "description": "The dream API host lists real runs (including the recovered surf run) and refuses paths outside its roots.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "persona_dream.ux.board_media_stratified",
+      "description": "The residue board's stratified sample keeps image, video, and audio memories through the 12-card cut against live memory recall.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "ui.dream_workspace.render",
+      "seam_type": "ui_render",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "api.dream_router.runs",
+      "seam_type": "http_api",
+      "criticality": "high",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "api.dream_router.path_policy",
+      "seam_type": "security_boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "ui.residue_board.stratified_sample",
+      "seam_type": "data_pipeline",
+      "criticality": "high",
+      "required_evidence": [
+        "live_e2e"
+      ]
     }
   ]
 }

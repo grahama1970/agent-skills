@@ -1,0 +1,31 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "persona-dream",
+  "regressions": [
+    {
+      "incident": "The 99-file DreamWorkspace modularization (commit 8636c7bb5b) left loadPhase02MediaGate unexported and memoryByKeysDocuments unimported. @ts-nocheck hid both from tsc; no consumer executed the component. The workspace rendered a blank page, and the residue board's extract handler swallowed its ReferenceError and stayed empty, dropping video/audio cards the user expected. The same session's board also dropped video/audio cards: the pinned-key ordering plus web-result mixing plus recall variance crowded them out of the 12-card cut; replaced by stratifiedMemorySample. That half is guarded by the retained live case residue-board-media-mix-live (its oracle fails whenever any of image/video/audio is absent); no deterministic single-line defect reproduces the old crowd-out, so it carries no separate fail_before_fix record.",
+      "claims": [
+        "persona_dream.ux.workspace_renders",
+        "persona_dream.ux.board_media_stratified"
+      ],
+      "seams": [
+        "ui.dream_workspace.render",
+        "ui.residue_board.stratified_sample"
+      ],
+      "retained_case": "dream-workspace-ssr-render",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "ux/app/scripts/eval/prove_fail_before_fix.sh"
+        ],
+        "proof_note": "Reinjects the unexported loadPhase02MediaGate into a temp copy of ui/src; the render guard must fail against it and pass on current code. Exits non-zero if the guard is vacuous.",
+        "expected_fail": false
+      },
+      "fixed_by": "6f8ef3028b",
+      "detected": "2026-08-19 live session; user reported missing pipeline steps and missing video/audio on the residue board.",
+      "regression_id": "2026-08-19-dream-workspace-blank-page",
+      "status": "ACTIVE"
+    }
+  ]
+}

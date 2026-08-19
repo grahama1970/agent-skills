@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-08-06 UTC (character continuity requires reference-conditioned WebGPT+zip generation, not free-form gpt-image; four contract/pipeline bugs fixed by a live dream run; see the 2026-08-06 entry) by Claude Fable 5
+**Last updated:** 2026-08-19 UTC (DreamWorkspace blank-page incident: two ReferenceErrors from the 99-file split hidden by @ts-nocheck; workspace remounted at ux/app #dream; surf run recovered into the library; residue board now stratified across media kinds; agentic-eval guards added and verified non-vacuous) by Claude Fable 5
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
 **Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
@@ -13,6 +13,51 @@ P2 engineering pilot, not production or full Phase 01-16 reliability),
 #1131 PCTOM-R corpus/estimator repair CLOSED (apparatus now valid; the live
 held-out benefit result is #1008 and does not exist yet),
 #1059 previous-video causality deferred with no provider spend.
+
+## 2026-08-19 — DreamWorkspace blank page, surf-run recovery, stratified board, and eval guards
+
+The pipeline UI (`ui/src` DreamWorkspace, phases 01-11) had no running host anywhere —
+the ux-lab registry honestly recorded `#dream` as unmounted — and carried two
+ReferenceErrors from the 99-file modularization (commit `8636c7bb5b`) that
+`@ts-nocheck` hid from tsc: `loadPhase02MediaGate` unexported (blank page at first
+render) and `memoryByKeysDocuments` unimported in `DreamWorkspace.tsx` (the extract
+handler's `catch` swallowed it, so the residue board stayed empty). Upstream main had
+the identical bugs; nothing had executed the component since the split.
+
+Fixes (landed as `6f8ef3028b` on agent-skills@main):
+- `ux/app` now mounts DreamWorkspace at `#dream` (vite :5173) with an express host
+  for `/api/projects/dream` on :8791 (`npm run dev:dream-api`) and vite proxies for
+  the dream API and `/api/memory` (served live by the sparta explorer API on :3001,
+  which proxies to the memory daemon).
+- Both ReferenceErrors fixed; asset serving widened to `/mnt/storage12tb/media/personas`
+  (persona_memory `source_path` root) so board thumbnails resolve instead of 403ing.
+- The board's ordering is `stratifiedMemorySample` (seeded by idea text): a random
+  stratified sample across image/video/audio/text, round-robin so every media kind in
+  recall survives the 12-card cut. It replaced a hardcoded pinned-key priority list
+  that, combined with the cut, dropped video/audio (the Nazaré drone mp4 and ocean
+  surf wav — both intact on disk and in memory the whole time).
+- The Kai/Embry surf run (`embry-kai-surf-phase04-contact-sheets-20260702`) was never
+  deleted, only invisible: `collectRuns` requires `status.json`/`validation.json`/
+  `manifest.json`/`report.html` at the run root and it had only `artifacts/`. A
+  factual `manifest.json` plus a `report.html → artifacts/index.html` symlink (both
+  outside the repo, on /mnt) restored it to the library.
+- `/api/tau/dream/*` (story/script draft endpoints the UI calls) has no server
+  implementation anywhere; those actions still fail. Known open gap.
+
+Regression guards (fixtures/agentic_eval.json now 10 cases, readiness READY, all
+three UI capability claims PROVEN; fixtures/regressions.json records the incident):
+- `dream-workspace-ssr-render` — SSR-renders the real component; any render-time
+  ReferenceError fails it. Non-vacuity proven by `prove_fail_before_fix.sh`
+  (reinjects the defect into a temp ui/src copy; verified via `agentic-evals
+  regressions verify`).
+- `residue-board-media-mix-live` — live recall+hydrate against :3001, asserts the
+  12-card board keeps ≥1 image, video, and audio.
+- `dream-api-runs-readback` / `dream-api-asset-path-policy-refuses-outside-root` —
+  boots the real host on :8797, asserts the surf run lists and `/etc/passwd` 403s.
+
+Standing lesson (also the root cause): `@ts-nocheck` plus a swallowing `catch` plus
+no executing consumer means breakage is invisible three ways. The eval above is the
+mechanical constraint that replaces remembering this.
 
 ## 2026-08-06 — Character continuity requires reference-conditioned generation; pipeline bugs fixed by a live dream run
 
