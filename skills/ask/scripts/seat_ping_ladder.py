@@ -106,6 +106,11 @@ def _verdict(payload: dict) -> tuple[str, str]:
         if not codes and not payload.get("failure_code"):
             return "DISHONEST", "named_blocker without any failure_code"
         return "NAMED_BLOCKER", ",".join(codes) or str(payload.get("failure_code"))
+    if outcome == "timed_out":
+        # The probe named the outcome itself -- honest and actionable (retry,
+        # raise the deadline, inspect the lane), but it is NOT an answer: it
+        # counts against readiness, never against honesty.
+        return "NAMED_BLOCKER", f"probe timeout after {payload.get('elapsed_s')}s"
     return "DISHONEST", f"outcome={outcome!r} is neither an answer nor a named blocker"
 
 

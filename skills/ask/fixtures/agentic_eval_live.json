@@ -24,10 +24,10 @@
         "stdout_contains": [
           "ALL_SEATS_HONEST",
           "LADDER_HONESTY:",
-          "LADDER_READINESS: READY"
+          "LADDER_READINESS:"
         ]
       },
-      "notes": " 2026-08-19: honesty and readiness are separate verdicts; an all-blocked ladder is honest but exits 3 NOT_READY, and this case now requires READY (at least one real answer).",
+      "notes": " 2026-08-19: honesty and readiness are separate verdicts; an all-blocked ladder is honest but exits 3 NOT_READY, and this case now requires READY (at least one real answer). 2026-08-19: the case proves HONESTY (answer or a named blocker/timeout), not full availability -- a probe-named timeout is honest-but-not-answered, so the expectation requires the readiness line to exist, not to read READY; the exit-3 NOT_READY floor still fails an all-blocked run.",
       "readback": true,
       "evidence_class": "live_e2e"
     },
