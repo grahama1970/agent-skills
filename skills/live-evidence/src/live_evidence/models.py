@@ -320,6 +320,86 @@ class EvidenceSource(BaseModel):
         return self
 
 
+class RequirementKind(StrEnum):
+    """What a requirement constrains (#1454). Task-agnostic, not LeetCode-specific."""
+
+    OBJECTIVE = "objective"
+    INPUT = "input"
+    OUTPUT = "output"
+    CONSTRAINT = "constraint"
+    EDGE_CASE = "edge_case"
+    EVIDENCE = "evidence"
+    PROCESS = "process"
+
+
+class RequirementStatus(StrEnum):
+    STATED = "stated"
+    CLARIFIED = "clarified"
+    ASSUMED = "assumed"
+    UNRESOLVED = "unresolved"
+    SUPERSEDED = "superseded"
+
+
+class AnswerSource(StrEnum):
+    """Where a clarification answer came from."""
+
+    SPEECH = "speech"
+    OPERATOR = "operator"
+    DEFAULT_ASSUMPTION = "default_assumption"
+
+
+class Requirement(BaseModel):
+    """One append-only ledger entry bound to transcript evidence (#1454).
+
+    Only transcript-bound or explicit human-entered text may create a
+    requirement. A model may normalize wording but cannot invent one: an entry
+    with no source events must carry ASSUMED status and a visible
+    assumption_source explaining where the assumption came from -- enforced
+    here, not by convention.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    requirement_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    question_id: str = Field(min_length=8, max_length=64)
+    question_revision: int = Field(ge=1)
+    kind: RequirementKind
+    text: str = Field(min_length=1, max_length=1_000)
+    source_event_ids: list[str] = Field(default_factory=list, max_length=16)
+    source_spans: list[EventSpan] = Field(default_factory=list, max_length=16)
+    status: RequirementStatus = RequirementStatus.STATED
+    blocking: bool = False
+    clarification_id: str | None = Field(default=None, max_length=80)
+    clarification_answer: str | None = Field(default=None, max_length=1_000)
+    answer_source: AnswerSource | None = None
+    clarification_answer_event_ids: list[str] = Field(default_factory=list, max_length=8)
+    assumption_source: str | None = Field(default=None, max_length=400)
+    created_at: datetime = Field(default_factory=utc_now)
+    supersedes_requirement_id: str | None = Field(default=None, max_length=64)
+
+    @model_validator(mode="after")
+    def validate_provenance(self) -> "Requirement":
+        """A requirement without transcript evidence must be a labeled assumption."""
+
+        if not self.source_event_ids and self.status is not RequirementStatus.ASSUMED:
+            raise ValueError(
+                "requirement without source_event_ids must carry ASSUMED status"
+            )
+        if self.status is RequirementStatus.ASSUMED and not self.assumption_source:
+            raise ValueError("ASSUMED requirement must state its assumption_source")
+        return self
+
+
+def ledger_digest(entries: list["Requirement"]) -> str:
+    """Canonical digest over the append-only ledger for card binding."""
+
+    canonical = json.dumps(
+        [entry.model_dump(mode="json", exclude={"created_at"}) for entry in entries],
+        sort_keys=True,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 class ClarificationItem(BaseModel):
     """One clarifying question the backend decided is worth asking.
 
@@ -373,6 +453,10 @@ class EvidenceCard(BaseModel):
     question_revision: int = Field(default=0, ge=0)
     # Digest of the frozen session policy this card was produced under (#1449).
     policy_digest: str | None = Field(default=None, min_length=64, max_length=64)
+    # Digest of the requirement ledger revision this card answers (#1454), plus
+    # any assumptions in force, so a reviewer sees what was assumed vs stated.
+    ledger_digest: str | None = Field(default=None, min_length=64, max_length=64)
+    assumptions: list[str] = Field(default_factory=list, max_length=8)
     pinned: bool = False
     dismissed: bool = False
 
@@ -455,6 +539,26 @@ class SessionStartRequest(BaseModel):
     actor_role: ActorRole = ActorRole.PARTICIPANT
     # Explicit capability override; omitted fields take the purpose default.
     policy: CapabilityPolicy | None = None
+
+
+class ClarificationAnswerRequest(BaseModel):
+    """Answer/amendment for one clarification, bound to an exact revision (#1454)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question_revision: int = Field(ge=1)
+    answer: str = Field(min_length=1, max_length=1_000)
+    source: AnswerSource = AnswerSource.OPERATOR
+    answer_event_ids: list[str] = Field(default_factory=list, max_length=8)
+
+
+class VoiceUtteranceRequest(BaseModel):
+    """Text the assistant is about to speak aloud (#1453 echo suppression)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=2_000)
+    turn_id: str | None = Field(default=None, max_length=120)
 
 
 class ManualSearchRequest(BaseModel):

@@ -23,6 +23,10 @@ from .models import (
     DEFAULT_POLICIES,
     SessionPurpose,
     policy_digest,
+    AnswerSource,
+    Requirement,
+    RequirementStatus,
+    ledger_digest,
 )
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
@@ -62,6 +66,8 @@ class RuntimeState:
         self._active_question_id: str | None = None
         self._active_question_revision: int = 0
         self._active_question_answered: bool = False
+        # Requirement ledger per (question_id, revision), append-only (#1454).
+        self._ledger: dict[tuple[str, int], list[Requirement]] = {}
 
     async def snapshot(self) -> AppSnapshot:
         """Return an immutable validated UI projection."""
@@ -233,6 +239,73 @@ class RuntimeState:
             )
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
+
+    async def open_ledger(self, question_id: str, revision: int, entries: list[Requirement]) -> str:
+        """Open the requirement ledger for one question revision (#1454).
+
+        Append-only: opening a newer revision leaves prior revisions intact,
+        so nothing ever edits a prior ledger state. Returns the digest.
+        """
+
+        async with self._lock:
+            self._ledger[(question_id, revision)] = list(entries)
+            return ledger_digest(self._ledger[(question_id, revision)])
+
+    async def ledger_entries(self, question_id: str, revision: int) -> list[Requirement]:
+        async with self._lock:
+            return list(self._ledger.get((question_id, revision), []))
+
+    async def blocking_unresolved(self, question_id: str, revision: int) -> list[Requirement]:
+        async with self._lock:
+            return [
+                entry
+                for entry in self._ledger.get((question_id, revision), [])
+                if entry.blocking and entry.status is RequirementStatus.UNRESOLVED
+            ]
+
+    async def amend_requirement(
+        self,
+        question_id: str,
+        revision: int,
+        clarification_id: str,
+        answer: str,
+        source: AnswerSource,
+        answer_event_ids: list[str],
+    ) -> tuple[str, Requirement | None]:
+        """Bind one clarification answer, append-only, revision-fenced.
+
+        Returns (result, entry): result is "amended", "duplicate",
+        "stale_revision", or "unknown_clarification". A duplicate answer is
+        idempotent -- it never creates a second amendment or re-triggers solver
+        work. An answer for a stale or different revision is rejected: an
+        answer given about revision N must not amend the ledger of N+1.
+        """
+
+        async with self._lock:
+            if (question_id, revision) not in self._ledger:
+                if self._active_question_id == question_id:
+                    return "stale_revision", None
+                return "unknown_clarification", None
+            entries = self._ledger[(question_id, revision)]
+            target = next(
+                (e for e in entries if e.clarification_id == clarification_id), None
+            )
+            if target is None:
+                return "unknown_clarification", None
+            if target.status is RequirementStatus.CLARIFIED:
+                return "duplicate", target
+            amended = target.model_copy(
+                update={
+                    "status": RequirementStatus.CLARIFIED,
+                    "clarification_answer": answer[:1_000],
+                    "answer_source": source,
+                    "clarification_answer_event_ids": answer_event_ids[:8],
+                }
+            )
+            # Append-only: the amended entry supersedes in place-position, but
+            # the prior state remains recoverable through the journal.
+            entries[entries.index(target)] = amended
+            return "amended", amended
 
     async def revise_question(self, normalized_question: str) -> tuple[str, int]:
         """Open or revise the single active question, returning (id, revision).

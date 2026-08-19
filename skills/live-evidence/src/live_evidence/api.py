@@ -23,6 +23,8 @@ from .models import (
     ManualSearchRequest,
     SessionStartRequest,
     TranscriptEvent,
+    ClarificationAnswerRequest,
+    VoiceUtteranceRequest,
 )
 from .persistence import SessionJournal
 from .state import RuntimeState
@@ -127,6 +129,35 @@ def _register_api_routes(
     @app.post("/api/session/stop", response_model=AppSnapshot)
     async def stop_session() -> AppSnapshot:
         return await state.stop_session()
+
+    @app.post("/api/questions/{question_id}/clarifications/{clarification_id}/answer")
+    async def answer_clarification(
+        question_id: str, clarification_id: str, request: ClarificationAnswerRequest
+    ) -> dict[str, Any]:
+        """Bind one clarification answer to an exact question revision (#1454)."""
+
+        outcome = await coordinator.apply_clarification_answer(
+            question_id,
+            request.question_revision,
+            clarification_id,
+            request.answer,
+            request.source,
+            request.answer_event_ids,
+        )
+        if outcome["result"] == "stale_revision":
+            raise HTTPException(status_code=409, detail="answer targets a stale question revision")
+        if outcome["result"] == "unknown_clarification":
+            raise HTTPException(status_code=404, detail="unknown question or clarification id")
+        return outcome
+
+    @app.post("/api/voice/utterance", status_code=202)
+    async def register_voice_utterance(request: VoiceUtteranceRequest) -> dict[str, Any]:
+        """Register text the assistant is speaking, for echo suppression (#1453)."""
+
+        if not state.session_policy().voice_output:
+            raise HTTPException(status_code=403, detail="voice_output disabled by session policy")
+        coordinator.register_assistant_utterance(request.text)
+        return {"status": "registered"}
 
     @app.post("/api/transcript", status_code=202)
     async def transcript(event: TranscriptEvent) -> dict[str, Any]:

@@ -77,6 +77,9 @@ class TriggerDecision:
     query: str
     thread: str
     reason: str
+    # Transcript events the candidate was assembled from, so downstream
+    # requirement-ledger entries stay bound to their exact source (#1454).
+    source_event_ids: tuple[str, ...] = ()
 
 
 class TriggerEngine:

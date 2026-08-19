@@ -29,6 +29,28 @@ DEFAULT_WAV_CANDIDATES = [
 ]
 
 
+def scillm_key() -> str | None:
+    """Resolve the stage-1 resolver key like the live server would: env first,
+    else the running proxy container's own SCILLM_MASTER_KEY. Without it the
+    resolver is unusable and question selection degrades to the punctuation
+    heuristic -- the exact flake this eval exists to catch."""
+    if os.getenv("LIVE_EVIDENCE_SCILLM_KEY"):
+        return os.environ["LIVE_EVIDENCE_SCILLM_KEY"]
+    if os.getenv("SCILLM_MASTER_KEY"):
+        return os.environ["SCILLM_MASTER_KEY"]
+    try:
+        env_text = subprocess.run(
+            ["docker", "inspect", "docker-scillm-proxy-1",
+             "--format", "{{range .Config.Env}}{{println .}}{{end}}"],
+            capture_output=True, text=True, timeout=20).stdout
+        for line in env_text.splitlines():
+            if line.startswith("SCILLM_MASTER_KEY="):
+                return line.split("=", 1)[1]
+    except Exception:
+        pass
+    return None
+
+
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -365,9 +387,21 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
     card_contract = oracle.get("card") if isinstance(oracle.get("card"), dict) else {}
     gate_contract = oracle.get("gate") if isinstance(oracle.get("gate"), dict) else {}
 
+    # Card text groups: the card question is authored by the stage-1 resolver
+    # when it is live, so exact STT wording ("opening ... parentheses") and the
+    # model's canonical phrasing ("remove the minimum number of parentheses")
+    # are both legitimate. Any one group sufficing mirrors selected_query.
+    card_term_groups = [
+        [str(t) for t in g]
+        for g in card_contract.get("required_text_terms_any_of") or []
+        if isinstance(g, list)
+    ]
+    if card_contract.get("required_text_terms"):
+        card_term_groups.append([str(t) for t in card_contract["required_text_terms"]])
     candidate_cards = [
         card for card in cards
-        if isinstance(card, dict) and term_group_present(card_blob(card), card_contract.get("required_text_terms") or [])
+        if isinstance(card, dict)
+        and (not card_term_groups or any(term_group_present(card_blob(card), g) for g in card_term_groups))
     ]
     path_fragments = [str(item) for item in card_contract.get("required_source_path_fragments") or []]
     excerpt_terms = [str(item) for item in card_contract.get("required_source_excerpt_terms") or []]
@@ -384,6 +418,14 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
 
     query_cards = []
     query_required = [str(item) for item in selected_query.get("required_terms") or []]
+    # Alternate acceptable term groups: live STT punctuation varies run to run,
+    # so the bounded query may legitimately be the clarification sentence OR
+    # the problem statement. Either satisfies "bounded, on-task query".
+    query_alternates = [
+        [str(term) for term in group]
+        for group in selected_query.get("required_terms_any_of") or []
+        if isinstance(group, list)
+    ]
     query_forbidden = [str(item) for item in selected_query.get("forbidden_terms") or []]
     query_max = int(selected_query.get("max_chars") or 0)
     for card in cards:
@@ -392,7 +434,8 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         query = normalize(card.get("query"))
         if not query:
             continue
-        if query_required and not term_group_present(query, query_required):
+        groups = ([query_required] if query_required else []) + query_alternates
+        if groups and not any(term_group_present(query, group) for group in groups):
             continue
         if query_max and len(str(card.get("query") or "")) > query_max:
             continue
@@ -645,6 +688,7 @@ def main() -> int:
                 "LIVE_EVIDENCE_ASK_TIMEOUT": "5",
                 "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "false",
                 "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
+                "LIVE_EVIDENCE_SCILLM_KEY": scillm_key() or "",
             }
             with server_log.open("w", encoding="utf-8") as log:
                 server_process = subprocess.Popen(

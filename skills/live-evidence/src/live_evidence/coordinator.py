@@ -18,6 +18,11 @@ from .models import (
     RetrievalLane,
     SessionStatus,
     TranscriptEvent,
+    AnswerSource,
+    Requirement,
+    RequirementKind,
+    RequirementStatus,
+    ledger_digest,
 )
 from .readiness import ReadinessVerdict
 from .resolver import GateEvent, StreamingResolver
@@ -59,6 +64,19 @@ class EvidenceCoordinator:
         self._resolver = StreamingResolver()
         self._facts = SalientFactWriter(settings.memory_url)
         self._tasks: set[asyncio.Task[None]] = set()
+        # (#1454) at-most-once solver per accepted question revision, plus the
+        # held retrieval context for questions blocked on unresolved
+        # requirements, so an amendment can continue without re-retrieving.
+        self._solved_revisions: set[tuple[str, int]] = set()
+        self._held: dict[tuple[str, int], dict] = {}
+        # Text the assistant is currently speaking aloud (#1453). The mic path
+        # hears our own TTS and labels it "interviewer"; without suppression
+        # Embry's monologue becomes a question candidate and pollutes the
+        # window -- observed live: the "redirect" card after a barge-in was
+        # Embry's own breakpoint explanation. We KNOW what we are saying, so
+        # transcript events that substantially match it are journaled as
+        # assistant echo and never enter the question path.
+        self._assistant_utterances: list[str] = []
 
     async def accept_transcript(self, event: TranscriptEvent) -> None:
         """Persist and project a transcript event, then schedule retrieval."""
@@ -83,8 +101,42 @@ class EvidenceCoordinator:
             fact_task.add_done_callback(self._task_done)
         if not policy.retrieve_local_evidence:
             return
+        stripped = self._strip_assistant_echo(event.text)
+        if len(stripped) != len(event.text):
+            await self._journal.append(
+                self._state.session_id(), "assistant_echo_redacted",
+                {"event_id": event.event_id, "before_chars": len(event.text),
+                 "after_chars": len(stripped)},
+                policy_digest=self._state.session_policy_digest(),
+            )
+            if len(stripped.split()) < 4:
+                return
+            event = event.model_copy(update={"text": stripped})
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
+            # (#1454) A final interviewer turn that is NOT a new question, while
+            # a blocking clarification is outstanding, is treated as its spoken
+            # answer -- bound to the exact question revision and clarification.
+            if (
+                outcome.candidate is None
+                and event.kind.value == "final"
+                and self._held
+            ):
+                (question_id, revision), _context = next(iter(self._held.items()))
+                blocking = await self._state.blocking_unresolved(question_id, revision)
+                if blocking:
+                    task = asyncio.create_task(
+                        self.apply_clarification_answer(
+                            question_id,
+                            revision,
+                            blocking[0].clarification_id or "",
+                            event.text,
+                            AnswerSource.SPEECH,
+                            [event.event_id],
+                        )
+                    )
+                    self._tasks.add(task)
+                    task.add_done_callback(self._task_done)
             return
         candidate = outcome.candidate
         decision = TriggerDecision(
@@ -92,6 +144,7 @@ class EvidenceCoordinator:
             query=candidate.normalized_question,
             thread=candidate_thread(candidate, self._profile),
             reason=candidate.trigger_reason,
+            source_event_ids=tuple(span.event_id for span in candidate.source_spans),
         )
         # Claim the revision this retrieval answers BEFORE dispatching it. A
         # later turn bumps the revision, so a slow result can be recognised as
@@ -129,6 +182,170 @@ class EvidenceCoordinator:
             f"Fact write unconfirmed: {detail}",
         )
         logger.warning("salient fact UNCONFIRMED fact_id={} ({})", fact.fact_id[:12], detail)
+
+    def register_assistant_utterance(self, text: str) -> None:
+        """Record text the assistant is about to speak, for echo suppression."""
+
+        normalized = " ".join(text.split()).lower()
+        if normalized:
+            self._assistant_utterances.append(normalized)
+            del self._assistant_utterances[:-4]
+
+    def _strip_assistant_echo(self, text: str) -> str:
+        """Redact the assistant's own spoken content, keep everything else.
+
+        Character-level fuzzy matching, not token identity: STT respells our
+        own speech ("breakpoint" -> "break point", "forty two" -> "42",
+        "set" -> "said"), so exact-token runs missed the echo entirely --
+        observed live: the registered monologue survived redaction verbatim.
+        difflib matching blocks of 15+ characters against each registered
+        utterance are removed; genuinely human speech does not share long
+        character runs with the assistant's script by accident.
+        """
+
+        if not self._assistant_utterances:
+            return text
+        import difflib
+
+        # SequenceMatcher yields ONE monotone alignment, but cumulative STT
+        # buffers can contain the same echoed phrase more than once -- the
+        # second occurrence survived a single pass (observed live: the card
+        # question repeated "point I set at line 42" twice). Iterate to a
+        # fixed point, bounded.
+        for _ in range(6):
+            lowered = text.lower()
+            cut: list[tuple[int, int]] = []
+            for utterance in self._assistant_utterances:
+                matcher = difflib.SequenceMatcher(None, lowered, utterance, autojunk=False)
+                for block in matcher.get_matching_blocks():
+                    if block.size >= 15:
+                        cut.append((block.a, block.a + block.size))
+            if not cut:
+                return text
+            cut.sort()
+            kept: list[str] = []
+            cursor = 0
+            for start, end in cut:
+                if start > cursor:
+                    kept.append(text[cursor:start])
+                cursor = max(cursor, end)
+            kept.append(text[cursor:])
+            text = " ".join("".join(kept).split())
+        return text
+
+    async def apply_clarification_answer(
+        self,
+        question_id: str,
+        revision: int,
+        clarification_id: str,
+        answer: str,
+        source: AnswerSource,
+        answer_event_ids: list[str],
+    ) -> dict:
+        """Bind a clarification answer and continue the held solve if unblocked.
+
+        Append-only and revision-fenced (#1454): a stale or unknown target is a
+        typed rejection, a duplicate is idempotent and never duplicates solver
+        work, and the solver runs at most once per accepted revision after the
+        LAST blocking requirement resolves.
+        """
+
+        result, entry = await self._state.amend_requirement(
+            question_id, revision, clarification_id, answer, source, answer_event_ids
+        )
+        await self._journal.append(
+            self._state.session_id(),
+            "requirement_amendment",
+            {"question_id": question_id, "question_revision": revision,
+             "clarification_id": clarification_id, "result": result,
+             "answer_source": source.value,
+             "entry": entry.model_dump(mode="json") if entry else None},
+            policy_digest=self._state.session_policy_digest(),
+        )
+        if result != "amended":
+            return {"result": result}
+
+        blocking = await self._state.blocking_unresolved(question_id, revision)
+        if blocking:
+            return {"result": "amended", "blocking_remaining": len(blocking)}
+
+        held = self._held.pop((question_id, revision), None)
+        if held is None or (question_id, revision) in self._solved_revisions:
+            return {"result": "amended", "blocking_remaining": 0}
+        self._solved_revisions.add((question_id, revision))
+
+        policy = self._state.session_policy()
+        entries = await self._state.ledger_entries(question_id, revision)
+        answers_block = "\n".join(
+            f"Clarified ({e.answer_source.value if e.answer_source else '?'}): {e.text} -> {e.clarification_answer}"
+            for e in entries
+            if e.status is RequirementStatus.CLARIFIED
+        )
+        query = held["query"]
+        seeded_query = f"{query}\n{answers_block}" if answers_block else query
+        sources = held["sources"]
+        ranked = rank_sources(sources, query, self._profile)
+        if policy.candidate_answer_generation:
+            await self._state.set_lane(
+                RetrievalLane.ASK, LaneState.RUNNING, "Solving after clarification"
+            )
+            ask_result = await self._ask.solve(seeded_query, ranked[:4])
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.OK if ask_result.ok else LaneState.DEGRADED,
+                ask_result.detail,
+                latency_ms=ask_result.latency_ms,
+                result_count=len(ask_result.sources),
+            )
+            ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
+        card = self._summarizer.build(query, held["thread"], ranked)
+        verdict = held.get("verdict")
+        if verdict is not None and verdict.clarifying_questions:
+            answered = {
+                e.clarification_id: e.clarification_answer
+                for e in entries
+                if e.status is RequirementStatus.CLARIFIED
+            }
+            card = card.model_copy(
+                update={
+                    "clarifications": [
+                        ClarificationItem(
+                            id=item.id,
+                            question=item.question,
+                            why_it_matters=item.why_it_matters,
+                            default_assumption=item.default_assumption,
+                            blocking=item.blocking,
+                            answer=answered.get(item.id),
+                        )
+                        for item in verdict.clarifying_questions
+                    ]
+                }
+            )
+        card = card.model_copy(
+            update={
+                "question_id": question_id,
+                "question_revision": revision,
+                "policy_digest": self._state.session_policy_digest(),
+                "ledger_digest": ledger_digest(entries) if entries else None,
+                "assumptions": [
+                    e.text for e in entries if e.status is RequirementStatus.ASSUMED
+                ][:8],
+            }
+        )
+        snapshot = await self._state.publish_card_fenced(card)
+        if snapshot is None:
+            await self._journal.append(
+                self._state.session_id(),
+                "evidence_card_discarded_stale_revision",
+                card,
+                policy_digest=self._state.session_policy_digest(),
+            )
+            return {"result": "amended", "blocking_remaining": 0, "published": False}
+        await self._journal.append(
+            snapshot.session.session_id, "evidence_card", card,
+            policy_digest=self._state.session_policy_digest(),
+        )
+        return {"result": "amended", "blocking_remaining": 0, "published": True}
 
     async def _resolve_readiness(self, query: str) -> ReadinessVerdict | None:
         """Run the stage-1 gate, surfacing the decision as soon as it streams.
@@ -339,7 +556,80 @@ class EvidenceCoordinator:
                 RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
             )
 
+        # (#1454) Requirement ledger for this question revision. The objective
+        # is transcript-bound; each blocking clarifying question becomes an
+        # UNRESOLVED blocking requirement; a default assumption becomes a
+        # visibly labeled ASSUMED entry. A grammatical period never marks the
+        # task complete: completeness is judged by the resolver and by this
+        # ledger, not punctuation.
+        entries: list[Requirement] = [
+            Requirement(
+                question_id=question_id,
+                question_revision=question_revision,
+                kind=RequirementKind.OBJECTIVE,
+                text=query[:1_000],
+                source_event_ids=list(decision.source_event_ids)[:16],
+                status=RequirementStatus.STATED,
+            )
+        ]
+        if verdict is not None:
+            for item in verdict.clarifying_questions:
+                if item.blocking:
+                    entries.append(
+                        Requirement(
+                            question_id=question_id,
+                            question_revision=question_revision,
+                            kind=RequirementKind.CONSTRAINT,
+                            text=item.question[:1_000],
+                            source_event_ids=list(decision.source_event_ids)[:16],
+                            status=RequirementStatus.UNRESOLVED,
+                            blocking=True,
+                            clarification_id=item.id,
+                        )
+                    )
+                elif item.default_assumption:
+                    entries.append(
+                        Requirement(
+                            question_id=question_id,
+                            question_revision=question_revision,
+                            kind=RequirementKind.CONSTRAINT,
+                            text=item.default_assumption[:1_000],
+                            status=RequirementStatus.ASSUMED,
+                            blocking=False,
+                            clarification_id=item.id,
+                            assumption_source=f"default assumption for unanswered clarification {item.id}: {item.question[:200]}",
+                        )
+                    )
+        digest = await self._state.open_ledger(question_id, question_revision, entries)
+        await self._journal.append(
+            self._state.session_id(),
+            "requirement_ledger_opened",
+            {"question_id": question_id, "question_revision": question_revision,
+             "ledger_digest": digest,
+             "entries": [e.model_dump(mode="json") for e in entries]},
+            policy_digest=self._state.session_policy_digest(),
+        )
+        blocking = await self._state.blocking_unresolved(question_id, question_revision)
+        if blocking:
+            # Solver must not start while a blocking requirement is UNRESOLVED.
+            may_ask = False
+            self._held[(question_id, question_revision)] = {
+                "query": query,
+                "thread": decision.thread,
+                "sources": sources,
+                "verdict": verdict,
+            }
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.IDLE,
+                f"Holding: {len(blocking)} unresolved requirement(s)",
+            )
+        if (question_id, question_revision) in self._solved_revisions:
+            # At most one automatic solver run per accepted revision.
+            may_ask = False
+
         if may_ask:
+            self._solved_revisions.add((question_id, question_revision))
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
             ask_result = await self._ask.solve(query, ranked[:4])
             await self._state.set_lane(
@@ -375,11 +665,18 @@ class EvidenceCoordinator:
                     ]
                 }
             )
+        ledger_entries = await self._state.ledger_entries(question_id, question_revision)
         card = card.model_copy(
             update={
                 "question_id": question_id,
                 "question_revision": question_revision,
                 "policy_digest": self._state.session_policy_digest(),
+                "ledger_digest": ledger_digest(ledger_entries) if ledger_entries else None,
+                "assumptions": [
+                    entry.text
+                    for entry in ledger_entries
+                    if entry.status is RequirementStatus.ASSUMED
+                ][:8],
             }
         )
         snapshot = await self._state.publish_card_fenced(card)
@@ -432,7 +729,14 @@ class EvidenceCoordinator:
             logger.exception("background evidence retrieval failed: {}", exc)
 
 
-_QUESTION_SENTENCE_RE = re.compile(r"([^.?!]{8,}\?)")
+# A sentence is question-shaped if it ends in '?' OR in a spoken tag question
+# ("... come before closing, right" / "... correct"). Live STT drops terminal
+# punctuation nondeterministically -- one oracle trial transcribed the same
+# clip with almost no '?' at all -- and tag questions are how interviewers
+# actually confirm constraints aloud.
+_QUESTION_SENTENCE_RE = re.compile(
+    r"([^.?!]{8,}(?:\?|,\s*(?:right|correct|okay|yes)\b[.?!]?))", re.IGNORECASE
+)
 
 
 def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:

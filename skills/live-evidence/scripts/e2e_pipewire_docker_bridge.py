@@ -84,24 +84,41 @@ def on_stabilized(text):
     publish("stabilized", text)
 
 
-recorder = AudioToTextRecorder(
-    use_microphone=False,
-    model=model,
-    realtime_model_type=realtime_model,
-    device=device,
-    compute_type=compute_type,
-    language="en",
-    enable_realtime_transcription=True,
-    realtime_processing_pause=0.12,
-    min_length_of_recording=0,
-    min_gap_between_recordings=0,
-    post_speech_silence_duration=0.45,
-    no_log_file=True,
-    spinner=False,
-    faster_whisper_vad_filter=True,
-    on_realtime_transcription_update=on_realtime,
-    on_realtime_transcription_stabilized=on_stabilized,
-)
+def build_recorder(active_device):
+    return AudioToTextRecorder(
+        use_microphone=False,
+        model=model,
+        realtime_model_type=realtime_model,
+        device=active_device,
+        compute_type=compute_type,
+        language="en",
+        enable_realtime_transcription=True,
+        realtime_processing_pause=0.12,
+        min_length_of_recording=0,
+        min_gap_between_recordings=0,
+        post_speech_silence_duration=0.45,
+        no_log_file=True,
+        spinner=False,
+        faster_whisper_vad_filter=True,
+        on_realtime_transcription_update=on_realtime,
+        on_realtime_transcription_stabilized=on_stabilized,
+    )
+
+
+# A busy GPU must degrade transcription latency, not kill the meeting:
+# tiny.en runs realtime on CPU, so a CUDA init OOM falls back instead of dying.
+try:
+    recorder = build_recorder(device)
+except Exception as exc:
+    if device == "cpu" or "out of memory" not in str(exc).lower():
+        raise
+    print(
+        json.dumps({"kind": "stt_device_fallback", "from": device, "to": "cpu", "error": str(exc)[:200]}),
+        file=sys.stderr,
+        flush=True,
+    )
+    device = "cpu"
+    recorder = build_recorder("cpu")
 
 chunks = 0
 bytes_read = 0

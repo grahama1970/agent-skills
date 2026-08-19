@@ -17,7 +17,17 @@ from typing import Any
 import httpx
 
 STORAGE_ROOT = Path("/mnt/storage12tb/skills/live-evidence/agentic-evals/leetcode-public-corpus")
-MEMORY_URL = os.getenv("LIVE_EVIDENCE_EVAL_MEMORY_URL", os.getenv("MEMORY_SERVICE_URL", "http://127.0.0.1:8601")).rstrip("/")
+_RAW_MEMORY_URL = os.getenv(
+    "LIVE_EVIDENCE_EVAL_MEMORY_URL",
+    os.getenv("MEMORY_SERVICE_URL", "http://127.0.0.1:8601"),
+).rstrip("/")
+# The login environment may export a unix:// socket URL for other memory
+# clients; httpx lanes here require HTTP, so fall back to the local boundary.
+MEMORY_URL = (
+    _RAW_MEMORY_URL
+    if _RAW_MEMORY_URL.startswith(("http://", "https://"))
+    else "http://127.0.0.1:8601"
+)
 
 
 def free_port() -> int:

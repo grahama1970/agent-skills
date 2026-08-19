@@ -164,10 +164,13 @@ class AppSettings(BaseModel):
             data_dir=data_dir,
             profile_path=profile_path,
             repo_roots=repo_roots,
-            memory_url=os.getenv(
-                "MEMORY_SERVICE_URL",
-                os.getenv("MEMORY_API_URL", "http://127.0.0.1:8601"),
-            ).rstrip("/"),
+            memory_url=_http_url_or_default(
+                os.getenv(
+                    "MEMORY_SERVICE_URL",
+                    os.getenv("MEMORY_API_URL", "http://127.0.0.1:8601"),
+                ),
+                "http://127.0.0.1:8601",
+            ),
             memory_runner=memory_runner,
             ask_runner=ask_runner,
             ask_handler=os.getenv("LIVE_EVIDENCE_ASK_HANDLER", "gpt-5.5-high"),
@@ -261,3 +264,11 @@ def public_settings(settings: AppSettings, profile: InterviewProfile) -> dict[st
         "external_search_enabled": bool(settings.brave_runner or settings.dogpile_runner),
         "remote_bind_allowed": settings.allow_remote_bind,
     }
+
+def _http_url_or_default(raw: str, default: str) -> str:
+    """Keep HTTP(S) URLs; anything else (e.g. unix:// sockets exported for
+    other memory clients) falls back to the local HTTP boundary."""
+    cleaned = (raw or "").rstrip("/")
+    if cleaned.startswith(("http://", "https://")):
+        return cleaned
+    return default

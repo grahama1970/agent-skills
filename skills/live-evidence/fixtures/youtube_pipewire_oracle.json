@@ -35,6 +35,18 @@
       "yeah that makes sense",
       "maintenance packet",
       "webgpt opinion"
+    ],
+    "required_terms_any_of": [
+      [
+        "minimum",
+        "parentheses",
+        "valid"
+      ],
+      [
+        "opening",
+        "parentheses",
+        "closing"
+      ]
     ]
   },
   "card": {
@@ -53,7 +65,19 @@
       "webgpt opinion",
       "skill_maintainer_cycle.py",
       "sweep_task_monitor.py"
-    ]
+    ],
+    "required_text_terms_any_of": [
+      [
+        "opening",
+        "parentheses"
+      ],
+      [
+        "minimum",
+        "parentheses",
+        "remove"
+      ]
+    ],
+    "note_required_text_terms": "Stage-1 resolver authors the card question when live; canonical phrasing (minimum/remove) is as valid as the raw STT phrasing (opening)."
   },
   "gate": {
     "raw_ask_without_gate_allowed": true,

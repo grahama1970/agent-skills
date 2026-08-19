@@ -347,6 +347,54 @@
           "session policy: PASS"
         ]
       }
+    },
+    {
+      "name": "requirement-ledger-gates-solver-and-binds-amendments",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-requirement-ledger"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "blocking requirements hold automatic Ask at zero: PASS",
+          "partial answer leaves the solver held: PASS",
+          "stale-revision answer rejected with 409: PASS",
+          "resolving the last blocking requirement runs Ask exactly once: PASS",
+          "duplicate answer is idempotent and never re-runs the solver: PASS",
+          "spoken non-question turn binds as a speech answer: PASS",
+          "invented requirement without ASSUMED provenance is rejected: PASS",
+          "requirement ledger: PASS"
+        ]
+      }
+    },
+    {
+      "name": "embry-voice-interrupted-and-redirected-by-real-human",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-voice-interruption"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "embry monologue rendered by live chatterbox: PASS",
+          "embry's breakpoint explanation transcribed live: PASS",
+          "embry playback actually stopped (process-level effect): PASS",
+          "chatterbox turn cancel receipt: PASS",
+          "human interrupt question transcribed after barge-in: PASS",
+          "system redirected: card is about the human's question, not the breakpoint: PASS",
+          "redirect card carries the rehearsal policy digest: PASS",
+          "voice interruption redirect: PASS"
+        ]
+      }
     }
   ]
 }

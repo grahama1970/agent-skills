@@ -25,6 +25,7 @@ import os
 import re
 import urllib.error
 import urllib.request
+from pathlib import Path
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
@@ -128,10 +129,18 @@ class StreamingResolver:
         self._effort = effort or os.getenv("LIVE_EVIDENCE_RESOLVER_EFFORT") or DEFAULT_EFFORT
         self._timeout_s = timeout_s
 
+    def _stream_fixture(self, path: Path) -> Iterator[GateEvent | ResolverOutcome]:
+        yield from _stream_fixture_verdicts(path)
+
     def stream(self, buffer_text: str) -> Iterator[GateEvent | ResolverOutcome]:
         """Yield a GateEvent as soon as it is parseable, then the final outcome."""
 
         import time
+
+        fixture = os.getenv("LIVE_EVIDENCE_RESOLVER_FIXTURE")
+        if fixture:
+            yield from self._stream_fixture(Path(fixture))
+            return
 
         key = resolver_key()
         if not key:
@@ -221,6 +230,33 @@ class StreamingResolver:
             # Unparseable output must never read as permission to answer.
             outcome.error = outcome.error or "unparseable_verdict"
         yield outcome
+
+
+def _fixture_index(path: Path) -> int:
+    counter = path.with_suffix(path.suffix + ".idx")
+    index = int(counter.read_text()) if counter.exists() else 0
+    counter.write_text(str(index + 1))
+    return index
+
+
+def _stream_fixture_verdicts(path: Path):
+    """Deterministic resolver verdicts for agentic evals (#1454 proofs).
+
+    The fixture is a JSON list of verdict objects consumed one per call via a
+    sidecar counter, so an eval can script "not ready yet" then "ready with two
+    blocking clarifications" without a model or a network. The last entry
+    repeats once the list is exhausted.
+    """
+
+    verdicts = json.loads(path.read_text())
+    index = min(_fixture_index(path), len(verdicts) - 1)
+    payload = verdicts[index]
+    verdict = _parse_verdict(json.dumps(payload))
+    outcome = ResolverOutcome(raw=json.dumps(payload), verdict=verdict,
+                              gate_elapsed_s=0.0, total_elapsed_s=0.0)
+    if verdict is None:
+        outcome.error = "unparseable_verdict"
+    yield outcome
 
 
 def _parse_verdict(raw: str) -> ReadinessVerdict | None:

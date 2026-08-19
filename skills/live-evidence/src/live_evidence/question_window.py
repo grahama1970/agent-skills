@@ -188,10 +188,24 @@ class QuestionWindowBuilder:
             for key, recent_text, seen_at in self._recent
             if now - seen_at <= self._duplicate_ttl_s
         ]
+        # Two similarity clauses, both DIRECTIONAL on purpose:
+        # - overlap (intersection / MAX >= 0.58) collapses near-identical
+        #   restatements;
+        # - candidate containment (intersection / len(candidate) >= 0.9)
+        #   collapses short fragments whose tokens are already inside recent
+        #   text (tag-question restatements like "...has to come before
+        #   closing, right?").
+        # The former symmetric MIN-containment clause is deliberately gone:
+        # live STT events are cumulative rolling buffers, so "intro plus a
+        # genuinely new question" was suppressed as a duplicate of the intro
+        # for the whole TTL (observed live: three cards from the intro, none
+        # from the actual problem statement). Candidate-directional
+        # containment cannot do that -- a window with substantial NEW tokens
+        # keeps its containment low and correctly proceeds.
         return any(
             key == fingerprint
             or _token_overlap(text, recent_text) >= 0.58
-            or _token_containment(text, recent_text) >= 0.72
+            or _candidate_containment(text, recent_text) >= 0.9
             for key, recent_text, _ in self._recent
         )
 
@@ -226,6 +240,15 @@ def _token_overlap(left: str, right: str) -> float:
     if not left_tokens or not right_tokens:
         return 0.0
     return len(left_tokens & right_tokens) / max(len(left_tokens), len(right_tokens))
+
+
+def _candidate_containment(candidate: str, recent: str) -> float:
+    """Fraction of the candidate's own tokens already present in recent text."""
+    candidate_tokens = {token.casefold() for token in tokenize(candidate)}
+    recent_tokens = {token.casefold() for token in tokenize(recent)}
+    if not candidate_tokens or not recent_tokens:
+        return 0.0
+    return len(candidate_tokens & recent_tokens) / len(candidate_tokens)
 
 
 def _token_containment(left: str, right: str) -> float:
