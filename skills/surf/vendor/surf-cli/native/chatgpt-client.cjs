@@ -1200,21 +1200,28 @@ async function fetchAssistantTextViaBackendApi(cdp, sentinel) {
   return null;
 }
 
-// Upgrade a sentinel-proven DOM capture with the backend-API text when the DOM
-// was a collapsed render. The upgrade is accepted only when the API text
-// contains the SAME sentinel and is strictly longer than the DOM text, so a
-// stale or different turn can never replace a proven capture.
+// Upgrade a sentinel-proven DOM capture with the backend-API text. The API
+// text is the model's actual markdown; DOM innerText loses structure the
+// evals depend on -- observed 2026-08-19: a complete DOM capture had its
+// ``` fences replaced by the UI's "Python"/"Run" code-block header, so a
+// strictly-longer test kept the unfaithful DOM text. The upgrade is accepted
+// only when the API text contains the SAME sentinel (a stale or different
+// turn can never replace a proven capture) and is not materially shorter
+// than the DOM text (guards a partial mid-stream API read).
 async function upgradeCollapsedDomCapture(cdp, result) {
   if (!result || !result.text || !result.sentinel || result.hasSentinel !== true) {
     return result;
   }
   const apiText = await fetchAssistantTextViaBackendApi(cdp, result.sentinel);
-  if (apiText && apiText.includes(result.sentinel) && apiText.length > result.text.length) {
+  if (apiText && apiText.includes(result.sentinel) && apiText.length >= result.text.length * 0.8) {
+    if (apiText === result.text) {
+      return result;
+    }
     return {
       ...result,
       text: apiText,
       source: "backend-api",
-      domTruncationDetected: true,
+      domTruncationDetected: apiText.length > result.text.length,
       domChars: result.text.length,
       apiChars: apiText.length,
     };
