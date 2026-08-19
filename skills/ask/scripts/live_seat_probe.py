@@ -145,6 +145,29 @@ def probe(handler: str, *, timeout: int = 900) -> dict:
                     )
 
     answered = [l for l in lanes if l["bytes"] > 0]
+    outcome = "answered" if answered else "named_blocker" if lanes else "no_lanes"
+    removal_reasons: list[str] = []
+    if outcome == "no_lanes":
+        # A run with zero lanes is a dead end UNLESS the seat's removal was
+        # recorded -- then the honest outcome is a named blocker carrying the
+        # selection receipt's own reason (observed 2026-08-19: webgrok removed
+        # by availability selection, probe said only 'no_lanes').
+        removed = payload.get("removed_seats") or []
+        sel_path = (run_dir / "browser-provider-selection.json") if run_dir else None
+        if sel_path and sel_path.is_file():
+            try:
+                sel = json.loads(sel_path.read_text(encoding="utf-8"))
+            except ValueError:
+                sel = {}
+            for row in sel.get("removed_handlers") or []:
+                if isinstance(row, dict) and (row.get("handler") == handler or handler in removed):
+                    removal_reasons.append(
+                        f"{row.get('handler')}: {row.get('reason') or row.get('code') or 'removed'}"
+                    )
+        if handler in removed and not removal_reasons:
+            removal_reasons.append(f"{handler}: removed by availability selection")
+        if removal_reasons:
+            outcome = "named_blocker"
     return {
         "ok": not violations,
         "handler": handler,
@@ -154,7 +177,8 @@ def probe(handler: str, *, timeout: int = 900) -> dict:
         "lanes": lanes,
         "answered": len(answered),
         "violations": violations,
-        "outcome": "answered" if answered else "named_blocker" if lanes else "no_lanes",
+        "failure_code": "; ".join(removal_reasons) if removal_reasons else None,
+        "outcome": outcome,
     }
 
 
