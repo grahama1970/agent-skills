@@ -473,7 +473,13 @@
         "stdout_contains": [
           "NO_CROSS_LANE_LEAK"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "competition-cross-lane-leakage-is-caught",
@@ -490,7 +496,13 @@
         "stdout_contains": [
           "LEAK_CAUGHT"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "competition-one-answer-is-not-a-competition",
@@ -507,7 +519,13 @@
         "stdout_contains": [
           "ONE_OPINION_CAUGHT"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "competition-audit-cli-runs-on-a-real-run",
@@ -526,7 +544,13 @@
           "equal_context",
           "isolation"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "the-preferred-roster-is-five-browsers-plus-local-claude",
@@ -679,7 +703,13 @@
         "stdout_contains": [
           "FAMILY_FOR_FAMILY"
         ]
-      }
+      },
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ]
     },
     {
       "name": "a-newer-model-id-absent-from-the-catalog-is-skipped",
@@ -696,7 +726,13 @@
         "stdout_contains": [
           "CATALOG_DECIDES"
         ]
-      }
+      },
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ]
     },
     {
       "name": "roundtable-compiles-concurrent-seats-into-one-join",
@@ -713,7 +749,13 @@
         "stdout_contains": [
           "ROUNDTABLE_CONCURRENT 3"
         ]
-      }
+      },
+      "seams": [
+        "scheduler.lane_local_degradation"
+      ],
+      "supports_claims": [
+        "ask.scheduler.lane_local_degradation"
+      ]
     },
     {
       "name": "a-sequential-chain-is-not-a-roundtable",
@@ -747,7 +789,13 @@
         "stdout_contains": [
           "COMPETE_ISOLATED 2"
         ]
-      }
+      },
+      "seams": [
+        "scheduler.lane_local_degradation"
+      ],
+      "supports_claims": [
+        "ask.scheduler.lane_local_degradation"
+      ]
     },
     {
       "name": "a-local-model-can-take-a-panel-seat",
@@ -1143,6 +1191,48 @@
       "evidence_required": [
         "deterministic"
       ]
+    },
+    {
+      "id": "ask.scheduler.lane_local_degradation",
+      "criticality": "critical",
+      "description": "One lane's failure degrades lane-local through the tau join contract; healthy seats always run to terminal and the join always settles.",
+      "evidence_required": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.provider.dispatch_and_substitution",
+      "criticality": "critical",
+      "description": "Seats dispatch only real catalog models; removed or rate-limited seats self-recover to their recorded substitution, and a misnamed model relays the transport's course correction.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.browser.tab_lifecycle",
+      "criticality": "critical",
+      "description": "Every browser seat opens (or is bound to) its own usable tab and answers from it; ambient rate-limited or hidden tabs never silently remove a seat.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.compete.isolated_and_judged",
+      "criticality": "critical",
+      "description": "Competitions run isolated candidate lanes with an identical packet and an independent judge whose verdict names an existing answering candidate; rigged verdicts fail the audit.",
+      "evidence_required": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.evals.artifact_provenance",
+      "criticality": "critical",
+      "description": "Eval verdicts are bound to their own invocation (nonces, exact ask-ids, seat identity, executed artifacts); stale, mismatched, or self-reported evidence is refused.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
     }
   ],
   "seams": [
@@ -1196,6 +1286,76 @@
       ],
       "required_evidence": [
         "deterministic"
+      ]
+    },
+    {
+      "seam_id": "scheduler.lane_local_degradation",
+      "claim_id": "ask.scheduler.lane_local_degradation",
+      "seam_type": "scheduler/concurrency",
+      "criticality": "critical",
+      "failure_modes": [
+        "one NEEDS_ATTENTION lane blocks the join and cancels healthy sibling futures",
+        "a failed single lane leaves the run with no join at all"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "provider.dispatch_and_substitution",
+      "claim_id": "ask.provider.dispatch_and_substitution",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "failure_modes": [
+        "a nonexistent model is dispatched anyway",
+        "a removed seat vanishes without a recorded substitution",
+        "scillm's course-correction 400 is swallowed instead of relayed"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "browser.tab_lifecycle",
+      "claim_id": "ask.browser.tab_lifecycle",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "failure_modes": [
+        "a seat submits into a hidden or rate-limited ambient tab",
+        "an unbound run reuses another lane's tab"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "competition.isolation_and_judging",
+      "claim_id": "ask.compete.isolated_and_judged",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "cross-lane leakage rigs the packet",
+        "a judge that is also a creator picks itself",
+        "a winner is declared that never answered or does not exist"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "evals.artifact_provenance",
+      "claim_id": "ask.evals.artifact_provenance",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "a stale green run is graded in place of a failed current one",
+        "a wrong-seat or tokenless receipt is credited",
+        "a self-reported success is trusted without execution"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
       ]
     }
   ]

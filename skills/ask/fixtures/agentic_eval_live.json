@@ -27,7 +27,9 @@
           "LADDER_READINESS: READY"
         ]
       },
-      "notes": " 2026-08-19: honesty and readiness are separate verdicts; an all-blocked ladder is honest but exits 3 NOT_READY, and this case now requires READY (at least one real answer)."
+      "notes": " 2026-08-19: honesty and readiness are separate verdicts; an all-blocked ladder is honest but exits 3 NOT_READY, and this case now requires READY (at least one real answer).",
+      "readback": true,
+      "evidence_class": "live_e2e"
     },
     {
       "name": "live-mixed-seats-complete-a-compliant-task",
@@ -46,7 +48,9 @@
           "ALL_SEATS_HONEST_ON_TASK",
           "TASK_LADDER:"
         ]
-      }
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
     },
     {
       "name": "live-a-misnamed-model-self-corrects-and-never-blocks-the-panel",
@@ -64,7 +68,17 @@
         "stdout_contains": [
           "ALL_SEATS_HONEST_ON_TASK"
         ]
-      }
+      },
+      "seams": [
+        "scheduler.lane_local_degradation",
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.scheduler.lane_local_degradation",
+        "ask.provider.dispatch_and_substitution"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e"
     },
     {
       "name": "live-a-local-seat-answers-or-names-its-blocker",
@@ -93,14 +107,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh live-seat-probe claude-fable-low"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe claude-fable-low --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nt=open(sys.argv[1]).read(); d=json.loads(t[t.index('{'):])\nlanes=d.get('lanes') or []\nrecovered=d.get('outcome')=='answered' and any(l.get('recorded_fallback') or l.get('has_token') for l in lanes)\nnamed=d.get('outcome')=='named_blocker' and any(l.get('failure_code') for l in lanes)\nprint('SEAT_RECOVERED_OR_NAMED_FROM_RECEIPT' if (recovered or named) else f'UNPROVEN {d}')\nraise SystemExit(0 if (recovered or named) else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "HONEST"
+          "SEAT_RECOVERED_OR_NAMED_FROM_RECEIPT"
         ]
-      }
+      },
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: verdict comes from the lane receipt fields (recorded_fallback / has_token / failure_code), not a stdout word."
     },
     {
       "name": "live-a-browser-seat-that-fails-names-a-failure-code",
@@ -137,7 +160,15 @@
           "NO_DISPATCH_OF_NONEXISTENT_MODEL"
         ]
       },
-      "notes": "2026-08-19 false-green fix: '|| true' plus substring '0' also accepted counts like 10. Now the count is compared numerically to zero."
+      "notes": "2026-08-19 false-green fix: '|| true' plus substring '0' also accepted counts like 10. Now the count is compared numerically to zero.",
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e"
     },
     {
       "name": "a-non-selected-tab-is-hidden-so-seats-need-own-windows",
@@ -173,7 +204,13 @@
         "stdout_contains": [
           "SEAT_HONEST"
         ]
-      }
+      },
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ]
     },
     {
       "name": "an-ambient-rate-limited-tab-does-not-remove-a-seat",
@@ -190,7 +227,13 @@
         "stdout_contains": [
           "LIMIT_SCOPED_TO_OUR_TAB"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ]
     },
     {
       "name": "an-unbound-browser-run-opens-a-fresh-tab",
@@ -207,7 +250,13 @@
         "stdout_contains": [
           "FRESH_TAB_WHEN_UNBOUND"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ]
     },
     {
       "name": "live-webgpt-opens-a-tab-and-answers",
@@ -218,14 +267,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webgpt"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webgpt --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "WORKS:"
+          "TAB_SEAT_ANSWERED_WITH_TOKEN"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
     },
     {
       "name": "live-webkimi-opens-a-tab-and-answers",
@@ -236,14 +294,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webkimi"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webkimi --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "WORKS:"
+          "TAB_SEAT_ANSWERED_WITH_TOKEN"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
     },
     {
       "name": "live-webgemini-opens-a-tab-and-answers",
@@ -254,14 +321,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webgemini"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webgemini --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "WORKS:"
+          "TAB_SEAT_ANSWERED_WITH_TOKEN"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
     },
     {
       "name": "live-webgrok-opens-a-tab-and-answers",
@@ -272,14 +348,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webgrok"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webgrok --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "WORKS:"
+          "TAB_SEAT_ANSWERED_WITH_TOKEN"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
     },
     {
       "name": "live-webdeepseek-opens-a-tab-and-answers",
@@ -290,14 +375,23 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh prove-workflow webdeepseek"
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webdeepseek --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nd=json.loads(open(sys.argv[1]).read()[open(sys.argv[1]).read().index('{'):])\nlanes=d.get('lanes') or []\nok=d.get('outcome')=='answered' and any(l.get('has_token') and (l.get('bytes') or 0)>0 for l in lanes)\nprint('TAB_SEAT_ANSWERED_WITH_TOKEN' if ok else f'TAB_SEAT_NOT_PROVEN {d.get(chr(39)+chr(39)) or d}')\nraise SystemExit(0 if ok else 1)\nEOF"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "WORKS:"
+          "TAB_SEAT_ANSWERED_WITH_TOKEN"
         ]
-      }
+      },
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
     },
     {
       "name": "live-webclaude-is-blocked-with-a-named-reason",
@@ -408,7 +502,13 @@
         "stdout_contains": [
           "WORKS:"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "live-an-mvp-unblock-competition-produces-a-judged-winner",
@@ -429,7 +529,13 @@
           "isolation",
           "equal_context"
         ]
-      }
+      },
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ]
     },
     {
       "name": "live-an-mvp-competition-with-one-candidate-is-refused",
@@ -586,16 +692,25 @@
       "command": [
         "bash",
         "-c",
-        "set -o pipefail; cd .. && AID=ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (one python -c command). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id \"$AID\" --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 && RD=/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/\"$AID\" && ./run.sh panel-audit \"$RD\" --mode compete && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
+        "set -o pipefail; cd .. && AID=ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (one python -c command). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id \"$AID\" --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 && RD=/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/\"$AID\" && ./run.sh panel-audit \"$RD\" --mode compete && ./run.sh judge-audit \"$RD\" --run-winner-proof && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "COMPLIANT: compete",
+          "JUDGE_AUDIT_OK",
           "WINNER: handler-"
         ]
       },
-      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1. 2026-08-19 provenance fix: the audited run dir is the exact --ask-id of this invocation (no newest-dir glob), and pipefail stops a failed tau run from being masked by tail."
+      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1. 2026-08-19 provenance fix: the audited run dir is the exact --ask-id of this invocation (no newest-dir glob), and pipefail stops a failed tau run from being masked by tail. 2026-08-19: judge-audit chained after panel-audit -- independence (judge is not a creator), verdict names an existing competitor that answered, every competitor addressed in the rationale, and the winner's own PROOF_COMMANDS executed exit 0.",
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e"
     },
     {
       "name": "ladder-red-team-false-greens-stay-red",
@@ -613,7 +728,14 @@
           "ALL_RED_PATHS_STAY_RED"
         ]
       },
-      "notes": "Red-before/green-after harness for the ladder itself (review 2026-08-19): a named blocker without a failure_code, an answered claim from a failing child, a tokenless answer, a wrong-seat receipt, and garbage output must each exit 1; an honest all-blocked run must exit 3 NOT_READY."
+      "notes": "Red-before/green-after harness for the ladder itself (review 2026-08-19): a named blocker without a failure_code, an answered claim from a failing child, a tokenless answer, a wrong-seat receipt, and garbage output must each exit 1; an honest all-blocked run must exit 3 NOT_READY.",
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "task-oracle-rejects-known-false-greens",
@@ -631,7 +753,14 @@
           "ORACLE_REJECTS_FALSE_GREENS"
         ]
       },
-      "notes": "The task oracle executes the delivered function on vectors; return a-b, prose without a fence, a stale nonce, and a one-line syntax error must all be rejected while the compliant sample passes."
+      "notes": "The task oracle executes the delivered function on vectors; return a-b, prose without a fence, a stale nonce, and a one-line syntax error must all be rejected while the compliant sample passes.",
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "evidence_class": "fault_injected_deterministic"
     },
     {
       "name": "live-one-shot-asks-mixed-seats-and-returns-per-seat-answers",
@@ -652,7 +781,152 @@
           "ANSWER "
         ]
       },
-      "notes": "The user's simple-concurrent-question shape: N independent single-call lanes, per-seat answers or named blockers, no consensus step. Nonce-bound: each answer must echo this run's token. A partial panel is DEGRADED-but-usable; only zero answers or a dishonest lane fails."
+      "notes": "The user's simple-concurrent-question shape: N independent single-call lanes, per-seat answers or named blockers, no consensus step. Nonce-bound: each answer must echo this run's token. A partial panel is DEGRADED-but-usable; only zero answers or a dishonest lane fails.",
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "judge-audit-red-team-rigged-verdicts-stay-red",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && uv run --project . python - \"$RT\" <<'EOF'\nimport json, sys\nfrom pathlib import Path\nRT=Path(sys.argv[1])\ndef build(name, judge_model='claude-opus-5-low', winner='handler-a', mention_all=True,\n          winner_answers=True, verdict_line=True):\n    d=RT/name/'node-artifacts'\n    for comp in ('handler-a','handler-b'):\n        (d/comp).mkdir(parents=True, exist_ok=True)\n        if comp!='handler-a' or winner_answers:\n            (d/comp/'response.md').write_text(f'answer from {comp}\\nPROOF_COMMANDS\\npython -c \\'assert 1+1==2\\'\\n')\n    (d/'judge').mkdir(parents=True, exist_ok=True)\n    mentions='handler-a and handler-b' if mention_all else 'handler-a only'\n    body=f'Rationale over {mentions}.\\n'+(f'WINNER: {winner}\\n' if verdict_line else 'no verdict\\n')\n    (d/'judge'/'response.md').write_text(body)\n    (d/'judge'/'node-receipt.json').write_text(json.dumps({'provider_receipt':{'requested_model':judge_model}}))\nbuild('good')\nbuild('judge_is_creator', judge_model='a')\nbuild('winner_missing', winner='handler-zzz')\nbuild('competitor_ignored', mention_all=False)\nbuild('winner_silent', winner_answers=False)\nbuild('no_verdict', verdict_line=False)\nprint('built')\nEOF\nfails=0; for m in judge_is_creator winner_missing competitor_ignored winner_silent no_verdict; do uv run --project . python scripts/judge_audit.py $RT/$m >/dev/null 2>&1; [ $? -eq 1 ] || { echo RIGGED_VERDICT_WENT_GREEN_$m; fails=1; }; done; uv run --project . python scripts/judge_audit.py $RT/good --run-winner-proof | grep -q JUDGE_AUDIT_OK || { echo HONEST_VERDICT_WENT_RED; fails=1; }; [ $fails -eq 0 ] && echo ALL_RIGGED_VERDICTS_STAY_RED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_RIGGED_VERDICTS_STAY_RED"
+        ]
+      },
+      "notes": "The judge audit itself is red-teamed: a judge that is also a creator, a winner that does not exist, an ignored competitor, a silent winner, and a missing verdict line must each fail; the honest run must pass with the winner's proof executed.",
+      "seams": [
+        "competition.isolation_and_judging",
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged",
+        "ask.evals.artifact_provenance"
+      ],
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "ask.scheduler.lane_local_degradation",
+      "criticality": "critical",
+      "description": "One lane's failure degrades lane-local through the tau join contract; healthy seats always run to terminal and the join always settles.",
+      "evidence_required": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.provider.dispatch_and_substitution",
+      "criticality": "critical",
+      "description": "Seats dispatch only real catalog models; removed or rate-limited seats self-recover to their recorded substitution, and a misnamed model relays the transport's course correction.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.browser.tab_lifecycle",
+      "criticality": "critical",
+      "description": "Every browser seat opens (or is bound to) its own usable tab and answers from it; ambient rate-limited or hidden tabs never silently remove a seat.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.compete.isolated_and_judged",
+      "criticality": "critical",
+      "description": "Competitions run isolated candidate lanes with an identical packet and an independent judge whose verdict names an existing answering candidate; rigged verdicts fail the audit.",
+      "evidence_required": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.evals.artifact_provenance",
+      "criticality": "critical",
+      "description": "Eval verdicts are bound to their own invocation (nonces, exact ask-ids, seat identity, executed artifacts); stale, mismatched, or self-reported evidence is refused.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "scheduler.lane_local_degradation",
+      "claim_id": "ask.scheduler.lane_local_degradation",
+      "seam_type": "scheduler/concurrency",
+      "criticality": "critical",
+      "failure_modes": [
+        "one NEEDS_ATTENTION lane blocks the join and cancels healthy sibling futures",
+        "a failed single lane leaves the run with no join at all"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "provider.dispatch_and_substitution",
+      "claim_id": "ask.provider.dispatch_and_substitution",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "failure_modes": [
+        "a nonexistent model is dispatched anyway",
+        "a removed seat vanishes without a recorded substitution",
+        "scillm's course-correction 400 is swallowed instead of relayed"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "browser.tab_lifecycle",
+      "claim_id": "ask.browser.tab_lifecycle",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "failure_modes": [
+        "a seat submits into a hidden or rate-limited ambient tab",
+        "an unbound run reuses another lane's tab"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "competition.isolation_and_judging",
+      "claim_id": "ask.compete.isolated_and_judged",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "cross-lane leakage rigs the packet",
+        "a judge that is also a creator picks itself",
+        "a winner is declared that never answered or does not exist"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "evals.artifact_provenance",
+      "claim_id": "ask.evals.artifact_provenance",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "a stale green run is graded in place of a failed current one",
+        "a wrong-seat or tokenless receipt is credited",
+        "a self-reported success is trusted without execution"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
     }
   ]
 }
