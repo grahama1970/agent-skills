@@ -106,16 +106,22 @@ def _browser_submit_preflight_or_exit(
         raise typer.Exit(2)
 
 
-def _emit_dag_chart(bundle: dict[str, Any], *, execute: bool) -> None:
-    """Print an ASCII confirmation chart of the compiled DAG before any run.
+def _render_dag_chart(
+    bundle: dict[str, Any],
+    *,
+    mode: str,
+    statuses: dict[str, str] | None = None,
+) -> str:
+    """Render the compiled DAG as ASCII, optionally verdict-annotated.
 
-    Deterministic and rendered from the same compiled nodes Tau executes;
-    stderr so --json stdout stays parseable.
+    Deterministic and rendered from the same compiled nodes Tau executes.
+    With `statuses` (node_id -> PASS/FAIL/...), every node line carries its
+    verdict so a final chart shows exactly what succeeded and what failed.
     """
     dag = bundle.get("dag") if isinstance(bundle, dict) else None
     nodes = (dag or {}).get("nodes") if isinstance(dag, dict) else None
     if not nodes:
-        return
+        return ""
     by_id = {str(n.get("id")): n for n in nodes if isinstance(n, dict) and n.get("id")}
     # Edges live per-node (depends_on) or in the contract's top-level edges list.
     deps_by_node: dict[str, set[str]] = {nid: set() for nid in by_id}
@@ -142,16 +148,75 @@ def _emit_dag_chart(bundle: dict[str, Any], *, execute: bool) -> None:
         for nid in by_id:
             depth(nid)
     except RecursionError:
-        return
-    mode = "about to EXECUTE via Tau" if execute else "preview only; add --execute to run"
+        return ""
     lines = [f"DAG ({mode}):", ""]
     for level in range(max(depths.values()) + 1):
         for nid in sorted(n for n, d in depths.items() if d == level):
             node = by_id[nid]
             deps = sorted(deps_by_node[nid])
             arrow = f"  <- {', '.join(deps)}" if deps else ""
-            lines.append(f"{'    ' * level}[{nid}] {node.get('agent', '')}{arrow}")
-    typer.echo("\n".join(lines) + "\n", err=True)
+            verdict = f" {statuses.get(nid, 'NO_RECEIPT')}" if statuses is not None else ""
+            lines.append(f"{'    ' * level}[{nid}]{verdict} {node.get('agent', '')}{arrow}")
+    return "\n".join(lines) + "\n"
+
+
+def _emit_dag_chart(bundle: dict[str, Any], *, execute: bool) -> None:
+    """Print the initial chart and persist it as dag-chart.initial.txt."""
+    mode = "about to EXECUTE via Tau" if execute else "preview only; add --execute to run"
+    text = _render_dag_chart(bundle, mode=mode)
+    if not text:
+        return
+    typer.echo(text, err=True)
+    run_dir = bundle.get("run_dir") if isinstance(bundle, dict) else None
+    if run_dir:
+        try:
+            (Path(str(run_dir)) / "dag-chart.initial.txt").write_text(text)
+        except OSError:
+            pass
+
+
+def _emit_final_dag_chart(bundle: dict[str, Any], execution: Any) -> None:
+    """Print + persist the post-run chart with per-node verdicts.
+
+    Verdicts come from the run's own execution-status.json receipts (the
+    authority), falling back to the in-memory execution payload. Every node
+    gets a line; a node with no receipt reads NO_RECEIPT, never a silent green.
+    """
+    run_dir = bundle.get("run_dir") if isinstance(bundle, dict) else None
+    if not run_dir:
+        return
+    statuses: dict[str, str] = {}
+    status_path = Path(str(run_dir)) / "execution-status.json"
+    payload: dict[str, Any] = {}
+    if status_path.is_file():
+        try:
+            payload = json.loads(status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+    if not payload and isinstance(execution, dict):
+        payload = execution
+    for receipt in payload.get("node_provider_receipts") or []:
+        if isinstance(receipt, dict) and receipt.get("node_id"):
+            statuses[str(receipt["node_id"])] = str(receipt.get("status") or "UNKNOWN")
+    join_receipt = payload.get("join_receipt")
+    if isinstance(join_receipt, dict) and join_receipt.get("node_id"):
+        statuses[str(join_receipt["node_id"])] = str(join_receipt.get("status") or "UNKNOWN")
+        for row in join_receipt.get("handler_response_index") or []:
+            if isinstance(row, dict) and row.get("node_id"):
+                statuses.setdefault(str(row["node_id"]), str(row.get("status") or "UNKNOWN"))
+    overall = str(
+        payload.get("status")
+        or (execution.get("status") if isinstance(execution, dict) else "")
+        or "UNKNOWN"
+    )
+    text = _render_dag_chart(bundle, mode=f"final; run status {overall}", statuses=statuses)
+    if not text:
+        return
+    typer.echo(text, err=True)
+    try:
+        (Path(str(run_dir)) / "dag-chart.final.txt").write_text(text)
+    except OSError:
+        pass
 
 
 
@@ -445,6 +510,7 @@ def run(
 
     if execute:
         _cleanup_browser_lifecycle(lifecycle)
+        _emit_final_dag_chart(bundle, execution)
 
     output_live = bool(
         (isinstance(execution, dict) and execution.get("live") is True)
@@ -729,6 +795,7 @@ def compete(
 
     if execute:
         _cleanup_browser_lifecycle(lifecycle)
+        _emit_final_dag_chart(bundle, execution)
     if (
         isinstance(execution, dict)
         and execution.get("schema") == "ask.tau_dag_execution.v1"

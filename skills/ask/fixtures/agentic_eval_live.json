@@ -811,6 +811,33 @@
         "ask.evals.artifact_provenance"
       ],
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "live-every-executed-dag-leaves-initial-and-final-verdict-charts",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 600,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && AID=chart-proof-$(date -u +%H%M%S)-$RANDOM && uv run --project . python -m ask.tau_dag_cli run 'Reply with exactly: CHART-PROOF' --repo local/agent-skills --target chart-artifacts --immutable-goal 'Return the token.' --dag-template single-call --handler claude-opus-5-low --ask-id \"$AID\" --execute --json --poll-timeout-seconds 300 >/dev/null 2>&1; RD=/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/\"$AID\" && grep -q 'about to EXECUTE' \"$RD/dag-chart.initial.txt\" && grep -q 'final; run status' \"$RD/dag-chart.final.txt\" && grep -qE '\\[handler-[a-z0-9-]+\\] (PASS|FAIL|BLOCKED|NEEDS_ATTENTION|NO_RECEIPT)' \"$RD/dag-chart.final.txt\" && echo INITIAL_AND_FINAL_VERDICT_CHARTS_PRESENT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "INITIAL_AND_FINAL_VERDICT_CHARTS_PRESENT"
+        ]
+      },
+      "notes": "Every executed /ask DAG must persist dag-chart.initial.txt at compile and dag-chart.final.txt after the run with a per-node verdict on every line (a node without a receipt reads NO_RECEIPT, never a silent green). The charts are the machine-checkable halves of the show-then-confirm and report-what-failed contracts. Bound to this invocation's exact --ask-id."
     }
   ],
   "capability_claims": [
