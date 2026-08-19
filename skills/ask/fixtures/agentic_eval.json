@@ -1183,6 +1183,30 @@
         ]
       },
       "notes": "The ambiguous human shape 'A and B solve X, then per-lens reviews (security/quality/metric), then synthesize and pick a winner' compiles to creators -> join-gate -> review-<lens> nodes -> judge -> join. Reviewers must not pick winners (requires_verdict false, single-criterion system prompt); the judge synthesizes all reviews. Added 2026-08-19 after the request went NEEDS_INTERVIEW."
+    },
+    {
+      "name": "every-compile-emits-the-preview-chart-before-any-execute",
+      "type": "positive",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && O=$(mktemp -d) && a=$(uv run --project . python -m ask.tau_dag_cli run 'chart gate probe' --repo local/agent-skills --target chartgate --immutable-goal g --dag-template single-call --handler claude-opus-5-low --ask-id chartgate-run --run-output-root $O 2>&1) && b=$(uv run --project . python -m ask.tau_dag_cli compete 'chart gate probe' --repo local/agent-skills --target chartgate --immutable-goal g --handler webgpt --handler oc-deepseek --reviewer webclaude=quality --judge-handler claude-opus-5-low --criterion overall --ask-id chartgate-compete --run-output-root $O 2>&1) && echo \"$a\" | grep -q 'DAG (preview only' && echo \"$b\" | grep -q 'DAG (preview only' && echo \"$b\" | grep -q 'review-quality' && echo \"$b\" | grep -q 'judge.*review-quality' && echo PREVIEW_CHART_EMITTED_FOR_RUN_AND_COMPETE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PREVIEW_CHART_EMITTED_FOR_RUN_AND_COMPETE"
+        ]
+      },
+      "notes": "The confirm-before-execute rule needs a chart to confirm: every compile (run AND compete) must print the 'DAG (preview only; add --execute to run)' ASCII tree, including reviewer/judge stages, so the project agent can show the human the DAG shape before dispatch. Added 2026-08-19 after finding compete never called _emit_dag_chart."
     }
   ],
   "capability_claims": [

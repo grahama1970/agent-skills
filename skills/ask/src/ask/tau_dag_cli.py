@@ -629,6 +629,7 @@ def compete(
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
+    _emit_dag_chart(bundle, execute=execute)
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute and not _has_browser_handlers(input_payload):
