@@ -361,8 +361,13 @@ async function processBridgeRequestForOutput(
   if (action === 'restart') {
     await stopActiveDebugSession();
   }
-  const stopped = waitForStoppedState(request, outputPath, { bindActiveSession: false });
-  const ok = await vscode.debug.startDebugging(folder, request.launchConfigName ?? 'Debug with $debugger');
+  const correlationToken = `${requestId}:${requestHash.slice(0, 16)}`;
+  const correlatedConfig = resolveLaunchConfiguration(folder, request.launchConfigName, correlationToken);
+  const stopped = waitForStoppedState(request, outputPath, { correlationToken });
+  const ok = await vscode.debug.startDebugging(
+    folder,
+    correlatedConfig ?? request.launchConfigName ?? 'Debug with $debugger',
+  );
   if (!ok) {
     throw new Error(`VS Code refused to start debug configuration: ${request.launchConfigName ?? 'Debug with $debugger'}`);
   }
@@ -871,10 +876,33 @@ function resolveBreakpointPath(folder: vscode.WorkspaceFolder, breakpoint: Bridg
   return assertWorkspacePath(folder.uri.fsPath, resolved, 'breakpoint');
 }
 
+function resolveLaunchConfiguration(
+  folder: vscode.WorkspaceFolder,
+  name: string | undefined,
+  correlationToken: string,
+): vscode.DebugConfiguration | undefined {
+  const configs = vscode.workspace
+    .getConfiguration('launch', folder.uri)
+    .get<Array<Record<string, unknown>>>('configurations') ?? [];
+  const match = configs.find((candidate) => candidate.name === name);
+  if (!match) {
+    return undefined;
+  }
+  // Clone and stamp a per-operation correlation token into the configuration.
+  // VS Code copies extra configuration fields onto DebugSession.configuration,
+  // so onDidStartDebugSession can recognize exactly the session this launch
+  // produced and reject any unrelated or compound session (#1431).
+  return { ...match, __bridgeCorrelationToken: correlationToken } as unknown as vscode.DebugConfiguration;
+}
+
+function sessionCorrelationToken(session: vscode.DebugSession): string | undefined {
+  return (session.configuration as { __bridgeCorrelationToken?: string } | undefined)?.__bridgeCorrelationToken;
+}
+
 function waitForStoppedState(
   request: BridgeRequest,
   outputPath: string,
-  options: { bindActiveSession?: boolean; sessionId?: string } = {},
+  options: { bindActiveSession?: boolean; sessionId?: string; correlationToken?: string } = {},
 ): Promise<StoppedState> {
   const timeoutMs = request.stopTimeoutMs ?? 30000;
   // A run action (continue / run-to / step) can end in the program exiting
@@ -935,8 +963,14 @@ function waitForStoppedState(
     }
 
     startSubscription = vscode.debug.onDidStartDebugSession((session) => {
+      // With a correlation token, only the session THIS launch produced may be
+      // bound; an unrelated or compound/child session that starts during the
+      // wait cannot consume this pending stop (#1431).
+      if (options.correlationToken !== undefined && sessionCorrelationToken(session) !== options.correlationToken) {
+        return;
+      }
       pendingBySession.set(session.id, pendingCapture);
-      if (options.sessionId || options.bindActiveSession) {
+      if (options.sessionId || options.bindActiveSession || options.correlationToken !== undefined) {
         startSubscription?.dispose();
       }
     });
