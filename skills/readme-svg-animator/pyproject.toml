@@ -7,11 +7,11 @@ name = "readme-svg-animator"
 version = "0.1.0"
 description = "Deterministic animated SVG generator and validator for GitHub READMEs"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
   "defusedxml>=0.7.1",
   "lxml>=5.2",
-  "loguru>=0.7",
+  "loguru>=0.7,<0.7.3",
   "Pillow>=10.4",
   "playwright>=1.47",
   "pydantic>=2.7",
