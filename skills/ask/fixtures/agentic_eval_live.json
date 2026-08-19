@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "live provider dispatch and live multi-seat panels through the real Ask runtime",
   "claims": {
-    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, that no seat dispatches a nonexistent model, that a live roundtable reaches three ANSWERING seats and passes its own compliance audit, that a live competition reaches two answering candidates, that a two-seat panel is refused rather than reported as a panel, and that an MVP unblock dispatches isolated candidates against a real blocker and passes the best-practices-competition audit while refusing a solo candidate",
+    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, that no seat dispatches a nonexistent model, that a live roundtable reaches three ANSWERING seats and passes its own compliance audit, that a live competition reaches two answering candidates, that a five-creator compete DAG with an independent claude-opus-5-low judge produces a 'WINNER: <node-id>' verdict with rationale and passes panel-audit, that a two-seat panel is refused rather than reported as a panel, and that an MVP unblock dispatches isolated candidates against a real blocker and passes the best-practices-competition audit while refusing a solo candidate",
     "does_not_prove": "that any given provider is available at run time, or semantic correctness of any response. Quorum is a floor on delivery, not on quality: three seats returning the token proves the transport seats a panel, never that the panel is right."
   },
   "cases": [
@@ -568,6 +568,26 @@
           "CLI_BROWSER_FIRST_FOR_WEB"
         ]
       }
+    },
+    {
+      "name": "live-compete-five-creators-judged-by-opus5-low-picks-a-winner",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2400,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (one python -c command). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 && RD=$(ls -td /mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-compete-add2-eval-* | head -1) && ./run.sh panel-audit \"$RD\" --mode compete && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPLIANT: compete",
+          "WINNER: handler-"
+        ]
+      },
+      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1."
     }
   ]
 }
