@@ -1,0 +1,115 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Runtime-artifact safety guards (#1440): before a debugger writes or reads a runtime artifact it must (a) reject a path that escapes the allowed root even when the lexical string looks contained (symlink / .. traversal resolved via realpath), and (b) use an owner(PID)+TTL runtime lock that recovers a crashed writer's stale lock on evidence but never steals an ACTIVE lock. These are the deterministic security primitives; the default $XDG_RUNTIME_DIR storage relocation and git-worktree-clean guarantee are a separate bridge-protocol increment.",
+  "claims": {
+    "proves": "debugger_runtime_guard.py rejects a symlink-escape and a ..-traversal path (realpath outside root) while accepting a genuinely contained path; and its runtime lock refuses an active lock (owner alive, TTL unexpired) but recovers a stale lock whose owner PID is dead or whose TTL has expired",
+    "does_not_prove": "that the live VS Code bridge already stores its artifacts under $XDG_RUNTIME_DIR, or that a real debugging run leaves the target git worktree clean end-to-end"
+  },
+  "cases": [
+    {
+      "name": "reject-symlink-escape",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A path through a symlink that points outside the root is rejected, even though its string is under the root.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); mkdir -p \"$T/root\" \"$T/outside\"; echo secret > \"$T/outside/target.txt\"; ln -s \"$T/outside\" \"$T/root/escape\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" check-containment \"$T/root\" \"$T/root/escape/target.txt\""
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["path escape"]
+      }
+    },
+    {
+      "name": "reject-dotdot-traversal",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A ..-traversal path resolving outside the root is rejected.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); mkdir -p \"$T/root\" \"$T/outside\"; echo secret > \"$T/outside/target.txt\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" check-containment \"$T/root\" \"$T/root/../outside/target.txt\""
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["path escape"]
+      }
+    },
+    {
+      "name": "accept-contained-path",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A genuinely contained path resolves inside the root and is accepted.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); mkdir -p \"$T/root\"; touch \"$T/root/real.txt\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" check-containment \"$T/root\" \"$T/root/real.txt\""
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["contained:"]
+      }
+    },
+    {
+      "name": "refuse-active-lock",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A lock held by a live owner within its TTL is NOT stolen -- acquisition is refused.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); LK=\"$T/run.lock\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-write \"$LK\" --pid $$ --age-seconds 1 --ttl 300 >/dev/null; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-acquire \"$LK\" --ttl 30"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["lock held"]
+      }
+    },
+    {
+      "name": "recover-stale-lock-dead-owner",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A lock whose owner PID is not alive is recovered (not silently deleted -- recovered on dead-owner evidence).",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); LK=\"$T/run.lock\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-write \"$LK\" --pid 999999 --age-seconds 1 --ttl 300 >/dev/null; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-acquire \"$LK\" --ttl 30"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["recovered stale lock", "not alive"]
+      }
+    },
+    {
+      "name": "recover-stale-lock-expired-ttl",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A lock whose TTL has expired is recovered even if its owner is still alive.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); LK=\"$T/run.lock\"; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-write \"$LK\" --pid $$ --age-seconds 999 --ttl 30 >/dev/null; python3 \"$SKILL/scripts/debugger_runtime_guard.py\" lock-acquire \"$LK\" --ttl 30"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["recovered stale lock", "expired"]
+      }
+    }
+  ]
+}
