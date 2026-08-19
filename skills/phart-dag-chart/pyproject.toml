@@ -2,7 +2,7 @@
 name = "phart-dag-chart"
 version = "0.1.0"
 description = "Validate ask/scillm DAG JSON and render PHART ASCII decision-tree charts"
-requires-python = ">=3.14,<3.13"
+requires-python = ">=3.14"
 dependencies = [
     "networkx>=3.3",
     "phart",

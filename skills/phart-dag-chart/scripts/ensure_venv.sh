@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
-# Symlink skill .venv to 12TB storage (NVMe is code-only).
+# Point the skill venv at fast local cache via UV_PROJECT_ENVIRONMENT.
+#
+# This previously symlinked .venv into /mnt/storage12tb. Two measured problems
+# (2026-08-19): that path is /dev/sda1, rotational=1 and near-full, while the
+# NVMe root has over 1T free -- interpreter startup paid seek latency on rust;
+# and the SYMLINK dodged the repo .gitignore's ".venv/" rule (a symlink is not
+# a directory), so it showed up as untracked cruft in every git status. The
+# skill's own verify contract elsewhere in this repo rejects heavy runtime
+# state in the source tree; a symlink pointing at it is the same problem in
+# disguise. Override by exporting UV_PROJECT_ENVIRONMENT.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STORE="/mnt/storage12tb/skills/phart-dag-chart"
-VEN="$STORE/.venv"
-if [[ ! -d /mnt/storage12tb ]]; then
-  exit 0
+# Drop any legacy in-tree .venv symlink from the old scheme.
+if [[ -L "$SCRIPT_DIR/.venv" ]]; then
+  rm -f "$SCRIPT_DIR/.venv"
 fi
-mkdir -p "$STORE"
-if [[ -L "$SCRIPT_DIR/.venv" && "$(readlink -f "$SCRIPT_DIR/.venv")" == "$(readlink -f "$VEN")" ]]; then
-  exit 0
+if [[ -z "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
+  export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/phart-dag-chart/venv"
 fi
-if [[ -e "$SCRIPT_DIR/.venv" && ! -L "$SCRIPT_DIR/.venv" ]]; then
-  rm -rf "$VEN" 2>/dev/null || true
-  mv "$SCRIPT_DIR/.venv" "$VEN"
-  rmdir "$SCRIPT_DIR/.venv" 2>/dev/null || rm -rf "$SCRIPT_DIR/.venv"
-fi
-ln -sfn "$VEN" "$SCRIPT_DIR/.venv"
-echo "linked $SCRIPT_DIR/.venv -> $VEN" >&2
+mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
