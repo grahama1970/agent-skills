@@ -191,6 +191,19 @@ acceptable.
 Do not "simplify" stage 1 back onto `tau-dag`. That change is what makes the
 skill unusable in a live interview, and the numbers above are the reason.
 
+## Debugger composition (#1450)
+
+Live Evidence composes the sibling `skills/debugger` through a bounded,
+read-only proof lane (`src/live_evidence/debugger_lane.py`): a
+`live_evidence.debug_request.v1` binds repository identity, question revision,
+and the frozen session policy; capture runs through the debugger skill's
+`capture_breakpoints.py`; the proof becomes evidence only after
+`validate_debugger_proof.py --expect-valid` passes AND the adapter's own
+readback confirms a verified stop at a requested location. Dispatch success,
+exit 0, or a producer-authored `proofValid` never satisfies the card gate.
+Secret redaction is debugger-side and preserved end to end. `vscode_bridge`
+mode reports a truthful BLOCKED state until the GUI capability is provisioned.
+
 Never import ArangoDB or Qdrant clients here. `/memory` owns ArangoDB, BM25,
 Qdrant/Jina semantic retrieval, graph traversal, code-index lifecycle, and
 freshness policy.

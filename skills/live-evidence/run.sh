@@ -188,6 +188,10 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_session_policy.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-debugger-lane)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_debugger_lane.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-review-dossier)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"

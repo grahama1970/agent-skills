@@ -418,6 +418,30 @@
         ]
       },
       "notes": "#1451 required deterministic proof over the committed time-coded fixture journal. The live/browser clip-seek rung is a separate, still-open case."
+    },
+    {
+      "name": "debugger-readonly-proof-lane-contract",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-debugger-lane"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "valid breakpoint proof yields supported outcome: PASS",
+          "captured paused state is real (subtotal=42 from the fixture run): PASS",
+          "secret-shaped local redacted end to end: PASS",
+          "tampered proofValid without a real stop rejected by independent validator: PASS",
+          "policy-blocked request runs zero subprocesses: PASS",
+          "stale-revision debugger card discarded by the CAS fence: PASS",
+          "debugger lane: PASS"
+        ]
+      },
+      "notes": "#1450 ten required scenarios against the REAL sibling debugger skill (capture_breakpoints.py + validate_debugger_proof.py subprocesses over a fresh git repo). UI actions and the visible VS Code rung are later slices; vscode_bridge reports BLOCKED truthfully."
     }
   ]
 }

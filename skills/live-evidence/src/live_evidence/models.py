@@ -154,6 +154,7 @@ class RetrievalLane(StrEnum):
     ASK = "ask"
     BRAVE = "brave"
     DOGPILE = "dogpile"
+    DEBUGGER = "debugger"
 
 
 class LaneState(StrEnum):
@@ -823,3 +824,57 @@ class ReviewBundle(BaseModel):
                     }
                 )
         return bullets
+
+
+# --- Read-only debugger proof lane (#1450) --------------------------------
+
+
+class DebugBreakpoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    file: str = Field(min_length=1, max_length=1_000)
+    line: int | None = Field(default=None, ge=1)
+    symbol: str | None = Field(default=None, min_length=1, max_length=300)
+
+    @model_validator(mode="after")
+    def validate_target(self) -> "DebugBreakpoint":
+        if self.line is None and self.symbol is None:
+            raise ValueError("breakpoint requires line or symbol")
+        return self
+
+
+class DebugRequest(BaseModel):
+    """live_evidence.debug_request.v1 -- bounded, read-only, revision-fenced.
+
+    Binds exact repository identity, the question revision it answers, and the
+    frozen session policy (#1449). allowed_effects is a literal: this lane can
+    never carry a mutation request.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.debug_request.v1"] = Field(
+        default="live_evidence.debug_request.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    session_id: str = Field(min_length=8, max_length=64)
+    session_policy_digest: str = Field(min_length=64, max_length=64)
+    question_id: str = Field(min_length=8, max_length=64)
+    question_revision: int = Field(ge=0)
+    repository_root: str = Field(min_length=1, max_length=1_000)
+    repository_commit_or_tree_digest: str = Field(min_length=8, max_length=128)
+    technical_question: str = Field(min_length=1, max_length=8_000)
+    reproduction_command: list[str] = Field(min_length=1, max_length=64)
+    requested_breakpoints: list[DebugBreakpoint] = Field(min_length=1, max_length=16)
+    requested_locals: list[str] = Field(default_factory=list, max_length=32)
+    requested_watches: list[str] = Field(default_factory=list, max_length=16)
+    debugger_mode: Literal["python_bdb", "vscode_bridge"] = "python_bdb"
+    allowed_effects: Literal["read_only"] = "read_only"
+    patch_requires_explicit_approval: Literal[True] = True
+
+    def request_digest(self) -> str:
+        payload = self.model_dump(mode="json", by_alias=True)
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
