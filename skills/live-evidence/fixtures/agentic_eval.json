@@ -442,6 +442,31 @@
         ]
       },
       "notes": "#1450 ten required scenarios against the REAL sibling debugger skill (capture_breakpoints.py + validate_debugger_proof.py subprocesses over a fresh git repo). UI actions and the visible VS Code rung are later slices; vscode_bridge reports BLOCKED truthfully."
+    },
+    {
+      "name": "rubric-coverage-evidence-bound-contract",
+      "type": "positive",
+      "real_world": false,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-coverage"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "rubric digest deterministic: PASS",
+          "prohibited criterion rejected: Apparent confidence: PASS",
+          "covered without evidence references rejected: PASS",
+          "vague answer cannot mark failure recovery covered: PASS",
+          "stale question revision cannot update coverage: PASS",
+          "suggestions capped at three: PASS",
+          "dismissal journaled with actor and does not change coverage: PASS",
+          "rubric coverage: PASS"
+        ]
+      },
+      "notes": "#1452 required deterministic proof: six-criterion role fixture, concrete/vague/contradicting answers, adversarial no-evidence suggestion. Live interviewer-assist browser rung is a later slice; coverage authorship (which events cover which criterion) is the model lane's job, this floor verifies bindings."
     }
   ]
 }
