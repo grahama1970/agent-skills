@@ -1,0 +1,58 @@
+{
+  "analysis": {
+    "conclusion": "The debugger stopped at the branch and captured the selected local.",
+    "nextEdit": ""
+  },
+  "assessment": {
+    "limitations": [],
+    "proofValid": true,
+    "variableInspectionValid": true
+  },
+  "breakpoints": [
+    {
+      "file": "/tmp/sample.py",
+      "hit": true,
+      "line": 2,
+      "source": "label = value",
+      "verified": true
+    }
+  ],
+  "captures": {
+    "locals": {
+      "value": "14"
+    },
+    "requestedLocals": [
+      "value"
+    ],
+    "watches": {}
+  },
+  "debugger": {
+    "adapter": "Python bdb",
+    "mode": "python-bdb"
+  },
+  "producer": {
+    "name": "fixture"
+  },
+  "repro": {
+    "command": [
+      "python",
+      "sample.py"
+    ]
+  },
+  "request": {
+    "runId": "run-100",
+    "sessionId": "req-session-A"
+  },
+  "schema": "debugger.proof.v1",
+  "stopped": {
+    "frame": {
+      "file": "/tmp/sample.py",
+      "function": "classify",
+      "line": 2
+    },
+    "hit": true,
+    "reason": "breakpoint",
+    "runId": "run-100",
+    "sessionId": "other-session-B"
+  }
+}

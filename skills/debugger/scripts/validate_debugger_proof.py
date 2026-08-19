@@ -305,6 +305,57 @@ def independent_assessment(proof: dict[str, Any]) -> tuple[bool, bool, list[str]
     return proof_valid, has_state, reasons
 
 
+def correlation_reasons(proof: dict[str, Any]) -> list[str]:
+    """Reject a proof whose supplied identity fields do not belong together.
+
+    A #1436 hardening layer: independent_assessment proves a stop happened at a
+    breakpoint FILE, but a producer can still hand a frame from a DIFFERENT run,
+    or from source that changed after the request. When the producer records the
+    optional identity fields, cross-check them here so those cannot pass:
+
+    - request/session correlation: `request.sessionId`/`request.runId` must equal
+      the stop's `stopped.sessionId`/`stopped.runId` -- the same file+line lifted
+      out of another session is not this request's evidence;
+    - source drift: a hit breakpoint's `sourceHash` (recorded at request time)
+      must equal the stopped frame's `sourceHash` (at the stop) for that file,
+      unless the frame is explicitly marked `reestablished: true`.
+
+    Only fields the producer actually supplies are checked (backwards compatible):
+    a proof without these fields is neither hardened nor rejected by this layer.
+    """
+    reasons: list[str] = []
+    request = proof.get("request", {}) if isinstance(proof.get("request"), dict) else {}
+    stopped = proof.get("stopped", {}) if isinstance(proof.get("stopped"), dict) else {}
+    frame = stopped.get("frame", {}) if isinstance(stopped.get("frame"), dict) else {}
+
+    def _sid(container: dict[str, Any], key: str) -> str | None:
+        val = container.get(key)
+        return str(val) if val is not None else None
+
+    for key, label in (("sessionId", "session"), ("runId", "run")):
+        want = _sid(request, key)
+        got = _sid(stopped, key) or _sid(frame, key)
+        if want is not None and got is not None and want != got:
+            reasons.append(f"stopped {label} {got!r} does not match requested {label} {want!r}")
+
+    frame_hash = frame.get("sourceHash")
+    reestablished = bool(frame.get("reestablished") or stopped.get("reestablished"))
+    if frame_hash is not None and not reestablished:
+        frame_file = Path(str(frame.get("file", ""))).name
+        for bp in proof.get("breakpoints", []) or []:
+            if not isinstance(bp, dict) or bp.get("hit") is not True:
+                continue
+            if Path(str(bp.get("file", ""))).name != frame_file:
+                continue
+            bp_hash = bp.get("sourceHash")
+            if bp_hash is not None and str(bp_hash) != str(frame_hash):
+                reasons.append(
+                    f"source hash for {frame.get('file')!r} drifted after the request "
+                    f"(requested {bp_hash}, stopped {frame_hash}) and was not re-established"
+                )
+    return reasons
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("artifact", type=Path)
@@ -326,7 +377,16 @@ def main() -> int:
                 "producer proofValid=true is not supported by independent evidence: "
                 + "; ".join(independent_reasons)
             )
+        # Cross-check supplied identity fields: a stop from a different session/run,
+        # or over source that drifted after the request, cannot certify this request.
+        correlation = correlation_reasons(proof)
+        if bool(proof["assessment"].get("proofValid")) and correlation:
+            raise ProofError(
+                "producer proofValid=true fails request/session/source correlation: "
+                + "; ".join(correlation)
+            )
         if args.expect_valid:
+            require(not correlation, "proof fails identity correlation: " + "; ".join(correlation))
             require(
                 independent_valid,
                 "independent evidence does not support a valid stop: " + "; ".join(independent_reasons),

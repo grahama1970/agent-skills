@@ -1,0 +1,81 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 3,
+  "eval_tier": "standard",
+  "proof_scope": "Proof identity correlation (#1436 hardening): the validator independently rejects a proof whose supplied identity fields do not belong together -- a stopped frame from a different session/run than the request, or a stop over source that drifted after the breakpoint request (unless the frame was explicitly re-established). Fields are checked only when the producer supplies them, so an un-instrumented proof is neither hardened nor broken by this layer.",
+  "claims": {
+    "proves": "validate_debugger_proof.py rejects (exit 1) a proofValid=true proof whose stopped session/run differs from the requested session/run, and one whose hit-breakpoint sourceHash (at request) differs from the stopped frame sourceHash (at stop) without re-establishment; and accepts (exit 0) a proof where source drift was explicitly re-established, and one whose session and source hash correlate",
+    "does_not_prove": "event-history hash-chain integrity, repo SHA/dirty-state binding, or that any specific producer actually emits these identity fields"
+  },
+  "cases": [
+    {
+      "name": "reject-cross-session-frame",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A proof whose stopped session differs from the requested session is rejected, even though the frame file matches a hit breakpoint.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-cross-session.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["does not match requested session"]
+      }
+    },
+    {
+      "name": "reject-source-drift-after-request",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A proof whose hit-breakpoint sourceHash (at request) differs from the stopped frame sourceHash (at stop), with no re-establishment, is rejected.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-source-drift.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["drifted after the request"]
+      }
+    },
+    {
+      "name": "accept-drift-explicitly-reestablished",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Source drift that was explicitly re-established before the stop is accepted.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-source-drift-reestablished.json --expect-valid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["validation passed"]
+      }
+    },
+    {
+      "name": "accept-correlated-session-and-source",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A proof whose session and source hash correlate between request and stop is accepted.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-correlated-valid.json --expect-valid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["validation passed"]
+      }
+    }
+  ]
+}
