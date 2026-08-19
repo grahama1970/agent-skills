@@ -64,7 +64,44 @@ const activeSessions = new Map<string, vscode.DebugSession>();
 const sessionStates = new Map<string, BridgeSessionState>();
 const sessionEvents = new Map<string, BridgeSessionEvent[]>();
 const requestFileMtimes = new Map<string, number>();
+// #1433 breakpoint ownership: the bridge tracks exactly the breakpoints it
+// created so it can (a) clear its own stale breakpoints on restart without
+// touching the human's, and (b) treat run-to breakpoints as temporary. A
+// human breakpoint is any SourceBreakpoint NOT in `ownedBreakpoints`, and the
+// bridge must never remove one.
+const ownedBreakpoints = new Set<vscode.SourceBreakpoint>();
+const temporaryBreakpoints = new Set<vscode.SourceBreakpoint>();
 const bridgeQueue = new AsyncKeyedQueue();
+
+function removeOwnedBreakpoints(options: { temporaryOnly?: boolean } = {}) {
+  const live = new Set(
+    vscode.debug.breakpoints.filter(
+      (breakpoint): breakpoint is vscode.SourceBreakpoint => breakpoint instanceof vscode.SourceBreakpoint,
+    ),
+  );
+  const toRemove = [...ownedBreakpoints].filter(
+    (breakpoint) => (!options.temporaryOnly || temporaryBreakpoints.has(breakpoint)) && live.has(breakpoint),
+  );
+  if (toRemove.length > 0) {
+    vscode.debug.removeBreakpoints(toRemove);
+  }
+  for (const breakpoint of toRemove) {
+    ownedBreakpoints.delete(breakpoint);
+    temporaryBreakpoints.delete(breakpoint);
+  }
+  // Drop any owned references VS Code no longer knows about (e.g. removed by the
+  // human) so the registry cannot leak or resurrect stale entries.
+  for (const breakpoint of [...ownedBreakpoints]) {
+    if (!live.has(breakpoint)) {
+      ownedBreakpoints.delete(breakpoint);
+      temporaryBreakpoints.delete(breakpoint);
+    }
+  }
+  return toRemove.map((breakpoint) => ({
+    file: breakpoint.location.uri.fsPath,
+    line: breakpoint.location.range.start.line + 1,
+  }));
+}
 let watcher: vscode.FileSystemWatcher | undefined;
 let extensionHostKind: BridgeAuthority['extensionHostKind'] = 'unknown';
 
@@ -487,7 +524,7 @@ async function processSessionControlRequest(
   await prepareSourceFiles(folder, request);
   let addedBreakpoints: unknown[] = [];
   if (request.action === 'runTo' && request.runTo) {
-    addedBreakpoints = await addRequestedBreakpoints(folder, [request.runTo]);
+    addedBreakpoints = await addRequestedBreakpoints(folder, [request.runTo], { temporary: true });
   } else if ((request.breakpoints?.length ?? 0) > 0) {
     addedBreakpoints = await replaceRequestedBreakpoints(folder, request);
   }
@@ -521,6 +558,12 @@ async function processSessionControlRequest(
     return;
   }
   const stoppedState = await stopped;
+  if (request.action === 'runTo') {
+    // A run-to breakpoint is temporary: remove it on the terminal path so it
+    // does not linger as a surprise stop later (#1433). Proof for run-to is
+    // matched against the run-to destination, not request.breakpoints.
+    removeOwnedBreakpoints({ temporaryOnly: true });
+  }
   const sessionProofAssessment = assessSessionControlValidity(request, currentState.stopSequence, stoppedState);
   const sessionState = sessionStates.get(session.id);
   await writeSessionEvents(folder, session.id);
@@ -570,10 +613,19 @@ function removeRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints:
     if (!(breakpoint instanceof vscode.SourceBreakpoint)) {
       return false;
     }
+    // Only remove breakpoints the bridge owns: a human breakpoint at the same
+    // file:line must survive an agent removeBreakpoints request (#1433).
+    if (!ownedBreakpoints.has(breakpoint)) {
+      return false;
+    }
     return targets.has(`${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`);
   });
   if (staleBreakpoints.length > 0) {
     vscode.debug.removeBreakpoints(staleBreakpoints);
+    for (const breakpoint of staleBreakpoints) {
+      ownedBreakpoints.delete(breakpoint);
+      temporaryBreakpoints.delete(breakpoint);
+    }
   }
   return staleBreakpoints.map((breakpoint) => ({
     file: breakpoint.location.uri.fsPath,
@@ -758,19 +810,20 @@ async function stopActiveDebugSession() {
 async function replaceRequestedBreakpoints(folder: vscode.WorkspaceFolder, request: BridgeRequest) {
   const breakpoints = request.breakpoints ?? [];
   if (request.replaceBreakpoints !== false) {
-    const requestedFiles = new Set(breakpoints.map((breakpoint) => resolveBreakpointPath(folder, breakpoint)));
-    const staleBreakpoints = vscode.debug.breakpoints.filter(
-      (breakpoint): breakpoint is vscode.SourceBreakpoint =>
-        breakpoint instanceof vscode.SourceBreakpoint && requestedFiles.has(breakpoint.location.uri.fsPath),
-    );
-    if (staleBreakpoints.length > 0) {
-      vscode.debug.removeBreakpoints(staleBreakpoints);
-    }
+    // Clear every breakpoint THIS bridge owns, in any file -- otherwise a
+    // breakpoint left in another file by a prior request is hit before the
+    // requested line (#1433). Human breakpoints are not in the owned set and
+    // are deliberately preserved across restart / run-to / cleanup.
+    removeOwnedBreakpoints();
   }
   return addRequestedBreakpoints(folder, breakpoints);
 }
 
-async function addRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints: BridgeBreakpoint[]) {
+async function addRequestedBreakpoints(
+  folder: vscode.WorkspaceFolder,
+  breakpoints: BridgeBreakpoint[],
+  options: { temporary?: boolean } = {},
+) {
   const sourceBreakpoints = breakpoints.map((breakpoint) => {
     const filePath = resolveBreakpointPath(folder, breakpoint);
     const location = new vscode.Location(vscode.Uri.file(filePath), new vscode.Position(breakpoint.line - 1, 0));
@@ -778,6 +831,12 @@ async function addRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoin
   });
   if (sourceBreakpoints.length > 0) {
     vscode.debug.addBreakpoints(sourceBreakpoints);
+    for (const breakpoint of sourceBreakpoints) {
+      ownedBreakpoints.add(breakpoint);
+      if (options.temporary) {
+        temporaryBreakpoints.add(breakpoint);
+      }
+    }
   }
   return sourceBreakpoints.map((breakpoint) => ({
     file: breakpoint.location.uri.fsPath,

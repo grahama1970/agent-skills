@@ -94,6 +94,12 @@ def write_launch(workspace: Path) -> None:
 
 
 def issue_request(workspace: Path, step: dict, timeout_ms: int) -> tuple[str, str]:
+    # This driver targets the human's local, visible VS Code -- the bridge runs
+    # in the UI extension host there. The requester defaults to demanding the
+    # 'workspace' host (Graham's Remote SSH flow: macOS client -> Ubuntu
+    # workspace host); override to the host we are actually driving, from
+    # DEBUGGER_VSCODE_HOST_KIND (default 'ui' for a local editor).
+    host_kind = os.environ.get("DEBUGGER_VSCODE_HOST_KIND", "ui")
     cmd = [
         "uv", "run", "--project", str(SKILL), "python",
         str(SKILL / "scripts" / "request_vscode_bridge.py"),
@@ -101,6 +107,7 @@ def issue_request(workspace: Path, step: dict, timeout_ms: int) -> tuple[str, st
         "--launch-config-name", CONFIG_NAME,
         "--break", f"{workspace / step['file']}:{step['line']}",
         "--stop-timeout-ms", str(timeout_ms),
+        "--expect-extension-host-kind", host_kind,
     ]
     for local in step["locals"]:
         cmd += ["--local", local]
