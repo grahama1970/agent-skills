@@ -467,6 +467,31 @@
         ]
       },
       "notes": "#1452 required deterministic proof: six-criterion role fixture, concrete/vague/contradicting answers, adversarial no-evidence suggestion. Live interviewer-assist browser rung is a later slice; coverage authorship (which events cover which criterion) is the model lane's job, this floor verifies bindings."
+    },
+    {
+      "name": "rehearsal-loop-practice-only-contract",
+      "type": "positive",
+      "real_world": false,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rehearsal-loop"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "formal_assessment refused at the loop boundary: PASS",
+          "render receipt hash-bound to the exact selected text: PASS",
+          "chatterbox cannot inject unrequested spoken text: PASS",
+          "question revision fences the old turn before new audio: PASS",
+          "pre-cancelled turn emits zero accepted bytes: PASS",
+          "mismatched chatterbox receipt fails closed: PASS",
+          "every rehearsal record lives in the practice partition: PASS",
+          "rehearsal loop: PASS"
+        ]
+      },
+      "notes": "#1453 ten required deterministic scenarios with a contract-shaped transport. The LIVE voice rung (real chatterbox TTS + real human barge-in) is embry-voice-interrupted-and-redirected-by-real-human."
     }
   ]
 }
