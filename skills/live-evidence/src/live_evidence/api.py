@@ -159,6 +159,89 @@ def _register_api_routes(
         coordinator.register_assistant_utterance(request.text)
         return {"status": "registered"}
 
+    @app.post("/api/debug/request")
+    async def debug_request(payload: dict[str, Any]) -> dict[str, Any]:
+        """Read-only debugger escalation (#1450), policy-gated in the backend.
+
+        Runs the DebuggerLane adapter off the event loop; only a supported,
+        independently validated outcome may publish a card, and that card goes
+        through the same compare-and-swap revision fence as every other lane.
+        """
+
+        import asyncio as _asyncio
+
+        from .debugger_lane import DebugRequest, DebuggerLane
+        from .models import CardStatus, EvidenceSource, RetrievalLane
+
+        policy = state.session_policy()
+        try:
+            request = DebugRequest(
+                session_id=state.session_id() or "no-session",
+                session_policy_digest=state.session_policy_digest() or "0" * 64,
+                **payload,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"invalid debug request: {exc}") from exc
+        if not hasattr(app.state, "debugger_lane"):
+            app.state.debugger_lane = DebuggerLane()
+        lane: DebuggerLane = app.state.debugger_lane
+        outcome = await _asyncio.to_thread(
+            lane.run, request, debugger_invocation_allowed=policy.debugger_invocation
+        )
+        journal = coordinator.journal
+        await journal.append(
+            request.session_id, "debugger_outcome",
+            {k: v for k, v in outcome.items() if k != "captured_locals"},
+            policy_digest=state.session_policy_digest(),
+        )
+        published = False
+        if outcome["result"] == "supported":
+            card = EvidenceCard(
+                query=request.technical_question[:8_000],
+                thread="Debugger",
+                question=request.technical_question[:8_000],
+                talking_point=(
+                    f"Stopped at {outcome['stopped_file']}:{outcome['stopped_line']}; "
+                    f"captured {', '.join(outcome['captured_variable_names'][:6])}"
+                )[:800],
+                proof=str(outcome["proof_path"])[:1_200],
+                qualifier="Observed run/state only; not a semantic guarantee beyond this run.",
+                confidence=0.85,
+                status=CardStatus.SUPPORTED,
+                sources=[EvidenceSource(
+                    lane=RetrievalLane.DEBUGGER,
+                    label=f"debugger proof {outcome['request_digest'][:12]}",
+                    excerpt=f"stop {outcome['stopped_file']}:{outcome['stopped_line']}",
+                    path=str(outcome["canonical_path"]),
+                    metadata={
+                        "proof_path": str(outcome["proof_path"]),
+                        "canonical_path": str(outcome["canonical_path"]),
+                        "request_digest": outcome["request_digest"],
+                        "repository_digest": outcome["repository_digest"],
+                    },
+                )],
+                lanes=[RetrievalLane.DEBUGGER],
+                question_id=request.question_id,
+                question_revision=request.question_revision,
+                policy_digest=state.session_policy_digest(),
+            )
+            published = await state.publish_card_fenced(card) is not None
+            if not published:
+                await journal.append(
+                    request.session_id, "debugger_card_discarded_stale_revision",
+                    {"request_digest": outcome["request_digest"],
+                     "question_id": request.question_id,
+                     "question_revision": request.question_revision},
+                    policy_digest=state.session_policy_digest(),
+                )
+        return {"result": outcome["result"], "request_digest": outcome["request_digest"],
+                "published": published,
+                "detail": outcome.get("detail"),
+                "stopped_file": outcome.get("stopped_file"),
+                "stopped_line": outcome.get("stopped_line"),
+                "captured_variable_names": outcome.get("captured_variable_names"),
+                "proof_path": outcome.get("proof_path")}
+
     @app.post("/api/transcript", status_code=202)
     async def transcript(event: TranscriptEvent) -> dict[str, Any]:
         await coordinator.accept_transcript(event)

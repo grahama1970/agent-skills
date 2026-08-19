@@ -1,0 +1,62 @@
+[
+ {
+  "id": 0,
+  "name": "Trip 0",
+  "start_date": "2018-01-15",
+  "category": "Adventurous"
+ },
+ {
+  "id": 1,
+  "name": "Trip 1",
+  "start_date": "2018-02-15",
+  "category": "Relaxing"
+ },
+ {
+  "id": 2,
+  "name": "Trip 2",
+  "start_date": "2018-03-15",
+  "category": "Adventurous"
+ },
+ {
+  "id": 3,
+  "name": "Trip 3",
+  "start_date": "2018-04-15",
+  "category": "Relaxing"
+ },
+ {
+  "id": 4,
+  "name": "Trip 4",
+  "start_date": "2018-05-15",
+  "category": "Adventurous"
+ },
+ {
+  "id": 5,
+  "name": "Trip 5",
+  "start_date": "2018-06-15",
+  "category": "Relaxing"
+ },
+ {
+  "id": 6,
+  "name": "Trip 6",
+  "start_date": "2018-07-15",
+  "category": "Adventurous"
+ },
+ {
+  "id": 7,
+  "name": "Trip 7",
+  "start_date": "2018-08-15",
+  "category": "Relaxing"
+ },
+ {
+  "id": 8,
+  "name": "Trip 8",
+  "start_date": "2018-09-15",
+  "category": "Adventurous"
+ },
+ {
+  "id": 9,
+  "name": "Trip 9",
+  "start_date": "2018-01-15",
+  "category": "Relaxing"
+ }
+]

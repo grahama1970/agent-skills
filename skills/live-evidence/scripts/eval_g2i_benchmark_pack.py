@@ -115,19 +115,29 @@ def main() -> int:
           len(violations(bad_report)) >= 3, f"hits={violations(bad_report)}")
     check("allowed measured-metrics formulation passes", violations(ALLOWED_SHAPE) == [])
 
-    # Promotion gate is fail-closed: no blocking-case receipts -> no marker.
+    # Promotion gate is fail-closed: the marker is legitimate ONLY when every
+    # blocking case holds >= 2 PASS receipts. Verified against the actual
+    # receipts on disk, both directions.
     receipts_dir = pack / "receipts"
     blocking = benchmark["blocking_cases"]
-    have = {
-        case: sorted(receipts_dir.glob(f"{case}-trial-*.json")) if receipts_dir.exists() else []
-        for case in blocking
-    }
-    ready = all(len(trials) >= 2 for trials in have.values())
-    marker = benchmark["release_marker"] if ready else None
+    have = {}
+    for case in blocking:
+        passes = 0
+        for trial_path in (sorted(receipts_dir.glob(f"{case}-trial-*.json"))
+                           if receipts_dir.exists() else []):
+            if json.loads(trial_path.read_text()).get("status") == "PASS":
+                passes += 1
+        have[case] = passes
+    entitled = all(passes >= 2 for passes in have.values())
+    campaign_path = pack / "campaign-receipt.json"
+    emitted = (
+        json.loads(campaign_path.read_text()).get("release_marker")
+        if campaign_path.exists() else None
+    )
     check(
-        "release marker refused while blocking cases lack two clean trials each",
-        marker is None,
-        f"cases_with_receipts={sum(1 for t in have.values() if t)}/{len(blocking)}",
+        "release marker matches blocking-case receipt state (fail-closed)",
+        (emitted == benchmark["release_marker"]) if entitled else (emitted is None),
+        f"entitled={entitled} emitted={emitted} passes={have}",
     )
 
     print()

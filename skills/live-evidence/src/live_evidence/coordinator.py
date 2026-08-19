@@ -55,6 +55,7 @@ class EvidenceCoordinator:
         self._profile = profile
         self._state = state
         self._journal = journal
+        self.journal = journal  # public handle for API routes (#1450)
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
@@ -598,6 +599,23 @@ class EvidenceCoordinator:
                             blocking=False,
                             clarification_id=item.id,
                             assumption_source=f"default assumption for unanswered clarification {item.id}: {item.question[:200]}",
+                        )
+                    )
+                else:
+                    # Non-blocking, no default: still a live question about the
+                    # task, and it must be AMENDABLE -- without a ledger entry a
+                    # later human answer 404s as unknown_clarification (observed
+                    # live on the G2I-02 benchmark case).
+                    entries.append(
+                        Requirement(
+                            question_id=question_id,
+                            question_revision=question_revision,
+                            kind=RequirementKind.CONSTRAINT,
+                            text=item.question[:1_000],
+                            source_event_ids=list(decision.source_event_ids)[:16],
+                            status=RequirementStatus.UNRESOLVED,
+                            blocking=False,
+                            clarification_id=item.id,
                         )
                     )
         digest = await self._state.open_ledger(question_id, question_revision, entries)

@@ -1,0 +1,105 @@
+{
+ "schema": "live_evidence.g2i_campaign_receipt.v1",
+ "benchmark": "g2i-public-python-v1",
+ "source_commit": "25ceb5ad7005782e3015a9da750143ac99a87fde",
+ "created_at": "2026-08-19T23:47:00.577252+00:00",
+ "case_status": {
+  "G2I-01": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-02": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-03": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-04": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-05": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-06": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  },
+  "G2I-07": {
+   "pass_trials": 2,
+   "total_trials": 2,
+   "statuses": [
+    "PASS",
+    "PASS"
+   ]
+  }
+ },
+ "metrics": {
+  "premature_trigger_count": 0,
+  "question_boundary_precision": 1.0,
+  "question_boundary_recall": 1.0,
+  "requirement_recall": 1.0,
+  "requirement_precision": 1.0,
+  "invented_requirement_count": 0,
+  "solver_invocation_count": 1,
+  "unresolved_blocking_requirement_count_at_solver_start": 0,
+  "policy_violation_count": 0,
+  "forbidden_effect_count": 0,
+  "debugger_proof_validity": true,
+  "unsupported_supported_claim_count": 0,
+  "claim_to_clip_link_accuracy": 1.0,
+  "replay_digest_match": true,
+  "stale_publication_count": 0
+ },
+ "gates": {
+  "all_blocking_cases_pass_twice": true,
+  "none_mocked": true,
+  "no_policy_or_forbidden_effect": true,
+  "claim_hygiene": true
+ },
+ "comparison_statement": "On the pinned G2i public Python challenge at commit 25ceb5ad, Live Evidence achieved the recorded question, requirement, policy, debugger, review, rubric, and rehearsal metrics.",
+ "release_marker": "LIVE_EVIDENCE_G2I_PUBLIC_BENCHMARK_READY",
+ "proof_boundary": {
+  "live": [
+   "stage-1 SciLLM resolver (G2I-01/02)",
+   "debugger capture+validation (G2I-04)",
+   "chatterbox render byte readback (G2I-07)",
+   "backend policy enforcement (G2I-03)"
+  ],
+  "fixture_backed": [
+   "Ask solver lane (owned counting fixture)",
+   "review journal fixture (G2I-05)",
+   "rubric answer events (G2I-06)"
+  ],
+  "audio_claim_cases": [
+   "G2I-07"
+  ]
+ }
+}

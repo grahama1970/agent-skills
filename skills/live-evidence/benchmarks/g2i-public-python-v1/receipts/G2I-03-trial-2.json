@@ -1,0 +1,24 @@
+{
+ "schema": "live_evidence.g2i_case_receipt.v1",
+ "case": "G2I-03",
+ "benchmark": "g2i-public-python-v1",
+ "created_at": "2026-08-19T23:46:37.371814+00:00",
+ "mocked": false,
+ "checks": {
+  "formal_ask_rejected": 403,
+  "formal_brave_rejected": 403,
+  "formal_voice_rejected": 403,
+  "formal_debugger_blocked": "blocked_by_policy",
+  "rehearsal_voice_allowed": 202,
+  "rehearsal_local_evidence_allowed": 200
+ },
+ "live": {
+  "backend": true,
+  "audio_claim": false
+ },
+ "metrics": {
+  "policy_violation_count": 0,
+  "forbidden_effect_count": 0
+ },
+ "status": "PASS"
+}

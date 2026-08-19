@@ -1,0 +1,23 @@
+{
+ "schema": "live_evidence.g2i_case_receipt.v1",
+ "case": "G2I-06",
+ "benchmark": "g2i-public-python-v1",
+ "created_at": "2026-08-19T23:34:53.672924+00:00",
+ "mocked": false,
+ "checks": {
+  "accepted": 3,
+  "coverage": {
+   "api-pagination": "covered",
+   "data-migration": "covered",
+   "filtering": "untested"
+  },
+  "untested_dimension_visible": true,
+  "followup_count": 1,
+  "followup_cites_criterion": true,
+  "no_score_emitted": true
+ },
+ "live": {
+  "audio_claim": false
+ },
+ "status": "PASS"
+}

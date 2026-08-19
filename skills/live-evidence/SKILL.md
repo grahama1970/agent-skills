@@ -155,18 +155,18 @@ gate verdicts:
 
 | Path | Latency |
 | --- | --- |
-| `tau-dag` `claude-opus-5-high` | 56s |
-| `tau-dag` `claude-opus-5-low` | 38s |
+| `tau-dag` `Codex-opus-5-high` | 56s |
+| `tau-dag` `Codex-opus-5-low` | 38s |
 | `tau-dag` trivial "reply OK" prompt | 18s |
-| direct SciLLM `claude-opus-5` default effort | 11.6s |
-| direct SciLLM `claude-opus-5` `reasoning_effort: low` | 10.8s |
+| direct SciLLM `Codex-opus-5` default effort | 11.6s |
+| direct SciLLM `Codex-opus-5` `reasoning_effort: low` | 10.8s |
 
 Tau adds roughly 27s to an 11s call. The trivial-prompt probe isolates the
 cause: 18s with nothing to generate, so the floor is orchestration (DAG
 compile, dispatch, run-dir creation, polling), not generation.
 
 Reasoning effort is not the lever for this task: direct low vs default differs
-by under a second. Note `claude-opus-5-low` is NOT a valid SciLLM model id;
+by under a second. Note `Codex-opus-5-low` is NOT a valid SciLLM model id;
 the `-low` suffix is an Ask/Tau handler convention, and direct calls pass
 `reasoning_effort` as a separate parameter.
 

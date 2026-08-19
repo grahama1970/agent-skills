@@ -510,7 +510,7 @@
           "pack rubric validates under live_evidence.role_rubric.v1 with deterministic digest: PASS",
           "every benchmark requirement traces to the pinned spec text: PASS",
           "forbidden comparison formulations rejected: PASS",
-          "release marker refused while blocking cases lack two clean trials each: PASS",
+          "release marker matches blocking-case receipt state (fail-closed): PASS",
           "g2i benchmark pack: PASS"
         ]
       },

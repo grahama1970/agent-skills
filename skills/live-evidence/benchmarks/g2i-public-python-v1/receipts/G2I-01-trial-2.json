@@ -1,0 +1,23 @@
+{
+ "schema": "live_evidence.g2i_case_receipt.v1",
+ "case": "G2I-01",
+ "benchmark": "g2i-public-python-v1",
+ "created_at": "2026-08-19T23:45:38.114986+00:00",
+ "mocked": false,
+ "checks": {
+  "premature_solver_calls": 0,
+  "question_incomplete_until_task_stated": true,
+  "card_after_operative_request": true,
+  "final_candidate_binds_final_turn": true
+ },
+ "live": {
+  "resolver": true,
+  "audio_claim": false
+ },
+ "metrics": {
+  "premature_trigger_count": 0,
+  "question_boundary_precision": 1.0,
+  "question_boundary_recall": 1.0
+ },
+ "status": "PASS"
+}

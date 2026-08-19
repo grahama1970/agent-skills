@@ -1,0 +1,24 @@
+{
+ "schema": "live_evidence.g2i_case_receipt.v1",
+ "case": "G2I-05",
+ "benchmark": "g2i-public-python-v1",
+ "created_at": "2026-08-19T23:46:42.613944+00:00",
+ "mocked": false,
+ "checks": {
+  "bundle_digest": "d6f28bb9e63c86eb640ef3be8fae6d60d037e700eee9f0ed741eb0a7e9c29797",
+  "readback_ok": true,
+  "tldr_bullets": 1,
+  "unverified_claim_stays_out_of_tldr": true,
+  "every_bullet_has_support": true
+ },
+ "live": {
+  "audio_claim": false,
+  "note": "owned committed journal fixture"
+ },
+ "metrics": {
+  "unsupported_supported_claim_count": 0,
+  "claim_to_clip_link_accuracy": 1.0,
+  "replay_digest_match": true
+ },
+ "status": "PASS"
+}
