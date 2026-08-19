@@ -65,6 +65,33 @@ def resolve_line(path: Path, *, line, function, klass) -> int | None:
     return None
 
 
+def speak(text: str) -> bool:
+    """Narrate a line aloud in the Embry voice via the chatterbox agent server.
+
+    Fail-soft: if the server is down or audio can't be played, the walkthrough
+    continues silently (the printed SAY line is the source of truth). The server
+    URL and the container->host path mapping for its output are configurable so
+    this stays decoupled from any one machine's layout.
+    """
+    url = os.environ.get("DEBUGGER_SPEAK_URL", "http://127.0.0.1:8018/synthesize")
+    out_map = os.environ.get("DEBUGGER_SPEAK_OUT_MAP", "/out:" + str(Path.home() / "workspace/experiments/chatterbox/logs"))
+    try:
+        import httpx
+        resp = httpx.post(url, json={"text": text}, timeout=90.0)
+        resp.raise_for_status()
+        audio = resp.json().get("audio")
+        if not audio:
+            return False
+        src, dst = out_map.split(":", 1)
+        host_path = audio.replace(src, dst, 1) if audio.startswith(src) else audio
+        if not Path(host_path).is_file():
+            return False
+        subprocess.run(["aplay", "-q", host_path], check=False, capture_output=True, timeout=180)
+        return True
+    except Exception:
+        return False
+
+
 def write_launch(workspace: Path, launch: dict, config_name: str) -> None:
     cmd = [
         "uv", "run", "--project", str(SKILL), "python",
@@ -135,6 +162,7 @@ def main() -> int:
     parser.add_argument("--workspace", default=None)
     parser.add_argument("--transcript", type=Path, default=None)
     parser.add_argument("--wait-seconds", type=float, default=45.0)
+    parser.add_argument("--speak", action="store_true", help="Narrate each stop aloud in the Embry voice (chatterbox).")
     args = parser.parse_args()
 
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
@@ -188,6 +216,8 @@ def main() -> int:
         print(f"\n── STOP {index}/{len(stops)} · {stop['file']}:{frame.get('line')} in {frame.get('name')!r} ──")
         print(f"SAY: {stop['say']}")
         print(f"STATE: {state_str}")
+        if args.speak and speak(stop["say"]):
+            print("  (narrated aloud in the Embry voice)")
         for name, want in (stop.get("expect") or {}).items():
             got = locals_map.get(name)
             if got != want:

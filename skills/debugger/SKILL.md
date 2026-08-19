@@ -478,6 +478,43 @@ Use this skill immediately when:
 - the user challenges a claimed fix or asks what variables actually contain
 - a proposed fix depends on what a variable, frame, request, response, or model payload looks like at runtime
 
+## Walkthrough Mode (review or blocked)
+
+Triggered by `/debugger walkthrough`, "walk me through this code", or "use
+`/debugger` to walk me through where you are blocked". Instead of proving one
+stop, you drive the live debugger through an ordered tour of the code and narrate
+each stop to the human, with the real paused variable state visible.
+
+1. Author a `debugger.walkthrough.v1` spec (schema:
+   `schemas/debugger.walkthrough.v1.schema.json`): a `title`, a `mode`
+   (`review` to showcase finished work, `blocked` to take the human to where you
+   are stuck), a `launch` block, and an ordered `stops` list. Each stop names a
+   `file` and a `line` (or `function`/`class`), the `say` narration, and the
+   `locals` to show. See `scenarios/variable_state/walkthrough.review.json`.
+2. Run it against the human's open, trusted VS Code workspace:
+
+   ```bash
+   DEBUGGER_VSCODE_WORKSPACE=<workspace> \
+     uv run --project skills/debugger python skills/debugger/scripts/vscode_walkthrough.py \
+     --spec <spec.json> --transcript <out.json>
+   ```
+
+   The debugger pauses at each stop (auto-revealing the line in the editor),
+   prints `SAY:` narration and the observed `STATE:`, and ends with
+   `WALKTHROUGH-COMPLETE`. It is capability-gated: `BRIDGE_BLOCKED` / exit 3 when
+   no trusted VS Code bridge answers, so it never fakes a tour.
+
+   Add `--speak` to narrate each stop aloud in the Embry voice through the
+   chatterbox agent server (fail-soft: silent if the server is down). Configure
+   with `DEBUGGER_SPEAK_URL` and `DEBUGGER_SPEAK_OUT_MAP` (container->host output
+   path). This turns the walkthrough into a spoken code tour.
+3. Author the stops to tell a story: for `review`, walk the key state
+   transitions of what you built; for `blocked`, set breakpoints around where the
+   observed state diverges from what you expected and narrate the divergence at
+   that exact frame.
+
+Gate: `fixtures/walkthrough.json` (agentic eval).
+
 ## Breakpoint Selection
 
 Prefer breakpoints where state enters, changes, and exits:
