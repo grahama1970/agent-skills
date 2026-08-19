@@ -141,7 +141,7 @@ def main(
                         correction = " ".join(str(packet.get(k) or "") for k in
                                               ("fallback_instruction", "next_command", "recommended_action"))
                 receipt_text = json.dumps(lane.get("receipt") or {})
-                has_valid_ids = bool(re.search(r"valid model|available models|model catalog|supported models", (correction + receipt_text), re.I))
+                has_valid_ids = bool(re.search(r"did you mean|available:|suggested_models|available_models", (correction + receipt_text), re.I))
                 if substitutions.get(seat) or has_valid_ids:
                     typer.echo(f"SEAT {seat_label}: named_blocker {failure} WITH course correction")
                 else:

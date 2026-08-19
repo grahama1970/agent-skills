@@ -27,7 +27,7 @@ app = typer.Typer(add_completion=False)
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SEATS = [
     "webgpt", "webgemini", "webkimi", "webclaude", "webgrok", "webdeepseek",
-    "claude-opus-5-low", "gpt-5.5-low", "deepseek-v4-flash",
+    "claude-opus-5-low", "gpt-5.5-low", "oc-deepseek",
 ]
 
 
