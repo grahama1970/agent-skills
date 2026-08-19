@@ -534,7 +534,17 @@ and ask something, and she answers grounded in the paused state, then resumes.
   (e.g. `/voices/horus_ref.wav`). So the agent can interview Embry aloud with no
   human present.
 - **Answers route through `/ask`** (`DEBUGGER_ASK_HANDLER`, e.g.
-  `claude-fable-low`), grounded in the stop's locals — never a canned reply.
+  `claude-fable-low`), grounded in the stop's locals **and the source of the
+  module she is stopped in** (whole file when small, else a window around the
+  paused line) — so she can answer about the code itself, never a canned reply.
+  Every spoken line is synthesized fresh from dynamic text; nothing is a
+  pre-recorded clip.
+- **Thinking cues + tonal arc.** While `/ask` runs (~15s), Embry speaks short
+  thinking cues in chatterbox's searching/`holding` tone (`curious_searching`)
+  so the latency is filled, not dead air. The conversation carries a tonal arc
+  via chatterbox tone presets: `calm_precise` narration, `one_at_a_time_interrupt`
+  when she's cut off, `curious_searching` while thinking, `memory_confident` on
+  the answer. `speak(..., tone=...)` sets the preset per line.
 - The conversation is stored in `/memory` (`--remember`) so a later session
   recalls what was walked through.
 

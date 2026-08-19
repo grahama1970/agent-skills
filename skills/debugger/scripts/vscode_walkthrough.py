@@ -83,10 +83,13 @@ def acknowledge_pause() -> None:
     """
     url = os.environ.get("DEBUGGER_SPEAK_EMOTION_URL", "http://127.0.0.1:8018/synthesize-emotion")
     out_map = os.environ.get("DEBUGGER_SPEAK_OUT_MAP", "/out:" + str(Path.home() / "workspace/experiments/chatterbox/logs"))
-    cue = os.environ.get("DEBUGGER_PAUSE_CUE", "Mm-hmm, go ahead.")
+    cue = os.environ.get("DEBUGGER_PAUSE_CUE", "Oh — yeah, go ahead.")
     try:
         import httpx
-        resp = httpx.post(url, json={"text": cue, "tone": "warm", "delivery_stage": "backchannel"}, timeout=45.0)
+        # one_at_a_time_interrupt is chatterbox's dedicated "someone cut in" tone,
+        # so the acknowledgment sounds like yielding the floor mid-sentence.
+        resp = httpx.post(url, json={"text": cue, "tone": "one_at_a_time_interrupt",
+                                     "delivery_stage": "interrupted"}, timeout=45.0)
         if resp.status_code != 200:
             speak(cue)
             return
@@ -182,6 +185,47 @@ def answer_question(question: str, stop: dict, state_str: str, spec: dict,
             f"is {state_str}. {stop.get('say')} Ask me to continue, repeat, go back, or ask something else.")
 
 
+# Thinking cues Embry speaks (in a searching/holding tone) while /ask is running,
+# so the ~15s LLM latency is covered by a natural delay comment, not dead air.
+THINKING_CUES = (
+    "Hmm, let me look at this for a second.",
+    "Okay, give me a moment here.",
+    "Let me trace that through the code.",
+    "Right, one sec while I check.",
+)
+
+
+def answer_with_thinking(question: str, stop: dict, state_str: str, spec: dict,
+                         workspace: Path | None, line: int | None,
+                         do_speak: bool, stop_flag: str | None, watch_keys: bool) -> str:
+    """Answer a question, filling the /ask latency with spoken thinking cues.
+
+    The /ask call runs in a background thread; while it works, Embry speaks short
+    thinking cues in a searching/holding tone (curious_searching) so there is no
+    dead air. When the answer lands it is returned for the caller to speak in a
+    confident tone -- giving the exchange a think-then-answer tonal arc.
+    """
+    import threading
+    box: dict[str, str] = {}
+    worker = threading.Thread(
+        target=lambda: box.__setitem__(
+            "a", answer_question(question, stop, state_str, spec, workspace=workspace, line=line)),
+        daemon=True,
+    )
+    worker.start()
+    cue = 0
+    while worker.is_alive():
+        if do_speak:
+            line_txt = THINKING_CUES[cue % len(THINKING_CUES)]
+            print(f"  (thinking) {line_txt}")
+            speak(line_txt, stop_flag=stop_flag, watch_stdin=watch_keys, tone="curious_searching")
+            cue += 1
+        else:
+            worker.join(timeout=0.5)
+    worker.join()
+    return box.get("a", "")
+
+
 def start_voice_listener(stop_flag: str):
     """Launch the RealtimeSTT barge-in listener and stream utterances into a queue.
 
@@ -269,13 +313,19 @@ def _speech_clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False, voice: str | None = None) -> str:
+def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False,
+          voice: str | None = None, tone: str | None = None) -> str:
     """Narrate a line aloud via the chatterbox agent server.
 
     `voice` selects the chatterbox reference voice: Embry narrates and answers in
     her voice (DEBUGGER_EMBRY_VOICE, default "embry"); the project agent poses its
     own clarifying questions in a distinct voice (DEBUGGER_AGENT_VOICE) so a
     two-speaker conversation is audible. Defaults to Embry.
+
+    `tone` is a chatterbox tone preset (e.g. calm_precise, curious_searching,
+    memory_confident) that shapes affect/pace, so the conversation carries a tonal
+    arc -- calm narration, a searching/holding tone while thinking, a confident
+    tone on the answer -- instead of one flat delivery.
 
     Returns "spoken", "interrupted" (the human said stop), or "silent" (server
     down / no audio). Playback is interruptible: while aplay runs, if `stop_flag`
@@ -294,6 +344,8 @@ def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False, vo
         payload = {"text": _speech_clean(text)}
         if ref_audio:
             payload["ref_audio"] = ref_audio
+        if tone:
+            payload["tone"] = tone
         resp = httpx.post(url, json=payload, timeout=90.0)
         resp.raise_for_status()
         audio = resp.json().get("audio")
@@ -512,7 +564,8 @@ def main() -> int:
         print(f"SAY: {stop['say']}")
         print(f"STATE: {state_str}")
         if args.speak:
-            result = speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys)
+            # Narration carries a calm, precise tone -- the baseline of the arc.
+            result = speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys, tone="calm_precise")
             if result == "interrupted":
                 print("  (interrupted — Embry pauses)")
                 acknowledge_pause()
@@ -546,7 +599,7 @@ def main() -> int:
             elif low in ("r", "repeat"):
                 print("  (repeat)")
                 if args.speak:
-                    speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys)
+                    speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys, tone="calm_precise")
             elif low in ("b", "back", "previous"):
                 index = max(0, index - 1)
                 advanced = True
@@ -569,18 +622,21 @@ def main() -> int:
                 print(f"  AGENT asks: {question}")
                 if args.speak:
                     speak(question, stop_flag=args.stop_flag, watch_stdin=watch_keys, voice=agent_voice)
-                answer = answer_question(question, stop, state_str, spec, workspace=workspace, line=line)
+                # Think aloud (holding tone) while /ask works, then answer confidently.
+                answer = answer_with_thinking(question, stop, state_str, spec, workspace, line,
+                                              args.speak, args.stop_flag, watch_keys)
                 print(f"  Embry: {answer}")
                 if args.speak:
-                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
+                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys, tone="memory_confident")
             else:
                 # A human-spoken/typed question: the human asks in their own voice,
                 # so only Embry's answer is synthesized (in her voice).
                 print(f"  Q: {cmd}")
-                answer = answer_question(cmd, stop, state_str, spec, workspace=workspace, line=line)
+                answer = answer_with_thinking(cmd, stop, state_str, spec, workspace, line,
+                                              args.speak, args.stop_flag, watch_keys)
                 print(f"  A: {answer}")
                 if args.speak:
-                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
+                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys, tone="memory_confident")
 
     print(f"\nWALKTHROUGH-COMPLETE mode={spec['mode']} stops={len(stops)}")
     finalize()
