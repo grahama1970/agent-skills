@@ -101,39 +101,6 @@ def acknowledge_pause() -> None:
         return
 
 
-def _extract_ask_answer(payload: dict) -> str | None:
-    """Pull the answer text out of an /ask (Tau single-call) --json result.
-
-    Fail-closed on a degraded/failed run (answerability model, like Sparta chat):
-    a provider gate or degraded provider yields no answer, so Embry deflects
-    rather than inventing one.
-    """
-    if payload.get("provider_gate") and not payload.get("provider_live", True):
-        return None
-    if payload.get("degraded_providers"):
-        return None
-    join = payload.get("join_artifact_path")
-    if isinstance(join, str) and Path(join).is_file():
-        try:
-            payload = json.loads(Path(join).read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            pass
-    best = None
-    def hunt(node):
-        nonlocal best
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key in ("answer", "final_answer", "response", "content", "text") and isinstance(value, str) and len(value.strip()) > 15:
-                    best = value.strip()
-                    return
-                hunt(value)
-        elif isinstance(node, list):
-            for value in node:
-                hunt(value)
-    hunt(payload)
-    return best
-
-
 def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> str:
     """Answer a human question during the walkthrough, grounded in the paused state.
 
@@ -144,30 +111,42 @@ def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> st
     or gated), Embry deflects rather than inventing one. The spoken answer is the
     same text (voice parity). Handler is configurable via DEBUGGER_ASK_HANDLER.
     """
-    # Opt-in: set DEBUGGER_ASK_HANDLER to a healthy /ask handler (e.g. webgpt or
-    # an API model) to route answers through Tau. Default 'none' gives the fast
-    # grounded deflect, so the loop never hangs on a degraded provider and evals
-    # stay fast; real answers are enabled explicitly when a provider is healthy.
+    # Route through /ask one-shot on the local Claude lane (claude-fable-low):
+    # no browser, no Chrome contention, resolves via SciLLM inside Tau (per the
+    # /ask SKILL.md roster). one-shot returns a per-seat answer or a named
+    # blocker; a partial answer is DEGRADED-but-usable (exit 0). Handler is
+    # configurable via DEBUGGER_ASK_HANDLER; 'none' keeps the fast deflect so
+    # evals never hang and answers are opt-in.
     handler = os.environ.get("DEBUGGER_ASK_HANDLER", "none").strip()
     if handler in ("", "none"):
         return (f"At this stop ({stop.get('file')}) the state is {state_str}. {stop.get('say')} "
                 f"Ask me to continue, repeat, go back, or ask something else. "
-                f"(Set DEBUGGER_ASK_HANDLER to a healthy /ask handler for a full answer.)")
+                f"(Set DEBUGGER_ASK_HANDLER=claude-fable-low for a full spoken answer via /ask.)")
     prompt = (
         f"You are Embry, walking a developer through code at a live debugger breakpoint. "
         f"Stop: {stop.get('file')} -- {stop.get('say')} Observed paused state: {state_str}. "
         f"Answer their question concisely and specifically, grounded only in this state; "
-        f"if you cannot answer from it, say so. Question: {question}"
+        f"if you cannot answer from it, say so. Answer in 2-3 sentences. Question: {question}"
     )
     try:
+        # Strip this process's uv/venv env so /ask uses its OWN project venv
+        # (we run inside `uv run --project debugger`, and that leaked env made
+        # /ask fast-fail on the wrong interpreter).
+        child_env = {k: v for k, v in os.environ.items()
+                     if k not in ("UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV", "UV_LINK_MODE")}
         result = subprocess.run(
-            ["bash", str(SKILL.parent / "ask" / "run.sh"), handler, "--json", prompt],
-            capture_output=True, text=True, timeout=240,
+            ["bash", str(SKILL.parent / "ask" / "run.sh"), "one-shot", prompt, "--handler", handler],
+            capture_output=True, text=True, timeout=240, env=child_env,
         )
-        payload = json.loads(result.stdout or "{}")
-        answer = _extract_ask_answer(payload)
-        if answer:
-            return answer
+        # one-shot prints: "ANSWER <handler>: <path to response.md>"
+        for row in result.stdout.splitlines():
+            if row.startswith("ANSWER ") and ":" in row:
+                answer_path = Path(row.split(":", 1)[1].strip())
+                if answer_path.is_file():
+                    text = answer_path.read_text(encoding="utf-8", errors="replace").strip()
+                    # Prefer the Position section; drop the nonce trailer line.
+                    body = text.split("## Evidence", 1)[0].replace("## Position", "").strip()
+                    return (body or text).strip()
     except Exception:
         pass
     # Fail-closed deflect: grounded, not invented (matches Sparta answerability).
