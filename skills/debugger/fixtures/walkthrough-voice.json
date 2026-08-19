@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "The voice barge-in path for the conversational walkthrough: the RealtimeSTT listener transcribes real speech on the GPU and emits a HEARD utterance (the barge-in signal), and the walkthrough driver's --voice mode launches that listener and turns each spoken utterance into the next command (so 'Continue.' advances the walk). Real audio through the real recorder on the GPU; the driver-wiring case is capability-gated on a live VS Code bridge. Guards the regression where start_voice_listener() was defined but never wired into the loop.",
+  "claims": {
+    "proves": "barge_in_listener.py transcribes a real spoken wav through the real RealtimeSTT recorder on cuda and prints 'HEARD: <text>' while touching the stop flag; it fails closed when the audio is missing; and vscode_walkthrough.py --voice launches the listener and consumes each HEARD utterance as a spoken command (spoken 'Continue.' advances past a stop), normalizing STT punctuation/case",
+    "does_not_prove": "live microphone voice-activity timing (the mid-speech VAD barge-in is exercised live, not here), the correctness of an /ask answer, or that the host live-evidence venv can drive the recorder (its torch is cu130; the recorder runs in the cu128 container)"
+  },
+  "cases": [
+    {
+      "name": "listener-transcribes-real-audio-on-gpu",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Feed a real spoken wav ('continue') through barge_in_listener.py in the GPU container; it must transcribe on cuda and emit the HEARD barge-in line.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; docker run --rm --gpus all -v \"$SKILL/scripts\":/dbg:ro -v \"$SKILL/scenarios/voice\":/audio:ro -e DEBUGGER_STT_WAV=/audio/say-continue.wav --entrypoint python3 live-evidence-realtimestt-gpu:local /dbg/barge_in_listener.py /tmp/embry-stop.flag"
+      ],
+      "timeout_seconds": 220,
+      "blocked_when_stdout_contains": ["Unable to find image", "could not select device driver", "docker: command not found"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["BARGE-IN-LISTENING", "HEARD: Continue."]
+      }
+    },
+    {
+      "name": "listener-fails-closed-on-missing-audio",
+      "type": "negative",
+      "required": true,
+      "description": "With DEBUGGER_STT_WAV pointing at a file that does not exist, the listener fails closed (BARGE-IN-UNAVAILABLE, exit 3) before loading any model, rather than hanging or passing blind.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; DEBUGGER_STT_WAV=/audio/does-not-exist.wav python3 ../scripts/barge_in_listener.py /tmp/embry-stop.flag"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BARGE-IN-UNAVAILABLE"]
+      }
+    },
+    {
+      "name": "voice-wiring-advances-on-spoken-continue",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "vscode_walkthrough.py --voice launches the real listener (transcribing the spoken wav in the GPU container) and consumes each spoken 'Continue.' as the next command, advancing through both stops to completion.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; SKILL=\"$(cd .. && pwd)\"; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; if [ -z \"$WS\" ]; then WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; fi; export DEBUGGER_STT_CMD=\"docker run --rm --gpus all -v $SKILL/scripts:/dbg:ro -v $SKILL/scenarios/voice:/audio:ro -e DEBUGGER_STT_WAV=/audio/say-continue.wav -e DEBUGGER_STT_WAV_LOOP=1 --entrypoint python3 live-evidence-realtimestt-gpu:local /dbg/barge_in_listener.py /tmp/embry-stop.flag\"; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.converse.json --workspace \"$WS\" --voice --wait-seconds 30"
+      ],
+      "timeout_seconds": 180,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED", "Unable to find image", "could not select device driver"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["voice on", "(heard) Continue.", "STOP 1/2", "STOP 2/2", "WALKTHROUGH-COMPLETE"]
+      }
+    }
+  ]
+}

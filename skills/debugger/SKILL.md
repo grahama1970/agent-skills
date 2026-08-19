@@ -513,7 +513,36 @@ each stop to the human, with the real paused variable state visible.
    observed state diverges from what you expected and narrate the divergence at
    that exact frame.
 
-Gate: `fixtures/walkthrough.json` (agentic eval).
+### Converse: interrupt Embry and ask a clarifying question
+
+The walkthrough is a two-way conversation, not a monologue. At each stop Embry
+pauses and listens; the human (or the agent itself) can cut her off mid-sentence
+and ask something, and she answers grounded in the paused state, then resumes.
+
+- **Interrupt mid-sentence** by keypress (Enter while she talks) or by voice.
+  Both drop a stop-flag file that kills playback the instant you start speaking,
+  so barge-in is immediate, not at line boundaries.
+- **Voice** (`--voice`) launches the RealtimeSTT barge-in listener
+  (`barge_in_listener.py`): every utterance touches the stop flag and becomes the
+  next spoken command/question. Because the host `live-evidence` venv ships a
+  cu130 torch that the A5000 driver (CUDA 12.8) rejects, run the listener in the
+  cu128 GPU container and point the driver at it with `DEBUGGER_STT_CMD`. Spoken
+  navigation words are punctuation/case-normalized ("Continue." advances).
+- **Two voices.** Embry narrates and answers in her voice (the chatterbox
+  default); the project agent poses its own clarifying questions in a distinct
+  voice via the `ask: <question>` command, spoken with `DEBUGGER_AGENT_VOICE`
+  (e.g. `/voices/horus_ref.wav`). So the agent can interview Embry aloud with no
+  human present.
+- **Answers route through `/ask`** (`DEBUGGER_ASK_HANDLER`, e.g.
+  `claude-fable-low`), grounded in the stop's locals — never a canned reply.
+- The conversation is stored in `/memory` (`--remember`) so a later session
+  recalls what was walked through.
+
+Gates: `fixtures/walkthrough.json`, `fixtures/walkthrough-converse.json`
+(scripted interrupt/question/quit loop), and `fixtures/walkthrough-voice.json`
+(real STT transcribing real audio on the GPU -> `HEARD`, fail-closed on missing
+audio, and `--voice` turning a spoken "Continue." into an advance) — all agentic
+evals.
 
 ## Breakpoint Selection
 

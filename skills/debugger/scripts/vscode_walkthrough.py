@@ -154,6 +154,48 @@ def answer_question(question: str, stop: dict, state_str: str, spec: dict) -> st
             f"is {state_str}. {stop.get('say')} Ask me to continue, repeat, go back, or ask something else.")
 
 
+def start_voice_listener(stop_flag: str):
+    """Launch the RealtimeSTT barge-in listener and stream utterances into a queue.
+
+    The listener runs in the live-evidence venv (it has RealtimeSTT); each thing
+    the human says touches the stop flag (barge-in interrupts Embry) and arrives
+    here as a queue item that becomes the spoken command/question. Returns
+    (proc, queue) or (None, None) when the STT venv is not available.
+    """
+    import queue
+    import threading
+    # DEBUGGER_STT_CMD lets a caller substitute the whole listener command (e.g.
+    # run barge_in_listener.py inside the GPU container, since the host torch is
+    # cu130 and can't drive the recorder). It must still emit BARGE-IN-LISTENING
+    # and `HEARD: <text>` lines on stdout. Default: the host live-evidence venv.
+    cmd_override = os.environ.get("DEBUGGER_STT_CMD", "").strip()
+    py = os.environ.get("DEBUGGER_STT_PYTHON", str(Path.home() / ".cache/live-evidence/venv/bin/python"))
+    listener = SKILL / "scripts" / "barge_in_listener.py"
+    try:
+        if cmd_override:
+            proc = subprocess.Popen(cmd_override, shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        else:
+            if not Path(py).exists() or not listener.exists():
+                return None, None
+            proc = subprocess.Popen([py, str(listener), stop_flag], stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, text=True, bufsize=1)
+    except (OSError, subprocess.SubprocessError):
+        return None, None
+    utterances: "queue.Queue[str]" = queue.Queue()
+
+    def pump():
+        for line in proc.stdout or []:
+            line = line.strip()
+            if line.startswith("HEARD:"):
+                utterances.put(line[len("HEARD:"):].strip())
+            elif line == "BARGE-IN-LISTENING":
+                utterances.put("__READY__")
+
+    threading.Thread(target=pump, daemon=True).start()
+    return proc, utterances
+
+
 def remember_walkthrough(spec: dict, transcript: list[dict], key_seed: str) -> str | None:
     """Store the walkthrough conversation in /memory so Embry keeps the context.
 
@@ -199,8 +241,13 @@ def _speech_clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False) -> str:
-    """Narrate a line aloud in the Embry voice via the chatterbox agent server.
+def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False, voice: str | None = None) -> str:
+    """Narrate a line aloud via the chatterbox agent server.
+
+    `voice` selects the chatterbox reference voice: Embry narrates and answers in
+    her voice (DEBUGGER_EMBRY_VOICE, default "embry"); the project agent poses its
+    own clarifying questions in a distinct voice (DEBUGGER_AGENT_VOICE) so a
+    two-speaker conversation is audible. Defaults to Embry.
 
     Returns "spoken", "interrupted" (the human said stop), or "silent" (server
     down / no audio). Playback is interruptible: while aplay runs, if `stop_flag`
@@ -210,9 +257,16 @@ def speak(text: str, stop_flag: str | None = None, watch_stdin: bool = False) ->
     """
     url = os.environ.get("DEBUGGER_SPEAK_URL", "http://127.0.0.1:8018/synthesize")
     out_map = os.environ.get("DEBUGGER_SPEAK_OUT_MAP", "/out:" + str(Path.home() / "workspace/experiments/chatterbox/logs"))
+    # chatterbox selects the speaker by ref_audio (a path under /data:/voices).
+    # Embry is the server default, so omit ref_audio for her; the agent voice is
+    # an explicit reference (DEBUGGER_AGENT_VOICE, e.g. /voices/horus_ref.wav).
+    ref_audio = voice
     try:
         import httpx
-        resp = httpx.post(url, json={"text": _speech_clean(text)}, timeout=90.0)
+        payload = {"text": _speech_clean(text)}
+        if ref_audio:
+            payload["ref_audio"] = ref_audio
+        resp = httpx.post(url, json=payload, timeout=90.0)
         resp.raise_for_status()
         audio = resp.json().get("audio")
         if not audio:
@@ -323,6 +377,9 @@ def main() -> int:
     parser.add_argument("--commands", default=None,
                         help="Semicolon-separated scripted commands for the pause-and-listen loop "
                              "(continue/repeat/back/quit/interrupt/<question>); for evals and automation.")
+    parser.add_argument("--voice", action="store_true",
+                        help="Drive the pause-and-listen loop by voice: launch the RealtimeSTT barge-in "
+                             "listener so the human can interrupt Embry aloud and ask a follow-up.")
     args = parser.parse_args()
 
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
@@ -343,7 +400,23 @@ def main() -> int:
     # (for evals/automation); otherwise a real terminal reads the human live. A
     # non-interactive run with no script just auto-advances (base walkthrough).
     commands = [c.strip() for c in args.commands.split(";")] if args.commands is not None else None
-    interactive = commands is not None or bool(sys.stdin and sys.stdin.isatty())
+    watch_keys = bool(sys.stdin and sys.stdin.isatty())
+
+    # Voice mode: launch the RealtimeSTT barge-in listener. Each utterance touches
+    # the stop flag (cutting Embry off mid-sentence via speak()'s stop_flag check)
+    # AND arrives on the queue as the next command/question. Fall back to keyboard
+    # if the STT venv/listener is unavailable, so --voice never hard-fails a demo.
+    voice_proc, utterances = (None, None)
+    if args.voice:
+        voice_proc, utterances = start_voice_listener(args.stop_flag)
+        if utterances is None:
+            print("VOICE-UNAVAILABLE: RealtimeSTT venv/listener missing; falling back to keyboard.", file=sys.stderr)
+        else:
+            import atexit
+            atexit.register(lambda: voice_proc.terminate())
+            print("(voice on: say something to interrupt Embry; what you say becomes her next question)")
+
+    interactive = commands is not None or utterances is not None or watch_keys
     if interactive and args.speak:
         print("(interrupt any time: press Enter or say a stop word; then continue / repeat / back / quit, or ask a question)")
 
@@ -352,6 +425,15 @@ def main() -> int:
     def next_command() -> str:
         if commands is not None:
             return commands.pop(0) if commands else "continue"
+        if utterances is not None:
+            # Voice-driven: the next thing the human says IS the command/question.
+            # __READY__ is the listener's startup sentinel, not an utterance.
+            while True:
+                heard = utterances.get()
+                if heard == "__READY__":
+                    continue
+                print(f"  (heard) {heard}")
+                return heard
         try:
             return input("  Embry paused — [Enter=continue · r=repeat · b=back · q=quit · or ask] > ").strip()
         except EOFError:
@@ -402,7 +484,7 @@ def main() -> int:
         print(f"SAY: {stop['say']}")
         print(f"STATE: {state_str}")
         if args.speak:
-            result = speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=interactive)
+            result = speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys)
             if result == "interrupted":
                 print("  (interrupted — Embry pauses)")
                 acknowledge_pause()
@@ -427,14 +509,16 @@ def main() -> int:
         advanced = False
         while not advanced:
             cmd = next_command().strip()
-            low = cmd.lower()
+            # Spoken commands arrive from STT with punctuation/case ("Continue.",
+            # "Back!"); normalize the navigation words so voice matches keyboard.
+            low = cmd.lower().strip().strip(".!?,;: ")
             if low in ("", "c", "continue", "next", "n"):
                 index += 1
                 advanced = True
             elif low in ("r", "repeat"):
                 print("  (repeat)")
                 if args.speak:
-                    speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=interactive)
+                    speak(stop["say"], stop_flag=args.stop_flag, watch_stdin=watch_keys)
             elif low in ("b", "back", "previous"):
                 index = max(0, index - 1)
                 advanced = True
@@ -448,12 +532,27 @@ def main() -> int:
                 # gives a natural acknowledgment, then keeps listening.
                 print("  (interrupted — Embry pauses)")
                 acknowledge_pause()
+            elif low.startswith("ask:"):
+                # The project agent poses its OWN clarifying question, in a
+                # distinct male voice (DEBUGGER_AGENT_VOICE), then Embry answers
+                # in her voice -- an audible two-speaker exchange, no human needed.
+                question = cmd.split(":", 1)[1].strip()
+                agent_voice = os.environ.get("DEBUGGER_AGENT_VOICE", "/voices/horus_ref.wav")
+                print(f"  AGENT asks: {question}")
+                if args.speak:
+                    speak(question, stop_flag=args.stop_flag, watch_stdin=watch_keys, voice=agent_voice)
+                answer = answer_question(question, stop, state_str, spec)
+                print(f"  Embry: {answer}")
+                if args.speak:
+                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
             else:
+                # A human-spoken/typed question: the human asks in their own voice,
+                # so only Embry's answer is synthesized (in her voice).
                 print(f"  Q: {cmd}")
                 answer = answer_question(cmd, stop, state_str, spec)
                 print(f"  A: {answer}")
                 if args.speak:
-                    speak(answer, stop_flag=args.stop_flag, watch_stdin=interactive)
+                    speak(answer, stop_flag=args.stop_flag, watch_stdin=watch_keys)
 
     print(f"\nWALKTHROUGH-COMPLETE mode={spec['mode']} stops={len(stops)}")
     finalize()
