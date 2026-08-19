@@ -2425,7 +2425,47 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         edges.append({"from": previous, "to": "join"})
     else:
         judge_present = any(n["id"] == "judge" for n in extra_nodes)
-        if judge_present:
+        # Concurrent seats settle through a Tau join CONTRACT (virtual node
+        # with tau.dag_join_policy.v1, policy all_terminal). Without it, a
+        # single lane's non-PASS receipt blocks the run and Tau cancels the
+        # in-flight healthy seats (observed 2026-08-19: one
+        # scillm_model_not_found lane starved webgpt/webclaude pre-dispatch,
+        # alert evidence_receipt_verdict_failed). With the contract, Tau's own
+        # transition policy makes a non-PASS feeder CONTRIBUTE to the join
+        # instead of blocking (project_transition: joins_from_source), and the
+        # downstream join command reconciles the receipts into a DEGRADED
+        # panel exactly as this skill's partial-failure contract requires.
+        if len(handler_nodes) >= 2:
+            gate_timeout = min(int(_dag_default_timeout_seconds(input)) * 2, 86_400)
+            extra_nodes.append(
+                {
+                    "id": "join-gate",
+                    "agent": "join-gate",
+                    "executor": "local",
+                    "join": {
+                        "schema": "tau.dag_join_policy.v1",
+                        "policy": "all_terminal",
+                        "timeout_seconds": gate_timeout,
+                    },
+                    "depends_on": list(competitor_ids),
+                    "context": {
+                        "role": "roundtable_join_gate",
+                        "workflow_mode": input.workflow_mode,
+                        "reconciled_by": "join",
+                    },
+                }
+            )
+            edges.extend({"from": cid, "to": "join-gate"} for cid in competitor_ids)
+            if judge_present:
+                edges.append({"from": "join-gate", "to": "judge"})
+                edges.append({"from": "judge", "to": "join"})
+                for node in extra_nodes:
+                    if node["id"] == "judge":
+                        node["depends_on"] = ["join-gate"]
+                        node["context"]["scheduler_dependencies"] = ["join-gate"]
+            else:
+                edges.append({"from": "join-gate", "to": "join"})
+        elif judge_present:
             edges.extend({"from": cid, "to": "judge"} for cid in competitor_ids)
             edges.append({"from": "judge", "to": "join"})
         else:
@@ -2494,6 +2534,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "requires_provider_route": False,
         "nodes": [
             *handler_nodes,
+            *[n for n in extra_nodes if n["id"] == "join-gate"],
             *[n for n in extra_nodes if n["id"] == "judge"],
             join_node,
             *[n for n in extra_nodes if n["id"] == "report"],
