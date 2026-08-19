@@ -515,6 +515,30 @@
         ]
       },
       "notes": "#1455 pack slice: pinned-source digest binding (live upstream readback when online, honest SKIP offline), clean-room requirement tracing, claim-hygiene gate, fail-closed release marker. Campaign cases G2I-01..07 are the remaining slices."
+    },
+    {
+      "name": "reviewer-surfaces-browser-rung",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-ui-insights"
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "debugger proof published as fenced card: PASS",
+          "review claims render with distinct dispositions: PASS",
+          "debugger-backed card visible in the HUD: PASS",
+          "clicking a supported claim seeks media to the bound span: PASS",
+          "unverified claim stays labeled unverified after clicking: PASS",
+          "dismissal journaled with actor; coverage untouched: PASS",
+          "ui insights: PASS"
+        ]
+      },
+      "notes": "Live browser rungs for #1450/#1451/#1452/#1453: real server, real built UI in a surf-controlled Chrome tab, real debugger proof card, real audio seek readback."
     }
   ]
 }

@@ -242,6 +242,66 @@ def _register_api_routes(
                 "captured_variable_names": outcome.get("captured_variable_names"),
                 "proof_path": outcome.get("proof_path")}
 
+    @app.post("/api/insights/{kind}", status_code=202)
+    async def publish_insight(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Publish a review dossier, rubric coverage, or rehearsal state for the
+        reviewer UI (#1451/#1452/#1453). Review payloads are validated against
+        the ReviewBundle contract; publication is journaled and attributable."""
+
+        if kind not in {"review", "rubric", "rehearsal"}:
+            raise HTTPException(status_code=404, detail="unknown insight kind")
+        if kind == "review":
+            from .review import ReviewBundle
+
+            try:
+                payload = ReviewBundle(**payload).model_dump(mode="json", by_alias=True)
+            except Exception as exc:
+                raise HTTPException(status_code=422, detail=f"invalid review bundle: {exc}") from exc
+        if not hasattr(app.state, "insights"):
+            app.state.insights = {}
+        app.state.insights[kind] = payload
+        await coordinator.journal.append(
+            state.session_id() or "no-session", "insight_published",
+            {"kind": kind, "size": len(str(payload))},
+            policy_digest=state.session_policy_digest(),
+        )
+        return {"status": "published", "kind": kind}
+
+    @app.get("/api/insights")
+    async def get_insights() -> dict[str, Any]:
+        return getattr(app.state, "insights", {}) or {}
+
+    @app.get("/api/insights/media")
+    async def insights_media() -> FileResponse:
+        """Serve the review bundle's locally retained media for clip seeking."""
+
+        insights = getattr(app.state, "insights", {}) or {}
+        locator = str((insights.get("review") or {}).get("media_locator") or "")
+        path = Path(locator.removeprefix("file://"))
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="review media not available locally")
+        return FileResponse(path)
+
+    @app.post("/api/insights/rubric/dismiss")
+    async def dismiss_suggestion(payload: dict[str, Any]) -> dict[str, Any]:
+        """Journaled, attributable dismissal; coverage evidence is untouched --
+        dismissing a suggestion is never evidence the criterion was covered."""
+
+        criterion_id = str(payload.get("criterion_id") or "")
+        actor = str(payload.get("actor") or "")
+        if not criterion_id or not actor:
+            raise HTTPException(status_code=422, detail="criterion_id and actor required")
+        insights = getattr(app.state, "insights", {}) or {}
+        rubric = insights.get("rubric") or {}
+        before = rubric.get("suggestions") or []
+        rubric["suggestions"] = [s for s in before if s.get("criterion_id") != criterion_id]
+        await coordinator.journal.append(
+            state.session_id() or "no-session", "suggestion_dismissed",
+            {"criterion_id": criterion_id, "actor": actor},
+            policy_digest=state.session_policy_digest(),
+        )
+        return {"status": "dismissed", "remaining": len(rubric["suggestions"])}
+
     @app.post("/api/transcript", status_code=202)
     async def transcript(event: TranscriptEvent) -> dict[str, Any]:
         await coordinator.accept_transcript(event)

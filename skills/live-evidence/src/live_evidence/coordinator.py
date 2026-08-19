@@ -26,6 +26,7 @@ from .models import (
 )
 from .readiness import ReadinessVerdict
 from .resolver import GateEvent, StreamingResolver
+from .requirement_ledger import build_requirement_entries
 from .salient_facts import SalientFactWriter, extract_decision
 from .persistence import SessionJournal
 from .retrieval import (
@@ -563,61 +564,9 @@ class EvidenceCoordinator:
         # visibly labeled ASSUMED entry. A grammatical period never marks the
         # task complete: completeness is judged by the resolver and by this
         # ledger, not punctuation.
-        entries: list[Requirement] = [
-            Requirement(
-                question_id=question_id,
-                question_revision=question_revision,
-                kind=RequirementKind.OBJECTIVE,
-                text=query[:1_000],
-                source_event_ids=list(decision.source_event_ids)[:16],
-                status=RequirementStatus.STATED,
-            )
-        ]
-        if verdict is not None:
-            for item in verdict.clarifying_questions:
-                if item.blocking:
-                    entries.append(
-                        Requirement(
-                            question_id=question_id,
-                            question_revision=question_revision,
-                            kind=RequirementKind.CONSTRAINT,
-                            text=item.question[:1_000],
-                            source_event_ids=list(decision.source_event_ids)[:16],
-                            status=RequirementStatus.UNRESOLVED,
-                            blocking=True,
-                            clarification_id=item.id,
-                        )
-                    )
-                elif item.default_assumption:
-                    entries.append(
-                        Requirement(
-                            question_id=question_id,
-                            question_revision=question_revision,
-                            kind=RequirementKind.CONSTRAINT,
-                            text=item.default_assumption[:1_000],
-                            status=RequirementStatus.ASSUMED,
-                            blocking=False,
-                            clarification_id=item.id,
-                            assumption_source=f"default assumption for unanswered clarification {item.id}: {item.question[:200]}",
-                        )
-                    )
-                else:
-                    # Non-blocking, no default: still a live question about the
-                    # task, and it must be AMENDABLE -- without a ledger entry a
-                    # later human answer 404s as unknown_clarification (observed
-                    # live on the G2I-02 benchmark case).
-                    entries.append(
-                        Requirement(
-                            question_id=question_id,
-                            question_revision=question_revision,
-                            kind=RequirementKind.CONSTRAINT,
-                            text=item.question[:1_000],
-                            source_event_ids=list(decision.source_event_ids)[:16],
-                            status=RequirementStatus.UNRESOLVED,
-                            blocking=False,
-                            clarification_id=item.id,
-                        )
-                    )
+        entries = build_requirement_entries(
+            question_id, question_revision, query, decision, verdict
+        )
         digest = await self._state.open_ledger(question_id, question_revision, entries)
         await self._journal.append(
             self._state.session_id(),

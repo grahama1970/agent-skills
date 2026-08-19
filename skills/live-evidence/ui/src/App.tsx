@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { LiveMeetingSurface } from "@/components/LiveMeetingSurface";
 import { MemoryVault } from "@/components/MemoryVault";
 import { TranscriptDrawer } from "@/components/TranscriptDrawer";
@@ -85,6 +86,8 @@ export default function App() {
         onPause={() => void actions.pause()}
         onStop={() => void actions.stop()}
       />
+
+      <InsightsPanel />
 
       {error ? (
         <div
