@@ -46,6 +46,7 @@ type StoppedState = {
   scopes?: unknown[];
   locals?: Record<string, string>;
   watches?: Record<string, string>;
+  terminated?: boolean;
   error?: string;
 };
 
@@ -564,6 +565,20 @@ async function processSessionControlRequest(
     // matched against the run-to destination, not request.breakpoints.
     removeOwnedBreakpoints({ temporaryOnly: true });
   }
+  if (stoppedState.terminated) {
+    // The program ran to completion instead of hitting another stop. That is a
+    // valid terminal outcome, distinct from a timeout (#1432).
+    const sessionState = upsertSessionState(session, request, 'terminated');
+    await writeSessionEvents(folder, session.id);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'terminated',
+      sessionState,
+      eventLog: sessionEvents.get(session.id) ?? [],
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
   const sessionProofAssessment = assessSessionControlValidity(request, currentState.stopSequence, stoppedState);
   const sessionState = sessionStates.get(session.id);
   await writeSessionEvents(folder, session.id);
@@ -862,22 +877,51 @@ function waitForStoppedState(
   options: { bindActiveSession?: boolean; sessionId?: string } = {},
 ): Promise<StoppedState> {
   const timeoutMs = request.stopTimeoutMs ?? 30000;
+  // A run action (continue / run-to / step) can end in the program exiting
+  // rather than hitting another stop; that clean termination is a valid typed
+  // outcome, not a timeout (#1432).
+  const terminationIsOutcome = request.action === 'continue'
+    || request.action === 'runTo'
+    || request.action === 'stepOver'
+    || request.action === 'stepIn'
+    || request.action === 'stepOut';
   return new Promise((resolve, reject) => {
+    let settled = false;
     let startSubscription: vscode.Disposable | undefined;
-    const timer = setTimeout(() => {
+    let terminateSubscription: vscode.Disposable | undefined;
+    const cleanup = () => {
+      clearTimeout(timer);
+      startSubscription?.dispose();
+      terminateSubscription?.dispose();
       for (const [sessionId, pending] of pendingBySession.entries()) {
         if (pending === pendingCapture) {
           pendingBySession.delete(sessionId);
         }
       }
-      startSubscription?.dispose();
+    };
+    // Settle exactly once: whichever of stop / termination / timeout happens
+    // first wins, and every listener and timer is torn down on that path.
+    const settleResolve = (state: StoppedState) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(state);
+    };
+    const timer = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
       reject(new Error(`Timed out waiting ${timeoutMs}ms for a debug adapter stopped event.`));
     }, timeoutMs);
 
     const pendingCapture: PendingCapture = {
       request,
       outputPath,
-      resolve,
+      resolve: settleResolve,
       timer,
     };
 
@@ -896,6 +940,23 @@ function waitForStoppedState(
         startSubscription?.dispose();
       }
     });
+
+    terminateSubscription = vscode.debug.onDidTerminateDebugSession((session) => {
+      const boundToThisWait = pendingBySession.get(session.id) === pendingCapture
+        || (options.sessionId !== undefined && session.id === options.sessionId);
+      if (!boundToThisWait || !terminationIsOutcome) {
+        return;
+      }
+      settleResolve({
+        sessionId: session.id,
+        sessionName: session.name,
+        stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
+        reason: 'terminated',
+        terminated: true,
+        threadId: -1,
+      });
+    });
+
     if (active) {
       startSubscription.dispose();
     }
