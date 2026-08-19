@@ -307,10 +307,20 @@ Pick the mode from what the DELIVERABLE is, not from how many seats you want.
 **one-shot** — the deliverable is N independent answers, side by side.
 No consensus, no judge, no quorum: 1/3 answers is a usable result.
 
+Human says: *"/ask webgpt, webclaude and oc-deepseek: how would you paginate
+this API?"* — a question to several seats where the human reads each answer.
+
 ```bash
 # GOOD: several perspectives on a question; you will read each answer yourself.
 ./run.sh one-shot "How would you paginate this API?" \
   --handler webgpt --handler webclaude --handler oc-deepseek
+```
+
+Converts to N fully independent single-call DAGs (no shared node at all —
+one seat's failure cannot reach another lane even in principle):
+
+```text
+[handler-webgpt] -> human      [handler-webclaude] -> human      [handler-oc-deepseek] -> human
 ```
 
 - BAD: using one-shot and then summarizing the answers into a "consensus"
@@ -324,6 +334,10 @@ No consensus, no judge, no quorum: 1/3 answers is a usable result.
 **roundtable** — the deliverable is one deliberated position built over an
 identical packet, with quorum (three answering seats) and per-seat status.
 
+Human says: *"/ask webgpt, webclaude and gpt-5.5 to discuss whether ask
+should adopt lane-local retries and give me a recommendation"* — one
+position is wanted, built from equal-context deliberation.
+
 ```bash
 # GOOD: a decision that benefits from cross-model deliberation and synthesis.
 ./run.sh tau-dag "Should ask adopt lane-local retries? Argue and conclude." \
@@ -331,6 +345,16 @@ identical packet, with quorum (three answering seats) and per-seat status.
   --immutable-goal "A defensible recommendation with dissent recorded" \
   --dag-template roundtable --topology concurrent \
   --handler webgpt --handler webclaude --handler gpt-5.5-high --execute --json
+```
+
+Converts to concurrent handler nodes settling through a virtual join-gate
+(tau join contract, policy all_terminal) so a failed lane degrades
+lane-local, then one join that synthesizes with per-seat status:
+
+```text
+[handler-webgpt]----\
+[handler-webclaude]--->[join-gate]-->[join]-->human
+[handler-gpt-5-5-high]/
 ```
 
 - BAD: tailoring any seat's packet ("you are the security expert, others are
@@ -344,6 +368,10 @@ identical packet, with quorum (three answering seats) and per-seat status.
 **compete** — the deliverable is a winner chosen by an INDEPENDENT judge from
 ISOLATED candidates, with receipts. Candidates never see each other.
 
+Human says: *"/ask webgpt, webclaude and oc-deepseek to each implement the
+parser fix, then have claude-opus-5 pick a winner with a rationale"* — the
+human wants ONE implementation chosen on evidence, not a discussion.
+
 ```bash
 # GOOD: multiple plausible implementations; local verification will follow.
 ./run.sh compete "Implement the parser fix. Return APPROACH/CHANGES/RISKS/PROOF_COMMANDS." \
@@ -354,6 +382,16 @@ ISOLATED candidates, with receipts. Candidates never see each other.
   --criterion correctness --criterion minimality --execute --json
 # Then ALWAYS: ./run.sh panel-audit <run-dir> --mode compete
 #              ./run.sh judge-audit <run-dir> --run-winner-proof
+```
+
+Converts to isolated candidate nodes through the join-gate, then the judge
+(verdict must end `WINNER: <competitor-node-id>`), then the join (topology
+read back from a real compiled dag.json):
+
+```text
+[handler-webgpt]----\
+[handler-webclaude]--->[join-gate]-->[judge]-->[join]-->human
+[handler-oc-deepseek]/
 ```
 
 - BAD: making a competitor seat the judge, or letting the judge's prose stand
