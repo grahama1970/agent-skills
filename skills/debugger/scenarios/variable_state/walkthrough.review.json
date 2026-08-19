@@ -1,0 +1,30 @@
+{
+  "schema": "debugger.walkthrough.v1",
+  "title": "How the running_total state leak produces a wrong second report",
+  "mode": "review",
+  "launch": {"module": "main", "python": "/usr/bin/python3", "config_name": "Debugger walkthrough ($debugger)"},
+  "stops": [
+    {
+      "file": "main.py",
+      "line": 20,
+      "say": "The first report totalled [1, 2, 3] = 6, which is correct. We are about to run the second report over the disjoint inputs [10, 20], which should total 30.",
+      "locals": ["first"],
+      "expect": {"first": "6"}
+    },
+    {
+      "file": "tally.py",
+      "function": "running_total",
+      "line": 12,
+      "say": "This is the mechanism. `seen` is a mutable DEFAULT argument, created once at definition time and shared by every call. On the second report's first call it will already carry the first report's values -- here on the very first call it holds [1].",
+      "locals": ["seen", "value"],
+      "expect": {"seen": "[1]", "value": "1"}
+    },
+    {
+      "file": "main.py",
+      "line": 21,
+      "say": "And the consequence: second is 36, not the 30 that [10, 20] should total. The shared `seen` leaked the first report's numbers into the second. The fix is a per-call default: `def running_total(value, seen=None)` then `seen = seen or []`.",
+      "locals": ["first", "second"],
+      "expect": {"first": "6", "second": "36"}
+    }
+  ]
+}

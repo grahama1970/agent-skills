@@ -808,27 +808,41 @@ async function prepareSourceFiles(folder: vscode.WorkspaceFolder, request: Bridg
 }
 
 async function stopActiveDebugSession() {
-  const session = vscode.debug.activeDebugSession;
-  if (!session) {
+  // Stop EVERY live debug session, not just the active one. A restart that left
+  // only the "active" session alive let prior paused/zombie sessions pile up
+  // until the adapter stopped binding new breakpoints (observed: a walkthrough
+  // that restarts repeatedly degraded after ~10 sessions). We wait until all
+  // tracked sessions have actually terminated before returning.
+  const sessions = new Set<vscode.DebugSession>();
+  if (vscode.debug.activeDebugSession) {
+    sessions.add(vscode.debug.activeDebugSession);
+  }
+  for (const session of activeSessions.values()) {
+    sessions.add(session);
+  }
+  if (sessions.size === 0) {
     return;
   }
+  const remaining = new Set([...sessions].map((session) => session.id));
   await new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, 5000);
+    const finish = () => {
+      clearTimeout(timer);
+      subscription.dispose();
+      resolve();
+    };
+    const timer = setTimeout(finish, 8000);
     const subscription = vscode.debug.onDidTerminateDebugSession((terminated) => {
-      if (terminated.id === session.id) {
-        clearTimeout(timer);
-        subscription.dispose();
-        resolve();
+      remaining.delete(terminated.id);
+      if (remaining.size === 0) {
+        finish();
       }
     });
-    void vscode.debug.stopDebugging(session).then(
-      () => undefined,
-      () => {
-        clearTimeout(timer);
-        subscription.dispose();
-        resolve();
-      },
-    );
+    // stopDebugging() with no argument stops all sessions; also stop each tracked
+    // session explicitly in case some are not the current root.
+    void Promise.all([
+      vscode.debug.stopDebugging(),
+      ...[...sessions].map((session) => Promise.resolve(vscode.debug.stopDebugging(session)).catch(() => undefined)),
+    ]).then(() => undefined, () => finish());
   });
 }
 

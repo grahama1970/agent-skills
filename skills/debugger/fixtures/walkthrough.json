@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "The /debugger walkthrough feature: the agent authors a debugger.walkthrough.v1 spec and the driver walks the live VS Code debugger through its stops, pausing at each named line, narrating, and showing the real paused variable state. Capability-gated on a trusted live VS Code bridge; fails closed and rejects malformed specs.",
+  "claims": {
+    "proves": "vscode_walkthrough.py drives the live debugger through an ordered spec (main.py:20 first=6 -> tally.py:12 seen=[1] -> main.py:21 second=36) with matching narration, fails closed when no bridge answers, and rejects a non-walkthrough spec",
+    "does_not_prove": "spoken/voice narration, or human interactive Q&A during the walkthrough"
+  },
+  "cases": [
+    {
+      "name": "live-walkthrough-review",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Walk the live debugger through the three stops of the variable_state review spec, asserting each stop's captured state matches the spec's expectations. Requires DEBUGGER_VSCODE_WORKSPACE at an open+trusted VS Code folder; otherwise BLOCKED.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; if [ -z \"$WS\" ]; then WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; fi; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.review.json --workspace \"$WS\" --wait-seconds 30"
+      ],
+      "timeout_seconds": 140,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["WALKTHROUGH mode=review stops=3", "STATE: first=6", "STATE: seen=[1], value=1", "STATE: first=6, second=36", "WALKTHROUGH-COMPLETE mode=review stops=3"]
+      }
+    },
+    {
+      "name": "fails-closed-without-live-bridge",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "With a workspace that is not open in VS Code, the walkthrough must fail closed (BRIDGE_BLOCKED, exit 3) rather than hang or fabricate a tour.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"$(mktemp -d)\"; cp ../scenarios/variable_state/*.py \"$WS/\"; uv run --project .. python ../scripts/vscode_walkthrough.py --spec ../scenarios/variable_state/walkthrough.review.json --workspace \"$WS\" --wait-seconds 6"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BRIDGE_BLOCKED"]
+      }
+    },
+    {
+      "name": "rejects-malformed-spec",
+      "type": "negative",
+      "required": true,
+      "description": "A spec that is not a debugger.walkthrough.v1 object is rejected before any debugging, deterministically.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; BAD=\"$(mktemp).json\"; printf '{\"schema\":\"nope\"}' > \"$BAD\"; uv run --project .. python ../scripts/vscode_walkthrough.py --spec \"$BAD\" --workspace \"$(mktemp -d)\""
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": ["not a debugger.walkthrough.v1"]
+      }
+    }
+  ]
+}

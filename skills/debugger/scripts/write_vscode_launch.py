@@ -120,7 +120,10 @@ def main(
         "cwd": "${workspaceFolder}",
         "python": python,
         "env": parse_env(env),
-        "console": "integratedTerminal",
+        # internalConsole (not integratedTerminal): automated bridge/walkthrough
+        # runs restart the session repeatedly, and a fresh integrated terminal
+        # per session piles up and eventually degrades the debug adapter.
+        "console": "internalConsole",
         "justMyCode": just_my_code,
     }
 
