@@ -41,8 +41,14 @@ class RubricCriterion(BaseModel):
 
     @model_validator(mode="after")
     def reject_prohibited(self) -> "RubricCriterion":
+        import re
+
         blob = f"{self.criterion_id} {self.label} {self.job_relevance}".lower()
-        hits = [term for term in PROHIBITED_CRITERION_TERMS if term in blob]
+        # Word-boundary matching: "pagination" must not trip on "age".
+        hits = [
+            term for term in PROHIBITED_CRITERION_TERMS
+            if re.search(rf"\b{re.escape(term)}\b", blob)
+        ]
         if hits:
             raise ValueError(f"prohibited criterion dimension(s): {hits}")
         return self

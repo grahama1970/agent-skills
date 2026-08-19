@@ -1,0 +1,68 @@
+{
+  "schema": "live_evidence.benchmark.v1",
+  "benchmark_id": "g2i-public-python-v1",
+  "source_manifest": "source-manifest.json",
+  "comparison_scope": "On the pinned G2i public Python challenge at commit 25ceb5ad, Live Evidence is measured on the recorded question, requirement, policy, debugger, review, rubric, and rehearsal metrics. No claim about G2i's private production product is made.",
+  "task_requirements": [
+    {
+      "id": "req-local-api",
+      "kind": "constraint",
+      "text": "Run the provided local Django REST Framework API server"
+    },
+    {
+      "id": "req-data-migration",
+      "kind": "objective",
+      "text": "Load departures.json into the API via a new empty Django data migration inserting into the Departure model"
+    },
+    {
+      "id": "req-pagination",
+      "kind": "objective",
+      "text": "Collect all departures from every page by following the response 'next' links"
+    },
+    {
+      "id": "req-filter-date",
+      "kind": "objective",
+      "text": "Filter to departures with start_date after June 1st, 2018"
+    },
+    {
+      "id": "req-filter-category",
+      "kind": "objective",
+      "text": "Filter to departures with category = Adventurous"
+    },
+    {
+      "id": "req-csv-output",
+      "kind": "output",
+      "text": "Write remaining departures to a CSV in the project root: one column per attribute, title-case headers, one row per instance"
+    },
+    {
+      "id": "req-docs",
+      "kind": "output",
+      "text": "README paragraphs describing how the challenge was completed"
+    },
+    {
+      "id": "req-structure-testability",
+      "kind": "constraint",
+      "text": "Code well structured, documented, and testable"
+    }
+  ],
+  "intentional_ambiguity_for_g2i02": "The spec does not state the CSV file name ('whatever file name you believe is relevant') nor the timezone/inclusivity of 'after June 1st, 2018' -- either is a legitimate blocking clarification.",
+  "cases": [
+    "G2I-01",
+    "G2I-02",
+    "G2I-03",
+    "G2I-04",
+    "G2I-05",
+    "G2I-06",
+    "G2I-07"
+  ],
+  "blocking_cases": [
+    "G2I-01",
+    "G2I-02",
+    "G2I-03",
+    "G2I-04",
+    "G2I-05",
+    "G2I-06",
+    "G2I-07"
+  ],
+  "release_marker": "LIVE_EVIDENCE_G2I_PUBLIC_BENCHMARK_READY"
+}

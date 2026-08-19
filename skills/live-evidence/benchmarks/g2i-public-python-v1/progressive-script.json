@@ -1,0 +1,23 @@
+{
+  "schema": "live_evidence.progressive_script.v1",
+  "purpose": "G2I-01 progressive question readiness: early grammatical sentences end before the operative request arrives.",
+  "turns": [
+    {
+      "speaker": "interviewer",
+      "text": "Okay so for this exercise we have a small project set up already."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "There is a local API running with Django REST Framework and it serves departures."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "The departures endpoint is paginated and each page gives you a next link."
+    },
+    {
+      "speaker": "interviewer",
+      "text": "So what I want you to build is a script that walks every page, collects all the departures, keeps only the ones with a start date after June first 2018 in the Adventurous category, and writes them to a CSV with title-case headers. How would you structure that?"
+    }
+  ],
+  "readiness_expectation": "No solver call before the final turn; the final question candidate binds the final turn's transcript span."
+}

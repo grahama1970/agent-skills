@@ -200,6 +200,10 @@ PY
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_rehearsal_loop.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-g2i-benchmark-pack)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_g2i_benchmark_pack.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-review-dossier)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"

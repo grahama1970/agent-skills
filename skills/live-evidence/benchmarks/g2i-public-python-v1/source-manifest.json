@@ -1,0 +1,20 @@
+{
+  "schema": "live_evidence.benchmark_source_manifest.v1",
+  "repository": "g2i/python-api-challenge",
+  "commit": "25ceb5ad7005782e3015a9da750143ac99a87fde",
+  "source": "README task specification",
+  "use": "external benchmark/specification only",
+  "files": [
+    {
+      "path": "README.md",
+      "local_copy": "fixtures/source-readme.md",
+      "sha256": "ef351a5bd23703846000374c766c613201dac0f776ad37cd984daaf457f5b356"
+    }
+  ],
+  "retrieval_date": "2026-08-19",
+  "retrieval_command": "curl raw.githubusercontent.com/g2i/python-api-challenge/25ceb5ad.../README.md",
+  "license": {
+    "spdx_id": null,
+    "limitation": "No license file published; the README specification is used strictly as an external benchmark description. No G2i implementation code, candidate data, or private product behavior is copied. All fixtures, solutions, recordings, and oracles are owned and clean-room."
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "live_evidence.role_rubric.v1",
+  "rubric_id": "g2i-python-api-challenge-v1",
+  "role_name": "Python Backend Engineer (G2i public challenge scope)",
+  "version": 1,
+  "scoring_disabled": true,
+  "criteria": [
+    {
+      "criterion_id": "api-pagination",
+      "label": "API pagination handling",
+      "job_relevance": "The task requires following next links across every page",
+      "evidence_required": [
+        "next link",
+        "offset",
+        "every page",
+        "pagination"
+      ],
+      "prohibited_inferences": []
+    },
+    {
+      "criterion_id": "data-migration",
+      "label": "Django data migration",
+      "job_relevance": "Loading departures.json requires an empty migration inserting Departure rows",
+      "evidence_required": [
+        "data migration",
+        "empty migration",
+        "departure model"
+      ],
+      "prohibited_inferences": []
+    },
+    {
+      "criterion_id": "filtering",
+      "label": "Date and category filtering",
+      "job_relevance": "start_date after June 1st 2018 and category Adventurous",
+      "evidence_required": [
+        "june 1",
+        "start_date",
+        "adventurous",
+        "category"
+      ],
+      "prohibited_inferences": []
+    },
+    {
+      "criterion_id": "csv-output",
+      "label": "CSV output contract",
+      "job_relevance": "Title-case headers, one column per attribute, root folder",
+      "evidence_required": [
+        "title-case",
+        "csv",
+        "header",
+        "column"
+      ],
+      "prohibited_inferences": []
+    },
+    {
+      "criterion_id": "testability",
+      "label": "Structure and testability",
+      "job_relevance": "The stated goal asks for structured, documented, testable code",
+      "evidence_required": [
+        "test",
+        "structure",
+        "documented"
+      ],
+      "prohibited_inferences": []
+    },
+    {
+      "criterion_id": "communication",
+      "label": "Communication of approach",
+      "job_relevance": "README paragraphs describing how the challenge was completed",
+      "evidence_required": [
+        "readme",
+        "approach",
+        "paragraph"
+      ],
+      "prohibited_inferences": []
+    }
+  ],
+  "question_bank": [
+    "Walk me through how your script collects every departure when the API is paginated.",
+    "How did you load departures.json into the API, and why a data migration?",
+    "How would you make the date filter safe against timezone and boundary mistakes?"
+  ]
+}

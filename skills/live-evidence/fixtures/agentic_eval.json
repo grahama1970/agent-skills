@@ -492,6 +492,29 @@
         ]
       },
       "notes": "#1453 ten required deterministic scenarios with a contract-shaped transport. The LIVE voice rung (real chatterbox TTS + real human barge-in) is embry-voice-interrupted-and-redirected-by-real-human."
+    },
+    {
+      "name": "g2i-benchmark-pack-integrity-and-gate",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-g2i-benchmark-pack"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pinned source copy matches manifest digest: PASS",
+          "pack rubric validates under live_evidence.role_rubric.v1 with deterministic digest: PASS",
+          "every benchmark requirement traces to the pinned spec text: PASS",
+          "forbidden comparison formulations rejected: PASS",
+          "release marker refused while blocking cases lack two clean trials each: PASS",
+          "g2i benchmark pack: PASS"
+        ]
+      },
+      "notes": "#1455 pack slice: pinned-source digest binding (live upstream readback when online, honest SKIP offline), clean-room requirement tracing, claim-hygiene gate, fail-closed release marker. Campaign cases G2I-01..07 are the remaining slices."
     }
   ]
 }
