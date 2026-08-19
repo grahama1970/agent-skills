@@ -38,13 +38,15 @@ def main() -> int:
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(root / "src"))
 
-    from live_evidence.models import (
+    from live_evidence.review import (
         MediaRetention,
         ReviewClaim,
         ReviewDisposition,
         ReviewerAnnotation,
+        append_annotation,
+        build_review_bundle,
+        verify_bundle,
     )
-    from live_evidence.review import append_annotation, build_review_bundle, verify_bundle
 
     journal = root / "fixtures" / "review_interview_journal.jsonl"
     fixed_time = datetime(2026, 8, 14, 18, 0, 0, tzinfo=timezone.utc)

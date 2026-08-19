@@ -45,7 +45,7 @@ def main() -> int:
         repository_digest,
         verified_stop_matches,
     )
-    from live_evidence.models import DebugBreakpoint, DebugRequest
+    from live_evidence.debugger_lane import DebugBreakpoint, DebugRequest
 
     work = Path(tempfile.mkdtemp(prefix="live-evidence-debugger-eval-"))
     repo = work / "repo"

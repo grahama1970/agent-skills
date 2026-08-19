@@ -16,14 +16,204 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .models import (
-    AnswerSpan,
-    MediaRetention,
-    ReviewBundle,
-    ReviewClaim,
-    ReviewQuestion,
-    ReviewerAnnotation,
-)
+from datetime import datetime, timezone
+from enum import StrEnum
+from typing import Literal
+from uuid import uuid4
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from .models import utc_now
+
+
+
+class ReviewDisposition(StrEnum):
+    """Closed vocabulary for review-claim evidence status (#1451)."""
+
+    SUPPORTED_BY_INTERVIEW = "supported_by_interview"
+    SUPPORTED_BY_AUTHORIZED_ARTIFACT = "supported_by_authorized_artifact"
+    CANDIDATE_ASSERTION_UNVERIFIED = "candidate_assertion_unverified"
+    CONTRADICTED = "contradicted"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+
+
+class MediaRetention(StrEnum):
+    RETAINED_LOCAL = "retained_local"
+    EXTERNAL_REFERENCE = "external_reference"
+    ABSENT = "absent"
+
+
+class ReviewQuestion(BaseModel):
+    """One question as asked, at one exact revision."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question_id: str = Field(min_length=8, max_length=64)
+    question_revision: int = Field(ge=0)
+    text: str = Field(min_length=1, max_length=8_000)
+    event_ids: list[str] = Field(min_length=1, max_length=64)
+    sequence_start: int = Field(ge=0)
+    sequence_end: int = Field(ge=0)
+    start_s: float = Field(ge=0.0)
+    end_s: float = Field(ge=0.0)
+
+
+class AnswerSpan(BaseModel):
+    """An answer segment bound to exact transcript events and timestamps."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    span_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    question_id: str = Field(min_length=8, max_length=64)
+    question_revision: int = Field(ge=0)
+    event_ids: list[str] = Field(min_length=1, max_length=256)
+    sequence_start: int = Field(ge=0)
+    sequence_end: int = Field(ge=0)
+    start_s: float = Field(ge=0.0)
+    end_s: float = Field(ge=0.0)
+
+    @model_validator(mode="after")
+    def validate_range(self) -> "AnswerSpan":
+        if self.sequence_end < self.sequence_start or self.end_s < self.start_s:
+            raise ValueError("answer span range must not be inverted")
+        return self
+
+
+class ArtifactRef(BaseModel):
+    """Authorized independent artifact supporting a claim (repo/ask/memory/debugger)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["repository", "ask", "memory", "debugger"]
+    locator: str = Field(min_length=1, max_length=1_000)
+    digest: str | None = Field(default=None, min_length=8, max_length=128)
+
+
+class ReviewClaim(BaseModel):
+    """A statement about the interview, honest about what backs it.
+
+    Fail-closed vocabulary enforcement (#1451): a claim cannot be LABELED
+    supported without the evidence that would make it supported, and a
+    candidate assertion cannot be silently promoted -- the promotion requires
+    an artifact, at which point the disposition changes explicitly.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    claim_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    text: str = Field(min_length=1, max_length=2_000)
+    disposition: ReviewDisposition
+    span_ids: list[str] = Field(default_factory=list, max_length=32)
+    artifact_refs: list[ArtifactRef] = Field(default_factory=list, max_length=16)
+
+    @model_validator(mode="after")
+    def validate_evidence(self) -> "ReviewClaim":
+        if self.disposition is ReviewDisposition.SUPPORTED_BY_INTERVIEW and not self.span_ids:
+            raise ValueError("supported_by_interview requires at least one answer span")
+        if (
+            self.disposition is ReviewDisposition.SUPPORTED_BY_AUTHORIZED_ARTIFACT
+            and not self.artifact_refs
+        ):
+            raise ValueError("supported_by_authorized_artifact requires an artifact reference")
+        if self.disposition is ReviewDisposition.CONTRADICTED and not self.span_ids:
+            raise ValueError("contradicted requires the contradicting span(s)")
+        return self
+
+
+class ReviewerAnnotation(BaseModel):
+    """Append-only reviewer note, attributable to an actor; never mutates evidence."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    annotation_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    actor: str = Field(min_length=1, max_length=200)
+    created_at: datetime = Field(default_factory=utc_now)
+    claim_id: str | None = Field(default=None, min_length=8, max_length=64)
+    note: str = Field(min_length=1, max_length=4_000)
+
+
+class ReviewBundle(BaseModel):
+    """Versioned post-interview review dossier (#1451).
+
+    bundle_digest() covers the evidence core (everything except reviewer
+    annotations), so appending a note never invalidates the evidence identity,
+    while mutating any transcript/media/claim binding does.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.review_bundle.v1"] = Field(
+        default="live_evidence.review_bundle.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    review_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    session_id: str = Field(min_length=8, max_length=64)
+    session_policy_digest: str = Field(min_length=64, max_length=64)
+    media_id: str = Field(min_length=1, max_length=200)
+    media_locator: str = Field(min_length=1, max_length=1_000)
+    media_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    media_retention: MediaRetention
+    transcript_digest: str = Field(min_length=64, max_length=64)
+    questions: list[ReviewQuestion] = Field(default_factory=list, max_length=256)
+    answer_spans: list[AnswerSpan] = Field(default_factory=list, max_length=1_024)
+    review_claims: list[ReviewClaim] = Field(default_factory=list, max_length=512)
+    reviewer_annotations: list[ReviewerAnnotation] = Field(default_factory=list, max_length=1_024)
+    created_at: datetime = Field(default_factory=utc_now)
+
+    @model_validator(mode="after")
+    def validate_bindings(self) -> "ReviewBundle":
+        """No dangling or cross-revision attribution (#1451).
+
+        An answer span must bind a question at its exact revision as present in
+        this bundle; a claim must bind spans that exist. An answer can never be
+        attributed to an obsolete wording of a question.
+        """
+
+        revisions = {(q.question_id, q.question_revision) for q in self.questions}
+        for span in self.answer_spans:
+            if (span.question_id, span.question_revision) not in revisions:
+                raise ValueError(
+                    f"answer span {span.span_id} binds question {span.question_id} "
+                    f"rev {span.question_revision} which is not in this bundle"
+                )
+        span_ids = {span.span_id for span in self.answer_spans}
+        for claim in self.review_claims:
+            missing = [sid for sid in claim.span_ids if sid not in span_ids]
+            if missing:
+                raise ValueError(f"claim {claim.claim_id} binds unknown span(s) {missing}")
+        if self.media_retention is MediaRetention.RETAINED_LOCAL and not self.media_sha256:
+            raise ValueError("locally retained media requires media_sha256")
+        return self
+
+    def bundle_digest(self) -> str:
+        payload = self.model_dump(mode="json", by_alias=True)
+        payload.pop("reviewer_annotations", None)
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+
+    def tldr(self) -> list[dict[str, Any]]:
+        """Summary bullets generated ONLY from evidence-bearing claims."""
+
+        bullets: list[dict[str, Any]] = []
+        for claim in self.review_claims:
+            if claim.disposition in {
+                ReviewDisposition.SUPPORTED_BY_INTERVIEW,
+                ReviewDisposition.SUPPORTED_BY_AUTHORIZED_ARTIFACT,
+            }:
+                bullets.append(
+                    {
+                        "text": claim.text,
+                        "disposition": claim.disposition.value,
+                        "span_ids": list(claim.span_ids),
+                        "artifact_refs": [ref.model_dump() for ref in claim.artifact_refs],
+                    }
+                )
+        return bullets
+
+
+
 
 
 def transcript_digest(events: list[dict[str, Any]]) -> str:
