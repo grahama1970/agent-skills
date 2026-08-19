@@ -65,15 +65,15 @@ import { crc32, downloadBlob, fnv1a32, writeUint16, writeUint32 } from './lib/bi
 import { contactSheetDecisionForStoryRow } from './lib/contact'
 import { chooseCrewPersona, compactCrewText, crewFitRationale, crewRoleCriteria, crewTauRepairNote, scoreCrewPersona } from './lib/crew'
 import { dreamBooleanLabel, dreamDisplayCode, dreamExtractPathFromText, dreamInferMediaType, dreamList, dreamNumber, dreamRenderableMediaUrl, dreamStringField, parseDreamJson, shouldIgnoreDreamPaneArrowKey } from './lib/dream'
-import { endpointParts, graphKindFromDocument, graphLabelFromDocument, graphNodeFromEndpoint, graphThumbFromDocument } from './lib/graph'
+import { endpointParts, graphKindFromDocument, graphLabelFromDocument, graphNodeFromEndpoint, graphThumbFromDocument, memoryByKeysDocuments } from './lib/graph'
 import { persistedHumanIdea } from './lib/idea'
 import { graphMediaSourceFromDocument, mediaLockFrameGroups, mediaLockFramesFromPacket, mediaLockGroupTimeRange, mediaLockStatusLabel } from './lib/media'
-import { buildLiveMemoryTraceGraph, dreamMemoryResultFromDocument, dreamMemoryResultPriority, extractKnownMemoryFieldText, extractPersonaMemoryKey, humanMemoryCaption, linkedStoryAssetFromMemoryResult, memoryConnectionPalette, memoryConnectionSignals, mergeMemoryTomGraph, personaMemoryThumbCache, readableMemoryText, readableMemoryValue, stripLeadingMemoryFieldLabels } from './lib/memory'
+import { buildLiveMemoryTraceGraph, dreamMemoryResultFromDocument, extractKnownMemoryFieldText, extractPersonaMemoryKey, humanMemoryCaption, linkedStoryAssetFromMemoryResult, memoryConnectionPalette, memoryConnectionSignals, mergeMemoryTomGraph, personaMemoryThumbCache, readableMemoryText, readableMemoryValue, stratifiedMemorySample, stripLeadingMemoryFieldLabels } from './lib/memory'
 import { authorStyleGuide, groupResearchContext, personaText, personaThumbnailUrl, productionTechniquePackage, roleFitCandidates, rolePrompt } from './lib/persona'
 import { activeDreamPhaseFromLocation, dreamPhaseHashAliases, dreamPhaseHashById, normalizeToCanonicalPhases, phaseNumber, phaseShortLabels } from './lib/phase'
 import { formatProviderContractBlocker, highlightJsonForProviderContract, highlightJsonLineForProviderContract, parseProviderContractAudioSummary, providerContractArtifactRole, providerContractAudioValueTone, providerContractJsonTokenStyle, providerContractStatusTone, providerFitDelta, providerFitMax, providerFitValue, rebindProviderContractAssetPath, shortProviderHash, videoProviderArtifactRole } from './lib/provider'
 import { PipelineErrorBoundary, clampNumber, styles, useElementSize } from './lib/react'
-import { coverageNoteForScriptRow, distinctAssetDescription, hasLiveDescriptionReceipt, scriptContractFromDraft, scriptCoverageStatusForRow, scriptCoverageStatusTitle, scriptEntityRows, scriptGlossaryFromContract, scriptStringFromContract, splitScriptIntoRows, storyAssetDescriptionFromMemoryDocument, storyAssetDescriptionFromResult } from './lib/script'
+import { coverageNoteForScriptRow, distinctAssetDescription, hasLiveDescriptionReceipt, loadPhase02MediaGate, scriptContractFromDraft, scriptCoverageStatusForRow, scriptCoverageStatusTitle, scriptEntityRows, scriptGlossaryFromContract, scriptStringFromContract, splitScriptIntoRows, storyAssetDescriptionFromMemoryDocument, storyAssetDescriptionFromResult } from './lib/script'
 import { createMissingStage, effectiveStageStatus, isStagePassed, requiredStageArtifact, stageArtifactSummary, stageImageSummary, stageMissingMessage } from './lib/stage'
 import { isExecutionReceiptArtifact, nodeKindColor, relationshipColor, statusLabel, statusTone, toneStyles } from './lib/status'
 import { compactStoryStatus, inferStoryLocationAndEnvironment, parseStoryDraftJson, storyContractSummaryFromDraft, storyDisplayText, storyEntityGlossary } from './lib/story'
@@ -517,8 +517,7 @@ export function DreamWorkspace() {
           if (result.url || result.snippet || result.title) allResults.push(result)
         })
       }
-      const rankedResults = [...allResults, ...webResults]
-        .sort((a, b) => dreamMemoryResultPriority(a) - dreamMemoryResultPriority(b))
+      const rankedResults = stratifiedMemorySample([...allResults, ...webResults], 24, ideaText)
       if (rankedResults.length > 0) setResearchResults(rankedResults)
       setProcessingPhase(null)
       setPipelineStatus('IDLE')

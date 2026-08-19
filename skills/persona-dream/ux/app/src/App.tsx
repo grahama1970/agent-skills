@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DreamWorkspace } from '../../../ui/src'
 import { api, type Journal, type RunSummary } from './api'
 import ChatWell from './components/ChatWell'
 import EmbryDrawer from './components/EmbryDrawer'
@@ -17,7 +18,26 @@ import JournalPage from './components/JournalPage'
  * composer would invite a conversation the backend would refuse anyway.
  */
 
+/** #dream mounts the pipeline workspace (phases 01-10) from ui/src; every
+ * other hash keeps the journal + chat surface. This is the project-owned
+ * mount the ux-lab registry's legacy-dream-route entry asks for. */
+function useHashRoute(): string {
+  const [hash, setHash] = useState(() => window.location.hash)
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', onChange)
+    return () => window.removeEventListener('hashchange', onChange)
+  }, [])
+  return hash
+}
+
 export default function App() {
+  const hash = useHashRoute()
+  if (hash === '#dream') return <DreamWorkspace />
+  return <JournalApp />
+}
+
+function JournalApp() {
   const [runs, setRuns] = useState<RunSummary[]>([])
   const [runId, setRunId] = useState<string | null>(null)
   const [journal, setJournal] = useState<Journal | null>(null)

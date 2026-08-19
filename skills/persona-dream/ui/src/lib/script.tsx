@@ -174,7 +174,7 @@ export function hasLiveDescriptionReceipt(doc: Record<string, unknown> | null | 
   return hasDescription && doc.description_status === 'READY' && receipt?.mocked === false && receipt?.live === true
 }
 
-async function loadPhase02MediaGate(): Promise<Phase02MediaGate> {
+export async function loadPhase02MediaGate(): Promise<Phase02MediaGate> {
   const requiredKeys = [...phase02RequiredMediaKeys, ...phase02RequiredTextKeys]
   const docs = await memoryByKeysDocuments('persona_memory', requiredKeys)
   const docsByKey = new Map(docs.map((doc) => [String(doc._key ?? ''), doc]))

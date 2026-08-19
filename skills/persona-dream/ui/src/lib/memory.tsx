@@ -187,6 +187,50 @@ export function dreamMemoryResultFromDocument(doc: Record<string, unknown>, inde
   }
 }
 
+export type MemoryStratum = 'image' | 'video' | 'audio' | 'text'
+
+export function dreamMemoryStratum(result: ResearchMemoryResult): MemoryStratum {
+  const kind = (result.mediaType ?? '').toLowerCase()
+  if (kind === 'mp4' || kind === 'mov' || kind === 'webm' || kind === 'video') return 'video'
+  if (kind === 'wav' || kind === 'mp3' || kind === 'ogg' || kind === 'audio') return 'audio'
+  if (kind === 'png' || kind === 'jpg' || kind === 'jpeg' || kind === 'webp' || kind === 'gif' || kind === 'image') return 'image'
+  return 'text'
+}
+
+/** Random stratified sample across media kinds, seeded by the idea text so
+ * the same directive redraws the same board. Round-robin across strata means
+ * every media kind present in recall survives any downstream slice; leftover
+ * slots fill from whatever remains. */
+export function stratifiedMemorySample(results: ResearchMemoryResult[], limit: number, seed: string): ResearchMemoryResult[] {
+  let h = 1779033703 ^ seed.length
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 3432918353), h = (h << 13) | (h >>> 19)
+  const rng = () => {
+    h = Math.imul(h ^ (h >>> 16), 2246822507)
+    h = Math.imul(h ^ (h >>> 13), 3266489909)
+    return ((h ^= h >>> 16) >>> 0) / 4294967296
+  }
+  const strata: Record<MemoryStratum, ResearchMemoryResult[]> = { image: [], video: [], audio: [], text: [] }
+  for (const result of results) strata[dreamMemoryStratum(result)].push(result)
+  for (const bucket of Object.values(strata)) {
+    for (let i = bucket.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1))
+      ;[bucket[i], bucket[j]] = [bucket[j], bucket[i]]
+    }
+  }
+  const order: MemoryStratum[] = ['image', 'video', 'audio', 'text']
+  const sample: ResearchMemoryResult[] = []
+  while (sample.length < Math.min(limit, results.length)) {
+    let drew = false
+    for (const stratum of order) {
+      const next = strata[stratum].shift()
+      if (next) { sample.push(next); drew = true }
+      if (sample.length >= Math.min(limit, results.length)) break
+    }
+    if (!drew) break
+  }
+  return sample
+}
+
 export function dreamMemoryResultPriority(result: ResearchMemoryResult): number {
   const haystack = `${result.title} ${result.snippet} ${result.url} ${result.mediaType ?? ''}`.toLowerCase()
   if (haystack.includes('embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png')) return 0
