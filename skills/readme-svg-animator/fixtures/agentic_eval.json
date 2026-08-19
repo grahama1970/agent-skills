@@ -9,25 +9,47 @@
   },
   "cases": [
     {
-      "name": "real-sanity",
+      "name": "real-render-verify-browser",
       "type": "positive",
-      "command": ["skills/readme-svg-animator/sanity.sh"],
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "out=$(mktemp -d) && ../run.sh render ../assets/templates/fanout-anatomy.yml \"$out/scene.svg\" && ../run.sh verify ../assets/templates/fanout-anatomy.yml \"$out/scene.svg\" --receipt \"$out/scene.receipt.json\" --browser"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["SANITY PASS"]
+        "stdout_contains": [
+          "PASS"
+        ]
+      }
+    },
+    {
+      "name": "real-sanity",
+      "type": "positive",
+      "command": [
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SANITY PASS"
+        ]
       }
     },
     {
       "name": "unsafe-svg-fails-closed",
       "type": "negative",
       "command": [
-        "skills/readme-svg-animator/run.sh",
+        "../run.sh",
         "validate",
-        "skills/readme-svg-animator/tests/fixtures/unsafe-script.svg"
+        "../tests/fixtures/unsafe-script.svg"
       ],
       "expected": {
         "exit_code": 1,
-        "stdout_contains": ["FAIL"]
+        "stdout_contains": [
+          "FAIL"
+        ]
       }
     }
   ],

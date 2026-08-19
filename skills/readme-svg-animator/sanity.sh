@@ -12,7 +12,7 @@ else
   UV_RUN=(uv run --project "$SCRIPT_DIR")
 fi
 
-"${UV_RUN[@]}" python -m pytest -q
+"${UV_RUN[@]}" python -m pytest -q "$SCRIPT_DIR/tests"
 "${UV_RUN[@]}" python "$SCRIPT_DIR/scripts/check_skill_contract.py" "$SCRIPT_DIR"
 
 "${UV_RUN[@]}" readme-svg verify \

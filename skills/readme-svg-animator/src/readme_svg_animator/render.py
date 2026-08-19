@@ -178,6 +178,32 @@ def _make_root(scene: Scene, theme: Theme, compiled: CompiledTimeline) -> etree.
     return root
 
 
+_MONO_CHAR_WIDTH = 0.62  # width/font-size ratio for the JetBrains Mono fallback stack
+
+
+def _fit_mono_lines(text: str, size: float, max_width: float) -> tuple[float, list[str]]:
+    """Greedy-wrap monospace text into at most two lines that fit max_width.
+
+    Shrinks the font size (never below 60% of the requested size) when two
+    wrapped lines still exceed the card width, so card text cannot collide
+    with neighboring cards.
+    """
+    words = text.split()
+    if not words:
+        return size, [text]
+    for candidate in (size, size * 0.85, size * 0.7, size * 0.6):
+        budget = max(1, int(max_width / (candidate * _MONO_CHAR_WIDTH)))
+        lines: list[str] = [words[0]]
+        for word in words[1:]:
+            if len(lines[-1]) + 1 + len(word) <= budget:
+                lines[-1] = f"{lines[-1]} {word}"
+            else:
+                lines.append(word)
+        if len(lines) <= 2 and all(len(line) <= budget for line in lines):
+            return candidate, lines
+    return candidate, lines
+
+
 def _add_text(
     parent: etree._Element,
     text: str,
@@ -480,16 +506,22 @@ def _render_fanout(
             anchor="middle",
             tracking=typography.heading_tracking,
         )
-        _add_text(
-            group,
-            target.detail,
-            x + card_width / 2,
-            820,
-            css_class="rsa-mono",
-            size=typography.supporting_size,
-            fill=_rgba(palette.white, theme.opacity.secondary_text),
-            anchor="middle",
+        detail_size, detail_lines = _fit_mono_lines(
+            target.detail, typography.supporting_size, card_width - 24
         )
+        line_gap = detail_size * 1.3
+        first_y = 820 - (len(detail_lines) - 1) * line_gap / 2
+        for line_index, line in enumerate(detail_lines):
+            _add_text(
+                group,
+                line,
+                x + card_width / 2,
+                first_y + line_index * line_gap,
+                css_class="rsa-mono",
+                size=detail_size,
+                fill=_rgba(palette.white, theme.opacity.secondary_text),
+                anchor="middle",
+            )
 
     _add_text(
         root,

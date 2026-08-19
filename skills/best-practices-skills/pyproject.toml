@@ -13,3 +13,8 @@ dependencies = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# Scripts-only skill: there is no importable package for hatchling to build,
+# so uv must manage the environment without installing the project itself.
+[tool.uv]
+package = false
