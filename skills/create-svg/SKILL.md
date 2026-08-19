@@ -1,10 +1,13 @@
 ---
-name: readme-svg-animator
+name: create-svg
 description: >
-  Create, restyle, preview, and validate self-contained animated SVG diagrams
-  for GitHub README files. Use when a user asks for an animated README SVG,
-  a reusable SVG style preset, a dark neon technical diagram, deterministic
-  CSS-keyframe animation, or a README-safe SVG generated from a semantic scene.
+  Create, restyle, preview, and validate self-contained themed SVG diagrams and
+  animations for any surface — READMEs, websites, pitchdecks, docs, artifacts.
+  Use when a user asks for an animated SVG, an animated README SVG, a reusable
+  SVG style preset, a dark neon technical diagram, deterministic CSS-keyframe
+  animation, or a README-safe SVG generated from a semantic scene. README-grade
+  constraints (no JS, self-contained, reduced-motion fallback) are the universal
+  floor, which makes every artifact portable to less-hostile surfaces for free.
 triggers:
   - animated README SVG
   - create SVG animation
@@ -70,7 +73,7 @@ the receipt with the artifact, and emit the README `snippet`. Never present a
 Stage-1 draft as the deliverable.
 
 ```bash
-SKILL_DIR=skills/readme-svg-animator
+SKILL_DIR=skills/create-svg
 
 # See the available semantic templates.
 "$SKILL_DIR/run.sh" templates
@@ -120,7 +123,7 @@ To inspect an existing SVG corpus:
 - Font family names are emitted, but font files are never included. Exact-font mode must
   receive a separately licensed local font from the operator in a future extension.
 - Generated previews, browser frames, and receipts should be written beneath
-  `/mnt/storage12tb/skills/readme-svg-animator/` in the full agent-skills environment.
+  `/mnt/storage12tb/skills/create-svg/` in the full agent-skills environment.
 
 ## Verification posture
 
@@ -132,8 +135,8 @@ The agentic-evals fixture is `fixtures/agentic_eval.json`:
 
 ```bash
 ./skills/agentic-evals/run.sh run \
-  skills/readme-svg-animator/fixtures/agentic_eval.json \
-  --output /mnt/storage12tb/skills/readme-svg-animator/outputs/agentic-eval.json
+  skills/create-svg/fixtures/agentic_eval.json \
+  --output /mnt/storage12tb/skills/create-svg/outputs/agentic-eval.json
 ```
 
 A skipped browser check is `NOT_RUN`, not PASS. A missing adjacent repository validator

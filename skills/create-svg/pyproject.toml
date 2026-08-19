@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "readme-svg-animator"
+name = "create-svg"
 version = "0.1.0"
 description = "Deterministic animated SVG generator and validator for GitHub READMEs"
 readme = "README.md"
@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.scripts]
-readme-svg = "readme_svg_animator.cli:app"
+create-svg = "create_svg.cli:app"
 
 [dependency-groups]
 dev = ["pytest>=8.3"]

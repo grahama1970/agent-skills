@@ -5,7 +5,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from readme_svg_animator.cli import app
+from create_svg.cli import app
 
 RUNNER = CliRunner()
 

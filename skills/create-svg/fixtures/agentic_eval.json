@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "skill": "readme-svg-animator",
+  "skill": "create-svg",
   "trials": 3,
   "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, and unsafe-input rejection",
   "claims": {

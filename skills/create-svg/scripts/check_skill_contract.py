@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Deterministic local conformance checks for the readme-svg-animator skill.
+"""Deterministic local conformance checks for the create-svg skill.
 
 Inputs: one skill directory. Outputs: human-readable PASS/FAIL findings. Failure modes:
 invalid frontmatter, missing evaluation posture, oversized or undocumented Python files,

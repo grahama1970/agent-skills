@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from readme_svg_animator.io import load_scene, load_theme, skill_root
-from readme_svg_animator.models import Timeline, TimelineEvent
+from create_svg.io import load_scene, load_theme, skill_root
+from create_svg.models import Timeline, TimelineEvent
 
 
 def test_bundled_theme_and_scenes_validate() -> None:

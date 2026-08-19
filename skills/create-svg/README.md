@@ -22,7 +22,7 @@ No upstream SVG artwork and no font binaries are included.
 ## Quick start
 
 ```bash
-cd skills/readme-svg-animator
+cd skills/create-svg
 uv sync --group dev
 
 ./run.sh new positive-negative /tmp/scene.yml

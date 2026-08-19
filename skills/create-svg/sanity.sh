@@ -15,17 +15,17 @@ fi
 "${UV_RUN[@]}" python -m pytest -q "$SCRIPT_DIR/tests"
 "${UV_RUN[@]}" python "$SCRIPT_DIR/scripts/check_skill_contract.py" "$SCRIPT_DIR"
 
-"${UV_RUN[@]}" readme-svg verify \
+"${UV_RUN[@]}" create-svg verify \
   "$SCRIPT_DIR/assets/templates/positive-negative.yml" \
   "$TMP_DIR/positive-negative.svg" \
   --receipt "$TMP_DIR/positive-negative.receipt.json" \
   --browser
 
-"${UV_RUN[@]}" readme-svg preview \
+"${UV_RUN[@]}" create-svg preview \
   "$TMP_DIR/positive-negative.svg" \
   "$TMP_DIR/positive-negative-preview.html"
 
-if "${UV_RUN[@]}" readme-svg validate \
+if "${UV_RUN[@]}" create-svg validate \
   "$SCRIPT_DIR/tests/fixtures/unsafe-script.svg" \
   --receipt "$TMP_DIR/unsafe.receipt.json"; then
   echo "negative gate failed: unsafe SVG was accepted" >&2

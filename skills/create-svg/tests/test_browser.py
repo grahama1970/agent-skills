@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from readme_svg_animator.browser import verify_readme_image
-from readme_svg_animator.io import load_scene, load_theme, skill_root
-from readme_svg_animator.render import render_scene
+from create_svg.browser import verify_readme_image
+from create_svg.io import load_scene, load_theme, skill_root
+from create_svg.render import render_scene
 
 
 @pytest.mark.browser

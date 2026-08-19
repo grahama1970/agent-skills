@@ -30,6 +30,43 @@ wheels = [
 ]
 
 [[package]]
+name = "create-svg"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "defusedxml" },
+    { name = "loguru" },
+    { name = "lxml" },
+    { name = "pillow" },
+    { name = "playwright" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "tinycss2" },
+    { name = "typer" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "defusedxml", specifier = ">=0.7.1" },
+    { name = "loguru", specifier = ">=0.7,<0.7.3" },
+    { name = "lxml", specifier = ">=5.2" },
+    { name = "pillow", specifier = ">=10.4" },
+    { name = "playwright", specifier = ">=1.47" },
+    { name = "pydantic", specifier = ">=2.7" },
+    { name = "pyyaml", specifier = ">=6.0" },
+    { name = "tinycss2", specifier = ">=1.3" },
+    { name = "typer", specifier = ">=0.12" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3" }]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -360,43 +397,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/86/bf/899e81e4cce32febab4fb42bb97dcdf66bc135272882d1987881a4b519e9/pyyaml-6.0.3-cp312-cp312-win_amd64.whl", hash = "sha256:5fcd34e47f6e0b794d17de1b4ff496c00986e1c83f7ab2fb8fcfe9616ff7477b", size = 154003, upload-time = "2025-09-25T21:32:21.167Z" },
     { url = "https://files.pythonhosted.org/packages/1a/08/67bd04656199bbb51dbed1439b7f27601dfb576fb864099c7ef0c3e55531/pyyaml-6.0.3-cp312-cp312-win_arm64.whl", hash = "sha256:64386e5e707d03a7e172c0701abfb7e10f0fb753ee1d773128192742712a98fd", size = 140344, upload-time = "2025-09-25T21:32:22.617Z" },
 ]
-
-[[package]]
-name = "readme-svg-animator"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "defusedxml" },
-    { name = "loguru" },
-    { name = "lxml" },
-    { name = "pillow" },
-    { name = "playwright" },
-    { name = "pydantic" },
-    { name = "pyyaml" },
-    { name = "tinycss2" },
-    { name = "typer" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "loguru", specifier = ">=0.7,<0.7.3" },
-    { name = "lxml", specifier = ">=5.2" },
-    { name = "pillow", specifier = ">=10.4" },
-    { name = "playwright", specifier = ">=1.47" },
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "pyyaml", specifier = ">=6.0" },
-    { name = "tinycss2", specifier = ">=1.3" },
-    { name = "typer", specifier = ">=0.12" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3" }]
 
 [[package]]
 name = "rich"
