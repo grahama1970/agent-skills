@@ -165,7 +165,10 @@ def main() -> int:
 (() => {
   const chips = [...document.querySelectorAll('[data-coverage-state]')].map(e => e.getAttribute('data-coverage-state'));
   const suggestion = document.querySelectorAll('[data-qid^="suggestion-"]').length;
-  return JSON.stringify({chips, suggestion});
+  const panel = !!document.querySelector('[data-qid=insights-panel]');
+  const rubricSection = !!document.querySelector('[data-qid=rubric-coverage]');
+  const bodyChars = document.body.textContent.length;
+  return JSON.stringify({chips, suggestion, panel, rubricSection, bodyChars});
 })()""")
             if dom and dom.get("chips"):
                 break

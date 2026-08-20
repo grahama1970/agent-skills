@@ -124,14 +124,18 @@ class SalientFactWriter:
         """Return (confirmed, detail). Confirmation never comes from the write."""
 
         document: dict[str, Any] = {"_key": fact.fact_id, **fact.model_dump(by_alias=True)}
+        # OSError included: httpx eagerly builds an SSL context and raises
+        # FileNotFoundError when the running venv has no CA bundle -- observed
+        # live in the suite's ephemeral env (#1475 action lane). A transport
+        # that cannot even construct is still a transport error, not a 500.
         try:
             await self._blind_write(document)
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, OSError) as exc:
             return False, f"write_transport_error:{type(exc).__name__}"
 
         try:
             found = await self._readback(fact.fact_id)
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, OSError) as exc:
             return False, f"readback_transport_error:{type(exc).__name__}"
 
         if found is None:

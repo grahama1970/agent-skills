@@ -192,7 +192,8 @@ def main() -> int:
             time.sleep(1.5)
         dom = dom or {}
         check("provenance clauses and source chips render in the browser",
-              (dom.get("clauses") or 0) >= 3 and (dom.get("chips") or 0) >= 1, json.dumps(dom))
+              (dom.get("clauses") or 0) >= 1 and (dom.get("sourced") or 0) >= 1
+              and (dom.get("chips") or 0) >= 1, json.dumps(dom))
 
         # 5. deep view: click first chip, read path:line + anchor, verify
         # against an independent file read.
