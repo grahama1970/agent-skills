@@ -39,6 +39,7 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parent.parent
 SCENARIO = SKILL / "scenarios" / "variable_state"
+SCENARIO_REL = Path("skills/debugger/scenarios/variable_state")
 CONFIG_NAME = "Debug variable_state leak ($debugger)"
 
 # The collaboration script: visit the bug's symptom, then its root cause.
@@ -88,9 +89,19 @@ def write_launch(workspace: Path) -> None:
             str(SKILL / "scripts" / "write_vscode_launch.py"),
             "--workspace", str(workspace), "--name", CONFIG_NAME,
             "--python", "/usr/bin/python3", "--module", "main",
+            "--env", "PYTHONPATH=${workspaceFolder}/" + str(SCENARIO_REL),
         ],
         check=True, capture_output=True, text=True,
     )
+
+
+def resolve_step_file(workspace: Path, name: str) -> Path:
+    """Step files live at the workspace root in a temp copy, else under the
+    scenario subdir (running against the open repo workspace)."""
+    root = workspace / name
+    if root.exists():
+        return root
+    return workspace / SCENARIO_REL / name
 
 
 def issue_request(workspace: Path, step: dict, timeout_ms: int) -> tuple[str, str]:
@@ -105,7 +116,7 @@ def issue_request(workspace: Path, step: dict, timeout_ms: int) -> tuple[str, st
         str(SKILL / "scripts" / "request_vscode_bridge.py"),
         "--workspace", str(workspace), "--action", "restart",
         "--launch-config-name", CONFIG_NAME,
-        "--break", f"{workspace / step['file']}:{step['line']}",
+        "--break", f"{resolve_step_file(workspace, step['file'])}:{step['line']}",
         "--stop-timeout-ms", str(timeout_ms),
         "--expect-extension-host-kind", host_kind,
     ]
