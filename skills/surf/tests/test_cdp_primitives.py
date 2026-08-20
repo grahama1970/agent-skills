@@ -93,8 +93,8 @@ def test_hit_test_uses_viewport_coordinates_and_describes_node() -> None:
     assert (
         "DOM.getNodeForLocation",
         {
-            "x": 60.5,
-            "y": 45.25,
+            "x": 60,
+            "y": 45,
             "includeUserAgentShadowDOM": True,
             "ignorePointerEventsNone": False,
         },

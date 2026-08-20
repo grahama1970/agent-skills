@@ -379,8 +379,8 @@ class CDPController:
         """Resolve the DOM node at viewport-relative CSS coordinates."""
 
         params = {
-            "x": float(x),
-            "y": float(y),
+            "x": int(round(float(x))),
+            "y": int(round(float(y))),
             "includeUserAgentShadowDOM": True,
             "ignorePointerEventsNone": False,
         }
@@ -398,6 +398,8 @@ class CDPController:
             "success": True,
             "x_css": float(x),
             "y_css": float(y),
+            "cdp_x": params["x"],
+            "cdp_y": params["y"],
             "hit": hit,
             "node": node,
         }

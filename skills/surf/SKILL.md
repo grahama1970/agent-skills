@@ -95,6 +95,7 @@ composes:
   - extractor
   - task-monitor
   - agentic-evals
+  - captcha
 complies:
   - best-practices-skills
   - best-practices-python
@@ -1610,6 +1611,27 @@ was solved and callers must re-observe the target after dispatch. For
 authenticated provider tabs, the extension/WebGPT proof contracts remain
 authoritative; generic CDP receipts are diagnostics unless the workflow is a
 local synthetic target launched for CDP control.
+
+### Bot Detection And Captcha Boundary
+
+Surf may compose the `captcha` skill only for explicitly authorized defensive
+loopback manifests that pass `captcha authorization-preflight`. The composed
+path is:
+
+```bash
+captcha authorization-preflight --manifest <local-manifest.json> --action evaluate --json
+captcha pointer-plan --manifest <local-manifest.json> --request <motion-request.json> --out /tmp/captcha-pointer-plan.json --json
+captcha pointer-dispatch-plan --manifest <local-manifest.json> --plan /tmp/captcha-pointer-plan.json --out /tmp/captcha-dispatch-plan.json --json
+surf pointer.dispatch --plan /tmp/captcha-pointer-plan.json --json
+surf cdp.layout --json
+```
+
+For public websites, real CAPTCHA providers, authenticated third-party pages,
+or any bot-detection page outside an explicit defensive loopback fixture, Surf
+must stop for human handoff. Do not call `captcha`, do not dispatch pointer
+input, and do not attempt solver, stealth, proxy, credential, session-reuse, or
+provider-bypass behavior. Use screenshots and CDP geometry as diagnostics only
+when they help the human understand the block.
 
 ### Screenshots & Scrolling
 

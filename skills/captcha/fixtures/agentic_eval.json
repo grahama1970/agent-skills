@@ -2,11 +2,57 @@
   "version": 2,
   "skill": "captcha",
   "trials": 2,
-  "proof_scope": "multi-trial local agentic safety and Surf/captcha seam gate",
+  "proof_scope": "multi-trial local agentic safety, Surf/captcha seam gate, and pinned real defensive CAPTCHA/bot-detection reference coverage",
   "claims": {
-    "proves": "the real captcha entrypoint reports safe status, rejects unauthorized public targets, refuses live effects without --execute, preserves missing-runtime blockers, emits an Ask skill.run DAG, and binds pointer dispatch to Surf without dispatching input",
+    "proves": "the real captcha entrypoint reports safe status, rejects unauthorized public targets, refuses live effects without --execute, preserves missing-runtime blockers, emits an Ask skill.run DAG, binds pointer dispatch to Surf without dispatching input, and is evaluated against a pinned real defensive CAPTCHA/bot-detection reference project",
     "does_not_prove": "live ReCAP model performance, public-site CAPTCHA solving, authenticated browser provider behavior, or that a pointer dispatch solves a challenge"
   },
+  "capability_claims": [
+    {
+      "id": "captcha.defensive_authorization_boundary",
+      "description": "Captcha fails closed for public targets and live effects unless the local defensive authorization contract is explicit.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.surf_pointer_plan_seam",
+      "description": "Captcha can prepare Surf pointer dispatch plans without dispatching browser input itself.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.real_defensive_reference",
+      "description": "Captcha eval coverage includes a pinned real open-source defensive CAPTCHA/bot-detection reference without public-provider solving.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "captcha.authorization_preflight",
+      "seam_type": "policy_boundary",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.surf_pointer_dispatch_plan",
+      "seam_type": "skill_composition",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.real_defensive_reference",
+      "seam_type": "external_reference",
+      "criticality": "critical",
+      "required_evidence": ["live_e2e"]
+    }
+  ],
   "cases": [
     {
       "name": "safe-default-real-entrypoint",
@@ -24,6 +70,8 @@
       "name": "public-target-fails-closed",
       "type": "adversarial",
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.authorization_preflight"],
       "command": [
         "../run.sh",
         "authorization-preflight",
@@ -43,6 +91,8 @@
       "name": "live-effect-requires-explicit-execute",
       "type": "negative",
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.authorization_preflight"],
       "command": [
         "../run.sh",
         "evaluate",
@@ -102,6 +152,8 @@
       "name": "pointer-dispatch-binds-to-surf-without-execution",
       "type": "positive",
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.surf_pointer_plan_seam"],
+      "seams": ["captcha.surf_pointer_dispatch_plan"],
       "command": [
         "bash",
         "-c",
@@ -125,6 +177,57 @@
             "path": "/tmp/captcha-agentic-pointer-dispatch-plan.json",
             "json_pointer": "/surf/post_observation_required",
             "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "fcaptcha-real-defensive-reference-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["captcha.real_defensive_reference"],
+      "seams": ["captcha.real_defensive_reference"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/fcaptcha_reference_eval.py --output /tmp/captcha-fcaptcha-reference-eval.json"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.fcaptcha_reference_eval.v1",
+          "WebDecoy/FCaptcha",
+          "6/6 passed",
+          "17/17 passed"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/success",
+            "equals": true
+          },
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/real_example",
+            "equals": true
+          },
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/source_commit",
+            "equals": "dbe52eab975bb39161dd2a54d69924de51f63000"
+          },
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/public_captcha_provider",
+            "equals": false
+          },
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/solver_or_bypass",
+            "equals": false
           }
         ]
       }

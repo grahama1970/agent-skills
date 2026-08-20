@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "surf",
   "trials": 3,
-  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, and deterministic CDP geometry/pointer receipt seams",
+  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, deterministic CDP geometry/pointer receipt seams, and live loopback bot-detector browser proof",
   "claims": {
-    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, and the CDP geometry/pointer primitives are covered by the production test runner",
-    "does_not_prove": "provider semantic correctness, authenticated WebGPT completion, live Chrome pointer delivery, or full browser review readiness"
+    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, the CDP geometry/pointer primitives are covered by the production test runner, and live Chrome can drive/read back a pinned loopback bot-detection page through those primitives",
+    "does_not_prove": "provider semantic correctness, authenticated WebGPT completion, CAPTCHA solving, public bot-detection bypass, or full browser review readiness"
   },
   "capability_claims": [
     {
@@ -13,7 +13,8 @@
       "description": "Surf exposes deterministic receipt-producing CDP geometry commands for DOM-unavailable workflows.",
       "criticality": "critical",
       "evidence_required": {
-        "deterministic": true
+        "deterministic": true,
+        "live_e2e": true
       }
     },
     {
@@ -21,7 +22,8 @@
       "description": "Surf validates receipt-bound pointer plans and exposes a pointer.dispatch receipt contract.",
       "criticality": "critical",
       "evidence_required": {
-        "deterministic": true
+        "deterministic": true,
+        "live_e2e": true
       }
     }
   ],
@@ -36,7 +38,7 @@
       "seam_id": "surf.cdp_client.primitives",
       "seam_type": "browser_transport",
       "criticality": "critical",
-      "required_evidence": ["deterministic"]
+      "required_evidence": ["deterministic", "live_e2e"]
     }
   ],
   "cases": [
@@ -109,6 +111,60 @@
         "exit_code": 0,
         "stdout_contains": [
           "5 passed"
+        ]
+      }
+    },
+    {
+      "name": "rebrowser-bot-detector-live-cdp-pointer-example",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "surf.cdp_geometry_receipts",
+        "surf.pointer_dispatch_receipt"
+      ],
+      "seams": [
+        "surf.cdp_client.primitives"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/surf-agentic-eval-venv python3 scripts/live_cdp_pointer_example.py --output /tmp/surf-rebrowser-cdp-pointer-live-example.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "surf.cdp_pointer_live_example.v1",
+          "rebrowser/rebrowser-bot-detector"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
+            "json_pointer": "/success",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
+            "json_pointer": "/real_example",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
+            "json_pointer": "/source_commit",
+            "equals": "e1a25b1ff264cc9a5b5ea7fe8a6dfc26e3b1c718"
+          },
+          {
+            "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
+            "json_pointer": "/pointer/active_element_after_dispatch",
+            "equals": "detections-json"
+          },
+          {
+            "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
+            "json_pointer": "/public_captcha_provider",
+            "equals": false
+          }
         ]
       }
     },
