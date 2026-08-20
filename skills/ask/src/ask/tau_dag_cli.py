@@ -2182,7 +2182,13 @@ def _close_windows(lifecycle: dict[str, Any], window_ids: list[str]) -> list[dic
 def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     if lifecycle.get("cleanup_status") == "attempted":
         return
-    if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") != "fresh-temporary":
+    # Recorded results => the tab closes, no exceptions (operator 2026-08-20).
+    # Every window/tab ASK CREATED (created_tabs) is closed at teardown in
+    # every mode except an explicit user fresh-keep. Tabs ask merely bound to
+    # (a user's own tab) are never in created_tabs and are never closed here.
+    # The one retention that survives is pending-recovery below: a lane whose
+    # response is NOT yet recorded may hold the only copy in-tab.
+    if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") == "fresh-keep":
         return
     run_dir = Path(str(lifecycle.get("run_dir") or ""))
     if run_dir.is_dir():
