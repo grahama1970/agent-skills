@@ -308,8 +308,12 @@ Compile first and show the human the DAG chart before any multi-candidate
 all visible). After the run, read `dag-chart.final.txt` — per-node verdicts
 on the same topology — and reconcile it with the scorecard: a candidate's
 node line must agree with its lane artifacts, and a judge node reading FAIL
-or NO_RECEIPT invalidates any winner claim. Both artifacts are eval-enforced
-in `$ask`.
+or NO_RECEIPT invalidates any winner claim.
+
+The final chart is also the project agent's SELF-CORRECTION instrument: walk
+its node lines before writing the scorecard. Every non-PASS node is a work
+item -- read that lane's receipts and fix, rerun, or name the blocker before
+any verdict is reported. Both artifacts are eval-enforced in `$ask`.
 
 ## Scoring Contract
 

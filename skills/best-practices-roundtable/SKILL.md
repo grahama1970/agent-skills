@@ -260,7 +260,15 @@ Compile first and show the human the DAG chart before any multi-seat
 `dag-chart.final.txt` — the same topology with a per-node verdict on every
 line (PASS / FAIL / NEEDS_ATTENTION / NO_RECEIPT) — and carry those verdicts
 into the synthesis. A seat's fate comes from its node line and lane
-artifacts, never from the join's narration. Both artifacts are eval-enforced
+artifacts, never from the join's narration.
+
+The final chart is also the project agent's SELF-CORRECTION instrument, not
+just a report for the human: after every run, walk its node lines before
+writing any claim. Every non-PASS node (FAIL, NEEDS_ATTENTION, BLOCKED,
+NO_RECEIPT) is a work item -- read that lane's receipts and either fix, rerun,
+or name the blocker. A synthesis written before the red nodes are resolved or
+explicitly carried as open items is a false report. Both artifacts are
+eval-enforced
 in `$ask` (`every-compile-emits-the-preview-chart-before-any-execute`,
 `live-every-executed-dag-leaves-initial-and-final-verdict-charts`).
 

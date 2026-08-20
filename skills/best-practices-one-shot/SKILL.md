@@ -87,7 +87,9 @@ Before executing, show the human the compiled DAG chart
 (`dag-chart.initial.txt`, printed at compile). After the run, read and report
 the final verdict chart (`dag-chart.final.txt`) — per-node PASS / FAIL /
 NAMED_BLOCKER / NO_RECEIPT — so what succeeded and failed is visible without
-trusting prose. Both artifacts are eval-enforced in `$ask`.
+trusting prose. The final chart is also the project agent's self-correction
+instrument: every non-PASS node is a work item to read, fix, rerun, or name
+before reporting. Both artifacts are eval-enforced in `$ask`.
 
 ## Fail-Closed Rules
 
