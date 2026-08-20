@@ -91,6 +91,24 @@ def _rows() -> list[dict]:
                              "outcome": "ERROR (corrupt probe-verdict.json)",
                              "detail": "probe-verdict.json", "at": probe.name.split("-")[-1]})
                 continue
+            # A v2 verdict must still be bound to ITS run: a copied or stale
+            # verdict whose request no longer hashes to the recorded value is
+            # an ERROR row, never a green (review finding 2026-08-19).
+            binding_problem = None
+            if d.get("schema") == "ask.live_task_probe_verdict.v2":
+                run_dir = Path(str(d.get("run_dir") or ""))
+                req = run_dir / "request.json"
+                if not req.is_file():
+                    binding_problem = "verdict's run dir is gone"
+                else:
+                    import hashlib
+                    if hashlib.sha256(req.read_bytes()).hexdigest() != d.get("request_sha256"):
+                        binding_problem = "verdict not bound to its run (request hash mismatch)"
+            if binding_problem:
+                rows.append({"source": "task-probe", "name": probe.name,
+                             "outcome": f"ERROR ({binding_problem})",
+                             "detail": "probe-verdict.json", "at": probe.name.split("-")[-1]})
+                continue
             dishonest = bool(d.get("violators"))
             outcome = f"{'FAIL' if dishonest else 'PASS'} ({d.get('readiness')}, {d.get('honesty')} honest)"
             rows.append({"source": "task-probe", "name": probe.name,

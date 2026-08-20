@@ -25,10 +25,13 @@ status tables -- Tau's aggregate status alone must never stand in for it).
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
+import random
 import re
 import subprocess
 import sys
+import time
 import uuid
 from pathlib import Path
 
@@ -50,6 +53,21 @@ PROMPT_TEMPLATE = (
 FENCE = re.compile(r"```(?:python|py)?\s*\n(.*?)```", re.S)
 
 EXEC_VECTORS = [((2, 3), 5), ((-1, 1), 0), ((0, 0), 0), ((2.5, 3.5), 6.0)]
+
+
+def _property_vectors(seed: str, count: int = 4) -> list[tuple[tuple[float, float], float]]:
+    """Seed-derived vectors so an implementation cannot overfit the fixed set.
+
+    The seed is the run nonce and is recorded in the verdict, so any grading
+    decision can be reproduced exactly.
+    """
+    rng = random.Random(seed)
+    vectors: list[tuple[tuple[float, float], float]] = []
+    for _ in range(count):
+        a = round(rng.uniform(-1e6, 1e6), 3)
+        b = round(rng.uniform(-1e6, 1e6), 3)
+        vectors.append(((a, b), a + b))
+    return vectors
 
 
 def _structural_verdict(code: str) -> tuple[str | None, list[str]]:
@@ -81,11 +99,15 @@ def _structural_verdict(code: str) -> tuple[str | None, list[str]]:
     return fn.name, problems
 
 
-def _execution_verdict(code: str, fn_name: str) -> list[str]:
-    """Run the delivered code in a subprocess and check it actually adds."""
+def _execution_verdict(code: str, fn_name: str, seed: str) -> list[str]:
+    """Run the delivered code in a subprocess and check it actually adds.
+
+    Fixed canonical vectors plus seed-derived property vectors: the fixed set
+    catches the obvious, the seeded set defeats overfitting to known inputs.
+    """
     checks = "; ".join(
         f"assert {fn_name}(*{list(vec)!r}) == {expected!r}, 'add{vec}!={expected}'"
-        for vec, expected in EXEC_VECTORS
+        for vec, expected in [*EXEC_VECTORS, *_property_vectors(seed)]
     )
     proc = subprocess.run(
         [sys.executable, "-c", code + "\n" + checks],
@@ -97,18 +119,32 @@ def _execution_verdict(code: str, fn_name: str) -> list[str]:
 
 
 def _floor_verdict(text: str, nonce: str) -> list[str]:
+    problems, _digest = _floor_verdict_with_digest(text, nonce)
+    return problems
+
+
+def _floor_verdict_with_digest(text: str, nonce: str) -> tuple[list[str], str | None]:
+    """Grade the response; return (problems, sha256 of the exact graded bytes).
+
+    The digest goes into the verdict so any grading decision names precisely
+    which bytes were executed -- a review pointed out that without it, an
+    ambiguous extraction could display one candidate while executing another.
+    """
     blocks = FENCE.findall(text)
     if not blocks:
-        return ["no fenced python block"]
+        return ["no fenced python block"], None
     code = blocks[0]
+    digest = hashlib.sha256(code.encode()).hexdigest()
     problems: list[str] = []
+    if len(blocks) > 1:
+        problems.append(f"expected exactly one fenced python block, found {len(blocks)}")
     if nonce not in code:
         problems.append("probe nonce missing from code block (response not bound to this run)")
     fn_name, structural = _structural_verdict(code)
     problems.extend(structural)
     if fn_name and not structural:
-        problems.extend(_execution_verdict(code, fn_name))
-    return problems
+        problems.extend(_execution_verdict(code, fn_name, nonce))
+    return problems, digest
 
 
 @app.command()
@@ -191,14 +227,16 @@ def main(
         response = lane.get("response") or ""
         failure = (lane.get("receipt") or {}).get("failure_code")
         if response.strip():
-            missing = _floor_verdict(response, nonce)
+            missing, graded_sha = _floor_verdict_with_digest(response, nonce)
             if missing:
                 typer.echo(f"SEAT {seat_label}: answered but BELOW FLOOR ({'; '.join(missing)})")
-                verdicts[seat] = {"state": "BELOW_FLOOR", "problems": missing}
+                verdicts[seat] = {"state": "BELOW_FLOOR", "problems": missing,
+                                  "graded_code_sha256": graded_sha}
                 violators.append(seat)
             else:
                 typer.echo(f"SEAT {seat_label}: answered, floor-compliant (AST + executed vectors)")
-                verdicts[seat] = {"state": "ANSWERED", "problems": []}
+                verdicts[seat] = {"state": "ANSWERED", "problems": [],
+                                  "graded_code_sha256": graded_sha}
         elif failure:
             # Rung 3, self-correction: a misnamed model must not dead-end. The
             # honest outcomes are a recorded substitution to a valid catalog
@@ -241,9 +279,21 @@ def main(
     readiness = "READY" if answered else "NOT_READY"
     if readiness == "READY" and len(answered) < len(handler) - len(violators):
         readiness = "DEGRADED"
+    # Bind the verdict to ITS run: request hash + receipt-tree digest mean a
+    # copied or stale verdict cannot stand in for a different run's outcome
+    # (review finding 2026-08-19). eval_status re-verifies this binding.
+    request_sha = hashlib.sha256((run_dir / "request.json").read_bytes()).hexdigest()
+    receipt_tree = hashlib.sha256()
+    for rp in sorted((run_dir / "node-artifacts").glob("handler-*/node-receipt.json")):
+        receipt_tree.update(rp.read_bytes())
     (out_dir / "probe-verdict.json").write_text(json.dumps({
-        "schema": "ask.live_task_probe_verdict.v1",
+        "schema": "ask.live_task_probe_verdict.v2",
         "nonce": nonce, "run_dir": str(run_dir),
+        "run_id": run_dir.name,
+        "request_sha256": request_sha,
+        "receipt_tree_sha256": receipt_tree.hexdigest(),
+        "property_vector_seed": nonce,
+        "created_at": time.time(),
         "seats": verdicts, "honesty": honesty,
         "answered": len(answered), "readiness": readiness,
         "violators": violators,

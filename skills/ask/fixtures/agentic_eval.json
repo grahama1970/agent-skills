@@ -1207,6 +1207,150 @@
         ]
       },
       "notes": "The confirm-before-execute rule needs a chart to confirm: every compile (run AND compete) must print the 'DAG (preview only; add --execute to run)' ASCII tree, including reviewer/judge stages, so the project agent can show the human the DAG shape before dispatch. Added 2026-08-19 after finding compete never called _emit_dag_chart."
+    },
+    {
+      "name": "incident-backend-sentinel-preserves-code-fence-over-dom",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "browser.sentinel_recovery"
+      ],
+      "supports_claims": [
+        "ask.recovery.provider_owned_extract"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "node - <<'EOF'\nconst m = require('/home/graham/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli/native/chatgpt-client.cjs');\nconst S='SENT-1';\nfunction cdp(api){ return async (expr)=>({result:{value: String(expr).includes('__surfBackendApiText')? api : true}}); }\n(async()=>{\n  const dom='Python\\nRun\\n# code\\ndef add(a,b):\\n    return a+b\\n'+S;\n  const api='```python\\n# code\\ndef add(a,b):\\n    return a+b\\n```\\n'+S;\n  const r1=await m.upgradeCollapsedDomCapture(cdp(api),{text:dom,sentinel:S,hasSentinel:true});\n  if(r1.text!==api||r1.source!=='backend-api') throw new Error('fenced API text did not win: '+JSON.stringify(r1).slice(0,120));\n  const short='```py\\n'+S+'\\n```';\n  const r2=await m.upgradeCollapsedDomCapture(cdp(short),{text:dom,sentinel:S,hasSentinel:true});\n  if(r2.text!==dom) throw new Error('materially shorter API text replaced a proven DOM capture');\n  const stale=api.replace(S,'SENT-OTHER');\n  const r3=await m.upgradeCollapsedDomCapture(cdp(stale),{text:dom,sentinel:S,hasSentinel:true});\n  if(r3.text!==dom) throw new Error('API text without the sentinel replaced a proven capture');\n  console.log('FENCED_BACKEND_TEXT_WINS_AND_GUARDS_HOLD');\n})().catch(e=>{console.error(e.message);process.exit(1);});\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FENCED_BACKEND_TEXT_WINS_AND_GUARDS_HOLD"
+        ]
+      },
+      "notes": "Pins the 2026-08-19 fence-loss fix in surf's upgradeCollapsedDomCapture via the REAL exported function driven by a stub cdp: sentinel-proven API markdown wins over a complete-but-fence-stripped DOM capture; a materially shorter API text and a wrong-sentinel API text must both keep the DOM."
+    },
+    {
+      "name": "ladder-probe-named-timeout-is-honest-blocker-not-dishonest",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && printf '#!/bin/bash\\necho \"{\\\\\"outcome\\\\\":\\\\\"timed_out\\\\\",\\\\\"elapsed_s\\\\\":900.0}\"\\n' > $RT/fake.sh && chmod +x $RT/fake.sh && uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/o --run-sh $RT/fake.sh > $RT/out.txt 2>&1; rc=$?; grep -q 'NAMED_BLOCKER (probe timeout' $RT/out.txt && [ $rc -eq 3 ] && echo TIMEOUT_IS_HONEST_NOT_ANSWERED_EXIT3 || { cat $RT/out.txt; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TIMEOUT_IS_HONEST_NOT_ANSWERED_EXIT3"
+        ]
+      },
+      "notes": "Pins wave-1b: a probe-named timeout is NAMED_BLOCKER (honest) and counts only against readiness -- a single timed-out seat run must exit 3 NOT_READY, never 1 DISHONEST, never 0."
+    },
+    {
+      "name": "ladder-selection-removal-reason-survives-zero-lane",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && printf '#!/bin/bash\\necho \"{\\\\\"outcome\\\\\":\\\\\"named_blocker\\\\\",\\\\\"failure_code\\\\\":\\\\\"s1: removed by availability selection\\\\\",\\\\\"lanes\\\\\":[]}\"\\n' > $RT/rec.sh && chmod +x $RT/rec.sh && printf '#!/bin/bash\\necho \"{\\\\\"outcome\\\\\":\\\\\"no_lanes\\\\\",\\\\\"lanes\\\\\":[]}\"\\n' > $RT/unrec.sh && chmod +x $RT/unrec.sh && uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/a --run-sh $RT/rec.sh >/dev/null 2>&1; a=$?; uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/b --run-sh $RT/unrec.sh >/dev/null 2>&1; b=$?; [ $a -eq 3 ] && [ $b -eq 1 ] && echo RECORDED_REMOVAL_HONEST_UNRECORDED_DISHONEST || { echo \"a=$a b=$b\"; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECORDED_REMOVAL_HONEST_UNRECORDED_DISHONEST"
+        ]
+      },
+      "notes": "Pins wave-1c: a zero-lane run whose seat removal carries a recorded reason is an honest named blocker (exit 3, not answered); a bare no_lanes dead end stays dishonest (exit 1)."
+    },
+    {
+      "name": "runner-oracle-matches-raw-stream-not-redacted",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\ninner_pass = 'print(\"returned the token\")  # raw_stream_probe.py\\nprint(\"COMPLIANT: roundtable\")'\ninner_fail = 'print(\"returned the token\")  # raw_stream_probe.py\\nprint(\"NOTHING HERE\")\\nraise SystemExit(1)'\nmanifest = {\n  'version': 2, 'skill': 'redaction-probe', 'trials': 2,\n  'proof_scope': 'runner oracle matching only',\n  'claims': {'proves': 'oracle markers survive redaction', 'does_not_prove': 'anything else'},\n  'cases': [\n    {'name': 'marker-after-the-word-token-still-matches', 'type': 'positive',\n     'real_world': True, 'evidence_class': 'fault_injected_deterministic', 'timeout_seconds': 30,\n     'command': ['python3', '-c', inner_pass],\n     'expected': {'exit_code': 0, 'stdout_contains': ['COMPLIANT: roundtable'],\n                  'stdout_excludes': ['REDACTED']}},\n    {'name': 'missing-marker-still-fails', 'type': 'adversarial',\n     'real_world': True, 'evidence_class': 'fault_injected_deterministic', 'timeout_seconds': 30,\n     'command': ['python3', '-c', inner_fail],\n     'expected': {'exit_code': 1, 'stdout_contains': ['NOTHING HERE']}},\n  ],\n}\nopen(f'{RT}/m.json', 'w').write(json.dumps(manifest))\nprint('manifest written')\nEOF\ncd ../agentic-evals && ./run.sh run $RT/m.json --output $RT/report.json >/dev/null 2>&1; uv run --project . python -c \"import json; d=json.load(open('$RT/report.json')); assert all(c['outcome']=='PASS' for c in d['cases']), d['cases']; print('RAW_STREAM_ORACLE_SURVIVES_REDACTION')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RAW_STREAM_ORACLE_SURVIVES_REDACTION"
+        ]
+      },
+      "notes": "Pins the wave-1 runner fix: output 'returned the token\\nCOMPLIANT: ...' has COMPLIANT eaten by the secret redactor in the PERSISTED report, but the oracle must match the raw stream, so the case passes. The adversarial sibling proves a genuinely missing marker still fails."
+    },
+    {
+      "name": "winner-proof-cannot-import-project-function",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && uv run --project . python - $RT <<'EOF'\nimport json,sys\nfrom pathlib import Path\nRT=Path(sys.argv[1])\nd=RT/'run'/'node-artifacts'\nfor comp in ('handler-a','handler-b'):\n    (d/comp).mkdir(parents=True, exist_ok=True)\n    (d/comp/'response.md').write_text('answer\\nPROOF_COMMANDS\\npython -c \\'from add import add; assert add(1,2)==3\\'\\n')\n(d/'judge').mkdir(parents=True, exist_ok=True)\n(d/'judge'/'response.md').write_text('Rationale over handler-a and handler-b.\\nWINNER: handler-a\\n')\n(d/'judge'/'node-receipt.json').write_text(json.dumps({'provider_receipt':{'requested_model':'claude-opus-5-low'}}))\nprint('built')\nEOF\nuv run --project . python scripts/judge_audit.py $RT/run --run-winner-proof >/dev/null 2>&1; [ $? -eq 1 ] && echo IMPORTING_PROOF_REJECTED || exit 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "IMPORTING_PROOF_REJECTED"
+        ]
+      },
+      "notes": "Pins wave-1 t00 exactly: a judged winner whose PROOF_COMMANDS does 'from add import add' must fail judge-audit --run-winner-proof (ModuleNotFoundError), because a proof that reads project files is not self-contained evidence."
+    },
+    {
+      "name": "run-sh-post-question-options-refused-for-all-shortcut-seats",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "browser.prompt_preflight"
+      ],
+      "supports_claims": [
+        "ask.preflight.fails_before_browser"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ok=1; for seat in webgpt webclaude webkimi webgemini webgrok; do ./run.sh $seat 'Review this' --attach-file /tmp/x.md >/dev/null 2>&1; [ $? -eq 2 ] || { echo SWALLOW_NOT_REFUSED_$seat; ok=0; }; done; [ $ok -eq 1 ] && echo ALL_SHORTCUT_SEATS_REFUSE_POST_QUESTION_FLAGS"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SHORTCUT_SEATS_REFUSE_POST_QUESTION_FLAGS"
+        ]
+      },
+      "notes": "Generalizes the arg-order incident across every shell shortcut seat: an option flag after the question text must exit 2 with the named refusal for webgpt, webclaude, webkimi, webgemini, and webgrok alike, never ship to a provider as prompt words."
     }
   ],
   "capability_claims": [
