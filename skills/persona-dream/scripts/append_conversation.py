@@ -38,8 +38,13 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parents[1]
 
 #: Who can speak. `agent` is the project agent reading the journal alongside the
-#: human; `embry` is the persona herself.
-ROLES = ("human", "agent", "embry")
+#: human; `embry` is the persona herself; `horus` is the second persona, voiced
+#: and bound exactly as she is (2026-08-20: his audio is first-class, not a
+#: sidecar artifact).
+ROLES = ("human", "agent", "embry", "horus")
+
+#: Roles whose turns must carry a requested tone and rendered audio.
+VOICED_ROLES = ("embry", "horus")
 
 
 def utc_now() -> str:
@@ -81,12 +86,12 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
     if spoken.is_file():
         turn["journal_spoken_sha256"] = sha_file(spoken)
 
-    if args.role == "embry":
-        # Her side must carry the same binding her journal does.
+    if args.role in VOICED_ROLES:
+        # A voiced persona turn must carry the same binding the journal does.
         if not args.tone:
-            failed.append("embry_turn_requires_tone")
+            failed.append(f"{args.role}_turn_requires_tone")
         if not args.audio:
-            failed.append("embry_turn_requires_audio")
+            failed.append(f"{args.role}_turn_requires_audio")
         turn["requested_delivery_tone"] = args.tone
         turn["tone_boundary"] = (
             "requested of the renderer, not achieved in the audio; the delivery "
@@ -104,7 +109,7 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
     elif args.tone or args.audio:
         # A human does not have a delivery tone. Silently dropping the flag
         # would make the record claim less than the caller thinks it does.
-        failed.append(f"tone_and_audio_are_embry_only:role={args.role}")
+        failed.append(f"tone_and_audio_are_voiced_roles_only:role={args.role}")
 
     return turn, failed
 
@@ -187,8 +192,8 @@ def main() -> int:
     ap.add_argument("--run-dir", type=Path, required=True)
     ap.add_argument("--role", choices=ROLES, required=True)
     ap.add_argument("--text", required=True)
-    ap.add_argument("--tone", help="embry turns only: the delivery tone requested")
-    ap.add_argument("--audio", help="embry turns only: rendered audio for this turn")
+    ap.add_argument("--tone", help="voiced turns (embry/horus) only: the delivery tone requested")
+    ap.add_argument("--audio", help="voiced turns (embry/horus) only: rendered audio for this turn")
     ap.add_argument("--created-at", help="override the timestamp (tests, backfill)")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--json", action="store_true")

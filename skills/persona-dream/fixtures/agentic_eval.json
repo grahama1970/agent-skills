@@ -269,7 +269,7 @@
     },
     {
       "id": "persona_dream.conversation.audible_two_agent",
-      "description": "Horus and Embry hold an audible conversation about her dream, day, and mood: Horus's questions rendered in his own voice, Embry's replies through the gated reasoning->speech->append path, every turn's audio read back from disk and her turns tone+sha256-bound in conversation.jsonl.",
+      "description": "Horus and Embry hold a DYNAMIC audible conversation: each Horus turn drafted live by Tau from her journal and the transcript (proven by Tau receipt provenance and conditioned-on-reply oracles), spoken in his own voice; both roles voiced first-class in conversation.jsonl with tone + sha256-bound audio.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
