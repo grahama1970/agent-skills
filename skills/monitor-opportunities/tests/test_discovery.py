@@ -297,7 +297,7 @@ def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:
     assert receipt["result_status"] == "MATCHES"
     assert receipt["parser_result"] == "PARSED"
     assert rows[0]["title"] == "Large Board AI Engineer"
-    assert len(rows[0]["posting_text"]) == 4000
+    assert len(rows[0]["posting_text"]) == 14000  # cap raised so requirement lists survive
 
 
 def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
