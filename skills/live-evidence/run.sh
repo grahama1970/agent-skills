@@ -224,6 +224,10 @@ PY
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_rubric_author.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-speaker-turns)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_speaker_turns.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-review-dossier)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"

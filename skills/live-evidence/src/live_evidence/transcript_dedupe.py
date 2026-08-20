@@ -33,10 +33,18 @@ def richer_transcript_event(previous: TranscriptEvent, current: TranscriptEvent)
 
     previous_tokens = tokenize(previous.text)
     current_tokens = tokenize(current.text)
+    # (#1477) turn identity survives whichever projection wins: the richer
+    # text replaces the words, never the turn.
+    inherited = {
+        "turn_id": previous.turn_id,
+        "speaker_slot": previous.speaker_slot,
+        "attribution_source": previous.attribution_source,
+        "attribution_confidence": previous.attribution_confidence,
+    } if previous.turn_id else {}
     if len(current_tokens) > len(previous_tokens):
-        return current
+        return current.model_copy(update=inherited) if inherited else current
     if len(current_tokens) == len(previous_tokens) and current.kind is TranscriptKind.FINAL:
-        return current
+        return current.model_copy(update=inherited) if inherited else current
     return previous
 
 

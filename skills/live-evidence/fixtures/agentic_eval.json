@@ -629,6 +629,29 @@
         ]
       },
       "notes": "#1474: LIVE model authorship over candidate transcript events, floor-validated; purpose-gated in the backend; browser readback of coverage chips + follow-up."
+    },
+    {
+      "name": "speaker-turn-contract",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-speaker-turns"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "turn boundaries follow speaker changes exactly: PASS",
+          "slots are anonymous speaker_N (no person-name inference): PASS",
+          "turn id survives a progressive restatement: PASS",
+          "manual correction propagates to the whole turn, journaled, content untouched: PASS",
+          "attribution sources are explicit transport|manual only: PASS",
+          "speaker turns: PASS"
+        ]
+      },
+      "notes": "#1477: deterministic turn contract short of diarization; live-audio turn labeling flows through the same ingest exercised by the pipewire suite cases; the eval fails if a diarizer attribution appears without explicit enablement."
     }
   ]
 }

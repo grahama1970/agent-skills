@@ -242,6 +242,26 @@ def _register_api_routes(
                 "captured_variable_names": outcome.get("captured_variable_names"),
                 "proof_path": outcome.get("proof_path")}
 
+    @app.post("/api/turns/{turn_id}/reassign")
+    async def reassign_turn(turn_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Attributable manual speaker correction (#1477); journaled; never
+        regenerates semantic content."""
+
+        actor = str(payload.get("actor") or "")
+        speaker_slot = str(payload.get("speaker_slot") or "")
+        if not actor or not speaker_slot:
+            raise HTTPException(status_code=422, detail="actor and speaker_slot required")
+        count = await state.reassign_turn(turn_id, speaker_slot)
+        if count == 0:
+            raise HTTPException(status_code=404, detail="unknown turn")
+        await coordinator.journal.append(
+            state.session_id() or "no-session", "turn_reassigned",
+            {"turn_id": turn_id, "speaker_slot": speaker_slot, "actor": actor,
+             "events_updated": count},
+            policy_digest=state.session_policy_digest(),
+        )
+        return {"turn_id": turn_id, "speaker_slot": speaker_slot, "events_updated": count}
+
     @app.post("/api/rubric/load", status_code=202)
     async def rubric_load(payload: dict[str, Any]) -> dict[str, Any]:
         """Load a role rubric for authorship (#1474). interviewer_assist and

@@ -141,6 +141,24 @@ class RuntimeState:
 
         return self._session.policy
 
+    async def reassign_turn(self, turn_id: str, speaker_slot: str) -> int:
+        """Manual speaker-slot correction (#1477): presentation-level only --
+        semantic content, cards, ledger, and coverage are untouched."""
+
+        async with self._lock:
+            count = 0
+            for index, item in enumerate(self._transcript):
+                if item.turn_id == turn_id:
+                    self._transcript[index] = item.model_copy(update={
+                        "speaker_slot": speaker_slot,
+                        "attribution_source": "manual",
+                        "attribution_confidence": 1.0,
+                    })
+                    count += 1
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return count
+
     def active_question(self) -> str | None:
         return self._active_question_id
 
@@ -212,6 +230,27 @@ class RuntimeState:
                     replaced = True
                     break
             if not replaced:
+                # (#1477) deterministic turn assignment: consecutive events
+                # from the same speaker share a turn; a speaker change opens a
+                # new one. Replacements/restatements above inherit the original
+                # event's turn, so turn ids are stable across revisions.
+                if event.turn_id is None:
+                    last = self._transcript[-1] if self._transcript else None
+                    if last is not None and last.speaker == event.speaker and last.turn_id:
+                        event = event.model_copy(update={
+                            "turn_id": last.turn_id,
+                            "speaker_slot": last.speaker_slot,
+                        })
+                    else:
+                        slots = {item.speaker: item.speaker_slot
+                                 for item in self._transcript if item.speaker_slot}
+                        slot = slots.get(event.speaker) or f"speaker_{len(set(slots.values()))}"
+                        from uuid import uuid4 as _uuid4
+
+                        event = event.model_copy(update={
+                            "turn_id": _uuid4().hex,
+                            "speaker_slot": slot,
+                        })
                 self._transcript.append(event)
             self._transcript = self._transcript[-self._settings.max_transcript_events :]
             snapshot = self._snapshot_unlocked()

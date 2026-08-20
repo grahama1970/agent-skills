@@ -204,6 +204,13 @@ class TranscriptEvent(BaseModel):
     sequence: int | None = Field(default=None, ge=0)
     start_ms: int | None = Field(default=None, ge=0)
     end_ms: int | None = Field(default=None, ge=0)
+    # (#1477) deterministic speaker-turn contract, deliberately short of
+    # diarization: turn identity + slot survive revisions; attribution names
+    # its source and confidence; no person-name inference exists anywhere.
+    turn_id: str | None = Field(default=None, min_length=8, max_length=64)
+    speaker_slot: str | None = Field(default=None, max_length=32)
+    attribution_confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    attribution_source: Literal["transport", "vad_gap", "manual", "diarizer"] = "transport"
 
     @field_validator("created_at")
     @classmethod
