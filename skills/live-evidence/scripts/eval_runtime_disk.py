@@ -128,9 +128,18 @@ def check_effective_venv_device() -> None:
 def check_runner_env_is_sanitised() -> None:
     """Sibling runners must not inherit UV_PROJECT_ENVIRONMENT."""
 
-    sys.path.insert(0, str(SKILL_DIR / "src"))
+    # Load the module by file path, NOT via the package: this eval must run
+    # under any python3 (the suite runner's interpreter carries no pydantic,
+    # and importing the package __init__ would drag it in -- observed live
+    # 2026-08-20 after the agentic-evals venv moved under the runner's PATH).
+    import importlib.util
+
+    module_path = SKILL_DIR / "src" / "live_evidence" / "retrieval" / "subprocess_env.py"
     try:
-        from live_evidence.retrieval.subprocess_env import child_env
+        spec = importlib.util.spec_from_file_location("subprocess_env_standalone", module_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        child_env = module.child_env
     except Exception as exc:  # noqa: BLE001
         check("runner env strips UV_PROJECT_ENVIRONMENT", False, f"import failed: {exc}")
         return

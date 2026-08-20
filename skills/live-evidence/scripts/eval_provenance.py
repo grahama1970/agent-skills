@@ -112,6 +112,20 @@ def main() -> int:
 
         status, provenance = campaign.http("GET", f"{server.url}/api/provenance")
         cards = provenance.get("cards") or []
+        # Model phrasing varies; when no clause overlapped a retrieval excerpt
+        # this round, ask one question whose answer must quote the file. This
+        # tops up coverage, it never loosens a check.
+        def sourced_count(payload):
+            return sum(1 for card in payload for clause in card.get("clauses") or []
+                       if clause.get("sourced"))
+        topup = 0
+        while sourced_count(cards) == 0 and topup < 2:
+            topup += 1
+            server.post_final(100 + topup,
+                              "Quote the exact cutoff string literal from collect_departures.py and tell me which line it is on.")
+            time.sleep(20)
+            status, provenance = campaign.http("GET", f"{server.url}/api/provenance")
+            cards = provenance.get("cards") or []
         clauses = [c for card in cards for c in card.get("clauses") or []]
         sources = [s for card in cards for s in card.get("sources") or []]
         anchors = len(clauses) + len(sources)

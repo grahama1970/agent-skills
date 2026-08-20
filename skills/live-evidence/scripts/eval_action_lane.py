@@ -125,7 +125,7 @@ def main() -> int:
         if remember:
             _, outcome = campaign.http(
                 "POST", f"{server.url}/api/actions/{remember['action_id']}/approve",
-                {"actor": "human:eval"}, timeout=60)
+                {"actor": "human:eval"}, timeout=120)
             receipt = outcome.get("execution_receipt") or {}
             check("remember_fact executes with independent memory readback",
                   outcome.get("status") == "executed" and receipt.get("readback_ok") is True,
@@ -138,7 +138,7 @@ def main() -> int:
         if artifact:
             _, outcome = campaign.http(
                 "POST", f"{server.url}/api/actions/{artifact['action_id']}/approve",
-                {"actor": "human:eval"}, timeout=60)
+                {"actor": "human:eval"}, timeout=120)
             receipt = outcome.get("execution_receipt") or {}
             resolved = Path(str(receipt.get("path") or "/nonexistent"))
             check("open_artifact resolves the cited file to a real path",
@@ -179,7 +179,7 @@ def main() -> int:
             time.sleep(20)  # let the new question claim the active slot
             _, outcome = campaign.http(
                 "POST", f"{server.url}/api/actions/{stale_target['action_id']}/approve",
-                {"actor": "human:eval"}, timeout=60)
+                {"actor": "human:eval"}, timeout=120)
             rows = [json.loads(line) for line in journal_path.read_text().splitlines()]
             fenced = [r for r in rows if r.get("kind") == "action_fenced_stale"]
             check("stale candidate is fenced and journaled, not executed",

@@ -239,14 +239,20 @@ def main() -> int:
 
         losses = 0
         judged = 0
-        for index, question in enumerate(parity_questions):
-            # Cards publish in question order; canonical rewrites mean text
-            # matching is unreliable -- match by anchor tokens instead.
-            anchors = [w for w in question.lower().split() if len(w) >= 6][:3]
+        # Deterministic mapping: fast_solver_receipts journal in submission
+        # order; the i-th receipt's question_id names the i-th question's card.
+        # (Token matching graded the WRONG card a 1/10 twice before this.)
+        receipt_rows = [r for r in rows if r.get("kind") == "fast_solver_receipt"]
+        for index in range(min(6, len(receipt_rows))):
+            target_qid = receipt_rows[index]["payload"]["question_id"]
             matching = [r for r in card_rows
-                        if all(a in json.dumps(r["payload"]).lower() for a in anchors)]
+                        if r["payload"].get("question_id") == target_qid]
             if not matching:
                 continue
+            # Both sides answer the SAME text: the card's own query. Held
+            # questions previously skewed the receipt->question alignment and
+            # the judge graded mismatched pairs.
+            question = str(matching[-1]["payload"].get("query") or "")[:500]
             fast_text = fast_full_text(matching[-1]["payload"])
             ask_text = ask_answer(question, f"q{index}")
             if not ask_text:

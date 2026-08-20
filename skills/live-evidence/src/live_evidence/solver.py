@@ -31,15 +31,19 @@ DEFAULT_URL = "http://127.0.0.1:4001"
 # 16s+ first content; sonnet completes comparable answers in ~3s). Quality is
 # held by the blinded parity gate in eval_fast_solver, not by model prestige.
 DEFAULT_MODEL = "claude-sonnet-5"
-DEFAULT_EFFORT = "medium"
+DEFAULT_EFFORT = "high"
 
 CODE_PROMPT = (
-    "Answer the interview/meeting question below using ONLY the question and the "
-    "provided local evidence excerpts. Be direct; no roundtable or report framing.\n"
+    "Answer the interview/meeting question below directly; no roundtable or "
+    "report framing.\n"
     "For coding questions use exactly these Markdown headings:\n"
     "## APPROACH\n## PSEUDOCODE\n## CODE\n## COMPLEXITY\n## OPTIMIZATIONS\n"
-    "For factual/research questions: a compact sourced answer, no headings.\n"
-    "Never invent evidence that is not in the excerpts; say when evidence is missing.\n\n"
+    "For factual/research questions: a compact answer, no headings.\n"
+    "Evidence rules: general technical knowledge is fair game and needs no "
+    "excerpt. Claims about THIS user's specific codebase or files must come "
+    "from the provided excerpts only -- ignore excerpts irrelevant to the "
+    "question, and say plainly when a codebase-specific claim has no excerpt "
+    "support. Never refuse a general question for lack of excerpts.\n\n"
 )
 
 
