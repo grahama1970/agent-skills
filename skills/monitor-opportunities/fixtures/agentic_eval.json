@@ -321,13 +321,11 @@
         "exit_code": 0,
         "stdout_contains": [
           "REGRESSION_2026_08_18 OK",
+          "IDENTITY_FLOOR",
+          "QUEUE_DEDUPE",
+          "LOCATION_BLACKHOLE",
           "EDGE_EVIDENCE",
-          "FIXTURE_AGING",
-          "RETENTION",
-          "MEETUP_BUDGET",
-          "NAME_GUARD",
-          "QUEUE_PROJECTION",
-          "LOCATION_BLACKHOLE"
+          "QUEUE_PROJECTION"
         ]
       },
       "proves": "The seven failure signatures of 2026-08-17/18/20 stay fixed: relationship edges cite only signal-backed evidence, the re-dated discovery fixture still shortlists, each nightly gets its own retained directory, the Meetup budget scales with attendee work, junk attendee names are never resolved, and the prospect queue carries resolved LinkedIn candidates. Plus: workplace inference reads the posting body, on-site-elsewhere rejects with a named reason, and remaining ambiguous rows surface in the morning interview instead of dying unseen.",

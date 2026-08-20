@@ -205,8 +205,50 @@ def location_blackhole() -> None:
     )
 
 
+def identity_floor() -> None:
+    """Context similarity assigned the WRONG PERSON's profile as strong (2026-08-20).
+
+    Deterministic half of the guard: candidates whose title/slug lack the
+    subject's name must be discarded no matter how well context terms match.
+    Exercises the real filter with a synthetic search result set.
+    """
+
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "ops-linkedin" / "src"))
+    from unittest.mock import patch
+    import ops_linkedin.lead_resolver as lr
+
+    fake = [
+        {"url": "https://www.linkedin.com/in/arlette-verploegh-1/", "title": "Arlette Verploegh - Founder Institute",
+         "description": "works with Jonathan Greechan on startup founder programs"},
+        {"url": "https://www.linkedin.com/in/jonathangreechan/", "title": "Jonathan Greechan - Co-Founder, Founder Institute",
+         "description": "startup founder programs"},
+    ]
+    with patch.object(lr, "search_profiles", return_value=(fake, "q")):
+        r = lr.resolve_candidates("Jonathan Greechan", context="startup founder institute", location="")
+    urls = [c["profile_url"] for c in r["candidates"]]
+    ok = urls == ["https://www.linkedin.com/in/jonathangreechan/"]
+    check(
+        "IDENTITY_FLOOR",
+        ok,
+        "wrong-person profile discarded despite matching context terms" if ok else f"candidates={urls}",
+    )
+
+
+def queue_dedupe() -> None:
+    """Duplicate relationship signals doubled queue rows (2026-08-20)."""
+
+    from monitor_opportunities.prospect_queue import relationship_prospects
+
+    signal = {"signal_id": "rel-dup", "subject": "Ada Example", "organization": "G",
+              "signal_type": "event_copresence", "relationship_path": ["Graham Anderson", "G", "Ada Example"],
+              "evidence_refs": ["https://example.com/e"]}
+    rows = relationship_prospects([signal, dict(signal)])
+    check("QUEUE_DEDUPE", len(rows) == 1, f"{len(rows)} row(s) from a duplicated signal (want 1)")
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -214,7 +256,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 7 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 9 failure signatures guarded")
     return 0
 
 

@@ -112,7 +112,12 @@ def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[d
     is reachable beyond the supplied evidence.
     """
     out: list[dict[str, Any]] = []
+    seen_signal_ids: set[str] = set()
     for signal in relationship_signals:
+        sid = str(signal.get("signal_id") or "")
+        if sid and sid in seen_signal_ids:
+            continue  # one prospect per signal; duplicates doubled queue rows on 2026-08-20
+        seen_signal_ids.add(sid)
         subject = str(signal.get("subject") or "").strip()
         org = str(signal.get("organization") or subject).strip()
         if not subject:

@@ -100,11 +100,26 @@ def resolve_candidates(
     results, query = search_profiles(name, location, count=count)
     terms = _context_terms(context)
     candidates: list[dict[str, Any]] = []
+    name_tokens = [t for t in re.findall(r"[a-z]+", name.lower()) if len(t) > 2]
     for result in results:
         url = str(result.get("url") or "")
         if "linkedin.com/in" not in url:
             continue
         blurb = " ".join([str(result.get("title") or ""), str(result.get("description") or "")]).lower()
+        # Identity floor: the profile must actually carry the person's name.
+        # Without this, context-term scoring promoted a DIFFERENT person -
+        # 'Jonathan Greechan' was assigned arlette-verploegh's profile as a
+        # strong candidate on 2026-08-20 because their event blurbs shared
+        # 'founder' and 'startup'. Context similarity ranks; it must never
+        # substitute for the name.
+        # ...and it must carry it in the TITLE or URL SLUG. A description
+        # mentioning the searched name is how other people's profiles leak in:
+        # ploshansky and fatihmcicek both mention 'Jonathan Greechan' in their
+        # page text and sailed through a blurb-wide check.
+        identity_haystack = (str(result.get("title") or "").lower() + " " + url.lower())
+        name_hits = sum(1 for t in name_tokens if t in identity_haystack)
+        if name_tokens and name_hits < min(2, len(name_tokens)):
+            continue
         matched = sorted({term for term in terms if term in blurb})
         candidates.append(
             {
