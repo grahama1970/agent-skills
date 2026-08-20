@@ -355,8 +355,36 @@ def candidate_strength_tiers() -> None:
     )
 
 
+def contact_recommendations() -> None:
+    """The skill must SUGGEST who to contact, not make the human find them.
+
+    Daniel Ayala (Aerospace Corp, cyber) and Randi Tinney (OpenC3 space-flight
+    software) are exactly the relevant contacts it should surface. Tinney's
+    underscore-joined repo name once scored zero.
+    """
+
+    from monitor_opportunities.contact_recommender import _relevance, recommend_contacts
+
+    tinney = _relevance("Randi Tinney", "rtinney1", "", "GitHub repo rtinney1/OpenC3_Cosmos_cFS_CFDP")[0]
+    ayala = _relevance("Daniel Ayala", "The Aerospace Corporation", "Cybersecurity", "aerospace security")[0]
+    junk = _relevance("Someone", "Buffalo Walking Club", "member", "we walk on weekends")[0]
+    sigs = [
+        {"subject": "Daniel Ayala", "organization": "The Aerospace Corporation",
+         "role": "Cybersecurity", "signal_type": "adjacent_contact"},
+        {"subject": "Someone", "organization": "Buffalo Walking Club", "role": "member",
+         "signal_type": "event_copresence"},
+    ]
+    rec = recommend_contacts(sigs)
+    only_relevant = all("Walking" not in str(x.get("organization")) for x in rec["suggestions"])
+    check(
+        "CONTACT_RECOMMENDATIONS",
+        tinney > 0 and ayala > 0 and junk == 0 and only_relevant,
+        f"tinney={tinney} ayala={ayala} junk={junk} suggestions_relevant={only_relevant}",
+    )
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap, compliance_claim_coverage, candidate_strength_tiers):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap, compliance_claim_coverage, candidate_strength_tiers, contact_recommendations):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -364,7 +392,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 13 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 14 failure signatures guarded")
     return 0
 
 

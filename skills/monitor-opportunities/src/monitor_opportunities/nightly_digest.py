@@ -300,6 +300,22 @@ def run_digest_phase(
                         relationship_signals.append(signal)
                         relationship_signal_ids.add(signal.get("signal_id"))
             prospects = build_prospect_queue(sam_evidence, shortlist_rows, relationship_signals)
+            # WHO to reach out to this week - the grunt work the human should not
+            # do. Ranks the same relationship signals by mandate fit + reachability.
+            try:
+                from .contact_recommender import recommend_contacts
+                recs = recommend_contacts(relationship_signals)
+                (out / "suggested-contacts.json").write_text(
+                    json.dumps(recs, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
+                steps["suggested_contacts"] = {
+                    "suggestions": len(recs["suggestions"]),
+                    "mandate_relevant": recs["mandate_relevant"],
+                    "top": [s["subject"] for s in recs["suggestions"][:5]],
+                }
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("contact recommendations skipped: {}", exc)
+                steps["suggested_contacts"] = {"error": str(exc)}
             (out / "prospect-queue.json").write_text(
                 json.dumps(
                     {
