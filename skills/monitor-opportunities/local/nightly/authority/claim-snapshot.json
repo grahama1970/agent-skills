@@ -361,6 +361,11 @@
           "wording_id": "wording:sparta:nist-oscal-compliance",
           "approved": true,
           "text": "Built an open-source compliance workspace that traces space-cyber conclusions through NIST-aligned framework guidance, program evidence, and human review."
+        },
+        {
+          "wording_id": "wording:sparta:compliance-domain",
+          "approved": true,
+          "text": "Experience across the compliance, security, risk, and audit domain: built an open-source workspace that maps controls to evidence and traces audit conclusions to their source."
         }
       ]
     },
@@ -571,6 +576,30 @@
           "wording_id": "wording:voice:realtime-multimodal",
           "approved": true,
           "text": "Built real-time voice and speech systems using streaming transcription, speaker resolution, and evidence-bound retrieval surfaced live during conversation."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:infra:postgres-containers",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "tier": 2,
+      "tier_basis": "Attested; the public repos run these deployments.",
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "wordings": [
+        {
+          "wording_id": "wording:infra:postgres-containers",
+          "approved": true,
+          "text": "Experience with Postgres-backed systems and multi-container deployments supporting live agent and retrieval services."
         }
       ]
     }
