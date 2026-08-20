@@ -365,14 +365,27 @@ return JSON.stringify({clicked: true, text: button.innerText});""",
 
                 surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT"]')
                 surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_DEFINITION_PEEK"]')
-                mode_state = surf_js(
-                    root,
-                    tab_id,
-                    r"""return JSON.stringify({
+                # Under full-suite browser load a click's React state flip can
+                # land after the first readback; poll, and re-click a control
+                # whose attribute has not flipped yet.
+                mode_state: dict = {}
+                for attempt in range(6):
+                    mode_state = surf_js(
+                        root,
+                        tab_id,
+                        r"""return JSON.stringify({
   compact: document.querySelector('.meeting-shell')?.getAttribute('data-compact'),
   peek: document.querySelector('.meeting-shell')?.getAttribute('data-peek')
 });""",
-                )
+                    )
+                    if mode_state.get("compact") == "true" and mode_state.get("peek") == "true":
+                        break
+                    if attempt == 2:
+                        if mode_state.get("compact") != "true":
+                            surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT"]')
+                        if mode_state.get("peek") != "true":
+                            surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_DEFINITION_PEEK"]')
+                    time.sleep(1.0)
                 if mode_state.get("compact") != "true" or mode_state.get("peek") != "true":
                     raise RuntimeError(f"compact/peek controls did not toggle: {mode_state}")
 
