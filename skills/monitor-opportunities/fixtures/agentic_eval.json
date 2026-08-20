@@ -331,6 +331,27 @@
       },
       "proves": "The six failure signatures of 2026-08-17/18/20 stay fixed: relationship edges cite only signal-backed evidence, the re-dated discovery fixture still shortlists, each nightly gets its own retained directory, the Meetup budget scales with attendee work, junk attendee names are never resolved, and the prospect queue carries resolved LinkedIn candidates.",
       "does_not_prove": "Live browser capture, live LinkedIn search quality, or the value of any individual lead."
+    },
+    {
+      "name": "morning-interview-disposition-loop",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/morning_interview_check.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "INTERVIEW OK",
+          "recorded_action=KEEP",
+          "idempotent=true"
+        ]
+      },
+      "proves": "The morning interview builds questions from the newest REAL retained nightly run and writes dispositions through the append-only decision ledger with idempotency intact.",
+      "does_not_prove": "That the human actually reviews digests, or identity-confirmation contact writes when the memory daemon is down."
     }
   ]
 }

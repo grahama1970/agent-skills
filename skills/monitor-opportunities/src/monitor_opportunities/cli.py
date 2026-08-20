@@ -2701,5 +2701,27 @@ for _command_name in NOT_IMPLEMENTED:
     _register_not_implemented(_command_name)
 
 
+@app.command("morning-interview")
+def morning_interview_cmd(
+    run: Path | None = typer.Option(None, "--run", help="Run directory; defaults to local/nightly/latest."),
+    mode: str = typer.Option("auto", help="Interview surface: auto, html, or tui."),
+    questions_only: bool = typer.Option(False, "--questions-only", help="Write questions.json and exit."),
+) -> None:
+    """Review the morning digest: dispositions feed ranking, identities become contacts."""
+
+    from .morning_interview import build_questions, run_interview
+    from .util import write_json
+
+    skill_dir = Path(__file__).resolve().parents[2]
+    run_dir = (run or skill_dir / "local" / "nightly" / "latest").resolve()
+    if questions_only:
+        questions = build_questions(run_dir)
+        out = run_dir / "morning-interview-questions.json"
+        write_json(out, questions)
+        typer.echo(json.dumps({"questions": len(questions["questions"]), "path": str(out)}))
+        return
+    typer.echo(json.dumps(run_interview(run_dir, mode=mode), indent=2, sort_keys=True))
+
+
 if __name__ == "__main__":  # pragma: no cover
     app()
