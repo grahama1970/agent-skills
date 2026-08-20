@@ -15,39 +15,144 @@
       "id": "ae.gate.fail_closed",
       "description": "run exits non-zero unless every required case is READY, and --report-only opts out",
       "criticality": "critical",
-      "evidence_required": {"fault_injected_deterministic": true}
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
     },
     {
       "id": "ae.gate.process_teardown",
       "description": "a timed-out case terminates its process group and leaves no orphan",
       "criticality": "critical",
-      "evidence_required": {"fault_injected_deterministic": true}
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
     },
     {
       "id": "ae.claims.class_separation",
       "description": "passing deterministic cases cannot satisfy a required live_e2e slot (#1445)",
       "criticality": "critical",
-      "evidence_required": {"fault_injected_deterministic": true}
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
     },
     {
       "id": "ae.evidence.real_e2e_contract",
       "description": "a live_e2e case with no independent readback is downgraded and cannot satisfy a live slot (#1446)",
       "criticality": "critical",
-      "evidence_required": {"fault_injected_deterministic": true}
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
     },
     {
       "id": "ae.report.readable_artifact",
       "description": "run emits a machine-readable report whose readiness field an independent reader can verify",
       "criticality": "important",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ae.remediation.categorize",
+      "description": "categorize assigns a complete failure set to stable category_ids",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ae.remediation.phart_viz",
+      "description": "the active category DAG renders + validates through the live phart-dag-chart skill",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ae.remediation.plan",
+      "description": "remediate builds a topo-ordered depends-on ticket plan in preview without mutating",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ae.remediation.acyclicity",
+      "description": "a cyclic category map is rejected by the acyclicity gate before any ticket mutation",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ae.remediation.total_categorization",
+      "description": "an unclassified failure hard-errors rather than silently escaping the loop",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
-    {"seam_id": "runner.gate", "claim_id": "ae.gate.fail_closed", "seam_type": "filesystem/process", "criticality": "critical", "failure_modes": ["exits 0 on non-READY"], "required_evidence": ["fault_injected_deterministic"]},
-    {"seam_id": "runner.process", "claim_id": "ae.gate.process_teardown", "seam_type": "scheduler/concurrency", "criticality": "critical", "failure_modes": ["orphan after timeout"], "required_evidence": ["fault_injected_deterministic"]},
-    {"seam_id": "runner.claims", "claim_id": "ae.claims.class_separation", "seam_type": "pure deterministic transform", "criticality": "critical", "failure_modes": ["deterministic counted as live"], "required_evidence": ["fault_injected_deterministic"]},
-    {"seam_id": "runner.evidence", "claim_id": "ae.evidence.real_e2e_contract", "seam_type": "pure deterministic transform", "criticality": "critical", "failure_modes": ["smoke counted as live"], "required_evidence": ["fault_injected_deterministic"]},
-    {"seam_id": "runner.report", "claim_id": "ae.report.readable_artifact", "seam_type": "filesystem/process", "criticality": "important", "failure_modes": ["unreadable/absent report"], "required_evidence": ["live_e2e"]}
+    {
+      "seam_id": "runner.gate",
+      "claim_id": "ae.gate.fail_closed",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "exits 0 on non-READY"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "runner.process",
+      "claim_id": "ae.gate.process_teardown",
+      "seam_type": "scheduler/concurrency",
+      "criticality": "critical",
+      "failure_modes": [
+        "orphan after timeout"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "runner.claims",
+      "claim_id": "ae.claims.class_separation",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "failure_modes": [
+        "deterministic counted as live"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "runner.evidence",
+      "claim_id": "ae.evidence.real_e2e_contract",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "failure_modes": [
+        "smoke counted as live"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "runner.report",
+      "claim_id": "ae.report.readable_artifact",
+      "seam_type": "filesystem/process",
+      "criticality": "important",
+      "failure_modes": [
+        "unreadable/absent report"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    }
   ],
   "cases": [
     {
@@ -55,55 +160,271 @@
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
-      "supports_claims": ["ae.gate.fail_closed"],
-      "seams": ["runner.gate"],
+      "supports_claims": [
+        "ae.gate.fail_closed"
+      ],
+      "seams": [
+        "runner.gate"
+      ],
       "timeout_seconds": 180,
-      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; $R run \"$D/f.json\" >/dev/null 2>&1; test $? -ne 0 && $R run \"$D/f.json\" --report-only >/dev/null 2>&1 && echo GATE_OK"],
-      "expected": {"exit_code": 0, "stdout_contains": ["GATE_OK"]}
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"f\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"exit 3\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/f.json\"; $R run \"$D/f.json\" >/dev/null 2>&1; test $? -ne 0 && $R run \"$D/f.json\" --report-only >/dev/null 2>&1 && echo GATE_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GATE_OK"
+        ]
+      }
     },
     {
       "name": "timed-out-case-leaves-no-orphan",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
-      "supports_claims": ["ae.gate.process_teardown"],
-      "seams": ["runner.process"],
+      "supports_claims": [
+        "ae.gate.process_teardown"
+      ],
+      "seams": [
+        "runner.process"
+      ],
       "timeout_seconds": 180,
-      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"t\",\"type\":\"adversarial\",\"timeout_seconds\":3,\"command\":[\"bash\",\"-c\",\"sleep 300 & sleep 300\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/t.json\"; $R run \"$D/t.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;t=json.load(sys.stdin)['cases'][0]['trials'][0];assert t['timed_out'] and t['orphan_pids_after_teardown']==[];print('NO_ORPHAN')\""],
-      "expected": {"exit_code": 0, "stdout_contains": ["NO_ORPHAN"]}
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"t\",\"type\":\"adversarial\",\"timeout_seconds\":3,\"command\":[\"bash\",\"-c\",\"sleep 300 & sleep 300\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/t.json\"; $R run \"$D/t.json\" --report-only 2>/dev/null | python3 -c \"import json,sys;t=json.load(sys.stdin)['cases'][0]['trials'][0];assert t['timed_out'] and t['orphan_pids_after_teardown']==[];print('NO_ORPHAN')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO_ORPHAN"
+        ]
+      }
     },
     {
       "name": "deterministic-passes-cannot-satisfy-required-live",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
-      "supports_claims": ["ae.claims.class_separation"],
-      "seams": ["runner.claims"],
+      "supports_claims": [
+        "ae.claims.class_separation"
+      ],
+      "seams": [
+        "runner.claims"
+      ],
       "timeout_seconds": 180,
-      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/det_only_missing_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);c=d['capability_readiness']['claims'][0];assert d['readiness']!='READY' and c['verdict']=='PARTIALLY_PROVEN' and c['missing_evidence']==['live_e2e'];print('CLASS_SEPARATION_OK')\""],
-      "expected": {"exit_code": 0, "stdout_contains": ["CLASS_SEPARATION_OK"]}
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/det_only_missing_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);c=d['capability_readiness']['claims'][0];assert d['readiness']!='READY' and c['verdict']=='PARTIALLY_PROVEN' and c['missing_evidence']==['live_e2e'];print('CLASS_SEPARATION_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLASS_SEPARATION_OK"
+        ]
+      }
     },
     {
       "name": "pseudo-live-without-readback-is-downgraded",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "fault_injected_deterministic",
-      "supports_claims": ["ae.evidence.real_e2e_contract"],
-      "seams": ["runner.evidence"],
+      "supports_claims": [
+        "ae.evidence.real_e2e_contract"
+      ],
+      "seams": [
+        "runner.evidence"
+      ],
       "timeout_seconds": 180,
-      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/pseudo_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);case=d['cases'][0];assert case['live_qualified'] is False and case['effective_evidence_class']=='fault_injected_deterministic' and d['readiness']!='READY';print('REAL_E2E_CONTRACT_OK')\""],
-      "expected": {"exit_code": 0, "stdout_contains": ["REAL_E2E_CONTRACT_OK"]}
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals; $R run fixtures/selftest/pseudo_live.json --report-only 2>/dev/null | python3 -c \"import json,sys;d=json.load(sys.stdin);case=d['cases'][0];assert case['live_qualified'] is False and case['effective_evidence_class']=='fault_injected_deterministic' and d['readiness']!='READY';print('REAL_E2E_CONTRACT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REAL_E2E_CONTRACT_OK"
+        ]
+      }
     },
     {
       "name": "run-emits-a-readable-report-artifact",
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["ae.report.readable_artifact"],
-      "seams": ["runner.report"],
+      "supports_claims": [
+        "ae.report.readable_artifact"
+      ],
+      "seams": [
+        "runner.report"
+      ],
       "timeout_seconds": 180,
-      "command": ["bash", "-c", "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"p\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/p.json\"; mkdir -p out; $R run \"$D/p.json\" --output out/report.json >/dev/null 2>&1"],
-      "expected": {"exit_code": 0, "artifacts": [{"path": "out/report.json", "json_pointer": "/readiness", "equals": "READY"}]}
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '{\"version\":2,\"skill\":\"s\",\"trials\":1,\"eval_kind\":\"runner_selftest\",\"cases\":[{\"name\":\"p\",\"type\":\"positive\",\"command\":[\"bash\",\"-c\",\"true\"],\"expected\":{\"exit_code\":0}}]}' > \"$D/p.json\"; mkdir -p out; $R run \"$D/p.json\" --output out/report.json >/dev/null 2>&1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "out/report.json",
+            "json_pointer": "/readiness",
+            "equals": "READY"
+          }
+        ]
+      }
+    },
+    {
+      "name": "remediate-categorize-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.remediation.categorize"
+      ],
+      "seams": [
+        "remediation.categorize"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '%s' '{\"readiness\":\"NOT_READY\",\"cases\":[{\"name\":\"c1\",\"case_id\":\"c1\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"intent.entity_extraction\"]},{\"name\":\"c2\",\"case_id\":\"c2\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"answer.claim_requirements\"]}]}' > \"$D/r.json\"; python3 -c \"import json;ns='agentic-evals:graph-memory-operator:';m={'schema':'agentic_evals.category_map.v1','repo':'grahama1970/graph-memory-operator','map_version':'1','categories':{'entity-resolution':{'category_id':ns+'entity-resolution','label':'eval-cat-entity-resolution','defect':'ids do not resolve','expected':'ids resolve','seams':['intent.entity_extraction'],'depends_on':[]},'answer-contract':{'category_id':ns+'answer-contract','label':'eval-cat-answer-contract','defect':'can_answer wrong','expected':'grounded','seams':['answer.claim_requirements'],'depends_on':[{'category_id':ns+'entity-resolution','rationale':'answer needs resolved ids'}]}}};json.dump(m,open('$D/map.json','w'))\"; $R categorize \"$D/r.json\" --map \"$D/map.json\" --map-version 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "entity-resolution",
+          "answer-contract",
+          "semantic_fingerprint"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "\"ok\": false"
+        ]
+      }
+    },
+    {
+      "name": "remediate-category-dag-live-phart",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.remediation.phart_viz"
+      ],
+      "seams": [
+        "remediation.visualization"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '%s' '{\"readiness\":\"NOT_READY\",\"cases\":[{\"name\":\"c1\",\"case_id\":\"c1\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"intent.entity_extraction\"]},{\"name\":\"c2\",\"case_id\":\"c2\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"answer.claim_requirements\"]}]}' > \"$D/r.json\"; python3 -c \"import json;ns='agentic-evals:graph-memory-operator:';m={'schema':'agentic_evals.category_map.v1','repo':'grahama1970/graph-memory-operator','map_version':'1','categories':{'entity-resolution':{'category_id':ns+'entity-resolution','label':'eval-cat-entity-resolution','defect':'ids do not resolve','expected':'ids resolve','seams':['intent.entity_extraction'],'depends_on':[]},'answer-contract':{'category_id':ns+'answer-contract','label':'eval-cat-answer-contract','defect':'can_answer wrong','expected':'grounded','seams':['answer.claim_requirements'],'depends_on':[{'category_id':ns+'entity-resolution','rationale':'answer needs resolved ids'}]}}};json.dump(m,open('$D/map.json','w'))\"; $R category-dag \"$D/r.json\" --map \"$D/map.json\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "entity_resolution",
+          "answer_contract",
+          "phart"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "\"ok\": false",
+          "dag_invalid"
+        ]
+      }
+    },
+    {
+      "name": "remediate-preview-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.remediation.plan"
+      ],
+      "seams": [
+        "remediation.plan"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '%s' '{\"readiness\":\"NOT_READY\",\"cases\":[{\"name\":\"c1\",\"case_id\":\"c1\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"intent.entity_extraction\"]},{\"name\":\"c2\",\"case_id\":\"c2\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"answer.claim_requirements\"]}]}' > \"$D/r.json\"; python3 -c \"import json;ns='agentic-evals:graph-memory-operator:';m={'schema':'agentic_evals.category_map.v1','repo':'grahama1970/graph-memory-operator','map_version':'1','categories':{'entity-resolution':{'category_id':ns+'entity-resolution','label':'eval-cat-entity-resolution','defect':'ids do not resolve','expected':'ids resolve','seams':['intent.entity_extraction'],'depends_on':[]},'answer-contract':{'category_id':ns+'answer-contract','label':'eval-cat-answer-contract','defect':'can_answer wrong','expected':'grounded','seams':['answer.claim_requirements'],'depends_on':[{'category_id':ns+'entity-resolution','rationale':'answer needs resolved ids'}]}}};json.dump(m,open('$D/map.json','w'))\"; $R remediate \"$D/r.json\" --map \"$D/map.json\" --fixture f.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "topo_order",
+          "\"executed\": false",
+          "semantic_fingerprint"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "github.com/grahama"
+        ]
+      }
+    },
+    {
+      "name": "remediate-cyclic-map-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.remediation.acyclicity"
+      ],
+      "seams": [
+        "remediation.dag_gate"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '%s' '{\"readiness\":\"NOT_READY\",\"cases\":[{\"name\":\"c1\",\"case_id\":\"c1\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"intent.entity_extraction\"]},{\"name\":\"c2\",\"case_id\":\"c2\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"answer.claim_requirements\"]}]}' > \"$D/r.json\"; python3 -c \"import json;ns='agentic-evals:graph-memory-operator:';m={'schema':'agentic_evals.category_map.v1','repo':'grahama1970/graph-memory-operator','map_version':'1','categories':{'entity-resolution':{'category_id':ns+'entity-resolution','label':'l1','defect':'d','expected':'e','seams':['intent.entity_extraction'],'depends_on':[{'category_id':ns+'answer-contract','rationale':'CYCLE'}]},'answer-contract':{'category_id':ns+'answer-contract','label':'l2','defect':'d','expected':'e','seams':['answer.claim_requirements'],'depends_on':[{'category_id':ns+'entity-resolution','rationale':'CYCLE2'}]}}};json.dump(m,open('$D/cyc.json','w'))\"; $R category-dag \"$D/r.json\" --map \"$D/cyc.json\""
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "dependency cycle"
+        ],
+        "stdout_excludes": [
+          "phart 1.5",
+          "topo_order"
+        ]
+      }
+    },
+    {
+      "name": "remediate-unclassified-hard-error",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "ae.remediation.total_categorization"
+      ],
+      "seams": [
+        "remediation.categorize"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "R=/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh; D=$(mktemp -d); printf '%s' '{\"readiness\":\"NOT_READY\",\"cases\":[{\"name\":\"x\",\"case_id\":\"x\",\"required\":true,\"outcome\":\"FAIL\",\"seams\":[\"intent.unknown_seam\"]}]}' > \"$D/bad.json\"; python3 -c \"import json;ns='agentic-evals:graph-memory-operator:';m={'schema':'agentic_evals.category_map.v1','repo':'grahama1970/graph-memory-operator','map_version':'1','categories':{'entity-resolution':{'category_id':ns+'entity-resolution','label':'eval-cat-entity-resolution','defect':'ids do not resolve','expected':'ids resolve','seams':['intent.entity_extraction'],'depends_on':[]},'answer-contract':{'category_id':ns+'answer-contract','label':'eval-cat-answer-contract','defect':'can_answer wrong','expected':'grounded','seams':['answer.claim_requirements'],'depends_on':[{'category_id':ns+'entity-resolution','rationale':'answer needs resolved ids'}]}}};json.dump(m,open('$D/map.json','w'))\"; $R categorize \"$D/bad.json\" --map \"$D/map.json\""
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "no category",
+          "\"ok\": false"
+        ],
+        "stdout_excludes": [
+          "semantic_fingerprint"
+        ]
+      }
     }
   ]
 }

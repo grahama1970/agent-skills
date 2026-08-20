@@ -21,6 +21,7 @@ provides:
   - trajectory-validation-pattern
 composes:
   - eval-skills
+  - phart-dag-chart
 complies:
   - best-practices-skills
   - best-practices-python
@@ -308,6 +309,63 @@ when the manifest declares it or any case is `real_world`. Reports are written
 atomically.
 
 Self-tests for every behavior above: `fixtures/runner_selftest.json`.
+
+## Remediation loop (categorize → ticket-with-depends-on → fix → re-run until green)
+
+**Status: DESIGN v2 (WebGPT-reviewed) — full contract in `REMEDIATION_LOOP.md`.**
+Running a suite and reporting `NOT_READY` is only half a loop. The standard
+remediation loop turns eval failures into fixes deterministically, identically
+for every project:
+
+```
+run ALL evals to completion (campaign-frozen inputs)
+  → render the active category DAG (phart-dag-chart) + validate acyclicity   [REQUIRED on failure]
+  → categorize the COMPLETE failure set into stable root-cause category_ids
+  → plan ticket + depends_on mutations, validate the plan, apply atomically
+  → project-watchdog dispatches routable (unblocked) tickets concurrently
+  → per ticket: `ask tau-dag --topology sequential`, gpt-5.5-high (creator) +
+    fable-5-low (reviewer with tampering VETO) → category-green (fast check)
+  → integrate → re-run the FULL suite on the merged head → fresh re-categorize
+  → stop when zero categories remain, or a fingerprint/budget blocker fires
+```
+
+Non-negotiable rules (each prevents a named failure mode):
+
+1. **Ticket only after a complete pass** — a defect *class* is visible only once
+   every failure belonging to it has been seen; one-per-case floods the fixer
+   with racing patches for one bug. (Sole exception: an incident/abort path for
+   infra corruption, destructive behavior, credential leak, or runaway cost.)
+2. **Categorize before ticketing and before edges** — edges are defined over
+   categories shown to exist in THIS run.
+3. **Re-categorize every iteration** — a landed fix reshapes the failure surface;
+   consume the exact frozen report, never "latest".
+4. **The INTEGRATED full re-run is the close gate, not a category-only run and
+   not the reviewer** — keep three distinct facts: `REVIEW_ADMISSIBLE` →
+   `CATEGORY_GREEN` (fast local check) → `FULL_RUN_RECONCILED` (complete suite on
+   the merged head, category absent, no regression) = CLOSED. Reviewer FAIL
+   VETOES closure against tampering with protected surfaces (fixtures, oracles,
+   category maps, proof commands).
+5. **A phart-dag-chart visualization is REQUIRED on any failing run** — it both
+   shows the operator what failed and what blocks what, and serves as the
+   acyclicity gate: no `ticket block` may apply while the active DAG is invalid.
+
+Guardrails the contract also mandates: stable immutable `category_id` (≠ the
+mutable GitHub label) with an explicit split/merge/disappear/new-category
+reconcile lifecycle; a validated active-only dependency mutation plan (edges wired
+only to currently-active categories, sparse by default, each with a rationale);
+fingerprint-based oscillation/no-progress termination with campaign-frozen inputs;
+same-repo-only v1; and a self-modification privilege boundary (a consumer's
+remediation ticket may not edit `/agentic-evals`, `/ticket`, `/project-watchdog`,
+or the schema).
+
+Each consumer project supplies only `fixtures/agentic_eval.json` and a
+`category_map.v1` (stable `category_id`s + active `depends_on` edges, tied to its
+`capability_claims`/`seams`). The shared machinery — `remediate`, `categorize`,
+`category-dag`, `run --only-category` — lives here. It composes existing
+`/ticket`, `/project-watchdog`, `/ask tau-dag`, `phart-dag-chart`, and
+`ticket_closure_evidence.v1` and invents no parallel ticketing, dispatch,
+closure, or charting system. The memory repo's `probe_failure_triage.py` is the
+prototype this generalizes and retires.
 
 ## Composition
 

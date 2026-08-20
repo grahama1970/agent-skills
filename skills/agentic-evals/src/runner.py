@@ -1032,6 +1032,11 @@ def run(
              "reruns skip the fixture-composition slop gate and score readiness "
              "from the executed cases alone (agent-skills#1463/#1464/#1468).",
     ),
+    only_category: str = typer.Option(
+        None, "--only-category",
+        help="Run only the cases a category owns (its close slice). Requires --map.",
+    ),
+    category_map: Path = typer.Option(None, "--map", help="category_map.v1 for --only-category."),
 ) -> None:
     """Run an agentic evaluation manifest.
 
@@ -1040,7 +1045,22 @@ def run(
     is the failure this gate exists to prevent. Use --report-only when you want
     the report without the gate.
     """
-    report = evaluate_manifest(manifest, timeout_seconds, only_cases=list(case or []) or None)
+    only_cases = list(case or []) or None
+    if only_category:
+        if category_map is None:
+            raise typer.BadParameter("--only-category requires --map")
+        import remediation as rem
+
+        cmap = rem.load_category_map(category_map)
+        manifest_doc = json.loads(manifest.read_text())
+        slice_names = [
+            c["name"] for c in manifest_doc.get("cases", [])
+            if only_category in rem._match_categories(c, cmap)
+        ]
+        if not slice_names:
+            raise typer.BadParameter(f"no cases match category {only_category!r}")
+        only_cases = slice_names
+    report = evaluate_manifest(manifest, timeout_seconds, only_cases=only_cases)
     payload = json.dumps(report, indent=2)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -1259,6 +1279,213 @@ def coverage_show(
 def schema() -> None:
     """Print the report schema identifier."""
     typer.echo("agentic_evals.report.v2")
+
+
+@app.command("categorize")
+def categorize_cmd(
+    report_path: Path = typer.Argument(..., help="agentic_evals.report.v2 JSON"),
+    category_map: Path = typer.Option(..., "--map", help="agentic_evals.category_map.v1 JSON"),
+    map_version: str = typer.Option("0", "--map-version"),
+    output: Path = typer.Option(None, "--output"),
+) -> None:
+    """Assign a report's COMPLETE failing set to stable category_ids (remediation
+    loop; REMEDIATION_LOOP.md). Unclassified/ambiguous failures are hard errors."""
+    import remediation as rem
+
+    report = json.loads(report_path.read_text())
+    cmap = rem.load_category_map(category_map)
+    try:
+        categorized = rem.categorize(report, cmap)
+    except rem.CategorizationError as exc:
+        typer.echo(json.dumps({"ok": False, "error": str(exc)}))
+        raise typer.Exit(1) from exc
+    semantic = rem.semantic_fingerprint(categorized, map_version)
+    result = {
+        "ok": True,
+        "schema": "agentic_evals.categorization.v1",
+        **categorized,
+        "semantic_fingerprint": semantic,
+    }
+    rendered = json.dumps(result, indent=2)
+    typer.echo(rendered)
+    if output:
+        output.write_text(rendered + "\n")
+
+
+@app.command("remediate-loop")
+def remediate_loop_cmd(
+    manifest: Path = typer.Argument(..., exists=True, dir_okay=False, help="the eval fixture"),
+    category_map: Path = typer.Option(..., "--map"),
+    route: str = typer.Option("backend_python_or_skill_runtime", "--route"),
+    evaluated_sha: str = typer.Option("unknown", "--evaluated-sha"),
+    timeout_seconds: float = typer.Option(30.0, "--timeout-seconds", min=0.1),
+    max_iterations: int = typer.Option(10, "--max-iterations", min=1),
+    no_progress_k: int = typer.Option(3, "--no-progress-k", min=1),
+    wait_seconds: int = typer.Option(0, "--wait-seconds", help="Per-iteration wait for ticket closures (0=preview/no wait)."),
+    execute: bool = typer.Option(False, "--execute", help="Actually file tickets each iteration (default: preview single pass)."),
+    output: Path = typer.Option(None, "--output"),
+) -> None:
+    """Run-until-green outer loop (REMEDIATION_LOOP.md): full run → categorize →
+    (green? stop) → fingerprint → oscillation/no-progress/budget termination →
+    file/reconcile tickets → wait for campaign progress → repeat. Preview by
+    default runs a single pass with no GitHub mutation and no wait."""
+    import remediation as rem
+
+    cmap = rem.load_category_map(category_map)
+    map_version = str(cmap.get("map_version", "0"))
+
+    def run_fn() -> dict[str, Any]:
+        return evaluate_manifest(manifest, timeout_seconds, only_cases=None)
+
+    def categorize_fn(report: dict[str, Any]) -> dict[str, Any]:
+        return rem.categorize(report, cmap)
+
+    def iterate_fn(report: dict[str, Any], categorized: dict[str, Any]) -> None:
+        active = set(categorized["active_category_ids"])
+        induced = rem.validate_category_map(cmap, active_category_ids=active)
+        chart = rem.render_and_validate_dag(rem.active_category_dag(induced, cmap))
+        if not chart["ok"]:
+            raise typer.Exit(1)
+        open_labels = rem.open_ticket_labels(str(cmap["repo"])) if execute else set()
+        plan = rem.plan_remediation(categorized, induced, cmap, open_labels=open_labels)
+        rem.apply_plan(plan, fixture=str(manifest), route=route, execute=execute)
+
+    def wait_fn(active_ids: list[str]) -> None:
+        # Live campaign progress is the watchdog closing the category tickets.
+        # Preview (wait_seconds=0 / not execute) does not wait — a single pass.
+        if not execute or wait_seconds <= 0:
+            return
+        _wait_for_ticket_progress(str(cmap["repo"]), active_ids, cmap, wait_seconds)
+
+    # Preview: a single pass so an operator sees the plan without an infinite
+    # unattended loop. --execute runs the real bounded loop.
+    effective_max = max_iterations if execute else 1
+    result = rem.remediate_loop(
+        run_fn=run_fn, categorize_fn=categorize_fn, iterate_fn=iterate_fn, wait_fn=wait_fn,
+        map_version=map_version, max_iterations=effective_max, no_progress_k=no_progress_k,
+    )
+    result["executed"] = execute
+    result["evaluated_sha"] = evaluated_sha
+    typer.echo(json.dumps(result, indent=2))
+    if output:
+        output.write_text(json.dumps(result, indent=2) + "\n")
+    if result["status"] != "GREEN":
+        raise typer.Exit(1)
+
+
+def _wait_for_ticket_progress(repo: str, active_ids: list[str], cmap: dict, wait_seconds: int) -> None:
+    """Block until the active categories' tickets leave the open pool, or a
+    bounded timeout. Campaign progress, not 'all closed' — any terminal change
+    unblocks the next full re-run (which is the real reconcile gate)."""
+    import remediation as rem
+
+    labels = {e["category_id"]: e["label"] for e in cmap["categories"].values()}
+    watch = {labels[c] for c in active_ids if c in labels}
+    deadline = time.time() + wait_seconds
+    while time.time() < deadline:
+        still_open = rem.open_ticket_labels(repo) & watch
+        if not still_open:
+            return
+        time.sleep(min(30, max(5, wait_seconds // 10)))
+
+
+@app.command("remediate")
+def remediate_cmd(
+    report_path: Path = typer.Argument(..., help="agentic_evals.report.v2 JSON (a COMPLETE run)"),
+    category_map: Path = typer.Option(..., "--map"),
+    fixture: str = typer.Option(..., "--fixture", help="fixture path (for repro/proof commands)"),
+    route: str = typer.Option("backend_python_or_skill_runtime", "--route"),
+    evaluated_sha: str = typer.Option("unknown", "--evaluated-sha"),
+    execute: bool = typer.Option(False, "--execute", help="Actually file tickets (default: preview)."),
+    output: Path = typer.Option(None, "--output"),
+) -> None:
+    """One remediation iteration: categorize a COMPLETE report → REQUIRED phart
+    visualization + acyclicity gate → validated atomic ticket+depends-on plan →
+    preview (default) or `--execute` file via /ticket. Campaign-frozen; the outer
+    run-until-green loop wraps this (REMEDIATION_LOOP.md)."""
+    import remediation as rem
+
+    report = json.loads(report_path.read_text())
+    cmap = rem.load_category_map(category_map)
+    try:
+        categorized = rem.categorize(report, cmap)
+    except rem.CategorizationError as exc:
+        typer.echo(json.dumps({"ok": False, "error": str(exc)}))
+        raise typer.Exit(1) from exc
+
+    if not categorized["active_category_ids"]:
+        typer.echo(json.dumps({"ok": True, "green": True, "message": "no active categories"}, indent=2))
+        return
+
+    active = set(categorized["active_category_ids"])
+    try:
+        induced = rem.validate_category_map(cmap, active_category_ids=active)
+    except rem.CategoryMapError as exc:
+        typer.echo(json.dumps({"ok": False, "error": f"category map invalid: {exc}"}))
+        raise typer.Exit(1) from exc
+
+    # REQUIRED visualization + acyclicity gate: no plan may proceed if invalid.
+    dag = rem.active_category_dag(induced, cmap)
+    chart = rem.render_and_validate_dag(dag)
+    if not chart["ok"]:
+        typer.echo(json.dumps({"ok": False, "error": "active category DAG invalid", "phart": chart}, indent=2))
+        raise typer.Exit(1)
+
+    map_version = str(cmap.get("map_version", "0"))
+    semantic = rem.semantic_fingerprint(categorized, map_version)
+    provenance = rem.provenance_fingerprint(
+        semantic, evaluated_sha=evaluated_sha,
+        frozen_inputs={"category_map": rem._hash(cmap), "map_version": map_version},
+    )
+    open_labels = rem.open_ticket_labels(str(cmap["repo"])) if execute else set()
+    plan = rem.plan_remediation(categorized, induced, cmap, open_labels=open_labels)
+    applied = rem.apply_plan(plan, fixture=fixture, route=route, execute=execute)
+
+    result = {
+        "ok": True,
+        "schema": "agentic_evals.remediation_iteration.v1",
+        "executed": execute,
+        "semantic_fingerprint": semantic,
+        "provenance_fingerprint": provenance,
+        "active_category_ids": categorized["active_category_ids"],
+        "category_dag_chart": chart["chart"],
+        "plan": plan,
+        "apply": applied,
+    }
+    typer.echo(json.dumps(result, indent=2))
+    if output:
+        output.write_text(json.dumps(result, indent=2) + "\n")
+
+
+@app.command("category-dag")
+def category_dag_cmd(
+    report_path: Path = typer.Argument(..., help="agentic_evals.report.v2 JSON"),
+    category_map: Path = typer.Option(..., "--map"),
+    output: Path = typer.Option(None, "--output", help="write the phart ASCII chart here"),
+) -> None:
+    """Emit + validate + render the ACTIVE category dependency DAG through
+    phart-dag-chart (REQUIRED on any failing run; the acyclicity gate). Exits
+    non-zero if the active DAG is invalid, so no `ticket block` may proceed."""
+    import remediation as rem
+
+    report = json.loads(report_path.read_text())
+    cmap = rem.load_category_map(category_map)
+    categorized = rem.categorize(report, cmap)
+    active = set(categorized["active_category_ids"])
+    try:
+        induced = rem.validate_category_map(cmap, active_category_ids=active)
+    except rem.CategoryMapError as exc:
+        typer.echo(json.dumps({"ok": False, "error": str(exc)}))
+        raise typer.Exit(1) from exc
+    dag = rem.active_category_dag(induced, cmap)
+    rendered = rem.render_and_validate_dag(dag)
+    if rendered["ok"]:
+        typer.echo(rendered["chart"])
+        if output:
+            output.write_text(rendered["chart"])
+    else:
+        typer.echo(json.dumps({"ok": False, "phart": rendered}, indent=2))
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

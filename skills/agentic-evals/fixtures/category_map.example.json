@@ -1,0 +1,44 @@
+{
+  "schema": "agentic_evals.category_map.v1",
+  "repo": "grahama1970/graph-memory-operator",
+  "map_version": "1",
+  "categories": {
+    "entity-resolution": {
+      "category_id": "agentic-evals:graph-memory-operator:entity-resolution",
+      "label": "eval-cat-entity-resolution",
+      "defect": "control/persona/skill identifiers do not resolve to canonical nodes",
+      "expected": "every in-corpus identifier resolves; only truly-absent ones unresolved",
+      "supports_claims": ["memory.intent.entity_grounded"],
+      "seams": ["intent.entity_extraction"],
+      "depends_on": []
+    },
+    "answer-contract": {
+      "category_id": "agentic-evals:graph-memory-operator:answer-contract",
+      "label": "eval-cat-answer-contract",
+      "defect": "can_answer / block grounding not a projection of governed evidence",
+      "expected": "can_answer is a projection of block-level grounding, not retrieval presence",
+      "supports_claims": ["memory.answer.grounded"],
+      "seams": ["answer.claim_requirements"],
+      "depends_on": [
+        {
+          "category_id": "agentic-evals:graph-memory-operator:entity-resolution",
+          "rationale": "answer grounding cannot be judged until identifiers resolve to canonical nodes"
+        }
+      ]
+    },
+    "skill-routing": {
+      "category_id": "agentic-evals:graph-memory-operator:skill-routing",
+      "label": "eval-cat-skill-routing",
+      "defect": "explicit $skill commands do not route to APP_COMMAND",
+      "expected": "a registered $skill token routes APP_COMMAND independent of app context",
+      "supports_claims": ["memory.intent.skill_invocation"],
+      "seams": ["intent.skill_registry"],
+      "depends_on": [
+        {
+          "category_id": "agentic-evals:graph-memory-operator:entity-resolution",
+          "rationale": "skill-arg identifiers must resolve before routing is judged"
+        }
+      ]
+    }
+  }
+}
