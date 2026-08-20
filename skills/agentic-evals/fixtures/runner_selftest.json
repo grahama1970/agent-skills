@@ -110,6 +110,74 @@
           "MANIFEST_CLAIMS_PRESERVED"
         ]
       }
+    },
+    {
+      "name": "runner-case-filter-runs-only-named-cases",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh run /home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json --case winner-proof-cannot-import-project-function --output $D/r.json >/dev/null 2>&1; python3 -c \"import json; d=json.load(open('$D/r.json')); assert [c['name'] for c in d['cases']] == ['winner-proof-cannot-import-project-function'], d['cases']; print('ONLY_NAMED_CASE_RAN')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONLY_NAMED_CASE_RAN"
+        ]
+      }
+    },
+    {
+      "name": "runner-focused-rerun-clears-slop-gate",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh run /home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json --case os-health-live-memory-probe --output $D/r.json >/dev/null 2>&1; rc=$?; [ $rc -eq 0 ] && python3 -c \"import json; d=json.load(open('$D/r.json')); assert len(d['cases'])==1; print('FOCUSED_SINGLE_POSITIVE_ACCEPTED')\" || { echo rc=$rc; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FOCUSED_SINGLE_POSITIVE_ACCEPTED"
+        ]
+      }
+    },
+    {
+      "name": "runner-validate-checks-without-executing",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh validate /home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json >/dev/null 2>&1 || exit 1; python3 -c \"import json; f=json.load(open('/home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json')); f['cases'][0]['type']='capability'; json.dump(f, open('$D/broken.json','w'))\"; /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh validate $D/broken.json >/dev/null 2>&1; rc=$?; python3 -c \"import json; f=json.load(open('/home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json')); f['cases']=[{'name':'writes','type':'positive','command':['bash','-c','touch $D/EXECUTED'],'expected':{'exit_code':0}},{'name':'adv','type':'adversarial','command':['bash','-c','exit 1'],'expected':{'exit_code':1}}]; json.dump(f, open('$D/exec.json','w'))\"; /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh validate $D/exec.json >/dev/null 2>&1; [ $rc -ne 0 ] && [ ! -f $D/EXECUTED ] && echo VALIDATE_REJECTS_AND_NEVER_EXECUTES || { echo rc=$rc; ls $D; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "VALIDATE_REJECTS_AND_NEVER_EXECUTES"
+        ]
+      }
+    },
+    {
+      "name": "runner-subset-readiness-separates-cases-from-claims",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh run /home/graham/workspace/experiments/agent-skills/skills/ask/fixtures/agentic_eval.json --case ladder-probe-named-timeout-is-honest-blocker-not-dishonest --output $D/r.json >/dev/null 2>&1; python3 -c \"import json; d=json.load(open('$D/r.json')); assert d['readiness']=='READY' and d['case_readiness']=='READY', d['readiness']; assert d['claims_coverage'].startswith('partial'), d['claims_coverage']; print('SUBSET_READY_WITH_PARTIAL_CLAIMS')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SUBSET_READY_WITH_PARTIAL_CLAIMS"
+        ]
+      }
     }
   ]
 }

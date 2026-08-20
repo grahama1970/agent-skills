@@ -207,7 +207,7 @@ def _terminate_group(proc: subprocess.Popen) -> list[int]:
     return [pid for pid in _pids_in_group(pgid) if pid != os.getpid()]
 
 
-def load_manifest(path: Path) -> dict[str, Any]:
+def load_manifest(path: Path, *, focused: bool = False) -> dict[str, Any]:
     with path.open(encoding="utf-8") as handle:
         manifest = json.load(handle)
     if manifest.get("version") != 2:
@@ -228,7 +228,12 @@ def load_manifest(path: Path) -> dict[str, Any]:
     class_problems.extend(_supports_claims_problems(manifest, cases))
     if class_problems:
         raise typer.BadParameter("; ".join(class_problems))
-    _assert_not_slop(manifest, cases, trials)
+    if not focused:
+        # A focused rerun (--case) re-executes cases that already passed the
+        # gate inside their parent fixture; forcing every such rerun to pad in
+        # an unrelated adversarial case tested nothing (agent-skills#1464).
+        # Per-case validation above still applies unconditionally.
+        _assert_not_slop(manifest, cases, trials)
     return manifest
 
 
@@ -571,13 +576,27 @@ def _repo_provenance(cwd: Path) -> dict[str, Any]:
     return {"sha": _git("rev-parse", "HEAD"), "ref": _git("rev-parse", "--abbrev-ref", "HEAD")}
 
 
-def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
-    manifest = load_manifest(path)
+def evaluate_manifest(
+    path: Path,
+    timeout_seconds: float,
+    only_cases: list[str] | None = None,
+) -> dict[str, Any]:
+    focused = bool(only_cases)
+    manifest = load_manifest(path, focused=focused)
     trials = manifest.get("trials", 3)
     cwd = path.parent
     run_id = uuid.uuid4().hex[:12]
     cases = []
     raw_cases = manifest["cases"]
+    if only_cases:
+        by_name = {c.get("name"): c for c in raw_cases}
+        unknown = [n for n in only_cases if n not in by_name]
+        if unknown:
+            raise typer.BadParameter(
+                f"--case names not in manifest: {', '.join(unknown)}; "
+                f"valid: {', '.join(sorted(by_name))}"
+            )
+        raw_cases = [by_name[n] for n in only_cases]
     for index, case in enumerate(raw_cases):
         case_id = f"{run_id}-c{index:03d}"
         # A case may declare its own timeout (real-world cases that run a live
@@ -651,6 +670,12 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
     capability_readiness = claims_mod.compute_readiness(manifest, enriched, now_iso)
     case_readiness = readiness_for(cases)
     effective = case_readiness
+    if focused:
+        # A focused rerun cannot span the manifest's claims by construction;
+        # blending claim coverage in would make a 100%-pass rerun read
+        # USABLE_WITH_GAPS forever (agent-skills#1468). Case readiness is the
+        # verdict; claim coverage is reported as explicitly partial.
+        capability_readiness = None
     if capability_readiness is not None:
         # When capability claims are declared the gate is the WORSE of the two:
         # twenty green deterministic cases cannot make a claim with an unmet
@@ -674,6 +699,8 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
         "readiness": effective,
         "case_readiness": case_readiness,
         "capability_readiness": capability_readiness,
+        "claims_coverage": ("partial: focused --case run" if focused else "manifest-spanning"),
+        "focused_cases": list(only_cases or []),
         "generated_at": now_iso,
         "case_count": len(cases),
         "required_case_count": sum(1 for c in cases if c["required"]),
@@ -999,6 +1026,12 @@ def run(
         "--report-only",
         help="Emit the report and exit 0 even when required cases failed.",
     ),
+    case: list[str] = typer.Option(
+        None, "--case",
+        help="Run ONLY the named case(s) from the manifest (repeatable). Focused "
+             "reruns skip the fixture-composition slop gate and score readiness "
+             "from the executed cases alone (agent-skills#1463/#1464/#1468).",
+    ),
 ) -> None:
     """Run an agentic evaluation manifest.
 
@@ -1007,7 +1040,7 @@ def run(
     is the failure this gate exists to prevent. Use --report-only when you want
     the report without the gate.
     """
-    report = evaluate_manifest(manifest, timeout_seconds)
+    report = evaluate_manifest(manifest, timeout_seconds, only_cases=list(case or []) or None)
     payload = json.dumps(report, indent=2)
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -1023,6 +1056,20 @@ def run(
             "readiness={} required_not_passing={}", report["readiness"], ", ".join(failed) or "none"
         )
         raise typer.Exit(1)
+
+
+@app.command("validate")
+def validate(
+    manifest: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+) -> None:
+    """Validate a fixture WITHOUT executing any case (agent-skills#1465).
+
+    Full schema, claims, seams, evidence-class, and slop validation -- exactly
+    what run performs before its first case -- then exit. Nonzero with the
+    problem list on a broken fixture; zero on a valid one.
+    """
+    m = load_manifest(manifest)
+    typer.echo(f"VALID: {manifest} ({len(m['cases'])} cases, trials={m.get('trials')})")
 
 
 @app.command("apply-scaffolds")
