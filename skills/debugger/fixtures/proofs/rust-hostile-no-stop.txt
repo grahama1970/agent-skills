@@ -1,0 +1,3 @@
+Breakpoint 1 at 0x000000000000113d: file /tmp/debugger-rust/main.rs, line 3.
+Continuing.
+[Inferior 1 (process 4242) exited normally]

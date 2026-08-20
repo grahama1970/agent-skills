@@ -9,8 +9,10 @@ used by the skill sanity checks.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -111,8 +113,11 @@ def normalize_node(raw: dict[str, Any]) -> dict[str, Any]:
             "hit": bool(raw.get("hit_breakpoint")),
             "reason": "breakpoint" if raw.get("hit_breakpoint") else "not-hit",
             "frame": {
-                "file": str(frame.get("url") or bp.get("file", "")),
-                "line": int(frame.get("line", bp.get("line", 1))),
+                # The frame speaks only for itself: never fall back to the
+                # breakpoint's file/line, which would make the independent
+                # frame-vs-breakpoint match vacuously true (#1436).
+                "file": str(frame.get("url") or frame.get("file") or ""),
+                "line": int(frame.get("line", 0) or 0),
                 "function": str(frame.get("functionName", "")),
             },
         },
@@ -338,6 +343,28 @@ def correlation_reasons(proof: dict[str, Any]) -> list[str]:
         if want is not None and got is not None and want != got:
             reasons.append(f"stopped {label} {got!r} does not match requested {label} {want!r}")
 
+    # Stop-sequence, authority, and request-hash correlation (when supplied).
+    want_seq = request.get("expectedStopSequence")
+    got_seq = stopped.get("stopSequence")
+    if want_seq is not None and got_seq is not None and int(got_seq) != int(want_seq):
+        reasons.append(f"stop sequence {got_seq} does not match requested {want_seq}")
+    want_auth = request.get("authority")
+    got_auth = stopped.get("authority") or (proof.get("debugger", {}) or {}).get("authority")
+    if want_auth is not None and got_auth is not None and str(want_auth) != str(got_auth):
+        reasons.append(f"stop authority {got_auth!r} does not match requested {want_auth!r}")
+    body = request.get("body")
+    claimed_req_hash = request.get("requestHash")
+    if body is not None and claimed_req_hash is not None:
+        actual = hashlib.sha256(
+            json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        if actual != str(claimed_req_hash):
+            reasons.append("request body does not hash to the recorded requestHash")
+    # Referenced artifacts must exist on disk and cannot be conjured (when supplied).
+    for index, ref in enumerate(proof.get("artifacts", []) or []):
+        if isinstance(ref, str) and ref and not Path(ref).exists():
+            reasons.append(f"referenced artifact does not exist: artifacts[{index}]={ref}")
+
     frame_hash = frame.get("sourceHash")
     reestablished = bool(frame.get("reestablished") or stopped.get("reestablished"))
     if frame_hash is not None and not reestablished:
@@ -356,12 +383,85 @@ def correlation_reasons(proof: dict[str, Any]) -> list[str]:
     return reasons
 
 
+def event_chain_reasons(proof: dict[str, Any]) -> list[str]:
+    """Detect deleted, reordered, duplicated, or substituted session events (#1436).
+
+    When the producer records ``events`` as a hash chain -- each event carries
+    ``seq`` (0-based, contiguous) and ``chainHash`` where
+
+        chainHash_i = sha256(prev_hash + canonical_json(event minus chainHash))
+
+    seeded by ``request.sessionId`` (or "genesis") -- the whole history becomes
+    integrity-bound: removing, reordering, editing, or substituting any event
+    breaks every later hash, and duplication breaks seq contiguity. Only checked
+    when ``events`` is present (backwards compatible).
+    """
+    events = proof.get("events")
+    if not isinstance(events, list) or not events:
+        return []
+    reasons: list[str] = []
+    request = proof.get("request", {}) if isinstance(proof.get("request"), dict) else {}
+    prev_hash = str(request.get("sessionId") or "genesis")
+    for index, event in enumerate(events):
+        if not isinstance(event, dict):
+            reasons.append(f"events[{index}] is not an object")
+            break
+        if event.get("seq") != index:
+            reasons.append(f"events[{index}] seq={event.get('seq')!r} breaks contiguity (expected {index})")
+            break
+        body = {k: v for k, v in event.items() if k != "chainHash"}
+        expected = hashlib.sha256(
+            (prev_hash + json.dumps(body, sort_keys=True, separators=(",", ":"))).encode()
+        ).hexdigest()
+        if event.get("chainHash") != expected:
+            reasons.append(
+                f"events[{index}] chainHash mismatch (event deleted, reordered, or "
+                f"substituted upstream of or at seq {index})"
+            )
+            break
+        prev_hash = expected
+    return reasons
+
+
+def repo_binding_reasons(proof: dict[str, Any], repo_root: Path | None) -> list[str]:
+    """Bind the proof to the actual repository state (#1436).
+
+    When the producer records ``repo`` ({sha, ref?, dirty?}) AND the caller
+    provides --repo-root, the recorded identity is checked against the real
+    repository -- `git rev-parse HEAD` and `git status --porcelain` -- so a proof
+    captured on different code cannot certify this checkout. Without --repo-root
+    the recorded fields remain claims (a limitation, not a pass).
+    """
+    repo = proof.get("repo")
+    if not isinstance(repo, dict) or repo_root is None:
+        return []
+    reasons: list[str] = []
+    try:
+        head = subprocess.run(["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, timeout=15).stdout.strip()
+        porcelain = subprocess.run(["git", "-C", str(repo_root), "status", "--porcelain"],
+                                   capture_output=True, text=True, timeout=15).stdout.strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        return [f"repo binding unverifiable: git failed under {repo_root}: {exc}"]
+    claimed_sha = str(repo.get("sha", ""))
+    if claimed_sha and not head.startswith(claimed_sha) and not claimed_sha.startswith(head):
+        reasons.append(f"proof repo.sha {claimed_sha[:12]} does not match checkout HEAD {head[:12]}")
+    if "dirty" in repo and bool(repo.get("dirty")) != bool(porcelain):
+        reasons.append(
+            f"proof repo.dirty={repo.get('dirty')} but checkout is "
+            f"{'dirty' if porcelain else 'clean'}"
+        )
+    return reasons
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("artifact", type=Path)
     parser.add_argument("--canonical-out", type=Path)
     parser.add_argument("--expect-valid", action="store_true")
     parser.add_argument("--expect-invalid", action="store_true")
+    parser.add_argument("--repo-root", type=Path, default=None,
+                        help="Verify the proof's recorded repo {sha,dirty} against this checkout.")
     args = parser.parse_args()
     if args.expect_valid and args.expect_invalid:
         parser.error("--expect-valid and --expect-invalid are mutually exclusive")
@@ -380,6 +480,8 @@ def main() -> int:
         # Cross-check supplied identity fields: a stop from a different session/run,
         # or over source that drifted after the request, cannot certify this request.
         correlation = correlation_reasons(proof)
+        correlation += event_chain_reasons(proof)
+        correlation += repo_binding_reasons(proof, args.repo_root)
         if bool(proof["assessment"].get("proofValid")) and correlation:
             raise ProofError(
                 "producer proofValid=true fails request/session/source correlation: "

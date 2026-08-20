@@ -1,0 +1,25 @@
+{
+  "adapter": "Node inspector",
+  "breakpoint": {
+    "file": "/tmp/app/handler.ts",
+    "line": 12,
+    "verified": true
+  },
+  "hit_breakpoint": true,
+  "locals": {
+    "payload": "{...}"
+  },
+  "proofAssessment": {
+    "missingLocals": [],
+    "proofValid": true,
+    "requestedLocals": [
+      "payload"
+    ],
+    "variableInspectionValid": true
+  },
+  "top_frame": {
+    "functionName": "handle",
+    "line": 12,
+    "url": "/tmp/app/handler.ts"
+  }
+}

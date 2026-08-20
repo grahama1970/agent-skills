@@ -3,10 +3,10 @@
   "skill": "debugger",
   "trials": 3,
   "eval_tier": "standard",
-  "proof_scope": "Proof identity correlation (#1436 hardening): the validator independently rejects a proof whose supplied identity fields do not belong together -- a stopped frame from a different session/run than the request, or a stop over source that drifted after the breakpoint request (unless the frame was explicitly re-established). Fields are checked only when the producer supplies them, so an un-instrumented proof is neither hardened nor broken by this layer.",
+  "proof_scope": "Proof identity correlation and history integrity (#1436): the validator independently rejects a proof whose supplied identity fields do not belong together -- a stopped frame from a different session/run than the request, a stop over source that drifted after the breakpoint request (unless explicitly re-established), a session event history whose hash chain shows deletion/reordering/substitution, or a recorded repo identity that does not match the actual checkout (--repo-root). Fields are checked only when the producer supplies them, so an un-instrumented proof is neither hardened nor broken by these layers.",
   "claims": {
-    "proves": "validate_debugger_proof.py rejects (exit 1) a proofValid=true proof whose stopped session/run differs from the requested session/run, and one whose hit-breakpoint sourceHash (at request) differs from the stopped frame sourceHash (at stop) without re-establishment; and accepts (exit 0) a proof where source drift was explicitly re-established, and one whose session and source hash correlate",
-    "does_not_prove": "event-history hash-chain integrity, repo SHA/dirty-state binding, or that any specific producer actually emits these identity fields"
+    "proves": "validate_debugger_proof.py rejects (exit 1) a proofValid=true proof with: a cross-session stopped frame; post-request source drift without re-establishment; a deleted, reordered, or substituted event in a hash-chained event history; or a repo.sha/dirty recording that contradicts the real checkout under --repo-root. It accepts (exit 0) re-established drift, correlated session+source, an intact event chain, and a repo recording matching the live checkout",
+    "does_not_prove": "that any specific producer actually emits these identity/event/repo fields, or repo binding when --repo-root is not supplied (recorded repo fields remain claims)"
   },
   "cases": [
     {
@@ -59,6 +59,146 @@
         "exit_code": 0,
         "stdout_contains": ["validation passed"]
       }
+    },
+    {
+      "name": "accept-intact-event-chain",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A proof whose session event history forms an intact hash chain is accepted.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-events-valid.json --expect-valid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["validation passed"]}
+    },
+    {
+      "name": "reject-deleted-event",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Deleting an event from the chained history breaks seq contiguity / the hash chain and is rejected.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-events-deleted.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 1, "stderr_contains": ["contiguity"]}
+    },
+    {
+      "name": "reject-reordered-events",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Reordering two events (keeping their original hashes) is detected and rejected.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-events-reordered.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 1, "stderr_contains": ["fails request/session/source correlation"]}
+    },
+    {
+      "name": "reject-substituted-event",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Editing an event body while keeping its original chainHash is detected and rejected.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-events-substituted.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 1, "stderr_contains": ["chainHash mismatch"]}
+    },
+    {
+      "name": "reject-repo-sha-mismatch-with-root",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "With --repo-root, a proof recording a repo.sha that does not match the actual checkout HEAD is rejected (live git read-back).",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/canonical-repo-wrong-sha.json --repo-root ../../.."
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 1, "stderr_contains": ["does not match checkout HEAD"]}
+    },
+    {
+      "name": "accept-repo-recording-matching-live-checkout",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A proof recording the REAL current HEAD sha and dirty state validates against the live checkout (generated at run time from git itself).",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; HEAD=$(git -C ../../.. rev-parse HEAD); DIRTY=$(git -C ../../.. status --porcelain); OUT=$(mktemp); python3 -c \"import json,sys; d=json.load(open('proofs/canonical-valid.json')); d['repo']={'sha':sys.argv[1],'dirty':bool(sys.argv[2])}; json.dump(d,open(sys.argv[3],'w'))\" \"$HEAD\" \"$DIRTY\" \"$OUT\"; uv run --project .. python ../scripts/validate_debugger_proof.py \"$OUT\" --repo-root ../../.. --expect-valid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["validation passed"]}
+    },
+    {
+      "name": "reject-node-borrowed-frame",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A TypeScript/node-shaped proof whose stopped frame is from a different file than the hit breakpoint is rejected; the normalizer no longer backfills a missing frame file from the breakpoint (producer-derived truth).",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/node-hostile-borrowed-frame.json"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 1, "stderr_contains": ["matches no breakpoint that hit"]}
+    },
+    {
+      "name": "accept-node-genuine-frame",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A node-shaped proof whose frame genuinely sits at the hit breakpoint still validates.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/node-valid.json --expect-valid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["validation passed"]}
+    },
+    {
+      "name": "rust-transcript-without-stop-is-invalid",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A Rust gdb transcript that sets a breakpoint but never stops or shows values is derived invalid (no invented adapter evidence).",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; uv run --project .. python ../scripts/validate_debugger_proof.py proofs/rust-hostile-no-stop.txt --expect-invalid"
+      ],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["invalid as expected"]}
+    },
+    {
+      "name": "reject-mismatched-supplied-identity-fields",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Stop-sequence, authority, request-hash, and artifact-reference mismatches (each supplied by the producer) are all rejected with named reasons.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; python3 -c \"import json; base=json.load(open('proofs/canonical-valid.json'));\nimport copy\nx=copy.deepcopy(base); x['request']={'expectedStopSequence':3}; x['stopped']=dict(base['stopped'],stopSequence=5); json.dump(x,open('/tmp/pc-seq.json','w'))\ny=copy.deepcopy(base); y['request']={'authority':'remote-ssh:box-a'}; y['stopped']=dict(base['stopped'],authority='local'); json.dump(y,open('/tmp/pc-auth.json','w'))\nz=copy.deepcopy(base); z['request']={'body':{'break':'x.py:2'},'requestHash':'deadbeef'}; json.dump(z,open('/tmp/pc-hash.json','w'))\nw=copy.deepcopy(base); w['artifacts']=['/nonexistent/event-log.jsonl']; json.dump(w,open('/tmp/pc-art.json','w'))\"; fails=0; for f in /tmp/pc-seq.json /tmp/pc-auth.json /tmp/pc-hash.json /tmp/pc-art.json; do uv run --project .. python ../scripts/validate_debugger_proof.py \"$f\" >/dev/null 2>>/tmp/pc-all.err && { echo \"UNEXPECTED-PASS $f\"; fails=1; }; done; grep -c 'fails request/session/source correlation' /tmp/pc-all.err; [ $fails -eq 0 ] && echo ALL-FOUR-REJECTED"
+      ],
+      "timeout_seconds": 90,
+      "expected": {"exit_code": 0, "stdout_contains": ["ALL-FOUR-REJECTED"]}
     },
     {
       "name": "accept-correlated-session-and-source",

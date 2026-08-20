@@ -1,0 +1,85 @@
+{
+  "analysis": {
+    "conclusion": "The debugger stopped at the branch and captured the selected local.",
+    "nextEdit": ""
+  },
+  "assessment": {
+    "limitations": [],
+    "proofValid": true,
+    "variableInspectionValid": true
+  },
+  "breakpoints": [
+    {
+      "file": "/tmp/sample.py",
+      "hit": true,
+      "line": 2,
+      "source": "label = value",
+      "verified": true
+    }
+  ],
+  "captures": {
+    "locals": {
+      "value": "14"
+    },
+    "requestedLocals": [
+      "value"
+    ],
+    "watches": {}
+  },
+  "debugger": {
+    "adapter": "Python bdb",
+    "mode": "python-bdb"
+  },
+  "events": [
+    {
+      "chainHash": "bb51db92a540411c0aea8d2bd27eb9b6452f322bf0a9a60014acf7a1da4a9b15",
+      "config": "walkthrough",
+      "kind": "launch",
+      "seq": 0
+    },
+    {
+      "chainHash": "a140faf1c35d6c0479497cde20b3ec4142c925bfd49a55ddee68c4b48b1757f7",
+      "kind": "stopped",
+      "line": 2,
+      "reason": "breakpoint",
+      "seq": 2
+    },
+    {
+      "chainHash": "d40ce266b3d3b7988be40ebabfc056ecc507655ef2bfd27862bd860d3a471577",
+      "file": "/tmp/sample.py",
+      "kind": "breakpoint-set",
+      "line": 2,
+      "seq": 1
+    },
+    {
+      "chainHash": "99f3900341804bd57d7bebddd66bc93627d269b559588f70f35e386375fbd820",
+      "kind": "inspected",
+      "locals": [
+        "value"
+      ],
+      "seq": 3
+    }
+  ],
+  "producer": {
+    "name": "fixture"
+  },
+  "repro": {
+    "command": [
+      "python",
+      "sample.py"
+    ]
+  },
+  "request": {
+    "sessionId": "s-chain-1"
+  },
+  "schema": "debugger.proof.v1",
+  "stopped": {
+    "frame": {
+      "file": "/tmp/sample.py",
+      "function": "classify",
+      "line": 2
+    },
+    "hit": true,
+    "reason": "breakpoint"
+  }
+}
