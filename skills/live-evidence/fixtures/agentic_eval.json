@@ -539,6 +539,28 @@
         ]
       },
       "notes": "Live browser rungs for #1450/#1451/#1452/#1453: real server, real built UI in a surf-controlled Chrome tab, real debugger proof card, real audio seek readback."
+    },
+    {
+      "name": "fast-solver-live-latency-and-parity",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver"
+      ],
+      "timeout_seconds": 900,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "30-question latency: p50 <= 5s and p95 <= 10s to first answer content: PASS",
+          "zero duplicate solver executions per revision: PASS",
+          "zero stale publications in the steady-state run: PASS",
+          "churn: new question answers under its own identity; old stream completes or is fenced: PASS",
+          "fast solver: PASS"
+        ]
+      },
+      "notes": "#1473 live stage-2 fast path: LIVE resolver + LIVE streaming solver, 30 heterogeneous questions, revision-churn fence, blinded parity vs the $ask single-call path. The ask fixture runner remains only as a keyless regression floor, never a live-answer claim."
     }
   ]
 }

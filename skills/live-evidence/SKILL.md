@@ -184,9 +184,17 @@ receipt, and no attempt budget (a missed poll is superseded by the next one
 seconds later). Paying 38s of compliance machinery for a verdict that is
 worthless 3 seconds later makes the live loop impossible.
 
-Stage 2 keeps `$ask tau-dag` precisely because the preserved Ask run directory
-is the source receipt this contract requires, and once per question 38s is
-acceptable.
+Stage 2 (#1473) has a fast path and an escalation path. The fast path is a
+direct streaming SciLLM call (claude-sonnet-5, medium effort) that publishes
+the answer into the already-fenced card as it streams: measured live over 30
+heterogeneous questions, p50 1.96s / p95 5.35s from canonical-question-ready
+to first answer content, with a fast_solver_receipt (model, effort, latency
+segments, response sha256) journaled per answer and blinded quality parity
+gated against the `$ask` path. `$ask tau-dag` remains the escalation route
+because its run directory is the source receipt this contract requires --
+and after agent-skills#1472 a single call costs ~5s of orchestration plus
+generation, not ~40s. A live-answer capability claim requires the fast path's
+live receipts; the keyless ask fixture runner is a regression floor only.
 
 Do not "simplify" stage 1 back onto `tau-dag`. That change is what makes the
 skill unusable in a live interview, and the numbers above are the reason.

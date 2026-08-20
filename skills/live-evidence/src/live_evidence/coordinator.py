@@ -25,6 +25,9 @@ from .models import (
     ledger_digest,
 )
 from .readiness import ReadinessVerdict
+from .echo import strip_assistant_echo
+from .fast_path import stream_fast_answer
+from .solver import FastSolver
 from .resolver import GateEvent, StreamingResolver
 from .requirement_ledger import build_requirement_entries
 from .salient_facts import SalientFactWriter, extract_decision
@@ -194,84 +197,7 @@ class EvidenceCoordinator:
             del self._assistant_utterances[:-4]
 
     def _strip_assistant_echo(self, text: str) -> str:
-        """Redact the assistant's own spoken content, keep everything else.
-
-        Character-level fuzzy matching, not token identity: STT respells our
-        own speech ("breakpoint" -> "break point", "forty two" -> "42",
-        "set" -> "said"), so exact-token runs missed the echo entirely --
-        observed live: the registered monologue survived redaction verbatim.
-        difflib matching blocks of 15+ characters against each registered
-        utterance are removed; genuinely human speech does not share long
-        character runs with the assistant's script by accident.
-        """
-
-        if not self._assistant_utterances:
-            return text
-        import difflib
-
-        # SequenceMatcher yields ONE monotone alignment, but cumulative STT
-        # buffers can contain the same echoed phrase more than once -- the
-        # second occurrence survived a single pass (observed live: the card
-        # question repeated "point I set at line 42" twice). Iterate to a
-        # fixed point, bounded.
-        for iteration in range(6):
-            lowered = text.lower()
-            cut: list[tuple[int, int]] = []
-            for utterance in self._assistant_utterances:
-                matcher = difflib.SequenceMatcher(None, lowered, utterance, autojunk=False)
-                for block in matcher.get_matching_blocks():
-                    if block.size >= 15:
-                        cut.append((block.a, block.a + block.size))
-            if not cut:
-                if iteration == 0:
-                    return text  # nothing echoed: leave text untouched
-                break
-            cut.sort()
-            # Expand each cut to word boundaries: a mid-word cut leaves
-            # fragments like "oint" from "breakpoint" that later STT variance
-            # turns into card text (observed live: "o the break 42").
-            expanded: list[tuple[int, int]] = []
-            for start, end in cut:
-                while start > 0 and not text[start - 1].isspace():
-                    start -= 1
-                while end < len(text) and not text[end].isspace():
-                    end += 1
-                expanded.append((start, end))
-            kept: list[str] = []
-            cursor = 0
-            for start, end in expanded:
-                if start > cursor:
-                    kept.append(text[cursor:start])
-                cursor = max(cursor, end)
-            kept.append(text[cursor:])
-            text = " ".join("".join(kept).split())
-        # Scrub (reached only when something WAS cut): residual words fuzzily
-        # matching assistant vocabulary are echo debris -- STT respells our
-        # speech ("breakpoint" -> "break"/"oint.42"), so exact matching misses
-        # exactly the debris that survives the character cuts.
-        import re as _re
-
-        vocabulary = {
-            part
-            for utterance in self._assistant_utterances
-            for token in utterance.split()
-            for part in _re.split(r"[^a-z0-9]+", token)
-            if len(part) >= 4 or part.isdigit()
-        }
-
-        def is_debris(word: str) -> bool:
-            parts = [p for p in _re.split(r"[^a-z0-9]+", word.lower()) if p]
-            if not parts:
-                return False
-            def part_matches(part: str) -> bool:
-                if part in vocabulary:
-                    return True
-                if len(part) >= 4:
-                    return any(len(v) >= 5 and (part in v or v in part) for v in vocabulary)
-                return False
-            return all(part_matches(p) for p in parts)
-
-        return " ".join(word for word in text.split() if not is_debris(word))
+        return strip_assistant_echo(text, self._assistant_utterances)
 
     async def apply_clarification_answer(
         self,
@@ -633,18 +559,27 @@ class EvidenceCoordinator:
             # At most one automatic solver run per accepted revision.
             may_ask = False
 
+        fast_pending = False
         if may_ask:
             self._solved_revisions.add((question_id, question_revision))
-            await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
-            ask_result = await self._ask.solve(query, ranked[:4])
-            await self._state.set_lane(
-                RetrievalLane.ASK,
-                LaneState.OK if ask_result.ok else LaneState.DEGRADED,
-                ask_result.detail,
-                latency_ms=ask_result.latency_ms,
-                result_count=len(ask_result.sources),
-            )
-            ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
+            if FastSolver.available():
+                # (#1473) Publish the evidence card first, then stream the
+                # answer into it; the full $ask path stays as escalation.
+                fast_pending = True
+                await self._state.set_lane(
+                    RetrievalLane.ASK, LaneState.RUNNING, "Fast solver streaming"
+                )
+            else:
+                await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
+                ask_result = await self._ask.solve(query, ranked[:4])
+                await self._state.set_lane(
+                    RetrievalLane.ASK,
+                    LaneState.OK if ask_result.ok else LaneState.DEGRADED,
+                    ask_result.detail,
+                    latency_ms=ask_result.latency_ms,
+                    result_count=len(ask_result.sources),
+                )
+                ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
         elif verdict is not None:
             # A judged "not ready" holds the solver back and says why, so the
             # HUD never shows a confident answer to a truncated question.
@@ -708,6 +643,29 @@ class EvidenceCoordinator:
             card,
             policy_digest=self._state.session_policy_digest(),
         )
+        if fast_pending:
+            outcome = await stream_fast_answer(
+                state=self._state, journal=self._journal, solver=FastSolver(),
+                card=card, query=query,
+                evidence_excerpts=[source.excerpt[:1_200] for source in ranked[:4]],
+                question_id=question_id, question_revision=question_revision,
+            )
+            lane_state = (
+                LaneState.OK if outcome is not None and outcome.ok else LaneState.DEGRADED
+            )
+            detail = (
+                f"Fast answer in {outcome.total_s:.1f}s" if outcome is not None and outcome.ok
+                else "Fast solver unavailable or superseded"
+            )
+            await self._state.set_lane(RetrievalLane.ASK, lane_state, detail)
+            if outcome is not None and not outcome.ok:
+                # Escalation: the receipt-heavy $ask path answers instead.
+                ask_result = await self._ask.solve(query, ranked[:4])
+                if ask_result.ok and ask_result.sources:
+                    merged = rank_sources([*ranked, *ask_result.sources], query, self._profile)
+                    await self._state.publish_card_fenced(
+                        card.model_copy(update={"sources": merged[:8]})
+                    )
         logger.info(
             "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,
