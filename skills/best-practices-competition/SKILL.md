@@ -94,6 +94,7 @@ candidate's approach, code, score, feature ideas, or failure analysis.
 | Request shape | Better route |
 | --- | --- |
 | Shared deliberation or synthesis | `$ask` roundtable with `$best-practices-roundtable` |
+| N independent answers the human reads, no winner | `$ask one-shot` with `$best-practices-one-shot` |
 | One answer from one handler | `$ask` single handler |
 | Creator then pass/fail reviewer | `$ask tau-dag --topology sequential` |
 | A deterministic repair is already obvious | Apply and test the repair directly |
@@ -257,6 +258,58 @@ may or may not contribute useful ideas; the project agent decides feature by
 feature and records the reason. If the winner cannot make progress after a
 focused continuation attempt, either run one explicit fallback round with the
 remaining candidates or report `NEEDS_ATTENTION` with the failing evidence.
+
+## Count candidates that ANSWERED, not candidates dispatched
+
+"Fewer than two candidates" must be measured on answers. Dispatching two seats
+and receiving one is a single opinion wearing a competition's artifacts.
+
+Observed 2026-08-16: a compete run dispatched `webgpt` and `webclaude`, one
+answered, and the scorecard still read `candidates: 2`. That run stayed honest
+only because it also reported `NEEDS_ATTENTION`; a scorecard naming a winner
+off one answer would have been indistinguishable from a real competition.
+
+```bash
+skills/ask/run.sh panel-audit <run-dir> --mode compete
+```
+
+The audit fails the run when fewer than two candidates produced a non-empty
+response and the status is not already `NEEDS_ATTENTION`/`BLOCKED`.
+
+## Isolation is checkable, so check it
+
+Do not assert isolation from the fact that you did not intend to leak. Look for
+a rival's response text inside each candidate's prompt -- that is the shape
+leakage actually takes when a join, a retry, or a recovery path rebuilds a
+packet from prior artifacts.
+
+Compare task bodies too: every candidate must receive a byte-identical packet
+once per-seat addressing (`Handler:`, `Model:`, `Browser model preference:`) is
+removed. A packet tailored to one candidate is a rigged competition even when
+the tailoring looks harmless.
+
+## A transport failure is not a candidate verdict
+
+A candidate that died before reaching its provider has produced no evidence
+about its approach. Record it as a transport blocker with its exact failure,
+never as a weak entry.
+
+This matters more than it sounds: on 2026-08-16 every non-`webgpt` browser seat
+was failing on a CLI usage error (`unrecognized arguments: --stable-stall-ms`)
+before opening a page. Read as candidate quality, that would have "proved"
+webgpt superior across every competition ever run on this machine. Always
+separate `did not run` from `ran and lost`.
+
+## Charts before and after the run
+
+Compile first and show the human the DAG chart before any multi-candidate
+`--execute`: `$ask` prints it at compile and persists it as
+`dag-chart.initial.txt` (candidates, join-gate, reviewer lenses, judge, join
+all visible). After the run, read `dag-chart.final.txt` — per-node verdicts
+on the same topology — and reconcile it with the scorecard: a candidate's
+node line must agree with its lane artifacts, and a judge node reading FAIL
+or NO_RECEIPT invalidates any winner claim. Both artifacts are eval-enforced
+in `$ask`.
 
 ## Scoring Contract
 

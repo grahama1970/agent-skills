@@ -168,7 +168,7 @@ standing:
 | Target | Example | Transport owner |
 | --- | --- | --- |
 | **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
-| **Model call** — API/model handler | `gpt-5.5-high`, `claude-opus-5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
+| **Model call** — API/model handler | `gpt-5.5-high`, `Codex-opus-5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
 | **Web model** — browser-backed reviewer (chat tab, NOT the agentic model; see the `webclaude` warning below) | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
 
 A project agent should not care which side is browser, model, or live session
@@ -199,7 +199,7 @@ the candidates plus a ready-to-paste command:
 ```
 'memory' matches 5 live panes:
   w11:p13 [codex/idle]    /home/graham/workspace/experiments/memory
-  w7E:pK  [claude/idle]   /home/graham/workspace/experiments/memory
+  w7E:pK  [Codex/idle]   /home/graham/workspace/experiments/memory
   w88:p1  [opencode/idle] /home/graham/workspace/experiments/memory
 Pick one by pane id:
   ./run.sh herdr send w11:p13 "<message>"
@@ -240,7 +240,7 @@ the agent's *reply*, requiring two or more occurrences — one for the echoed
 prompt, one for the answer. Counting is harness-agnostic; reply markers are not
 (codex renders `›` for input and `•` for output, other harnesses differ).
 Round-trip needs a harness that echoes and answers in the pane, so it is
-expected to work with pi/codex/claude-style TUIs and to skip elsewhere.
+expected to work with pi/codex/Codex-style TUIs and to skip elsewhere.
 
 **Some panes report `idle` but are dead.** A blank readback is not about which
 agent is running — it is about whether anything is still drawing to the
@@ -276,7 +276,7 @@ real text. Delivery is verified after the fact instead of predicted before it.
 Two conditions the probes report honestly rather than as `/ask` failures: a
 target that received the message but is **out of provider credits** (skip, not
 fail), and a `pane run` that types text which the harness leaves **unsent in
-the composer** — observed once on a Claude Code pane, where `submitted: true`
+the composer** — observed once on a Codex pane, where `submitted: true`
 was reported for a message still sitting at the prompt.
 
 ## Project-Agent Quickstart
@@ -296,7 +296,7 @@ orchestration path.
 Handlers are peers even when their transports differ. Browser handlers
 (`webgpt`, `webclaude`, `webkimi`, `webgemini`, `webgrok`) run through `$surf`
 and `$browser-oracle`. API/model handlers such as `gpt-5.5-high`,
-`gpt-5.5-xhigh`, `claude-opus-5-high`, or
+`gpt-5.5-xhigh`, `Codex-opus-5-high`, or
 `chutes deepseek-ai/DeepSeek-V3.2-TEE` are routed by Tau. Project agents should
 not care which side is browser or API beyond naming the handler.
 
@@ -305,7 +305,8 @@ not care which side is browser or API beyond naming the handler.
 Pick the mode from what the DELIVERABLE is, not from how many seats you want.
 
 **one-shot** — the deliverable is N independent answers, side by side.
-No consensus, no judge, no quorum: 1/3 answers is a usable result.
+No consensus, no judge, no quorum: 1/3 answers is a usable result. Full
+contract in `$best-practices-one-shot`.
 
 Human says: *"/ask webgpt, webclaude and oc-deepseek: how would you paginate
 this API?"* — a question to several seats where the human reads each answer.
@@ -369,7 +370,7 @@ lane-local, then one join that synthesizes with per-seat status:
 ISOLATED candidates, with receipts. Candidates never see each other.
 
 Human says: *"/ask webgpt, webclaude and oc-deepseek to each implement the
-parser fix, then have claude-opus-5 pick a winner with a rationale"* — the
+parser fix, then have Codex-opus-5 pick a winner with a rationale"* — the
 human wants ONE implementation chosen on evidence, not a discussion.
 
 ```bash
@@ -378,7 +379,7 @@ human wants ONE implementation chosen on evidence, not a discussion.
   --repo local/agent-skills --target parser-fix \
   --immutable-goal "A locally verifiable fix" \
   --handler webgpt --handler webclaude --handler oc-deepseek \
-  --judge-handler claude-opus-5-low \
+  --judge-handler Codex-opus-5-low \
   --criterion correctness --criterion minimality --execute --json
 # Then ALWAYS: ./run.sh panel-audit <run-dir> --mode compete
 #              ./run.sh judge-audit <run-dir> --run-winner-proof
@@ -422,8 +423,8 @@ downgrade. Do not use `max` as an Ask handler suffix unless a future local
 receipts prove the applied effort.
 
 Use exact dynamic model ids from the provider/SciLLM catalog as the model part.
-For Claude, that means names such as `claude-opus-5`,
-`claude-sonnet-4-6`, or `claude-fable-5`, with the effort suffix appended when
+For Codex, that means names such as `Codex-opus-5`,
+`Codex-sonnet-4-6`, or `Codex-fable-5`, with the effort suffix appended when
 needed:
 
 ```bash
@@ -431,7 +432,7 @@ needed:
   --repo local/agent-skills \
   --target ask-review \
   --immutable-goal "Return a receipt-backed review with explicit blockers." \
-  --handler claude-opus-5-high \
+  --handler Codex-opus-5-high \
   --execute --json
 
 ./run.sh tau-dag "Compare these repair options" \
@@ -439,26 +440,26 @@ needed:
   --target ask-roundtable \
   --immutable-goal "Each seat returns a usable position or a blocker." \
   --dag-template roundtable \
-  --handler claude-sonnet-4-6-medium \
+  --handler Codex-sonnet-4-6-medium \
   --handler gpt-5.5-xhigh \
   --topology concurrent \
   --execute --json
 ```
 
 Do not invent partial aliases such as `opus-5-high`, `sonnet-high`,
-`claude high`, or `webclaude-high`. `webclaude` is a browser chat tab and has no
-Ask-controlled reasoning effort. If the human asks for "Claude Opus 5 max" and
+`Codex high`, or `webclaude-high`. `webclaude` is a browser chat tab and has no
+Ask-controlled reasoning effort. If the human asks for "Codex Opus 5 max" and
 the current Ask runtime has no supported `max` selector, fail closed unless the
 human explicitly accepts the highest supported Ask selector
-(`claude-opus-5-xhigh`) and the report states that `xhigh` dispatches as `high`
+(`Codex-opus-5-xhigh`) and the report states that `xhigh` dispatches as `high`
 in the current SciLLM adapter.
 
 Every executed API/model lane must preserve the effort evidence in the emitted
 Tau artifacts. Inspect the command spec and node receipt for:
 
 - `requested_model`: the exact selector the caller requested, such as
-  `claude-opus-5-xhigh`
-- `model`: the resolved model id dispatched to SciLLM, such as `claude-opus-5`
+  `Codex-opus-5-xhigh`
+- `model`: the resolved model id dispatched to SciLLM, such as `Codex-opus-5`
 - `requested_reasoning_effort`: the requested suffix, such as `xhigh`
 - `reasoning_effort`: the effort actually dispatched, such as `high`
 - `reasoning_downgrade_reason`: required when requested and dispatched effort
@@ -482,8 +483,8 @@ before submission and keep the same binding for every round.
 ### Live evals: the contract is honesty, not a fixed answer
 
 ```bash
-skills/ask/run.sh live-seat-probe claude-opus-4-8-high
-skills/ask/run.sh live-seat-probe claude-fable-low     # exercises self-recovery
+skills/ask/run.sh live-seat-probe Codex-opus-4-8-high
+skills/ask/run.sh live-seat-probe Codex-fable-low     # exercises self-recovery
 skills/ask/run.sh live-seat-probe webgemini
 ```
 
@@ -506,12 +507,12 @@ Both outcomes pass. Three things fail, whatever the provider was doing:
 | a different model answered, unrecorded | a reply that looks fine and silently came from elsewhere |
 
 The third caught a real bug minutes after the rate-limit fallback was added:
-the receipt read `claude-fable-low PASS` while `claude-opus-4-8` had written the
+the receipt read `Codex-fable-low PASS` while `Codex-opus-4-8` had written the
 answer. The substitution is now recorded in the node receipt:
 
 ```json
 "rate_limit_fallback": {
-  "from": "claude-fable-low", "to": "claude-opus-4-8-high",
+  "from": "Codex-fable-low", "to": "Codex-opus-4-8-high",
   "reason": "provider_rate_limited"
 }
 ```
@@ -580,52 +581,52 @@ restating them.
 
 ### webclaude is testing-only
 
-A claude.ai web call is billed the same as an OAuth call, so there is no reason
+A Codex.ai web call is billed the same as an OAuth call, so there is no reason
 to spend a browser seat, a window, and Chrome contention on it. Use the local
-Claude lane. `webclaude` exists to test the browser path itself; for that
-testing, `claude-opus-5` is the model to use.
+Codex lane. `webclaude` exists to test the browser path itself; for that
+testing, `Codex-opus-5` is the model to use.
 
 When `webclaude` is requested and unavailable it is the ONE named seat that
-auto-substitutes, to **`claude-opus-5-high`** (then `claude-opus-4-8-high`,
-then `claude-fable-low`), because
+auto-substitutes, to **`Codex-opus-5-high`** (then `Codex-opus-4-8-high`,
+then `Codex-fable-low`), because
 preferring the local lane is the policy rather than a workaround. Every other
 named browser seat blocks with its failure code instead of quietly answering as
 something else.
 
 The takeover happens at BOTH selection and submit time. The availability probe
-can only see an account banner if some existing claude.ai tab is showing one; a
+can only see an account banner if some existing Codex.ai tab is showing one; a
 fresh tab shows nothing until the submit is attempted, so a selection-only
 fallback fires or does not depending on which tabs happen to be open.
 
-Proven live 2026-08-16: claude.ai reported "You're out of usage credits" and the
-run answered from `handler-claude-opus-5-high`, status DEGRADED, substitution
+Proven live 2026-08-16: Codex.ai reported "You're out of usage credits" and the
+run answered from `handler-Codex-opus-5-high`, status DEGRADED, substitution
 recorded.
 
 ### The preferred seat roster
 
-Five browser providers plus the local Claude lane:
+Five browser providers plus the local Codex lane:
 
 ```
-webgpt  webgrok  webkimi  webdeepseek  webgemini  claude-fable-low
+webgpt  webgrok  webkimi  webdeepseek  webgemini  Codex-fable-low
 ```
 
-with **`claude-opus-4-8-high`** as the fallback when Fable is rate limited.
+with **`Codex-opus-4-8-high`** as the fallback when Fable is rate limited.
 
 Spread matters because providers rate-limit independently. Measured 2026-08-16:
 `browser-availability` reported webgpt `limited: true` on both its tabs while
 webgpt was, at that moment, the only browser seat that worked at all. A panel
 drawn from one or two providers is one rate limit away from no panel.
 
-`claude-fable-low` is the local Fable 5 lane at low reasoning effort; it needs
+`Codex-fable-low` is the local Fable 5 lane at low reasoning effort; it needs
 no browser, no tab, and no Chrome contention, and it carries a real reasoning
 selector. Both ids resolve through the SciLLM route table:
 
 ```
-claude-fable-low      -> claude-fable-5   effort=low
-claude-opus-4-8-high  -> claude-opus-4-8  effort=high
+Codex-fable-low      -> Codex-fable-5   effort=low
+Codex-opus-4-8-high  -> Codex-opus-4-8  effort=high
 ```
 
-**`webclaude` is not in the roster.** It is a claude.ai chat tab: no tools, no
+**`webclaude` is not in the roster.** It is a Codex.ai chat tab: no tools, no
 repo access, no Ask-controlled reasoning effort, and one more seat competing for
 the same Chrome. It stays reachable by explicit name and is always ordered last.
 Live-web questions still lead with a browser seat, since a chat tab with search
@@ -669,23 +670,23 @@ a build that does not exist yet — `opencode-go/kimi-k3` sits ahead of `k2.6` a
 is simply skipped until scillm reports it. That is how a newer model is
 preferred without inventing a working name.
 
-### Prefer the local Claude lane over webclaude
+### Prefer the local Codex lane over webclaude
 
-Handler preference for Claude work, in order:
+Handler preference for Codex work, in order:
 
-1. **`claude-fable-low`** — local Fable 5 at low reasoning effort. Preferred
+1. **`Codex-fable-low`** — local Fable 5 at low reasoning effort. Preferred
    outright.
-2. **`claude-opus-4-8`** — when Fable is rate limited.
+2. **`Codex-opus-4-8`** — when Fable is rate limited.
 3. **`webclaude`** — last resort only.
 
-`webclaude` is a claude.ai chat tab: no tools, no repo access, no Ask-controlled
+`webclaude` is a Codex.ai chat tab: no tools, no repo access, no Ask-controlled
 reasoning effort, and one more seat competing for the same Chrome. The local
 lane answers the same questions with effort control and no browser at all.
 Live-web questions still put a browser seat first, since that is what a chat tab
 is actually better at.
 
 This ordering lives in `WEBCLAUDE_PREFERRED_SUBSTITUTES` and is eval-gated.
-Before it, the fallback list filtered to browser names only, so every Claude
+Before it, the fallback list filtered to browser names only, so every Codex
 fallback was forced onto a chat tab by construction.
 
 ### Unblocking: one singular MVP, or nothing
@@ -908,7 +909,7 @@ repairing a browser roundtable packet, apply this matrix:
 | `webgpt` | Short prompt plus one readable bundle | One attachment only; zip is allowed when the task needs a bundle | Multiple attachments fail before submission. Do not infer file creation from prose; download and verify generated artifacts. |
 | `webgemini` | Short prompt plus one readable Markdown/text bundle | Ask inlines Markdown/text bundles for current Gemini tabs; do not rely on upload unless Surf records attachment metadata | Current Gemini UI may expose `Upload & tools` without an `input[type=file]`; stale page text can look like a response if sentinel capture is not strict. |
 | `webkimi` | Short prompt plus one plain readable Markdown/text bundle | Do not use zip; Ask passes the Markdown/text bundle through Surf `kimi.submit --attach-file` | Kimi's Lexical composer can corrupt large inline payloads; do not paste or inline full review bundles into the composer. |
-| `webclaude` | Prompt plus readable files | Multiple attachments are supported | Claude can stage a prompt without submitting it; require submit-acceptance and sentinel proof, not only a prepared prompt file. |
+| `webclaude` | Prompt plus readable files | Multiple attachments are supported | Codex can stage a prompt without submitting it; require submit-acceptance and sentinel proof, not only a prepared prompt file. |
 | `webdeepseek` / `deepseek` | Inline text or short prompt only | Attachments and zip files are unsupported | If local evidence is required, route through another handler or summarize the evidence into the prompt within size limits. |
 
 Do not automatically convert every evidence set into a zip. For one-attachment
@@ -1133,7 +1134,7 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   templates in prompt prose.
 - **Single call**: use one Tau handler or one solver/reviewer model. This is the
   path for "ask webclaude", "ask webkimi", "ask webgemini", "ask webgpt", or one
-  API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model
+  API-backed model such as `gpt-5.5`, `Codex-sonnet-4-6`, or another model
   routed by `$tau` through `$scillm`.
 - **Roundtable (deliberation panel)**: repeatable `--handler` values with
   `--topology concurrent` - ALWAYS concurrent; see the Roundtable
@@ -1159,22 +1160,22 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
   `webgemini`, and `webgrok`. Browser aliases normalize as `gpt -> webgpt`,
   `kimi -> webkimi`, `gemini -> webgemini`, and `grok -> webgrok`. Spell
-  `webclaude` explicitly for the claude.ai browser tab; bare `claude` is the
-  agentic SciLLM Claude alias, not the browser seat.
-- **WARNING - `webclaude` IS NOT agentic Claude** (operator, 2026-08-12).
-  `webclaude` is a claude.ai CHAT TAB: no tools, no filesystem or repo access,
+  `webclaude` explicitly for the Codex.ai browser tab; bare `Codex` is the
+  agentic SciLLM Codex alias, not the browser seat.
+- **WARNING - `webclaude` IS NOT agentic Codex** (operator, 2026-08-12).
+  `webclaude` is a Codex.ai CHAT TAB: no tools, no filesystem or repo access,
   no Ask-controlled effort, a different system prompt and context regime. It is
-  a browser REVIEW seat only. For agentic Claude, use a SciLLM Claude handler
-  such as `claude-fable-5-high`, `claude-sonnet-4-6-high`, or
-  `claude-opus-5-high` executed inside the Tau DAG. The bare `claude` alias maps
-  to the default agentic SciLLM Claude handler, currently `claude-fable-5`; do
+  a browser REVIEW seat only. For agentic Codex, use a SciLLM Codex handler
+  such as `Codex-fable-5-high`, `Codex-sonnet-4-6-high`, or
+  `Codex-opus-5-high` executed inside the Tau DAG. The bare `Codex` alias maps
+  to the default agentic SciLLM Codex handler, currently `Codex-fable-5`; do
   not use it when the requested lane must specifically be Opus or Sonnet. Direct
-  `claude -p` subprocess calls are reported as degraded and are not a substitute
+  `Codex -p` subprocess calls are reported as degraded and are not a substitute
   for Ask/Tau receipts.
 - **Supported local/API handlers**: explicit non-browser handler labels are
   routed by Tau according to their transport. SciLLM-compatible model labels
   use exact model ids plus optional effort suffixes, such as `gpt-5.5-high`,
-  `claude-opus-5-high`, or `claude-sonnet-4-6-medium`, and emit Tau-owned
+  `Codex-opus-5-high`, or `Codex-sonnet-4-6-medium`, and emit Tau-owned
   `scillm.chat` adapter nodes. OAuth/Codex subagent selectors such as
   `gpt-5.5-xhigh` emit Tau-owned `subagent-runner.codex_exec` nodes and
   preserve `xhigh` as the requested reasoning effort. For Chutes exact models,

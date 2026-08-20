@@ -80,6 +80,7 @@ transport differs, but the roundtable contract does not.
 | Request shape | Better route |
 | --- | --- |
 | One factual answer or one model response | `$ask` single handler |
+| N independent answers the human reads, no synthesis | `$ask one-shot` with `$best-practices-one-shot` |
 | Independent implementations and winner selection | `$ask compete` or an approach bakeoff |
 | Creator then pass/fail reviewer | `$ask tau-dag --topology sequential` |
 | The next deterministic command is obvious | Run the command first |
@@ -98,9 +99,11 @@ transport differs, but the roundtable contract does not.
    and proof boundaries. Every seat receives the same packet.
 
 3. **Select seats and transport.**
-   Name handlers explicitly. Use browser handlers for browser-only reviewers
-   and API model names for `$scillm` seats. Do not give one seat privileged
-   hidden context because its transport is easier.
+   Name handlers explicitly. Seat at least five so three can still answer; three
+   answering seats is quorum, and dispatching three to reach three assumes a
+   perfect run. Use browser handlers for browser-only reviewers and API model
+   names for `$scillm` seats. Do not give one seat privileged hidden context
+   because its transport is easier.
 
 4. **Compile through `$ask`.**
    Use `$ask` as the front door so the request becomes a Tau DAG. For current
@@ -165,6 +168,101 @@ Ask every seat for:
 
 The prompt may invite seat-specific strengths, but it must not hide context
 from any seat.
+
+## Equal context is measurable, not assumed
+
+"Every seat receives the same packet" was unfalsifiable until it was measured.
+Compare the **task body**, not raw bytes: a seat legitimately learns which seat
+it is and which model to select, and those lines differ by design.
+
+Everything else must be byte-identical. Hash the packet with per-seat
+addressing removed and assert one digest across all seats:
+
+```bash
+skills/ask/run.sh panel-audit <run-dir> --mode roundtable
+```
+
+Lines that may differ per seat: `Handler:`, `Model:`, `Seat:`, `node_id:`, and
+`Browser model preference:` (whose value may sit on following lines). Anything
+else that differs is a tailored packet, and a panel fed tailored packets agrees
+with whoever got the better brief.
+
+## Seat status comes from the seat, not from the join
+
+Read each seat's own artifacts. A seat "responded" only when it produced a
+non-empty response file; a node receipt saying `NEEDS_ATTENTION` with no
+response is a seat that never answered, however the join narrates it.
+
+Verified 2026-08-16: a two-seat run where one seat never submitted still
+produced a full join artifact. The join is a claim about the panel; the lane
+directory is the evidence.
+
+## Three seats that ANSWERED, not three dispatched
+
+Quorum for a roundtable is **three answering seats**, measured the same way
+`best-practices-competition` measures candidates: on answers, never on
+dispatch. Below quorum the run must report `NEEDS_ATTENTION` or `BLOCKED`
+rather than present its output as a panel finding.
+
+Two is not enough, and this is the reason the floor is higher here than for a
+competition. A competition at two candidates is a real head-to-head. A panel at
+two has no majority to hold and no dissent to attribute, and it degrades to a
+single opinion the moment one seat drops -- which is the artifact the previous
+two sections exist to refuse, arriving with clean per-seat receipts instead of
+a fabricated join.
+
+Dispatch the roster, not the quorum. Seating exactly three and requiring three
+makes every run a perfect run; at the ~75% per-seat delivery rate on record
+(`skills/ask/HANDOFF.md`, n=20) that is a 42% chance of reaching quorum, versus
+90% when five seats are dispatched.
+
+```bash
+skills/ask/run.sh panel-audit <run-dir> --mode roundtable
+```
+
+The `roundtable_quorum` check fails the run when fewer than three seats
+produced a non-empty response and the join status is not already
+`NEEDS_ATTENTION`/`BLOCKED`. The number lives in one place --
+`ROUNDTABLE_MIN_ANSWERING` in `skills/ask/src/ask/panel_compliance.py` -- and
+`run.sh prove-workflow roundtable` imports it rather than restating it.
+
+## Browser seats need one window each
+
+Do not put N browser seats in one window with N tabs, however tidy that looks.
+Chrome reports `document.hidden = true` for every non-selected tab, and
+providers defer DOM updates while hidden, so N seats in one window leaves
+exactly one seat working and the rest timing out.
+
+Measured 2026-08-16 in a live window with two tabs:
+
+```
+selected tab -> {"hidden":false,"visibilityState":"visible"}
+second tab   -> {"hidden":true, "visibilityState":"hidden"}
+```
+
+One unfocused window per seat is the workaround. The obligation that comes with
+it is closing them: a seat window whose response is already on disk holds
+nothing unique and must be released, or every run leaks a window per seat.
+
+## A requested reasoning tier is not a delivered one
+
+Asking a browser provider for a reasoning level does not prove it was applied.
+Surf reports `requested_reasoning` alongside `selected_reasoning`, and every
+real receipt on disk as of 2026-08-16 shows a requested tier with no
+confirmation. Treat absence of confirmation as `unconfirmed`, never as success,
+and do not describe a panel as having run at a tier you cannot show.
+
+## Charts before and after the run
+
+Compile first and show the human the DAG chart before any multi-seat
+`--execute`: `$ask` prints it at compile and persists it as
+`dag-chart.initial.txt` in the run dir. After the run, read
+`dag-chart.final.txt` — the same topology with a per-node verdict on every
+line (PASS / FAIL / NEEDS_ATTENTION / NO_RECEIPT) — and carry those verdicts
+into the synthesis. A seat's fate comes from its node line and lane
+artifacts, never from the join's narration. Both artifacts are eval-enforced
+in `$ask` (`every-compile-emits-the-preview-chart-before-any-execute`,
+`live-every-executed-dag-leaves-initial-and-final-verdict-charts`).
 
 ## Synthesis Contract
 
