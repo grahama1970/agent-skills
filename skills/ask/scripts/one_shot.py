@@ -30,7 +30,8 @@ app = typer.Typer(add_completion=False)
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path) -> dict:
+def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path,
+         attachments: list[Path] | None = None) -> dict:
     prompt = (f"{question}\n\nEnd your reply with this exact line so the result "
               f"can be verified: {nonce}")
     ask_id = f"one-shot-{nonce.lower()}-{handler.replace('.', '-')}"
@@ -40,6 +41,8 @@ def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path) 
            "--dag-template", "single-call", "--handler", handler,
            "--ask-id", ask_id,
            "--poll-timeout-seconds", str(timeout), "--execute", "--json"]
+    for att in attachments or []:
+        cmd += ["--attach-file", str(att)]
     lane: dict = {"handler": handler, "ask_id": ask_id}
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True,
@@ -72,7 +75,15 @@ def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path) 
     elif failure:
         lane.update({"state": "NAMED_BLOCKER", "failure_code": failure})
     else:
-        lane.update({"state": "DISHONEST", "detail": "no answer and no failure_code"})
+        # A zero-lane run whose seat removal WAS recorded is a named blocker
+        # (same contract as live_seat_probe, 2026-08-19); an unrecorded dead
+        # end stays dishonest.
+        removed = result.get("removed_seats") or []
+        if handler in removed:
+            lane.update({"state": "NAMED_BLOCKER",
+                         "failure_code": f"{handler}: removed by availability selection"})
+        else:
+            lane.update({"state": "DISHONEST", "detail": "no answer and no failure_code"})
     return lane
 
 
@@ -83,12 +94,15 @@ def main(
     timeout: int = typer.Option(900, "--timeout"),
     min_answered: int = typer.Option(1, "--min-answered"),
     out_dir: Path = typer.Option(Path("/tmp/ask-one-shot"), "--out-dir"),
+    attach_file: list[Path] = typer.Option(None, "--attach-file",
+                                           help="Forwarded to each lane's browser submit. Repeat per file."),
 ) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     nonce = f"ONESHOT-{uuid.uuid4().hex[:8].upper()}"
     lanes: dict[str, dict] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(handler)) as pool:
-        futures = {pool.submit(_one, h, question, nonce, timeout, out_dir): h for h in handler}
+        futures = {pool.submit(_one, h, question, nonce, timeout, out_dir, list(attach_file or [])): h
+                   for h in handler}
         for fut in concurrent.futures.as_completed(futures):
             h = futures[fut]
             lanes[h] = fut.result()

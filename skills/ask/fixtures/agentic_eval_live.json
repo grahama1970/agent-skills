@@ -838,6 +838,64 @@
         ]
       },
       "notes": "Every executed /ask DAG must persist dag-chart.initial.txt at compile and dag-chart.final.txt after the run with a per-node verdict on every line (a node without a receipt reads NO_RECEIPT, never a silent green). The charts are the machine-checkable halves of the show-then-confirm and report-what-failed contracts. Bound to this invocation's exact --ask-id."
+    },
+    {
+      "name": "live-a-one-shot-lane-names-a-recorded-seat-removal",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "seams": [
+        "provider.dispatch_and_substitution",
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution",
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && O=/tmp/oneshot-removal-$$ && ./run.sh one-shot 'Reply with exactly: PING' --handler webclaude --timeout 600 --out-dir $O; rc=$?; uv run --project . python - $O/one-shot-verdict.json $rc <<'EOF'\nimport json,sys\nd=json.load(open(sys.argv[1])); rc=int(sys.argv[2])\nlane=d['lanes']['webclaude']\nok=lane['state'] in ('ANSWERED','NAMED_BLOCKER')\nif lane['state']=='NAMED_BLOCKER':\n    assert lane.get('failure_code'), 'named blocker without a code'\nprint('ONE_SHOT_LANE_HONEST' if ok else f'LANE_DISHONEST {lane}')\nraise SystemExit(0 if ok else 1)\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_SHOT_LANE_HONEST"
+        ]
+      },
+      "notes": "2026-08-19: a one-shot webgpt lane whose seat was removed by availability selection returned DISHONEST 'no answer and no failure_code'. one_shot.py now relays a recorded removal as a named blocker (same contract live_seat_probe adopted); an unrecorded zero-lane dead end stays dishonest. webclaude is used as the seat because its substitution/removal paths are the richest."
+    },
+    {
+      "name": "live-an-uncertain-probe-does-not-remove-the-only-fresh-seat",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "seams": [
+        "provider.dispatch_and_substitution",
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution",
+        "ask.browser.tab_lifecycle"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && O=$(mktemp -d) && ./run.sh live-seat-probe webgpt --json > $O/probe.json 2>/dev/null; uv run --project . python - $O/probe.json <<'EOF'\nimport json,sys\nt=open(sys.argv[1]).read(); d=json.loads(t[t.index('{'):])\n# The seat must either answer or name a CONFIRMED blocker. A removal whose\n# only basis is probe uncertainty is the regression this case pins\n# (2026-08-19: three consecutive webgpt dispatches removed on\n# provider_probe_uncertain_requires_readback while the tab was usable).\nfc=str(d.get('failure_code') or '')\nok=d.get('outcome')=='answered' or (d.get('outcome')=='named_blocker' and 'availability selection' not in fc)\nprint('SEAT_NOT_REMOVED_ON_UNCERTAINTY' if ok else f'REMOVED_ON_UNCERTAINTY {fc}')\nraise SystemExit(0 if ok else 1)\nEOF"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SEAT_NOT_REMOVED_ON_UNCERTAINTY"
+        ]
+      },
+      "notes": "An UNCERTAIN availability probe (auto_retry_blocked_reason provider_probe_uncertain_requires_readback) must not remove a single explicitly requested fresh-lifecycle seat; the fresh-tab worker owns the bounded retry, and the join-gate contains a genuinely dead lane. A CONFIRMED blocker (rate limit attributable to the run's own tab) may still remove and will fail this case's oracle only if it mislabels itself as an availability-selection removal."
     }
   ],
   "capability_claims": [

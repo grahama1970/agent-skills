@@ -1232,6 +1232,7 @@ def _select_available_browser_handlers(
     # contradicts the artifact the probe just wrote.
     unusable: dict[str, str] = {}
     advisory_limited: dict[str, str] = {}
+    probe_uncertain: set[str] = set()
     for name, payload in providers.items():
         if not isinstance(payload, dict):
             continue
@@ -1256,6 +1257,11 @@ def _select_available_browser_handlers(
             blocked = isinstance(packet, dict) and packet.get("auto_retry_allowed") is False
             if blocked:
                 unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_degraded")
+                if (
+                    isinstance(packet, dict)
+                    and packet.get("auto_retry_blocked_reason") == "provider_probe_uncertain_requires_readback"
+                ):
+                    probe_uncertain.add(name)
 
     active: list[str] = []
     removed: list[str] = []
@@ -1278,13 +1284,21 @@ def _select_available_browser_handlers(
         and removed == browser_requested
         and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
         and browser_requested[0] not in explicit_projects
-        and all(unusable.get(handler) == "provider_limited" for handler in removed)
+        and all(
+            unusable.get(handler) == "provider_limited" or handler in probe_uncertain
+            for handler in removed
+        )
     ):
         # Ambient provider probes inspect already-open tabs before fresh
         # lifecycle provisioning. A stale WebGPT modal in an old tab must not
         # remove the only explicitly requested fresh WebGPT seat before the
         # new tab exists; the WebGPT worker owns the bounded provider retry
-        # once that fresh tab is created.
+        # once that fresh tab is created. The same holds when the probe is
+        # merely UNCERTAIN (provider_probe_uncertain_requires_readback):
+        # unconfirmed uncertainty about ambient tabs must not become seat
+        # unavailability -- observed 2026-08-19, three consecutive webgpt
+        # dispatches removed while a direct tab readback showed a usable
+        # composer and no alert banner. A confirmed blocker still removes.
         active.extend(removed)
         fresh_lifecycle_kept = list(removed)
         removed = []
