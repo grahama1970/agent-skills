@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "/ask fix-issues: the diagnose->verify->close ticket flow. A real GitHub issue is gathered via gh, diagnosed through a live /ask one-shot handler into a structured cause/fix/needs_debugger/verify JSON (the debugger ladder gate: /debugger is recommended only when the diagnosis names in-process runtime state no artifact explains), and closing is fail-closed: dry-run by default, and even with --execute an issue is never closed without its verify command actually passing. Capability-gated on gh auth and the answer handler.",
+  "claims": {
+    "proves": "fix-issues gathers a real open issue and produces a structured diagnosis via a live handler (dry-run exit 0, plan printed); with --execute and no verify command it refuses to close (blocked, exit 1); with --execute and a failing verify command it reports verify-failed (exit 1) and does not close; and a gh failure surfaces as a named error, not a silent pass",
+    "does_not_prove": "diagnosis correctness for arbitrary issues, or the closed-issue happy path (closing a real issue is a destructive external write and is exercised only under human direction)"
+  },
+  "cases": [
+    {
+      "name": "dry-run-diagnoses-real-issue",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Dry-run against a real open issue produces a structured diagnosis (cause + ladder gate + verify plan) and exits 0 without touching the issue.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; cd .. && timeout 280 bash run.sh fix-issues --repo grahama1970/agent-skills --issue 1441"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": ["STALE_OR_UNBOUND", "NOT_READY", "gh issue view failed"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ISSUE #1441: dry-run", "cause:", "needs_debugger:"]
+      }
+    },
+    {
+      "name": "execute-without-verify-refuses-to-close",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "--execute with a diagnosis that names no verify command refuses to close (blocked) instead of closing on an unproven fix. Uses --verify-cmd '' to force the no-verify path deterministically.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; cd .. && timeout 280 bash run.sh fix-issues --repo grahama1970/agent-skills --issue 1441 --execute --verify-cmd '' ; rc=$?; [ $rc -eq 1 ] && exit 0 || { echo \"UNEXPECTED-RC=$rc\"; exit 1; }"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": ["STALE_OR_UNBOUND", "NOT_READY"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["blocked", "refusing to close without proof"]
+      }
+    },
+    {
+      "name": "execute-with-failing-verify-does-not-close",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "--execute with a verify command that fails reports verify-failed and does not close the issue.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; cd .. && timeout 280 bash run.sh fix-issues --repo grahama1970/agent-skills --issue 1441 --execute --verify-cmd 'false'; rc=$?; state=$(gh issue view 1441 --repo grahama1970/agent-skills --json state --jq .state); echo \"STATE-AFTER=$state\"; [ $rc -eq 1 ] && [ \"$state\" = \"OPEN\" ] && exit 0 || { echo \"UNEXPECTED rc=$rc state=$state\"; exit 1; }"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": ["STALE_OR_UNBOUND", "NOT_READY"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["verify-failed", "STATE-AFTER=OPEN"]
+      }
+    },
+    {
+      "name": "bad-repo-fails-closed",
+      "type": "negative",
+      "required": true,
+      "description": "A nonexistent repo surfaces as a named error (exit 1), never a silent pass.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; cd .. && bash run.sh fix-issues --repo grahama1970/does-not-exist-xyz --issue 1; rc=$?; [ $rc -eq 1 ] && exit 0 || { echo \"UNEXPECTED-RC=$rc\"; exit 1; }"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["error", "gh issue view failed"]
+      }
+    }
+  ]
+}

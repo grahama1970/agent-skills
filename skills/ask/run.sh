@@ -517,6 +517,12 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/one_shot.py" "$@"
         ;;
+    fix-issues)
+        shift
+        # Diagnose -> (ladder-gated /debugger recommendation) -> verify -> close.
+        # Dry-run by default; --execute closes ONLY after the verify command passes.
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/fix_issues.py" "$@"
+        ;;
     judge-audit)
         shift
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/judge_audit.py" "$@"
