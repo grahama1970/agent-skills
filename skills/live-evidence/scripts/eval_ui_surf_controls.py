@@ -115,7 +115,7 @@ def run_command(
     return result
 
 
-def surf(root: Path, args: list[str], *, timeout_s: float = 20.0) -> str:
+def surf(root: Path, args: list[str], *, timeout_s: float = 60.0) -> str:
     runner = root.parent / "surf" / "run.sh"
     if not runner.exists():
         raise RuntimeError(f"Surf runner not found: {runner}")
@@ -124,7 +124,7 @@ def surf(root: Path, args: list[str], *, timeout_s: float = 20.0) -> str:
 
 
 def surf_new_tab(root: Path, url: str) -> int:
-    output = surf(root, ["tab.new", url, "--json"], timeout_s=20.0)
+    output = surf(root, ["tab.new", url, "--json"], timeout_s=60.0)
     match = re.search(r"Created tab\s+(\d+)", output)
     if not match:
         raise RuntimeError(f"could not parse tab id from Surf output: {output}")

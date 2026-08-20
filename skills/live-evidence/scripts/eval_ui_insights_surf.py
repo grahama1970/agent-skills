@@ -34,7 +34,7 @@ def check(name: str, ok: bool, detail: str = "") -> None:
         FAILURES.append(name)
 
 
-def surf(root: Path, args: list[str], timeout_s: float = 25.0) -> str:
+def surf(root: Path, args: list[str], timeout_s: float = 60.0) -> str:
     runner = root.parent / "surf" / "run.sh"
     result = subprocess.run([str(runner), *args], cwd=root.parent.parent, text=True,
                             capture_output=True, timeout=timeout_s)

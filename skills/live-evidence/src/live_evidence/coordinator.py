@@ -223,17 +223,56 @@ class EvidenceCoordinator:
                     if block.size >= 15:
                         cut.append((block.a, block.a + block.size))
             if not cut:
-                return text
+                if _ == 0:
+                    return text  # nothing echoed at all: leave text untouched
+                break
             cut.sort()
+            # Expand each cut to word boundaries: a mid-word cut leaves
+            # fragments like "oint" from "breakpoint" that later STT variance
+            # turns into card text (observed live: "o the break 42").
+            expanded: list[tuple[int, int]] = []
+            for start, end in cut:
+                while start > 0 and not text[start - 1].isspace():
+                    start -= 1
+                while end < len(text) and not text[end].isspace():
+                    end += 1
+                expanded.append((start, end))
             kept: list[str] = []
             cursor = 0
-            for start, end in cut:
+            for start, end in expanded:
                 if start > cursor:
                     kept.append(text[cursor:start])
                 cursor = max(cursor, end)
             kept.append(text[cursor:])
             text = " ".join("".join(kept).split())
-        return text
+        # Final scrub, only reached when something WAS cut: residual words that
+        # fuzzily belong to the assistant's own vocabulary are echo debris, not
+        # human content. Fuzzy on purpose -- STT respells our speech
+        # ("breakpoint" -> "break"/"oint.42"), so exact-vocab matching misses
+        # exactly the debris that survives the character cuts.
+        import re as _re
+
+        vocabulary = {
+            part
+            for utterance in self._assistant_utterances
+            for token in utterance.split()
+            for part in _re.split(r"[^a-z0-9]+", token)
+            if len(part) >= 4 or part.isdigit()
+        }
+
+        def is_debris(word: str) -> bool:
+            parts = [p for p in _re.split(r"[^a-z0-9]+", word.lower()) if p]
+            if not parts:
+                return False
+            def part_matches(part: str) -> bool:
+                if part in vocabulary:
+                    return True
+                if len(part) >= 4:
+                    return any(len(v) >= 5 and (part in v or v in part) for v in vocabulary)
+                return False
+            return all(part_matches(p) for p in parts)
+
+        return " ".join(word for word in text.split() if not is_debris(word))
 
     async def apply_clarification_answer(
         self,
