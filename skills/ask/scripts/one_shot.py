@@ -42,7 +42,14 @@ def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path,
            "--ask-id", ask_id,
            "--poll-timeout-seconds", str(timeout), "--execute", "--json"]
     for att in attachments or []:
-        cmd += ["--attach-file", str(att)]
+        # The lane's tau worker runs from its own cwd; a relative path that is
+        # readable here is unreadable there (browser_attachment_missing,
+        # observed 2026-08-19). Resolve before handing over, and fail closed
+        # NOW if the file does not exist rather than after a browser round.
+        resolved = Path(att).resolve()
+        if not resolved.is_file():
+            raise typer.BadParameter(f"attachment not readable: {att}")
+        cmd += ["--attach-file", str(resolved)]
     lane: dict = {"handler": handler, "ask_id": ask_id}
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True,
