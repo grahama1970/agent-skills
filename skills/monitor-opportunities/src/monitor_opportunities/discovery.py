@@ -239,7 +239,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             "published_at": record.get("published_at") or record.get("observed_at"),
             "updated_at": record.get("updated_at") or record.get("observed_at"),
             "content_hash": receipt["content_sha256"],
-            "posting_text": evidence_text[:4000],
+            "posting_text": evidence_text[:14000],
             "fit_score": float(record.get("fit_score") or (0.93 if top_candidate else 0.72)),
         }
         # Premium capture signals (LinkedIn computes these server-side): an
@@ -838,7 +838,7 @@ def _github_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[s
             "published_at": record.get("created_at"),
             "updated_at": record.get("pushed_at") or record.get("updated_at"),
             "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
-            "posting_text": posting_text[:4000],
+            "posting_text": posting_text[:14000],
             "fit_score": float(record.get("fit_score") or github_fit_score),
             "contact_state": "CONTACT_PRESENT",
             "github_repo": repo,
@@ -1007,7 +1007,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             "published_at": job.get("first_published"),
             "updated_at": job.get("updated_at"),
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
-            "posting_text": (job.get("content") or "")[:4000],
+            "posting_text": (job.get("content") or "")[:14000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
         payload["candidate_id"] = _candidate_id("candidate:a", payload)
@@ -1077,7 +1077,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "published_at": str(job.get("createdAt")) if job.get("createdAt") is not None else None,
             "updated_at": str(job.get("updatedAt")) if job.get("updatedAt") is not None else None,
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
-            "posting_text": posting_text[:4000],
+            "posting_text": posting_text[:14000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
         payload["candidate_id"] = _candidate_id("candidate:a", payload)
@@ -1146,7 +1146,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "published_at": job.get("publishedDate"),
             "updated_at": job.get("updatedAt"),
             "content_hash": sha256_bytes(str(job).encode("utf-8")),
-            "posting_text": (job.get("descriptionHtml") or job.get("descriptionPlain") or "")[:4000],
+            "posting_text": (job.get("descriptionHtml") or job.get("descriptionPlain") or "")[:14000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
         payload["candidate_id"] = _candidate_id("candidate:a", payload)
@@ -1246,7 +1246,7 @@ def _builtin_candidates(
             "published_at": None,
             "updated_at": None,
             "content_hash": sha256_bytes(job_url.encode("utf-8")),
-            "posting_text": str(item.get("description") or "")[:4000],
+            "posting_text": str(item.get("description") or "")[:14000],
             "fit_score": target.get("default_fit_score", 0.5),
         }
         payload["candidate_id"] = _candidate_id("candidate:a", payload)

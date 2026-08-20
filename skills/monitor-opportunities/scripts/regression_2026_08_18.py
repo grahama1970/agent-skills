@@ -247,8 +247,45 @@ def queue_dedupe() -> None:
     check("QUEUE_DEDUPE", len(rows) == 1, f"{len(rows)} row(s) from a duplicated signal (want 1)")
 
 
+def requirement_extraction() -> None:
+    """Real postings extracted ZERO requirements (2026-08-20): every top opportunity
+    showed requirements=0, so 'pursue' tailored a resume against nothing.
+
+    Two causes: (1) <strong> inside <li> was treated as a heading and stopped item
+    capture - Ashby/Greenhouse/Lever all bold the bullet lead-in; (2) posting_text
+    truncated at 4000 chars cut requirement lists off the end of long postings.
+    """
+
+    from monitor_opportunities.qualification_match import extract_requirements
+
+    nested = ('<h2>What We\'re Looking For</h2><ul style="min-height:1.5em">'
+              '<li><p style="x"><strong>Systems-First:</strong> reliable distributed systems in Python.</p></li>'
+              '<li><p>Deep experience with OCR and document extraction at scale.</p></li></ul>')
+    reqs = extract_requirements(nested)
+    check(
+        "REQUIREMENT_EXTRACTION",
+        len(reqs) == 2,
+        f"nested <li><p><strong> bullets extract {len(reqs)} requirement(s) (want 2)",
+    )
+
+
+def posting_text_cap() -> None:
+    import inspect
+
+    from monitor_opportunities import discovery
+
+    src = inspect.getsource(discovery)
+    check(
+        "POSTING_TEXT_CAP",
+        "[:4000]" not in src and "[:14000]" in src,
+        "posting_text captured at 14000 chars so requirement lists survive"
+        if "[:4000]" not in src
+        else "posting_text still truncated at 4000; requirements at the end of long postings are lost",
+    )
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -256,7 +293,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 9 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 11 failure signatures guarded")
     return 0
 
 

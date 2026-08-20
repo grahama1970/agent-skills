@@ -82,12 +82,15 @@ class _RequirementParser(HTMLParser):
         self.items: list[tuple[str, bool]] = []
 
     def handle_starttag(self, tag: str, attrs: Any) -> None:
-        if tag in {"h1", "h2", "h3", "h4", "strong", "b"}:
-            self._in_heading = True
-            self._heading_buffer = []
-        elif tag == "li":
+        if tag == "li":
             self._in_item = True
             self._item_buffer = []
+        elif tag in {"h1", "h2", "h3", "h4"} or (tag in {"strong", "b"} and not self._in_item):
+            # A <strong> inside an <li> is emphasis, not a heading. Treating it as
+            # one stopped item capture, so every posting that bolds a bullet lead-in
+            # ("<li><p><strong>Systems:</strong> ...") extracted zero requirements.
+            self._in_heading = True
+            self._heading_buffer = []
 
     def handle_endtag(self, tag: str) -> None:
         if tag in {"h1", "h2", "h3", "h4", "strong", "b"} and self._in_heading:
