@@ -51,13 +51,23 @@ def _one(handler: str, question: str, nonce: str, timeout: int, out_root: Path,
             raise typer.BadParameter(f"attachment not readable: {att}")
         cmd += ["--attach-file", str(resolved)]
     lane: dict = {"handler": handler, "ask_id": ask_id}
+    proc = None
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True,
                               timeout=timeout + 300, cwd=SKILL_ROOT)
         text = proc.stdout
         result = json.loads(text[text.index("{"):text.rindex("}") + 1])
     except Exception as exc:
-        lane.update({"state": "RUNNER_ERROR", "error": str(exc)[:200]})
+        # A wrapper error MUST carry the child's own words, or the lane is a
+        # dead end (observed 2026-08-20: 'substring not found' with the real
+        # refusal discarded in the child's stderr).
+        lane.update({
+            "state": "RUNNER_ERROR",
+            "error": str(exc)[:200],
+            "child_exit": getattr(proc, "returncode", None),
+            "child_stdout_tail": (getattr(proc, "stdout", "") or "")[-400:],
+            "child_stderr_tail": (getattr(proc, "stderr", "") or "")[-400:],
+        })
         return lane
     run_dir = Path(str(((result.get("execution") or {}).get("run_dir"))
                        or ((result.get("bundle") or {}).get("run_dir")) or ""))
@@ -114,7 +124,10 @@ def main(
             h = futures[fut]
             lanes[h] = fut.result()
             l = lanes[h]
-            detail = l.get("first_line") or l.get("failure_code") or l.get("detail") or l.get("error") or ""
+            detail = (l.get("first_line") or l.get("failure_code") or l.get("detail")
+                      or l.get("error") or "")
+            if l["state"] == "RUNNER_ERROR" and l.get("child_stderr_tail"):
+                detail = f"{detail} | child stderr: {l['child_stderr_tail'][-160:]}"
             typer.echo(f"SEAT {h}: {l['state']}  {detail}")
     answered = [h for h, l in lanes.items() if l["state"] == "ANSWERED"]
     dishonest = [h for h, l in lanes.items() if l["state"] in {"DISHONEST", "RUNNER_ERROR", "STALE_OR_UNBOUND"}]
