@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useRegisterAction } from "@/hooks/useRegisterAction";
+
 // Reviewer surfaces for #1451 (evidence-linked review dossier), #1452 (rubric
 // coverage + follow-up), #1453 (rehearsal turn state). Everything rendered
 // here is a readback of backend-published artifacts; nothing is invented in
@@ -52,6 +54,21 @@ const COVERAGE_STYLE: Record<string, string> = {
 
 export function InsightsPanel() {
   const [insights, setInsights] = useState<Insights>({});
+
+  useRegisterAction({
+    element_id: "live-evidence:insights:claim-seek",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_REVIEW_CLAIM_SEEK",
+    label: "Seek media to a review claim's clip",
+    description: "Seek the retained interview media to the transcript span bound to this claim",
+  });
+  useRegisterAction({
+    element_id: "live-evidence:insights:suggestion-dismiss",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_RUBRIC_SUGGESTION_DISMISS",
+    label: "Dismiss a rubric follow-up suggestion",
+    description: "Journaled, attributable dismissal; never marks the criterion covered",
+  });
   const [activeSpan, setActiveSpan] = useState<Span | null>(null);
   const mediaRef = useRef<HTMLAudioElement | null>(null);
 
