@@ -284,8 +284,39 @@ def posting_text_cap() -> None:
     )
 
 
+def compliance_claim_coverage() -> None:
+    """A compliance/audit requirement must answer from an approved claim (2026-08-20).
+
+    Sparta IS compliance work with a public artifact, but the original wording
+    used 'NIST-aligned framework guidance' - so a posting asking for 'compliance,
+    security, risk, or audit' matched nothing. Closed by an alternate approved
+    wording that uses the domain words, NOT by loosening the matcher.
+    """
+
+    import json as _json
+
+    from monitor_opportunities.qualification_match import answer_requirements, load_policy
+
+    authority = Path(__file__).resolve().parents[1] / "local" / "nightly" / "authority" / "claim-snapshot.json"
+    if not authority.is_file():
+        check("COMPLIANCE_CLAIM_COVERAGE", False, "authority claim snapshot missing")
+        return
+    snapshot = _json.loads(authority.read_text())
+    requirement = [{"text": "Experience in compliance, security, risk, or audit domains."}]
+    rows, _ = answer_requirements(requirement, snapshot, policy=load_policy())
+    answered = rows and rows[0]["disposition"] == "ANSWERABLE_FROM_APPROVED_CLAIM"
+    via_sparta = answered and "sparta" in rows[0].get("claim_key", "")
+    check(
+        "COMPLIANCE_CLAIM_COVERAGE",
+        bool(via_sparta),
+        f"compliance requirement answers from {rows[0].get('claim_key') if rows else None}"
+        if via_sparta
+        else f"compliance requirement unanswered: {rows[0]['disposition'] if rows else 'no rows'}",
+    )
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap, compliance_claim_coverage):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -293,7 +324,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 11 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 12 failure signatures guarded")
     return 0
 
 
