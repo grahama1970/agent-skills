@@ -247,6 +247,7 @@ def build_pointer_motion_plan(
         authorization_id=authorization.authorization_id,
         manifest_sha256=authorization.manifest_sha256,
         target_url=str(manifest.target_url),
+        team_mode=manifest.team_mode,
         source_package=PointerSourcePackage.model_validate(POINTER_MOTION_REFERENCE),
         algorithm="clamped_cubic_b_spline_with_seeded_jitter.v1",
         action=request.action,
@@ -286,6 +287,7 @@ def build_pointer_dispatch_plan(
         manifest_sha256=authorization.manifest_sha256,
         pointer_plan_sha256=pointer_plan_sha256,
         target_url=str(manifest.target_url),
+        team_mode=manifest.team_mode,
         pointer_action=pointer_plan.action,
         sample_count=len(pointer_plan.samples),
         surf=SurfPointerDispatchBinding(

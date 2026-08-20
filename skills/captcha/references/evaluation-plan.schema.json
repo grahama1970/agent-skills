@@ -89,6 +89,9 @@
           "title": "Target Url",
           "type": "string"
         },
+        "team_mode": {
+          "$ref": "#/$defs/TeamMode"
+        },
         "validated_at": {
           "format": "date-time",
           "title": "Validated At",
@@ -104,6 +107,7 @@
         "manifest_sha256",
         "target_url",
         "model_base_url",
+        "team_mode",
         "policy_version",
         "limitations",
         "seam_validation"
@@ -290,6 +294,14 @@
       ],
       "title": "SurfBinding",
       "type": "object"
+    },
+    "TeamMode": {
+      "enum": [
+        "blue_team",
+        "red_team"
+      ],
+      "title": "TeamMode",
+      "type": "string"
     }
   },
   "$id": "captcha.evaluation_plan.v1",

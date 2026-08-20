@@ -41,6 +41,27 @@ def test_valid_authorization_preflight_passes() -> None:
     payload = json.loads(result.stdout)
     assert payload["status"] == "PASS"
     assert payload["schema_version"] == "captcha.authorization_receipt.v1"
+    assert payload["team_mode"] == "blue_team"
+
+
+def test_red_team_authorization_preflight_passes_with_mode_receipt() -> None:
+    result = RUNNER.invoke(
+        app,
+        [
+            "authorization-preflight",
+            "--manifest",
+            str(FIXTURES / "authorization-valid-red-team-local.json"),
+            "--action",
+            "plan",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "PASS"
+    assert payload["team_mode"] == "red_team"
+    assert any("does not widen authorization" in item for item in payload["limitations"])
 
 
 def test_public_target_preflight_fails_closed() -> None:
@@ -146,6 +167,7 @@ def test_pointer_plan_requires_authorized_local_manifest(tmp_path: Path) -> None
     written = json.loads(out.read_text())
     assert payload == written
     assert payload["schema_version"] == "captcha.pointer_motion_plan.v1"
+    assert payload["team_mode"] == "blue_team"
     assert payload["source_package"]["package"] == "ghost-cursor"
     assert payload["defensive_scope"] == "authorized_loopback_synthetic_only"
     assert payload["samples"][0]["event"] == "mouseMoved"
@@ -213,6 +235,7 @@ def test_pointer_dispatch_plan_binds_to_surf_command(tmp_path: Path) -> None:
     written = json.loads(dispatch_plan_path.read_text())
     assert payload == written
     assert payload["schema_version"] == "captcha.pointer_dispatch_plan.v1"
+    assert payload["team_mode"] == "blue_team"
     assert payload["surf"]["expected_schema"] == "surf.pointer_dispatch_receipt.v1"
     assert payload["surf"]["command"][1:4] == [
         "pointer.dispatch",

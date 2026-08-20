@@ -54,6 +54,11 @@ class TestMode(StrEnum):
     CUSTOM = "custom"
 
 
+class TeamMode(StrEnum):
+    BLUE_TEAM = "blue_team"
+    RED_TEAM = "red_team"
+
+
 class CaptchaType(StrEnum):
     TEXT = "text"
     COMPACT_TEXT = "compact_text"
@@ -112,6 +117,7 @@ class AuthorizationManifest(StrictModel):
         "ReCAP-Agent/ReCAP-32B",
     ] = "ReCAP-Agent/ReCAP-8B"
     model_family: ModelFamily = ModelFamily.QWEN3
+    team_mode: TeamMode = TeamMode.BLUE_TEAM
     provider: Literal["dynamic"] = "dynamic"
     test_mode: TestMode = TestMode.ONCE
     captcha_name: CaptchaType | None = None
@@ -254,6 +260,7 @@ class PointerMotionPlan(StrictModel):
     authorization_id: str
     manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     target_url: str
+    team_mode: TeamMode
     provider: Literal["dynamic"] = "dynamic"
     defensive_scope: Literal["authorized_loopback_synthetic_only"] = (
         "authorized_loopback_synthetic_only"
@@ -301,6 +308,7 @@ class PointerDispatchPlan(StrictModel):
     manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     pointer_plan_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     target_url: str
+    team_mode: TeamMode
     provider: Literal["dynamic"] = "dynamic"
     defensive_scope: Literal["authorized_loopback_synthetic_only"] = (
         "authorized_loopback_synthetic_only"
@@ -330,6 +338,7 @@ class AuthorizationReceipt(StrictModel):
     manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     target_url: str
     model_base_url: str
+    team_mode: TeamMode
     provider: Literal["dynamic"] = "dynamic"
     policy_version: str
     limitations: list[str]

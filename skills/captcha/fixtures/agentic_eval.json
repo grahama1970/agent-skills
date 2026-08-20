@@ -2,12 +2,36 @@
   "version": 2,
   "skill": "captcha",
   "trials": 2,
-  "proof_scope": "multi-trial local agentic safety, Surf/captcha seam gate, and pinned real defensive CAPTCHA/bot-detection reference coverage",
+  "proof_scope": "multi-trial local agentic safety, blue/red team mode propagation, Surf/captcha seam gates, receipt verification, and pinned real defensive CAPTCHA/bot-detection reference coverage",
   "claims": {
-    "proves": "the real captcha entrypoint reports safe status, rejects unauthorized public targets, refuses live effects without --execute, preserves missing-runtime blockers, emits an Ask skill.run DAG, binds pointer dispatch to Surf without dispatching input, and is evaluated against a pinned real defensive CAPTCHA/bot-detection reference project",
-    "does_not_prove": "live ReCAP model performance, public-site CAPTCHA solving, authenticated browser provider behavior, or that a pointer dispatch solves a challenge"
+    "proves": "the real captcha entrypoint reports safe status, schemas include the red/blue mode contract, blue-team and red-team local manifests issue typed authorization receipts, red-team mode does not widen public-target authorization, live effects still require --execute, missing-runtime plans remain NEEDS_ATTENTION, Ask DAG composition is explicit, pointer dispatch plans bind to Surf without dispatching input for both teams, verifier tests check real evidence hashes and tamper failure, and the skill is evaluated against a pinned real defensive CAPTCHA/bot-detection reference project",
+    "does_not_prove": "live ReCAP model performance, public-site CAPTCHA solving, stealth or proxy behavior, authenticated browser provider behavior, or that a pointer dispatch solves a challenge"
   },
   "capability_claims": [
+    {
+      "id": "captcha.status_and_schema_contracts",
+      "description": "Captcha reports a safe entrypoint status and exports schemas that include mode-bearing receipts and pointer plans.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.blue_team_authorization_boundary",
+      "description": "Blue-team mode is the default defensive path and is written into authorization receipts without changing the local-only boundary.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.red_team_authorization_boundary",
+      "description": "Red-team mode is explicitly represented for authorized local simulation and does not widen public-target or live-provider permissions.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
     {
       "id": "captcha.defensive_authorization_boundary",
       "description": "Captcha fails closed for public targets and live effects unless the local defensive authorization contract is explicit.",
@@ -17,8 +41,32 @@
       }
     },
     {
+      "id": "captcha.plan_truthfulness",
+      "description": "Captcha emits NEEDS_ATTENTION plans instead of PASS when runtime, storage, or credential prerequisites are absent.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.ask_dag_composition",
+      "description": "Captcha emits an explicit ask.dag.v1 skill.run node for authorized local ReCAP evaluation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "captcha.surf_pointer_plan_seam",
       "description": "Captcha can prepare Surf pointer dispatch plans without dispatching browser input itself.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.verify_receipt_integrity",
+      "description": "Captcha verifier checks receipt-bound evidence hashes and rejects tampered run artifacts.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -35,14 +83,38 @@
   ],
   "seams": [
     {
+      "seam_id": "captcha.status_and_schemas",
+      "seam_type": "cli_contract",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
       "seam_id": "captcha.authorization_preflight",
       "seam_type": "policy_boundary",
       "criticality": "critical",
       "required_evidence": ["deterministic"]
     },
     {
+      "seam_id": "captcha.evaluation_plan",
+      "seam_type": "runtime_truthfulness",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.ask_dag",
+      "seam_type": "skill_composition",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
       "seam_id": "captcha.surf_pointer_dispatch_plan",
       "seam_type": "skill_composition",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.verify",
+      "seam_type": "receipt_integrity",
       "criticality": "critical",
       "required_evidence": ["deterministic"]
     },
@@ -59,11 +131,99 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.status_and_schema_contracts"],
+      "seams": ["captcha.status_and_schemas"],
       "command": ["../run.sh"],
       "timeout_seconds": 45,
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["captcha.status.v1"]
+      }
+    },
+    {
+      "name": "schemas-check-through-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.status_and_schema_contracts"],
+      "seams": ["captcha.status_and_schemas"],
+      "command": ["../run.sh", "schemas", "--check", "--json"],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.schema_export_receipt.v1", "PASS", "authorization-receipt.schema.json", "pointer-dispatch-plan.schema.json"]
+      }
+    },
+    {
+      "name": "blue-team-authorization-preflight-passes",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.blue_team_authorization_boundary", "captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.authorization_preflight"],
+      "command": [
+        "../run.sh",
+        "authorization-preflight",
+        "--manifest",
+        "authorization-valid-local.json",
+        "--action",
+        "evaluate",
+        "--receipt-out",
+        "/tmp/captcha-agentic-blue-authorization.json",
+        "--json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.authorization_receipt.v1", "blue_team", "does not widen authorization"],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-blue-authorization.json",
+            "json_pointer": "/team_mode",
+            "equals": "blue_team"
+          },
+          {
+            "path": "/tmp/captcha-agentic-blue-authorization.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "red-team-authorization-preflight-passes",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.red_team_authorization_boundary", "captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.authorization_preflight"],
+      "command": [
+        "../run.sh",
+        "authorization-preflight",
+        "--manifest",
+        "authorization-valid-red-team-local.json",
+        "--action",
+        "evaluate",
+        "--receipt-out",
+        "/tmp/captcha-agentic-red-authorization.json",
+        "--json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.authorization_receipt.v1", "red_team", "does not widen authorization"],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-red-authorization.json",
+            "json_pointer": "/team_mode",
+            "equals": "red_team"
+          },
+          {
+            "path": "/tmp/captcha-agentic-red-authorization.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
       }
     },
     {
@@ -80,6 +240,23 @@
         "--action",
         "evaluate",
         "--json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["target_not_loopback", "BLOCKED"]
+      }
+    },
+    {
+      "name": "red-team-public-target-still-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.red_team_authorization_boundary", "captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.authorization_preflight"],
+      "command": [
+        "bash",
+        "-c",
+        "python3 - <<'PY'\nimport json\nsource = 'authorization-valid-red-team-local.json'\nvalue = json.load(open(source))\nvalue['target_url'] = 'https://captcha.example.org'\nopen('/tmp/captcha-agentic-red-public.json', 'w').write(json.dumps(value))\nPY\n../run.sh authorization-preflight --manifest /tmp/captcha-agentic-red-public.json --action evaluate --json"
       ],
       "timeout_seconds": 45,
       "expected": {
@@ -110,6 +287,8 @@
       "name": "missing-runtime-plan-is-not-pass",
       "type": "negative",
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.plan_truthfulness", "captcha.blue_team_authorization_boundary"],
+      "seams": ["captcha.evaluation_plan"],
       "command": [
         "../run.sh",
         "plan",
@@ -126,13 +305,40 @@
       "timeout_seconds": 45,
       "expected": {
         "exit_code": 2,
-        "stdout_contains": ["NEEDS_ATTENTION", "blockers"]
+        "stdout_contains": ["NEEDS_ATTENTION", "blockers", "blue_team"]
+      }
+    },
+    {
+      "name": "red-team-missing-runtime-plan-is-not-pass",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.plan_truthfulness", "captcha.red_team_authorization_boundary"],
+      "seams": ["captcha.evaluation_plan"],
+      "command": [
+        "../run.sh",
+        "plan",
+        "--manifest",
+        "authorization-valid-red-team-local.json",
+        "--recap-root",
+        "/definitely/missing/ReCAP-Agent",
+        "--recap-python",
+        "/definitely/missing/ReCAP-Agent/.venv/bin/python",
+        "--output-root",
+        "/mnt/storage12tb/skills/captcha/outputs",
+        "--json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["NEEDS_ATTENTION", "blockers", "red_team"]
       }
     },
     {
       "name": "ask-composition-is-explicit",
       "type": "positive",
       "evidence_class": "deterministic",
+      "supports_claims": ["captcha.ask_dag_composition"],
+      "seams": ["captcha.ask_dag"],
       "command": [
         "../run.sh",
         "ask-dag",
@@ -145,14 +351,26 @@
       "timeout_seconds": 45,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["ask.dag.v1", "skill.run", "captcha"]
+        "stdout_contains": ["ask.dag.v1", "skill.run", "captcha"],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-eval-dag.json",
+            "json_pointer": "/nodes/0/type",
+            "equals": "skill.run"
+          },
+          {
+            "path": "/tmp/captcha-agentic-eval-dag.json",
+            "json_pointer": "/nodes/0/input/skill",
+            "equals": "captcha"
+          }
+        ]
       }
     },
     {
-      "name": "pointer-dispatch-binds-to-surf-without-execution",
+      "name": "blue-team-pointer-dispatch-binds-to-surf-without-execution",
       "type": "positive",
       "evidence_class": "deterministic",
-      "supports_claims": ["captcha.surf_pointer_plan_seam"],
+      "supports_claims": ["captcha.surf_pointer_plan_seam", "captcha.blue_team_authorization_boundary"],
       "seams": ["captcha.surf_pointer_dispatch_plan"],
       "command": [
         "bash",
@@ -164,10 +382,21 @@
         "exit_code": 0,
         "stdout_contains": [
           "captcha.pointer_dispatch_plan.v1",
+          "blue_team",
           "surf.pointer_dispatch_receipt.v1",
           "pointer.dispatch"
         ],
         "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-pointer-plan.json",
+            "json_pointer": "/team_mode",
+            "equals": "blue_team"
+          },
+          {
+            "path": "/tmp/captcha-agentic-pointer-dispatch-plan.json",
+            "json_pointer": "/team_mode",
+            "equals": "blue_team"
+          },
           {
             "path": "/tmp/captcha-agentic-pointer-dispatch-plan.json",
             "json_pointer": "/surf/expected_schema",
@@ -179,6 +408,68 @@
             "equals": true
           }
         ]
+      }
+    },
+    {
+      "name": "red-team-pointer-dispatch-binds-to-surf-without-execution",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.surf_pointer_plan_seam", "captcha.red_team_authorization_boundary"],
+      "seams": ["captcha.surf_pointer_dispatch_plan"],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh pointer-plan --manifest authorization-valid-red-team-local.json --request pointer-motion-request-valid.json --out /tmp/captcha-agentic-red-pointer-plan.json --json >/tmp/captcha-agentic-red-pointer-plan.stdout.json && ../run.sh pointer-dispatch-plan --manifest authorization-valid-red-team-local.json --plan /tmp/captcha-agentic-red-pointer-plan.json --out /tmp/captcha-agentic-red-pointer-dispatch-plan.json --json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.pointer_dispatch_plan.v1",
+          "red_team",
+          "surf.pointer_dispatch_receipt.v1",
+          "pointer.dispatch"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-red-pointer-plan.json",
+            "json_pointer": "/team_mode",
+            "equals": "red_team"
+          },
+          {
+            "path": "/tmp/captcha-agentic-red-pointer-dispatch-plan.json",
+            "json_pointer": "/team_mode",
+            "equals": "red_team"
+          },
+          {
+            "path": "/tmp/captcha-agentic-red-pointer-dispatch-plan.json",
+            "json_pointer": "/surf/expected_schema",
+            "equals": "surf.pointer_dispatch_receipt.v1"
+          },
+          {
+            "path": "/tmp/captcha-agentic-red-pointer-dispatch-plan.json",
+            "json_pointer": "/surf/post_observation_required",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "verify-receipt-integrity-tests-real-hashes-and-tamper",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.verify_receipt_integrity"],
+      "seams": ["captcha.verify"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_runtime.py::test_verify_run_checks_real_evidence_hashes tests/test_runtime.py::test_verify_run_fails_after_evidence_tamper"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["2 passed"]
       }
     },
     {

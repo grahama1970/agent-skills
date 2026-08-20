@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "surf",
   "trials": 3,
-  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, deterministic CDP geometry/pointer receipt seams, and live loopback bot-detector browser proof",
+  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, deterministic CDP geometry/pointer receipt seams, live loopback bot-detector browser proof, and defensive captcha composition including red-team mode",
   "claims": {
-    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, the CDP geometry/pointer primitives are covered by the production test runner, and live Chrome can drive/read back a pinned loopback bot-detection page through those primitives",
+    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, the CDP geometry/pointer primitives are covered by the production test runner, live Chrome can drive/read back a pinned loopback bot-detection page through those primitives, and Surf eval coverage reaches the captcha entrypoint for defensive reference and red-team local authorization",
     "does_not_prove": "provider semantic correctness, authenticated WebGPT completion, CAPTCHA solving, public bot-detection bypass, or full browser review readiness"
   },
   "capability_claims": [
@@ -28,7 +28,7 @@
     },
     {
       "id": "surf.captcha_defensive_composition",
-      "description": "Surf's declared captcha composition path reaches the captcha skill entrypoint and real defensive reference eval.",
+      "description": "Surf's declared captcha composition path reaches the captcha skill entrypoint for real defensive reference and red-team local authorization eval.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
@@ -229,6 +229,45 @@
             "path": "/tmp/surf-composed-captcha-fcaptcha-reference.json",
             "json_pointer": "/solver_or_bypass",
             "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "captcha-composed-red-team-authorization-boundary",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "surf.captcha_defensive_composition"
+      ],
+      "seams": [
+        "surf.captcha_skill_composition"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ../captcha/run.sh authorization-preflight --manifest ../captcha/fixtures/authorization-valid-red-team-local.json --action evaluate --receipt-out /tmp/surf-composed-captcha-red-authorization.json --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.authorization_receipt.v1",
+          "red_team",
+          "does not widen authorization"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-composed-captcha-red-authorization.json",
+            "json_pointer": "/team_mode",
+            "equals": "red_team"
+          },
+          {
+            "path": "/tmp/surf-composed-captcha-red-authorization.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
           }
         ]
       }

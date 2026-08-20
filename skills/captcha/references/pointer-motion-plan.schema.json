@@ -207,6 +207,14 @@
       ],
       "title": "SeamValidation",
       "type": "object"
+    },
+    "TeamMode": {
+      "enum": [
+        "blue_team",
+        "red_team"
+      ],
+      "title": "TeamMode",
+      "type": "string"
     }
   },
   "$id": "captcha.pointer_motion_plan.v1",
@@ -286,6 +294,9 @@
     "target_url": {
       "title": "Target Url",
       "type": "string"
+    },
+    "team_mode": {
+      "$ref": "#/$defs/TeamMode"
     }
   },
   "required": [
@@ -294,6 +305,7 @@
     "authorization_id",
     "manifest_sha256",
     "target_url",
+    "team_mode",
     "source_package",
     "algorithm",
     "action",

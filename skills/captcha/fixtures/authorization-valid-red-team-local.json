@@ -1,19 +1,19 @@
 {
   "schema_version": "captcha.target_authorization.v1",
-  "authorization_id": "recap-local-fixture",
+  "authorization_id": "recap-red-team-local-fixture",
   "project": "captcha-skill-sanity",
   "operator": "agent-skills-maintainer",
-  "purpose": "Validate the local synthetic ReCAP evaluation contract and fail-closed receipts.",
+  "purpose": "Validate authorized red-team CAPTCHA defensive simulation against a local synthetic ReCAP target.",
   "target_url": "http://127.0.0.1:5000",
   "model_base_url": "http://127.0.0.1:8000/v1",
   "model_id": "ReCAP-Agent/ReCAP-8B",
   "model_family": "qwen3",
-  "team_mode": "blue_team",
+  "team_mode": "red_team",
   "provider": "dynamic",
   "test_mode": "custom",
-  "captcha_name": "text",
+  "captcha_name": "slider",
   "test_size": 2,
-  "seed": 42,
+  "seed": 1337,
   "workers": 1,
   "max_calls": 4,
   "max_tasks": 2,
@@ -26,7 +26,7 @@
     "ask-dag"
   ],
   "allowed_captcha_types": [
-    "text"
+    "slider"
   ],
   "recap_commit": "577c7728ed159756a6cb6cbd1a58897fe288f73e",
   "expires_at": "2030-01-01T00:00:00Z",

@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from captcha_skill.errors import CaptchaSkillError, ErrorCode
-from captcha_skill.models import AuthorizationManifest, EvaluationAction
+from captcha_skill.models import AuthorizationManifest, EvaluationAction, TeamMode
 from captcha_skill.policy import canonical_json_bytes, sha256_bytes, validate_authorization
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
@@ -41,6 +41,43 @@ def test_valid_local_manifest_issues_typed_receipt() -> None:
     assert receipt.manifest_sha256 == digest
     assert receipt.seam_validation.status == "PASS"
     assert receipt.provider == "dynamic"
+    assert receipt.team_mode is TeamMode.BLUE_TEAM
+    assert any("blue_team" in item for item in receipt.limitations)
+
+
+def test_red_team_local_manifest_issues_typed_receipt_without_widening_scope() -> None:
+    value = json.loads((FIXTURES / "authorization-valid-red-team-local.json").read_text())
+    manifest = _validate(value)
+    digest = sha256_bytes(canonical_json_bytes(manifest.model_dump(mode="json")))
+
+    receipt = validate_authorization(
+        manifest,
+        manifest_sha256=digest,
+        required_action=EvaluationAction.EVALUATE,
+        now=datetime(2028, 1, 1, tzinfo=timezone.utc),
+    )
+
+    assert receipt.status == "PASS"
+    assert receipt.team_mode is TeamMode.RED_TEAM
+    assert receipt.provider == "dynamic"
+    assert any("red_team" in item for item in receipt.limitations)
+    assert any("does not widen authorization" in item for item in receipt.limitations)
+
+
+def test_red_team_public_target_is_still_rejected_before_execution() -> None:
+    value = json.loads((FIXTURES / "authorization-valid-red-team-local.json").read_text())
+    value["target_url"] = "https://captcha.example.org"
+    manifest = _validate(value)
+
+    with pytest.raises(CaptchaSkillError) as raised:
+        validate_authorization(
+            manifest,
+            manifest_sha256="a" * 64,
+            required_action=EvaluationAction.EVALUATE,
+            now=datetime(2028, 1, 1, tzinfo=timezone.utc),
+        )
+
+    assert raised.value.code is ErrorCode.TARGET_NOT_LOOPBACK
 
 
 def test_manifest_set_serialization_is_deterministic() -> None:

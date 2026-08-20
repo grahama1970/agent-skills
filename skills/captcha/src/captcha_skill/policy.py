@@ -254,6 +254,7 @@ def validate_authorization(
 
     limitations = [
         "Synthetic ReCAP dynamic provider only.",
+        f"Team mode is {manifest.team_mode.value}; it does not widen authorization.",
         "Target and model endpoint use literal loopback IP addresses.",
         "No credentials, cookies, proxies, stealth, or third-party CAPTCHA providers.",
         (
@@ -270,6 +271,7 @@ def validate_authorization(
         manifest_sha256=manifest_sha256,
         target_url=str(manifest.target_url),
         model_base_url=str(manifest.model_base_url),
+        team_mode=manifest.team_mode,
         policy_version=POLICY_VERSION,
         limitations=limitations,
         seam_validation=SeamValidation(kind="captcha.authorization_manifest"),

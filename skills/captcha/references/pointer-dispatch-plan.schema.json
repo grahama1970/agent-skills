@@ -71,6 +71,14 @@
       ],
       "title": "SurfPointerDispatchBinding",
       "type": "object"
+    },
+    "TeamMode": {
+      "enum": [
+        "blue_team",
+        "red_team"
+      ],
+      "title": "TeamMode",
+      "type": "string"
     }
   },
   "$id": "captcha.pointer_dispatch_plan.v1",
@@ -138,6 +146,9 @@
     "target_url": {
       "title": "Target Url",
       "type": "string"
+    },
+    "team_mode": {
+      "$ref": "#/$defs/TeamMode"
     }
   },
   "required": [
@@ -147,6 +158,7 @@
     "manifest_sha256",
     "pointer_plan_sha256",
     "target_url",
+    "team_mode",
     "pointer_action",
     "sample_count",
     "surf",

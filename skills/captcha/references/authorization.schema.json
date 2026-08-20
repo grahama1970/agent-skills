@@ -60,6 +60,14 @@
       "title": "ModelFamily",
       "type": "string"
     },
+    "TeamMode": {
+      "enum": [
+        "blue_team",
+        "red_team"
+      ],
+      "title": "TeamMode",
+      "type": "string"
+    },
     "TestMode": {
       "enum": [
         "once",
@@ -198,6 +206,10 @@
       "minLength": 1,
       "title": "Target Url",
       "type": "string"
+    },
+    "team_mode": {
+      "$ref": "#/$defs/TeamMode",
+      "default": "blue_team"
     },
     "test_mode": {
       "$ref": "#/$defs/TestMode",
