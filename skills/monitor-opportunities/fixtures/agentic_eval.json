@@ -306,6 +306,31 @@
       "timeout_seconds": 7200,
       "proves": "The promoted Stage 0 cron path is live, pinned, no-effect, tracker-skipped, ATS-memory-skipped, explicit about application-history degradation, free of Surf tab-close cleanup failures, and stops Tau provider evaluation after the first provider-live addendum.",
       "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
+    },
+    {
+      "name": "regression-2026-08-18-failure-signatures",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/regression_2026_08_18.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REGRESSION_2026_08_18 OK",
+          "EDGE_EVIDENCE",
+          "FIXTURE_AGING",
+          "RETENTION",
+          "MEETUP_BUDGET",
+          "NAME_GUARD",
+          "QUEUE_PROJECTION"
+        ]
+      },
+      "proves": "The six failure signatures of 2026-08-17/18/20 stay fixed: relationship edges cite only signal-backed evidence, the re-dated discovery fixture still shortlists, each nightly gets its own retained directory, the Meetup budget scales with attendee work, junk attendee names are never resolved, and the prospect queue carries resolved LinkedIn candidates.",
+      "does_not_prove": "Live browser capture, live LinkedIn search quality, or the value of any individual lead."
     }
   ]
 }

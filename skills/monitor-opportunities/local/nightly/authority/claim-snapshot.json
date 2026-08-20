@@ -1,0 +1,586 @@
+{
+  "active": true,
+  "candidate_profile_id": "graham-anderson-stage0-fixture",
+  "claims": [
+    {
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "approved": true,
+      "claim_key": "claim:arcos:acert-architect",
+      "evidence_refs": [
+        "https://www.darpa.mil/research/programs/automated-rapid-certification-of-software",
+        "https://github.com/ge-high-assurance/RACK",
+        "https://doi.org/10.2514/6.2025-2677",
+        "human_attested:graham:2026-08-02"
+      ],
+      "sensitivity": "public",
+      "valid_from": "2026-08-02T00:00:00Z",
+      "valid_until": null,
+      "verification_status": "approved",
+      "wordings": [
+        {
+          "wording_id": "wording:arcos:resume-safe",
+          "approved": true,
+          "text": "Experience with software-assurance and certification-evidence research on the DARPA ARCOS program."
+        },
+        {
+          "wording_id": "wording:arcos:employer-scoped",
+          "approved": true,
+          "text": "Led CS Group's ACERT work on the DARPA ARCOS program, a certification-requirements effort led by GrammaTech, turning aerospace engineering documentation into queryable graph evidence."
+        }
+      ],
+      "tier": 2,
+      "tier_basis": "Employment history. Program is publicly documented; the role and ACERT returned zero indexed results in two searches."
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "approved": true,
+      "claim_key": "claim:pdf-oxide:document-extraction",
+      "evidence_refs": [
+        "https://github.com/grahama1970/pdf_oxide",
+        "https://crates.io/crates/pdf_oxide",
+        "https://pypi.org/project/pdf-oxide/"
+      ],
+      "sensitivity": "public",
+      "valid_from": "2026-08-02T00:00:00Z",
+      "valid_until": null,
+      "verification_status": "approved",
+      "wordings": [
+        {
+          "approved": true,
+          "text": "Built document extraction systems that preserve source evidence and support deterministic review workflows.",
+          "wording_id": "wording:pdf:extract"
+        }
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository plus published crates.io and PyPI packages."
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "approved": true,
+      "claim_key": "claim:memory:retrieval-platform",
+      "evidence_refs": [
+        "https://github.com/grahama1970/memory-public"
+      ],
+      "sensitivity": "public",
+      "valid_from": "2026-08-02T00:00:00Z",
+      "valid_until": null,
+      "verification_status": "approved",
+      "wordings": [
+        {
+          "approved": true,
+          "text": "Designed retrieval and receipt systems that separate source truth, inference, and human review decisions.",
+          "wording_id": "wording:memory:receipt"
+        }
+      ],
+      "tier": 1,
+      "tier_basis": "Public overview repository grahama1970/memory-public (created 2026-08-18); implementation private."
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "GMAIL",
+        "LINKEDIN"
+      ],
+      "claim_key": "claim:sparta:agentic-compliance",
+      "evidence_refs": [
+        "https://github.com/grahama1970/sparta-public"
+      ],
+      "sensitivity": "public",
+      "verification_status": "approved",
+      "wordings": [
+        {
+          "wording_id": "wording:sparta:workspace",
+          "approved": true,
+          "text": "Built Sparta Explorer, an open-source agent-driven compliance workspace that traces a conclusion from framework guidance through program evidence to human review."
+        }
+      ],
+      "tier": 1,
+      "tier_basis": "Public mirror grahama1970/sparta-public; working repo is private.",
+      "approved": true
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "GMAIL",
+        "LINKEDIN"
+      ],
+      "claim_key": "claim:extractor:multi-format-processing",
+      "evidence_refs": [
+        "https://github.com/grahama1970/extractor"
+      ],
+      "sensitivity": "public",
+      "verification_status": "approved",
+      "wordings": [
+        {
+          "wording_id": "wording:extractor:service",
+          "approved": true,
+          "text": "Built Extractor, an open-source multi-format document extraction service that returns one typed result envelope."
+        }
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository grahama1970/extractor.",
+      "approved": true
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "GMAIL",
+        "LINKEDIN"
+      ],
+      "claim_key": "claim:realpie:executive-producer-web",
+      "evidence_refs": [
+        "human_attested:graham:2026-08-06"
+      ],
+      "recency": "early_career",
+      "sensitivity": "public",
+      "usage_note": "Dated leadership credential. Use as background depth/range and for leadership-framed audiences; do not present as recent hands-on work. Recent claims (ARCOS/pdf_oxide/extractor/SPARTA/memory) lead for engineering roles.",
+      "verification_status": "human_attested",
+      "wordings": [
+        {
+          "text": "Served as Executive Producer for web at RealPie, leading a team of about 12 people.",
+          "wording_id": "w1"
+        }
+      ],
+      "tier": 2,
+      "tier_basis": "Self-reported early-career scope. Deliberately unapproved and out of target scope."
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "GMAIL",
+        "LINKEDIN"
+      ],
+      "claim_key": "claim:dentsu:interactive-director",
+      "evidence_refs": [
+        "human_attested:graham:2026-08-06"
+      ],
+      "recency": "early_career",
+      "sensitivity": "public",
+      "usage_note": "Dated leadership credential. Use as background depth/range and for leadership-framed audiences; do not present as recent hands-on work. Recent claims (ARCOS/pdf_oxide/extractor/SPARTA/memory) lead for engineering roles.",
+      "verification_status": "human_attested",
+      "wordings": [
+        {
+          "text": "Director of Interactive Services at Dentsu America (Santa Monica), delivering websites, games, and hardware projects for major brands including Disney, Toyota, Cartoon Network, and Bandai with globally distributed teams.",
+          "wording_id": "w1"
+        }
+      ],
+      "tier": 2,
+      "tier_basis": "Self-reported early-career scope. Deliberately unapproved and out of target scope."
+    },
+    {
+      "allowed_channels": [
+        "resume",
+        "GMAIL",
+        "LINKEDIN"
+      ],
+      "claim_key": "claim:composer:commercial-brand-work",
+      "evidence_refs": [
+        "human_attested:graham:2026-08-06"
+      ],
+      "recency": "early_career",
+      "sensitivity": "public",
+      "usage_note": "COLOR, not credential. Signals a cross-disciplinary problem-solving lens most agentic VPs/engineers lack. Use sparingly as differentiation for the right audience; never evaluated on its own merits, never as recent work.",
+      "verification_status": "human_attested",
+      "wordings": [
+        {
+          "text": "Worked as a commercial composer, creating music for campaigns and accounts including X Games, Nokia, Pepsi, Taco Bell, and Adidas.",
+          "wording_id": "w1"
+        }
+      ],
+      "tier": 2,
+      "tier_basis": "Self-reported early-career scope. Deliberately unapproved and out of target scope."
+    },
+    {
+      "claim_key": "claim:opensource:document-graph-tools",
+      "approved": true,
+      "verification_status": "approved",
+      "sensitivity": "public",
+      "valid_from": "2026-08-17T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/sparta-public",
+        "https://github.com/grahama1970/extractor",
+        "https://github.com/grahama1970/pdf_oxide"
+      ],
+      "wordings": [
+        {
+          "wording_id": "wording:opensource:document-graph-tools",
+          "approved": true,
+          "text": "Built open-source document-graph tools: Sparta Explorer and Extractor."
+        }
+      ],
+      "tier": 1,
+      "tier_basis": "Public repositories anyone can clone: sparta-public, extractor, pdf_oxide."
+    },
+    {
+      "claim_key": "claim:tau:agent-orchestration",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/tau"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository.",
+      "wordings": [
+        {
+          "wording_id": "wording:tau:agent-orchestration",
+          "approved": true,
+          "text": "Built Tau, an open-source multi-agent orchestration system that compiles goals into DAG contracts and executes them with receipts at every node."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:agent-skills:skill-platform",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository.",
+      "wordings": [
+        {
+          "wording_id": "wording:agent-skills:skill-platform",
+          "approved": true,
+          "text": "Built and operate an open-source platform of 380+ composable agent skills covering discovery, evaluation, compliance, and document processing."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:memory:graph-retrieval",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/memory-public"
+      ],
+      "tier": 1,
+      "tier_basis": "Public overview repository; implementation private.",
+      "wordings": [
+        {
+          "wording_id": "wording:memory:graph-retrieval",
+          "approved": true,
+          "text": "Designed Graph Memory, a hybrid retrieval system combining BM25, dense vectors, and graph traversal, with evidence-bound results and explicit degradation reporting."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:pdf-oxide:published-packages",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://crates.io/crates/pdf_oxide",
+        "https://pypi.org/project/pdf-oxide/"
+      ],
+      "tier": 1,
+      "tier_basis": "Published package registries.",
+      "wordings": [
+        {
+          "wording_id": "wording:pdf-oxide:published-packages",
+          "approved": true,
+          "text": "Ship pdf_oxide as published packages on crates.io and PyPI, with a Rust core, Python bindings, WASM support, and an MCP server for AI assistants."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:sparta:nist-oscal-compliance",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/sparta-public"
+      ],
+      "tier": 1,
+      "tier_basis": "Public mirror.",
+      "wordings": [
+        {
+          "wording_id": "wording:sparta:nist-oscal-compliance",
+          "approved": true,
+          "text": "Built an open-source compliance workspace that traces space-cyber conclusions through NIST-aligned framework guidance, program evidence, and human review."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:evals:adversarial-evaluation",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository: agentic-evals and test-lab skills.",
+      "wordings": [
+        {
+          "wording_id": "wording:evals:adversarial-evaluation",
+          "approved": true,
+          "text": "Designed agentic evaluation harnesses that run skills through multi-trial, adversarial, live-path cases and score readiness from evidence rather than unit tests."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:extraction:agentic-pipelines",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/extractor",
+        "https://github.com/grahama1970/pdf_oxide"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repositories.",
+      "wordings": [
+        {
+          "wording_id": "wording:extraction:agentic-pipelines",
+          "approved": true,
+          "text": "Built agentic document-extraction pipelines that route files through typed stages and return a single truthful result envelope with provenance."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:llm:multi-provider-integration",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository: scillm and ask skills.",
+      "wordings": [
+        {
+          "wording_id": "wording:llm:multi-provider-integration",
+          "approved": true,
+          "text": "Integrate and orchestrate multiple LLM providers behind one proxy with routing, caching, batch pools, and cost telemetry."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:knowledge-graph:arangodb",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/memory-public",
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repositories.",
+      "wordings": [
+        {
+          "wording_id": "wording:knowledge-graph:arangodb",
+          "approved": true,
+          "text": "Model domain knowledge as graph collections in ArangoDB, with BM25 full-text views, entity vocabularies, and multi-hop traversal serving live agents."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:arcos:requirements-graph",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "human_attested:graham:2026-08-02"
+      ],
+      "tier": 2,
+      "tier_basis": "Employment history; program publicly documented, role attested.",
+      "wordings": [
+        {
+          "wording_id": "wording:arcos:requirements-graph",
+          "approved": true,
+          "text": "Experience with turning dense aerospace engineering requirements into queryable knowledge-graph evidence during four years of certification research."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:cs-group:research-leadership",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "human_attested:graham:2026-08-02"
+      ],
+      "tier": 2,
+      "tier_basis": "Employment history, attested.",
+      "wordings": [
+        {
+          "wording_id": "wording:cs-group:research-leadership",
+          "approved": true,
+          "text": "Led a research effort at CS Group as Principal Data Scientist, owning architecture and delivery across a multi-year federal research program."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:rd:prototype-to-production",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "human_attested:graham:2026-08-18"
+      ],
+      "tier": 2,
+      "tier_basis": "Attested; public repos corroborate the production half.",
+      "wordings": [
+        {
+          "wording_id": "wording:rd:prototype-to-production",
+          "approved": true,
+          "text": "Background in carrying applied AI research from experimental prototypes to systems in daily production use."
+        }
+      ]
+    },
+    {
+      "claim_key": "claim:voice:realtime-multimodal",
+      "approved": true,
+      "verification_status": "approved_by_graham_2026-08-20",
+      "sensitivity": "public",
+      "valid_from": "2026-08-18T00:00:00Z",
+      "valid_until": null,
+      "allowed_channels": [
+        "resume",
+        "email",
+        "linkedin",
+        "interview"
+      ],
+      "evidence_refs": [
+        "https://github.com/grahama1970/agent-skills"
+      ],
+      "tier": 1,
+      "tier_basis": "Public repository: live-evidence skill.",
+      "wordings": [
+        {
+          "wording_id": "wording:voice:realtime-multimodal",
+          "approved": true,
+          "text": "Built real-time voice and speech systems using streaming transcription, speaker resolution, and evidence-bound retrieval surfaced live during conversation."
+        }
+      ]
+    }
+  ],
+  "schema": "monitor_opportunities.claim_snapshot.v1",
+  "tier_policy": {
+    "source": "Panel 2026-08-17, kimi.ai seat, reaffirmed by Graham.",
+    "1": "Public artifact: repo, paper, patent, press release. May be asserted as an accomplishment in any channel.",
+    "2": "Attested history: employment record, self-reported scope. Resume may carry it only as 'experience with <domain>' or 'background in <area>' - never with a leadership verb, a metric, or deliverable language. Outreach may reference it to establish relevance. Interview may probe it.",
+    "3": "Inferred competence from an adjacent skill. Interview probing only; never asserted.",
+    "firewall": "No single wording may name a repository and a program or agency together, because a reader infers the repository was a contract deliverable."
+  }
+}

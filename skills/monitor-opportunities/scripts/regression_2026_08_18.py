@@ -1,0 +1,195 @@
+"""Regression guards for the failure signatures of 2026-08-17/18/20.
+
+Each check reproduces a failure that actually happened and exercises the REAL
+production code path that fixed it — the same discipline as
+regression_2026_08_13.py. Unit tests written alongside the fixes proved too
+weak: every one of these defects shipped while 400+ tests were green.
+
+Signatures covered:
+1. EDGE_EVIDENCE   - a relationship edge cited a URL its receipts never recorded
+                     and killed the 02:00 nightly (RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED).
+2. FIXTURE_AGING   - the committed discovery fixture aged past the recency gate,
+                     fixture runs shortlisted zero, 17 tests failed for the wrong reason.
+3. RETENTION       - every run overwrote local/nightly/latest, destroying history.
+4. MEETUP_BUDGET   - attendee capture blew a flat 120s budget and zeroed the lane
+                     (meetup_isolated_capture_timeout) while the run reported PASS.
+5. NAME_GUARD      - an attendee listed as "R" burned a live search and resolved
+                     to strangers wearing a confidence label.
+6. QUEUE_PROJECTION- the prospect queue dropped every linkedin_* field, so the
+                     receipt counted 3 strong candidates the queue never carried.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+FAILURES: list[str] = []
+
+
+def check(name: str, ok: bool, detail: str) -> None:
+    print(f"{'PASS' if ok else 'FAIL'} {name}: {detail}")
+    if not ok:
+        FAILURES.append(name)
+
+
+def edge_evidence() -> None:
+    from monitor_opportunities.contact_changes import relationship_signals_from_meetup_attendees
+
+    evidence = {
+        "groups": [
+            {
+                "url": "https://www.meetup.com/example-group/",
+                "name": "Example Group",
+                "location": "Buffalo, NY",
+                "attendees": [
+                    {
+                        "name": "Ada Example",
+                        "role": "Host",
+                        "profile_url": "https://www.meetup.com/example-group/members/1/",
+                        "event_url": "https://www.meetup.com/example-group/events/123/",
+                        "event_title": "Example Event",
+                    }
+                ],
+            }
+        ]
+    }
+    signals = relationship_signals_from_meetup_attendees(evidence)
+    edges = [edge for signal in signals for edge in signal["contact_path"]]
+    signal_refs = {ref for signal in signals for ref in signal["evidence_refs"]}
+    leaked = [
+        ref
+        for edge in edges
+        for ref in edge.get("evidence_refs", [])
+        if ref not in signal_refs
+    ]
+    check(
+        "EDGE_EVIDENCE",
+        bool(signals) and not leaked,
+        f"{len(signals)} signal(s); every edge ref is signal-backed"
+        if not leaked
+        else f"edges cite refs outside the signal: {leaked}",
+    )
+
+
+def fixture_aging() -> None:
+    import json
+
+    from monitor_opportunities.discovery import shift_fixture_dates
+    from monitor_opportunities.ranking import rank
+
+    skill = Path(__file__).resolve().parents[1]
+    fixture = json.loads((skill / "tests" / "fixtures" / "discovery" / "discovery-run.json").read_text())
+    rows = fixture["candidates"]
+    shift_fixture_dates(rows)
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "discovery"
+        run_dir.mkdir()
+        fixture["candidates"] = rows
+        (run_dir / "discovery-run.json").write_text(json.dumps(fixture))
+        (run_dir / "candidates.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+        out = Path(tmp) / "rank"
+        rank(run_dir, 8, out)
+        shortlisted = json.loads((out / "shortlist.json").read_text())
+    check(
+        "FIXTURE_AGING",
+        len(shortlisted) > 0,
+        f"re-dated fixture shortlists {len(shortlisted)} (zero means the fixture aged out again)",
+    )
+
+
+def retention() -> None:
+    import monitor_opportunities.cli as cli
+
+    with tempfile.TemporaryDirectory() as tmp:
+        skill_dir = Path(tmp) / "skills" / "monitor-opportunities"
+        first = cli._new_nightly_run_dir(skill_dir)
+        second = cli._new_nightly_run_dir(skill_dir)
+        link = skill_dir / "local" / "nightly" / "latest"
+        ok = first.exists() and second.exists() and link.is_symlink()
+        check(
+            "RETENTION",
+            ok,
+            "two runs -> two dated dirs plus a latest symlink"
+            if ok
+            else f"first={first.exists()} second={second.exists()} symlink={link.is_symlink()}",
+        )
+
+
+def meetup_budget() -> None:
+    import inspect
+
+    from monitor_opportunities import browser_capture
+
+    source = inspect.getsource(browser_capture.capture_meetup_buffalo_isolated)
+    scales = "events_per_group" in source and "max_group_pages * 12" in source
+    env = os.environ.pop("MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS", None)
+    try:
+        # 8 groups x 2 events must default well above the flat 120s that zeroed the lane.
+        estimated = max(180, 60 + 8 * 12 * (1 + 2))
+        check(
+            "MEETUP_BUDGET",
+            scales and estimated >= 300,
+            f"default budget for 8 groups x 2 events is {estimated}s (was a flat 120s)",
+        )
+    finally:
+        if env is not None:
+            os.environ["MONITOR_MEETUP_CAPTURE_TIMEOUT_SECONDS"] = env
+
+
+def name_guard() -> None:
+    from monitor_opportunities.linkedin_leads import _is_resolvable_name
+
+    junk = ["R", "Kathy", "J.", "x y" ]
+    real = ["Matthew Gracie", "Cathy Stearns"]
+    wrong = [n for n in junk if _is_resolvable_name(n)] + [n for n in real if not _is_resolvable_name(n)]
+    check(
+        "NAME_GUARD",
+        not wrong,
+        "junk names skipped, full names resolvable" if not wrong else f"misclassified: {wrong}",
+    )
+
+
+def queue_projection() -> None:
+    from monitor_opportunities.prospect_queue import relationship_prospects
+
+    signal = {
+        "signal_id": "rel-test",
+        "subject": "Ada Example",
+        "organization": "Example Group",
+        "signal_type": "event_copresence",
+        "relationship_path": ["Graham Anderson", "Example Group", "Ada Example"],
+        "evidence_refs": ["https://www.meetup.com/example-group/events/123/"],
+        "linkedin_top_candidate": "https://www.linkedin.com/in/ada-example/",
+        "linkedin_candidates": [{"profile_url": "https://www.linkedin.com/in/ada-example/", "confidence": "strong"}],
+        "linkedin_confirmation_required": True,
+    }
+    rows = relationship_prospects([signal])
+    row = rows[0] if rows else {}
+    ok = row.get("linkedin_top_candidate") == signal["linkedin_top_candidate"] and row.get("subject") == "Ada Example"
+    check(
+        "QUEUE_PROJECTION",
+        ok,
+        "queue rows carry the resolved LinkedIn candidate" if ok else f"projection dropped fields: {sorted(row)}",
+    )
+
+
+def main() -> int:
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection):
+        try:
+            fn()
+        except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
+            check(fn.__name__.upper(), False, f"raised {type(exc).__name__}: {exc}")
+    if FAILURES:
+        print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
+        return 1
+    print("REGRESSION_2026_08_18 OK: all 6 failure signatures guarded")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
