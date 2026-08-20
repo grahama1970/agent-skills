@@ -54,7 +54,7 @@
       "valid_parentheses.py"
     ],
     "required_source_excerpt_terms": [
-      "is_valid_parentheses"
+      "valid_parentheses"
     ],
     "required_text_terms": [
       "opening",
@@ -77,7 +77,8 @@
         "remove"
       ]
     ],
-    "note_required_text_terms": "Stage-1 resolver authors the card question when live; canonical phrasing (minimum/remove) is as valid as the raw STT phrasing (opening)."
+    "note_required_text_terms": "Stage-1 resolver authors the card question when live; canonical phrasing (minimum/remove) is as valid as the raw STT phrasing (opening).",
+    "note_excerpt_terms": "matches is_valid_parentheses OR remove_invalid_parentheses -- both planted fixture files are legitimate evidence for the pinned question; observed live: retrieval sometimes ranks only the remove_* file."
   },
   "gate": {
     "raw_ask_without_gate_allowed": true,

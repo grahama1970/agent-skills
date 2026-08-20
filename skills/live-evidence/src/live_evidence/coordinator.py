@@ -214,7 +214,7 @@ class EvidenceCoordinator:
         # second occurrence survived a single pass (observed live: the card
         # question repeated "point I set at line 42" twice). Iterate to a
         # fixed point, bounded.
-        for _ in range(6):
+        for iteration in range(6):
             lowered = text.lower()
             cut: list[tuple[int, int]] = []
             for utterance in self._assistant_utterances:
@@ -223,8 +223,8 @@ class EvidenceCoordinator:
                     if block.size >= 15:
                         cut.append((block.a, block.a + block.size))
             if not cut:
-                if _ == 0:
-                    return text  # nothing echoed at all: leave text untouched
+                if iteration == 0:
+                    return text  # nothing echoed: leave text untouched
                 break
             cut.sort()
             # Expand each cut to word boundaries: a mid-word cut leaves
@@ -245,10 +245,9 @@ class EvidenceCoordinator:
                 cursor = max(cursor, end)
             kept.append(text[cursor:])
             text = " ".join("".join(kept).split())
-        # Final scrub, only reached when something WAS cut: residual words that
-        # fuzzily belong to the assistant's own vocabulary are echo debris, not
-        # human content. Fuzzy on purpose -- STT respells our speech
-        # ("breakpoint" -> "break"/"oint.42"), so exact-vocab matching misses
+        # Scrub (reached only when something WAS cut): residual words fuzzily
+        # matching assistant vocabulary are echo debris -- STT respells our
+        # speech ("breakpoint" -> "break"/"oint.42"), so exact matching misses
         # exactly the debris that survives the character cuts.
         import re as _re
 
