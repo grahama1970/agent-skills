@@ -80,6 +80,16 @@ class BoundedJudgment(StrEnum):
     NOT_MEASURED = "NOT_MEASURED"
 
 
+class PointerMotionAction(StrEnum):
+    CLICK = "click"
+    DRAG = "drag"
+
+
+class ScreenshotCaptureKind(StrEnum):
+    VIEWPORT = "viewport"
+    FULL_PAGE = "full_page"
+
+
 class Acknowledgements(StrictModel):
     owns_or_controls_target: bool
     local_synthetic_only: bool
@@ -151,6 +161,163 @@ class AuthorizationManifest(StrictModel):
 class SeamValidation(StrictModel):
     kind: str = Field(min_length=1, max_length=120)
     status: Literal["PASS"] = "PASS"
+
+
+class PointerPoint(StrictModel):
+    x: float = Field(ge=0)
+    y: float = Field(ge=0)
+
+
+class PointerCoordinateMapping(StrictModel):
+    """Map a screenshot coordinate plane into Chrome viewport CSS pixels."""
+
+    screenshot_width_px: int = Field(gt=0, le=20000)
+    screenshot_height_px: int = Field(gt=0, le=20000)
+    viewport_width_css: int = Field(gt=0, le=10000)
+    viewport_height_css: int = Field(gt=0, le=10000)
+    clip_x_css: float = Field(default=0, ge=0)
+    clip_y_css: float = Field(default=0, ge=0)
+    scroll_x_css: float = Field(default=0, ge=0)
+    scroll_y_css: float = Field(default=0, ge=0)
+    capture_kind: ScreenshotCaptureKind = ScreenshotCaptureKind.VIEWPORT
+
+    @property
+    def scale_x(self) -> float:
+        return self.screenshot_width_px / self.viewport_width_css
+
+    @property
+    def scale_y(self) -> float:
+        return self.screenshot_height_px / self.viewport_height_css
+
+    def image_to_viewport(self, point: PointerPoint) -> PointerPoint:
+        document_x = self.clip_x_css + point.x / self.scale_x
+        document_y = self.clip_y_css + point.y / self.scale_y
+        return PointerPoint(
+            x=document_x - self.scroll_x_css,
+            y=document_y - self.scroll_y_css,
+        )
+
+
+class PointerSourcePackage(StrictModel):
+    package: Literal["ghost-cursor"] = "ghost-cursor"
+    repository: str
+    npm: str
+    license: str
+    selection_basis: str
+    integration_mode: Literal["reference_algorithm_not_vendored_runtime"] = (
+        "reference_algorithm_not_vendored_runtime"
+    )
+
+
+class PointerMotionRequest(StrictModel):
+    schema_version: Literal["captcha.pointer_motion_request.v1"]
+    action: PointerMotionAction = PointerMotionAction.DRAG
+    start_image_px: PointerPoint
+    end_image_px: PointerPoint
+    mapping: PointerCoordinateMapping
+    duration_ms: int = Field(default=850, ge=120, le=5000)
+    sample_count: int = Field(default=32, ge=8, le=240)
+    seed: int = Field(default=42, ge=0, le=2_147_483_647)
+    jitter_css_px: float = Field(default=1.2, ge=0, le=8)
+    control_offset_css_px: float = Field(default=80, ge=0, le=400)
+    hold_ms: int = Field(default=80, ge=0, le=1000)
+
+    @model_validator(mode="after")
+    def validate_visible_coordinates(self) -> "PointerMotionRequest":
+        for label, image_point in (
+            ("start_image_px", self.start_image_px),
+            ("end_image_px", self.end_image_px),
+        ):
+            if image_point.x > self.mapping.screenshot_width_px:
+                raise ValueError(f"{label}.x exceeds screenshot_width_px")
+            if image_point.y > self.mapping.screenshot_height_px:
+                raise ValueError(f"{label}.y exceeds screenshot_height_px")
+            viewport = self.mapping.image_to_viewport(image_point)
+            if viewport.x < 0 or viewport.x > self.mapping.viewport_width_css:
+                raise ValueError(f"{label} maps outside viewport x bounds")
+            if viewport.y < 0 or viewport.y > self.mapping.viewport_height_css:
+                raise ValueError(f"{label} maps outside viewport y bounds")
+        return self
+
+
+class PointerSample(StrictModel):
+    event: Literal["mouseMoved", "mousePressed", "mouseReleased"]
+    time_ms: int = Field(ge=0)
+    x_css: float = Field(ge=0)
+    y_css: float = Field(ge=0)
+    button_down: bool
+
+
+class PointerMotionPlan(StrictModel):
+    schema_version: Literal["captcha.pointer_motion_plan.v1"]
+    created_at: datetime
+    authorization_id: str
+    manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    target_url: str
+    provider: Literal["dynamic"] = "dynamic"
+    defensive_scope: Literal["authorized_loopback_synthetic_only"] = (
+        "authorized_loopback_synthetic_only"
+    )
+    source_package: PointerSourcePackage
+    algorithm: Literal["clamped_cubic_b_spline_with_seeded_jitter.v1"]
+    action: PointerMotionAction
+    start_viewport_css: PointerPoint
+    end_viewport_css: PointerPoint
+    mapping: PointerCoordinateMapping
+    samples: list[PointerSample] = Field(min_length=3, max_length=242)
+    limitations: list[str]
+    seam_validation: SeamValidation
+
+    @model_validator(mode="after")
+    def validate_motion_truth(self) -> "PointerMotionPlan":
+        if not self.limitations:
+            raise ValueError("pointer motion plan requires explicit limitations")
+        if self.samples[0].event != "mouseMoved":
+            raise ValueError("pointer plan must start with mouseMoved")
+        if self.action is PointerMotionAction.DRAG:
+            if not any(sample.event == "mousePressed" for sample in self.samples):
+                raise ValueError("drag plan requires mousePressed")
+            if self.samples[-1].event != "mouseReleased":
+                raise ValueError("drag plan must end with mouseReleased")
+        return self
+
+
+class SurfPointerDispatchBinding(StrictModel):
+    command: list[str] = Field(min_length=4)
+    expected_schema: Literal["surf.pointer_dispatch_receipt.v1"] = (
+        "surf.pointer_dispatch_receipt.v1"
+    )
+    required: Literal[True] = True
+    role: Literal["browser_transport_pointer_input_dispatch"] = (
+        "browser_transport_pointer_input_dispatch"
+    )
+    post_observation_required: Literal[True] = True
+
+
+class PointerDispatchPlan(StrictModel):
+    schema_version: Literal["captcha.pointer_dispatch_plan.v1"]
+    created_at: datetime
+    authorization_id: str
+    manifest_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    pointer_plan_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    target_url: str
+    provider: Literal["dynamic"] = "dynamic"
+    defensive_scope: Literal["authorized_loopback_synthetic_only"] = (
+        "authorized_loopback_synthetic_only"
+    )
+    pointer_action: PointerMotionAction
+    sample_count: int = Field(ge=3, le=242)
+    surf: SurfPointerDispatchBinding
+    limitations: list[str]
+    seam_validation: SeamValidation
+
+    @model_validator(mode="after")
+    def validate_dispatch_truth(self) -> "PointerDispatchPlan":
+        if not self.limitations:
+            raise ValueError("pointer dispatch plan requires explicit limitations")
+        if self.surf.expected_schema != "surf.pointer_dispatch_receipt.v1":
+            raise ValueError("pointer dispatch plan must target the Surf dispatch receipt")
+        return self
 
 
 class AuthorizationReceipt(StrictModel):

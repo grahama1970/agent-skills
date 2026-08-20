@@ -1,0 +1,25 @@
+{
+  "schema_version": "captcha.pointer_motion_request.v1",
+  "action": "drag",
+  "start_image_px": {
+    "x": 220,
+    "y": 520
+  },
+  "end_image_px": {
+    "x": 760,
+    "y": 520
+  },
+  "mapping": {
+    "screenshot_width_px": 1000,
+    "screenshot_height_px": 1000,
+    "viewport_width_css": 1000,
+    "viewport_height_css": 1000,
+    "capture_kind": "viewport"
+  },
+  "duration_ms": 720,
+  "sample_count": 24,
+  "seed": 1337,
+  "jitter_css_px": 1.4,
+  "control_offset_css_px": 90,
+  "hold_ms": 70
+}

@@ -1582,6 +1582,35 @@ surf key Enter                   # Press key (Enter, Tab, Escape, etc.)
 
 The `click` command auto-detects whether the argument is an element ref (`e<N>`) or a CSS selector (anything else). CSS selectors use `document.querySelector()` under the hood.
 
+### CDP Geometry And Pointer Receipts
+
+Use these Surf commands when DOM or accessibility references are incomplete but
+the task is still an authorized local/browser-control workflow:
+
+```bash
+./run.sh cdp.layout --json
+./run.sh cdp.quads 'canvas[data-challenge]' --json
+./run.sh cdp.hit-test 512 384 --json
+./run.sh cdp.raw Page.getLayoutMetrics --json
+./run.sh pointer.dispatch --plan /tmp/captcha-pointer-plan.json --json
+```
+
+Receipt schemas:
+
+| Command | Receipt |
+| --- | --- |
+| `cdp.raw` | `surf.cdp_raw_result.v1` |
+| `cdp.layout` | `surf.layout_metrics.v1` |
+| `cdp.quads` | `surf.content_quads.v1` |
+| `cdp.hit-test` | `surf.hit_test.v1` |
+| `pointer.dispatch` | `surf.pointer_dispatch_receipt.v1` |
+
+`pointer.dispatch` is input-delivery proof only. It does not prove a challenge
+was solved and callers must re-observe the target after dispatch. For
+authenticated provider tabs, the extension/WebGPT proof contracts remain
+authoritative; generic CDP receipts are diagnostics unless the workflow is a
+local synthetic target launched for CDP control.
+
 ### Screenshots & Scrolling
 
 ```bash
@@ -1590,6 +1619,13 @@ surf snap --output /tmp/page.png # Specify output path
 surf snap --full                 # Full page screenshot
 surf snap-container '[data-qid="pane"]' --output /tmp/pane.png
                                  # Stitch a nested scroll container
+surf cdp.layout --json           # CDP layout metrics + viewport receipt
+surf cdp.quads 'button.primary'  # DOM.getContentQuads selector geometry
+surf cdp.hit-test 420 310        # DOM.getNodeForLocation at viewport coords
+surf cdp.raw Page.getLayoutMetrics --json
+                                 # Explicit raw CDP command wrapper
+surf pointer.dispatch --plan /tmp/captcha-pointer-plan.json --json
+                                 # Dispatch CDP pointer samples from a receipt
 surf scroll down                 # Scroll down
 surf scroll up                   # Scroll up
 surf scroll top                  # Scroll to top

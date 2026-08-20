@@ -45,6 +45,16 @@ done < <(find src/captcha_skill -maxdepth 1 -name '*.py' -type f | sort)
   --output-root /mnt/storage12tb/skills/captcha/outputs \
   --out "$TMP_DIR/ask-dag.json" \
   --json >"$TMP_DIR/ask-dag.stdout.json"
+./run.sh pointer-plan \
+  --manifest fixtures/authorization-valid-local.json \
+  --request fixtures/pointer-motion-request-valid.json \
+  --out "$TMP_DIR/pointer-plan.json" \
+  --json >"$TMP_DIR/pointer-plan.stdout.json"
+./run.sh pointer-dispatch-plan \
+  --manifest fixtures/authorization-valid-local.json \
+  --plan "$TMP_DIR/pointer-plan.json" \
+  --out "$TMP_DIR/pointer-dispatch-plan.json" \
+  --json >"$TMP_DIR/pointer-dispatch-plan.stdout.json"
 
 if ./run.sh authorization-preflight \
   --manifest fixtures/authorization-invalid-public.json \
@@ -66,13 +76,15 @@ status = json.loads((root / "status.json").read_text())
 agentic_eval = json.loads((root / "agentic-eval.json").read_text())
 authorization = json.loads((root / "authorization.json").read_text())
 dag = json.loads((root / "ask-dag.json").read_text())
+pointer = json.loads((root / "pointer-plan.json").read_text())
+dispatch = json.loads((root / "pointer-dispatch-plan.json").read_text())
 invalid = json.loads((root / "invalid.stdout").read_text())
 
 if status["schema_version"] != "captcha.status.v1":
     raise SystemExit("status schema mismatch")
 if agentic_eval["readiness"] != "READY":
     raise SystemExit("agentic eval readiness was not READY")
-if agentic_eval["case_count"] < 5:
+if agentic_eval["case_count"] < 6:
     raise SystemExit("agentic eval fixture lost behavioral coverage")
 if authorization["status"] != "PASS":
     raise SystemExit("authorization receipt did not pass")
@@ -81,6 +93,18 @@ if dag["schema_version"] != "ask.dag.v1":
 node = dag["nodes"][0]
 if node["type"] != "skill.run" or node["input"]["skill"] != "captcha":
     raise SystemExit("Ask DAG does not compose captcha through skill.run")
+if pointer["schema_version"] != "captcha.pointer_motion_plan.v1":
+    raise SystemExit("pointer motion plan schema mismatch")
+if pointer["source_package"]["package"] != "ghost-cursor":
+    raise SystemExit("pointer motion source package mismatch")
+if pointer["defensive_scope"] != "authorized_loopback_synthetic_only":
+    raise SystemExit("pointer motion defensive scope mismatch")
+if dispatch["schema_version"] != "captcha.pointer_dispatch_plan.v1":
+    raise SystemExit("pointer dispatch plan schema mismatch")
+if dispatch["surf"]["expected_schema"] != "surf.pointer_dispatch_receipt.v1":
+    raise SystemExit("pointer dispatch Surf schema mismatch")
+if dispatch["sample_count"] != len(pointer["samples"]):
+    raise SystemExit("pointer dispatch sample count mismatch")
 if invalid.get("failure_code") != "target_not_loopback":
     raise SystemExit("public-target failure code mismatch")
 PY

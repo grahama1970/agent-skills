@@ -17,8 +17,9 @@ from pydantic import BaseModel, ValidationError
 
 from .constants import DEFAULT_OUTPUT_ROOT, DEFAULT_RECAP_ROOT, DEFAULT_STORAGE_ROOT
 from .errors import CaptchaSkillError, ErrorCode
-from .models import EvaluationAction, RunStatus
-from .policy import load_manifest, validate_authorization, write_json_atomic
+from .models import EvaluationAction, PointerMotionPlan, PointerMotionRequest, RunStatus
+from .pointer_motion import build_pointer_dispatch_plan, build_pointer_motion_plan
+from .policy import load_json_object, load_manifest, validate_authorization, write_json_atomic
 from .schemas import export_schemas
 from .runtime import (
     build_ask_dag,
@@ -191,6 +192,92 @@ def plan_command(
         _emit(plan, json_output=json_output)
         if plan.readiness is not RunStatus.PASS:
             raise typer.Exit(code=2)
+    except CaptchaSkillError as exc:
+        _abort(exc, json_output=json_output)
+    except ValidationError as exc:
+        _abort(_validation_error(exc), json_output=json_output)
+
+
+@app.command("pointer-plan")
+def pointer_plan_command(
+    manifest_path: Path = typer.Option(..., "--manifest", exists=True, dir_okay=False),
+    request_path: Path = typer.Option(..., "--request", exists=True, dir_okay=False),
+    out: Path | None = typer.Option(None, "--out"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Emit a seeded Surf/CDP pointer path for an authorized synthetic target."""
+
+    try:
+        manifest, manifest_sha256 = load_manifest(manifest_path)
+        authorization = validate_authorization(
+            manifest,
+            manifest_sha256=manifest_sha256,
+            required_action=EvaluationAction.PLAN,
+        )
+        request = PointerMotionRequest.model_validate(load_json_object(request_path))
+        plan = build_pointer_motion_plan(manifest, authorization, request)
+        if out is not None:
+            write_json_atomic(out, plan.model_dump(mode="json"))
+        _emit(plan, json_output=json_output)
+    except CaptchaSkillError as exc:
+        _abort(exc, json_output=json_output)
+    except ValidationError as exc:
+        _abort(_validation_error(exc), json_output=json_output)
+
+
+@app.command("pointer-dispatch-plan")
+def pointer_dispatch_plan_command(
+    manifest_path: Path = typer.Option(..., "--manifest", exists=True, dir_okay=False),
+    pointer_plan_path: Path = typer.Option(..., "--plan", exists=True, dir_okay=False),
+    out: Path | None = typer.Option(None, "--out"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Emit the authorized Surf command for dispatching a pointer plan."""
+
+    try:
+        manifest, manifest_sha256 = load_manifest(manifest_path)
+        authorization = validate_authorization(
+            manifest,
+            manifest_sha256=manifest_sha256,
+            required_action=EvaluationAction.PLAN,
+        )
+        pointer_plan = PointerMotionPlan.model_validate(load_json_object(pointer_plan_path))
+        if pointer_plan.manifest_sha256 != authorization.manifest_sha256:
+            raise CaptchaSkillError(
+                ErrorCode.RECEIPT_INVALID,
+                "pointer plan manifest hash does not match current authorization",
+                {
+                    "expected": authorization.manifest_sha256,
+                    "actual": pointer_plan.manifest_sha256,
+                },
+            )
+        if pointer_plan.authorization_id != authorization.authorization_id:
+            raise CaptchaSkillError(
+                ErrorCode.RECEIPT_INVALID,
+                "pointer plan authorization id does not match current authorization",
+                {
+                    "expected": authorization.authorization_id,
+                    "actual": pointer_plan.authorization_id,
+                },
+            )
+        if pointer_plan.target_url != str(manifest.target_url):
+            raise CaptchaSkillError(
+                ErrorCode.RECEIPT_INVALID,
+                "pointer plan target URL does not match current authorization",
+                {
+                    "expected": str(manifest.target_url),
+                    "actual": pointer_plan.target_url,
+                },
+            )
+        dispatch_plan = build_pointer_dispatch_plan(
+            manifest,
+            authorization,
+            pointer_plan,
+            pointer_plan_path,
+        )
+        if out is not None:
+            write_json_atomic(out, dispatch_plan.model_dump(mode="json"))
+        _emit(dispatch_plan, json_output=json_output)
     except CaptchaSkillError as exc:
         _abort(exc, json_output=json_output)
     except ValidationError as exc:

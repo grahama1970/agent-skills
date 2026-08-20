@@ -10,6 +10,7 @@ This is the assembler module. Implementation lives in:
 import json
 import sys
 from typing import Optional
+from pathlib import Path
 
 import typer
 
@@ -55,6 +56,16 @@ def _run_cdp_command(cdp: CDPController, as_json: bool, fn, *args, **kwargs):
         raise typer.Exit(code=1)
     finally:
         cdp.close()
+
+
+def _load_json_object(path: Path) -> dict:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON file: {path}") from exc
+    if not isinstance(value, dict):
+        raise ValueError(f"expected JSON object: {path}")
+    return value
 
 
 @app.command()
@@ -110,6 +121,98 @@ def click_cmd(
         _run_cdp_command(cdp, as_json, cdp.click_element, target)
     else:
         _run_cdp_command(cdp, as_json, cdp.click_selector, target)
+
+
+@app.command("cdp.raw")
+def cdp_raw(
+    method: str = typer.Argument(..., help="CDP method, e.g. Page.getLayoutMetrics"),
+    params_json: Optional[str] = typer.Option(None, "--params-json", help="Inline JSON object params"),
+    params_file: Optional[Path] = typer.Option(None, "--params-file", exists=True, dir_okay=False),
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
+):
+    """Send one raw CDP command through Surf's CDP fallback transport."""
+
+    if params_json and params_file:
+        raise typer.BadParameter("use only one of --params-json or --params-file")
+    try:
+        if params_file is not None:
+            params = _load_json_object(params_file)
+        elif params_json:
+            params = json.loads(params_json)
+            if not isinstance(params, dict):
+                raise ValueError("--params-json must be a JSON object")
+        else:
+            params = {}
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(json.dumps({"schema_version": "surf.cdp_raw_result.v1", "success": False, "error": str(exc)}))
+        raise typer.Exit(code=2)
+
+    cdp = CDPController(port=port)
+    _run_cdp_command(cdp, as_json, cdp.raw_command, method, params)
+
+
+@app.command("cdp.layout")
+def cdp_layout(
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
+):
+    """Read viewport and CDP layout metrics."""
+
+    cdp = CDPController(port=port)
+    _run_cdp_command(cdp, as_json, cdp.layout_metrics)
+
+
+@app.command("cdp.quads")
+def cdp_quads(
+    selector: str = typer.Argument(..., help="CSS selector to resolve with DOM.getContentQuads"),
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
+):
+    """Resolve content quads and primary center for a CSS selector."""
+
+    cdp = CDPController(port=port)
+    _run_cdp_command(cdp, as_json, cdp.content_quads, selector)
+
+
+@app.command("cdp.hit-test")
+def cdp_hit_test(
+    x: float = typer.Argument(..., help="Viewport CSS x coordinate"),
+    y: float = typer.Argument(..., help="Viewport CSS y coordinate"),
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
+):
+    """Resolve the DOM node at viewport-relative CSS coordinates."""
+
+    cdp = CDPController(port=port)
+    _run_cdp_command(cdp, as_json, cdp.hit_test, x, y)
+
+
+@app.command("pointer.dispatch")
+def pointer_dispatch(
+    plan_path: Path = typer.Option(..., "--plan", exists=True, dir_okay=False),
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
+):
+    """Dispatch CDP pointer samples from a captcha pointer-motion plan receipt."""
+
+    try:
+        plan = _load_json_object(plan_path)
+        samples = plan.get("samples")
+        if not isinstance(samples, list):
+            raise ValueError("pointer plan must contain a samples array")
+    except (OSError, ValueError) as exc:
+        print(json.dumps({"schema_version": "surf.pointer_dispatch_receipt.v1", "success": False, "error": str(exc)}))
+        raise typer.Exit(code=2)
+
+    cdp = CDPController(port=port)
+    _run_cdp_command(
+        cdp,
+        as_json,
+        cdp.dispatch_pointer_samples,
+        samples,
+        source_path=str(plan_path.expanduser().resolve()),
+    )
 
 
 @app.command("type")

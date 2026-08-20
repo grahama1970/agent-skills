@@ -1,0 +1,309 @@
+{
+  "$defs": {
+    "PointerCoordinateMapping": {
+      "additionalProperties": false,
+      "description": "Map a screenshot coordinate plane into Chrome viewport CSS pixels.",
+      "properties": {
+        "capture_kind": {
+          "$ref": "#/$defs/ScreenshotCaptureKind",
+          "default": "viewport"
+        },
+        "clip_x_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Clip X Css",
+          "type": "number"
+        },
+        "clip_y_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Clip Y Css",
+          "type": "number"
+        },
+        "screenshot_height_px": {
+          "exclusiveMinimum": 0,
+          "maximum": 20000,
+          "title": "Screenshot Height Px",
+          "type": "integer"
+        },
+        "screenshot_width_px": {
+          "exclusiveMinimum": 0,
+          "maximum": 20000,
+          "title": "Screenshot Width Px",
+          "type": "integer"
+        },
+        "scroll_x_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll X Css",
+          "type": "number"
+        },
+        "scroll_y_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll Y Css",
+          "type": "number"
+        },
+        "viewport_height_css": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Viewport Height Css",
+          "type": "integer"
+        },
+        "viewport_width_css": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Viewport Width Css",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "screenshot_width_px",
+        "screenshot_height_px",
+        "viewport_width_css",
+        "viewport_height_css"
+      ],
+      "title": "PointerCoordinateMapping",
+      "type": "object"
+    },
+    "PointerMotionAction": {
+      "enum": [
+        "click",
+        "drag"
+      ],
+      "title": "PointerMotionAction",
+      "type": "string"
+    },
+    "PointerPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "minimum": 0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "minimum": 0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "PointerPoint",
+      "type": "object"
+    },
+    "PointerSample": {
+      "additionalProperties": false,
+      "properties": {
+        "button_down": {
+          "title": "Button Down",
+          "type": "boolean"
+        },
+        "event": {
+          "enum": [
+            "mouseMoved",
+            "mousePressed",
+            "mouseReleased"
+          ],
+          "title": "Event",
+          "type": "string"
+        },
+        "time_ms": {
+          "minimum": 0,
+          "title": "Time Ms",
+          "type": "integer"
+        },
+        "x_css": {
+          "minimum": 0,
+          "title": "X Css",
+          "type": "number"
+        },
+        "y_css": {
+          "minimum": 0,
+          "title": "Y Css",
+          "type": "number"
+        }
+      },
+      "required": [
+        "event",
+        "time_ms",
+        "x_css",
+        "y_css",
+        "button_down"
+      ],
+      "title": "PointerSample",
+      "type": "object"
+    },
+    "PointerSourcePackage": {
+      "additionalProperties": false,
+      "properties": {
+        "integration_mode": {
+          "const": "reference_algorithm_not_vendored_runtime",
+          "default": "reference_algorithm_not_vendored_runtime",
+          "title": "Integration Mode",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        },
+        "npm": {
+          "title": "Npm",
+          "type": "string"
+        },
+        "package": {
+          "const": "ghost-cursor",
+          "default": "ghost-cursor",
+          "title": "Package",
+          "type": "string"
+        },
+        "repository": {
+          "title": "Repository",
+          "type": "string"
+        },
+        "selection_basis": {
+          "title": "Selection Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "npm",
+        "license",
+        "selection_basis"
+      ],
+      "title": "PointerSourcePackage",
+      "type": "object"
+    },
+    "ScreenshotCaptureKind": {
+      "enum": [
+        "viewport",
+        "full_page"
+      ],
+      "title": "ScreenshotCaptureKind",
+      "type": "string"
+    },
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.pointer_motion_plan.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PointerMotionAction"
+    },
+    "algorithm": {
+      "const": "clamped_cubic_b_spline_with_seeded_jitter.v1",
+      "title": "Algorithm",
+      "type": "string"
+    },
+    "authorization_id": {
+      "title": "Authorization Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "defensive_scope": {
+      "const": "authorized_loopback_synthetic_only",
+      "default": "authorized_loopback_synthetic_only",
+      "title": "Defensive Scope",
+      "type": "string"
+    },
+    "end_viewport_css": {
+      "$ref": "#/$defs/PointerPoint"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "mapping": {
+      "$ref": "#/$defs/PointerCoordinateMapping"
+    },
+    "provider": {
+      "const": "dynamic",
+      "default": "dynamic",
+      "title": "Provider",
+      "type": "string"
+    },
+    "samples": {
+      "items": {
+        "$ref": "#/$defs/PointerSample"
+      },
+      "maxItems": 242,
+      "minItems": 3,
+      "title": "Samples",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "captcha.pointer_motion_plan.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/SeamValidation"
+    },
+    "source_package": {
+      "$ref": "#/$defs/PointerSourcePackage"
+    },
+    "start_viewport_css": {
+      "$ref": "#/$defs/PointerPoint"
+    },
+    "target_url": {
+      "title": "Target Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "created_at",
+    "authorization_id",
+    "manifest_sha256",
+    "target_url",
+    "source_package",
+    "algorithm",
+    "action",
+    "start_viewport_css",
+    "end_viewport_css",
+    "mapping",
+    "samples",
+    "limitations",
+    "seam_validation"
+  ],
+  "title": "PointerMotionPlan",
+  "type": "object"
+}

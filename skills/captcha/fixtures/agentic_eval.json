@@ -1,17 +1,18 @@
 {
   "version": 2,
   "skill": "captcha",
-  "trials": 3,
-  "proof_scope": "multi-trial local agentic safety and composition gate",
+  "trials": 2,
+  "proof_scope": "multi-trial local agentic safety and Surf/captcha seam gate",
   "claims": {
-    "proves": "the real captcha entrypoint repeatedly reports safe status, rejects unauthorized public targets, refuses live effects without --execute, preserves missing-runtime blockers, and emits an Ask skill.run DAG",
-    "does_not_prove": "live ReCAP model performance, nondeterministic CAPTCHA-solving behavior, Surf browser transport behavior, or release readiness"
+    "proves": "the real captcha entrypoint reports safe status, rejects unauthorized public targets, refuses live effects without --execute, preserves missing-runtime blockers, emits an Ask skill.run DAG, and binds pointer dispatch to Surf without dispatching input",
+    "does_not_prove": "live ReCAP model performance, public-site CAPTCHA solving, authenticated browser provider behavior, or that a pointer dispatch solves a challenge"
   },
   "cases": [
     {
       "name": "safe-default-real-entrypoint",
       "type": "positive",
       "real_world": true,
+      "evidence_class": "deterministic",
       "command": ["../run.sh"],
       "timeout_seconds": 45,
       "expected": {
@@ -22,6 +23,7 @@
     {
       "name": "public-target-fails-closed",
       "type": "adversarial",
+      "evidence_class": "deterministic",
       "command": [
         "../run.sh",
         "authorization-preflight",
@@ -40,6 +42,7 @@
     {
       "name": "live-effect-requires-explicit-execute",
       "type": "negative",
+      "evidence_class": "deterministic",
       "command": [
         "../run.sh",
         "evaluate",
@@ -56,6 +59,7 @@
     {
       "name": "missing-runtime-plan-is-not-pass",
       "type": "negative",
+      "evidence_class": "deterministic",
       "command": [
         "../run.sh",
         "plan",
@@ -78,6 +82,7 @@
     {
       "name": "ask-composition-is-explicit",
       "type": "positive",
+      "evidence_class": "deterministic",
       "command": [
         "../run.sh",
         "ask-dag",
@@ -91,6 +96,37 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["ask.dag.v1", "skill.run", "captcha"]
+      }
+    },
+    {
+      "name": "pointer-dispatch-binds-to-surf-without-execution",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh pointer-plan --manifest authorization-valid-local.json --request pointer-motion-request-valid.json --out /tmp/captcha-agentic-pointer-plan.json --json >/tmp/captcha-agentic-pointer-plan.stdout.json && ../run.sh pointer-dispatch-plan --manifest authorization-valid-local.json --plan /tmp/captcha-agentic-pointer-plan.json --out /tmp/captcha-agentic-pointer-dispatch-plan.json --json"
+      ],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.pointer_dispatch_plan.v1",
+          "surf.pointer_dispatch_receipt.v1",
+          "pointer.dispatch"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-agentic-pointer-dispatch-plan.json",
+            "json_pointer": "/surf/expected_schema",
+            "equals": "surf.pointer_dispatch_receipt.v1"
+          },
+          {
+            "path": "/tmp/captcha-agentic-pointer-dispatch-plan.json",
+            "json_pointer": "/surf/post_observation_required",
+            "equals": true
+          }
+        ]
       }
     }
   ]

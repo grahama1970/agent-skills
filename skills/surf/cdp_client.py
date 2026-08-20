@@ -10,6 +10,7 @@ import time
 import base64
 import math
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(usecwd=True), override=False)
@@ -162,6 +163,18 @@ class CDPController:
 
         raise ConnectionError(f"Failed to send command after {self.MAX_RETRIES} attempts: {last_error}")
 
+    def raw_command(self, method: str, params: dict | None = None) -> dict:
+        """Send one arbitrary CDP command with a stable Surf receipt wrapper."""
+
+        result = self.send(method, params or {})
+        return {
+            "schema_version": "surf.cdp_raw_result.v1",
+            "success": True,
+            "method": method,
+            "params": params or {},
+            "result": result,
+        }
+
     def close(self) -> None:
         """Close the WebSocket connection."""
         if self.ws:
@@ -288,6 +301,156 @@ class CDPController:
             "clickCount": 1
         })
         return {"success": True, "x": x, "y": y}
+
+    def layout_metrics(self) -> dict:
+        """Return CDP layout metrics plus page viewport metadata."""
+
+        metrics = self.send("Page.getLayoutMetrics")
+        viewport = self.evaluate("""
+({
+  url: location.href,
+  title: document.title,
+  viewport_width_css: window.innerWidth,
+  viewport_height_css: window.innerHeight,
+  device_scale_factor: window.devicePixelRatio || 1,
+  scroll_x_css: window.scrollX || 0,
+  scroll_y_css: window.scrollY || 0,
+  document_width_css: Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0),
+  document_height_css: Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)
+})
+        """)
+        return {
+            "schema_version": "surf.layout_metrics.v1",
+            "success": True,
+            "viewport": viewport,
+            "cdp": metrics,
+        }
+
+    def _query_selector_node_id(self, selector: str) -> int:
+        document = self.send("DOM.getDocument", {"depth": -1, "pierce": True})
+        root = document.get("root", {})
+        root_node_id = root.get("nodeId")
+        if not root_node_id:
+            raise RuntimeError("DOM.getDocument did not return root.nodeId")
+        result = self.send(
+            "DOM.querySelector",
+            {"nodeId": root_node_id, "selector": selector},
+        )
+        node_id = result.get("nodeId")
+        if not node_id:
+            raise RuntimeError(f"selector_not_found: {selector}")
+        return int(node_id)
+
+    @staticmethod
+    def _quad_bounds(quad: list[float]) -> dict[str, float]:
+        xs = [float(quad[index]) for index in range(0, len(quad), 2)]
+        ys = [float(quad[index]) for index in range(1, len(quad), 2)]
+        return {
+            "x": min(xs),
+            "y": min(ys),
+            "width": max(xs) - min(xs),
+            "height": max(ys) - min(ys),
+            "center_x": (min(xs) + max(xs)) / 2,
+            "center_y": (min(ys) + max(ys)) / 2,
+        }
+
+    def content_quads(self, selector: str) -> dict:
+        """Return CDP content quads for a CSS selector."""
+
+        node_id = self._query_selector_node_id(selector)
+        result = self.send("DOM.getContentQuads", {"nodeId": node_id})
+        quads = result.get("quads", [])
+        bounds = [self._quad_bounds(quad) for quad in quads if len(quad) >= 8]
+        return {
+            "schema_version": "surf.content_quads.v1",
+            "success": True,
+            "selector": selector,
+            "node_id": node_id,
+            "quads": quads,
+            "bounds": bounds,
+            "primary_center": (
+                {"x": bounds[0]["center_x"], "y": bounds[0]["center_y"]}
+                if bounds
+                else None
+            ),
+        }
+
+    def hit_test(self, x: float, y: float) -> dict:
+        """Resolve the DOM node at viewport-relative CSS coordinates."""
+
+        params = {
+            "x": float(x),
+            "y": float(y),
+            "includeUserAgentShadowDOM": True,
+            "ignorePointerEventsNone": False,
+        }
+        hit = self.send("DOM.getNodeForLocation", params)
+        node: dict[str, Any] | None = None
+        backend_node_id = hit.get("backendNodeId")
+        if backend_node_id:
+            try:
+                described = self.send("DOM.describeNode", {"backendNodeId": backend_node_id})
+                node = described.get("node")
+            except Exception:
+                node = None
+        return {
+            "schema_version": "surf.hit_test.v1",
+            "success": True,
+            "x_css": float(x),
+            "y_css": float(y),
+            "hit": hit,
+            "node": node,
+        }
+
+    def dispatch_pointer_samples(self, samples: list[dict[str, Any]], *, source_path: str | None = None) -> dict:
+        """Dispatch a CDP-style pointer sample sequence and emit a receipt."""
+
+        if not samples:
+            raise ValueError("pointer dispatch requires at least one sample")
+
+        dispatched = []
+        previous_time = 0
+        for index, sample in enumerate(samples):
+            event = sample.get("event")
+            if event not in {"mouseMoved", "mousePressed", "mouseReleased"}:
+                raise ValueError(f"unsupported pointer event at index {index}: {event}")
+            current_time = int(sample.get("time_ms", previous_time))
+            delay_ms = max(0, current_time - previous_time)
+            if delay_ms:
+                time.sleep(delay_ms / 1000.0)
+            previous_time = current_time
+            params = {
+                "type": event,
+                "x": float(sample["x_css"]),
+                "y": float(sample["y_css"]),
+                "button": "left",
+            }
+            if event in {"mousePressed", "mouseReleased"}:
+                params["clickCount"] = 1
+            self.send("Input.dispatchMouseEvent", params)
+            dispatched.append(
+                {
+                    "index": index,
+                    "event": event,
+                    "time_ms": current_time,
+                    "x_css": params["x"],
+                    "y_css": params["y"],
+                    "delay_ms": delay_ms,
+                }
+            )
+
+        return {
+            "schema_version": "surf.pointer_dispatch_receipt.v1",
+            "success": True,
+            "source_path": source_path,
+            "sample_count": len(dispatched),
+            "events": dispatched,
+            "proof_boundary": {
+                "dispatch_only": True,
+                "post_observation_required": True,
+                "does_not_prove_challenge_solved": True,
+            },
+        }
 
     def type_text(self, text: str, ref: str = None) -> dict:
         """Type text, optionally into a specific element."""

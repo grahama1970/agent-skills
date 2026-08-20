@@ -17,6 +17,9 @@ from .models import (
     AuthorizationReceipt,
     EvaluationPlan,
     ModelEndpointProof,
+    PointerDispatchPlan,
+    PointerMotionPlan,
+    PointerMotionRequest,
     RunReceipt,
     RunStatusArtifact,
     StatusReport,
@@ -54,6 +57,18 @@ _SCHEMA_MODELS = {
     "model-endpoint-preflight.schema.json": (
         "captcha.model_endpoint_preflight.v1",
         ModelEndpointProof,
+    ),
+    "pointer-motion-request.schema.json": (
+        "captcha.pointer_motion_request.v1",
+        PointerMotionRequest,
+    ),
+    "pointer-motion-plan.schema.json": (
+        "captcha.pointer_motion_plan.v1",
+        PointerMotionPlan,
+    ),
+    "pointer-dispatch-plan.schema.json": (
+        "captcha.pointer_dispatch_plan.v1",
+        PointerDispatchPlan,
     ),
     "ask-dag.schema.json": (
         "ask.dag.v1.captcha-profile",

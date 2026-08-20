@@ -18,6 +18,16 @@ DEFAULT_RECAP_ROOT = DEFAULT_STORAGE_ROOT / "vendor" / "ReCAP-Agent"
 DEFAULT_OUTPUT_ROOT = DEFAULT_STORAGE_ROOT / "outputs"
 SURF_CAPABILITIES_SCHEMA = "surf.capabilities.v1"
 LOCAL_MODEL_API_KEY_ENV = "CAPTCHA_LOCAL_MODEL_API_KEY"
+POINTER_MOTION_REFERENCE = {
+    "package": "ghost-cursor",
+    "repository": "https://github.com/Xetera/ghost-cursor",
+    "npm": "https://www.npmjs.com/package/ghost-cursor",
+    "license": "MIT upstream repository; npm package declares ISC",
+    "selection_basis": (
+        "Highest GitHub star count among searched human mouse-movement packages "
+        "on 2026-08-20; used as a defensive reference, not vendored runtime code."
+    ),
+}
 CAPTCHA_TYPES = (
     "text",
     "compact_text",

@@ -584,6 +584,11 @@ if [[ "$1" == "click" ]]; then
     done
 fi
 
+if [[ "$1" == "cdp.raw" || "$1" == "cdp.layout" || "$1" == "cdp.quads" || "$1" == "cdp.hit-test" || "$1" == "pointer.dispatch" ]]; then
+    run_cdp_controller "$@"
+    exit $?
+fi
+
 if [[ "$1" == "webgpt.submit" ]]; then
     exec "$SKILL_DIR/scripts/run-immutable-shell.sh" "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
@@ -713,6 +718,11 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf key <key>          Press key (Enter, Tab, Escape...)"
     echo "  surf snap               Take screenshot (--full for full page)"
     echo "  surf snap-container <selector>  Stitch a nested scroll container screenshot"
+    echo "  surf cdp.layout         Read CDP layout metrics as a receipt"
+    echo "  surf cdp.quads <selector>  Resolve DOM.getContentQuads for a selector"
+    echo "  surf cdp.hit-test <x> <y>  Resolve DOM.getNodeForLocation at viewport coords"
+    echo "  surf cdp.raw <method> [--params-json '{}']  Send one raw CDP command"
+    echo "  surf pointer.dispatch --plan pointer-plan.json  Dispatch receipt-bound pointer samples"
     echo "  surf scroll <dir>       Scroll (up/down/top/bottom)"
     echo "  surf wait <seconds>     Wait"
     echo "  surf text               Get page text content"
@@ -876,6 +886,10 @@ case "$1" in
     snap-container|screenshot-container)
         shift
         run_cdp_controller snap-container "$@"
+        exit $?
+        ;;
+    cdp.raw|cdp.layout|cdp.quads|cdp.hit-test|pointer.dispatch)
+        run_cdp_controller "$@"
         exit $?
         ;;
     scroll)

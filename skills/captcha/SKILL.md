@@ -69,6 +69,59 @@ freshly created Surf window remained on the exact authorized loopback challenge.
 ReCAP performs the synthetic benchmark interaction through its own Playwright
 runner. Those are separate receipts and must not be conflated.
 
+## DOM-unavailable pointer planning
+
+`captcha` also exposes a deterministic pointer-motion planner for authorized
+synthetic drag/click challenges. This is a planning receipt only: it does not
+dispatch browser input, does not use cookies or sessions, and does not route
+ordinary public-site CAPTCHA encounters through the skill.
+
+The planner incorporates the browser-control lessons from
+`captivus/chrome-agent` pinned at
+`3b46bb9b09167fe60ab94821dedc9f6e01453014`:
+
+- screenshots and layout metrics are the fallback observation plane when DOM
+  nodes, accessibility refs, shadow roots, cross-origin iframe internals, or
+  canvas contents are not available;
+- target coordinates are expressed first in screenshot pixels, then mapped into
+  Chrome viewport CSS coordinates;
+- downstream consumers should dispatch trusted viewport-relative input through
+  Surf/CDP and then re-observe the page rather than treating a click/drag call
+  as proof.
+
+The selected human-mouse-movement package reference is `ghost-cursor`
+(`https://github.com/Xetera/ghost-cursor`), chosen on 2026-08-20 because it had
+the highest GitHub star count among the searched human mouse-movement packages.
+The package is used as a reviewed design reference only. The runtime does not
+vendor or execute the package; instead it emits a local, seeded, hashable
+`clamped_cubic_b_spline_with_seeded_jitter.v1` path that can be reproduced from
+the request.
+
+```bash
+./run.sh pointer-plan \
+  --manifest /path/to/authorization.json \
+  --request fixtures/pointer-motion-request-valid.json \
+  --out /tmp/captcha-pointer-plan.json \
+  --json
+
+./run.sh pointer-dispatch-plan \
+  --manifest /path/to/authorization.json \
+  --plan /tmp/captcha-pointer-plan.json \
+  --out /tmp/captcha-pointer-dispatch-plan.json \
+  --json
+```
+
+The manifest gate is the same loopback synthetic authorization gate used by
+`plan` and `evaluate`. Public targets, real providers, credentials, stealth,
+proxies, and session reuse remain refused.
+
+`pointer-dispatch-plan` does not dispatch input. It validates that the pointer
+plan is bound to the current authorization manifest and emits the exact Surf
+command that can produce `surf.pointer_dispatch_receipt.v1`. Surf owns browser
+transport and input delivery; captcha owns authorization, defensive scope, and
+the pointer-plan contract. Post-dispatch observation is mandatory and a Surf
+dispatch receipt never proves that a CAPTCHA was solved.
+
 ## Safe default
 
 No arguments performs a zero-network readiness report, which makes generic Ask
@@ -143,6 +196,13 @@ ReCAP stdout and stderr, the upstream summary, and
 `captcha.run-receipt.json`. A `PASS` claim is
 bounded to the exact commit, manifest, local model, synthetic tasks, and hashes
 recorded by that run.
+
+`pointer-plan` emits `captcha.pointer_motion_plan.v1`, including the manifest
+digest, coordinate mapping, source-package reference, B-spline/jitter algorithm
+id, CDP-style pointer samples, limitations, and a seam-validation stamp.
+`pointer-dispatch-plan` emits `captcha.pointer_dispatch_plan.v1`, which points
+to Surf's dispatch command and expected receipt schema. Neither artifact is a
+ReCAP capability measurement or evidence that any challenge was solved.
 
 ## Compose through Ask
 

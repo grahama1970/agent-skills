@@ -21,6 +21,7 @@ from captcha_skill.models import (
     EvaluationPlan,
     ExecutionSpec,
     ModelEndpointProof,
+    PointerMotionRequest,
     RecapBinding,
     RunReceipt,
     RunStatus,
@@ -30,6 +31,7 @@ from captcha_skill.models import (
     SurfTargetProof,
     TargetProof,
 )
+from captcha_skill.pointer_motion import build_pointer_motion_plan
 from captcha_skill.policy import (
     canonical_json_bytes,
     sha256_bytes,
@@ -175,6 +177,37 @@ def test_ask_dag_composes_captcha_through_skill_run(tmp_path: Path) -> None:
     assert node.input.args[0] == "evaluate"
     assert "--execute" in node.input.args
     assert node.input.timeout == 720
+
+
+def test_pointer_motion_plan_is_seeded_and_viewport_relative() -> None:
+    manifest, authorization = _authorization(EvaluationAction.PLAN)
+    request_value = json.loads((FIXTURES / "pointer-motion-request-valid.json").read_text())
+    request = PointerMotionRequest.model_validate(request_value)
+
+    first = build_pointer_motion_plan(manifest, authorization, request)
+    second = build_pointer_motion_plan(manifest, authorization, request)
+
+    first_without_time = first.model_dump(mode="json") | {"created_at": "ignored"}
+    second_without_time = second.model_dump(mode="json") | {"created_at": "ignored"}
+    assert first_without_time == second_without_time
+    assert first.algorithm == "clamped_cubic_b_spline_with_seeded_jitter.v1"
+    assert first.source_package.package == "ghost-cursor"
+    assert first.start_viewport_css.x == 220
+    assert first.end_viewport_css.x == 760
+    assert first.samples[0].button_down is False
+    assert first.samples[1].event == "mousePressed"
+    assert first.samples[-1].event == "mouseReleased"
+    assert first.samples[-1].x_css == 760
+    assert all(0 <= sample.x_css <= 1000 for sample in first.samples)
+    assert all(0 <= sample.y_css <= 1000 for sample in first.samples)
+
+
+def test_pointer_motion_request_rejects_off_viewport_mapping() -> None:
+    request_value = json.loads((FIXTURES / "pointer-motion-request-valid.json").read_text())
+    request_value["start_image_px"]["x"] = 1200
+
+    with pytest.raises(ValueError, match="screenshot_width_px"):
+        PointerMotionRequest.model_validate(request_value)
 
 
 class _ChallengeHandler(BaseHTTPRequestHandler):

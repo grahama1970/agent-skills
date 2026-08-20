@@ -1,0 +1,158 @@
+{
+  "$defs": {
+    "PointerMotionAction": {
+      "enum": [
+        "click",
+        "drag"
+      ],
+      "title": "PointerMotionAction",
+      "type": "string"
+    },
+    "SeamValidation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "status": {
+          "const": "PASS",
+          "default": "PASS",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SeamValidation",
+      "type": "object"
+    },
+    "SurfPointerDispatchBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4,
+          "title": "Command",
+          "type": "array"
+        },
+        "expected_schema": {
+          "const": "surf.pointer_dispatch_receipt.v1",
+          "default": "surf.pointer_dispatch_receipt.v1",
+          "title": "Expected Schema",
+          "type": "string"
+        },
+        "post_observation_required": {
+          "const": true,
+          "default": true,
+          "title": "Post Observation Required",
+          "type": "boolean"
+        },
+        "required": {
+          "const": true,
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "role": {
+          "const": "browser_transport_pointer_input_dispatch",
+          "default": "browser_transport_pointer_input_dispatch",
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "SurfPointerDispatchBinding",
+      "type": "object"
+    }
+  },
+  "$id": "captcha.pointer_dispatch_plan.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authorization_id": {
+      "title": "Authorization Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "defensive_scope": {
+      "const": "authorized_loopback_synthetic_only",
+      "default": "authorized_loopback_synthetic_only",
+      "title": "Defensive Scope",
+      "type": "string"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "pointer_action": {
+      "$ref": "#/$defs/PointerMotionAction"
+    },
+    "pointer_plan_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Pointer Plan Sha256",
+      "type": "string"
+    },
+    "provider": {
+      "const": "dynamic",
+      "default": "dynamic",
+      "title": "Provider",
+      "type": "string"
+    },
+    "sample_count": {
+      "maximum": 242,
+      "minimum": 3,
+      "title": "Sample Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "captcha.pointer_dispatch_plan.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seam_validation": {
+      "$ref": "#/$defs/SeamValidation"
+    },
+    "surf": {
+      "$ref": "#/$defs/SurfPointerDispatchBinding"
+    },
+    "target_url": {
+      "title": "Target Url",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "created_at",
+    "authorization_id",
+    "manifest_sha256",
+    "pointer_plan_sha256",
+    "target_url",
+    "pointer_action",
+    "sample_count",
+    "surf",
+    "limitations",
+    "seam_validation"
+  ],
+  "title": "PointerDispatchPlan",
+  "type": "object"
+}

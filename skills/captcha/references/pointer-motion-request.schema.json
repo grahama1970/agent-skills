@@ -1,0 +1,180 @@
+{
+  "$defs": {
+    "PointerCoordinateMapping": {
+      "additionalProperties": false,
+      "description": "Map a screenshot coordinate plane into Chrome viewport CSS pixels.",
+      "properties": {
+        "capture_kind": {
+          "$ref": "#/$defs/ScreenshotCaptureKind",
+          "default": "viewport"
+        },
+        "clip_x_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Clip X Css",
+          "type": "number"
+        },
+        "clip_y_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Clip Y Css",
+          "type": "number"
+        },
+        "screenshot_height_px": {
+          "exclusiveMinimum": 0,
+          "maximum": 20000,
+          "title": "Screenshot Height Px",
+          "type": "integer"
+        },
+        "screenshot_width_px": {
+          "exclusiveMinimum": 0,
+          "maximum": 20000,
+          "title": "Screenshot Width Px",
+          "type": "integer"
+        },
+        "scroll_x_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll X Css",
+          "type": "number"
+        },
+        "scroll_y_css": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll Y Css",
+          "type": "number"
+        },
+        "viewport_height_css": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Viewport Height Css",
+          "type": "integer"
+        },
+        "viewport_width_css": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Viewport Width Css",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "screenshot_width_px",
+        "screenshot_height_px",
+        "viewport_width_css",
+        "viewport_height_css"
+      ],
+      "title": "PointerCoordinateMapping",
+      "type": "object"
+    },
+    "PointerMotionAction": {
+      "enum": [
+        "click",
+        "drag"
+      ],
+      "title": "PointerMotionAction",
+      "type": "string"
+    },
+    "PointerPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "minimum": 0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "minimum": 0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "PointerPoint",
+      "type": "object"
+    },
+    "ScreenshotCaptureKind": {
+      "enum": [
+        "viewport",
+        "full_page"
+      ],
+      "title": "ScreenshotCaptureKind",
+      "type": "string"
+    }
+  },
+  "$id": "captcha.pointer_motion_request.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PointerMotionAction",
+      "default": "drag"
+    },
+    "control_offset_css_px": {
+      "default": 80,
+      "maximum": 400,
+      "minimum": 0,
+      "title": "Control Offset Css Px",
+      "type": "number"
+    },
+    "duration_ms": {
+      "default": 850,
+      "maximum": 5000,
+      "minimum": 120,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "end_image_px": {
+      "$ref": "#/$defs/PointerPoint"
+    },
+    "hold_ms": {
+      "default": 80,
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Hold Ms",
+      "type": "integer"
+    },
+    "jitter_css_px": {
+      "default": 1.2,
+      "maximum": 8,
+      "minimum": 0,
+      "title": "Jitter Css Px",
+      "type": "number"
+    },
+    "mapping": {
+      "$ref": "#/$defs/PointerCoordinateMapping"
+    },
+    "sample_count": {
+      "default": 32,
+      "maximum": 240,
+      "minimum": 8,
+      "title": "Sample Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "captcha.pointer_motion_request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "seed": {
+      "default": 42,
+      "maximum": 2147483647,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "start_image_px": {
+      "$ref": "#/$defs/PointerPoint"
+    }
+  },
+  "required": [
+    "schema_version",
+    "start_image_px",
+    "end_image_px",
+    "mapping"
+  ],
+  "title": "PointerMotionRequest",
+  "type": "object"
+}
