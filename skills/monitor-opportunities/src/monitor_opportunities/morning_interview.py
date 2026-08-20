@@ -58,9 +58,21 @@ def build_questions(run_dir: Path, *, max_opportunities: int = 8, max_identities
     digest = read_json(run_dir / "morning-digest.json")
     questions: list[dict[str, Any]] = []
 
+    # Only surface roles where Graham would be in the top candidate pool
+    # (Graham, 2026-08-20). WEAK and BLOCKED roles are recorded but not asked about.
+    strengths = {}
+    qg_path = run_dir / "qualification-gaps.json"
+    if qg_path.exists():
+        for rep in read_json(qg_path).get("reports") or []:
+            cs = rep.get("candidate_strength") or {}
+            strengths[str(rep.get("candidate_id"))] = cs.get("tier")
+
     for row in (digest.get("top") or [])[:max_opportunities]:
         opp_id = str(row.get("opportunity_id") or row.get("candidate_id") or "")
         if not opp_id:
+            continue
+        tier = strengths.get(opp_id)
+        if tier in {"WEAK", "BLOCKED"}:
             continue
         questions.append(
             {

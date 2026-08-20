@@ -315,8 +315,48 @@ def compliance_claim_coverage() -> None:
     )
 
 
+def candidate_strength_tiers() -> None:
+    """Only top-candidate-pool roles should surface (Graham, 2026-08-20).
+
+    Behavioral gaps must not disqualify; unmet HARD requirements must. A hard
+    blocker is always out.
+    """
+
+    from monitor_opportunities.qualification_match import candidate_strength, is_hard_requirement
+
+    assert not is_hard_requirement("You thrive in fast-moving, ambiguous environments")
+    assert not is_hard_requirement("A generalist mindset with a bias for action")
+    assert is_hard_requirement("Have deep Kubernetes expertise; design and manage clusters")
+    assert is_hard_requirement("Active SECRET clearance required")
+
+    def rep(reqs):
+        return {"requirements": reqs}
+
+    soft_only = rep([
+        {"disposition": "ANSWERABLE_FROM_APPROVED_CLAIM", "text": "10+ years"},
+        {"disposition": "NOT_EVIDENCED", "text": "You have a generalist mindset"},
+        {"disposition": "NOT_EVIDENCED", "text": "You thrive in ambiguity"},
+    ])
+    hard_heavy = rep([
+        {"disposition": "ANSWERABLE_FROM_APPROVED_CLAIM", "text": "10+ years"},
+        {"disposition": "NOT_EVIDENCED", "text": "deep Kubernetes cluster operations"},
+        {"disposition": "NOT_EVIDENCED", "text": "Python framework author"},
+        {"disposition": "NOT_EVIDENCED", "text": "Postgres query planner internals"},
+    ])
+    blocked = rep([{"disposition": "HARD_BLOCKER", "text": "SECRET clearance", "blocker_kind": "clearance"}])
+
+    top = candidate_strength(soft_only)["tier"]
+    weak = candidate_strength(hard_heavy)["tier"]
+    out = candidate_strength(blocked)["tier"]
+    check(
+        "CANDIDATE_STRENGTH_TIERS",
+        top == "TOP_CANDIDATE" and weak == "WEAK" and out == "BLOCKED",
+        f"soft-only={top} hard-heavy={weak} clearance={out}",
+    )
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap, compliance_claim_coverage):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole, identity_floor, queue_dedupe, requirement_extraction, posting_text_cap, compliance_claim_coverage, candidate_strength_tiers):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -324,7 +364,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 12 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 13 failure signatures guarded")
     return 0
 
 

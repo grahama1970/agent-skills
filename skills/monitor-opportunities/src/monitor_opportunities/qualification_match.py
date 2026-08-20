@@ -315,6 +315,60 @@ def answer_requirements(
     return rows, limitations
 
 
+_SOFT_REQUIREMENT_MARKERS = (
+    "mindset", "thrive", "passionate", "obsessed", "comfortable", "self-directed",
+    "self directed", "generalist", "collaborat", "communicat", "partner", "curious",
+    "ownership", "bias for action", "fast-moving", "fast moving", "ambiguous",
+    "team player", "eager", "adaptable", "resourceful", "autonomous problem",
+)
+
+
+def is_hard_requirement(text: str) -> bool:
+    """A hard requirement names a skill, tool, credential, or year count you either
+    have or you don't. A soft one describes a working style. Only UNMET hard
+    requirements should keep a role out of the top-candidate pool - Graham meets
+    'thrives in ambiguity', he just has no claim that lexically says so."""
+
+    low = str(text or "").lower()
+    if any(marker in low for marker in _SOFT_REQUIREMENT_MARKERS):
+        return False
+    return True
+
+
+def candidate_strength(report: dict[str, Any]) -> dict[str, Any]:
+    """Where does Graham sit in the applicant pool for this role?
+
+    Graham (2026-08-20): only roles where he would be in the top candidate pool
+    are worth surfacing. A hard blocker is out. Otherwise it's the count of HARD
+    requirements he cannot evidence that decides it - soft/behavioral gaps do not
+    disqualify a real candidate.
+    """
+
+    requirements = report.get("requirements") or []
+    if any(r.get("disposition") == "HARD_BLOCKER" for r in requirements):
+        blocker = next(r for r in requirements if r["disposition"] == "HARD_BLOCKER")
+        return {"tier": "BLOCKED", "reason": f"hard blocker: {blocker.get('blocker_kind')}", "hard_gaps": 0}
+    hard_gaps = [
+        r for r in requirements
+        if r.get("disposition") == "NOT_EVIDENCED" and is_hard_requirement(r.get("text", ""))
+    ]
+    answerable = sum(1 for r in requirements if r.get("disposition") == "ANSWERABLE_FROM_APPROVED_CLAIM")
+    n = len(hard_gaps)
+    if n == 0:
+        tier = "TOP_CANDIDATE"
+    elif n <= 2 and answerable >= 1:
+        tier = "POSSIBLE"
+    else:
+        tier = "WEAK"
+    return {
+        "tier": tier,
+        "hard_gaps": n,
+        "hard_gap_requirements": [r["text"][:80] for r in hard_gaps[:5]],
+        "answerable": answerable,
+        "reason": f"{n} unmet hard requirement(s), {answerable} answerable",
+    }
+
+
 def qualification_report(
     candidate: dict[str, Any],
     claim_snapshot: dict[str, Any],
@@ -339,7 +393,7 @@ def qualification_report(
         "hard_blockers": sum(1 for r in rows if r["disposition"] == "HARD_BLOCKER"),
         "from_linkedin_match_panel": sum(1 for r in rows if r["source"] == "linkedin_match_panel"),
     }
-    return {
+    report = {
         "schema": "monitor_opportunities.qualification_report.v1",
         "candidate_id": candidate.get("candidate_id"),
         "title": candidate.get("title"),
@@ -360,3 +414,5 @@ def qualification_report(
         "action_worthy": True,
         "visible_in_report": True,
     }
+    report["candidate_strength"] = candidate_strength(report)
+    return report

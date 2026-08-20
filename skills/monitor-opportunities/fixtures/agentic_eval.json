@@ -326,7 +326,8 @@
           "LOCATION_BLACKHOLE",
           "EDGE_EVIDENCE",
           "QUEUE_PROJECTION",
-          "COMPLIANCE_CLAIM_COVERAGE"
+          "COMPLIANCE_CLAIM_COVERAGE",
+          "CANDIDATE_STRENGTH_TIERS"
         ]
       },
       "proves": "The seven failure signatures of 2026-08-17/18/20 stay fixed: relationship edges cite only signal-backed evidence, the re-dated discovery fixture still shortlists, each nightly gets its own retained directory, the Meetup budget scales with attendee work, junk attendee names are never resolved, and the prospect queue carries resolved LinkedIn candidates. Plus: workplace inference reads the posting body, on-site-elsewhere rejects with a named reason, and remaining ambiguous rows surface in the morning interview instead of dying unseen.",
