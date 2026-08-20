@@ -71,6 +71,8 @@ export type BridgeAction =
   | 'terminate';
 
 export type BridgeRequest = {
+  expand?: Array<string | { name: string; depth?: number; maxChildren?: number; maxBytes?: number }>;
+  allowRiskyWatches?: boolean;
   id?: string;
   action?: BridgeAction;
   workspace?: string;
@@ -691,6 +693,94 @@ export async function writeJsonFile(filePath: string, body: unknown) {
   );
   await fs.writeFile(tempPath, JSON.stringify(body, null, 2) + '\n', 'utf8');
   await fs.rename(tempPath, filePath);
+}
+
+// ---------------------------------------------------------------------------
+// #1438: bounded typed variable expansion + fail-closed watch policy
+// ---------------------------------------------------------------------------
+
+export type ExpandLimits = { depth: number; maxChildren: number; maxBytes: number };
+
+export const DEFAULT_EXPAND_LIMITS: ExpandLimits = { depth: 2, maxChildren: 20, maxBytes: 16384 };
+export const EXPAND_LIMIT_CEILING: ExpandLimits = { depth: 5, maxChildren: 100, maxBytes: 131072 };
+
+export function clampExpandLimits(requested: Partial<ExpandLimits> | undefined): ExpandLimits {
+  const want = { ...DEFAULT_EXPAND_LIMITS, ...(requested ?? {}) };
+  return {
+    depth: Math.max(1, Math.min(want.depth, EXPAND_LIMIT_CEILING.depth)),
+    maxChildren: Math.max(1, Math.min(want.maxChildren, EXPAND_LIMIT_CEILING.maxChildren)),
+    maxBytes: Math.max(256, Math.min(want.maxBytes, EXPAND_LIMIT_CEILING.maxBytes)),
+  };
+}
+
+export const VALUE_TRUNCATE_AT = 1024;
+
+export function truncateDisplayValue(value: string): { value: string; truncated?: true; originalLength?: number } {
+  if (value.length <= VALUE_TRUNCATE_AT) {
+    return { value };
+  }
+  return { value: value.slice(0, VALUE_TRUNCATE_AT) + '…', truncated: true, originalLength: value.length };
+}
+
+// Watch expressions can invoke getters/functions or mutate state. Classify by
+// side-effect risk and FAIL CLOSED on anything not provably safe: only plain
+// identifier/attribute/index chains, comparisons, arithmetic on those chains,
+// and literals classify as safe. Calls, assignments, statements, dunders,
+// imports, and anything unrecognized are risky.
+export function classifyWatchExpression(expression: string): { risk: 'safe' | 'risky'; reason: string } {
+  const text = expression.trim();
+  if (!text) {
+    return { risk: 'risky', reason: 'empty expression' };
+  }
+  const hardMarkers: Array<[RegExp, string]> = [
+    [/\(/, 'contains a call/grouping paren (may invoke a function or getter)'],
+    [/(?<![=!<>])=(?!=)/, 'contains an assignment'],
+    [/[+\-*\/|&^%]=/, 'contains an augmented assignment'],
+    [/;|\n/, 'contains a statement separator'],
+    [/\b(del|import|exec|eval|global|nonlocal|lambda|yield|await)\b/, 'contains a statement/eval keyword'],
+    [/__[a-zA-Z]+__/, 'references a dunder attribute'],
+    [/`/, 'contains a backtick'],
+  ];
+  for (const [pattern, reason] of hardMarkers) {
+    if (pattern.test(text)) {
+      return { risk: 'risky', reason };
+    }
+  }
+  // Safe shape: chains of identifiers/attributes/indexes, numbers, strings,
+  // comparisons and arithmetic between them.
+  const chain = String.raw`[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[^\[\]]*\])*`;
+  const literal = String.raw`(?:\d+(?:\.\d+)?|'[^']*'|"[^"]*"|True|False|None)`;
+  const term = `(?:${chain}|${literal})`;
+  const operator = String.raw`(?:==|!=|<=|>=|<|>|\+|-|\*|\/|%| and | or | not | in | is )`;
+  const safeShape = new RegExp(`^\\s*(?:not\\s+)?${term}(?:\\s*${operator}\\s*(?:not\\s+)?${term})*\\s*$`);
+  if (safeShape.test(text)) {
+    return { risk: 'safe', reason: 'identifier/attribute/index chain with comparisons or arithmetic only' };
+  }
+  return { risk: 'risky', reason: 'expression shape not recognized as side-effect free' };
+}
+
+// Conservative bridge-side redaction for persisted pause state (#1438/#1440):
+// values shaped like credentials are replaced before any status is written.
+const SECRET_VALUE_PATTERNS: RegExp[] = [
+  /\b(?:sk|pk|rk)-[A-Za-z0-9]{16,}\b/,
+  /\bAKIA[0-9A-Z]{16}\b/,
+  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/,
+  /\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/,
+  /\bBearer\s+[A-Za-z0-9._-]{16,}\b/i,
+  /\b(?=[A-Fa-f0-9]*\d)[A-Fa-f0-9]{40,}\b/,  // requires a digit: all-letter runs are prose, not hex
+];
+const SECRET_NAME_PATTERN = /(?:^|_)(?:secret|token|password|passwd|api_?key|credential|auth)(?:_|$)/i;
+
+export function redactSecretLikeValue(name: string, value: string): { value: string; redacted?: true } {
+  if (SECRET_NAME_PATTERN.test(name)) {
+    return { value: '<redacted: secret-like variable name>', redacted: true };
+  }
+  for (const pattern of SECRET_VALUE_PATTERNS) {
+    if (pattern.test(value)) {
+      return { value: value.replace(pattern, '<redacted>'), redacted: true };
+    }
+  }
+  return { value };
 }
 
 export function sha256(value: string) {

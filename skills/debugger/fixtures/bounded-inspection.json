@@ -1,0 +1,81 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Bounded typed variable expansion and the fail-closed watch policy (#1438), over the LIVE VS Code bridge: a nested dict expands to the requested depth capturing only requested locals (debugpy pseudo-children skipped), a self-referential list terminates with a cycle marker, oversized values truncate with original-size metadata, secret-shaped locals are redacted while prose-shaped big strings are NOT (hex false-positive guard), a call-shaped watch is blocked by default with a named side-effect reason while a safe comparison evaluates, an explicitly allowed risky watch is evaluated AND audited in the persisted state, and a missing expansion target invalidates only that inspection. Watch classification/redaction/truncation/limit-clamping are additionally covered deterministically by vscode-bridge/scripts/protocol-tests.mjs.",
+  "claims": {
+    "proves": "the live bridge captures structured bounded expansions (children, cycle markers, limits), enforces allowWatchEval->classification->allowRiskyWatches fail-closed ordering with an audit trail, redacts secret-shaped values without over-redacting prose, and degrades a missing target to a named per-inspection error",
+    "does_not_prove": "behavior for TypeScript/Rust adapters (Python debugpy only here), or bounded evaluation latency enforcement where the adapter does not support it"
+  },
+  "cases": [
+    {
+      "name": "live-bounded-expansion-cycle-redaction-and-block",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "One live stop: expand a nested dict (depth 3) and a self-referential list; capture an oversized string and a secret-named local; one safe and one call-shaped watch. Asserts children, cycle, truncate-not-redact, redact, evaluate, block.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action restart --launch-config-name 'Debug nested ($debugger)' --break \"$WS/skills/debugger/scenarios/variable_state/nested.py:12\" --local payload --local blob --local api_token --expand payload:3 --expand loop:3 --expand missing_var --watch 'payload[\"count\"] > 2' --watch 'build()' --allow-watch-eval --stop-timeout-ms 45000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 75); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; [ \"$S\" = stopped ] || [ \"$S\" = stopped-not-proof ] || { echo BRIDGE_BLOCKED; exit 0; }; python3 - \"$OUT\" <<'PYEOF'\nimport json, sys\nd = json.load(open(sys.argv[1])); ss = d.get(\"stoppedState\") or {}\nloc = ss.get(\"locals\") or {}; exp = ss.get(\"expanded\") or {}; w = ss.get(\"watches\") or {}\nassert \"<redacted\" in loc.get(\"api_token\",\"\"), loc.get(\"api_token\")\nassert \"<redacted\" not in loc.get(\"blob\",\"\"), \"blob over-redacted\"\nprint(\"REDACTION-CORRECT\")\np = exp.get(\"payload\", {}); kids = list((p.get(\"children\") or {}).keys())\nassert any(\"user\" in k for k in kids) and any(\"count\" in k for k in kids), kids\nassert not any(\"special variables\" in k for k in kids), kids\nprint(\"EXPANSION-CHILDREN-CORRECT\")\ndef cyc(n):\n    if n.get(\"cycle\"): return True\n    return any(cyc(c) for c in (n.get(\"children\") or {}).values())\nassert cyc(exp.get(\"loop\", {})), \"no cycle marker\"\nprint(\"CYCLE-MARKED\")\nassert (exp.get(\"missing_var\") or {}).get(\"error\"), \"missing target must carry its own error\"\nprint(\"MISSING-TARGET-ISOLATED\")\nassert w.get('payload[\"count\"] > 2') == \"True\", w\nassert \"<blocked: side-effect risk\" in w.get(\"build()\",\"\"), w\nprint(\"WATCH-POLICY-CORRECT\")\nPYEOF"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REDACTION-CORRECT",
+          "EXPANSION-CHILDREN-CORRECT",
+          "CYCLE-MARKED",
+          "MISSING-TARGET-ISOLATED",
+          "WATCH-POLICY-CORRECT"
+        ]
+      }
+    },
+    {
+      "name": "live-risky-watch-requires-explicit-audit",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Watches without --allow-watch-eval are refused up front at request validation (strictest fail-closed); with eval but not --allow-risky-watches a call is blocked per-watch with a named reason; with --allow-risky-watches it evaluates AND lands in auditedRiskyWatches.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; run(){ OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action restart --launch-config-name 'Debug nested ($debugger)' --break \"$WS/skills/debugger/scenarios/variable_state/nested.py:12\" --local payload --watch 'len(payload)' \"$@\" --stop-timeout-ms 45000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 75); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; python3 -c \"import json;d=json.load(open('$OUT'));ss=d.get('stoppedState') or {};print(json.dumps({'w':ss.get('watches'),'a':ss.get('auditedRiskyWatches'),'e':d.get('error')}))\"; }; R1=$(run); echo \"no-eval: $R1\"; echo \"$R1\" | grep -q 'requires allowWatchEval' || { echo BRIDGE_BLOCKED; exit 0; }; echo NO-EVAL-REFUSED-UPFRONT; R2=$(run --allow-watch-eval); echo \"no-risky: $R2\"; echo \"$R2\" | grep -q 'side-effect risk' && echo RISKY-BLOCKED || exit 1; R3=$(run --allow-watch-eval --allow-risky-watches); echo \"audited: $R3\"; echo \"$R3\" | grep -q '\"a\": \\[' && echo \"$R3\" | grep -vq 'side-effect risk' && echo RISKY-AUDITED-AND-EVALUATED || exit 1"
+      ],
+      "timeout_seconds": 600,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO-EVAL-REFUSED-UPFRONT",
+          "RISKY-BLOCKED",
+          "RISKY-AUDITED-AND-EVALUATED"
+        ]
+      }
+    },
+    {
+      "name": "classification-and-redaction-unit-gate",
+      "type": "negative",
+      "required": true,
+      "description": "The deterministic protocol test suite (classification of calls/assignments/dunders/statements as risky, safe chains as safe, redaction name+value patterns, truncation metadata, limit clamping) must pass; a regression here fails the gate.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; cd ../vscode-bridge && node scripts/protocol-tests.mjs"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "debugger bridge protocol tests passed"
+        ]
+      }
+    }
+  ]
+}

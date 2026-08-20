@@ -85,6 +85,14 @@ def main(
         bool,
         typer.Option("--allow-watch-eval", help="Allow VS Code debug adapter watch expression evaluation."),
     ] = False,
+    expand: Annotated[
+        list[str] | None,
+        typer.Option("--expand", help="Bounded typed expansion of a captured local: NAME or NAME:DEPTH. Repeat as needed."),
+    ] = None,
+    allow_risky_watches: Annotated[
+        bool,
+        typer.Option("--allow-risky-watches", help="Evaluate risky-classified watches too (audited in the status)."),
+    ] = False,
     workspace_artifacts: Annotated[
         bool,
         typer.Option(
@@ -161,6 +169,11 @@ def main(
         "locals": local or [],
         "watches": watch or [],
         "allowWatchEval": allow_watch_eval,
+        "allowRiskyWatches": allow_risky_watches or None,
+        "expand": (
+            [{"name": item.split(":", 1)[0], "depth": int(item.split(":", 1)[1])} if ":" in item else item
+             for item in expand] if expand else None
+        ),
         "output": str(status_path),
         "stopTimeoutMs": stop_timeout_ms,
         "replaceBreakpoints": replace_breakpoints,

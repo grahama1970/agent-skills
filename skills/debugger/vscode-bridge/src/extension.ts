@@ -25,6 +25,11 @@ import {
   resolveWorkspacePath as resolveContainedWorkspacePath,
   resolveArtifactPath,
   runtimeArtifactRoot,
+  clampExpandLimits,
+  classifyWatchExpression,
+  redactSecretLikeValue,
+  truncateDisplayValue,
+  type ExpandLimits,
   sha256,
   usesSharedRequestOwner,
   validateRequest,
@@ -48,6 +53,8 @@ type StoppedState = {
   scopes?: unknown[];
   locals?: Record<string, string>;
   watches?: Record<string, string>;
+  expanded?: Record<string, unknown>;
+  auditedRiskyWatches?: Array<{ expression: string; reason: string }>;
   terminated?: boolean;
   error?: string;
 };
@@ -1186,27 +1193,162 @@ async function captureStoppedState(
       variablesReference: localsScope.variablesReference,
     });
     const variables = variablesResponse?.variables ?? [];
+    // Allowlisted flat capture (unchanged contract), now redacted + truncated.
     for (const variable of variables) {
       if (request.locals?.includes(variable.name)) {
-        state.locals![variable.name] = variable.value;
+        const truncated = truncateDisplayValue(String(variable.value ?? ''));
+        const redacted = redactSecretLikeValue(variable.name, truncated.value);
+        state.locals![variable.name] = redacted.value;
+      }
+    }
+    // #1438: explicit bounded typed expansion of requested locals only.
+    const expandRequests = Array.isArray(request.expand) ? request.expand : [];
+    if (expandRequests.length > 0) {
+      state.expanded = {};
+      for (const spec of expandRequests) {
+        const name = typeof spec === 'string' ? spec : String((spec as { name?: unknown })?.name ?? '');
+        if (!name) {
+          continue;
+        }
+        const limits = clampExpandLimits(typeof spec === 'object' && spec !== null ? (spec as Partial<ExpandLimits>) : undefined);
+        const target = variables.find((variable: { name?: string }) => variable.name === name);
+        if (!target) {
+          // A missing target invalidates only THIS inspection; nothing is fabricated.
+          state.expanded[name] = { error: 'no such local in the paused frame', limits };
+          continue;
+        }
+        const budget = { bytes: 0 };
+        state.expanded[name] = await expandVariableBounded(session, target, limits, 0, new Set(), budget);
       }
     }
   }
 
+  // #1438: watches are FAIL-CLOSED. Nothing evaluates unless allowWatchEval;
+  // risky-classified expressions additionally require allowRiskyWatches and are
+  // recorded in an audit list on the persisted state.
+  const riskyAudit: Array<{ expression: string; reason: string }> = [];
   for (const expression of request.watches ?? []) {
+    if (request.allowWatchEval !== true) {
+      state.watches![expression] = '<blocked: watch evaluation disabled (allowWatchEval=false)>';
+      continue;
+    }
+    const classified = classifyWatchExpression(expression);
+    if (classified.risk === 'risky' && request.allowRiskyWatches !== true) {
+      state.watches![expression] = `<blocked: side-effect risk — ${classified.reason}>`;
+      continue;
+    }
+    if (classified.risk === 'risky') {
+      riskyAudit.push({ expression, reason: classified.reason });
+    }
     try {
       const evaluated = await session.customRequest('evaluate', {
         expression,
         frameId: frame.id,
         context: 'watch',
       });
-      state.watches![expression] = evaluated?.result ?? '';
+      const truncated = truncateDisplayValue(String(evaluated?.result ?? ''));
+      state.watches![expression] = redactSecretLikeValue(expression, truncated.value).value;
     } catch (error) {
       state.watches![expression] = `<error: ${error instanceof Error ? error.message : String(error)}>`;
     }
   }
+  if (riskyAudit.length > 0) {
+    state.auditedRiskyWatches = riskyAudit;
+  }
 
   return state;
+}
+
+type ExpandedNode = {
+  value?: string;
+  type?: string;
+  variablesReference?: number;
+  namedVariables?: number;
+  indexedVariables?: number;
+  truncated?: true;
+  originalLength?: number;
+  redacted?: true;
+  cycle?: true;
+  childrenTruncatedAt?: number;
+  budgetExhausted?: true;
+  error?: string;
+  limits?: { depth: number; maxChildren: number; maxBytes: number };
+  children?: Record<string, ExpandedNode>;
+};
+
+// Walk one variable's children through DAP `variables` requests with hard
+// bounds: depth, per-level child count, and a total byte budget. Repeated
+// variablesReference values mark a cycle and terminate deterministically.
+async function expandVariableBounded(
+  session: vscode.DebugSession,
+  variable: { name?: string; value?: unknown; type?: string; variablesReference?: number; namedVariables?: number; indexedVariables?: number },
+  limits: { depth: number; maxChildren: number; maxBytes: number },
+  depth: number,
+  seenReferences: Set<number>,
+  budget: { bytes: number },
+): Promise<ExpandedNode> {
+  const name = String(variable.name ?? '');
+  const rawValue = String(variable.value ?? '');
+  const truncated = truncateDisplayValue(rawValue);
+  const redacted = redactSecretLikeValue(name, truncated.value);
+  const node: ExpandedNode = { value: redacted.value, type: variable.type };
+  if (truncated.truncated) {
+    node.truncated = true;
+    node.originalLength = truncated.originalLength;
+  }
+  if (redacted.redacted) {
+    node.redacted = true;
+  }
+  if (depth === 0) {
+    node.limits = limits;
+  }
+  const reference = typeof variable.variablesReference === 'number' ? variable.variablesReference : 0;
+  if (reference > 0) {
+    node.variablesReference = reference;
+    if (typeof variable.namedVariables === 'number') node.namedVariables = variable.namedVariables;
+    if (typeof variable.indexedVariables === 'number') node.indexedVariables = variable.indexedVariables;
+  }
+  budget.bytes += node.value?.length ?? 0;
+  if (reference <= 0 || depth >= limits.depth) {
+    return node;
+  }
+  if (seenReferences.has(reference)) {
+    node.cycle = true;
+    return node;
+  }
+  if (budget.bytes >= limits.maxBytes) {
+    node.budgetExhausted = true;
+    return node;
+  }
+  seenReferences.add(reference);
+  try {
+    const response = await session.customRequest('variables', { variablesReference: reference });
+    const children = (response?.variables ?? []) as Array<{ name?: string }>;
+    node.children = {};
+    let taken = 0;
+    for (const child of children) {
+      const childName = String(child.name ?? '');
+      // debugpy grouping/introspection pseudo-children burn the budget without
+      // informing anyone; expansion targets USER state.
+      if (/^(special variables|function variables|class variables|protected variables|len\(\))$/.test(childName) ||
+          /^__.*__$/.test(childName)) {
+        continue;
+      }
+      if (taken >= limits.maxChildren || budget.bytes >= limits.maxBytes) {
+        node.childrenTruncatedAt = taken;
+        if (budget.bytes >= limits.maxBytes) node.budgetExhausted = true;
+        break;
+      }
+      node.children[String(child.name ?? `#${taken}`)] = await expandVariableBounded(
+        session, child, limits, depth + 1, seenReferences, budget,
+      );
+      taken += 1;
+    }
+  } catch (error) {
+    // A failed expansion invalidates only this subtree; no values are invented.
+    node.error = `expansion failed: ${error instanceof Error ? error.message : String(error)}`;
+  }
+  return node;
 }
 
 async function breakpointEvidenceForFrame(frame: unknown, request: BridgeRequest): Promise<BridgeBreakpointEvidence[]> {

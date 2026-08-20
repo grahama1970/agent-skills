@@ -384,6 +384,33 @@ try {
     false,
   );
 
+  // #1438: fail-closed watch classification
+  const { classifyWatchExpression, redactSecretLikeValue, truncateDisplayValue, clampExpandLimits } =
+    await import('../out/protocol.js');
+  assert.equal(classifyWatchExpression('user.profile.name').risk, 'safe');
+  assert.equal(classifyWatchExpression('items[0].total > 30').risk, 'safe');
+  assert.equal(classifyWatchExpression('first == 6 and second != 30').risk, 'safe');
+  assert.equal(classifyWatchExpression('reset_all()').risk, 'risky');
+  assert.equal(classifyWatchExpression('x = 5').risk, 'risky');
+  assert.equal(classifyWatchExpression('total += 1').risk, 'risky');
+  assert.equal(classifyWatchExpression('obj.__dict__').risk, 'risky');
+  assert.equal(classifyWatchExpression('__import__("os")').risk, 'risky');
+  assert.equal(classifyWatchExpression('del items[0]').risk, 'risky');
+  assert.equal(classifyWatchExpression('x == 6; import os').risk, 'risky');
+  assert.equal(classifyWatchExpression('(lambda: 1)()').risk, 'risky');
+  // redaction: name-shaped and value-shaped
+  assert.ok(redactSecretLikeValue('api_key', 'abc').redacted);
+  assert.ok(redactSecretLikeValue('data', 'sk-abcdefghijklmnop1234').redacted);
+  assert.ok(redactSecretLikeValue('data', 'Bearer abcdefghijklmnop1234').redacted);
+  assert.equal(redactSecretLikeValue('count', '42').redacted, undefined);
+  // truncation with original-size metadata
+  const big = truncateDisplayValue('x'.repeat(5000));
+  assert.ok(big.truncated);
+  assert.equal(big.originalLength, 5000);
+  // limit clamping never exceeds the ceiling
+  assert.equal(clampExpandLimits({ depth: 99, maxChildren: 9999, maxBytes: 10 ** 9 }).depth, 5);
+  assert.equal(clampExpandLimits(undefined).depth, 2);
+
   console.log('debugger bridge protocol tests passed');
 } finally {
   await rm(tempRoot, { recursive: true, force: true });
