@@ -359,30 +359,43 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True,
 
 def build_instruments(adapter, sel: dict, out: Path) -> dict:
     texts = {k: str(d.get("retrieval_text") or "") for k, d in sel["docs"].items()}
-    prompt = (
-        "Given ONLY these three memory texts, write 3 short recall probes "
-        "(one-line paraphrase queries a search engine could match to these "
-        "memories) and 1 negative-control query about a domain COMPLETELY "
-        "unrelated to any content below.\n"
-        + json.dumps(texts) +
-        '\nReturn strict JSON: {"probes": ["...","...","..."], "negative_control": "..."}'
-    )
-    parsed, receipt = adapter.dispatch_text_reasoning(
-        prompt, "persona-cycle-instruments",
-        output_contract={"probes": ["3 strings"], "negative_control": "string"})
-    probes = [str(x).strip() for x in (parsed or {}).get("probes") or [] if str(x).strip()]
-    neg = str((parsed or {}).get("negative_control") or "").strip()
-    if len(probes) < 3 or not neg:
-        raise SystemExit(f"BLOCKED_CYCLE_INSTRUMENTS: probes={len(probes)} neg={bool(neg)} "
-                         f"receipt={json.dumps(receipt)[:160]}")
-    parsed = {"probes": probes[:3], "negative_control": neg}
+    # The overlap gate below is only satisfiable by construction if the model
+    # knows which words are forbidden, so name them in the prompt instead of
+    # hoping (2026-08-20: 'events' overlapped and blocked the whole cycle).
     root_words = set()
     for t in texts.values():
         root_words.update(w for w in re.findall(r"[a-z]{4,}", t.lower())
                           if w not in STOPWORDS)
-    neg_words = {w for w in re.findall(r"[a-z]{4,}", parsed["negative_control"].lower())
-                 if w not in STOPWORDS}
-    overlap = sorted(root_words & neg_words)
+    base_prompt = (
+        "Given ONLY these three memory texts, write 3 short recall probes "
+        "(one-line paraphrase queries a search engine could match to these "
+        "memories) and 1 negative-control query about a domain COMPLETELY "
+        "unrelated to any content below. The negative-control query must not "
+        "contain ANY of these forbidden words (or their plurals/inflections): "
+        + ", ".join(sorted(root_words)) + "\n"
+        + json.dumps(texts) +
+        '\nReturn strict JSON: {"probes": ["...","...","..."], "negative_control": "..."}'
+    )
+    parsed = None
+    overlap: list[str] = []
+    feedback = ""
+    for _attempt in range(3):
+        raw, receipt = adapter.dispatch_text_reasoning(
+            base_prompt + feedback, "persona-cycle-instruments",
+            output_contract={"probes": ["3 strings"], "negative_control": "string"})
+        probes = [str(x).strip() for x in (raw or {}).get("probes") or [] if str(x).strip()]
+        neg = str((raw or {}).get("negative_control") or "").strip()
+        if len(probes) < 3 or not neg:
+            raise SystemExit(f"BLOCKED_CYCLE_INSTRUMENTS: probes={len(probes)} neg={bool(neg)} "
+                             f"receipt={json.dumps(receipt)[:160]}")
+        parsed = {"probes": probes[:3], "negative_control": neg}
+        neg_words = {w for w in re.findall(r"[a-z]{4,}", neg.lower())
+                     if w not in STOPWORDS}
+        overlap = sorted(root_words & neg_words)
+        if not overlap:
+            break
+        feedback = ("\nYour previous negative-control query used forbidden words "
+                    f"{overlap[:5]}; produce a new one avoiding every forbidden word.")
     if overlap:
         raise SystemExit(f"BLOCKED_CYCLE_NEGATIVE_CONTROL_OVERLAP: {overlap[:5]}")
     instruments = {

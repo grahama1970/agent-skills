@@ -212,6 +212,34 @@
         ]
       },
       "readback": true
+    },
+    {
+      "name": "horus-embry-audible-conversation-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.conversation.audible_two_agent"
+      ],
+      "seams": [
+        "conversation.horus_embry.audible"
+      ],
+      "blocked_when_stdout_contains": [
+        "BLOCKED_UX_SERVER_UNREACHABLE",
+        "BLOCKED_CHATTERBOX_UNREACHABLE"
+      ],
+      "command": [
+        "python3",
+        "../scripts/eval_audible_conversation.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "AUDIBLE_CONVERSATION_OK turns=2"
+        ]
+      },
+      "timeout_seconds": 900
     }
   ],
   "capability_claims": [
@@ -234,6 +262,14 @@
     {
       "id": "persona_dream.ux.board_media_stratified",
       "description": "The residue board's stratified sample keeps image, video, and audio memories through the 12-card cut against live memory recall.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "persona_dream.conversation.audible_two_agent",
+      "description": "Horus and Embry hold an audible conversation about her dream, day, and mood: Horus's questions rendered in his own voice, Embry's replies through the gated reasoning->speech->append path, every turn's audio read back from disk and her turns tone+sha256-bound in conversation.jsonl.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
@@ -270,6 +306,14 @@
       "seam_id": "ui.residue_board.stratified_sample",
       "seam_type": "data_pipeline",
       "criticality": "high",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "conversation.horus_embry.audible",
+      "seam_type": "multi_agent_voice",
+      "criticality": "critical",
       "required_evidence": [
         "live_e2e"
       ]
