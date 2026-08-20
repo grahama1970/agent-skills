@@ -58,14 +58,15 @@ def _open_ticket_exists(title: str) -> bool:
         return False
 
 
-@app.command()
-def main(
-    fixture: Path = typer.Option(SKILL_ROOT / "fixtures" / "agentic_eval_live_subset.json",
-                                 "--fixture", help="Manifest to run."),
-    apply: bool = typer.Option(False, "--apply", help="Actually file tickets (preview otherwise)."),
-    skip_run: Path = typer.Option(None, "--from-report",
-                                  help="Skip running; ticket failures from this existing report."),
-) -> None:
+def _tick(
+    fixture: Path,
+    apply: bool,
+    dispatch_fix: bool,
+    repair_creator: str,
+    skip_run: Path | None,
+) -> int:
+    """One bounded loop tick. Returns the number of FAILED cases."""
+
     if skip_run:
         report_path = skip_run
     else:
@@ -134,10 +135,71 @@ def main(
                    + ("" if ok else f"  (ticket cli exit {proc.returncode}: {proc.stderr[-160:]})"))
         if ok:
             filed.append(c["name"])
+    if dispatch_fix and apply and (filed or deduped):
+        # One bounded watchdog tick per outstanding ticket, SEQUENTIALLY:
+        # each tick leases one issue, dispatches the creator-reviewer Tau DAG
+        # (creator = the operator-chosen gpt-5.5 high seat, reviewer a
+        # different family), and posts its receipt before the next tick runs.
+        import os
+        env = dict(os.environ)
+        env["PROJECT_WATCHDOG_REPAIR_CREATOR"] = repair_creator
+        for i, _name in enumerate([*filed, *deduped], 1):
+            typer.echo(f"DISPATCH_FIX tick {i}/{len(filed) + len(deduped)} "
+                       f"(creator={repair_creator})")
+            proc = subprocess.run(
+                [str(SKILLS_ROOT / "project-watchdog" / "run.sh"),
+                 "tick", "--apply", "--project", "agent-skills", "--max-tickets", "1"],
+                capture_output=True, text=True, env=env,
+                cwd=SKILLS_ROOT / "project-watchdog",
+            )
+            tail = (proc.stdout or proc.stderr)[-300:].replace("\n", " | ")
+            typer.echo(f"  tick exit {proc.returncode}: {tail}")
     typer.echo(f"EVAL_LOOP_RESULT: {'CONVERGED' if not failed else 'OPEN'} "
                f"failed={len(failed)} filed={len(filed)} deduped={len(deduped)}")
-    if failed:
-        raise typer.Exit(1)
+    return len(failed)
+
+
+@app.command()
+def main(
+    fixture: Path = typer.Option(SKILL_ROOT / "fixtures" / "agentic_eval_live_subset.json",
+                                 "--fixture", help="Manifest to run."),
+    apply: bool = typer.Option(False, "--apply", help="Actually file tickets (preview otherwise)."),
+    dispatch_fix: bool = typer.Option(
+        False, "--dispatch-fix",
+        help="After filing, run one bounded project-watchdog tick per ticket with the "
+             "chosen repair creator (diagnose, fix in an isolated worktree, close with "
+             "proof; the reviewer seat stays a different model family). Sequential: one "
+             "ticket, one tick, then the next. Requires --apply."),
+    repair_creator: str = typer.Option(
+        "gpt-5.5-high", "--repair-creator",
+        help="Creator seat for dispatched repairs (operator default: gpt-5.5 high reasoning)."),
+    until_pass: bool = typer.Option(
+        False, "--until-pass",
+        help="Keep looping run -> ticket -> fix -> re-run until every case passes or "
+             "--max-iterations is hit. Implies --apply --dispatch-fix semantics per tick."),
+    max_iterations: int = typer.Option(
+        5, "--max-iterations",
+        help="Hard cap on --until-pass ticks; a loop that cannot converge in this many "
+             "rounds needs a human, not more rounds."),
+    skip_run: Path = typer.Option(None, "--from-report",
+                                  help="Skip running; ticket failures from this existing report."),
+) -> None:
+    if not until_pass:
+        failed = _tick(fixture, apply, dispatch_fix, repair_creator, skip_run)
+        raise typer.Exit(1 if failed else 0)
+    if not apply:
+        typer.echo("--until-pass requires --apply (the loop must file and fix, "
+                   "not preview forever)", err=True)
+        raise typer.Exit(2)
+    for iteration in range(1, max_iterations + 1):
+        typer.echo(f"=== EVAL_LOOP ITERATION {iteration}/{max_iterations} ===")
+        failed = _tick(fixture, True, True, repair_creator, None)
+        if not failed:
+            typer.echo(f"EVAL_LOOP_CONVERGED after {iteration} iteration(s)")
+            raise typer.Exit(0)
+    typer.echo(f"EVAL_LOOP_EXHAUSTED: still {failed} failing after "
+               f"{max_iterations} iterations -- needs a human", err=True)
+    raise typer.Exit(1)
 
 
 if __name__ == "__main__":
