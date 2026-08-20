@@ -369,7 +369,8 @@ return JSON.stringify({clicked: true, text: button.innerText});""",
                 # land after the first readback; poll, and re-click a control
                 # whose attribute has not flipped yet.
                 mode_state: dict = {}
-                for attempt in range(6):
+                for attempt in range(8):
+                    time.sleep(1.5)
                     mode_state = surf_js(
                         root,
                         tab_id,
@@ -380,12 +381,15 @@ return JSON.stringify({clicked: true, text: button.innerText});""",
                     )
                     if mode_state.get("compact") == "true" and mode_state.get("peek") == "true":
                         break
-                    if attempt == 2:
-                        if mode_state.get("compact") != "true":
-                            surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT"]')
-                        if mode_state.get("peek") != "true":
-                            surf_click(root, tab_id, '[data-qs-action="LIVE_EVIDENCE_MEETING_TOGGLE_DEFINITION_PEEK"]')
-                    time.sleep(1.0)
+                    # Verify-then-click each round: a click lost to a header
+                    # re-render (icon swap after the compact toggle) is
+                    # re-issued via the element itself, which cannot miss.
+                    if mode_state.get("compact") != "true":
+                        surf_js(root, tab_id,
+                                "(() => { document.querySelector('[data-qs-action=LIVE_EVIDENCE_MEETING_TOGGLE_COMPACT]').click(); return JSON.stringify({c:1}); })()")
+                    if mode_state.get("peek") != "true":
+                        surf_js(root, tab_id,
+                                "(() => { document.querySelector('[data-qs-action=LIVE_EVIDENCE_MEETING_TOGGLE_DEFINITION_PEEK]').click(); return JSON.stringify({p:1}); })()")
                 if mode_state.get("compact") != "true" or mode_state.get("peek") != "true":
                     raise RuntimeError(f"compact/peek controls did not toggle: {mode_state}")
 
