@@ -127,6 +127,14 @@ def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[d
                 "mandate_hits": ["relationship", str(signal.get("signal_type") or "contact")],
                 "prospect_class": "warm_reconnect",
                 "relationship_signal_id": signal.get("signal_id"),
+                # The resolved LinkedIn candidates are the actionable half of a
+                # Meetup lead; the projection silently dropped them on 2026-08-20
+                # (receipt counted strong_top_candidate: 3, queue carried none).
+                "subject": signal.get("subject"),
+                "linkedin_top_candidate": signal.get("linkedin_top_candidate"),
+                "linkedin_candidates": (signal.get("linkedin_candidates") or [])[:3],
+                "linkedin_confirmation_required": signal.get("linkedin_confirmation_required", False),
+                "event_title": signal.get("event_title"),
                 "relationship_path": signal.get("relationship_path", []),
                 "recommended_action": signal.get("recommended_action"),
                 "contact_channel_risk": signal.get("contact_channel_risk"),
