@@ -1351,6 +1351,30 @@
         ]
       },
       "notes": "Generalizes the arg-order incident across every shell shortcut seat: an option flag after the question text must exit 2 with the named refusal for webgpt, webclaude, webkimi, webgemini, and webgrok alike, never ship to a provider as prompt words."
+    },
+    {
+      "name": "runner-flake-taxonomy-pass-blocked-fail",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\nflaky = (\"if [ -f flake.state ]; then echo 'OK from probe.py'; else touch flake.state; \"\n         \"echo 'RATE_LIMITED_BY_PROVIDER (probe.py)'; exit 7; fi\")\nmanifest = {'version': 2, 'skill': 'flake-taxonomy-probe', 'trials': 2,\n 'proof_scope': 'runner trial taxonomy only',\n 'claims': {'proves': 'infra-blocked trials classify and aggregate correctly', 'does_not_prove': 'anything else'},\n 'cases': [\n  {'name': 'flaky-pass', 'type': 'positive', 'real_world': True,\n   'evidence_class': 'fault_injected_deterministic', 'timeout_seconds': 30,\n   'infra_blocked_when': ['RATE_LIMITED_BY_PROVIDER'],\n   'command': ['bash', '-c', flaky],\n   'expected': {'exit_code': 0, 'stdout_contains': ['OK from probe.py']}},\n  {'name': 'all-infra-blocked', 'type': 'positive', 'real_world': True,\n   'evidence_class': 'fault_injected_deterministic', 'timeout_seconds': 30,\n   'infra_blocked_when': ['RATE_LIMITED_BY_PROVIDER'],\n   'command': ['bash', '-c', \"echo 'RATE_LIMITED_BY_PROVIDER (probe.py)'; exit 7\"],\n   'expected': {'exit_code': 0, 'stdout_contains': ['OK from probe.py']}},\n  {'name': 'undeclared-failure', 'type': 'adversarial', 'real_world': True,\n   'evidence_class': 'fault_injected_deterministic', 'timeout_seconds': 30,\n   'infra_blocked_when': ['RATE_LIMITED_BY_PROVIDER'],\n   'command': ['bash', '-c', \"echo 'SOME_NEW_UNKNOWN_ERROR (probe.py)'; exit 7\"],\n   'expected': {'exit_code': 0, 'stdout_contains': ['OK from probe.py']}},\n ]}\nopen(f'{RT}/m.json', 'w').write(json.dumps(manifest))\nEOF\ncd ../agentic-evals && ./run.sh run $RT/m.json --report-only --output $RT/report.json >/dev/null 2>&1; uv run --project . python -c \"import json; d=json.load(open('$RT/report.json')); by={c['name']:c for c in d['cases']}; assert by['flaky-pass']['outcome']=='PASS' and by['flaky-pass']['flaky'] is True, by['flaky-pass']; assert by['all-infra-blocked']['outcome']=='BLOCKED', by['all-infra-blocked']; assert by['undeclared-failure']['outcome']=='FAIL', by['undeclared-failure']; print('FLAKE_TAXONOMY_HOLDS')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FLAKE_TAXONOMY_HOLDS"
+        ]
+      },
+      "notes": "Pins the flakiness policy (webgpt review 2026-08-19): a declared external blocker on one of two trials is pass-with-flake (surfaced, not punished); ONLY infra-blocked trials is BLOCKED never PASS; an undeclared failure signature is always a regression FAIL -- unknown errors are never flake-eligible."
     }
   ],
   "capability_claims": [

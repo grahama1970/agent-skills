@@ -50,7 +50,14 @@
         ]
       },
       "readback": true,
-      "evidence_class": "live_e2e"
+      "evidence_class": "live_e2e",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-a-misnamed-model-self-corrects-and-never-blocks-the-panel",
@@ -283,7 +290,14 @@
       ],
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-webkimi-opens-a-tab-and-answers",
@@ -310,7 +324,14 @@
       ],
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-webgemini-opens-a-tab-and-answers",
@@ -337,7 +358,14 @@
       ],
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-webgrok-opens-a-tab-and-answers",
@@ -364,7 +392,14 @@
       ],
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-webdeepseek-opens-a-tab-and-answers",
@@ -391,7 +426,14 @@
       ],
       "readback": true,
       "evidence_class": "live_e2e",
-      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word."
+      "notes": " 2026-08-19: oracle reads the probe's JSON receipt (token proof + byte count from tau lane receipts) instead of trusting a stdout success word.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-webclaude-is-blocked-with-a-named-reason",
@@ -466,7 +508,14 @@
           "equal_context",
           "roundtable_quorum"
         ]
-      }
+      },
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-a-roundtable-below-quorum-is-not-reported-as-a-panel",
@@ -535,6 +584,13 @@
       ],
       "supports_claims": [
         "ask.compete.isolated_and_judged"
+      ],
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
       ]
     },
     {
@@ -710,7 +766,14 @@
         "ask.compete.isolated_and_judged"
       ],
       "readback": true,
-      "evidence_class": "live_e2e"
+      "evidence_class": "live_e2e",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "ladder-red-team-false-greens-stay-red",
@@ -783,7 +846,14 @@
       },
       "notes": "The user's simple-concurrent-question shape: N independent single-call lanes, per-seat answers or named blockers, no consensus step. Nonce-bound: each answer must echo this run's token. A partial panel is DEGRADED-but-usable; only zero answers or a dishonest lane fails.",
       "readback": true,
-      "evidence_class": "live_e2e"
+      "evidence_class": "live_e2e",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "judge-audit-red-team-rigged-verdicts-stay-red",
@@ -837,7 +907,14 @@
           "INITIAL_AND_FINAL_VERDICT_CHARTS_PRESENT"
         ]
       },
-      "notes": "Every executed /ask DAG must persist dag-chart.initial.txt at compile and dag-chart.final.txt after the run with a per-node verdict on every line (a node without a receipt reads NO_RECEIPT, never a silent green). The charts are the machine-checkable halves of the show-then-confirm and report-what-failed contracts. Bound to this invocation's exact --ask-id."
+      "notes": "Every executed /ask DAG must persist dag-chart.initial.txt at compile and dag-chart.final.txt after the run with a per-node verdict on every line (a node without a receipt reads NO_RECEIPT, never a silent green). The charts are the machine-checkable halves of the show-then-confirm and report-what-failed contracts. Bound to this invocation's exact --ask-id.",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
     },
     {
       "name": "live-a-one-shot-lane-names-a-recorded-seat-removal",

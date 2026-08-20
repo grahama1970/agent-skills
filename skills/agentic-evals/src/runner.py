@@ -56,6 +56,14 @@ OUTCOME_FAIL = "FAIL"
 OUTCOME_BLOCKED = "BLOCKED"
 OUTCOME_NOT_TESTED = "NOT_TESTED"
 OUTCOME_SKIPPED = "SKIPPED"
+#: A trial that failed its oracle BUT whose failure signature matches one of
+#: the case's declared `infra_blocked_when` markers (provider rate limit,
+#: transport lock, recorded seat unavailability...). Only declared markers
+#: qualify -- an unknown error is never flake-eligible; it stays a FAIL.
+#: One INFRA_BLOCKED trial beside a PASS keeps the case passing (flake is
+#: surfaced, not punished); a case with ONLY infra-blocked trials is BLOCKED,
+#: never PASS.
+OUTCOME_INFRA_BLOCKED = "INFRA_BLOCKED"
 
 
 def _redact(text: str) -> str:
@@ -487,6 +495,14 @@ def trial_outcome(case: dict[str, Any], trial: dict[str, Any], cwd: Path) -> tup
             problems.append(f"stdout unexpectedly contains {needle!r}")
     artifact_problems, hashes = check_artifacts(case, cwd)
     problems.extend(artifact_problems)
+    if problems:
+        # Flakiness policy (2026-08-19 review): a failed trial whose output
+        # carries a DECLARED external-blocker marker is INFRA_BLOCKED, not a
+        # regression. Semantic violations without a declared marker always
+        # stay FAIL -- unknown errors are never flake-eligible.
+        for marker in case.get("infra_blocked_when", []) or []:
+            if marker in stdout_for_match or marker in stderr_for_match:
+                return OUTCOME_INFRA_BLOCKED, [f"external blocker: saw {marker!r}", *problems]
     if hashes:
         trial["artifact_hashes"] = hashes
     return (OUTCOME_PASS if not problems else OUTCOME_FAIL), problems
@@ -499,6 +515,14 @@ def case_outcome(trial_outcomes: list[str]) -> str:
         return OUTCOME_PASS
     if any(outcome == OUTCOME_FAIL for outcome in trial_outcomes):
         return OUTCOME_FAIL
+    # PASS + INFRA_BLOCKED = pass-with-flake: the semantic behavior was proven
+    # by the passing trial and the failing trial named a declared external
+    # blocker. ONLY infra-blocked trials = BLOCKED (unmet precondition), never
+    # PASS -- two externally blocked trials prove nothing about the subject.
+    if any(outcome == OUTCOME_PASS for outcome in trial_outcomes) and all(
+        outcome in {OUTCOME_PASS, OUTCOME_INFRA_BLOCKED} for outcome in trial_outcomes
+    ):
+        return OUTCOME_PASS
     return OUTCOME_BLOCKED
 
 
@@ -580,9 +604,14 @@ def evaluate_manifest(path: Path, timeout_seconds: float) -> dict[str, Any]:
             problems.extend(why)
             results.append(trial)
         passed_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_PASS)
+        infra_blocked_trials = sum(1 for outcome in outcomes if outcome == OUTCOME_INFRA_BLOCKED)
         qual = evidence_mod.qualify(case)
         cases.append(
             {
+                "infra_blocked_trials": infra_blocked_trials,
+                # A passing case that needed a flake-excused trial stays PASS
+                # but is flagged so health tracking can see provider decay.
+                "flaky": bool(infra_blocked_trials and case_outcome(outcomes) == OUTCOME_PASS),
                 "name": case["name"],
                 "type": case["type"],
                 "case_id": case_id,
