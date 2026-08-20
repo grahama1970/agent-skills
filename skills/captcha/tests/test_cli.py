@@ -258,3 +258,30 @@ def test_pointer_dispatch_plan_rejects_mismatched_authorization(tmp_path: Path) 
     assert result.exit_code == 2
     payload = json.loads(result.stdout)
     assert payload["failure_code"] == "receipt_invalid"
+
+
+def test_defensive_reference_command_writes_skill_entrypoint_receipt(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    output = tmp_path / "fcaptcha-reference.json"
+    receipt = {
+        "schema_version": "captcha.fcaptcha_reference_eval.v1",
+        "success": True,
+        "skill_entrypoint": "captcha defensive-reference",
+    }
+    monkeypatch.setattr("captcha_skill.cli.run_fcaptcha_reference", lambda: receipt)
+
+    result = RUNNER.invoke(
+        app,
+        [
+            "defensive-reference",
+            "--output",
+            str(output),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["skill_entrypoint"] == "captcha defensive-reference"
+    assert json.loads(output.read_text()) == receipt

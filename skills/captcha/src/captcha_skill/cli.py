@@ -21,6 +21,7 @@ from .models import EvaluationAction, PointerMotionPlan, PointerMotionRequest, R
 from .pointer_motion import build_pointer_dispatch_plan, build_pointer_motion_plan
 from .policy import load_json_object, load_manifest, validate_authorization, write_json_atomic
 from .schemas import export_schemas
+from .defensive_reference import run_fcaptcha_reference, write_receipt
 from .runtime import (
     build_ask_dag,
     build_evaluation_plan,
@@ -134,6 +135,30 @@ def schemas_command(
         _emit(result, json_output=json_output)
     except CaptchaSkillError as exc:
         _abort(exc, json_output=json_output)
+
+
+@app.command("defensive-reference")
+def defensive_reference_command(
+    output: Path | None = typer.Option(None, "--output", dir_okay=False),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Run pinned local defensive CAPTCHA/bot-detection reference tests."""
+
+    try:
+        receipt = run_fcaptcha_reference()
+        if output is not None:
+            write_receipt(output, receipt)
+        _emit(receipt, json_output=json_output)
+        if not receipt["success"]:
+            raise typer.Exit(code=2)
+    except RuntimeError as exc:
+        _abort(
+            CaptchaSkillError(
+                ErrorCode.IO_ERROR,
+                str(exc),
+            ),
+            json_output=json_output,
+        )
 
 
 

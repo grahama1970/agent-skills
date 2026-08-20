@@ -192,7 +192,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && python3 scripts/fcaptcha_reference_eval.py --output /tmp/captcha-fcaptcha-reference-eval.json"
+        "cd .. && ./run.sh defensive-reference --output /tmp/captcha-fcaptcha-reference-eval.json --json"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -228,6 +228,11 @@
             "path": "/tmp/captcha-fcaptcha-reference-eval.json",
             "json_pointer": "/solver_or_bypass",
             "equals": false
+          },
+          {
+            "path": "/tmp/captcha-fcaptcha-reference-eval.json",
+            "json_pointer": "/skill_entrypoint",
+            "equals": "captcha defensive-reference"
           }
         ]
       }

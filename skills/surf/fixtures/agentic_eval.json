@@ -25,6 +25,14 @@
         "deterministic": true,
         "live_e2e": true
       }
+    },
+    {
+      "id": "surf.captcha_defensive_composition",
+      "description": "Surf's declared captcha composition path reaches the captcha skill entrypoint and real defensive reference eval.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -39,6 +47,12 @@
       "seam_type": "browser_transport",
       "criticality": "critical",
       "required_evidence": ["deterministic", "live_e2e"]
+    },
+    {
+      "seam_id": "surf.captcha_skill_composition",
+      "seam_type": "skill_composition",
+      "criticality": "critical",
+      "required_evidence": ["live_e2e"]
     }
   ],
   "cases": [
@@ -163,6 +177,57 @@
           {
             "path": "/tmp/surf-rebrowser-cdp-pointer-live-example.json",
             "json_pointer": "/public_captcha_provider",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "captcha-composed-fcaptcha-defensive-reference",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "surf.captcha_defensive_composition"
+      ],
+      "seams": [
+        "surf.captcha_skill_composition"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ../captcha/run.sh defensive-reference --output /tmp/surf-composed-captcha-fcaptcha-reference.json --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "captcha.fcaptcha_reference_eval.v1",
+          "captcha defensive-reference",
+          "WebDecoy/FCaptcha",
+          "6/6 passed",
+          "17/17 passed"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-composed-captcha-fcaptcha-reference.json",
+            "json_pointer": "/success",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-composed-captcha-fcaptcha-reference.json",
+            "json_pointer": "/skill_entrypoint",
+            "equals": "captcha defensive-reference"
+          },
+          {
+            "path": "/tmp/surf-composed-captcha-fcaptcha-reference.json",
+            "json_pointer": "/source_commit",
+            "equals": "dbe52eab975bb39161dd2a54d69924de51f63000"
+          },
+          {
+            "path": "/tmp/surf-composed-captcha-fcaptcha-reference.json",
+            "json_pointer": "/solver_or_bypass",
             "equals": false
           }
         ]
