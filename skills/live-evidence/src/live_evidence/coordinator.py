@@ -60,6 +60,8 @@ class EvidenceCoordinator:
         self._state = state
         self._journal = journal
         self.journal = journal  # public handle for API routes (#1450)
+        self.settings = settings  # public: action lane memory_url (#1475)
+        self.actions = None  # ActionEngine, lazily bound to the session policy
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
@@ -558,6 +560,34 @@ class EvidenceCoordinator:
         if (question_id, question_revision) in self._solved_revisions:
             # At most one automatic solver run per accepted revision.
             may_ask = False
+
+        if verdict is not None and verdict.action_candidates:
+            # (#1475) resolver-proposed action candidates: propose-only here;
+            # execution requires an explicit human approval via the API.
+            from .actions import ActionEngine
+
+            digest = self._state.session_policy_digest()
+            if self.actions is None or self.actions._policy_digest != digest:
+                self.actions = ActionEngine(
+                    purpose=self._state.session_purpose(),
+                    policy=policy,
+                    policy_digest=digest,
+                )
+            proposed = self.actions.propose(
+                verdict.action_candidates,
+                trigger_event_ids=list(decision.source_event_ids),
+                question_id=question_id,
+                question_revision=question_revision,
+            )
+            for entry in self.actions.journal:
+                await self._journal.append(
+                    self._state.session_id(), entry.pop("kind"), entry,
+                    policy_digest=digest,
+                )
+            self.actions.journal.clear()
+            if proposed:
+                logger.info("action candidates proposed: {}",
+                            [c.kind for c in proposed])
 
         fast_pending = False
         if may_ask:

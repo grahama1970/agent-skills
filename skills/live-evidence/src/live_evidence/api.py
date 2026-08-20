@@ -242,6 +242,39 @@ def _register_api_routes(
                 "captured_variable_names": outcome.get("captured_variable_names"),
                 "proof_path": outcome.get("proof_path")}
 
+    @app.get("/api/actions/pending")
+    async def actions_pending() -> dict[str, Any]:
+        engine = coordinator.actions
+        return {"pending": [c.model_dump(mode="json", by_alias=True)
+                             for c in (engine.pending() if engine else [])]}
+
+    @app.post("/api/actions/{action_id}/approve")
+    async def approve_action(action_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Human approval executes exactly one candidate (#1475): journaled,
+        revision-fenced, policy-gated in the backend."""
+
+        actor = str(payload.get("actor") or "")
+        if not actor:
+            raise HTTPException(status_code=422, detail="actor required")
+        engine = coordinator.actions
+        if engine is None:
+            raise HTTPException(status_code=404, detail="no action candidates in this session")
+        active = (state.active_question(), state.active_question_revision())
+        try:
+            candidate = await engine.approve(
+                action_id, actor=actor, active_question=active,
+                coordinator=coordinator, state=state,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="unknown action") from exc
+        for entry in engine.journal:
+            await coordinator.journal.append(
+                state.session_id() or "no-session", entry.pop("kind"), entry,
+                policy_digest=state.session_policy_digest(),
+            )
+        engine.journal.clear()
+        return candidate.model_dump(mode="json", by_alias=True)
+
     @app.get("/api/provenance")
     async def provenance() -> dict[str, Any]:
         """Clause-level provenance for current cards (#1476), recomputed from

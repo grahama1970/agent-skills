@@ -49,6 +49,14 @@ type ProvenanceSource = {
 type ProvenanceClause = { clause: string; source_ids: string[]; sourced: boolean; invalidated: boolean };
 type ProvenanceCard = { card_id: string; clauses: ProvenanceClause[]; sources: ProvenanceSource[] };
 
+type ActionCandidate = {
+  action_id: string;
+  kind: string;
+  summary: string;
+  status: string;
+  trigger_event_ids: string[];
+};
+
 const DISPOSITION_STYLE: Record<string, string> = {
   supported_by_interview: "bg-emerald-900/60 border-emerald-500 text-emerald-100",
   supported_by_authorized_artifact: "bg-emerald-900/60 border-emerald-400 text-emerald-100",
@@ -68,6 +76,7 @@ const COVERAGE_STYLE: Record<string, string> = {
 export function InsightsPanel() {
   const [insights, setInsights] = useState<Insights>({});
   const [provenance, setProvenance] = useState<ProvenanceCard[]>([]);
+  const [pendingActions, setPendingActions] = useState<ActionCandidate[]>([]);
   const [openSource, setOpenSource] = useState<ProvenanceSource | null>(null);
 
   useRegisterAction({
@@ -76,6 +85,13 @@ export function InsightsPanel() {
     action: "LIVE_EVIDENCE_REVIEW_CLAIM_SEEK",
     label: "Seek media to a review claim's clip",
     description: "Seek the retained interview media to the transcript span bound to this claim",
+  });
+  useRegisterAction({
+    element_id: "live-evidence:insights:action-approve",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_ACTION_APPROVE",
+    label: "Approve a suggested action",
+    description: "Execute one evidence-triggered action after explicit human approval",
   });
   useRegisterAction({
     element_id: "live-evidence:insights:provenance-open-source",
@@ -104,6 +120,10 @@ export function InsightsPanel() {
         if (provenanceResponse.ok && alive) {
           setProvenance((await provenanceResponse.json()).cards ?? []);
         }
+        const actionsResponse = await fetch("/api/actions/pending");
+        if (actionsResponse.ok && alive) {
+          setPendingActions((await actionsResponse.json()).pending ?? []);
+        }
       } catch {
         /* server-side artifact readback only; nothing to invent on failure */
       }
@@ -118,7 +138,15 @@ export function InsightsPanel() {
 
   const { review, rubric, rehearsal } = insights;
   const provenanceCard = provenance.find((card) => card.clauses.length > 0) ?? null;
-  if (!review && !rubric && !rehearsal && !provenanceCard) return null;
+  if (!review && !rubric && !rehearsal && !provenanceCard && pendingActions.length === 0) return null;
+
+  const approveAction = async (actionId: string) => {
+    await fetch(`/api/actions/${actionId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actor: "human:hud" }),
+    });
+  };
 
   const seekClaim = (claim: Claim) => {
     if (!review) return;
@@ -211,6 +239,29 @@ export function InsightsPanel() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {pendingActions.length > 0 && (
+        <div data-qid="actions-panel">
+          <h3 className="mb-1 font-semibold text-slate-100">Suggested actions (human-approved only)</h3>
+          <ul className="grid gap-1 text-xs">
+            {pendingActions.map((action) => (
+              <li key={action.action_id} data-qid={`action-${action.action_id}`} data-action-kind={action.kind} className="flex items-center gap-2 rounded border border-indigo-700 bg-indigo-950/50 px-2 py-1">
+                <span className="rounded bg-black/30 px-1 text-[10px] uppercase">{action.kind.replaceAll("_", " ")}</span>
+                <span className="flex-1 text-slate-100">{action.summary}</span>
+                <button
+                  type="button"
+                  data-qid={`approve-${action.action_id}`}
+                  data-qs-action="LIVE_EVIDENCE_ACTION_APPROVE"
+                  title="Approve and execute this action (journaled, revision-fenced, policy-gated)"
+                  onClick={() => void approveAction(action.action_id)}
+                  className="rounded bg-indigo-700 px-2 py-0.5 text-indigo-100 hover:bg-indigo-600"
+                >
+                  Approve
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {provenanceCard && (

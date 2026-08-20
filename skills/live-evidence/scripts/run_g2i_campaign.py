@@ -107,7 +107,7 @@ cat $D/response.json
 
 class Server:
     def __init__(self, work: Path, purpose: str = "meeting", *, live_resolver: bool = True,
-                 policy: dict | None = None):
+                 policy: dict | None = None, memory_url: str = "http://127.0.0.1:9"):
         self.work = work
         self.port = free_port()
         self.url = f"http://127.0.0.1:{self.port}"
@@ -123,7 +123,7 @@ class Server:
             "LIVE_EVIDENCE_ASK_HANDLER": "fixture-handler",
             "LIVE_EVIDENCE_ASK_TIMEOUT": "8",
             "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "false",
-            "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
+            "MEMORY_SERVICE_URL": memory_url,
             "LIVE_EVIDENCE_SCILLM_KEY": (scillm_key() or "") if live_resolver else "",
         }
         env.pop("LIVE_EVIDENCE_PROFILE", None)

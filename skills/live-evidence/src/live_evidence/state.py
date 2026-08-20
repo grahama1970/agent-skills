@@ -141,6 +141,15 @@ class RuntimeState:
 
         return self._session.policy
 
+    def active_question(self) -> str | None:
+        return self._active_question_id
+
+    def active_question_revision(self) -> int:
+        return self._active_question_revision
+
+    def session_purpose(self):
+        return self._session.purpose
+
     def session_policy_digest(self) -> str:
         return self._session.policy_digest
 

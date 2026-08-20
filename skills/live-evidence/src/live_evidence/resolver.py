@@ -45,7 +45,9 @@ PROMPT_HEADER = (
     '{"ready_to_answer":bool,"blocking_reason":"none|truncated|awaiting_more_speech|'
     'needs_clarification|not_a_question","question_type":"research|code|leetcode|'
     'client|none","actionable":bool,"question_asked_yet":bool,'
-    '"canonical_question":str,"clarifying_questions":[str],"confidence":float}\n\n'
+    '"canonical_question":str,"clarifying_questions":[str],"confidence":float,'
+    '"action_candidates":[{"kind":"fact_check|remember_fact|open_artifact",'
+    '"payload":str,"summary":str}]}\n\n'
     "Rules:\n"
     "- A statement cut off mid-sentence is NOT complete; ready_to_answer=false, "
     "blocking_reason=truncated.\n"
@@ -59,7 +61,12 @@ PROMPT_HEADER = (
     "  with the interviewer before committing to an approach (input bounds,\n"
     "  character set, return contract, edge cases, scale). These are what the human\n"
     "  should ASK, not things you need. Leave empty only when not actionable.\n"
-    "- Do not answer the question. Only judge readiness and what to clarify.\n\n"
+    "- Do not answer the question. Only judge readiness and what to clarify.\n"
+    "- action_candidates (usually empty; at most 3): a checkable factual CLAIM\n"
+    "  someone stated (kind=fact_check, payload=the claim), an explicit DECISION\n"
+    "  or commitment worth remembering (kind=remember_fact, payload=the decision),\n"
+    "  or a NAMED file/artifact someone referenced (kind=open_artifact,\n"
+    "  payload=the artifact name). Only propose what was literally said.\n\n"
     "BUFFER:\n"
 )
 

@@ -60,6 +60,9 @@ class ReadinessVerdict(BaseModel):
         "needs_clarification",
         "not_a_question",
     ] = "not_a_question"
+    # (#1475) resolver-proposed action candidates; the resolver is the single
+    # ambient authority, so this is the ONLY proposal channel.
+    action_candidates: list[dict] = Field(default_factory=list)
     question_type: Literal["research", "code", "leetcode", "client", "none"] = "none"
     actionable: bool = False
     canonical_question: str = ""

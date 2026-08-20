@@ -583,6 +583,30 @@
         ]
       },
       "notes": "#1476: clause->source mapping excludes generated (fast-solver) sources so clauses cannot self-cite the generator; digests stamped at retrieval; verification recomputes from the filesystem on every call."
+    },
+    {
+      "name": "action-lane-live-rung",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-action-lane"
+      ],
+      "timeout_seconds": 600,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "resolver proposes evidence-bound action candidates: PASS",
+          "nothing executes without approval: PASS",
+          "remember_fact executes with independent memory readback: PASS",
+          "open_artifact resolves the cited file to a real path: PASS",
+          "stale candidate is fenced and journaled, not executed: PASS",
+          "formal_assessment proposes zero candidates (backend-journaled): PASS",
+          "action lane: PASS"
+        ]
+      },
+      "notes": "#1475: one action_candidate.v1 envelope, resolver-proposed (single ambient authority), human-approved execution with destination readbacks: live memory keyed readback, real artifact path, live Brave fact-check or honest unresolved."
     }
   ]
 }
