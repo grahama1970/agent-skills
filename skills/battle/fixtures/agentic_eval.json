@@ -1,0 +1,518 @@
+{
+  "version": 2,
+  "skill": "battle",
+  "trials": 2,
+  "eval_tier": "compliance",
+  "live": true,
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, focused contract suites, and an explicit fail-closed adaptive-lineage exact-chain receipt gate",
+  "claims": {
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, production staging route availability, production WebSocket TLS/auth/fanout, or visual Pixi correctness"
+  },
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, and independent JSON receipt readback",
+  "what_remains_unverified": "passing battle-004 exact-byte live adaptive-lineage recovered proof chain (#1336), external staging authority bundle (#1149), and browser visual Pixi verification",
+  "capability_claims": [
+    {
+      "id": "battle.authorization.fail_closed",
+      "description": "Battle rejects mutated target/action/runtime/expiry/probe authorization before execution",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.local_docker.reactive_round",
+      "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "battle.red_judge_blue.visibility",
+      "description": "Red observation is unconfirmed until Judge #1, proactive Blue cannot see private Red findings, and reactive Blue receives only Judge-confirmed findings",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "battle.blue.functionality_tri_state",
+      "description": "Judge #2 distinguishes exploit blocking from functionality preservation before Blue success is awarded",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "battle.scorekeeper.judge_authority",
+      "description": "Scorekeeper uses Judge receipts, not Blue self-claims, as the scoring authority",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.adaptive_lineage.contracts",
+      "description": "Adaptive lineage contract tests reject slot mutation, replay mismatch, invalid parent/child lineage, and reducer drift",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.adaptive_lineage.live_exact_chain",
+      "description": "battle-004 fresh or recovered exact-byte Red/Blue adaptive-lineage campaign binds campaign, artifact-integrity, and backend-verification receipts",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.memory.lineage_contracts",
+      "description": "Adaptive memory selection, ablation, and evidence contracts prevent Red/Blue lineage regressions",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.transport.same_run_pixi",
+      "description": "Same-run transport emits ordered HTTP/SSE/WebSocket payloads and frontend reducers reject gaps/malformed events",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.pause_resume.fail_closed",
+      "description": "Battle live transport fails closed on bad Last-Event-ID resume inputs",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.staging.readiness_boundary",
+      "description": "Production readiness does not pass without required local and external staging receipts",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "authorization.preflight",
+      "claim_id": "battle.authorization.fail_closed",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "failure_modes": [
+        "mutated or stale authorization reaches execution"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "digital_twin.local_docker",
+      "claim_id": "battle.local_docker.reactive_round",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "repair runs outside isolated target",
+        "round receipt omits Docker-local proof boundary"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "red_judge_blue.visibility",
+      "claim_id": "battle.red_judge_blue.visibility",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "proactive Blue sees private Red findings",
+        "reactive Blue starts before Judge #1"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "blue.functionality_tri_state",
+      "claim_id": "battle.blue.functionality_tri_state",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "fake defense accepted without functionality preservation"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "scorekeeper.judge_authority",
+      "claim_id": "battle.scorekeeper.judge_authority",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "failure_modes": [
+        "Blue advisory fields become score authority"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.contracts",
+      "claim_id": "battle.adaptive_lineage.contracts",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "slot mutation accepted",
+        "Judge replay mismatch accepted",
+        "invalid lineage IDs accepted"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.live_exact_chain",
+      "claim_id": "battle.adaptive_lineage.live_exact_chain",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "failure_modes": [
+        "recovered/fresh live campaign receipts are not bound to GOAL_ADAPTIVE_LINEAGE.md",
+        "mutated live campaign input is accepted"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.lineage_contracts",
+      "claim_id": "battle.memory.lineage_contracts",
+      "seam_type": "persistent state/database/index",
+      "criticality": "critical",
+      "failure_modes": [
+        "memory-selected evidence is not bound into lineage",
+        "ablation no longer detects missing memory effect"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "transport.same_run_pixi",
+      "claim_id": "battle.transport.same_run_pixi",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "failure_modes": [
+        "same-run Arena-to-Pixi events are unordered or malformed",
+        "frontend reducer accepts malformed payloads"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "transport.pause_resume",
+      "claim_id": "battle.pause_resume.fail_closed",
+      "seam_type": "restart/resume/idempotency",
+      "criticality": "critical",
+      "failure_modes": [
+        "bad Last-Event-ID replay is accepted",
+        "acknowledged events replay during resume"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "deployment.staging_readiness",
+      "claim_id": "battle.staging.readiness_boundary",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "failure_modes": [
+        "production readiness passes without route/auth/rollback/teardown receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "authorization-fail-closed-sampling",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.authorization.fail_closed"
+      ],
+      "seams": [
+        "authorization.preflight"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py authorization-sampling --samples 50 --seed $RANDOM --summary /tmp/battle-agentic-evals/authorization-fail-closed-sampling.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=authorization-fail-closed-sampling"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/authorization-fail-closed-sampling.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 500
+          },
+          {
+            "path": "/tmp/battle-agentic-evals/authorization-fail-closed-sampling.json",
+            "json_pointer": "/samples",
+            "equals": 50
+          }
+        ]
+      }
+    },
+    {
+      "name": "reactive-round-local-docker",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "battle.local_docker.reactive_round",
+        "battle.red_judge_blue.visibility",
+        "battle.blue.functionality_tri_state"
+      ],
+      "seams": [
+        "digital_twin.local_docker",
+        "red_judge_blue.visibility",
+        "blue.functionality_tri_state"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py reactive-round --summary /tmp/battle-agentic-evals/reactive-round-local-docker.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=reactive-round-local-docker"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/reactive-round-local-docker.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 1000
+          }
+        ]
+      }
+    },
+    {
+      "name": "scorekeeper-rejects-blue-self-claim-authority",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.scorekeeper.judge_authority"
+      ],
+      "seams": [
+        "scorekeeper.judge_authority"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py scorekeeper-adversarial --summary /tmp/battle-agentic-evals/scorekeeper-rejects-blue-self-claim-authority.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=scorekeeper-adversarial-self-claim"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/scorekeeper-rejects-blue-self-claim-authority.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "adaptive-lineage-contract-regressions",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.contracts"
+      ],
+      "seams": [
+        "adaptive_lineage.contracts"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py adaptive-lineage-contracts --summary /tmp/battle-agentic-evals/adaptive-lineage-contract-regressions.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=adaptive-lineage-contracts"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/adaptive-lineage-contract-regressions.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "adaptive-lineage-live-exact-chain",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.live_exact_chain"
+      ],
+      "seams": [
+        "adaptive_lineage.live_exact_chain"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": [
+        "ADAPTIVE_LINEAGE_LIVE_EXACT_CHAIN_BLOCKED"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py adaptive-lineage-live-exact-chain --summary /tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=adaptive-lineage-live-exact-chain"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "memory-lineage-contract-regressions",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.memory.lineage_contracts"
+      ],
+      "seams": [
+        "memory.lineage_contracts"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py memory-lineage-contracts --summary /tmp/battle-agentic-evals/memory-lineage-contract-regressions.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=memory-lineage-contracts"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/memory-lineage-contract-regressions.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "transport-pixi-pause-resume-safety",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.transport.same_run_pixi",
+        "battle.pause_resume.fail_closed"
+      ],
+      "seams": [
+        "transport.same_run_pixi",
+        "transport.pause_resume"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py transport --summary /tmp/battle-agentic-evals/transport-pixi-pause-resume-safety.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=transport-pixi-pause-resume"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/transport-pixi-pause-resume-safety.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "production-readiness-missing-receipts-fail-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.staging.readiness_boundary"
+      ],
+      "seams": [
+        "deployment.staging_readiness"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py production-fail-closed --summary /tmp/battle-agentic-evals/production-readiness-missing-receipts-fail-closed.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=production-readiness-fail-closed"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/production-readiness-missing-receipts-fail-closed.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -690,6 +690,21 @@ def _request_specimen(
     return specimen
 
 
+def _spawn_block_reason(manifest: dict[str, Any]) -> str:
+    teams = manifest.get("teams") if isinstance(manifest.get("teams"), list) else []
+    for item in teams:
+        if not isinstance(item, dict) or item.get("team") != "red":
+            continue
+        if item.get("error"):
+            return str(item["error"])
+        materialized = item.get("materialized_artifact")
+        if not isinstance(materialized, dict):
+            materialized = item.get("materialized")
+        if isinstance(materialized, dict) and materialized.get("reason"):
+            return str(materialized["reason"])
+    return "red_artifact_not_materialized"
+
+
 class RecordedSpecimenProvider:
     """Deterministic provider that replays specimens recorded from fixtures.
 
@@ -990,9 +1005,37 @@ class LiveTauSpecimenProvider:
             manifest = json.loads(Path(spawn_manifest_path).read_text(encoding="utf-8"))
             red_entries = alb._materialized_entries(manifest, "red")
             if not red_entries:
-                raise RuntimeError(
-                    f"Tau spawn for {stage} produced no Red materialized artifact"
-                )
+                if child:
+                    break
+                reason = _spawn_block_reason(manifest)
+                specimen = {
+                    "specimen_id": stage,
+                    "exploit_py": "",
+                    "source_sha256": _sha256_text(""),
+                    "mutation_operator": operator,
+                    "technique_delta": f"{operator} materialization blocked: {reason}",
+                    "parent_evidence_packet_ref": parent_state.get("evidence_packet_ref")
+                    or self._evidence_packet_ref(parent_id or "G0"),
+                    "judge_outcome": {
+                        "vulnerable_original_confirmed": False,
+                        "patched_bypass": False,
+                        "duration_seconds": 0.0,
+                    },
+                    "judge_attempts": 0,
+                    "operator_retries": attempt,
+                    "materialization_status": "BLOCKED",
+                    "materialization_blocker": reason,
+                }
+                if stage == "G2":
+                    specimen["inputs"] = self._g2_bindings(context=context)
+                self._materialized[stage] = {
+                    "entry": {},
+                    "subagent_receipt": None,
+                    "manifest_path": str(spawn_manifest_path),
+                    "specimen": specimen,
+                    "evidence_packet_ref": self._evidence_packet_ref(stage),
+                }
+                return specimen
             child = red_entries[-1]
             exploit_py, source_sha256, _declared_op, declared_delta = self._extract_red(child)
 
