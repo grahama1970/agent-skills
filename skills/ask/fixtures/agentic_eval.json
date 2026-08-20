@@ -1375,6 +1375,78 @@
         ]
       },
       "notes": "Pins the flakiness policy (webgpt review 2026-08-19): a declared external blocker on one of two trials is pass-with-flake (surfaced, not punished); ONLY infra-blocked trials is BLOCKED never PASS; an undeclared failure signature is always a regression FAIL -- unknown errors are never flake-eligible."
+    },
+    {
+      "name": "watchdog-targeted-dispatch-leases-only-the-named-issue",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "RT=$(mktemp -d) && mkdir -p $RT/bin && cat > $RT/bin/gh <<'EOF'\n#!/bin/bash\nif [[ \"$*\" == *\"issue list\"* && \"$*\" == *\"agent-work\"* ]]; then\n  echo '[{\"number\":101,\"title\":\"unrelated older ticket\",\"body\":\"<!-- ticket-skill\\ntype: bug\\ntarget: skills/other\\nroute: backend_python_or_skill_runtime\\nagent: coder\\n-->\",\"labels\":[{\"name\":\"agent-work\"},{\"name\":\"route:backend_python_or_skill_runtime\"}],\"url\":\"https://example.invalid/101\"},{\"number\":202,\"title\":\"eval regression: target-me\",\"body\":\"<!-- ticket-skill\\ntype: bug\\ntarget: skills/ask\\nroute: backend_python_or_skill_runtime\\nagent: coder\\n-->\",\"labels\":[{\"name\":\"agent-work\"},{\"name\":\"route:backend_python_or_skill_runtime\"}],\"url\":\"https://example.invalid/202\"}]'\nelif [[ \"$*\" == *\"issue list\"* ]]; then echo \"[]\"; else echo \"{}\"; fi\nexit 0\nEOF\nchmod +x $RT/bin/gh && export PATH=$RT/bin:$PATH && export PROJECT_WATCHDOG_STATE_ROOT=$RT/state && cd ../../project-watchdog && out=$(./run.sh tick --project agent-skills --issue 202 2>&1); echo \"$out\" | grep -q '\"issue_number\": 202' || { echo TARGETED_ISSUE_NOT_SELECTED; echo \"$out\" | tail -5; exit 1; }; echo \"$out\" | grep -q '\"issue_number\": 101' && { echo UNRELATED_ISSUE_LEASED; exit 1; }; out2=$(./run.sh tick --project agent-skills --issue 999 2>&1); echo \"$out2\" | grep -q 'targeted_issue_not_routable' || { echo WRONG_NUMBER_NOT_REFUSED; exit 1; }; echo \"$out2\" | grep -qE '\"issue_number\": (101|202)' && { echo REFUSAL_STILL_LEASED_SOMETHING; exit 1; }; echo TARGETED_DISPATCH_LEASES_ONLY_THE_NAMED_ISSUE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TARGETED_DISPATCH_LEASES_ONLY_THE_NAMED_ISSUE"
+        ]
+      },
+      "notes": "Proof for agent-skills#1456: with a canned gh returning an older unrelated routable issue plus the targeted one, tick --issue selects ONLY the named issue; a wrong number is refused with targeted_issue_not_routable and leases nothing (closure-audit/attestation lanes are gated off in targeted mode). Fault-injected: fake gh on PATH, temp watchdog state root, dry-run tick."
+    },
+    {
+      "name": "eval-loop-dedupes-by-stable-case-identity",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && mkdir -p $RT/bin && printf '#!/bin/bash\\nif [[ \"$*\" == *\"in:body\"* ]]; then echo \\x27[{\"number\":77,\"body\":\"...eval-case-id: stable-add-two...\"}]\\x27; else echo \"[]\"; fi\\n' > $RT/bin/gh && chmod +x $RT/bin/gh && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\nfor i, name in enumerate(('old-name', 'new-name')):\n    json.dump({'cases': [{'name': name, 'case_id': 'stable-add-two', 'outcome': 'FAIL',\n                          'problems': ['x'], 'passed_trials': 0, 'trials': [{}]}]},\n              open(f'{RT}/r{i}.json', 'w'))\nEOF\nPATH=$RT/bin:$PATH uv run --project . python scripts/eval_ticket_loop.py --from-report $RT/r0.json --apply > $RT/o0.txt 2>&1; PATH=$RT/bin:$PATH uv run --project . python scripts/eval_ticket_loop.py --from-report $RT/r1.json --apply > $RT/o1.txt 2>&1; grep -q 'TICKET_EXISTS: #77' $RT/o0.txt && grep -q 'TICKET_EXISTS: #77' $RT/o1.txt && ! grep -q 'TICKET_FILED' $RT/o0.txt $RT/o1.txt && echo ONE_TICKET_FOR_BOTH_NAMES || { cat $RT/o0.txt $RT/o1.txt | tail -8; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_TICKET_FOR_BOTH_NAMES"
+        ]
+      },
+      "notes": "Proof for agent-skills#1457: two failing reports carrying the same case_id under DIFFERENT case names both resolve to open ticket #77 via the eval-case-id body marker; neither files a duplicate. Fault-injected fake gh; real eval-loop CLI."
+    },
+    {
+      "name": "eval-loop-atomic-ticketing-blocks-partial-dispatch",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && mkdir -p $RT/bin && printf '#!/bin/bash\\necho \"[]\"\\n' > $RT/bin/gh && chmod +x $RT/bin/gh && printf '#!/bin/bash\\nexit 1\\n' > $RT/failing-ticket.sh && chmod +x $RT/failing-ticket.sh && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\njson.dump({'cases': [{'name': 'case-a', 'outcome': 'FAIL', 'problems': ['x'],\n                      'passed_trials': 0, 'trials': [{}]},\n                     {'name': 'case-b', 'outcome': 'FAIL', 'problems': ['y'],\n                      'passed_trials': 0, 'trials': [{}]}]},\n          open(f'{RT}/r.json', 'w'))\nEOF\nPATH=$RT/bin:$PATH ASK_EVAL_TICKET_CMD=$RT/failing-ticket.sh uv run --project . python scripts/eval_ticket_loop.py --from-report $RT/r.json --apply --dispatch-fix > $RT/o.txt 2>&1; rc=$?; [ $rc -eq 4 ] && grep -q 'EVAL_LOOP_TICKETING_INCOMPLETE' $RT/o.txt && ! grep -q 'DISPATCH_FIX' $RT/o.txt && echo INCOMPLETE_TICKETING_BLOCKS_ALL_DISPATCH || { echo rc=$rc; tail -6 $RT/o.txt; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "INCOMPLETE_TICKETING_BLOCKS_ALL_DISPATCH"
+        ]
+      },
+      "notes": "Proof for agent-skills#1458: when the ticket CLI fails for FAIL cases, the iteration exits with the distinct code 4 and EVAL_LOOP_TICKETING_INCOMPLETE, and performs ZERO repair dispatch -- partial ticket coverage never masquerades as loop progress. Fault-injected failing ticket runner via ASK_EVAL_TICKET_CMD; real eval-loop CLI."
     }
   ],
   "capability_claims": [

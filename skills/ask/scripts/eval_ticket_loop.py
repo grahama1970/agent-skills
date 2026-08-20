@@ -42,20 +42,57 @@ def _ticket_title(case_name: str) -> str:
     return f"eval regression: {case_name}"
 
 
-def _open_ticket_exists(title: str) -> bool:
+def _case_identity(case: dict) -> str:
+    """Stable machine identity for dedupe (agent-skills#1457).
+
+    An explicit ``case_id`` in the fixture survives renames; the name is only
+    the fallback for cases that never declared one. The identity is stamped
+    into the ticket body as an ``eval-case-id:`` marker and dedupe matches on
+    THAT marker, so `old-name` and `new-name` reports with one identity keep
+    one open ticket.
+    """
+    return str(case.get("case_id") or case.get("name"))
+
+
+def _find_open_ticket(case: dict) -> int | None:
+    """Return the open ticket number for this case identity, else None."""
+    identity = _case_identity(case)
     proc = subprocess.run(
         ["gh", "issue", "list", "--repo", REPO, "--state", "open",
-         "--search", f'in:title "{title}"', "--json", "title"],
+         "--search", f'"eval-case-id: {identity}" in:body', "--json", "number,body"],
+        capture_output=True, text=True, timeout=60,
+    )
+    if proc.returncode == 0:
+        try:
+            for row in json.loads(proc.stdout or "[]"):
+                if f"eval-case-id: {identity}" in (row.get("body") or ""):
+                    return int(row["number"])
+        except (json.JSONDecodeError, KeyError, ValueError):
+            pass
+    # Back-compat: tickets filed before the identity marker dedupe by title.
+    title = _ticket_title(str(case.get("name")))
+    proc = subprocess.run(
+        ["gh", "issue", "list", "--repo", REPO, "--state", "open",
+         "--search", f'in:title "{title}"', "--json", "number,title"],
         capture_output=True, text=True, timeout=60,
     )
     if proc.returncode != 0:
         # Fail closed into filing: a dedupe check that cannot read GitHub must
         # not silently suppress a regression ticket.
-        return False
+        return None
     try:
-        return any(row.get("title") == title for row in json.loads(proc.stdout or "[]"))
-    except json.JSONDecodeError:
-        return False
+        for row in json.loads(proc.stdout or "[]"):
+            if row.get("title") == title:
+                return int(row["number"])
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return None
+
+
+def _issue_number_from_output(text: str) -> int | None:
+    import re
+    m = re.search(r"/issues/(\d+)", text or "")
+    return int(m.group(1)) if m else None
 
 
 def _tick(
@@ -91,13 +128,21 @@ def _tick(
         typer.echo(f"BLOCKED (no ticket -- external precondition): {c['name']}: "
                    f"{'; '.join(c.get('problems') or [])[:160]}")
     filed, deduped = [], []
+    ticket_numbers: dict[str, int] = {}
+    ticketing_incomplete: list[str] = []
+    ticket_runner = str(SKILLS_ROOT / "ticket" / "run.sh")
+    import os as _os
+    ticket_runner = _os.environ.get("ASK_EVAL_TICKET_CMD", ticket_runner)
     for c in failed:
         title = _ticket_title(c["name"])
-        if _open_ticket_exists(title):
+        existing = _find_open_ticket(c)
+        if existing:
             deduped.append(c["name"])
-            typer.echo(f"TICKET_EXISTS: {title}")
+            ticket_numbers[c["name"]] = existing
+            typer.echo(f"TICKET_EXISTS: #{existing} {title}")
             continue
         evidence = "; ".join((c.get("problems") or [])[:4])[:400] or "see report trials"
+        evidence += f" | eval-case-id: {_case_identity(c)}"
         rerun = (
             "cd skills/ask && python3 - <<'PYEOF'\n"
             "import json\n"
@@ -112,7 +157,7 @@ def _tick(
             "cd ../agentic-evals && ./run.sh run ../ask/fixtures/agentic_eval_live_subset.json "
             "--output /tmp/eval-regression-proof.json"
         )
-        cmd = [str(SKILLS_ROOT / "ticket" / "run.sh"), "bug", title,
+        cmd = [ticket_runner, "bug", title,
                "--target", "skills/ask",
                "--observed", f"agentic-eval case failed {c.get('passed_trials', 0)}"
                              f"/{len(c.get('trials') or [])} trials: {evidence}",
@@ -135,6 +180,18 @@ def _tick(
                    + ("" if ok else f"  (ticket cli exit {proc.returncode}: {proc.stderr[-160:]})"))
         if ok:
             filed.append(c["name"])
+            num = _issue_number_from_output(proc.stdout)
+            if num:
+                ticket_numbers[c["name"]] = num
+        elif apply:
+            ticketing_incomplete.append(c["name"])
+    # Atomic ticketing (agent-skills#1458): a FAIL case with neither an open
+    # ticket nor a successful filing has no repair unit. Dispatching for the
+    # others would let partial coverage masquerade as loop progress.
+    if apply and ticketing_incomplete:
+        typer.echo("EVAL_LOOP_TICKETING_INCOMPLETE: no dispatch this iteration; "
+                   "unticketed FAIL cases: " + ", ".join(ticketing_incomplete), err=True)
+        raise typer.Exit(4)
     if dispatch_fix and apply and (filed or deduped):
         # One bounded watchdog tick per outstanding ticket, SEQUENTIALLY:
         # each tick leases one issue, dispatches the creator-reviewer Tau DAG
@@ -143,12 +200,18 @@ def _tick(
         import os
         env = dict(os.environ)
         env["PROJECT_WATCHDOG_REPAIR_CREATOR"] = repair_creator
-        for i, _name in enumerate([*filed, *deduped], 1):
+        for i, name in enumerate([*filed, *deduped], 1):
+            issue = ticket_numbers.get(name)
             typer.echo(f"DISPATCH_FIX tick {i}/{len(filed) + len(deduped)} "
-                       f"(creator={repair_creator})")
+                       f"(creator={repair_creator}, issue={issue or 'unknown'})")
+            tick_cmd = [str(SKILLS_ROOT / "project-watchdog" / "run.sh"),
+                        "tick", "--apply", "--project", "agent-skills", "--max-tickets", "1"]
+            if issue:
+                # Targeted repair (agent-skills#1456): this tick may lease ONLY
+                # the ticket for this iteration's regression, or refuse.
+                tick_cmd += ["--issue", str(issue)]
             proc = subprocess.run(
-                [str(SKILLS_ROOT / "project-watchdog" / "run.sh"),
-                 "tick", "--apply", "--project", "agent-skills", "--max-tickets", "1"],
+                tick_cmd,
                 capture_output=True, text=True, env=env,
                 cwd=SKILLS_ROOT / "project-watchdog",
             )

@@ -60,11 +60,17 @@ def tick_command(
     apply: bool = typer.Option(False, "--apply", help="Apply mutations instead of dry-run scan."),
     project: str = typer.Option("tau", "--project", help="Registered project id."),
     max_tickets: int = typer.Option(1, "--max-tickets", min=1, help="Maximum issues to handle."),
+    issue: int = typer.Option(
+        0, "--issue",
+        help="Target EXACTLY this issue number: lease and dispatch only it, or "
+             "refuse without leasing anything else (eval-loop targeted repair, "
+             "agent-skills#1456)."),
     verbose: bool = typer.Option(False, "--verbose", help="Log at DEBUG level to stderr."),
 ) -> None:
     """Scan and handle at most one bounded project ticket."""
     _startup(verbose)
-    raise typer.Exit(commands.tick(apply=apply, project_id=project, max_tickets=max_tickets))
+    raise typer.Exit(commands.tick(apply=apply, project_id=project, max_tickets=max_tickets,
+                                   only_issue=issue or None))
 
 
 @app.command("activate")

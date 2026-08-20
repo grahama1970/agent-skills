@@ -127,7 +127,7 @@ def _reclaim_stale_leases(
     return reclaimed, failures
 
 
-def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
+def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | None = None) -> int:
     """Run one bounded watchdog tick under the single-tick lock."""
     run_id = f"project-watchdog-{timestamp()}"
     receipt_dir = config.receipt_root() / run_id
@@ -176,7 +176,8 @@ def tick(*, apply: bool, project_id: str, max_tickets: int) -> int:
         return finish(run_id, receipt_dir, receipt, 1, persist=False)
     try:
         return _tick_locked(
-            run_id, receipt_dir, apply=apply, project_id=project_id, max_tickets=max_tickets
+            run_id, receipt_dir, apply=apply, project_id=project_id, max_tickets=max_tickets,
+            only_issue=only_issue,
         )
     finally:
         release_lock()
@@ -344,6 +345,7 @@ def _tick_locked(
     apply: bool,
     project_id: str,
     max_tickets: int,
+    only_issue: int | None = None,
 ) -> int:
     receipt = base_receipt(run_id, receipt_dir, apply)
     state = load_json(config.state_path())
@@ -423,6 +425,19 @@ def _tick_locked(
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
             logger.error("issue scan failed for project {}: {}", cid, exc)
             continue
+        if only_issue is not None:
+            # Targeted repair (agent-skills#1456): lease ONLY the named issue.
+            # If it is not routable right now, refuse without leasing anything
+            # else -- spending this tick on an unrelated ticket would let the
+            # eval-loop believe its regression got repair capacity.
+            found = [i for i in found if int(i["number"]) == int(only_issue)]
+            if not found:
+                skipped.append({
+                    "project_id": cid,
+                    "reason": "targeted_issue_not_routable",
+                    "targeted_issue": int(only_issue),
+                })
+                continue
         if not found:
             skipped.append(
                 {
@@ -464,6 +479,16 @@ def _tick_locked(
     # recent closure needs reviewing: closing a ticket is a claim that the work
     # is done, and until now nothing verified that claim. Repairs come first --
     # an audit must never delay a ticket that is actually waiting.
+    if project is None and only_issue is not None:
+        # Targeted mode: this tick exists for one named issue. When it is not
+        # dispatchable, refuse -- do NOT spend the tick on closure audits or
+        # attestation, which would let the caller believe its regression got
+        # repair capacity (agent-skills#1456).
+        receipt.update({"ok": True, "status": "SKIPPED",
+                        "stop_reason": "targeted_issue_not_routable",
+                        "targeted_issue": int(only_issue)})
+        return finish(run_id, receipt_dir, receipt, 0)
+
     if project is None:
         audited = _audit_one_closure(run_id, receipt_dir, state, receipt, apply=apply)
         if audited is not None:
