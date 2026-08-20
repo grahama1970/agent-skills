@@ -23,6 +23,8 @@ import {
   invalidRequestStatusPath,
   isRequestAlreadyClaimed,
   resolveWorkspacePath as resolveContainedWorkspacePath,
+  resolveArtifactPath,
+  runtimeArtifactRoot,
   sha256,
   usesSharedRequestOwner,
   validateRequest,
@@ -252,7 +254,22 @@ function requestErrorStatusPath(requestFilePath: string, request?: BridgeRequest
       ? request.workspace
       : path.dirname(path.dirname(path.dirname(requestFilePath)));
   try {
-    return resolveContainedWorkspacePath(workspacePath, request.output, 'output');
+    const { resolved, location } = resolveArtifactPath(workspacePath, request.output, 'output');
+    if (location === 'runtime') {
+      return resolved;
+    }
+    // #1440: an error status must never land at an arbitrary workspace path --
+    // that would create a bridge-authored file the repo could stage. Workspace
+    // outputs only get the error if they are inside the bridge dir itself;
+    // anything else routes to the shared bridge status.
+    const relativeToBridge = path.relative(bridgeDir, resolved);
+    if (!relativeToBridge.startsWith('..') && !path.isAbsolute(relativeToBridge)) {
+      return resolved;
+    }
+    channel.appendLine(
+      `Debugger bridge routed an error status away from unprotected workspace path ${request.output} (#1440).`,
+    );
+    return invalidRequestStatusPath(sharedStatusPath);
   } catch (error) {
     channel.appendLine(`Debugger bridge could not resolve request output for error status: ${String(error)}`);
     return invalidRequestStatusPath(sharedStatusPath);
@@ -272,7 +289,7 @@ async function processBridgeRequest(
   const requestId = request.id as string;
   const requestHash = request.requestHash as string;
   const folder = resolveWorkspaceFolder(request.workspace);
-  const outputPath = resolveWorkspacePath(folder, request.output ?? '.vscode/debugger-bridge/status.json');
+  const outputPath = await resolveRuntimeOutputPath(folder, request);
   const authority = buildBridgeAuthority(folder);
   validateBridgeAuthority(request, authority);
   const artifactLocations: BridgeArtifactLocations = {
@@ -677,7 +694,10 @@ function upsertSessionState(
     workspace: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
     authority: bridgeAuthorityForCurrentWorkspace(),
     artifactLocations: {
-      sessionEventsPath: `.vscode/debugger-bridge/session-events.${safeSessionId(session.id)}.json`,
+      sessionEventsPath: path.join(
+        runtimeArtifactRoot(vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? ''),
+        `session-events.${safeSessionId(session.id)}.json`,
+      ),
     },
     runtime: patch.runtime ?? prior?.runtime,
     status,
@@ -721,10 +741,10 @@ function recordSessionEvent(state: BridgeSessionState, request: BridgeRequest | 
 
 async function writeSessionEvents(folder: vscode.WorkspaceFolder, sessionId: string) {
   const events = sessionEvents.get(sessionId) ?? [];
-  const eventPath = resolveContainedWorkspacePath(
-    folder.uri.fsPath,
-    `.vscode/debugger-bridge/session-events.${safeSessionId(sessionId)}.json`,
-    'session events',
+  // Session events carry paused runtime detail: keep them out of the worktree (#1440).
+  const eventPath = path.join(
+    runtimeArtifactRoot(folder.uri.fsPath),
+    `session-events.${safeSessionId(sessionId)}.json`,
   );
   await writeJsonFile(eventPath, events);
 }
@@ -1367,6 +1387,45 @@ function resolveWorkspaceFolder(workspacePath?: string) {
 
 function resolveWorkspacePath(folder: vscode.WorkspaceFolder, filePath: string) {
   return resolveContainedWorkspacePath(folder.uri.fsPath, filePath, 'output');
+}
+
+// #1440: runtime-value-bearing status defaults OUTSIDE the git worktree, under
+// $XDG_RUNTIME_DIR/agent-skills-debugger/<workspace-hash>/. An explicit
+// request.output inside the workspace is "workspace-local mode" and is refused
+// unless that path is git-ignored (cannot be accidentally staged) or the request
+// carries an audited allowWorkspaceArtifacts override.
+async function resolveRuntimeOutputPath(
+  folder: vscode.WorkspaceFolder,
+  request: Record<string, unknown>,
+): Promise<string> {
+  const requested = typeof request.output === 'string' ? request.output : undefined;
+  if (!requested) {
+    return path.join(runtimeArtifactRoot(folder.uri.fsPath), 'status.json');
+  }
+  const { resolved, location } = resolveArtifactPath(folder.uri.fsPath, requested, 'output');
+  if (location === 'workspace' && request.allowWorkspaceArtifacts !== true) {
+    const ignored = await isGitIgnored(folder.uri.fsPath, resolved);
+    if (!ignored) {
+      throw new Error(
+        `Debugger bridge refuses workspace-local artifacts at ${requested}: the path is not ` +
+        `git-ignored, so paused runtime values could be staged/committed. Use the default ` +
+        `runtime-dir storage, git-ignore the path, or set allowWorkspaceArtifacts: true (audited).`,
+      );
+    }
+  }
+  return resolved;
+}
+
+async function isGitIgnored(workspacePath: string, candidate: string): Promise<boolean> {
+  const { execFile } = await import('node:child_process');
+  return await new Promise<boolean>((resolve) => {
+    execFile(
+      'git',
+      ['-C', workspacePath, 'check-ignore', '-q', candidate],
+      { timeout: 10_000 },
+      (error) => resolve(error === null),
+    );
+  });
 }
 
 async function writeStatus(filePath: string, body: unknown) {

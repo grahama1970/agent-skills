@@ -3,10 +3,10 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "Runtime-artifact safety guards (#1440): before a debugger writes or reads a runtime artifact it must (a) reject a path that escapes the allowed root even when the lexical string looks contained (symlink / .. traversal resolved via realpath), and (b) use an owner(PID)+TTL runtime lock that recovers a crashed writer's stale lock on evidence but never steals an ACTIVE lock. These are the deterministic security primitives; the default $XDG_RUNTIME_DIR storage relocation and git-worktree-clean guarantee are a separate bridge-protocol increment.",
+  "proof_scope": "Runtime-artifact safety (#1440): (a) containment -- reject a path that escapes the allowed root even when the lexical string looks contained (symlink / .. traversal); (b) an owner(PID)+TTL runtime lock that recovers a crashed writer's stale lock on evidence but never steals an ACTIVE lock; and (c) storage relocation -- a default live bridge run writes its runtime-value-bearing status OUTSIDE the git worktree (under $XDG_RUNTIME_DIR/agent-skills-debugger/<workspace-hash>/) leaving zero new debugger-bridge worktree entries, and a request that targets a NON-git-ignored workspace path is refused by name with no file created there. Live cases are capability-gated on an open, trusted VS Code workspace with the bridge.",
   "claims": {
-    "proves": "debugger_runtime_guard.py rejects a symlink-escape and a ..-traversal path (realpath outside root) while accepting a genuinely contained path; and its runtime lock refuses an active lock (owner alive, TTL unexpired) but recovers a stale lock whose owner PID is dead or whose TTL has expired",
-    "does_not_prove": "that the live VS Code bridge already stores its artifacts under $XDG_RUNTIME_DIR, or that a real debugging run leaves the target git worktree clean end-to-end"
+    "proves": "debugger_runtime_guard.py enforces realpath containment and evidence-based lock recovery; and the live bridge stores paused-value status under the OS runtime dir by default (worktree untouched) while refusing unprotected workspace-local artifact paths (no leak file, named refusal)",
+    "does_not_prove": "storage behavior on Remote SSH hosts, or redaction quality of captured values (secret-redaction.json owns capture-side redaction)"
   },
   "cases": [
     {
@@ -23,7 +23,9 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 1,
-        "stderr_contains": ["path escape"]
+        "stderr_contains": [
+          "path escape"
+        ]
       }
     },
     {
@@ -40,7 +42,9 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 1,
-        "stderr_contains": ["path escape"]
+        "stderr_contains": [
+          "path escape"
+        ]
       }
     },
     {
@@ -57,7 +61,9 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["contained:"]
+        "stdout_contains": [
+          "contained:"
+        ]
       }
     },
     {
@@ -74,7 +80,9 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 1,
-        "stderr_contains": ["lock held"]
+        "stderr_contains": [
+          "lock held"
+        ]
       }
     },
     {
@@ -91,7 +99,58 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["recovered stale lock", "not alive"]
+        "stdout_contains": [
+          "recovered stale lock",
+          "not alive"
+        ]
+      }
+    },
+    {
+      "name": "default-storage-leaves-worktree-clean",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A default live bridge stop writes its paused-value status under $XDG_RUNTIME_DIR (not the worktree): the frame and locals are read back from the runtime dir, and git sees zero new debugger-bridge entries.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; BEFORE=$(git -C \"$WS\" status --porcelain | grep -c debugger-bridge || true); OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action restart --launch-config-name 'Debugger walkthrough ($debugger)' --break \"$WS/skills/debugger/scenarios/variable_state/main.py:20\" --local first --stop-timeout-ms 30000 --expect-extension-host-kind ui | tail -1); echo \"status-path: $OUT\"; case \"$OUT\" in ${XDG_RUNTIME_DIR:-/tmp}/agent-skills-debugger/*) echo OUT-IS-RUNTIME-DIR;; *) echo OUT-NOT-RUNTIME-DIR; exit 1;; esac; for i in $(seq 1 75); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; echo \"final-status=$S\"; [ \"$S\" = stopped ] || { echo BRIDGE_BLOCKED; exit 0; }; python3 -c \"import json;d=json.load(open('$OUT'));ss=d['stoppedState'];print('locals:',ss['locals'])\"; AFTER=$(git -C \"$WS\" status --porcelain | grep -c debugger-bridge || true); [ \"$BEFORE\" = \"$AFTER\" ] && echo WORKTREE-CLEAN || { echo WORKTREE-DIRTIED; exit 1; }"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OUT-IS-RUNTIME-DIR",
+          "final-status=stopped",
+          "locals:",
+          "WORKTREE-CLEAN"
+        ]
+      }
+    },
+    {
+      "name": "refuses-unprotected-workspace-output",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A request whose output targets a NON-git-ignored workspace path is refused: no file is created there, and the refusal is named in a bridge-dir status.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; LEAK=\"$WS/docs/debugger-status-leak-eval.json\"; python3 - \"$WS\" <<'PYEOF'\nimport json, hashlib, sys, uuid\nfrom datetime import datetime, timezone\nfrom pathlib import Path\nws = Path(sys.argv[1])\nreq = {\n  \"id\": f\"debugger-{uuid.uuid4()}\", \"action\": \"restart\", \"workspace\": str(ws),\n  \"launchConfigName\": \"Debugger walkthrough ($debugger)\",\n  \"breakpoints\": [{\"file\": str(ws / \"skills/debugger/scenarios/variable_state/main.py\"), \"line\": 20}],\n  \"removeBreakpoints\": [], \"locals\": [\"first\"], \"watches\": [], \"allowWatchEval\": False,\n  \"output\": \"docs/debugger-status-leak-eval.json\",\n  \"stopTimeoutMs\": 20000, \"replaceBreakpoints\": True, \"saveBeforeStart\": False,\n  \"createdAt\": datetime.now(timezone.utc).isoformat(), \"maxRequestAgeMs\": 120000,\n  \"expectedExtensionHostKind\": \"ui\",\n}\npayload = json.dumps({k: v for k, v in req.items() if k != \"requestHash\"}, sort_keys=True, separators=(\",\", \":\"))\nreq[\"requestHash\"] = hashlib.sha256(payload.encode()).hexdigest()\n(ws / \".vscode/debugger-bridge/request.json\").write_text(json.dumps(req, indent=2, sort_keys=True) + \"\\n\")\nPYEOF\nfound=''; for i in $(seq 1 20); do sleep 2; if grep -rls 'refuses workspace-local' \"$WS/.vscode/debugger-bridge\" >/dev/null 2>&1; then found=yes; break; fi; done; [ -f \"$LEAK\" ] && { echo LEAK-FILE-EXISTS; exit 1; }; echo NO-LEAK-FILE; [ -n \"$found\" ] && echo REFUSAL-NAMED || { echo BRIDGE_BLOCKED; exit 0; }"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NO-LEAK-FILE",
+          "REFUSAL-NAMED"
+        ]
       }
     },
     {
@@ -108,7 +167,10 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["recovered stale lock", "expired"]
+        "stdout_contains": [
+          "recovered stale lock",
+          "expired"
+        ]
       }
     }
   ]

@@ -1,5 +1,6 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 export type BridgeBreakpoint = {
@@ -645,6 +646,31 @@ function pruneProcessedIds(processed: Record<string, number>) {
 export function resolveWorkspacePath(workspacePath: string, filePath: string, label: string) {
   const resolved = path.isAbsolute(filePath) ? filePath : path.join(workspacePath, filePath);
   return assertWorkspacePath(workspacePath, resolved, label);
+}
+
+// Runtime-value-bearing artifacts (status/session/events) default OUTSIDE the
+// target repository (#1440): an OS runtime dir keyed by the workspace path hash,
+// so a default debugging run leaves no paused-value artifact under the git
+// worktree. Only the request trigger stays in the workspace.
+export function runtimeArtifactRoot(workspacePath: string) {
+  const base = process.env.XDG_RUNTIME_DIR && process.env.XDG_RUNTIME_DIR.trim()
+    ? process.env.XDG_RUNTIME_DIR
+    : os.tmpdir();
+  const key = crypto.createHash('sha256').update(path.resolve(workspacePath)).digest('hex').slice(0, 16);
+  return path.join(base, 'agent-skills-debugger', key);
+}
+
+// Resolve an artifact path that may live either in the runtime root (default)
+// or inside the workspace (explicit workspace-local mode). Anything else is a
+// containment violation.
+export function resolveArtifactPath(workspacePath: string, filePath: string, label: string) {
+  const resolved = path.resolve(path.isAbsolute(filePath) ? filePath : path.join(workspacePath, filePath));
+  const runtimeRoot = path.resolve(runtimeArtifactRoot(workspacePath));
+  const runtimeRelative = path.relative(runtimeRoot, resolved);
+  if (!runtimeRelative.startsWith('..') && !path.isAbsolute(runtimeRelative)) {
+    return { resolved, location: 'runtime' as const };
+  }
+  return { resolved: assertWorkspacePath(workspacePath, resolved, label), location: 'workspace' as const };
 }
 
 export function assertWorkspacePath(workspacePath: string, candidatePath: string, label: string) {

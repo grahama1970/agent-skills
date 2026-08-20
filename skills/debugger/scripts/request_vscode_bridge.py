@@ -85,6 +85,14 @@ def main(
         bool,
         typer.Option("--allow-watch-eval", help="Allow VS Code debug adapter watch expression evaluation."),
     ] = False,
+    workspace_artifacts: Annotated[
+        bool,
+        typer.Option(
+            "--workspace-artifacts",
+            help="Write status under .vscode/debugger-bridge in the workspace (legacy; the "
+                 "bridge requires the path to be git-ignored). Default: $XDG_RUNTIME_DIR.",
+        ),
+    ] = False,
     stop_timeout_ms: Annotated[int, typer.Option("--stop-timeout-ms", help="Stop wait timeout.")] = 30000,
     replace_breakpoints: Annotated[
         bool, typer.Option("--replace-breakpoints/--keep-breakpoints", help="Replace existing breakpoints in requested files.")
@@ -129,7 +137,19 @@ def main(
     request_path = bridge_dir / "request.json"
     generated_request_id = request_id or f"debugger-{uuid.uuid4()}"
     status_name = f"status.{safe_file_name(generated_request_id)}.json"
-    status_path = bridge_dir / status_name
+    # #1440: runtime-value-bearing status lives OUTSIDE the target repo by
+    # default -- $XDG_RUNTIME_DIR/agent-skills-debugger/<workspace-hash>/ --
+    # matching the extension's runtimeArtifactRoot derivation. Only the
+    # request.json trigger stays in the workspace. --workspace-artifacts opts
+    # into the legacy in-repo location (the bridge then requires it git-ignored).
+    if workspace_artifacts:
+        status_path = bridge_dir / status_name
+    else:
+        runtime_base = os.environ.get("XDG_RUNTIME_DIR", "").strip() or tempfile.gettempdir()
+        key = hashlib.sha256(str(workspace.resolve()).encode()).hexdigest()[:16]
+        runtime_dir = Path(runtime_base) / "agent-skills-debugger" / key
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        status_path = runtime_dir / status_name
     request = {
         "id": generated_request_id,
         "action": action,
@@ -141,7 +161,7 @@ def main(
         "locals": local or [],
         "watches": watch or [],
         "allowWatchEval": allow_watch_eval,
-        "output": f".vscode/debugger-bridge/{status_name}",
+        "output": str(status_path),
         "stopTimeoutMs": stop_timeout_ms,
         "replaceBreakpoints": replace_breakpoints,
         "saveBeforeStart": save_before_start,
@@ -169,7 +189,7 @@ def main(
         indent=2,
         sort_keys=True,
     ) + "\n"
-    fd, temp_name = tempfile.mkstemp(prefix="status.", suffix=".json.tmp", dir=bridge_dir)
+    fd, temp_name = tempfile.mkstemp(prefix="status.", suffix=".json.tmp", dir=status_path.parent)
     with os.fdopen(fd, "w", encoding="utf-8") as handle:
         handle.write(status)
         handle.flush()
