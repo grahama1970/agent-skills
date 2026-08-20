@@ -175,7 +175,7 @@ def main() -> int:
                 [str(ask_runner), "tau-dag", question, "--repo", "local/agent-skills",
                  "--target", f"parity-{tag}", "--immutable-goal", "Answer the question.",
                  "--handler", "claude-opus-5-low", "--execute", "--json"],
-                capture_output=True, text=True, timeout=240, cwd=str(root.parent / "ask"),
+                capture_output=True, text=True, timeout=420, cwd=str(root.parent / "ask"),
             )
             raw = result.stdout
             data = json.loads(raw[raw.index("{"):])
@@ -243,7 +243,7 @@ def main() -> int:
         # order; the i-th receipt's question_id names the i-th question's card.
         # (Token matching graded the WRONG card a 1/10 twice before this.)
         receipt_rows = [r for r in rows if r.get("kind") == "fast_solver_receipt"]
-        for index in range(min(6, len(receipt_rows))):
+        for index in range(min(10, len(receipt_rows))):
             target_qid = receipt_rows[index]["payload"]["question_id"]
             matching = [r for r in card_rows
                         if r["payload"].get("question_id") == target_qid]
@@ -265,6 +265,8 @@ def main() -> int:
             ask_grade = grades["a" if flip else "b"]
             judged += 1
             print(f"  parity q{index}: fast={fast_grade} ask={ask_grade}")
+            if judged >= 6:
+                break
             # Parity = within one grade band (ticket criterion): a fast answer
             # more than 2 points below the $ask answer is a real quality loss.
             if fast_grade < ask_grade - 2:

@@ -123,12 +123,24 @@ class ActionEngine:
         candidate.approved_by = actor
         candidate.status = "approved"
         receipt: dict[str, Any] = {"actor": actor, "kind": candidate.kind}
+        try:
+            return await self._execute(candidate, receipt, coordinator=coordinator, state=state)
+        except Exception as exc:  # execution failure is an outcome, not a 500
+            candidate.status = "unresolved"
+            receipt["error"] = f"{type(exc).__name__}: {exc}"[:300]
+            candidate.execution_receipt = receipt
+            self.journal.append({"kind": "action_executed", "action_id": candidate.action_id,
+                                 "status": "unresolved", "receipt": receipt})
+            return candidate
+
+    async def _execute(self, candidate: ActionCandidate, receipt: dict[str, Any], *,
+                       coordinator: Any, state: Any) -> ActionCandidate:
 
         if candidate.kind == "fact_check":
             if not self._policy.external_search:
                 candidate.status = "rejected_by_policy"
                 self.journal.append({"kind": "action_rejected_by_policy",
-                                     "action_id": action_id,
+                                     "action_id": candidate.action_id,
                                      "reason": "external_search_disabled"})
                 return candidate
             from .models import ManualSearchRequest, RetrievalLane
@@ -164,7 +176,7 @@ class ActionEngine:
             if not self._policy.retrieve_local_evidence:
                 candidate.status = "rejected_by_policy"
                 self.journal.append({"kind": "action_rejected_by_policy",
-                                     "action_id": action_id,
+                                     "action_id": candidate.action_id,
                                      "reason": "retrieve_local_evidence_disabled"})
                 return candidate
             resolved = _resolve_artifact(candidate.payload, coordinator)
@@ -172,7 +184,7 @@ class ActionEngine:
             candidate.status = "executed" if resolved.get("exists") else "unresolved"
 
         candidate.execution_receipt = receipt
-        self.journal.append({"kind": "action_executed", "action_id": action_id,
+        self.journal.append({"kind": "action_executed", "action_id": candidate.action_id,
                              "status": candidate.status, "receipt": receipt})
         return candidate
 

@@ -137,7 +137,10 @@ export function InsightsPanel() {
   }, []);
 
   const { review, rubric, rehearsal } = insights;
-  const provenanceCard = provenance.find((card) => card.clauses.length > 0) ?? null;
+  const provenanceCard =
+    provenance.find((card) => card.clauses.some((clause) => clause.sourced)) ??
+    provenance.find((card) => card.clauses.length > 0) ??
+    null;
   if (!review && !rubric && !rehearsal && !provenanceCard && pendingActions.length === 0) return null;
 
   const approveAction = async (actionId: string) => {

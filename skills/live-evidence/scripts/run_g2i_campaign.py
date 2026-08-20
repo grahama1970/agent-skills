@@ -133,7 +133,7 @@ class Server:
              "--port", str(self.port), "--no-browser"],
             cwd=ROOT, env=env, stdout=self.log, stderr=subprocess.STDOUT, text=True,
         )
-        for _ in range(360):  # 90s: uv-backed startup under full-suite load
+        for _ in range(960):  # 240s: cold uv-backed startup under full-suite load
             try:
                 status, _ = http("GET", f"{self.url}/api/health")
                 if status == 200:

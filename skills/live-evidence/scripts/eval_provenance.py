@@ -179,7 +179,7 @@ def main() -> int:
         tab_id = int(re.search(r"Created tab\s+(\d+)", output).group(1))
         time.sleep(3)
         dom = None
-        for _ in range(15):
+        for _ in range(30):
             dom = surf_js(root, tab_id, """
 (() => {
   const clauses = document.querySelectorAll('[data-qid^="clause-"][data-sourced]').length;

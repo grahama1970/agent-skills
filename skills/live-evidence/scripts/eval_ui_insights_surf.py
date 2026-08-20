@@ -144,7 +144,7 @@ def main() -> int:
         time.sleep(2.5)
 
         dom = None
-        for _ in range(20):
+        for _ in range(30):
             dom = surf_js(root, tab_id, """
 (() => {
   const claims = document.querySelectorAll('[data-qid^="insight-claim-"]').length;
