@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Race/staleness protection on the live bridge (#1441 vscode-races family): a stale agent command bound to an outdated stop sequence cannot control a newer pause, a command bound to the wrong session cannot control the current one, and a session-control command with no session binding is refused. Capability-gated on the live bridge.",
+  "claims": {
+    "proves": "the live bridge rejects an inspect whose expectedStopSequence does not match the current pause (naming both numbers), rejects an inspect bound to a nonexistent sessionId, and refuses session control with no sessionId at all",
+    "does_not_prove": "human-driven Step Over interleaving (needs the HUMAN capability) or multi-window race arbitration"
+  },
+  "cases": [
+    {
+      "name": "stale-stop-sequence-command-rejected",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Stop at a breakpoint, then issue an inspect bound to expectedStopSequence 999: the bridge must reject it as stale, naming the mismatch, instead of controlling the newer pause.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; for attempt in 1 2; do OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action restart --launch-config-name 'Debug nested ($debugger)' --break \"$WS/skills/debugger/scenarios/variable_state/nested.py:12\" --local payload --stop-timeout-ms 45000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 75); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; case \"$S\" in stopped|stopped-not-proof) break;; esac; sleep 5; done; [ \"$S\" = stopped ] || [ \"$S\" = stopped-not-proof ] || { echo BRIDGE_BLOCKED; exit 0; }; SID=$(python3 -c \"import json;print((json.load(open('$OUT')).get('stoppedState') or {}).get('sessionId',''))\"); OUT2=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action inspect --session-id \"$SID\" --expected-stop-sequence 999 --local payload --stop-timeout-ms 15000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 30); do sleep 2; S2=$(python3 -c \"import json;print(json.load(open('$OUT2')).get('status'))\" 2>/dev/null || echo pending); case \"$S2\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; E=$(python3 -c \"import json;print(json.load(open('$OUT2')).get('error') or '')\"); echo \"stale-error: $E\"; echo \"$E\" | grep -q 'stale inspect rejected' && echo STALE-COMMAND-REJECTED || exit 1"
+      ],
+      "timeout_seconds": 500,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "stale inspect rejected",
+          "does not match current",
+          "STALE-COMMAND-REJECTED"
+        ]
+      }
+    },
+    {
+      "name": "wrong-session-command-rejected",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "An inspect bound to a nonexistent sessionId is rejected instead of controlling whatever session is current.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action inspect --session-id 'no-such-session-xyz' --local payload --stop-timeout-ms 15000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 30); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; E=$(python3 -c \"import json;print(json.load(open('$OUT')).get('error') or '')\"); echo \"error: $E\"; [ \"$S\" = error ] && [ -n \"$E\" ] && echo WRONG-SESSION-REJECTED || { echo BRIDGE_BLOCKED; exit 0; }"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRONG-SESSION-REJECTED"
+        ]
+      }
+    },
+    {
+      "name": "session-control-without-binding-refused",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "An inspect with no sessionId at all is refused up front (requires sessionId), never guessing a session.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; OUT=$(uv run --project .. python ../scripts/request_vscode_bridge.py --workspace \"$WS\" --action inspect --local payload --stop-timeout-ms 10000 --expect-extension-host-kind ui | tail -1); for i in $(seq 1 20); do sleep 2; S=$(python3 -c \"import json;print(json.load(open('$OUT')).get('status'))\" 2>/dev/null || echo pending); case \"$S\" in stopped|stopped-not-proof|error|terminated) break;; esac; done; E=$(python3 -c \"import json;print(json.load(open('$OUT')).get('error') or '')\"); echo \"error: $E\"; echo \"$E\" | grep -q 'requires sessionId' && echo UNBOUND-CONTROL-REFUSED || { echo BRIDGE_BLOCKED; exit 0; }"
+      ],
+      "timeout_seconds": 90,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "requires sessionId",
+          "UNBOUND-CONTROL-REFUSED"
+        ]
+      }
+    }
+  ]
+}

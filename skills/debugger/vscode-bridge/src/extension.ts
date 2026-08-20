@@ -77,34 +77,48 @@ const requestFileMtimes = new Map<string, number>();
 // #1433 breakpoint ownership: the bridge tracks exactly the breakpoints it
 // created so it can (a) clear its own stale breakpoints on restart without
 // touching the human's, and (b) treat run-to breakpoints as temporary. A
-// human breakpoint is any SourceBreakpoint NOT in `ownedBreakpoints`, and the
-// bridge must never remove one.
-const ownedBreakpoints = new Set<vscode.SourceBreakpoint>();
-const temporaryBreakpoints = new Set<vscode.SourceBreakpoint>();
+// human breakpoint is any SourceBreakpoint whose LOCATION is not in
+// `ownedBreakpointKeys`, and the bridge must never remove one.
+//
+// Ownership is keyed by location (file:line), NOT object identity: VS Code may
+// re-instantiate SourceBreakpoint objects in `vscode.debug.breakpoints`, so an
+// identity Set silently stops matching and the bridge's own breakpoints survive
+// replacement -- the live defect where a second walkthrough stop kept hitting
+// the first stop's line.
+const ownedBreakpointKeys = new Set<string>();
+const temporaryBreakpointKeys = new Set<string>();
 const bridgeQueue = new AsyncKeyedQueue();
 
+function breakpointKey(breakpoint: vscode.SourceBreakpoint) {
+  return `${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`;
+}
+
 function removeOwnedBreakpoints(options: { temporaryOnly?: boolean } = {}) {
-  const live = new Set(
-    vscode.debug.breakpoints.filter(
-      (breakpoint): breakpoint is vscode.SourceBreakpoint => breakpoint instanceof vscode.SourceBreakpoint,
-    ),
+  const liveSource = vscode.debug.breakpoints.filter(
+    (breakpoint): breakpoint is vscode.SourceBreakpoint => breakpoint instanceof vscode.SourceBreakpoint,
   );
-  const toRemove = [...ownedBreakpoints].filter(
-    (breakpoint) => (!options.temporaryOnly || temporaryBreakpoints.has(breakpoint)) && live.has(breakpoint),
-  );
+  const liveKeys = new Set(liveSource.map(breakpointKey));
+  const toRemove = liveSource.filter((breakpoint) => {
+    const key = breakpointKey(breakpoint);
+    if (!ownedBreakpointKeys.has(key)) {
+      return false;
+    }
+    return !options.temporaryOnly || temporaryBreakpointKeys.has(key);
+  });
   if (toRemove.length > 0) {
     vscode.debug.removeBreakpoints(toRemove);
   }
   for (const breakpoint of toRemove) {
-    ownedBreakpoints.delete(breakpoint);
-    temporaryBreakpoints.delete(breakpoint);
+    const key = breakpointKey(breakpoint);
+    ownedBreakpointKeys.delete(key);
+    temporaryBreakpointKeys.delete(key);
   }
-  // Drop any owned references VS Code no longer knows about (e.g. removed by the
+  // Drop any owned keys VS Code no longer knows about (e.g. removed by the
   // human) so the registry cannot leak or resurrect stale entries.
-  for (const breakpoint of [...ownedBreakpoints]) {
-    if (!live.has(breakpoint)) {
-      ownedBreakpoints.delete(breakpoint);
-      temporaryBreakpoints.delete(breakpoint);
+  for (const key of [...ownedBreakpointKeys]) {
+    if (!liveKeys.has(key)) {
+      ownedBreakpointKeys.delete(key);
+      temporaryBreakpointKeys.delete(key);
     }
   }
   return toRemove.map((breakpoint) => ({
@@ -659,7 +673,7 @@ function removeRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints:
     }
     // Only remove breakpoints the bridge owns: a human breakpoint at the same
     // file:line must survive an agent removeBreakpoints request (#1433).
-    if (!ownedBreakpoints.has(breakpoint)) {
+    if (!ownedBreakpointKeys.has(breakpointKey(breakpoint))) {
       return false;
     }
     return targets.has(`${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`);
@@ -667,8 +681,8 @@ function removeRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints:
   if (staleBreakpoints.length > 0) {
     vscode.debug.removeBreakpoints(staleBreakpoints);
     for (const breakpoint of staleBreakpoints) {
-      ownedBreakpoints.delete(breakpoint);
-      temporaryBreakpoints.delete(breakpoint);
+      ownedBreakpointKeys.delete(breakpointKey(breakpoint));
+      temporaryBreakpointKeys.delete(breakpointKey(breakpoint));
     }
   }
   return staleBreakpoints.map((breakpoint) => ({
@@ -898,9 +912,9 @@ async function addRequestedBreakpoints(
   if (sourceBreakpoints.length > 0) {
     vscode.debug.addBreakpoints(sourceBreakpoints);
     for (const breakpoint of sourceBreakpoints) {
-      ownedBreakpoints.add(breakpoint);
+      ownedBreakpointKeys.add(breakpointKey(breakpoint));
       if (options.temporary) {
-        temporaryBreakpoints.add(breakpoint);
+        temporaryBreakpointKeys.add(breakpointKey(breakpoint));
       }
     }
   }
@@ -1177,6 +1191,16 @@ async function captureStoppedState(
     watches: {},
   };
   state.breakpointEvidence = await breakpointEvidenceForFrame(frame, request);
+  // Observability: the FULL live breakpoint set at this pause, with ownership --
+  // the receipt that settles "why did we stop here" without guessing (#1433).
+  (state as Record<string, unknown>).liveBreakpoints = vscode.debug.breakpoints
+    .filter((b): b is vscode.SourceBreakpoint => b instanceof vscode.SourceBreakpoint)
+    .map((b) => ({
+      file: b.location.uri.fsPath,
+      line: b.location.range.start.line + 1,
+      enabled: b.enabled,
+      owned: ownedBreakpointKeys.has(breakpointKey(b)),
+    }));
   state.matchedBreakpoint = state.breakpointEvidence.some((evidence) => evidence.accepted);
 
   if (!frame?.id) {
