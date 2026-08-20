@@ -29,6 +29,7 @@ class Speaker(StrEnum):
 
     GRAHAM = "graham"
     INTERVIEWER = "interviewer"
+    CANDIDATE = "candidate"
     UNKNOWN = "unknown"
 
 

@@ -607,6 +607,28 @@
         ]
       },
       "notes": "#1475: one action_candidate.v1 envelope, resolver-proposed (single ambient authority), human-approved execution with destination readbacks: live memory keyed readback, real artifact path, live Brave fact-check or honest unresolved."
+    },
+    {
+      "name": "rubric-authorship-live-rung",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-author"
+      ],
+      "timeout_seconds": 600,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "meeting purpose cannot load a rubric (backend 403): PASS",
+          "every covered claim carries exact event refs (floor-verified live): PASS",
+          "omitted competencies stay untested (no promotion): PASS",
+          "20 fabricated coverage attempts rejected by the floor: PASS",
+          "rubric author: PASS"
+        ]
+      },
+      "notes": "#1474: LIVE model authorship over candidate transcript events, floor-validated; purpose-gated in the backend; browser readback of coverage chips + follow-up."
     }
   ]
 }

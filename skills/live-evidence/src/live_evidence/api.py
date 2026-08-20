@@ -242,6 +242,80 @@ def _register_api_routes(
                 "captured_variable_names": outcome.get("captured_variable_names"),
                 "proof_path": outcome.get("proof_path")}
 
+    @app.post("/api/rubric/load", status_code=202)
+    async def rubric_load(payload: dict[str, Any]) -> dict[str, Any]:
+        """Load a role rubric for authorship (#1474). interviewer_assist and
+        post_interview_review purposes only -- enforced here, not in the UI."""
+
+        from .rubric import RoleRubric, RubricEngine
+
+        purpose = state.session_purpose().value
+        if purpose not in {"interviewer_assist", "post_interview_review"}:
+            raise HTTPException(status_code=403,
+                                detail=f"rubric authorship not available for purpose {purpose}")
+        try:
+            rubric = RoleRubric(**{k: v for k, v in payload.items() if k != "schema"})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"invalid rubric: {exc}") from exc
+        app.state.rubric_engine = RubricEngine(rubric)
+        return {"status": "loaded", "rubric_digest": app.state.rubric_engine.rubric_digest}
+
+    @app.post("/api/rubric/author")
+    async def rubric_author(payload: dict[str, Any]) -> dict[str, Any]:
+        """Run one LIVE authorship pass over candidate answer events and apply
+        it through the deterministic floor; rejections journal, never render."""
+
+        import asyncio as _asyncio
+
+        from .rubric_author import RubricAuthor, apply_authored
+
+        engine = getattr(app.state, "rubric_engine", None)
+        if engine is None:
+            raise HTTPException(status_code=409, detail="no rubric loaded")
+        purpose = state.session_purpose().value
+        if purpose not in {"interviewer_assist", "post_interview_review"}:
+            raise HTTPException(status_code=403, detail="purpose does not permit authorship")
+        snapshot = await state.snapshot()
+        events = [
+            {"event_id": e.event_id, "text": e.text}
+            for e in snapshot.transcript
+            if e.speaker.value == "candidate" and e.kind.value == "final"
+        ][-24:]
+        if not events:
+            raise HTTPException(status_code=409, detail="no candidate answer events yet")
+        question_id = str(payload.get("question_id") or state.active_question() or "q-rubric-live")
+        question_revision = int(payload.get("question_revision")
+                                or state.active_question_revision() or 1)
+        author = RubricAuthor()
+        authored = await _asyncio.to_thread(author.author, engine._rubric, events)
+        if authored is None:
+            raise HTTPException(status_code=502, detail="authorship call unavailable")
+        outcome = apply_authored(engine, authored, events,
+                                 question_id=question_id,
+                                 question_revision=question_revision)
+        for entry in engine.journal:
+            await coordinator.journal.append(
+                state.session_id() or "no-session", entry.pop("kind"), entry,
+                policy_digest=state.session_policy_digest(),
+            )
+        engine.journal.clear()
+        coverage = engine.coverage(question_id, question_revision)
+        suggestions = engine._suggestions.get(
+            (question_id, question_revision, engine.rubric_digest), [])
+        if not hasattr(app.state, "insights"):
+            app.state.insights = {}
+        app.state.insights["rubric"] = {
+            "coverage": [{"criterion_id": c.criterion_id, "state": c.state.value,
+                           "evidence_event_ids": c.evidence_event_ids}
+                          for c in coverage],
+            "suggestions": [{"criterion_id": s.criterion_id,
+                              "question_text": s.question_text,
+                              "why_this_is_still_open": s.why_this_is_still_open,
+                              "unsupported": s.unsupported}
+                             for s in suggestions],
+        }
+        return {"outcome": outcome, "coverage": app.state.insights["rubric"]}
+
     @app.get("/api/actions/pending")
     async def actions_pending() -> dict[str, Any]:
         engine = coordinator.actions
