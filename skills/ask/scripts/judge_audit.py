@@ -90,9 +90,16 @@ def main(
         winner_response = wr.read_text(errors="replace") if wr.is_file() else ""
         if not winner_response.strip():
             problems.append(f"declared winner {winner} has no response of its own")
-    # Every competitor is mentioned in the rationale (nobody silently ignored).
+    # Every competitor is addressed in the rationale (nobody silently
+    # ignored). Judges legitimately name seats without the 'handler-' node
+    # prefix (observed 2026-08-20: a rationale addressing webgemini/webgrok by
+    # seat name failed the literal node-id match), so accept either form --
+    # while a competitor absent under BOTH names is still a violation.
     if judge_response:
-        ignored = [c for c in competitors if c not in judge_response]
+        ignored = [
+            c for c in competitors
+            if c not in judge_response and c.replace("handler-", "") not in judge_response
+        ]
         if ignored:
             problems.append("judge rationale never mentions: " + ", ".join(ignored))
     # Optionally execute the winner's own proof command.

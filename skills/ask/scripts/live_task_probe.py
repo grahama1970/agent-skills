@@ -186,12 +186,17 @@ def main(
                    f"invocation's nonce {nonce}; refusing to grade a stale run", err=True)
         raise typer.Exit(1)
     substitutions: dict[str, str] = {}
+    removed_seats: set[str] = set()
     sel_path = run_dir / "browser-provider-selection.json"
     if sel_path.is_file():
         sel = json.loads(sel_path.read_text())
         for sub in sel.get("local_substitutions") or []:
             if sub.get("from") and sub.get("to"):
                 substitutions[sub["from"]] = sub["to"]
+        removed_seats = {
+            (r if isinstance(r, str) else str(r.get("handler") or ""))
+            for r in sel.get("removed_handlers") or []
+        }
     run_alerts: list[str] = []
     exec_path = run_dir / "execution-status.json"
     if exec_path.is_file():
@@ -270,6 +275,13 @@ def main(
             typer.echo(f"SEAT {seat_label}: never dispatched -- run BLOCKED by {','.join(run_alerts)}")
             verdicts[seat] = {"state": "RUN_BLOCKED", "alerts": run_alerts}
             violators.append(seat)
+        elif seat in removed_seats:
+            # Same contract as the ladder and one-shot (2026-08-20): a seat
+            # whose removal IS recorded names its blocker; only an unrecorded
+            # dead end is dishonest.
+            typer.echo(f"SEAT {seat_label}: named_blocker removed by availability selection")
+            verdicts[seat] = {"state": "NAMED_BLOCKER",
+                              "failure_code": f"{seat}: removed by availability selection"}
         else:
             typer.echo(f"SEAT {seat_label}: NO ANSWER AND NO FAILURE CODE")
             verdicts[seat] = {"state": "DISHONEST"}

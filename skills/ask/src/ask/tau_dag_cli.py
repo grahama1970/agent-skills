@@ -1267,7 +1267,15 @@ def _select_available_browser_handlers(
     removed: list[str] = []
     for handler in requested:
         if handler in BROWSER_FRESH_URLS and handler in unusable:
-            removed.append(handler)
+            if handler in probe_uncertain:
+                # Uncertainty is not unavailability (operator 2026-08-19/20):
+                # an UNCONFIRMED probe never removes a seat in ANY run shape.
+                # The fresh-tab worker owns the bounded retry, and the
+                # join-gate contains a genuinely dead lane without starving
+                # the panel. A CONFIRMED blocker still removes below.
+                active.append(handler)
+            else:
+                removed.append(handler)
         else:
             active.append(handler)
 

@@ -167,6 +167,9 @@ def main() -> int:
         )
         raw_path.write_text(raw_text, encoding="utf-8")
         clean_text = _clean_response(raw_text, sentinel)
+        clean_text, capture_source = _upgrade_clean_response(
+            requested_tab_id, sentinel, clean_text
+        )
         output_path.write_text(clean_text, encoding="utf-8")
         focus_after = _focus_state()
         meta = _success_meta(
@@ -549,6 +552,73 @@ def _clean_response(raw_text: str, sentinel: str) -> str:
     if idx < 0:
         raise SubmitFailure("sentinel missing from latest Claude response")
     return response_text[:idx].rstrip() + "\n"
+
+
+_DOM_MARKDOWN_JS = r"""
+(() => {
+  const S = %s;
+  const nodes = Array.from(document.querySelectorAll(
+    'div.font-claude-message, [data-is-streaming], div[data-test-render-count], .prose'
+  )).filter((el) => el.innerText && el.innerText.includes(S));
+  const root = nodes.length ? nodes[nodes.length - 1] : null;
+  if (!root) return null;
+  const clone = root.cloneNode(true);
+  clone.querySelectorAll('pre').forEach((pre) => {
+    const code = pre.querySelector('code');
+    const langClass = code ? Array.from(code.classList).find((c) => c.startsWith('language-')) : null;
+    const lang = langClass ? langClass.replace('language-', '') : '';
+    const body = (code || pre).innerText.replace(/\n$/, '');
+    const repl = document.createElement('div');
+    repl.innerText = '\n```' + lang + '\n' + body + '\n```\n';
+    pre.replaceWith(repl);
+  });
+  // innerText needs layout; a detached clone would collapse newlines.
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-100000px;top:0;white-space:pre-wrap;';
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
+  const text = clone.innerText;
+  holder.remove();
+  return text;
+})()
+"""
+
+
+def _dom_markdown_response(tab_id: str, sentinel: str) -> str | None:
+    """Reconstruct the last assistant message's MARKDOWN from the DOM.
+
+    page.text flattens the rendered message -- fences, headings, and in-block
+    newlines collapse to one line (observed 2026-08-20: a fully compliant
+    fenced answer arrived as ' PositionPosition python# probe-nonce...').
+    This walks the message container and rebuilds ``` fences from <pre><code>
+    with the language class. Fail-open: any error returns None and the caller
+    keeps the page-text capture.
+    """
+    expression = _DOM_MARKDOWN_JS % json.dumps(sentinel)
+    try:
+        proc = _surf(["js", expression, "--tab-id", tab_id, "--no-activate"], timeout=30)
+        value = json.loads(proc.stdout.strip())
+        return value if isinstance(value, str) and value.strip() else None
+    except Exception:
+        return None
+
+
+def _upgrade_clean_response(tab_id: str, sentinel: str, clean_text: str) -> tuple[str, str]:
+    """Prefer the DOM-markdown capture when sentinel-proven and not shorter.
+
+    Returns (text, source). Guards mirror the chatgpt backend-API upgrade: the
+    candidate must contain the SAME sentinel and be at least 80%% of the
+    page-text length, so a partial or wrong-turn read can never replace a
+    proven capture.
+    """
+    md = _dom_markdown_response(tab_id, sentinel)
+    if not md or sentinel not in md:
+        return clean_text, "page_text"
+    idx = md.rfind(sentinel)
+    candidate = md[:idx].rstrip() + "\n"
+    if len(candidate) >= 0.8 * len(clean_text):
+        return candidate, "dom_markdown"
+    return clean_text, "page_text"
 
 
 def _latest_claude_response(raw_text: str) -> str:
