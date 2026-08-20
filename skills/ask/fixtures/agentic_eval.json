@@ -1447,6 +1447,102 @@
         ]
       },
       "notes": "Proof for agent-skills#1458: when the ticket CLI fails for FAIL cases, the iteration exits with the distinct code 4 and EVAL_LOOP_TICKETING_INCOMPLETE, and performs ZERO repair dispatch -- partial ticket coverage never masquerades as loop progress. Fault-injected failing ticket runner via ASK_EVAL_TICKET_CMD; real eval-loop CLI."
+    },
+    {
+      "name": "eval-loop-flapping-case-defers-convergence",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && mkdir -p $RT/bin && printf '#!/bin/bash\\necho \"[]\"\\n' > $RT/bin/gh && chmod +x $RT/bin/gh && printf '#!/bin/bash\\nexit 0\\n' > $RT/ok.sh && chmod +x $RT/ok.sh && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\ndef rep(i, outcome):\n    json.dump({'cases': [{'name': 'flappy', 'outcome': outcome, 'problems': ['x'],\n                          'passed_trials': 0 if outcome == 'FAIL' else 2,\n                          'trials': [{}]}]}, open(f'{RT}/r{i}.json', 'w'))\nfor i, o in enumerate(('FAIL', 'PASS', 'FAIL', 'PASS', 'PASS')):\n    rep(i, o)\nEOF\nPATH=$RT/bin:$PATH ASK_EVAL_TICKET_CMD=$RT/ok.sh ASK_EVAL_LOOP_REPORTS_SEQ=$RT/r0.json,$RT/r1.json,$RT/r2.json,$RT/r3.json,$RT/r4.json uv run --project . python scripts/eval_ticket_loop.py --until-pass --apply --max-iterations 5 > $RT/o.txt 2>&1; rc=$?; grep -q 'EVAL_LOOP_CONVERGED after 5' $RT/o.txt && [ $rc -eq 0 ] && grep -q 'EVAL_LOOP_FLAPPING' $RT/o.txt && ! grep -q 'EVAL_LOOP_CONVERGED after 2' $RT/o.txt && echo FLAPPING_DEFERS_CONVERGENCE || { echo rc=$rc; tail -8 $RT/o.txt; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FLAPPING_DEFERS_CONVERGENCE"
+        ]
+      },
+      "notes": "Proof for agent-skills#1459: report sequence FAIL,PASS,FAIL,PASS,PASS for one case converges ONLY at iteration 5 (two consecutive passes after the last fail); iteration 2's green is explicitly deferred with EVAL_LOOP_FLAPPING. Fault-injected report sequence; real eval-loop CLI."
+    },
+    {
+      "name": "eval-loop-budget-gate-refuses-unaffordable-iteration",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && mkdir -p $RT/bin && printf '#!/bin/bash\\necho \"[]\"\\n' > $RT/bin/gh && chmod +x $RT/bin/gh && printf '#!/bin/bash\\nexit 0\\n' > $RT/ok.sh && chmod +x $RT/ok.sh && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\nfor i in range(2):\n    json.dump({'cases': [{'name': 'still-failing', 'outcome': 'FAIL', 'problems': ['x'],\n                          'passed_trials': 0, 'trials': [{}]}]}, open(f'{RT}/r{i}.json', 'w'))\nEOF\nPATH=$RT/bin:$PATH ASK_EVAL_TICKET_CMD=$RT/ok.sh ASK_EVAL_LOOP_REPORTS_SEQ=$RT/r0.json,$RT/r1.json uv run --project . python scripts/eval_ticket_loop.py --until-pass --apply --max-iterations 5 --max-eval-runs 1 > $RT/o.txt 2>&1; rc=$?; [ $rc -eq 5 ] && grep -q 'EVAL_LOOP_BUDGET_EXHAUSTED' $RT/o.txt && [ $(grep -c 'EVAL_LOOP ITERATION' $RT/o.txt) -eq 1 ] && echo BUDGET_REFUSES_BEFORE_SECOND_RUN || { echo rc=$rc; tail -6 $RT/o.txt; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BUDGET_REFUSES_BEFORE_SECOND_RUN"
+        ]
+      },
+      "notes": "Proof for agent-skills#1462: with --max-eval-runs 1 and a still-failing case, exactly ONE iteration executes; the second is refused with exit 5 EVAL_LOOP_BUDGET_EXHAUSTED before the runner or watchdog is invoked."
+    },
+    {
+      "name": "eval-loop-forwards-prior-attempt-evidence",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && mkdir -p $RT/bin $RT/state/receipts/run-001 && cat > $RT/bin/gh <<'EOF'\n#!/bin/bash\nif [[ \"$1\" == \"issue\" && \"$2\" == \"comment\" ]]; then echo \"$@\" >> $CAPTURE; exit 0; fi\nif [[ \"$*\" == *\"in:body\"* ]]; then echo '[{\"number\":88,\"body\":\"...eval-case-id: persistent-case...\"}]'; else echo '[]'; fi\nEOF\nchmod +x $RT/bin/gh && printf '#!/bin/bash\\nexit 0\\n' > $RT/wd.sh && chmod +x $RT/wd.sh && uv run --project . python - $RT <<'EOF'\nimport json, sys\nRT = sys.argv[1]\njson.dump({'run_id': 'run-001', 'status': 'NEEDS_ATTENTION',\n           'handled_issues': [{'issue_number': 88, 'status': 'BLOCKED', 'ok': False,\n                               'summary': 'creator patch failed its proof'}]},\n          open(f'{RT}/state/receipts/run-001/receipt.json', 'w'))\njson.dump({'cases': [{'name': 'persistent-case', 'case_id': 'persistent-case', 'outcome': 'FAIL',\n                      'problems': ['x'], 'passed_trials': 0, 'trials': [{}]}]},\n          open(f'{RT}/r.json', 'w'))\nEOF\nCAPTURE=$RT/comments.txt PATH=$RT/bin:$PATH PROJECT_WATCHDOG_STATE_ROOT=$RT/state uv run --project . python scripts/eval_ticket_loop.py --from-report $RT/r.json --apply --dispatch-fix > $RT/o.txt 2>&1; grep -q 'PRIOR_ATTEMPT_FORWARDED to #88' $RT/o.txt && grep -q 'run-001' $RT/comments.txt && grep -q 'creator patch failed its proof' $RT/comments.txt && echo PRIOR_ATTEMPT_EVIDENCE_ON_TICKET || { tail -6 $RT/o.txt; cat $RT/comments.txt 2>/dev/null; exit 1; }"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PRIOR_ATTEMPT_EVIDENCE_ON_TICKET"
+        ]
+      },
+      "notes": "Proof for agent-skills#1460: a persistent (deduped) regression's redispatch first comments the LAST watchdog receipt for that issue -- run id, status, and summary -- onto the ticket, which is the only context the stateless repair node receives. Fault-injected receipts root and gh capture; note the dispatch tick itself is not faked out (watchdog CLI runs a dry refusal harmlessly)."
+    },
+    {
+      "name": "watchdog-guarded-close-lifecycle-three-attempts",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "RT=$(mktemp -d) && mkdir -p $RT/bin && cat > $RT/bin/gh <<'EOF'\n#!/bin/bash\n# canned gh: label state lives in a file so lease mutations persist\nL=$LABELS_FILE\nif [[ \"$*\" == *\"--jq .labels[].name\"* || \"$*\" == *\".labels[].name\"* ]]; then cat \"$L\" 2>/dev/null; exit 0; fi\nif [[ \"$1\" == \"issue\" && \"$2\" == \"edit\" ]]; then\n  for ((i=1;i<=$#;i++)); do\n    if [[ \"${!i}\" == \"--add-label\" ]]; then j=$((i+1)); echo \"${!j}\" | tr ',' '\\n' >> \"$L\"; fi\n    if [[ \"${!i}\" == \"--remove-label\" ]]; then j=$((i+1)); grep -vFx \"${!j}\" \"$L\" > \"$L.t\" 2>/dev/null; mv \"$L.t\" \"$L\"; fi\n  done; exit 0; fi\nif [[ \"$1\" == \"issue\" && ( \"$2\" == \"close\" || \"$2\" == \"comment\" ) ]]; then echo \"$2 ok\"; exit 0; fi\necho '[]'\nEOF\nchmod +x $RT/bin/gh && export PATH=$RT/bin:$PATH LABELS_FILE=$RT/labels.txt GH_TICKET_SKIP_WORKTREE_AUDIT=1 && printf 'agent-work\\n' > $RT/labels.txt && T=../../best-practices-github-ticket/scripts/gh-ticket-tools.sh && cd .. && T=../best-practices-github-ticket/scripts/gh-ticket-tools.sh && printf 'real proof content\\n' > $RT/proof.md && : > $RT/empty.md && $T close 55 --proof $RT/proof.md --reason completed >/dev/null 2>$RT/e1; rc1=$?; grep -q 'not leased with maintainer-active' $RT/e1 && [ $rc1 -ne 0 ] || { echo UNLEASED_CLOSE_ALLOWED; cat $RT/e1; exit 1; }; $T lease 55 --agent tester >/dev/null 2>&1 && grep -Fxq maintainer-active $RT/labels.txt || { echo LEASE_DID_NOT_STICK; exit 1; }; $T close 55 --proof $RT/empty.md --reason completed >/dev/null 2>$RT/e2; rc2=$?; [ $rc2 -ne 0 ] && grep -qi 'empty' $RT/e2 || { echo EMPTY_PROOF_CLOSE_ALLOWED; cat $RT/e2; exit 1; }; $T close 55 --proof $RT/proof.md --reason completed > $RT/o3 2>$RT/e3; rc3=$?; [ $rc3 -eq 0 ] || { echo VALID_CLOSE_REFUSED; cat $RT/e3; exit 1; }; echo GUARDED_CLOSE_LIFECYCLE_HOLDS"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GUARDED_CLOSE_LIFECYCLE_HOLDS"
+        ]
+      },
+      "notes": "Proof for agent-skills#1461: through the REAL gh-ticket-tools.sh with a stateful fake gh -- (a) close without a lease fails with 'not leased with maintainer-active'; (b) close with an active lease but an EMPTY proof file fails; (c) close with the lease plus non-empty proof succeeds. The convergence loop's closure accounting depends on exactly these three behaviors."
     }
   ],
   "capability_claims": [

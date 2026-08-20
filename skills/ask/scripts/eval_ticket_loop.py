@@ -95,6 +95,40 @@ def _issue_number_from_output(text: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
+def _prior_attempt_summary(issue: int) -> str | None:
+    """Bounded summary of the LAST watchdog dispatch for this issue.
+
+    Stateless repair agents repeat identical attempts when nothing tells them
+    what was already tried (agent-skills#1460). Reads the watchdog's own
+    receipts (newest first) and returns one short block: run id, status, and
+    the receipt's summary line when present. Returns None when no prior
+    dispatch receipt exists.
+    """
+    import os
+    state_root = Path(os.environ.get("PROJECT_WATCHDOG_STATE_ROOT",
+                                     str(Path.home() / ".local" / "state" / "project-watchdog")))
+    receipts = state_root / "receipts"
+    if not receipts.is_dir():
+        return None
+    for run_dir in sorted(receipts.iterdir(), key=lambda d: d.name, reverse=True):
+        rp = run_dir / "receipt.json"
+        if not rp.is_file():
+            continue
+        try:
+            receipt = json.loads(rp.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        for handled in receipt.get("handled_issues") or []:
+            if isinstance(handled, dict) and int(handled.get("issue_number", -1)) == int(issue):
+                return (
+                    f"prior-attempt: run {receipt.get('run_id', run_dir.name)} "
+                    f"status={handled.get('status') or receipt.get('status')} "
+                    f"ok={handled.get('ok')} "
+                    f"summary={str(handled.get('summary') or receipt.get('summary') or '')[:300]}"
+                )
+    return None
+
+
 def _tick(
     fixture: Path,
     apply: bool,
@@ -204,6 +238,19 @@ def _tick(
             issue = ticket_numbers.get(name)
             typer.echo(f"DISPATCH_FIX tick {i}/{len(filed) + len(deduped)} "
                        f"(creator={repair_creator}, issue={issue or 'unknown'})")
+            if issue and name in deduped:
+                # Persistent regression: forward what the LAST attempt did so
+                # the next stateless repair agent does not repeat it
+                # (agent-skills#1460). The comment lands on the ticket, which
+                # is the only context the repair node receives.
+                summary = _prior_attempt_summary(issue)
+                if summary:
+                    subprocess.run(
+                        ["gh", "issue", "comment", str(issue), "--repo", REPO,
+                         "--body", f"eval-loop {summary}"],
+                        capture_output=True, text=True, timeout=60,
+                    )
+                    typer.echo(f"  PRIOR_ATTEMPT_FORWARDED to #{issue}: {summary[:120]}")
             tick_cmd = [str(SKILLS_ROOT / "project-watchdog" / "run.sh"),
                         "tick", "--apply", "--project", "agent-skills", "--max-tickets", "1"]
             if issue:
@@ -219,7 +266,7 @@ def _tick(
             typer.echo(f"  tick exit {proc.returncode}: {tail}")
     typer.echo(f"EVAL_LOOP_RESULT: {'CONVERGED' if not failed else 'OPEN'} "
                f"failed={len(failed)} filed={len(filed)} deduped={len(deduped)}")
-    return len(failed)
+    return [c["name"] for c in failed], [c["name"] for c in passed]
 
 
 @app.command()
@@ -244,24 +291,67 @@ def main(
         5, "--max-iterations",
         help="Hard cap on --until-pass ticks; a loop that cannot converge in this many "
              "rounds needs a human, not more rounds."),
+    stability: int = typer.Option(
+        2, "--stability",
+        help="Consecutive passing iterations a previously-failed case must hold before "
+             "the loop may declare CONVERGED (flap detection, agent-skills#1459)."),
+    max_eval_runs: int = typer.Option(
+        0, "--max-eval-runs",
+        help="Budget: maximum runner invocations this loop may consume; 0 = unlimited. "
+             "Refuses further iterations BEFORE running (agent-skills#1462)."),
     skip_run: Path = typer.Option(None, "--from-report",
                                   help="Skip running; ticket failures from this existing report."),
 ) -> None:
     if not until_pass:
-        failed = _tick(fixture, apply, dispatch_fix, repair_creator, skip_run)
+        failed, _passed = _tick(fixture, apply, dispatch_fix, repair_creator, skip_run)
         raise typer.Exit(1 if failed else 0)
     if not apply:
         typer.echo("--until-pass requires --apply (the loop must file and fix, "
                    "not preview forever)", err=True)
         raise typer.Exit(2)
+    import os
+    # Fault-injection hook: a comma-separated report sequence stands in for
+    # live runner invocations, one per iteration, so convergence semantics are
+    # testable without hours of browser time. Each consumed report still
+    # counts against the eval-run budget.
+    reports_seq = [Path(x) for x in os.environ.get("ASK_EVAL_LOOP_REPORTS_SEQ", "").split(",") if x]
+    ever_failed: set[str] = set()
+    pass_streak: dict[str, int] = {}
+    runs_done = 0
+    failed: list[str] = []
     for iteration in range(1, max_iterations + 1):
+        # Budget gate (agent-skills#1462): refuse BEFORE the runner and before
+        # any dispatch when another eval run cannot be afforded. Iteration
+        # count is a weak proxy for expensive live/browser work.
+        if max_eval_runs and runs_done >= max_eval_runs:
+            typer.echo(f"EVAL_LOOP_BUDGET_EXHAUSTED: {runs_done}/{max_eval_runs} eval runs "
+                       f"consumed; refusing iteration {iteration} before invoking the runner "
+                       "or the watchdog", err=True)
+            raise typer.Exit(5)
         typer.echo(f"=== EVAL_LOOP ITERATION {iteration}/{max_iterations} ===")
-        failed = _tick(fixture, True, True, repair_creator, None)
-        if not failed:
+        seq_report = reports_seq[iteration - 1] if len(reports_seq) >= iteration else None
+        failed, passed = _tick(fixture, True, True, repair_creator, seq_report)
+        runs_done += 1
+        # Flap detection (agent-skills#1459): a case that has EVER failed in
+        # this invocation must pass --stability consecutive iterations before
+        # the loop may declare CONVERGED; current-iteration state alone lets an
+        # intermittent regression slip through as green.
+        for name in failed:
+            ever_failed.add(name)
+            pass_streak[name] = 0
+        for name in passed:
+            if name in ever_failed:
+                pass_streak[name] = pass_streak.get(name, 0) + 1
+        unstable = sorted(n for n in ever_failed if pass_streak.get(n, 0) < stability)
+        if not failed and not unstable:
             typer.echo(f"EVAL_LOOP_CONVERGED after {iteration} iteration(s)")
             raise typer.Exit(0)
-    typer.echo(f"EVAL_LOOP_EXHAUSTED: still {failed} failing after "
-               f"{max_iterations} iterations -- needs a human", err=True)
+        if not failed and unstable:
+            typer.echo("EVAL_LOOP_FLAPPING: all green this iteration, but these cases have "
+                       f"not yet held {stability} consecutive passes: " + ", ".join(unstable))
+    typer.echo(f"EVAL_LOOP_EXHAUSTED: still failing={failed} "
+               f"unstable={sorted(n for n in ever_failed if pass_streak.get(n, 0) < stability)} "
+               f"after {max_iterations} iterations -- needs a human", err=True)
     raise typer.Exit(1)
 
 
