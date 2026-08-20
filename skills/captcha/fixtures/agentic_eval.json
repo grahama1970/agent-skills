@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "captcha",
   "trials": 2,
-  "proof_scope": "multi-trial local agentic safety, blue/red team mode propagation, Surf/captcha seam gates, receipt verification, and pinned real defensive CAPTCHA/bot-detection reference coverage",
+  "proof_scope": "multi-trial local agentic safety, blue/red team mode propagation, policy failure boundaries, runtime argv/environment contracts, target/model/Surf preflights, pointer coordinate planning, CLI receipt verification, pinned real defensive CAPTCHA/bot-detection reference coverage, and an optional nondeterministic authorized local ReCAP campaign gate",
   "claims": {
-    "proves": "the real captcha entrypoint reports safe status, schemas include the red/blue mode contract, blue-team and red-team local manifests issue typed authorization receipts, red-team mode does not widen public-target authorization, live effects still require --execute, missing-runtime plans remain NEEDS_ATTENTION, Ask DAG composition is explicit, pointer dispatch plans bind to Surf without dispatching input for both teams, verifier tests check real evidence hashes and tamper failure, and the skill is evaluated against a pinned real defensive CAPTCHA/bot-detection reference project",
-    "does_not_prove": "live ReCAP model performance, public-site CAPTCHA solving, stealth or proxy behavior, authenticated browser provider behavior, or that a pointer dispatch solves a challenge"
+    "proves": "the real captcha entrypoint and explicit status command report safe readiness, schemas include the red/blue mode contract, blue-team and red-team local manifests issue typed authorization receipts, red-team mode does not widen public-target authorization, unsafe manifest edges fail closed, live effects still require --execute, missing-runtime plans remain NEEDS_ATTENTION, ReCAP argv and environment are pinned and sterile, local target and model endpoint preflights verify exact loopback services, Surf target preflight closes tabs on success and failure, pointer plans use viewport-relative seeded motion and reject off-viewport mappings, Ask DAG composition is explicit, pointer dispatch plans bind to Surf without dispatching input for both teams, verifier function tests and the verify CLI check real evidence hashes and tamper failure, and the skill is evaluated against a pinned real defensive CAPTCHA/bot-detection reference project",
+    "does_not_prove": "public-site CAPTCHA solving, stealth or proxy behavior, authenticated browser provider behavior, or that a pointer dispatch solves a challenge; live ReCAP model performance is only proven when the optional nondeterministic local campaign case runs without BLOCKED_EXTERNAL"
   },
   "capability_claims": [
     {
@@ -79,6 +79,62 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "captcha.policy_failure_matrix",
+      "description": "Captcha rejects public model endpoints, DNS aliases, target subpaths, embedded credentials, expired manifests, unauthorized actions, false acknowledgements, and unbounded task selections.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.recap_runtime_environment_contract",
+      "description": "Captcha builds a pinned ReCAP dynamic/qwen3 argv and sterile loopback-only environment without proxy or unrelated secret leakage.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.local_target_model_preflights",
+      "description": "Captcha target and model preflights prove exact local loopback services and reject wrong local services or model identities.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "captcha.surf_target_preflight_contract",
+      "description": "Captcha Surf preflight opens the local challenge, captures screenshot evidence, rejects redirects, and fails closed when tab cleanup is unproven.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.pointer_motion_coordinates",
+      "description": "Captcha turns vision-relative image coordinates into bounded viewport pointer samples and rejects off-viewport mappings.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.verify_cli_contract",
+      "description": "Captcha verify is exercised through the real CLI and rejects tampered evidence after accepting a valid local receipt fixture.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "captcha.nondeterministic_live_resolution_campaign",
+      "description": "Captcha can run a randomized bounded authorized local ReCAP campaign when the local target, model endpoint, Surf, storage, and ReCAP runtime are present.",
+      "criticality": "optional",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -123,6 +179,48 @@
       "seam_type": "external_reference",
       "criticality": "critical",
       "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "captcha.policy_matrix",
+      "seam_type": "policy_boundary",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.recap_runtime_environment",
+      "seam_type": "runtime_contract",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.local_preflights",
+      "seam_type": "local_live_probe",
+      "criticality": "critical",
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "captcha.surf_target_preflight",
+      "seam_type": "skill_composition",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.pointer_motion",
+      "seam_type": "coordinate_mapping",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.verify_cli",
+      "seam_type": "receipt_integrity",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "captcha.live_resolution_campaign",
+      "seam_type": "adversarial_live_e2e",
+      "criticality": "optional",
+      "required_evidence": ["adversarial_live_e2e"]
     }
   ],
   "cases": [
@@ -138,6 +236,20 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["captcha.status.v1"]
+      }
+    },
+    {
+      "name": "explicit-status-command-reports-readiness",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.status_and_schema_contracts"],
+      "seams": ["captcha.status_and_schemas"],
+      "command": ["../run.sh", "status", "--json"],
+      "timeout_seconds": 45,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.status.v1", "ask_skill_present"]
       }
     },
     {
@@ -265,6 +377,24 @@
       }
     },
     {
+      "name": "policy-failure-matrix-rejects-unsafe-manifest-edges",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.policy_failure_matrix", "captcha.defensive_authorization_boundary"],
+      "seams": ["captcha.policy_matrix", "captcha.authorization_preflight"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_policy.py::test_public_model_endpoint_is_rejected tests/test_policy.py::test_dns_alias_other_than_localhost_is_rejected tests/test_policy.py::test_target_root_path_is_required tests/test_policy.py::test_embedded_credentials_are_rejected tests/test_policy.py::test_expired_manifest_is_rejected tests/test_policy.py::test_unlisted_action_is_rejected tests/test_policy.py::test_false_acknowledgement_is_rejected tests/test_policy.py::test_custom_mode_requires_named_allowed_captcha tests/test_policy.py::test_once_mode_is_bounded_to_seven_tasks"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["9 passed"]
+      }
+    },
+    {
       "name": "live-effect-requires-explicit-execute",
       "type": "negative",
       "evidence_class": "deterministic",
@@ -281,6 +411,80 @@
       "expected": {
         "exit_code": 2,
         "stdout_contains": ["execution_not_confirmed", "BLOCKED"]
+      }
+    },
+    {
+      "name": "recap-argv-and-sterile-environment-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.recap_runtime_environment_contract"],
+      "seams": ["captcha.recap_runtime_environment"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_runtime.py::test_recap_argv_is_pinned_to_dynamic_qwen3 tests/test_runtime.py::test_sterile_recap_environment_drops_proxies_and_unrelated_secrets"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["2 passed"]
+      }
+    },
+    {
+      "name": "target-and-model-endpoint-preflights-use-real-loopback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["captcha.local_target_model_preflights"],
+      "seams": ["captcha.local_preflights"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_runtime.py::test_target_preflight_uses_real_loopback_http tests/test_runtime.py::test_target_preflight_rejects_wrong_loopback_service tests/test_runtime.py::test_model_endpoint_preflight_proves_exact_local_model tests/test_runtime.py::test_model_endpoint_preflight_rejects_wrong_model_identity"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["4 passed"]
+      }
+    },
+    {
+      "name": "surf-target-preflight-closes-tabs-and-rejects-unsafe-visible-state",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": ["captcha.surf_target_preflight_contract"],
+      "seams": ["captcha.surf_target_preflight"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_surf_preflight.py::test_surf_target_preflight_runs_real_subprocess_and_closes_tab tests/test_surf_preflight.py::test_surf_target_preflight_rejects_redirect_and_still_closes_tab tests/test_surf_preflight.py::test_surf_target_preflight_fails_when_cleanup_is_unproven"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["3 passed"]
+      }
+    },
+    {
+      "name": "pointer-motion-coordinate-mapping-and-adversarial-bounds",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["captcha.pointer_motion_coordinates", "captcha.surf_pointer_plan_seam"],
+      "seams": ["captcha.pointer_motion"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_runtime.py::test_pointer_motion_plan_is_seeded_and_viewport_relative tests/test_runtime.py::test_pointer_motion_request_rejects_off_viewport_mapping"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["2 passed"]
       }
     },
     {
@@ -470,6 +674,58 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["2 passed"]
+      }
+    },
+    {
+      "name": "verify-cli-accepts-valid-run-and-rejects-tamper",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": ["captcha.verify_cli_contract", "captcha.verify_receipt_integrity"],
+      "seams": ["captcha.verify_cli", "captcha.verify"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/captcha-agentic-eval-venv uv run --with pytest --project . python scripts/verify_cli_feature_eval.py"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.verify_cli_feature_eval.v1", "\"success\": true", "\"failure_code\": \"receipt_invalid\""]
+      }
+    },
+    {
+      "name": "nondeterministic-authorized-live-resolution-campaign-gate",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "required": false,
+      "supports_claims": ["captcha.nondeterministic_live_resolution_campaign"],
+      "seams": ["captcha.live_resolution_campaign"],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./scripts/nondeterministic_live_resolution_probe.py --samples 50 --seed \"$RANDOM\" --output /tmp/captcha-nondeterministic-live-resolution.json --json"
+      ],
+      "timeout_seconds": 3600,
+      "blocked_when_stdout_contains": ["BLOCKED_EXTERNAL"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["captcha.nondeterministic_resolution_probe.v1"],
+        "artifacts": [
+          {
+            "path": "/tmp/captcha-nondeterministic-live-resolution.json",
+            "json_pointer": "/schema_version",
+            "equals": "captcha.nondeterministic_resolution_probe.v1"
+          },
+          {
+            "path": "/tmp/captcha-nondeterministic-live-resolution.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
       }
     },
     {
