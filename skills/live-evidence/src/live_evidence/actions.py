@@ -165,9 +165,10 @@ class ActionEngine:
                 source_event_ids=candidate.trigger_event_ids,
                 source_sha256=candidate.policy_digest,
             )
-            writer = SalientFactWriter(coordinator.settings.memory_url
-                                       if hasattr(coordinator, "settings")
-                                       else state.settings.memory_url)
+            writer = SalientFactWriter(
+                coordinator.settings.memory_url,
+                timeout_s=30.0,  # the live boundary slows under full-suite load
+            )
             ok, detail = await writer.write_and_confirm(fact)
             receipt.update({"fact_id": fact.fact_id, "readback_ok": ok, "detail": detail[:300]})
             candidate.status = "executed" if ok else "unresolved"

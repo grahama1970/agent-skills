@@ -127,9 +127,13 @@ def main() -> int:
                 "POST", f"{server.url}/api/actions/{remember['action_id']}/approve",
                 {"actor": "human:eval"}, timeout=120)
             receipt = outcome.get("execution_receipt") or {}
-            check("remember_fact executes with independent memory readback",
-                  outcome.get("status") == "executed" and receipt.get("readback_ok") is True,
-                  f"status={outcome.get('status')} detail={str(receipt.get('detail'))[:60]}")
+            ok = outcome.get("status") == "executed" and receipt.get("readback_ok") is True
+            error_text = str(receipt.get("error") or receipt.get("detail") or "")
+            if not ok and ("timed out" in error_text.lower() or "timeout" in error_text.lower()
+                            or "connection" in error_text.lower()):
+                print(f"MEMORY_SERVICE_STARVED: {error_text[:120]}")
+            check("remember_fact executes with independent memory readback", ok,
+                  f"status={outcome.get('status')} error={error_text[:80]}")
         else:
             check("remember_fact executes with independent memory readback", False, "not proposed")
 

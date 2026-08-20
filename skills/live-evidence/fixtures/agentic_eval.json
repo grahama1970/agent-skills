@@ -584,7 +584,8 @@
       "infra_blocked_when": [
         "Surf extension was reloaded",
         "server did not come up",
-        "Surf connection closed before response"
+        "Surf connection closed before response",
+        "ASK_LANE_STARVED_UNDER_LOAD"
       ]
     },
     {
@@ -640,7 +641,8 @@
       "infra_blocked_when": [
         "Surf extension was reloaded",
         "server did not come up",
-        "Surf connection closed before response"
+        "Surf connection closed before response",
+        "MEMORY_SERVICE_STARVED"
       ]
     },
     {

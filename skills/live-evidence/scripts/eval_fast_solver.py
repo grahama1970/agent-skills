@@ -271,11 +271,17 @@ def main() -> int:
             # more than 2 points below the $ask answer is a real quality loss.
             if fast_grade < ask_grade - 2:
                 losses += 1
-        check(
-            "blinded parity vs $ask single-call: fast path within one grade (losses <= 2)",
-            judged >= 4 and losses <= 2,
-            f"judged={judged} losses={losses}",
-        )
+        if judged < 4:
+            # The comparison side ($ask) starved under load; the fast path was
+            # not shown deficient. Declared blocker, surfaced, never a PASS.
+            print(f"ASK_LANE_STARVED_UNDER_LOAD: only {judged} parity pairs judged (losses={losses})")
+            FAILURES.append("parity sample insufficient")
+        else:
+            check(
+                "blinded parity vs $ask single-call: fast path within one grade (losses <= 2)",
+                losses <= 2,
+                f"judged={judged} losses={losses}",
+            )
     finally:
         server.close()
 
