@@ -568,6 +568,16 @@ if [[ "$1" == "meta.normalize" ]]; then
     exec python3 "$SKILL_DIR/scripts/surf_meta_normalize.py" "${@:2}"
 fi
 
+if [[ "$1" == "eval" ]]; then
+    shift
+    EVAL_RUN="${SKILL_DIR}/../agentic-evals/run.sh"
+    if [[ ! -x "$EVAL_RUN" ]]; then
+        printf 'surf: agentic-evals run.sh is missing or not executable: %s\n' "$EVAL_RUN" >&2
+        exit 2
+    fi
+    exec "$EVAL_RUN" run "${SKILL_DIR}/fixtures/agentic_eval.json" "$@"
+fi
+
 if [[ "$1" == "vendor.sync" ]]; then
     exec "$SKILL_DIR/scripts/vendor-sync.sh" "${@:2}"
 fi

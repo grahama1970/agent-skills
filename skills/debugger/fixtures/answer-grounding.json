@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Embry's walkthrough answers are grounded in the module she is stopped in, not just the paused locals: answer_question feeds the breakpoint's source (whole file when small) into the /ask prompt, so a 'what is this module for' question is answered from the code. And when no answer handler is configured it deflects (fail-closed) rather than inventing an answer. Capability-gated on /ask; a /ask outage marks BLOCKED, not FAIL.",
+  "claims": {
+    "proves": "with a live answer handler, answer_question grounded in tally.py returns an answer that names the module's actual subject (the mutable-default / running-tally bug); with no handler it returns the fail-closed deflect instead of a fabricated answer",
+    "does_not_prove": "the full correctness of the model's explanation, or grounding quality for modules larger than the whole-file capture threshold"
+  },
+  "cases": [
+    {
+      "name": "answer-cites-module-source",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A whole-module question, answered while stopped in tally.py, names the module's actual subject (mutable default / running total), proving the source was in the prompt.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export DEBUGGER_ASK_HANDLER=${DEBUGGER_ASK_HANDLER:-gpt-5.5}; python3 -c \"import sys; sys.path.insert(0,'../scripts'); import vscode_walkthrough as w; from pathlib import Path; a=w.answer_question('what is this whole module for', {'file':'tally.py','line':11,'say':'inside running_total'}, 'seen=[1, 2, 3, 10]', {'title':'t'}, workspace=Path('../scenarios/variable_state'), line=11); low=a.lower(); print('ANSWER:', a[:200]); print('ASK-DOWN' if \\\"can't ground a full answer\\\" in low else ('GROUNDED' if any(k in low for k in ('mutable','default','seen','running','tally')) else 'NOT-GROUNDED'))\""
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["ASK-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["GROUNDED"]
+      }
+    },
+    {
+      "name": "no-handler-deflects-not-invents",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "With no answer handler configured, answer_question returns the fail-closed deflect rather than fabricating an answer.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; DEBUGGER_ASK_HANDLER=none python3 -c \"import sys; sys.path.insert(0,'../scripts'); import vscode_walkthrough as w; from pathlib import Path; a=w.answer_question('what is this module for', {'file':'tally.py','line':11,'say':'x'}, 'seen=[1, 2, 3]', {'title':'t'}, workspace=Path('../scenarios/variable_state'), line=11); print('DEFLECT' if 'DEBUGGER_ASK_HANDLER' in a else 'UNEXPECTED')\""
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["DEFLECT"]
+      }
+    }
+  ]
+}

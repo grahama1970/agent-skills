@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "The spoken-delivery layer of the conversational walkthrough: two distinct chatterbox voices (Embry vs the agent/Horus reference), a tonal arc where each conversational beat uses a tone preset that resolves to a distinct delivery stage, an interrupt cue rendered through the emotion endpoint, and thinking cues that fill /ask latency so there is no dead air. Capability-gated on the live chatterbox server (:8018) and /ask; each case fails closed / marks BLOCKED when its dependency is down rather than passing blind.",
+  "claims": {
+    "proves": "chatterbox resolves Embry's default and the agent's ref_audio to distinct reference voices; the four driver tones (calm_precise, curious_searching, memory_confident, one_at_a_time_interrupt) normalize to four distinct delivery stages (neutral/holding/satisfied/deflecting); the interrupt cue renders audio via /synthesize-emotion; answer_with_thinking emits spoken thinking cues while /ask runs; and an unknown tone falls back safely instead of crashing",
+    "does_not_prove": "the subjective audio quality of any voice or tone, or that a human perceives the arc"
+  },
+  "cases": [
+    {
+      "name": "two-voices-resolve-distinct-references",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Embry (chatterbox default) and the agent voice (ref_audio=/voices/horus_ref.wav) resolve to two DIFFERENT reference voices.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; curl -sf -m5 http://127.0.0.1:8018/health >/dev/null || { echo CHATTERBOX-DOWN; exit 0; }; E=$(curl -s -m40 -X POST http://127.0.0.1:8018/synthesize -H 'Content-Type: application/json' -d '{\"text\":\"hi\"}' | python3 -c 'import json,sys;print(json.load(sys.stdin,strict=False).get(\"reference_audio\"))'); H=$(curl -s -m40 -X POST http://127.0.0.1:8018/synthesize -H 'Content-Type: application/json' -d '{\"text\":\"hi\",\"ref_audio\":\"/voices/horus_ref.wav\"}' | python3 -c 'import json,sys;print(json.load(sys.stdin,strict=False).get(\"reference_audio\"))'); echo \"EMBRY=$E HORUS=$H\"; [ \"$E\" != \"$H\" ] && [ \"$H\" = \"/voices/horus_ref.wav\" ] && echo VOICES-DISTINCT || { echo VOICES-SAME; exit 1; }"
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["CHATTERBOX-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["VOICES-DISTINCT"]
+      }
+    },
+    {
+      "name": "tonal-arc-tones-map-to-distinct-stages",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "The four driver tones normalize to four distinct chatterbox delivery stages, giving the conversation its arc.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; curl -sf -m5 http://127.0.0.1:8018/health >/dev/null || { echo CHATTERBOX-DOWN; exit 0; }; for t in calm_precise curious_searching memory_confident one_at_a_time_interrupt; do s=$(curl -s -m40 -X POST http://127.0.0.1:8018/synthesize -H 'Content-Type: application/json' -d \"{\\\"text\\\":\\\"x\\\",\\\"tone\\\":\\\"$t\\\"}\" | python3 -c 'import json,sys;print(json.load(sys.stdin,strict=False).get(\"delivery_stage\"))'); echo \"$t=$s\"; done"
+      ],
+      "timeout_seconds": 180,
+      "blocked_when_stdout_contains": ["CHATTERBOX-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["calm_precise=neutral", "curious_searching=holding", "memory_confident=satisfied", "one_at_a_time_interrupt=deflecting"]
+      }
+    },
+    {
+      "name": "interrupt-cue-renders-audio",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "The interrupt cue (acknowledge_pause) renders audio through the emotion endpoint in the one_at_a_time_interrupt tone.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; curl -sf -m5 http://127.0.0.1:8018/health >/dev/null || { echo CHATTERBOX-DOWN; exit 0; }; a=$(curl -s -m45 -X POST http://127.0.0.1:8018/synthesize-emotion -H 'Content-Type: application/json' -d '{\"text\":\"Oh — go ahead.\",\"tone\":\"one_at_a_time_interrupt\",\"delivery_stage\":\"interrupted\"}' | python3 -c 'import json,sys;print(json.load(sys.stdin,strict=False).get(\"audio\") or \"\")'); echo \"EMOTION-AUDIO=$a\"; case \"$a\" in /out/*) echo CUE-RENDERED;; *) exit 1;; esac"
+      ],
+      "timeout_seconds": 90,
+      "blocked_when_stdout_contains": ["CHATTERBOX-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["CUE-RENDERED"]
+      }
+    },
+    {
+      "name": "thinking-cues-cover-ask-latency",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "answer_with_thinking speaks thinking cues while the real /ask call runs (speak muted via an unreachable TTS URL so the cue text is the observable), then returns an answer.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export DEBUGGER_SPEAK_URL=http://127.0.0.1:1/none; export DEBUGGER_ASK_HANDLER=${DEBUGGER_ASK_HANDLER:-gpt-5.5}; python3 -c \"import sys; sys.path.insert(0,'../scripts'); import vscode_walkthrough as w; from pathlib import Path; a=w.answer_with_thinking('what is this module for', {'file':'main.py','line':20,'say':'x'}, 'first=6', {'title':'t'}, Path('../scenarios/variable_state'), 20, True, '/tmp/dbg-vd.flag', False); print('ANSWER_OK' if a else 'ANSWER_EMPTY')\""
+      ],
+      "timeout_seconds": 120,
+      "blocked_when_stdout_contains": ["ASK-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["(thinking)", "ANSWER_OK"]
+      }
+    },
+    {
+      "name": "unknown-tone-falls-back-safely",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "An unknown tone does not crash synthesis; chatterbox falls back to a safe default tone rather than erroring.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; curl -sf -m5 http://127.0.0.1:8018/health >/dev/null || { echo CHATTERBOX-DOWN; exit 0; }; curl -s -m40 -X POST http://127.0.0.1:8018/synthesize -H 'Content-Type: application/json' -d '{\"text\":\"x\",\"tone\":\"__not_a_real_tone__\"}' | python3 -c 'import json,sys;d=json.load(sys.stdin,strict=False);print(\"ok=%s normalized=%s\"%(d.get(\"ok\"),d.get(\"normalized_tone\")))'"
+      ],
+      "timeout_seconds": 90,
+      "blocked_when_stdout_contains": ["CHATTERBOX-DOWN"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ok=True", "normalized=neutral_warm"]
+      }
+    }
+  ]
+}
