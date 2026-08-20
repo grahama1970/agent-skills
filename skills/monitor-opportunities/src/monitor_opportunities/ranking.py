@@ -137,6 +137,8 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
         return "ELIGIBLE_WNY_ONSITE", ["Buffalo/WNY onsite"]
     if workplace == "REMOTE":
         return "ELIGIBLE_REMOTE", ["credible remote"]
+    if workplace == "ONSITE_ELSEWHERE":
+        return "REJECT_RELOCATION_REQUIRED", ["posting body requires on-site outside Buffalo/WNY"]
     if workplace == "AMBIGUOUS":
         return "HUMAN_REVIEW_LOCATION_AMBIGUOUS", ["location cannot be disambiguated"]
     return "REJECT_LOCATION", [f"unsupported workplace_type={workplace!r}"]

@@ -72,6 +72,36 @@ def build_questions(run_dir: Path, *, max_opportunities: int = 8, max_identities
             }
         )
 
+    # Location-ambiguous rows were dying invisibly - 172 in one night, including
+    # every LinkedIn top-applicant match. The best of them are now a question,
+    # not a black hole.
+    rejections_path = run_dir / "ranking" / "rejections.json"
+    if rejections_path.exists():
+        ambiguous = [
+            r for r in read_json(rejections_path)
+            if r.get("eligibility_state") == "HUMAN_REVIEW_LOCATION_AMBIGUOUS"
+        ]
+        ambiguous.sort(key=lambda r: -float(r.get("fit_score") or 0))
+        for row in ambiguous[:5]:
+            cid = str(row.get("candidate_id") or "")
+            if not cid:
+                continue
+            questions.append(
+                {
+                    "id": f"location::{cid}",
+                    "header": str(row.get("organization") or "?")[:12],
+                    "text": (
+                        f"{row.get('title')} — {row.get('organization')} "
+                        f"(location listed as '{row.get('location_display')}'). Worth pursuing despite unclear location?"
+                    ),
+                    "options": [
+                        {"label": "Pursue - likely remote", "description": "Treat as remote and prepare it."},
+                        {"label": "Skip", "description": "Not worth resolving."},
+                    ],
+                    "multi_select": False,
+                }
+            )
+
     identity_count = 0
     prospect_queue = {}
     pq_path = run_dir / "prospect-queue.json"
@@ -150,7 +180,16 @@ def apply_answers(run_dir: Path, answers: dict[str, str], *, memory_url: str = M
     errors: list[str] = []
     for qid, answer in answers.items():
         try:
-            if qid.startswith("disposition::"):
+            if qid.startswith("location::"):
+                item_id = qid.split("::", 1)[1]
+                action = "KEEP" if answer.startswith("Pursue") else "REJECT"
+                append_decision(
+                    run_dir=run_dir, item_id=item_id, action=action, actor="human",
+                    idempotency_key=f"morning-interview:{run_dir.name}:{qid}",
+                    reason=f"morning interview location review: {answer}",
+                )
+                dispositions += 1
+            elif qid.startswith("disposition::"):
                 item_id = qid.split("::", 1)[1]
                 action = DISPOSITION_ACTION.get(answer.split(" (")[0], None)
                 if action is None:

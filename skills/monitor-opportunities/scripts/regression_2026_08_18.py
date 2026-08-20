@@ -178,8 +178,35 @@ def queue_projection() -> None:
     )
 
 
+def location_blackhole() -> None:
+    """172 candidates/night died in HUMAN_REVIEW_LOCATION_AMBIGUOUS unseen (2026-08-20)."""
+
+    from monitor_opportunities.discovery import _workplace_type
+    from monitor_opportunities.ranking import _eligibility
+
+    cases = [
+        ("United States", "we are a fully remote company", "REMOTE"),
+        ("New York Office", "In-Person 5 days a week in our NYC office", "ONSITE_ELSEWHERE"),
+        ("United States", "join our mission", "AMBIGUOUS"),
+    ]
+    wrong = [(l, _workplace_type(l, b)) for l, b, want in cases if _workplace_type(l, b) != want]
+    state, _ = _eligibility({"lane": "A", "title": "AI Engineer", "workplace_type": "ONSITE_ELSEWHERE"})
+    reject_named = state == "REJECT_RELOCATION_REQUIRED"
+    # The remaining ambiguous rows must be surfaced, not buried.
+    from monitor_opportunities import morning_interview
+    import inspect
+    surfaced = "HUMAN_REVIEW_LOCATION_AMBIGUOUS" in inspect.getsource(morning_interview.build_questions)
+    check(
+        "LOCATION_BLACKHOLE",
+        not wrong and reject_named and surfaced,
+        "body-aware inference, named on-site rejection, ambiguous rows surfaced in the interview"
+        if not wrong and reject_named and surfaced
+        else f"wrong={wrong} reject_named={reject_named} surfaced={surfaced}",
+    )
+
+
 def main() -> int:
-    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection):
+    for fn in (edge_evidence, fixture_aging, retention, meetup_budget, name_guard, queue_projection, location_blackhole):
         try:
             fn()
         except Exception as exc:  # noqa: BLE001 - a crashed check is a failed check
@@ -187,7 +214,7 @@ def main() -> int:
     if FAILURES:
         print(f"REGRESSION_2026_08_18 FAIL: {FAILURES}")
         return 1
-    print("REGRESSION_2026_08_18 OK: all 6 failure signatures guarded")
+    print("REGRESSION_2026_08_18 OK: all 7 failure signatures guarded")
     return 0
 
 

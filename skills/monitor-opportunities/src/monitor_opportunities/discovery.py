@@ -230,7 +230,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             "organization": organization,
             "title": title,
             "location_display": location,
-            "workplace_type": _workplace_type(location),
+            "workplace_type": _workplace_type(location, evidence_text),
             "relocation_required": _relocation_required(location, evidence_text),
             "clearance_required": False,
             "posting_url": primary_url,
@@ -998,7 +998,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             "organization": job.get("company_name") or target["name"],
             "title": job.get("title") or "Untitled",
             "location_display": location,
-            "workplace_type": _workplace_type(location),
+            "workplace_type": _workplace_type(location, str(job.get("content") or "")),
             "relocation_required": "relocation" in location.lower() and "required" in location.lower(),
             "clearance_required": False,
             "posting_url": posting_url,
@@ -1068,7 +1068,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "organization": target["name"],
             "title": job.get("text") or "Untitled",
             "location_display": location,
-            "workplace_type": _workplace_type(location),
+            "workplace_type": _workplace_type(location, posting_text),
             "relocation_required": _relocation_required(location, posting_text),
             "clearance_required": False,
             "posting_url": hosted_url,
@@ -1137,7 +1137,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "organization": target["name"],
             "title": job.get("title") or "Untitled",
             "location_display": location,
-            "workplace_type": _workplace_type(location),
+            "workplace_type": _workplace_type(location, str(job.get("descriptionHtml") or job.get("descriptionPlain") or "")),
             "relocation_required": _relocation_required(location, str(job)),
             "clearance_required": False,
             "posting_url": posting_url,
@@ -1237,7 +1237,7 @@ def _builtin_candidates(
             "organization": org,
             "title": title,
             "location_display": default_location,
-            "workplace_type": _workplace_type(default_location),
+            "workplace_type": _workplace_type(default_location, str(item.get("description") or "")),
             "relocation_required": False,
             "clearance_required": False,
             "posting_url": job_url,
@@ -1281,7 +1281,27 @@ def _ashby_location(job: dict[str, Any]) -> str:
     return "Unknown"
 
 
-def _workplace_type(location: str) -> str:
+_REMOTE_BODY_MARKERS = (
+    "fully remote", "100% remote", "remote-first", "remote first", "work from anywhere",
+    "us-remote", "remote (us", "remote, us", "remote within the us", "this role is remote",
+    "this is a remote", "remote position", "remote role", "remote work environment",
+)
+_ONSITE_BODY_MARKERS = (
+    "in-person", "in person at", "on-site", "onsite", "in office", "in our office",
+    "in the office", "days per week in", "days a week in", "days/week in",
+)
+
+
+def _workplace_type(location: str, content: str = "") -> str:
+    """Infer workplace from location AND posting body.
+
+    Reading only the location string sent 172 candidates per night - including
+    all 63 LinkedIn top-applicant rows - into HUMAN_REVIEW_LOCATION_AMBIGUOUS,
+    a bucket no surface ever showed the human. 'United States' with 'fully
+    remote' in the body is not ambiguous, and 'New York Office' with 'In-Person'
+    in the body is not a question either.
+    """
+
     text = location.lower()
     if "buffalo" in text and "hybrid" in text:
         return "WNY_HYBRID"
@@ -1289,6 +1309,12 @@ def _workplace_type(location: str) -> str:
         return "WNY_ONSITE"
     if "remote" in text:
         return "REMOTE"
+    body = str(content or "").lower()
+    if body:
+        if any(marker in body for marker in _REMOTE_BODY_MARKERS):
+            return "REMOTE"
+        if any(marker in body for marker in _ONSITE_BODY_MARKERS) and "remote" not in body:
+            return "ONSITE_ELSEWHERE"
     return "AMBIGUOUS"
 
 
