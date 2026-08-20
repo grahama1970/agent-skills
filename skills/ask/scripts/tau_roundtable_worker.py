@@ -412,7 +412,7 @@ def main() -> int:
     parser.add_argument("--node-id", required=True)
     parser.add_argument("--handler", required=True)
     parser.add_argument("--topology", required=True)
-    parser.add_argument("--workflow-mode", default="roundtable", choices=["roundtable", "compete"])
+    parser.add_argument("--workflow-mode", default="roundtable", choices=["roundtable", "compete", "single"])
     parser.add_argument("--request-file", required=True)
     parser.add_argument("--browser-oracle-project", default="")
     parser.add_argument("--provider-hint", default="")
@@ -486,6 +486,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     # ladder was skipped before trying a single rung (observed 2026-08-03:
     # webkimi, recovery_budget_exhausted with zero attempts made).
     lane_recovery_budget = max(240, int(getattr(args, "timeout", 900) or 900) // 2)
+    lane_started_monotonic = time.monotonic()
     request_payload = _read_json(Path(args.request_file))
     request_text = str(request_payload.get("request") or "")
     handler = args.handler
@@ -499,6 +500,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     )
     commands: list[dict[str, Any]] = []
     prior_receipts = _load_prior_receipts(artifact_dir.parent, args.prior_node)
+    prompt_compose_started = time.monotonic()
     prompt_path.write_text(
         _handler_prompt(
             request_text,
@@ -517,6 +519,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         ),
         encoding="utf-8",
     )
+    prompt_ready_monotonic = time.monotonic()
 
     status = "ERROR"
     ok = False
@@ -991,7 +994,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
 
     lane_exit_ok = ok
     workflow_mode = getattr(args, "workflow_mode", "roundtable")
-    if workflow_mode in {"roundtable", "compete"} and not ok:
+    if workflow_mode in {"roundtable", "compete", "single"} and not ok:
         # Seats can be unavailable, rate-limited, auth-blocked, or provider-
         # blocked without invalidating the artifact set. Preserve the lane as a
         # terminal outcome and let the join node index every peer receipt.
@@ -1033,6 +1036,19 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "browser_oracle_binding_refresh": binding_refresh,
         "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "submit_meta": submit_meta,
+        # #1472: make the next latency regression diagnosable from the
+        # artifact. provider_wall_ms comes from the submit meta when the
+        # transport recorded it; everything else is lane-side wall clock.
+        "latency_breakdown": {
+            "compile_to_lane_ms": None,
+            "prompt_compose_ms": round((prompt_ready_monotonic - prompt_compose_started) * 1000, 1),
+            "provider_wall_ms": (
+                round(float(submit_meta.get("duration_seconds")) * 1000, 1)
+                if isinstance(submit_meta, dict) and submit_meta.get("duration_seconds") is not None
+                else None
+            ),
+            "lane_total_ms": round((time.monotonic() - lane_started_monotonic) * 1000, 1),
+        },
         "surf_provider_result_path": str(surf_provider_result_path) if surf_provider_result_path else None,
         "surf_provider_result": surf_provider_result or None,
         "commands": commands,
@@ -5366,6 +5382,11 @@ def _handler_prompt(
         )
     elif workflow_mode == "compete":
         role_line = "You are one isolated competitor in a Tau-managed implementation competition."
+    elif workflow_mode == "single":
+        # Single-handler runs carry no panel: no participant framing, and no
+        # mandated section headings below -- that scaffolding measurably
+        # inflated single-call generation by ~21s (agent-skills#1472).
+        role_line = "Answer the request below directly and completely. Do not add roundtable or report scaffolding."
     else:
         role_line = "You are one participant in a Tau-managed roundtable."
     lines = [
@@ -5431,15 +5452,16 @@ def _handler_prompt(
                 "",
             ]
         )
-    lines.extend(
-        [
-            "Return a concise position with these Markdown headings:",
-            "## Position",
-            "## Evidence",
-            "## Uncertainties",
-            "## Blockers",
-        ]
-    )
+    if workflow_mode != "single":
+        lines.extend(
+            [
+                "Return a concise position with these Markdown headings:",
+                "## Position",
+                "## Evidence",
+                "## Uncertainties",
+                "## Blockers",
+            ]
+        )
     return "\n".join(lines)
 
 

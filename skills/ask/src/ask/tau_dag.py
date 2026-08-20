@@ -51,7 +51,11 @@ SUPPORTED_DAG_TEMPLATES = {
     "single-call": {
         "description": "One Tau handler/browser/API/subagent node answers the request, then joins to human.",
         "topology": "concurrent",
-        "workflow_mode": "roundtable",
+        # "single", not "roundtable": one handler answering one request must
+        # not receive roundtable participant framing or mandated position
+        # sections -- measured live 2026-08-19, that scaffolding inflated
+        # generation by roughly 21 seconds per call (agent-skills#1472).
+        "workflow_mode": "single",
         "min_handlers": 1,
     },
     "prompt-chain": {
@@ -321,6 +325,18 @@ def infer_compile_input(
         if not topology:
             resolved_topology = str(template_spec["topology"])
         resolved_workflow_mode = str(template_spec["workflow_mode"])
+    elif (
+        resolved_workflow_mode == "roundtable"
+        and len(inferred_handlers) == 1
+        and not inferred_solvers
+        and not inferred_reviewer
+        and not judge_handler
+        and not report_handler
+    ):
+        # One answering seat, no panel, no template asked for: this is a
+        # single call, and roundtable participant framing measurably inflates
+        # its generation (~21s; agent-skills#1472).
+        resolved_workflow_mode = "single"
     return TauDagCompileInput(
         request=normalized_request,
         repo=repo.strip(),
@@ -1168,7 +1184,7 @@ def _ensure_degraded_roundtable_join(bundle: dict[str, Any]) -> dict[str, Any] |
     dag = bundle.get("dag") if isinstance(bundle.get("dag"), dict) else {}
     dag_context = dag.get("context") if isinstance(dag.get("context"), dict) else {}
     workflow_mode = str(dag_context.get("workflow_mode") or "")
-    if workflow_mode not in {"roundtable", "compete"}:
+    if workflow_mode not in {"roundtable", "compete", "single"}:
         return None
     run_dir = Path(str(bundle.get("run_dir") or ""))
     if not run_dir:
@@ -3027,7 +3043,7 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
             policy["model_preference_reason"] = (
                 "Competition mode defaults the webclaude browser seat to Claude Opus 5 High."
             )
-        elif workflow_mode == "roundtable" and handler == "webclaude":
+        elif workflow_mode in {"roundtable", "single"} and handler == "webclaude":
             policy["model_preference"] = ROUNDTABLE_WEBCLAUDE_MODEL
             policy["model_preference_scope"] = "ask_roundtable_default"
             policy["model_preference_reason"] = (
@@ -3200,6 +3216,22 @@ def _roundtable_handler_prompt_contract(
             contract["model_preference"] = COMPETE_WEBCLAUDE_MODEL
             contract["model_preference_scope"] = "ask_compete_default"
         return contract
+    if input.workflow_mode == "single":
+        return {
+            "schema": "ask.tau_dag_prompt_contract.v1",
+            "system": "Answer the request directly and completely. No roundtable or report scaffolding.",
+            "user_template": (
+                f"{input.request}\n"
+                f"Immutable goal / acceptance bar: {input.immutable_goal}\n"
+                f"Handler: {handler}"
+            ),
+            "handler": handler,
+            "immutable_goal": input.immutable_goal,
+            "prior_nodes": prior_nodes,
+            "requires_prior_receipts": bool(prior_nodes),
+            "requires_verdict": requires_verdict,
+            "verdict_schema": "PASS|FAIL|NEEDS_ATTENTION" if requires_verdict else None,
+        }
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",
@@ -3664,6 +3696,8 @@ def _normalize_workflow_mode(value: str) -> str:
     normalized = value.strip().lower() or "roundtable"
     if normalized in {"competition", "compete", "bakeoff"}:
         return "compete"
+    if normalized in {"single", "single-call"}:
+        return "single"
     return "roundtable"
 
 

@@ -1,0 +1,245 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "live provider dispatch and live multi-seat panels through the real Ask runtime",
+  "claims": {
+    "proves": "that a seat either answers with real content or names its blocker, that a rate-limited seat self-recovers to its configured fallback AND records the substitution, that no seat dispatches a nonexistent model, that a live roundtable reaches three ANSWERING seats and passes its own compliance audit, that a live competition reaches two answering candidates, that a five-creator compete DAG with an independent claude-opus-5-low judge produces a 'WINNER: <node-id>' verdict with rationale and passes panel-audit, that a two-seat panel is refused rather than reported as a panel, and that an MVP unblock dispatches isolated candidates against a real blocker and passes the best-practices-competition audit while refusing a solo candidate",
+    "does_not_prove": "that any given provider is available at run time, or semantic correctness of any response. Quorum is a floor on delivery, not on quality: three seats returning the token proves the transport seats a panel, never that the panel is right."
+  },
+  "capability_claims": [
+    {
+      "id": "ask.scheduler.lane_local_degradation",
+      "criticality": "critical",
+      "description": "One lane's failure degrades lane-local through the tau join contract; healthy seats always run to terminal and the join always settles.",
+      "evidence_required": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.provider.dispatch_and_substitution",
+      "criticality": "critical",
+      "description": "Seats dispatch only real catalog models; removed or rate-limited seats self-recover to their recorded substitution, and a misnamed model relays the transport's course correction.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.browser.tab_lifecycle",
+      "criticality": "critical",
+      "description": "Every browser seat opens (or is bound to) its own usable tab and answers from it; ambient rate-limited or hidden tabs never silently remove a seat.",
+      "evidence_required": [
+        "live_e2e"
+      ]
+    },
+    {
+      "id": "ask.compete.isolated_and_judged",
+      "criticality": "critical",
+      "description": "Competitions run isolated candidate lanes with an identical packet and an independent judge whose verdict names an existing answering candidate; rigged verdicts fail the audit.",
+      "evidence_required": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.evals.artifact_provenance",
+      "criticality": "critical",
+      "description": "Eval verdicts are bound to their own invocation (nonces, exact ask-ids, seat identity, executed artifacts); stale, mismatched, or self-reported evidence is refused.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "scheduler.lane_local_degradation",
+      "claim_id": "ask.scheduler.lane_local_degradation",
+      "seam_type": "scheduler/concurrency",
+      "criticality": "critical",
+      "failure_modes": [
+        "one NEEDS_ATTENTION lane blocks the join and cancels healthy sibling futures",
+        "a failed single lane leaves the run with no join at all"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "provider.dispatch_and_substitution",
+      "claim_id": "ask.provider.dispatch_and_substitution",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "failure_modes": [
+        "a nonexistent model is dispatched anyway",
+        "a removed seat vanishes without a recorded substitution",
+        "scillm's course-correction 400 is swallowed instead of relayed"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "browser.tab_lifecycle",
+      "claim_id": "ask.browser.tab_lifecycle",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "failure_modes": [
+        "a seat submits into a hidden or rate-limited ambient tab",
+        "an unbound run reuses another lane's tab"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "competition.isolation_and_judging",
+      "claim_id": "ask.compete.isolated_and_judged",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "cross-lane leakage rigs the packet",
+        "a judge that is also a creator picks itself",
+        "a winner is declared that never answered or does not exist"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "evals.artifact_provenance",
+      "claim_id": "ask.evals.artifact_provenance",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "a stale green run is graded in place of a failed current one",
+        "a wrong-seat or tokenless receipt is credited",
+        "a self-reported success is trusted without execution"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "live-mixed-seats-complete-a-compliant-task",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2100,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python scripts/live_task_probe.py --handler webgpt --handler webclaude --handler gpt-5.5-low --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/task-probe-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_HONEST_ON_TASK",
+          "TASK_LADDER:"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
+    },
+    {
+      "name": "live-a-misnamed-model-self-corrects-and-never-blocks-the-panel",
+      "type": "adversarial",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2100,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_WEBGPT_REASONING=Instant uv run --project . python scripts/live_task_probe.py --handler webgpt --handler webclaude --handler deepseek-v4-flash --out-dir /mnt/storage12tb/skills/ask/outputs/eval-reports/task-probe-defect-$(date -u +%Y%m%dT%H%M%SZ)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_SEATS_HONEST_ON_TASK"
+        ]
+      },
+      "seams": [
+        "scheduler.lane_local_degradation",
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.scheduler.lane_local_degradation",
+        "ask.provider.dispatch_and_substitution"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "live-compete-five-creators-judged-by-opus5-low-picks-a-winner",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "timeout_seconds": 2400,
+      "command": [
+        "bash",
+        "-c",
+        "set -o pipefail; cd .. && AID=ask-compete-add2-eval-$(date -u +%Y%m%dT%H%M%SZ) && SURF_WEBGPT_REASONING=Instant uv run --project . python -m ask.tau_dag_cli compete 'Objective: Write exactly one Python function that adds two numbers. Immutable goal: a single function add(a: float, b: float) -> float returning the sum, complying with best-practices-python: full type hints, docstring, no side effects, no I/O. Expected output: APPROACH, CHANGES (one python code block), RISKS, PROOF_COMMANDS (exactly one FULLY SELF-CONTAINED python -c command that defines the function inline; it must not read files or import local modules). Forbidden claims: do not claim tests were run. Proof boundary: the project agent runs PROOF_COMMANDS locally.' --repo local/agent-skills --target ask-agentic-eval-compete-add2 --immutable-goal 'One best-practices-python-compliant add-two-numbers function selected by an independent judge with a written rationale.' --handler webgpt --handler webclaude --handler webgemini --handler oc-deepseek --handler webgrok --judge-handler claude-opus-5-low --criterion best-practices-python-compliance --criterion correctness --criterion minimality --ask-id \"$AID\" --execute --json --poll-timeout-seconds 1500 --poll-interval-seconds 5 | tail -60 > /tmp/compete-cli-$AID.out; rc=$?; cat /tmp/compete-cli-$AID.out; RD=/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/\"$AID\" && { [ $rc -eq 0 ] || grep -q '\"removed_seats\": \\[' /tmp/compete-cli-$AID.out || { echo CLI_FAILED_WITHOUT_RECORDED_REMOVAL; exit 1; }; } && ./run.sh panel-audit \"$RD\" --mode compete && ./run.sh judge-audit \"$RD\" --run-winner-proof && grep -E '^WINNER: handler-' \"$RD\"/node-artifacts/judge/response.md"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPLIANT: compete",
+          "JUDGE_AUDIT_OK",
+          "WINNER: handler-"
+        ]
+      },
+      "notes": "Five isolated creators (mixed browser + scillm transports) each write add(a,b) per best-practices-python; claude-opus-5-low judges all receipts and must emit 'WINNER: <node-id>' with a rationale. panel-audit enforces >=2 answered candidates and packet isolation. First green live run 2026-08-19: 5/5 candidates PASS, judge picked handler-webgpt; winner's PROOF_COMMANDS ran locally exit 0 and the judge's SyntaxError claim against oc-deepseek's proof reproduced locally exit 1. 2026-08-19 provenance fix: the audited run dir is the exact --ask-id of this invocation (no newest-dir glob), and pipefail stops a failed tau run from being masked by tail. 2026-08-19: judge-audit chained after panel-audit -- independence (judge is not a creator), verdict names an existing competitor that answered, every competitor addressed in the rationale, and the winner's own PROOF_COMMANDS executed exit 0. 2026-08-19 wave-1 hardening: the packet now demands a fully self-contained python -c proof (a judged winner shipped 'import add' and failed judge-audit --run-winner-proof), and the case chain tolerates a nonzero cli exit ONLY when removed_seats is recorded (ambient rate limits removed webclaude and webgrok with substitutions mid-wave; honest degradation must not read as a compete failure, while an unrecorded seat loss still fails).",
+      "seams": [
+        "competition.isolation_and_judging"
+      ],
+      "supports_claims": [
+        "ask.compete.isolated_and_judged"
+      ],
+      "readback": true,
+      "evidence_class": "live_e2e",
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout",
+        "provider_route_failed"
+      ]
+    },
+    {
+      "name": "ladder-red-team-false-greens-stay-red",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && RT=$(mktemp -d) && cat > $RT/fake-run.sh <<'EOF'\n#!/bin/bash\nseat=\"$2\"\ncase \"$FAKE_MODE\" in\n  blocker_no_code) echo \"{\\\"outcome\\\":\\\"named_blocker\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"failure_code\\\":null}]}\";;\n  answered_bad_exit) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"has_token\\\":true}]}\"; exit 1;;\n  answered_no_token) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"has_token\\\":false}]}\";;\n  wrong_seat) echo \"{\\\"outcome\\\":\\\"answered\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-somebody-else\\\",\\\"has_token\\\":true}]}\";;\n  garbage) echo 'not json';;\n  all_blocked) echo \"{\\\"outcome\\\":\\\"named_blocker\\\",\\\"lanes\\\":[{\\\"lane\\\":\\\"handler-$seat\\\",\\\"failure_code\\\":\\\"provider_down\\\"}]}\";;\nesac\nEOF\nchmod +x $RT/fake-run.sh && fails=0 && for m in blocker_no_code answered_bad_exit answered_no_token wrong_seat garbage; do FAKE_MODE=$m uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/$m --run-sh $RT/fake-run.sh >/dev/null 2>&1; [ $? -eq 1 ] || { echo RED_PATH_WENT_GREEN_$m; fails=1; }; done; FAKE_MODE=all_blocked uv run --project . python scripts/seat_ping_ladder.py --seat s1 --out-dir $RT/ab --run-sh $RT/fake-run.sh >/dev/null 2>&1; [ $? -eq 3 ] || { echo ALL_BLOCKED_NOT_EXIT_3; fails=1; }; [ $fails -eq 0 ] && echo ALL_RED_PATHS_STAY_RED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ALL_RED_PATHS_STAY_RED"
+        ]
+      },
+      "notes": "Red-before/green-after harness for the ladder itself (review 2026-08-19): a named blocker without a failure_code, an answered claim from a failing child, a tokenless answer, a wrong-seat receipt, and garbage output must each exit 1; an honest all-blocked run must exit 3 NOT_READY.",
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ]
+}

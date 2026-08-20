@@ -1173,7 +1173,7 @@ def _browser_lifecycle_creates_fresh_tabs(input_payload: Any, mode: str) -> bool
     if normalized in {"fresh-temporary", "fresh-keep"}:
         return True
     if normalized == "auto":
-        return str(getattr(input_payload, "workflow_mode", "") or "") in {"roundtable", "compete"}
+        return str(getattr(input_payload, "workflow_mode", "") or "") in {"roundtable", "compete", "single"}
     return False
 
 
@@ -1684,7 +1684,7 @@ def _provision_browser_lifecycle(
         explicit_bindings = _explicit_handler_projects(input_payload)
         unbound = [h for h in browser_handlers if h not in explicit_bindings]
         if browser_handlers and (
-            str(input_payload.workflow_mode or "") in {"roundtable", "compete"} or unbound
+            str(input_payload.workflow_mode or "") in {"roundtable", "compete", "single"} or unbound
         ):
             mode = "fresh-temporary"
         else:
