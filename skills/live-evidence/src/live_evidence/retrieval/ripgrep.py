@@ -311,7 +311,13 @@ def _parse_rg_json(root: Path, stdout: str) -> list[EvidenceSource]:
                 path=str(path.resolve()),
                 line_start=_positive_int(line_number),
                 line_end=_positive_int(line_number),
-                metadata={"matched_terms": matched_terms, "root": str(root)},
+                metadata={
+                    "matched_terms": matched_terms,
+                    "root": str(root),
+                    # provenance anchor (#1476): digest at retrieval time so a
+                    # later mutation of the cited file is detectable.
+                    "content_sha256": _file_sha256(path),
+                },
             )
         )
     return sources
@@ -395,3 +401,12 @@ def _dedupe(sources: list[EvidenceSource]) -> list[EvidenceSource]:
         seen.add(key)
         result.append(source)
     return result
+
+
+def _file_sha256(path: Path) -> str | None:
+    import hashlib
+
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None

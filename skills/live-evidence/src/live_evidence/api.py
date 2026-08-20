@@ -242,6 +242,22 @@ def _register_api_routes(
                 "captured_variable_names": outcome.get("captured_variable_names"),
                 "proof_path": outcome.get("proof_path")}
 
+    @app.get("/api/provenance")
+    async def provenance() -> dict[str, Any]:
+        """Clause-level provenance for current cards (#1476), recomputed from
+        the filesystem on every call -- a mutated source shows up immediately."""
+
+        from .provenance import card_provenance
+
+        snapshot = await state.snapshot()
+        return {
+            "cards": [
+                card_provenance(card.model_dump(mode="json", by_alias=True))
+                for card in snapshot.cards
+                if not card.dismissed
+            ][:6]
+        }
+
     @app.post("/api/insights/{kind}", status_code=202)
     async def publish_insight(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Publish a review dossier, rubric coverage, or rehearsal state for the

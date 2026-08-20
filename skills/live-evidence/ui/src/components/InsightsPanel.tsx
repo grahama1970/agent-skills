@@ -36,6 +36,19 @@ type Rubric = { coverage: Coverage[]; suggestions: Suggestion[] };
 type RehearsalTurn = { turn_id: string; question_text: string; audio_status: string; question_revision: number };
 type Insights = { review?: Review; rubric?: Rubric; rehearsal?: { turns: RehearsalTurn[] } };
 
+type ProvenanceSource = {
+  source_id: string;
+  label: string;
+  lane: string;
+  path: string | null;
+  line_start: number | null;
+  line_end: number | null;
+  excerpt: string;
+  verification: { state: string; ok: boolean; anchor_line?: string | null } | null;
+};
+type ProvenanceClause = { clause: string; source_ids: string[]; sourced: boolean; invalidated: boolean };
+type ProvenanceCard = { card_id: string; clauses: ProvenanceClause[]; sources: ProvenanceSource[] };
+
 const DISPOSITION_STYLE: Record<string, string> = {
   supported_by_interview: "bg-emerald-900/60 border-emerald-500 text-emerald-100",
   supported_by_authorized_artifact: "bg-emerald-900/60 border-emerald-400 text-emerald-100",
@@ -54,6 +67,8 @@ const COVERAGE_STYLE: Record<string, string> = {
 
 export function InsightsPanel() {
   const [insights, setInsights] = useState<Insights>({});
+  const [provenance, setProvenance] = useState<ProvenanceCard[]>([]);
+  const [openSource, setOpenSource] = useState<ProvenanceSource | null>(null);
 
   useRegisterAction({
     element_id: "live-evidence:insights:claim-seek",
@@ -61,6 +76,13 @@ export function InsightsPanel() {
     action: "LIVE_EVIDENCE_REVIEW_CLAIM_SEEK",
     label: "Seek media to a review claim's clip",
     description: "Seek the retained interview media to the transcript span bound to this claim",
+  });
+  useRegisterAction({
+    element_id: "live-evidence:insights:provenance-open-source",
+    app: "live-evidence",
+    action: "LIVE_EVIDENCE_PROVENANCE_OPEN_SOURCE",
+    label: "Open a clause's cited source",
+    description: "Show the exact cited file, line range, and verification state for a clause",
   });
   useRegisterAction({
     element_id: "live-evidence:insights:suggestion-dismiss",
@@ -78,6 +100,10 @@ export function InsightsPanel() {
       try {
         const response = await fetch("/api/insights");
         if (response.ok && alive) setInsights(await response.json());
+        const provenanceResponse = await fetch("/api/provenance");
+        if (provenanceResponse.ok && alive) {
+          setProvenance((await provenanceResponse.json()).cards ?? []);
+        }
       } catch {
         /* server-side artifact readback only; nothing to invent on failure */
       }
@@ -91,7 +117,8 @@ export function InsightsPanel() {
   }, []);
 
   const { review, rubric, rehearsal } = insights;
-  if (!review && !rubric && !rehearsal) return null;
+  const provenanceCard = provenance.find((card) => card.clauses.length > 0) ?? null;
+  if (!review && !rubric && !rehearsal && !provenanceCard) return null;
 
   const seekClaim = (claim: Claim) => {
     if (!review) return;
@@ -184,6 +211,70 @@ export function InsightsPanel() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {provenanceCard && (
+        <div data-qid="provenance-panel">
+          <h3 className="mb-1 font-semibold text-slate-100">Answer provenance</h3>
+          <ul className="grid gap-1 text-xs">
+            {provenanceCard.clauses.map((clause, index) => (
+              <li
+                key={index}
+                data-qid={`clause-${index}`}
+                data-sourced={String(clause.sourced)}
+                data-invalidated={String(clause.invalidated)}
+                className={`rounded border px-2 py-1 ${
+                  clause.invalidated
+                    ? "border-rose-500 bg-rose-950/60 text-rose-100 line-through"
+                    : clause.sourced
+                      ? "border-emerald-700 bg-emerald-950/40 text-slate-100"
+                      : "border-slate-600 bg-slate-800/60 text-slate-400"
+                }`}
+              >
+                <span className="mr-1 rounded bg-black/30 px-1 text-[10px] uppercase">
+                  {clause.invalidated ? "invalidated" : clause.sourced ? "sourced" : "unsourced"}
+                </span>
+                {clause.clause}
+                <span className="ml-1">
+                  {clause.source_ids.map((sourceId) => {
+                    const source = provenanceCard.sources.find((item) => item.source_id === sourceId);
+                    if (!source) return null;
+                    return (
+                      <button
+                        key={sourceId}
+                        type="button"
+                        data-qid={`clause-source-${index}-${sourceId}`}
+                        data-qs-action="LIVE_EVIDENCE_PROVENANCE_OPEN_SOURCE"
+                        data-file-backed={String(Boolean(source.path))}
+                        title={`Open ${source.label} at the exact cited range`}
+                        onClick={() => setOpenSource(source)}
+                        className="ml-1 rounded bg-sky-900 px-1 text-[10px] text-sky-100 hover:bg-sky-800"
+                      >
+                        {source.label.split("/").pop()}
+                        {source.line_start ? `:${source.line_start}` : ""}
+                      </button>
+                    );
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {openSource && (
+            <div data-qid="source-deep-view" className="mt-2 rounded border border-sky-700 bg-slate-950 p-2 text-xs">
+              <p className="text-sky-200">
+                {openSource.path}
+                {openSource.line_start ? `:${openSource.line_start}` : ""}
+                {openSource.line_end && openSource.line_end !== openSource.line_start ? `-${openSource.line_end}` : ""}
+                {" · "}
+                <span data-qid="source-verification-state">
+                  {openSource.verification?.state ?? "unknown"}
+                </span>
+              </p>
+              <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap text-slate-300">
+                {openSource.verification?.anchor_line ?? openSource.excerpt}
+              </pre>
+            </div>
+          )}
         </div>
       )}
       {rehearsal && (

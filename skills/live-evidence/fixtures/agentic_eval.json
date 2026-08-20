@@ -561,6 +561,28 @@
         ]
       },
       "notes": "#1473 live stage-2 fast path: LIVE resolver + LIVE streaming solver, 30 heterogeneous questions, revision-churn fence, blinded parity vs the $ask single-call path. The ask fixture runner remains only as a keyless regression floor, never a live-answer claim."
+    },
+    {
+      "name": "clause-provenance-live-browser-rung",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-provenance"
+      ],
+      "timeout_seconds": 600,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "independent recomputation matches every file-backed anchor: PASS",
+          "no clause borrows a citation its text does not overlap: PASS",
+          "deep view shows exact path:line whose content matches the file: PASS",
+          "mutating a cited file flips its clauses to invalidated in the browser: PASS",
+          "provenance: PASS"
+        ]
+      },
+      "notes": "#1476: clause->source mapping excludes generated (fast-solver) sources so clauses cannot self-cite the generator; digests stamped at retrieval; verification recomputes from the filesystem on every call."
     }
   ]
 }
