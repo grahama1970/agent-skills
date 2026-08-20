@@ -240,6 +240,35 @@
         ]
       },
       "timeout_seconds": 900
+    },
+    {
+      "name": "full-cycle-live",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "timeout_seconds": 3000,
+      "supports_claims": [
+        "persona_dream.full_cycle.live"
+      ],
+      "seams": [
+        "pipeline.full_cycle.e2e"
+      ],
+      "blocked_when_stdout_contains": [
+        "BLOCKED_CHATTERBOX_UNREACHABLE",
+        "BLOCKED_DREAM_DOCTOR"
+      ],
+      "command": [
+        "python3",
+        "../scripts/eval_full_cycle.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FULL_CYCLE_OK stages=7",
+          "conversation:3_pairs_all_voiced"
+        ]
+      }
     }
   ],
   "capability_claims": [
@@ -270,6 +299,14 @@
     {
       "id": "persona_dream.conversation.audible_two_agent",
       "description": "Horus and Embry hold a DYNAMIC audible conversation: each Horus turn drafted live by Tau from her journal and the transcript (proven by Tau receipt provenance and conditioned-on-reply oracles), spoken in his own voice; both roles voiced first-class in conversation.jsonl with tone + sha256-bound audio.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "persona_dream.full_cycle.live",
+      "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), tone-annotated day journal, ASR-verified spoken journal, memory write, artifact store, a 3-pair fully audible dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
@@ -313,6 +350,14 @@
     {
       "seam_id": "conversation.horus_embry.audible",
       "seam_type": "multi_agent_voice",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pipeline.full_cycle.e2e",
+      "seam_type": "end_to_end_pipeline",
       "criticality": "critical",
       "required_evidence": [
         "live_e2e"

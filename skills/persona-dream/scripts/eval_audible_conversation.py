@@ -60,11 +60,15 @@ def main() -> int:
         [sys.executable, str(ROOT / "scripts" / "dynamic_conversation.py"),
          "--run-dir", str(run_dir), "--turns", "2"],
         capture_output=True, text=True, timeout=1500)
-    if "BLOCKED_" in (proc.stdout + proc.stderr) and proc.returncode != 0:
-        marker = next((tok for tok in (proc.stdout + proc.stderr).split()
-                       if tok.startswith("BLOCKED_")), "BLOCKED_DYNAMIC_CONVERSATION")
-        print(marker)
-        return 0
+    # Only service-down markers pass through as BLOCKED; every other failure
+    # must surface its diagnostics and FAIL (a swallowed BLOCKED_EMBRY_TURN
+    # cost the 2026-08-20 suite run its root cause).
+    service_markers = ("BLOCKED_CHATTERBOX_UNREACHABLE", "BLOCKED_UX_SERVER_UNREACHABLE")
+    if proc.returncode != 0:
+        for marker in service_markers:
+            if marker in (proc.stdout + proc.stderr):
+                print(marker)
+                return 0
     if proc.returncode != 0 or "PASS_DYNAMIC_CONVERSATION" not in proc.stdout:
         raise SystemExit(f"FAIL_DYNAMIC_CONVERSATION: rc={proc.returncode} "
                          f"out={proc.stdout[-200:]} err={proc.stderr[-200:]}")
