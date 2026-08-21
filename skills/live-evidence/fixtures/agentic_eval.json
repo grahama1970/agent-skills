@@ -15,7 +15,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh verify"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh verify"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -33,7 +33,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-interview-loop"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-interview-loop"
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -55,7 +55,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-youtube-interview"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-youtube-interview"
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -99,7 +99,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-real-stt-window"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-real-stt-window"
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -117,7 +117,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-mvp-steps-2-8 --samples 60 --seed \"$RANDOM\""
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-mvp-steps-2-8 --samples 60 --seed \"$RANDOM\""
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -145,7 +145,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-two-stage-prompt-contract --samples 60 --seed \"$RANDOM\""
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-two-stage-prompt-contract --samples 60 --seed \"$RANDOM\""
       ],
       "timeout_seconds": 90,
       "expected": {
@@ -164,7 +164,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-memory-recall"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -182,7 +182,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-public-corpus"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_EVAL_MEMORY_URL=http://127.0.0.1:8601 bash ../run.sh eval-leetcode-public-corpus"
       ],
       "timeout_seconds": 360,
       "expected": {
@@ -203,7 +203,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh listen --mode microphone"
       ],
       "timeout_seconds": 30,
       "expected": {
@@ -220,7 +220,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adversarial"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adversarial"
       ],
       "timeout_seconds": 30,
       "expected": {
@@ -301,7 +301,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-revision-fence"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-revision-fence"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -322,7 +322,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-salient-fact-memory"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-salient-fact-memory"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -344,7 +344,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-session-policy"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-session-policy"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -368,7 +368,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-requirement-ledger"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-requirement-ledger"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -392,7 +392,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-voice-interruption"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-voice-interruption"
       ],
       "timeout_seconds": 300,
       "expected": {
@@ -421,7 +421,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-review-dossier"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-review-dossier"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -444,7 +444,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-debugger-lane"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-debugger-lane"
       ],
       "timeout_seconds": 240,
       "expected": {
@@ -468,7 +468,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-coverage"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-coverage"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -493,7 +493,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rehearsal-loop"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rehearsal-loop"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -518,7 +518,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-g2i-benchmark-pack"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-g2i-benchmark-pack"
       ],
       "timeout_seconds": 120,
       "expected": {
@@ -541,7 +541,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-ui-insights"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-ui-insights"
       ],
       "timeout_seconds": 420,
       "expected": {
@@ -570,7 +570,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver"
       ],
       "timeout_seconds": 1800,
       "expected": {
@@ -598,7 +598,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-provenance"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-provenance"
       ],
       "timeout_seconds": 600,
       "expected": {
@@ -625,7 +625,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-action-lane"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-action-lane"
       ],
       "timeout_seconds": 600,
       "expected": {
@@ -655,7 +655,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-author"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-rubric-author"
       ],
       "timeout_seconds": 600,
       "expected": {
@@ -682,7 +682,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"${TMPDIR:-/tmp}/live-evidence-agentic-eval-${RANDOM}\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-speaker-turns"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-speaker-turns"
       ],
       "timeout_seconds": 240,
       "expected": {
