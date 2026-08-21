@@ -92,6 +92,13 @@ def main() -> int:
               f"kinds={kinds}")
 
         if pending:
+            for _ in range(30):
+                ui_status, ui_body = campaign.http("GET", f"{server.url}/")
+                if ui_status == 200:
+                    break
+                time.sleep(1)
+            else:
+                print(f"UI route unhealthy before tab: {ui_status} {str(ui_body)[:80]}")
             output = surf(root, ["tab.new", f"{server.url}/", "--json"])
             tab_id = int(re.search(r"Created tab\s+(\d+)", output).group(1))
             time.sleep(3)

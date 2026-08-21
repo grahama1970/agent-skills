@@ -127,6 +127,10 @@ class Server:
             "LIVE_EVIDENCE_SCILLM_KEY": (scillm_key() or "") if live_resolver else "",
         }
         env.pop("LIVE_EVIDENCE_PROFILE", None)
+        # Module resolution must not depend on the ephemeral venv's
+        # site-packages contents (observed live: 'No module named
+        # live_evidence' from a venv that demonstrably had it earlier).
+        env["PYTHONPATH"] = str(ROOT / "src")
         self.log = (work / "server.log").open("w")
         self.process = subprocess.Popen(
             [sys.executable, "-m", "live_evidence", "serve", "--host", "127.0.0.1",
