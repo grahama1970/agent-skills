@@ -8,6 +8,7 @@ This is the assembler module. Implementation lives in:
 - cdp_client.py: CDPController WebSocket client class
 """
 import json
+import os
 import sys
 from typing import Optional
 from pathlib import Path
@@ -25,8 +26,37 @@ from cdp_scripts import (
     GET_PAGE_TEXT_SCRIPT,
 )
 from cdp_client import CDPController, CDP_PORT
+from pointer_os_dispatch import PointerDispatchError, dispatch_os_pointer_plan
 
 app = typer.Typer(help="CDP-based browser automation")
+
+
+def _red_team_enabled() -> bool:
+    """True when SURF_RED_TEAM is set to an enabling value.
+
+    Red-team mode defaults to off. Only when enabled may surf dispatch captcha
+    pointer plans whose defensive_scope is ``authorized_live_surf_resolution``.
+    """
+
+    value = os.environ.get("SURF_RED_TEAM", "").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
+def red_team_gate(plan: dict) -> str | None:
+    """Return an error string when a live-resolution plan needs red-team mode.
+
+    The loopback synthetic defensive scope is always permitted; live-resolution
+    pointer dispatch is gated behind SURF_RED_TEAM (default off).
+    """
+
+    if plan.get("defensive_scope") != "authorized_live_surf_resolution":
+        return None
+    if _red_team_enabled():
+        return None
+    return (
+        "surf red-team mode is disabled; export SURF_RED_TEAM=1 to dispatch a "
+        "live-resolution pointer plan"
+    )
 
 
 def _run_cdp_command(cdp: CDPController, as_json: bool, fn, *args, **kwargs):
@@ -56,6 +86,16 @@ def _run_cdp_command(cdp: CDPController, as_json: bool, fn, *args, **kwargs):
         raise typer.Exit(code=1)
     finally:
         cdp.close()
+
+
+def _cdp_probe(port: int) -> bool:
+    """Return true when a CDP target is reachable without dispatching input."""
+
+    try:
+        CDPController(port=port)._get_ws_url()
+    except Exception:
+        return False
+    return True
 
 
 def _load_json_object(path: Path) -> dict:
@@ -192,9 +232,16 @@ def cdp_hit_test(
 def pointer_dispatch(
     plan_path: Path = typer.Option(..., "--plan", exists=True, dir_okay=False),
     port: int = typer.Option(CDP_PORT, help="CDP port"),
+    transport: str = typer.Option("auto", "--transport", help="Pointer transport: auto, cdp, or os"),
+    backend: str = typer.Option("auto", "--backend", help="OS backend: auto, uinput, or xdotool"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Build the OS pointer receipt without moving the pointer"),
+    window_id: Optional[str] = typer.Option(None, "--window-id", help="OS window id for geometry lookup"),
+    window_origin_x: Optional[int] = typer.Option(None, "--window-origin-x", help="Window origin X in screen pixels"),
+    window_origin_y: Optional[int] = typer.Option(None, "--window-origin-y", help="Window origin Y in screen pixels"),
+    device_pixel_ratio: Optional[float] = typer.Option(None, "--device-pixel-ratio", help="Viewport CSS to screen pixel scale"),
     as_json: bool = typer.Option(True, "--json/--no-json", help="Output as JSON"),
 ):
-    """Dispatch CDP pointer samples from a captcha pointer-motion plan receipt."""
+    """Dispatch receipt-bound pointer samples from a pointer-motion plan."""
 
     try:
         plan = _load_json_object(plan_path)
@@ -205,14 +252,70 @@ def pointer_dispatch(
         print(json.dumps({"schema_version": "surf.pointer_dispatch_receipt.v1", "success": False, "error": str(exc)}))
         raise typer.Exit(code=2)
 
-    cdp = CDPController(port=port)
-    _run_cdp_command(
-        cdp,
-        as_json,
-        cdp.dispatch_pointer_samples,
-        samples,
-        source_path=str(plan_path.expanduser().resolve()),
-    )
+    gate_error = red_team_gate(plan)
+    if gate_error is not None:
+        print(json.dumps({
+            "schema_version": "surf.pointer_dispatch_receipt.v1",
+            "success": False,
+            "error": gate_error,
+            "red_team_enabled": False,
+            "defensive_scope": plan.get("defensive_scope"),
+            "hint": "export SURF_RED_TEAM=1",
+        }))
+        raise typer.Exit(code=2)
+
+    if transport not in {"auto", "cdp", "os"}:
+        print(json.dumps({
+            "schema_version": "surf.pointer_dispatch_receipt.v1",
+            "success": False,
+            "error": f"unsupported pointer transport: {transport}; expected auto, cdp, or os",
+        }))
+        raise typer.Exit(code=2)
+
+    source_path = str(plan_path.expanduser().resolve())
+    if transport in {"auto", "cdp"} and _cdp_probe(port):
+        cdp = CDPController(port=port)
+        _run_cdp_command(
+            cdp,
+            as_json,
+            cdp.dispatch_pointer_samples,
+            samples,
+            source_path=source_path,
+        )
+        return
+    if transport == "cdp":
+        print(json.dumps({
+            "schema_version": "surf.pointer_dispatch_receipt.v1",
+            "success": False,
+            "transport_selected": "cdp",
+            "error": f"Cannot connect to CDP at port {port}",
+        }))
+        raise typer.Exit(code=2)
+
+    try:
+        receipt = dispatch_os_pointer_plan(
+            plan,
+            source_path=source_path,
+            backend=backend,
+            dry_run=dry_run,
+            window_id=window_id,
+            window_origin_x=window_origin_x,
+            window_origin_y=window_origin_y,
+            device_pixel_ratio=device_pixel_ratio,
+        )
+    except PointerDispatchError as exc:
+        print(json.dumps({
+            "schema_version": "surf.pointer_dispatch_receipt.v1",
+            "success": False,
+            "transport_selected": "os",
+            "error": str(exc),
+        }))
+        raise typer.Exit(code=2)
+
+    if as_json:
+        print(json.dumps(receipt, indent=2))
+    else:
+        print("OK")
 
 
 @app.command("type")

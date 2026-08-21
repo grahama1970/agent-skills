@@ -221,7 +221,7 @@ contract and normalize any provider meta receipt:
 
 `capabilities --json` reports the vendored engine version, skill identity,
 provider support, lock behavior, recovery features, and update-gate references.
-`meta.normalize` converts WebGPT, Claude, Gemini, Kimi, and Grok receipts into
+`meta.normalize` converts WebGPT, Codex, Gemini, Kimi, and Grok receipts into
 `surf.provider_result.v1` with proof status, controlled tab/view id, URL, model,
 reasoning, delivery proof, retryability, stale-binding repair, bounded error
 details, and immutable request snapshot hashes.
@@ -933,7 +933,7 @@ rate-limit/capacity banners.
 
 All browser submit wrappers accept `--attach-file PATH` and `--attach-files
 PATH[,PATH...]` for one simple project-agent contract. Prefer one local bundle.
-Claude can upload multiple files directly. WebGPT and Kimi currently send one
+Codex can upload multiple files directly. WebGPT and Kimi currently send one
 attachment and fail closed if multiple files are passed. For Kimi, prefer a
 short prompt plus one plain Markdown/text attachment; do not inline large review
 bundles into the composer. Kimi mounts its `input[type=file]` only when the
@@ -959,7 +959,7 @@ Provider payload rules are part of the Surf contract:
 | `webgpt.submit` | Text prompt through the ChatGPT composer | Exactly one attachment; zip is allowed when a real archive is needed | Do not pass multiple files. Do not treat assistant prose about a downloadable file as local proof. |
 | `gemini.submit` | Text prompt through the Gemini page composer | Upload is available only when the current UI exposes a file input; Ask should inline Markdown/text review bundles for WebGemini | Do not assume `Upload & tools` means a usable `input[type=file]` exists. Do not accept stale page text or prompt echo as a response. |
 | `kimi.submit` | Short text prompt through the Kimi composer | Exactly one plain Markdown/text attachment for large review bundles | Do not send zip files to Kimi. Do not paste or inline large bundles manually, through shell argv, or through the composer; attach the bundle and verify attachment metadata. Do not resubmit a round into a thread Kimi has declared too long, and do not treat that notice as throttling. |
-| `claude.submit` | Text prompt through the Claude composer with submit-acceptance verification | Multiple attachments are supported | Do not accept a staged draft, `.submitted.md`, or prompt echo as proof of submission. |
+| `Codex.submit` | Text prompt through the Codex composer with submit-acceptance verification | Multiple attachments are supported | Do not accept a staged draft, `.submitted.md`, or prompt echo as proof of submission. |
 | `deepseek.submit` | Inline text prompt only | Unsupported | Do not pass attachments or zip files to DeepSeek. |
 | `grok.submit` | Text prompt through the Grok composer | Attachment support depends on the visible file input and preview proof | Do not continue if no upload input or preview appears. |
 
@@ -1006,15 +1006,15 @@ If the Grok editor still contains the prompt after both the click and Enter
 paths, `grok.submit` fails closed instead of pretending the browser accepted the
 task. Do not retry a large bundle until a tiny sentinel ping succeeds.
 
-`claude.submit` is the Surf transport used by `$ask`/Tau `webclaude` nodes. A
-Claude tab can lose its Surf content script while another long browser node is
-running. Before submitting, `claude.submit` probes the explicit controlled tab;
+`Codex.submit` is the Surf transport used by `$ask`/Tau `webclaude` nodes. A
+Codex tab can lose its Surf content script while another long browser node is
+running. Before submitting, `Codex.submit` probes the explicit controlled tab;
 if Surf reports `Content script not loaded`, it hard-reloads that same tab once,
 waits for the content script/readability to return, and records the
 `content_script_recovery` metadata. This recovery never opens a fallback tab or
-silently chooses a different Claude session. If same-tab reload does not restore
+silently chooses a different Codex session. If same-tab reload does not restore
 readability, the run fails before prompt submission and the caller must refresh
-or rebind the Claude reviewer tab.
+or rebind the Codex reviewer tab.
 
 ### Fresh chat on an existing provider tab
 
@@ -1033,7 +1033,7 @@ Fresh URLs:
 | Backend | Fresh URL |
 | --- | --- |
 | `webgpt` | `https://chatgpt.com/` |
-| `webclaude` | `https://claude.ai/new` |
+| `webclaude` | `https://Codex.ai/new` |
 | `webkimi` | `https://www.kimi.com/` |
 | `webgemini` | `https://gemini.google.com/app` |
 | `webgrok` | `https://grok.com/` |
@@ -1594,6 +1594,7 @@ the task is still an authorized local/browser-control workflow:
 ./run.sh cdp.hit-test 512 384 --json
 ./run.sh cdp.raw Page.getLayoutMetrics --json
 ./run.sh pointer.dispatch --plan /tmp/captcha-pointer-plan.json --json
+./run.sh pointer.dispatch --transport os --plan /tmp/captcha-pointer-plan.json --json
 ```
 
 Receipt schemas:
@@ -1607,31 +1608,73 @@ Receipt schemas:
 | `pointer.dispatch` | `surf.pointer_dispatch_receipt.v1` |
 
 `pointer.dispatch` is input-delivery proof only. It does not prove a challenge
-was solved and callers must re-observe the target after dispatch. For
-authenticated provider tabs, the extension/WebGPT proof contracts remain
+was solved and callers must re-observe the target after dispatch. The default
+transport is `auto`: Surf uses CDP when that target is reachable and falls back
+to OS-level replay when CDP is unavailable. `--transport os` maps viewport CSS
+samples to screen pixels using the supplied or resolved window origin and device
+pixel ratio, then replays through `uinput` when available or `xdotool`
+otherwise. OS receipts record `transport_selected`, `backend`, window origin,
+DPR, mapped screen coordinates, and `sample_count`.
+
+For authenticated provider tabs, the extension/WebGPT proof contracts remain
 authoritative; generic CDP receipts are diagnostics unless the workflow is a
-local synthetic target launched for CDP control.
+local synthetic target launched for CDP control. OS dispatch still requires
+post-dispatch observation through the authoritative channel, such as `surf js`
+for extension-controlled Chrome.
 
 ### Bot Detection And Captcha Boundary
 
-Surf may compose the `captcha` skill only for explicitly authorized defensive
-loopback manifests that pass `captcha authorization-preflight`. The composed
-path is:
+Surf composes the `captcha` skill only when an authorization manifest passes
+`captcha authorization-preflight`. Two providers are authorized:
+
+- **`dynamic`** — the ReCAP synthetic benchmark on literal loopback (defensive
+  evaluation only).
+- **`surf`** — surf-composed live resolution against a page the operator owns or
+  is explicitly authorized to test. Surf owns browser transport and the human
+  alert; captcha owns authorization, the pointer contract, and the outcome.
+
+The live-resolution path:
 
 ```bash
-captcha authorization-preflight --manifest <local-manifest.json> --action evaluate --json
-captcha pointer-plan --manifest <local-manifest.json> --request <motion-request.json> --out /tmp/captcha-pointer-plan.json --json
-captcha pointer-dispatch-plan --manifest <local-manifest.json> --plan /tmp/captcha-pointer-plan.json --out /tmp/captcha-dispatch-plan.json --json
+captcha authorization-preflight --manifest <live-manifest.json> --action plan --json
+captcha pointer-plan --manifest <live-manifest.json> --request <motion-request.json> --out /tmp/captcha-pointer-plan.json --json
+captcha pointer-dispatch-plan --manifest <live-manifest.json> --plan /tmp/captcha-pointer-plan.json --out /tmp/captcha-dispatch-plan.json --json
 surf pointer.dispatch --plan /tmp/captcha-pointer-plan.json --json
 surf cdp.layout --json
 ```
 
-For public websites, real CAPTCHA providers, authenticated third-party pages,
-or any bot-detection page outside an explicit defensive loopback fixture, Surf
-must stop for human handoff. Do not call `captcha`, do not dispatch pointer
-input, and do not attempt solver, stealth, proxy, credential, session-reuse, or
-provider-bypass behavior. Use screenshots and CDP geometry as diagnostics only
-when they help the human understand the block.
+Or run the bounded attempt in one command; when the challenge is not cleared it
+emits the outcome and triggers the human alert automatically:
+
+```bash
+captcha resolve --manifest <live-manifest.json> \
+  --request <motion-request.json> --tab-id <id> \
+  --observe-js '<js returning true when the challenge is cleared>' \
+  --channel <buzz-channel-uuid> --out /tmp/captcha-resolve/ --json
+```
+
+**When a CAPTCHA cannot be resolved, Surf alerts the human.** Captcha's
+`resolve` command invokes Surf's alert transport on NOT_SOLVED or BLOCKED
+outcomes:
+
+```bash
+surf captcha.alert --outcome /tmp/captcha-resolve/captcha.resolution-outcome.json \
+  --channel <buzz-channel-uuid> --out /tmp/captcha-resolve/alert-receipt.json
+```
+
+`surf captcha.alert` renders an ops-buzz message from the resolution outcome and
+posts it through `skills/ops-buzz`. It writes a `surf.captcha_alert_receipt.v1`
+with status `DELIVERED`, `DRY_RUN`, or `BLOCKED`, and exits non-zero when the
+notification could not be delivered. Surf never posts an alert for a challenge
+that was resolved.
+
+For targets without a passing authorization manifest — public websites the
+operator does not own or is not authorized to test, real CAPTCHA providers,
+authenticated third-party pages, or any bot-detection page outside an
+authorized scope — Surf must stop for human handoff. Do not call `captcha`, do
+not dispatch pointer input, and do not attempt solver, stealth, proxy,
+credential, session-reuse, or provider-bypass behavior. Use screenshots and CDP
+geometry as diagnostics only when they help the human understand the block.
 
 ### Screenshots & Scrolling
 
@@ -1754,7 +1797,7 @@ surf cdp start
 surf go "https://google.com"
 surf read
 # Output shows: textbox "Search" [e1] ...
-surf type "claude ai" --ref e1
+surf type "Codex ai" --ref e1
 surf key Enter
 surf wait 2
 surf read
@@ -1766,7 +1809,7 @@ surf cdp stop
 
 ## Screenshot Analysis with VLM
 
-When sending screenshots to a VLM (Claude Vision, Gemini, GPT-4V), **preprocess with `vlm_image`**:
+When sending screenshots to a VLM (Codex Vision, Gemini, GPT-4V), **preprocess with `vlm_image`**:
 
 ```python
 from common.vlm_image import prepare_for_vlm, stitch_vertical, smart_crop, upscale, auto_crop

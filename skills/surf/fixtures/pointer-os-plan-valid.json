@@ -1,0 +1,25 @@
+{
+  "schema_version": "captcha.pointer_motion_plan.v1",
+  "defensive_scope": "authorized_loopback_synthetic_only",
+  "device_pixel_ratio": 2,
+  "samples": [
+    {
+      "event": "mouseMoved",
+      "time_ms": 0,
+      "x_css": 10,
+      "y_css": 20
+    },
+    {
+      "event": "mousePressed",
+      "time_ms": 20,
+      "x_css": 10,
+      "y_css": 20
+    },
+    {
+      "event": "mouseReleased",
+      "time_ms": 40,
+      "x_css": 10,
+      "y_css": 20
+    }
+  ]
+}

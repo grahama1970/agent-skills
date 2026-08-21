@@ -22,6 +22,11 @@ SKILL_DIR="$SCRIPT_DIR"
 # Surf doesn't need project .env — only CDP_PORT and CHROME_USER_DATA
 # which have sane defaults below
 
+if [[ -n "${CDP_PORT:-}" ]]; then
+    CDP_PORT_EXPLICIT=1
+else
+    CDP_PORT_EXPLICIT=0
+fi
 CDP_PORT="${CDP_PORT:-9222}"
 CHROME_USER_DATA="${CHROME_USER_DATA:-/tmp/chrome-cdp-profile}"
 CDP_PID_FILE="/tmp/chrome-cdp.pid"
@@ -58,7 +63,7 @@ gpu_render_device_available() {
 }
 
 cdp_gpu_status() {
-    python3 "$SKILL_DIR/scripts/cdp_gpu_status.py" --port "$1"
+    uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/cdp_gpu_status.py" --port "$1"
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -393,7 +398,7 @@ CDP_CONTROLLER="$SKILL_DIR/cdp_controller.py"
 
 run_cdp_controller() {
     local port="${CDP_PORT:-9222}"
-    if [[ -f "${CDP_PID_FILE}.port" ]]; then
+    if [[ "$CDP_PORT_EXPLICIT" != "1" && -f "${CDP_PID_FILE}.port" ]]; then
         port=$(cat "${CDP_PID_FILE}.port")
     fi
     CDP_PORT="$port" uv run --project "$SCRIPT_DIR" python3 "$CDP_CONTROLLER" "$@"
@@ -404,7 +409,7 @@ run_cdp_controller() {
 # routing into a guaranteed ECONNREFUSED.
 surf_cli_available() {
     [[ -S "/tmp/surf.sock" ]] || return 1
-    python3 - <<'PY'
+    uv run --project "$SCRIPT_DIR" python3 - <<'PY'
 import socket
 import sys
 
@@ -425,7 +430,7 @@ PY
 
 recover_stale_surf_socket() {
     [[ -S "/tmp/surf.sock" ]] || return 1
-    python3 - <<'PY'
+    uv run --project "$SCRIPT_DIR" python3 - <<'PY'
 import socket
 import sys
 
@@ -530,7 +535,7 @@ if [[ "$1" == "go" ]]; then
     if [[ -n "$_expect_url" && -n "$_tab_id" ]]; then
         echo "Checking tab $_tab_id URL before navigating..." >&2
         _js_out="$("$RUN_SH" js "return document.URL" --tab-id "$_tab_id" 2>/dev/null || true)"
-        _current_url="$(printf '%s' "$_js_out" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0] if isinstance(d,list) else d)' 2>/dev/null || printf '%s' "$_js_out" | tr -d '[]"')"
+        _current_url="$(printf '%s' "$_js_out" | uv run --project "$SCRIPT_DIR" python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0] if isinstance(d,list) else d)' 2>/dev/null || printf '%s' "$_js_out" | tr -d '[]"')"
         if [[ -z "$_current_url" ]]; then
             echo "WARNING: Could not read tab $_tab_id URL — proceeding without guard (no surf-cli?)." >&2
         elif [[ "$_current_url" != "$_expect_url" ]]; then
@@ -561,11 +566,15 @@ if [[ "$1" == "extension.fresh" ]]; then
 fi
 
 if [[ "$1" == "capabilities" ]]; then
-    exec python3 "$SKILL_DIR/scripts/surf_capabilities.py" "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/surf_capabilities.py" "${@:2}"
 fi
 
 if [[ "$1" == "meta.normalize" ]]; then
-    exec python3 "$SKILL_DIR/scripts/surf_meta_normalize.py" "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/surf_meta_normalize.py" "${@:2}"
+fi
+
+if [[ "$1" == "captcha.alert" ]]; then
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/captcha_alert.py" "${@:2}"
 fi
 
 if [[ "$1" == "eval" ]]; then
@@ -623,7 +632,7 @@ if [[ "$1" == "grok.extract" ]]; then
 fi
 
 if [[ "$1" == "claude.submit" ]]; then
-    exec python3 "$SKILL_DIR/scripts/claude-submit.py" "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/claude-submit.py" "${@:2}"
 fi
 
 if [[ "$1" == "gemini.extract" ]]; then
@@ -635,11 +644,11 @@ if [[ "$1" == "webgpt.extract" ]]; then
 fi
 
 if [[ "$1" == "webgpt.prompt-preflight" ]]; then
-    exec python3 "$SKILL_DIR/scripts/lib/webgpt_prompt_preflight.py" "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/lib/webgpt_prompt_preflight.py" "${@:2}"
 fi
 
 if [[ "$1" == "webgpt.heartbeat" ]]; then
-    exec python3 "$SKILL_DIR/scripts/lib/webgpt_heartbeat.py" "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/lib/webgpt_heartbeat.py" "${@:2}"
 fi
 
 if [[ "$1" == "webgpt.recover" ]]; then
@@ -664,7 +673,7 @@ fi
 
 if [[ "$1" == "cursor-browser.tab.list" ]]; then
     export PYTHONPATH="$SKILL_DIR/scripts${PYTHONPATH:+:$PYTHONPATH}"
-    exec python3 "$SKILL_DIR/scripts/cursor_browser_client.py" tab.list "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/cursor_browser_client.py" tab.list "${@:2}"
 fi
 
 if [[ "$1" == "webgpt.tab-id-background-sanity" ]]; then
@@ -688,15 +697,15 @@ if [[ "$1" == "webgpt.roundtrip-preflight" ]]; then
 fi
 
 if [[ "$1" == "kde.spaces" ]]; then
-    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" inventory "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/kde_spaces.py" inventory "${@:2}"
 fi
 
 if [[ "$1" == "kde.helper" ]]; then
-    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" serve "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/kde_spaces.py" serve "${@:2}"
 fi
 
 if [[ "$1" == "kde.helper.health" ]]; then
-    exec python3 "$SKILL_DIR/scripts/kde_spaces.py" health "${@:2}"
+    exec uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/kde_spaces.py" health "${@:2}"
 fi
 
 # Handle help
@@ -717,8 +726,9 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo ""
     echo "Tab Management (requires extension):"
     echo "  surf tab.list           List all browser tabs"
+    echo "  surf tab.age            How long each tab has been open (oldest first)"
     echo "  surf tab.new <url>      Open new tab"
-    echo "  surf tab.activate <id>  Switch to tab"
+    echo "  surf tab.switch <id>    Switch to tab"
     echo ""
     echo "Browser Automation:"
     echo "  surf go <url>           Navigate to URL (add --expect-url URL --tab-id ID to guard against wrong tab)"
@@ -732,7 +742,8 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf cdp.quads <selector>  Resolve DOM.getContentQuads for a selector"
     echo "  surf cdp.hit-test <x> <y>  Resolve DOM.getNodeForLocation at viewport coords"
     echo "  surf cdp.raw <method> [--params-json '{}']  Send one raw CDP command"
-    echo "  surf pointer.dispatch --plan pointer-plan.json  Dispatch receipt-bound pointer samples"
+    echo "  surf pointer.dispatch --plan pointer-plan.json [--transport auto|cdp|os]  Dispatch receipt-bound pointer samples"
+    echo "  surf captcha.alert --outcome outcome.json --channel UUID --out receipt.json  Post human alert when a CAPTCHA could not be resolved"
     echo "  surf scroll <dir>       Scroll (up/down/top/bottom)"
     echo "  surf wait <seconds>     Wait"
     echo "  surf text               Get page text content"
@@ -777,8 +788,23 @@ fi
 LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
 
+if [[ "$1" == "tab.age" ]]; then
+    # Chrome exposes no tab creation time, so age comes from a first-seen
+    # ledger that this command maintains as a side effect of being called.
+    shift
+    _mode="report"
+    _age_args=()
+    for _arg in "$@"; do
+        [[ "$_arg" == "--json" ]] && { _mode="annotate-tabs"; continue; }
+        _age_args+=("$_arg")
+    done
+    "$0" tab.list --json | uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/tab_age.py" "$_mode"
+    exit $?
+fi
+
 if [[ "$1" == "tab.list" ]]; then
     _with_kde=0
+    _with_age=0
     _want_json=0
     _args=()
     for _arg in "$@"; do
@@ -789,8 +815,16 @@ if [[ "$1" == "tab.list" ]]; then
         if [[ "$_arg" == "--json" ]]; then
             _want_json=1
         fi
+        if [[ "$_arg" == "--with-age" ]]; then
+            _with_age=1
+            continue
+        fi
         _args+=("$_arg")
     done
+    if [[ "$_with_age" == "1" ]]; then
+        "$0" tab.list --json | uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/tab_age.py" annotate-tabs
+        exit $?
+    fi
     if [[ "$_with_kde" == "1" ]]; then
         if ! surf_cli_available; then
             recover_stale_surf_socket || true
@@ -802,11 +836,11 @@ if [[ "$1" == "tab.list" ]]; then
             exit 1
         fi
         _json="$(node "$LOCAL_CLI" "${_args[@]}" --json)"
-        _annotated="$(printf '%s' "$_json" | python3 "$SKILL_DIR/scripts/kde_spaces.py" annotate-tabs)"
+        _annotated="$(printf '%s' "$_json" | uv run --project "$SCRIPT_DIR" python "$SKILL_DIR/scripts/kde_spaces.py" annotate-tabs)"
         if [[ "$_want_json" == "1" ]]; then
             printf '%s\n' "$_annotated"
         else
-            printf '%s\n' "$_annotated" | python3 -c 'import json,sys
+            printf '%s\n' "$_annotated" | uv run --project "$SCRIPT_DIR" python3 -c 'import json,sys
 data=json.load(sys.stdin)
 for tab in data.get("tabs", []):
     kde=tab.get("kde", {})

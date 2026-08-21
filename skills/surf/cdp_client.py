@@ -146,7 +146,8 @@ class CDPController:
                 last_error = e
                 # Connection issue - close and retry
                 try:
-                    self.ws.close()
+                    if self.ws:
+                        self.ws.close()
                 except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
                     pass
                 self.ws = None

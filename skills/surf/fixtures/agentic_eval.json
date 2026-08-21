@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "surf",
   "trials": 3,
-  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, deterministic CDP geometry/pointer receipt seams, live loopback bot-detector browser proof, and defensive captcha composition including red-team mode",
+  "proof_scope": "surf entrypoint, native-socket troubleshooting posture, deterministic CDP geometry/pointer receipt seams, deterministic OS pointer coordinate mapping receipts, live loopback bot-detector browser proof, and defensive captcha composition including red-team mode",
   "claims": {
-    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, the CDP geometry/pointer primitives are covered by the production test runner, live Chrome can drive/read back a pinned loopback bot-detection page through those primitives, and Surf eval coverage reaches the captcha entrypoint for defensive reference and red-team local authorization",
+    "proves": "the Surf entrypoint exposes the current browser-control contract, native CLI socket diagnostics meet explicit local expectations, the CDP geometry/pointer primitives are covered by the production test runner, OS pointer dispatch maps viewport CSS samples to screen pixels with a receipt, live Chrome can drive/read back a pinned loopback bot-detection page through CDP primitives, and Surf eval coverage reaches the captcha entrypoint for defensive reference and red-team local authorization",
     "does_not_prove": "provider semantic correctness, authenticated WebGPT completion, CAPTCHA solving, public bot-detection bypass, or full browser review readiness"
   },
   "capability_claims": [
@@ -19,7 +19,16 @@
     },
     {
       "id": "surf.pointer_dispatch_receipt",
-      "description": "Surf validates receipt-bound pointer plans and exposes a pointer.dispatch receipt contract.",
+      "description": "Surf validates receipt-bound pointer plans and exposes CDP and OS-level pointer.dispatch receipt contracts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "surf.pointer_dispatch_os_transport",
+      "description": "Surf can map viewport CSS pointer samples to screen pixels and deliver an OS-level pointer dispatch receipt to real Chrome when the default CDP 9222 path is unavailable.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true,
@@ -45,6 +54,12 @@
     {
       "seam_id": "surf.cdp_client.primitives",
       "seam_type": "browser_transport",
+      "criticality": "critical",
+      "required_evidence": ["deterministic", "live_e2e"]
+    },
+    {
+      "seam_id": "surf.pointer_os_dispatch",
+      "seam_type": "os_input_transport",
       "criticality": "critical",
       "required_evidence": ["deterministic", "live_e2e"]
     },
@@ -124,7 +139,146 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "5 passed"
+          "6 passed"
+        ]
+      }
+    },
+    {
+      "name": "os-pointer-transport-production-test-runner",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "surf.pointer_dispatch_receipt",
+        "surf.pointer_dispatch_os_transport"
+      ],
+      "seams": [
+        "surf.pointer_os_dispatch"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/surf-agentic-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_pointer_os_dispatch.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ]
+      }
+    },
+    {
+      "name": "os-pointer-dispatch-dry-run-maps-screen-coordinates",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "surf.pointer_dispatch_os_transport"
+      ],
+      "seams": [
+        "surf.pointer_os_dispatch"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh pointer.dispatch --transport os --backend xdotool --dry-run --window-origin-x 100 --window-origin-y 200 --device-pixel-ratio 2 --plan fixtures/pointer-os-plan-valid.json --json | tee /tmp/surf-pointer-os-dry-run.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"transport_selected\": \"os\"",
+          "\"backend\": \"xdotool\"",
+          "\"screen_x\": 120",
+          "\"screen_y\": 240"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/success",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/transport_selected",
+            "equals": "os"
+          },
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/sample_count",
+            "equals": 3
+          },
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/coordinate_mapping/window_origin_screen_px/x",
+            "equals": 100
+          },
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/coordinate_mapping/device_pixel_ratio",
+            "equals": 2
+          },
+          {
+            "path": "/tmp/surf-pointer-os-dry-run.json",
+            "json_pointer": "/events/0/screen_x",
+            "equals": 120
+          }
+        ]
+      }
+    },
+    {
+      "name": "os-pointer-dispatch-live-xvfb-checkbox-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "surf.pointer_dispatch_os_transport"
+      ],
+      "seams": [
+        "surf.pointer_os_dispatch"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 scripts/live_os_pointer_xvfb_example.py --output /tmp/surf-os-pointer-xvfb-live-example.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "surf.os_pointer_xvfb_live_example.v1",
+          "\"transport_selected\": \"os\"",
+          "\"checkbox_checked\": true"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-os-pointer-xvfb-live-example.json",
+            "json_pointer": "/success",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-os-pointer-xvfb-live-example.json",
+            "json_pointer": "/checks/cdp_9222_unavailable",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-os-pointer-xvfb-live-example.json",
+            "json_pointer": "/checks/checkbox_checked",
+            "equals": true
+          },
+          {
+            "path": "/tmp/surf-os-pointer-xvfb-live-example.json",
+            "json_pointer": "/dispatch/transport_selected",
+            "equals": "os"
+          },
+          {
+            "path": "/tmp/surf-os-pointer-xvfb-live-example.json",
+            "json_pointer": "/dispatch/sample_count",
+            "equals": 3
+          }
         ]
       }
     },
