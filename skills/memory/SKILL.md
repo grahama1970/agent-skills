@@ -610,7 +610,9 @@ r = client.post("/recall", json={
 - When `collections` targets SPARTA collections, results come from supplemental sources via ArangoSearch View
 - `dense=0.0` means Qdrant semantic recall is unavailable — check `embry-embedding-mm`, `embry-qdrant`, and `qdrant_point_id` metadata
 
-**CRITICAL:** The daemon proxy runs `MemoryClient.recall()` locally (not just HTTP forwarding). Code changes to `api.py` require `uv pip install -e . && systemctl --user restart embry-memory`. The Docker container at 8601 has its own code copy — it does NOT auto-reload from host source files.
+**CRITICAL:** The daemon proxy runs `MemoryClient.recall()` locally (not just HTTP forwarding). Code changes to `api.py` require `uv pip install -e . && systemctl --user restart embry-memory`. Reload behavior depends on WHICH compose launched the container (verify with `docker inspect embry-memory --format '{{join .Config.Cmd " "}}'`):
+- **Production** (`docker compose -f docker-compose.yml up -d`): the container has its own code copy — it does NOT auto-reload from host source files; rebuild/recreate required.
+- **Development** (`docker compose up -d`, auto-includes `docker-compose.override.yml`): `./src` is bind-mounted and uvicorn runs `--reload --reload-dir /app/src`, so host edits to `src/` reload the live service within seconds (`StatReload detected changes` in `docker logs embry-memory`). This also means edits DURING an eval run contaminate it — freeze `src/` while acceptance runs execute.
 
 `SKILL.md` is the agent contract and lives outside the memory Docker image. It
 is read from the shared skill path, which project mirrors may symlink to. Editing
