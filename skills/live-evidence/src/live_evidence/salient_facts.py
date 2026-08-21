@@ -154,34 +154,60 @@ class SalientFactWriter:
         """
 
         payload = {"collection": self._collection, "documents": [document]}
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            async with client.stream(
-                "POST",
+
+        # urllib rather than httpx: httpx eagerly builds an SSL context and
+        # raises FileNotFoundError in a venv without a CA bundle (observed in
+        # the suite's ephemeral env), and this endpoint is plain local http.
+        # The body is deliberately never read: only the keyed readback decides.
+        import asyncio
+        import json as _json
+        import urllib.request
+
+        def post_blind() -> int:
+            request = urllib.request.Request(
                 f"{self._url}/upsert",
-                json=payload,
-                headers={"X-Caller-Skill": "live-evidence"},
-            ) as response:
-                # Transport status only. No .json(), .text, .content, .aread().
-                if response.status_code >= 500:
-                    raise httpx.HTTPStatusError(
-                        "memory upsert transport failure",
-                        request=response.request,
-                        response=response,
-                    )
+                data=_json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json",
+                         "X-Caller-Skill": "live-evidence"},
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=self._timeout_s) as response:
+                    return int(response.status)
+            except urllib.error.HTTPError as exc:
+                return int(exc.code)
+
+        status = await asyncio.to_thread(post_blind)
+        if status >= 500:
+            raise OSError(f"memory upsert transport failure: HTTP {status}")
 
     async def _readback(self, fact_id: str) -> dict[str, Any] | None:
         """Keyed lookup. This, and only this, establishes that a write landed."""
 
         payload = {"collection": self._collection, "keys": [fact_id]}
-        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await client.post(
+        import asyncio
+        import json as _json
+        import urllib.request
+
+        def recall() -> dict[str, Any] | None:
+            request = urllib.request.Request(
                 f"{self._url}/recall/by-keys",
-                json=payload,
-                headers={"X-Caller-Skill": "live-evidence"},
+                data=_json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json",
+                         "X-Caller-Skill": "live-evidence"},
+                method="POST",
             )
-            if response.status_code != 200:
+            try:
+                with urllib.request.urlopen(request, timeout=self._timeout_s) as response:
+                    if response.status != 200:
+                        return None
+                    return _json.loads(response.read().decode("utf-8"))
+            except urllib.error.HTTPError:
                 return None
-            body = response.json()
+
+        body = await asyncio.to_thread(recall)
+        if body is None:
+            return None
         documents = body.get("documents") or body.get("results") or []
         for document in documents:
             if isinstance(document, dict) and document.get("_key") == fact_id:

@@ -398,17 +398,17 @@ def upsert_documents(
         # The embedding service shares one GPU with STT/TTS/solver work and
         # returns transient 5xx under load; bounded retry with backoff, and
         # the final attempt still fails loudly.
-        for attempt in range(3):
+        for attempt in range(4):
             response = client.post(
                 "/upsert",
                 json={"collection": collection, "documents": batch},
                 headers={"X-Caller-Skill": "live-evidence"},
             )
-            if response.status_code < 500 or attempt == 2:
+            if response.status_code < 500 or attempt == 3:
                 break
             import time as _time
 
-            _time.sleep(5 * (attempt + 1))
+            _time.sleep(10 * (attempt + 1))
         response.raise_for_status()
         payload = response.json()
         totals["inserted"] += int(payload.get("inserted") or 0)

@@ -256,9 +256,13 @@ def main() -> int:
             fast_text = fast_full_text(matching[-1]["payload"])
             ask_text = ask_answer(question, f"q{index}")
             if not ask_text:
+                ask_text = ask_answer(question, f"q{index}-retry")
+            if not ask_text:
                 continue
             flip = random.random() < 0.5
             grades = judge(question, ask_text if flip else fast_text, fast_text if flip else ask_text)
+            if not grades:
+                grades = judge(question, ask_text if flip else fast_text, fast_text if flip else ask_text)
             if not grades:
                 continue
             fast_grade = grades["b" if flip else "a"]

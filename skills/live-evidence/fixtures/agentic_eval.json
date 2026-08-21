@@ -191,7 +191,10 @@
           "\"status\": \"PASS\"",
           "leetcode-public-corpus"
         ]
-      }
+      },
+      "infra_blocked_when": [
+        "Server error '500 Internal Server Error' for url 'http://127.0.0.1:8601/upsert'"
+      ]
     },
     {
       "name": "listener-requires-explicit-consent",

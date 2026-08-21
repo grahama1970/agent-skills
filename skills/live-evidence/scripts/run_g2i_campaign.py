@@ -142,7 +142,12 @@ class Server:
                 pass
             time.sleep(0.25)
         else:
-            raise RuntimeError("server did not come up")
+            try:
+                self.log.flush()
+                tail = (work / "server.log").read_text()[-800:]
+            except OSError:
+                tail = "<no log>"
+            raise RuntimeError(f"server did not come up; log tail: {tail}")
         payload = {"consent_confirmed": True, "purpose": purpose}
         if policy:
             payload["policy"] = policy
