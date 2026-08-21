@@ -50,6 +50,8 @@ COMMANDS:
     button          Button operation commands
     status          Status query commands
     audit-states    Non-mutating audit of all configured button states
+    audit-display-safety
+                    Non-mutating audit for meeting/display button hazards
     config          Configuration commands
     health-check    Verify services and button icons
     fix             Auto-fix button configuration (safe)
@@ -82,6 +84,8 @@ STATUS COMMANDS:
 
 AUDIT COMMANDS:
     audit-states       Validate every configured page/button/state without executing commands
+    audit-display-safety
+                       Verify meeting/display buttons do not route to display topology or KDE scale mutation
 
 CONFIG COMMANDS:
     config             Show current configuration
@@ -408,6 +412,156 @@ summary["ok"] = not (
 print(json.dumps(summary, indent=2, sort_keys=True))
 sys.exit(0 if summary["ok"] else 1)
 AUDIT_STATES_EOF
+}
+
+audit_display_safety() {
+    local project_root="${STREAMDECK_PROJECT:-/home/graham/workspace/streamdeck}"
+    STREAMDECK_CONFIG="$STREAMDECK_CONFIG" STREAMDECK_PROJECT="$project_root" python3 << 'AUDIT_DISPLAY_SAFETY_EOF'
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+config_path = Path(os.environ["STREAMDECK_CONFIG"])
+project_root = Path(os.environ["STREAMDECK_PROJECT"])
+
+forbidden_patterns = [
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in [
+        r"\bstreamdeck(\.cli)?\s+teleprompter\s+(meeting|coding)\b",
+        r"streamdeck\.windows\.teleprompter_manager\s+(main\s+)?(meeting|coding)\b",
+        r"\bxrandr\b.*\b--output\b",
+        r"\bkscreen-doctor\b.*\boutput\b",
+        r"\bnvidia-settings\b.*(--assign|--load-config-only)",
+        r"\bkwriteconfig(?:5)?\b",
+        r"\bkdeglobals\b",
+        r"\bScreenScaleFactors\b",
+        r"\bforceFontDPI\b",
+        r"\bGlobal\s+Scale\b",
+    ]
+]
+
+summary = {
+    "ok": False,
+    "config": str(config_path),
+    "project_root": str(project_root),
+    "meeting_button_command": None,
+    "checked_live_buttons": 0,
+    "checked_templates": 0,
+    "checked_scripts": [],
+    "forbidden_hits": [],
+    "guard": {
+        "teleprompter_manager": "not_checked",
+        "display_mutation_env": False,
+        "display_mutation_guard": False,
+    },
+}
+
+
+def add_hit(source, location, value, pattern):
+    summary["forbidden_hits"].append({
+        "source": source,
+        "location": location,
+        "value": value,
+        "pattern": pattern.pattern,
+    })
+
+
+def scan_value(source, location, value):
+    if not isinstance(value, str) or not value:
+        return
+    for pattern in forbidden_patterns:
+        if pattern.search(value):
+            add_hit(source, location, value, pattern)
+
+
+if not config_path.exists():
+    print(json.dumps({**summary, "error": "streamdeck_config_missing"}, indent=2, sort_keys=True))
+    sys.exit(1)
+
+try:
+    cfg = json.loads(config_path.read_text())
+    deck_id = next(iter(cfg["state"]))
+    pages = cfg["state"][deck_id]["buttons"]
+except Exception as exc:
+    print(json.dumps({**summary, "error": f"streamdeck_config_unreadable:{exc}"}, indent=2, sort_keys=True))
+    sys.exit(1)
+
+for page_id, buttons in pages.items():
+    for button_id, button in buttons.items():
+        states = button.get("states", {})
+        active_state_id = str(button.get("state", 0))
+        state = states.get(active_state_id) or states.get("0") or {}
+        text = state.get("text", "") or button.get("text", "")
+        command = state.get("command", "") or button.get("command", "")
+        icon = state.get("icon", "") or button.get("icon", "")
+        interesting = any(
+            needle in f"{text} {command} {icon}".lower()
+            for needle in ("mtg", "meeting", "teleprompter", "monitor", "code off")
+        )
+        if interesting:
+            summary["checked_live_buttons"] += 1
+            location = f"page={page_id} button={button_id} text={text!r}"
+            scan_value("live_config", location, command)
+            if text == "MTG OFF" and summary["meeting_button_command"] is None:
+                summary["meeting_button_command"] = command
+
+template_dir = project_root / "config" / "page_templates"
+if template_dir.exists():
+    for template in sorted(template_dir.glob("*.json")):
+        try:
+            data = json.loads(template.read_text())
+        except Exception as exc:
+            add_hit("template", str(template), f"unreadable:{exc}", re.compile("template_json_error"))
+            continue
+        for idx, button in enumerate(data.get("buttons", [])):
+            text = button.get("text", "")
+            command = button.get("command", "")
+            icon = button.get("icon", "")
+            interesting = any(
+                needle in f"{text} {command} {icon}".lower()
+                for needle in ("mtg", "meeting", "teleprompter", "monitor", "code off")
+            )
+            if interesting:
+                summary["checked_templates"] += 1
+                scan_value("template", f"{template.name} button={idx} text={text!r}", command)
+
+for rel in ("scripts/meeting-mode.sh", "scripts/meeting_layout.sh"):
+    path = project_root / rel
+    if path.exists():
+        summary["checked_scripts"].append(str(path))
+        content = path.read_text(errors="replace")
+        scan_value("script", rel, content)
+    else:
+        add_hit("script", rel, "missing", re.compile("required_script_missing"))
+
+manager = project_root / "src" / "streamdeck" / "windows" / "teleprompter_manager.py"
+if manager.exists():
+    content = manager.read_text(errors="replace")
+    summary["guard"]["teleprompter_manager"] = str(manager)
+    summary["guard"]["display_mutation_env"] = "STREAMDECK_ALLOW_DISPLAY_MUTATION" in content
+    summary["guard"]["display_mutation_guard"] = (
+        "def display_mutation_allowed" in content
+        and "if not display_mutation_allowed" in content
+    )
+else:
+    summary["guard"]["teleprompter_manager"] = "missing"
+
+expected_meeting_cmd = str(project_root / "scripts" / "meeting-mode.sh")
+summary["ok"] = (
+    not summary["forbidden_hits"]
+    and summary["meeting_button_command"] == expected_meeting_cmd
+    and summary["guard"]["display_mutation_env"]
+    and summary["guard"]["display_mutation_guard"]
+)
+
+if summary["meeting_button_command"] != expected_meeting_cmd:
+    summary["meeting_button_expected"] = expected_meeting_cmd
+
+print(json.dumps(summary, indent=2, sort_keys=True))
+sys.exit(0 if summary["ok"] else 1)
+AUDIT_DISPLAY_SAFETY_EOF
 }
 
 # Status queries
@@ -805,6 +959,11 @@ case "$COMMAND" in
     # Non-mutating config audit
     audit-states|audit)
         audit_states
+        ;;
+
+    # Non-mutating display/workstation safety audit
+    audit-display-safety|display-safety)
+        audit_display_safety
         ;;
     
     # Config commands

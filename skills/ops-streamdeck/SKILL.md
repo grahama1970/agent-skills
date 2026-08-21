@@ -131,6 +131,12 @@ The streamdeck project has two components:
 | `status --json`    | Get status in JSON format |
 | `status --buttons` | Get button states         |
 
+### Safety Audits
+
+| Command                | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `audit-display-safety` | Non-mutating audit for meeting/display button routes and KDE scale hazards  |
+
 ### Configuration
 
 | Command                      | Description                |
@@ -194,6 +200,26 @@ This means:
 - The next time the service restarts, it loads from the config file
 
 **Use `./run.sh fix` to safely update button configurations.**
+
+## Workstation Display Safety
+
+Display topology and KDE Global Scale are global workstation state, not normal
+button state. A Stream Deck meeting button must not route through commands that
+can change monitor topology, mirror outputs, or write KDE scale settings unless
+the human has explicitly authorized a recovery operation.
+
+For meeting/display button work:
+
+- Treat `xrandr --output`, `kscreen-doctor output.*`, `nvidia-settings --assign`,
+  `nvidia-settings --load-config-only`, `kwriteconfig`, `kdeglobals`,
+  `ScreenScaleFactors`, `forceFontDPI`, and KDE Global Scale writes as hazardous.
+- Do not treat a blank command as a working disabled state. If a disabled button
+  must become usable, wire it to a non-mutating script first and prove the command
+  survived the Stream Deck daemon save interval.
+- Do not run a physical button or command path as proof until a static
+  `audit-display-safety` readback has passed.
+- If display recovery is needed, use the separate workstation rollback plan and
+  do not fold recovery commands into Stream Deck meeting automation.
 
 ## Configuration
 
@@ -342,22 +368,19 @@ chmod 755 ~/.streamdeck
 multi-trial fixture at `fixtures/agentic_eval.json`.
 
 Use this fixture after changing the skill contract, `run.sh`, service-control
-logic, button execution behavior, health checks, or Stream Deck config safety
-rules:
+logic, button execution behavior, health checks, Stream Deck config safety
+rules, or any meeting/display button path:
 
 ```bash
 ../agentic-evals/run.sh run fixtures/agentic_eval.json
 ```
 
-The eval exercises a live local status path and a fail-closed malformed button
-request. It also runs `./run.sh audit-states`, which non-mutatingly enumerates
-every configured Stream Deck page/button/state and reports missing icon paths,
-invalid field types, and switch-page warnings from the live
-`~/.streamdeck_ui.json` state.
-
-This does not prove physical button rendering, USB hardware availability, light
-behavior, daemon API correctness, command semantics for every executable button,
-or safe persistent config mutation.
+The eval exercises a live local status path, a fail-closed malformed button
+request, nested button-state readback, `audit-states`, and
+`audit-display-safety`, which non-mutatingly checks live config/templates/scripts
+for hazardous display and KDE scale routes. It does not prove physical button
+rendering, USB hardware availability, light behavior, daemon API correctness,
+actual meeting button execution, or safe persistent config mutation.
 
 ### Adding New Features
 
