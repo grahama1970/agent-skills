@@ -115,11 +115,20 @@ def run_command(
     return result
 
 
+def _clean_surf_env() -> dict:
+    import os
+
+    env = dict(os.environ)
+    env.pop("UV_PROJECT_ENVIRONMENT", None)  # surf's uv run must not rebuild our venv
+    env.pop("VIRTUAL_ENV", None)
+    return env
+
+
 def surf(root: Path, args: list[str], *, timeout_s: float = 60.0) -> str:
     runner = root.parent / "surf" / "run.sh"
     if not runner.exists():
         raise RuntimeError(f"Surf runner not found: {runner}")
-    result = run_command([str(runner), *args], cwd=root.parent.parent, timeout_s=timeout_s)
+    result = run_command([str(runner), *args], cwd=root.parent.parent, timeout_s=timeout_s, env=_clean_surf_env())
     return result.stdout.strip()
 
 

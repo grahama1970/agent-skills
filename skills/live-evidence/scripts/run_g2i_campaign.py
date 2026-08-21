@@ -131,6 +131,23 @@ class Server:
         # site-packages contents (observed live: 'No module named
         # live_evidence' from a venv that demonstrably had it earlier).
         env["PYTHONPATH"] = str(ROOT / "src")
+        # Forensic (#1475 suite): the second server of a case has been seen
+        # spawning from an interpreter that no longer imports pydantic.
+        # Record the interpreter's importability at spawn time.
+        probe = subprocess.run(
+            [sys.executable, "-c",
+             "import sys;\nimport pydantic;\nprint(sys.executable, pydantic.__version__)"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if probe.returncode != 0:
+            import glob as _glob
+
+            site = _glob.glob(str(Path(sys.executable).parent.parent / "lib" / "python*" / "site-packages"))
+            listing = sorted(Path(site[0]).iterdir())[:10] if site else []
+            raise RuntimeError(
+                f"interpreter lost pydantic BEFORE spawn: {sys.executable}; "
+                f"probe stderr={probe.stderr[-200:]}; site head={[p.name for p in listing]}"
+            )
         self.log = (work / "server.log").open("w")
         self.process = subprocess.Popen(
             [sys.executable, "-m", "live_evidence", "serve", "--host", "127.0.0.1",
@@ -148,7 +165,7 @@ class Server:
         else:
             try:
                 self.log.flush()
-                tail = (work / "server.log").read_text()[-800:]
+                tail = (work / "server.log").read_text()[-2500:]
             except OSError:
                 tail = "<no log>"
             raise RuntimeError(f"server did not come up; log tail: {tail}")

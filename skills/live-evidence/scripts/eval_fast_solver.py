@@ -171,11 +171,17 @@ def main() -> int:
         import subprocess
 
         def ask_answer(question: str, tag: str) -> str:
+            import os as _os
+
+            clean = dict(_os.environ)
+            clean.pop("UV_PROJECT_ENVIRONMENT", None)  # else uv rebuilds OUR venv as ask's
+            clean.pop("VIRTUAL_ENV", None)
             result = subprocess.run(
                 [str(ask_runner), "tau-dag", question, "--repo", "local/agent-skills",
                  "--target", f"parity-{tag}", "--immutable-goal", "Answer the question.",
                  "--handler", "claude-opus-5-low", "--execute", "--json"],
                 capture_output=True, text=True, timeout=420, cwd=str(root.parent / "ask"),
+                env=clean,
             )
             raw = result.stdout
             data = json.loads(raw[raw.index("{"):])

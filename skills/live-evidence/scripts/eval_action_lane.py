@@ -38,10 +38,24 @@ def check(name: str, ok: bool, detail: str = "") -> None:
         FAILURES.append(name)
 
 
+def _clean_env() -> dict:
+    """Subprocesses must not inherit this eval's UV_PROJECT_ENVIRONMENT: a
+    sibling skill's `uv run --project X` would REBUILD our ephemeral venv as
+    project X's environment (observed live: the action eval's venv became
+    surf's, complete with PIL, and the server lost pydantic mid-case)."""
+
+    import os
+
+    env = dict(os.environ)
+    env.pop("UV_PROJECT_ENVIRONMENT", None)
+    env.pop("VIRTUAL_ENV", None)
+    return env
+
+
 def surf(root: Path, args: list[str], timeout_s: float = 60.0) -> str:
     runner = root.parent / "surf" / "run.sh"
     result = subprocess.run([str(runner), *args], cwd=root.parent.parent, text=True,
-                            capture_output=True, timeout=timeout_s)
+                            capture_output=True, timeout=timeout_s, env=_clean_env())
     if result.returncode != 0:
         raise RuntimeError(f"surf failed: {result.stderr or result.stdout}")
     return result.stdout.strip()
