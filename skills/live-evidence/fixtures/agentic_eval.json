@@ -697,6 +697,35 @@
         ]
       },
       "notes": "#1477: deterministic turn contract short of diarization; live-audio turn labeling flows through the same ingest exercised by the pipewire suite cases; the eval fails if a diarizer attribution appears without explicit enablement."
+    },
+    {
+      "name": "briefing-pack-opening-detection",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-briefing-pack"
+      ],
+      "timeout_seconds": 420,
+      "infra_blocked_when": [
+        "Surf extension was reloaded",
+        "server did not come up",
+        "Surf connection closed before response"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "formal_assessment cannot load a briefing pack (403): PASS",
+          "every seeded opening surfaces its point: PASS",
+          "every surfaced point binds the exact trigger transcript events: PASS",
+          "small talk and unrelated chatter surface nothing: PASS",
+          "cooldown suppresses an immediate repeat of the same topic: PASS",
+          "surfaced openings render in the browser with the heard terms: PASS",
+          "briefing pack: PASS"
+        ]
+      },
+      "notes": "Briefing packs: pre-call talking points matched against the live transcript; the Straive pack (fixtures/briefing_straive.json) is the shipped example. Deterministic stem-matching floor; every surfaced point cites its trigger events."
     }
   ]
 }

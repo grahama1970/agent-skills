@@ -1,0 +1,424 @@
+{
+  "schema": "live_evidence.briefing_pack.v1",
+  "pack_id": "straive-2026-08",
+  "audience": "Straive (AI operationalization services; NextGen Invent forward-deployed acquisition)",
+  "core_concepts": [
+    "operationalization",
+    "forward-deployed engineering",
+    "agent verification",
+    "regulated knowledge systems",
+    "hands-on principal leadership"
+  ],
+  "closing_sentence": "A lot of people can make an AI demo work; most of my career has been about making complex systems prove that they worked, especially when the consequences of being wrong matter.",
+  "points": [
+    {
+      "point_id": "operationalization",
+      "title": "Straive's strategy is AI operationalization, not GenAI development",
+      "opening_triggers": [
+        [
+          "operationaliz"
+        ],
+        [
+          "production",
+          "poc"
+        ],
+        [
+          "pilot",
+          "production"
+        ],
+        [
+          "experiments",
+          "scale"
+        ],
+        [
+          "demo",
+          "production"
+        ]
+      ],
+      "hook": "That's the part of AI I concentrate on -- the gap between a demo that works and a system you can trust in production.",
+      "story": "Tau/agent-skills: every capability lands behind receipts, evals, and fail-closed gates before it counts as done.",
+      "sources": [
+        "https://www.straive.com/operationalize-ai-at-enterprise-scale/"
+      ]
+    },
+    {
+      "point_id": "forward-deployed",
+      "title": "NextGen Invent acquisition: forward-deployed engineers, land and scale",
+      "opening_triggers": [
+        [
+          "forward deployed"
+        ],
+        [
+          "forward-deployed"
+        ],
+        [
+          "nextgen"
+        ],
+        [
+          "embedded",
+          "client"
+        ],
+        [
+          "land",
+          "scale"
+        ]
+      ],
+      "hook": "My background is built for forward deployment: diagnose the client's hard problem, architect it, write the code, demo it, explain it to executives and engineers, and leave behind something the organization can operate.",
+      "story": "DARPA ARCOS: technical lead, hands-on knowledge-graph/LLM architecture, roughly half the time briefing technical and executive stakeholders.",
+      "ask": "I noticed you specifically highlighted forward-deployed engineering in the NextGen acquisition. How is that model being integrated into Straive, and where would this role sit relative to it?",
+      "sources": [
+        "https://www.straive.com/news/straive-acquires-nextgen-invent-to-boost-data-ai-operationalization-capabilities/"
+      ]
+    },
+    {
+      "point_id": "agentic-verification",
+      "title": "Agentic AI business: orchestration, Agent Ops, auditability, governance",
+      "opening_triggers": [
+        [
+          "agentic"
+        ],
+        [
+          "multi-agent"
+        ],
+        [
+          "agent ops"
+        ],
+        [
+          "orchestration",
+          "agents"
+        ],
+        [
+          "monitoring",
+          "agents"
+        ]
+      ],
+      "hook": "I build agent systems that don't have to be trusted to report their own correctness.",
+      "story": "Tau: contracts, receipts, bounded workers, deterministic gates -- a success signal from the thing under test is worth nothing; independent readback decides.",
+      "sources": [
+        "https://www.straive.com/agentic-ai-solutions/"
+      ]
+    },
+    {
+      "point_id": "verification-differentiator",
+      "title": "The differentiator is verification, not LLM familiarity",
+      "opening_triggers": [
+        [
+          "evaluation"
+        ],
+        [
+          "evals"
+        ],
+        [
+          "hallucination"
+        ],
+        [
+          "how do you test"
+        ],
+        [
+          "ground truth"
+        ],
+        [
+          "adversarial"
+        ]
+      ],
+      "hook": "I specialize in knowing whether the AI actually did what we think it did.",
+      "story": "Evaluation harnesses, ground-truth fixtures, adversarial testing, formal verification, receipt-gated execution -- built and shipped, not aspirational.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "graphrag",
+      "title": "Enterprise knowledge maps to GraphRAG work",
+      "opening_triggers": [
+        [
+          "knowledge assistant"
+        ],
+        [
+          "semantic search"
+        ],
+        [
+          "knowledge graph"
+        ],
+        [
+          "rag"
+        ],
+        [
+          "retrieval"
+        ],
+        [
+          "research acceleration"
+        ]
+      ],
+      "hook": "I've built hybrid BM25 + vector + graph retrieval over ArangoDB knowledge graphs, grounded to evidence -- much stronger than having used a vector database.",
+      "story": "Evidence-grounded compliance retrieval: BM25 + embeddings + multi-hop graph traversal with source-bound answers.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "document-ai",
+      "title": "Document AI is a hidden major fit",
+      "opening_triggers": [
+        [
+          "document"
+        ],
+        [
+          "publishing"
+        ],
+        [
+          "pdf"
+        ],
+        [
+          "contracts",
+          "extraction"
+        ],
+        [
+          "content automation"
+        ],
+        [
+          "ingestion"
+        ]
+      ],
+      "hook": "Document intelligence is home turf: I've done deep PDF internals work -- extraction, layout, tables, calibration, NIST document validation.",
+      "story": "pdf_oxide: hundreds of commits across Rust PDF internals, extraction, layout analysis, table structure, cloning, NIST validation.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "governance-compliance",
+      "title": "Governance and compliance are commercially important to Straive",
+      "opening_triggers": [
+        [
+          "compliance"
+        ],
+        [
+          "regulated"
+        ],
+        [
+          "audit"
+        ],
+        [
+          "bfsi"
+        ],
+        [
+          "pharma"
+        ],
+        [
+          "life sciences"
+        ],
+        [
+          "governance"
+        ]
+      ],
+      "hook": "I've worked where 'looks right' isn't an acceptable acceptance criterion.",
+      "story": "DARPA, ITAR, NIST/MITRE/SPARTA, requirements-to-proof systems, formal methods.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "human-authority",
+      "title": "Human/Expert-in-the-loop is a substantive architectural position",
+      "opening_triggers": [
+        [
+          "human in the loop"
+        ],
+        [
+          "expert in the loop"
+        ],
+        [
+          "human oversight"
+        ],
+        [
+          "who decides"
+        ],
+        [
+          "human review"
+        ]
+      ],
+      "hook": "My systems deliberately separate model recommendation from human authority. Who decides, when the AI sounds sure? Humans do.",
+      "story": "SPARTA: model surfaces relevance and evidence; decision authority stays with the human, by architecture not policy.",
+      "sources": [
+        "https://www.straive.com/blogs/a-leaders-guide-to-operationalizing-ai-across-departments/"
+      ]
+    },
+    {
+      "point_id": "rnd-to-delivery",
+      "title": "Bridge between R&D and delivery",
+      "opening_triggers": [
+        [
+          "research",
+          "delivery"
+        ],
+        [
+          "prototype",
+          "production"
+        ],
+        [
+          "stakeholders"
+        ],
+        [
+          "executive",
+          "briefing"
+        ],
+        [
+          "presales"
+        ]
+      ],
+      "hook": "I can sit with a customer on Monday, find the actual failure mode, prototype the fix, and explain on Friday why the architecture deserves funding.",
+      "story": "DARPA ARCOS: technical lead + hands-on implementation + ~half-time stakeholder briefings.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "career-path",
+      "title": "The unusual creative career is an advantage",
+      "opening_triggers": [
+        [
+          "background"
+        ],
+        [
+          "career"
+        ],
+        [
+          "composer"
+        ],
+        [
+          "unusual path"
+        ],
+        [
+          "tell me about yourself"
+        ]
+      ],
+      "hook": "Composer to interactive producer to data scientist to DARPA technical lead to AI architect sounds strange until the job is forward-deployed AI consulting -- then it explains why one person can handle interfaces, demos, communication, architecture, and code.",
+      "story": "Cross-disciplinary problem solving is the deliberate through-line, not an accident.",
+      "sources": [
+        "https://grahama.co/"
+      ]
+    },
+    {
+      "point_id": "role-level",
+      "title": "Not a generic Senior GenAI Engineer",
+      "opening_triggers": [
+        [
+          "senior engineer"
+        ],
+        [
+          "langchain"
+        ],
+        [
+          "role",
+          "title"
+        ],
+        [
+          "level",
+          "position"
+        ],
+        [
+          "staff",
+          "principal"
+        ]
+      ],
+      "hook": "The best fit is Principal AI Architect, Staff Agentic AI Engineer, Forward-Deployed AI Architect, or technical practice leadership. If the need is wiring LangChain apps to APIs, that underuses what I bring.",
+      "sources": [
+        "https://grahama.co/resume"
+      ]
+    },
+    {
+      "point_id": "role-scope-question",
+      "title": "Strategic role or billable delivery?",
+      "opening_triggers": [
+        [
+          "six months"
+        ],
+        [
+          "responsibilities"
+        ],
+        [
+          "what would you own"
+        ],
+        [
+          "day to day"
+        ],
+        [
+          "expectations"
+        ]
+      ],
+      "hook": "",
+      "story": "",
+      "ask": "What would you expect me personally to own six months in -- architecture, code, client discovery, presales, delivery teams, or account expansion?"
+    },
+    {
+      "point_id": "funding-question",
+      "title": "Funded role or account-contingent?",
+      "opening_triggers": [
+        [
+          "headcount"
+        ],
+        [
+          "bench"
+        ],
+        [
+          "utilization"
+        ],
+        [
+          "engagement ends"
+        ],
+        [
+          "which client"
+        ],
+        [
+          "reporting line"
+        ]
+      ],
+      "hook": "",
+      "ask": "Is this position funded as part of the AI organization, or is it contingent on a specific client or project?"
+    },
+    {
+      "point_id": "why-me-question",
+      "title": "Make them explain why they need him",
+      "opening_triggers": [
+        [
+          "any questions for us"
+        ],
+        [
+          "questions for me"
+        ],
+        [
+          "anything you want to ask"
+        ],
+        [
+          "wrap up"
+        ]
+      ],
+      "hook": "",
+      "ask": "You've seen the unusual combination -- agent orchestration, evaluation, GraphRAG, formal methods, document systems, regulated environments, client-facing delivery. Which part made you want to have this conversation? (If the answer is 'Python and RAG', that's weak. If it's 'moving agentic pilots into governed production', that's the opportunity.)"
+    },
+    {
+      "point_id": "closing-anchor",
+      "title": "The one sentence to leave behind",
+      "opening_triggers": [
+        [
+          "anything else"
+        ],
+        [
+          "final thoughts"
+        ],
+        [
+          "summary",
+          "yourself"
+        ],
+        [
+          "last thing"
+        ]
+      ],
+      "hook": "A lot of people can make an AI demo work; most of my career has been about making complex systems prove that they worked, especially when the consequences of being wrong matter.",
+      "sources": [
+        "https://grahama.co/"
+      ]
+    }
+  ]
+}

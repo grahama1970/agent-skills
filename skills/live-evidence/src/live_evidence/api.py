@@ -262,6 +262,44 @@ def _register_api_routes(
         )
         return {"turn_id": turn_id, "speaker_slot": speaker_slot, "events_updated": count}
 
+    @app.post("/api/briefing/load", status_code=202)
+    async def briefing_load(payload: dict[str, Any]) -> dict[str, Any]:
+        """Load a briefing pack for this call. A recognition assist for the
+        HUMAN's own meeting -- refused for formal_assessment sessions."""
+
+        from .briefing import BriefingMatcher, BriefingPack
+
+        if state.session_purpose().value == "formal_assessment":
+            raise HTTPException(status_code=403,
+                                detail="briefing packs are not available in formal_assessment")
+        try:
+            pack = BriefingPack(**{k: v for k, v in payload.items() if k != "schema"})
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"invalid briefing pack: {exc}") from exc
+        coordinator.briefing = BriefingMatcher(pack)
+        await coordinator.journal.append(
+            state.session_id() or "no-session", "briefing_pack_loaded",
+            {"pack_id": pack.pack_id, "points": len(pack.points),
+             "pack_digest": coordinator.briefing.digest},
+            policy_digest=state.session_policy_digest(),
+        )
+        return {"status": "loaded", "pack_id": pack.pack_id,
+                "points": len(pack.points), "pack_digest": coordinator.briefing.digest}
+
+    @app.get("/api/briefing")
+    async def briefing_state() -> dict[str, Any]:
+        matcher = coordinator.briefing
+        if matcher is None:
+            return {"loaded": False, "surfaced": []}
+        return {
+            "loaded": True,
+            "pack_id": matcher.pack.pack_id,
+            "audience": matcher.pack.audience,
+            "core_concepts": matcher.pack.core_concepts,
+            "closing_sentence": matcher.pack.closing_sentence,
+            "surfaced": matcher.surfaced[-10:][::-1],
+        }
+
     @app.post("/api/rubric/load", status_code=202)
     async def rubric_load(payload: dict[str, Any]) -> dict[str, Any]:
         """Load a role rubric for authorship (#1474). interviewer_assist and

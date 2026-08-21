@@ -49,6 +49,17 @@ type ProvenanceSource = {
 type ProvenanceClause = { clause: string; source_ids: string[]; sourced: boolean; invalidated: boolean };
 type ProvenanceCard = { card_id: string; clauses: ProvenanceClause[]; sources: ProvenanceSource[] };
 
+type BriefingHit = {
+  point_id: string;
+  title: string;
+  hook: string;
+  story: string;
+  ask: string;
+  matched_terms: string[];
+  trigger_event_ids: string[];
+};
+type Briefing = { loaded: boolean; pack_id?: string; surfaced: BriefingHit[] };
+
 type ActionCandidate = {
   action_id: string;
   kind: string;
@@ -77,6 +88,7 @@ export function InsightsPanel() {
   const [insights, setInsights] = useState<Insights>({});
   const [provenance, setProvenance] = useState<ProvenanceCard[]>([]);
   const [pendingActions, setPendingActions] = useState<ActionCandidate[]>([]);
+  const [briefing, setBriefing] = useState<Briefing>({ loaded: false, surfaced: [] });
   const [openSource, setOpenSource] = useState<ProvenanceSource | null>(null);
 
   useRegisterAction({
@@ -124,6 +136,10 @@ export function InsightsPanel() {
         if (actionsResponse.ok && alive) {
           setPendingActions((await actionsResponse.json()).pending ?? []);
         }
+        const briefingResponse = await fetch("/api/briefing");
+        if (briefingResponse.ok && alive) {
+          setBriefing(await briefingResponse.json());
+        }
       } catch {
         /* server-side artifact readback only; nothing to invent on failure */
       }
@@ -141,7 +157,8 @@ export function InsightsPanel() {
     provenance.find((card) => card.clauses.some((clause) => clause.sourced)) ??
     provenance.find((card) => card.clauses.length > 0) ??
     null;
-  if (!review && !rubric && !rehearsal && !provenanceCard && pendingActions.length === 0) return null;
+  if (!review && !rubric && !rehearsal && !provenanceCard
+      && pendingActions.length === 0 && briefing.surfaced.length === 0) return null;
 
   const approveAction = async (actionId: string) => {
     await fetch(`/api/actions/${actionId}/approve`, {
@@ -242,6 +259,32 @@ export function InsightsPanel() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {briefing.surfaced.length > 0 && (
+        <div data-qid="briefing-panel">
+          <h3 className="mb-1 font-semibold text-slate-100">
+            Openings · {briefing.pack_id}
+          </h3>
+          <ul className="grid gap-1 text-sm">
+            {briefing.surfaced.map((hit) => (
+              <li
+                key={`${hit.point_id}-${hit.trigger_event_ids[0] ?? ""}`}
+                data-qid={`briefing-${hit.point_id}`}
+                data-matched-terms={hit.matched_terms.join(",")}
+                className="rounded border border-amber-600 bg-amber-950/50 px-2 py-1.5"
+              >
+                <p className="text-[11px] uppercase tracking-wide text-amber-300">
+                  {hit.title} · heard: {hit.matched_terms.join(", ")}
+                </p>
+                {hit.hook && <p className="mt-0.5 text-amber-50">{hit.hook}</p>}
+                {hit.story && <p className="mt-0.5 text-xs text-amber-200/80">{hit.story}</p>}
+                {hit.ask && (
+                  <p className="mt-0.5 text-xs text-sky-200">Ask: {hit.ask}</p>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {pendingActions.length > 0 && (

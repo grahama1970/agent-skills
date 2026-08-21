@@ -62,6 +62,7 @@ class EvidenceCoordinator:
         self.journal = journal  # public handle for API routes (#1450)
         self.settings = settings  # public: action lane memory_url (#1475)
         self.actions = None  # ActionEngine, lazily bound to the session policy
+        self.briefing = None  # BriefingMatcher when a pack is loaded
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
@@ -119,6 +120,14 @@ class EvidenceCoordinator:
             if len(stripped.split()) < 4:
                 return
             event = event.model_copy(update={"text": stripped})
+        if self.briefing is not None and event.kind.value == "final":
+            # Briefing pack (recognition assist): zero-latency deterministic
+            # matching; every surfaced point binds its trigger events.
+            for hit in self.briefing.match(event.event_id, event.text):
+                await self._journal.append(
+                    self._state.session_id(), "briefing_point_surfaced", hit,
+                    policy_digest=self._state.session_policy_digest(),
+                )
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
             # (#1454) A final interviewer turn that is NOT a new question, while
