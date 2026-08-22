@@ -1,0 +1,26 @@
+{
+  "answer_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+  "label": "persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_025-turn_002",
+  "use_blessed_qra_cache": false,
+  "asr_verify": true,
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.0,
+  "voice_delivery": {
+    "schema": "persona_dream.voice_delivery.v1",
+    "source": "continuity_session_mood",
+    "session_mood_id": "session_mood:7f601dffa9cf5997f74b2ff2",
+    "tone": "firm_boundary",
+    "pace": "measured",
+    "emphasis_tag": "boundary",
+    "intensity": 0.78,
+    "valence": -0.45,
+    "use_base_emotion": true,
+    "required_engine": "chatterbox_base",
+    "local_modulation": {
+      "local_tone": null,
+      "applied": false
+    }
+  },
+  "ref_audio": "/data/embry_ref.wav"
+}

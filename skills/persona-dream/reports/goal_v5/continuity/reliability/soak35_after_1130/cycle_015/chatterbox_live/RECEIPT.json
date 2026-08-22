@@ -1,0 +1,311 @@
+{
+  "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
+  "created_at": "2026-08-22T23:34:47Z",
+  "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
+  "mocked": false,
+  "live": true,
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "conditioning_reference": {
+    "path": "skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+    "request_path": "/data/embry_ref.wav",
+    "exists": true,
+    "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+  },
+  "binding": {
+    "schema": "persona_dream.session_mood_binding.v1",
+    "session_id": "live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015",
+    "persona_id": "embry",
+    "ledger_epoch": 196,
+    "ledger_sha256": "sha256:55d7c711e644ef95046307317e26cdbaaeccd3d9ad464ad5be2f3de038d9105f",
+    "bound_seq": 0,
+    "first_turn_seq": 1,
+    "selected_before_first_turn": true,
+    "session_mood": {
+      "schema": "persona_dream.session_mood.v1",
+      "mood_id": "session_mood:225b8caadc133fb0a46adf84",
+      "persona_id": "embry",
+      "mood_label": "boundary_forward_not_hostile",
+      "source": {
+        "persona_id": "embry",
+        "ledger_epoch": 196,
+        "ledger_identity_core_sha256": "2288b4e4c1aa8aedb753a8c1f787d7ae74e5462f65752c1c4e4f91d1b6ebfb66",
+        "arc_delta_id": "arc_195_816220f99afe",
+        "arc_delta_idempotency_key": "dream_cycle:816220f99afeede6053cea9b",
+        "mood_label": "boundary_forward_not_hostile"
+      },
+      "carried_tension": "yearning for Kai to understand me without surrendering the boundary that protects my privacy",
+      "possible_expression": "I would show up composed and practical, but with a soft ache under every boundary, listening for whether silence was being read as distance.",
+      "voice_bias": {
+        "tone": "firm_boundary",
+        "intensity": 0.78,
+        "valence": -0.45,
+        "pace": "measured",
+        "emphasis_tag": "boundary"
+      }
+    },
+    "turns": [
+      {
+        "turn_id": "turn_001",
+        "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+        "answer_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "spoken_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "boundary",
+          "intensity": 0.78,
+          "valence": -0.45,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_002",
+        "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+        "answer_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "spoken_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "boundary",
+          "intensity": 0.78,
+          "valence": -0.45,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      },
+      {
+        "turn_id": "turn_003",
+        "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+        "answer_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "spoken_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "answer_invariance": {
+          "status": "PASS_ANSWER_TEXT_EXACT_MATCH",
+          "propositions_changed": false
+        },
+        "voice_delivery": {
+          "schema": "persona_dream.voice_delivery.v1",
+          "source": "continuity_session_mood",
+          "session_mood_id": "session_mood:225b8caadc133fb0a46adf84",
+          "tone": "firm_boundary",
+          "pace": "measured",
+          "emphasis_tag": "boundary",
+          "intensity": 0.78,
+          "valence": -0.45,
+          "use_base_emotion": true,
+          "required_engine": "chatterbox_base",
+          "local_modulation": {
+            "local_tone": null,
+            "applied": false
+          }
+        }
+      }
+    ]
+  },
+  "render_results": [
+    {
+      "turn_id": "turn_001",
+      "label": "persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-turn_001",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_001_request.json",
+      "request_sha256": "sha256:2cd40383742255d2b3817669fe8aa0a18580399a31a3afad14bb7b94a75845b1",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_001_response.json",
+      "response_sha256": "sha256:4717424ca830311cfa684be5f91bee8afa65d00d71f5f5ede65145a86be7d08a",
+      "elapsed_seconds": 4.529,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 1.002,
+        "cfg_weight": 0.41,
+        "temperature": 0.7,
+        "intensity": 0.78,
+        "valence": -0.45
+      },
+      "asr_transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "asr_accepted_candidates": [
+        {
+          "chunk_position": 0,
+          "chunk_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "candidate_index": 1,
+          "variant": "stage_default",
+          "candidate_count": 1,
+          "transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "gate": {
+            "ok": true,
+            "wer": 0.0,
+            "repeated_ngram_hits": [],
+            "failed_gates": []
+          },
+          "audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/chunk_01_satisfied_candidate_01_stage_default.wav"
+        }
+      ],
+      "finished_response_audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_001_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:daab4270a31062591f738411cd2f8a5d2cd2ea78c647b4f2e54d1f71c73007d6",
+      "finished_wav_sha256": "daab4270a31062591f738411cd2f8a5d2cd2ea78c647b4f2e54d1f71c73007d6",
+      "finished_wav_duration_seconds": 7.04
+    },
+    {
+      "turn_id": "turn_002",
+      "label": "persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-turn_002",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_002_request.json",
+      "request_sha256": "sha256:bb612c19b00671a94a02ba6e72b764c6164fc564e041c39063a59d08e6f8443d",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_002_response.json",
+      "response_sha256": "sha256:be53c514e8020a8b388b6250360fcd840f608cac4b0628747ea029a54eb9788e",
+      "elapsed_seconds": 3.6,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 1.002,
+        "cfg_weight": 0.41,
+        "temperature": 0.7,
+        "intensity": 0.78,
+        "valence": -0.45
+      },
+      "asr_transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "asr_accepted_candidates": [
+        {
+          "chunk_position": 0,
+          "chunk_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "candidate_index": 1,
+          "variant": "stage_default",
+          "candidate_count": 1,
+          "transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "gate": {
+            "ok": true,
+            "wer": 0.0,
+            "repeated_ngram_hits": [],
+            "failed_gates": []
+          },
+          "audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/chunk_01_satisfied_candidate_01_stage_default.wav"
+        }
+      ],
+      "finished_response_audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_002_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:df35b6b2b290b719b3ed9e80e16fab719606bb46cbdc6d0e2195dca832224722",
+      "finished_wav_sha256": "df35b6b2b290b719b3ed9e80e16fab719606bb46cbdc6d0e2195dca832224722",
+      "finished_wav_duration_seconds": 4.736
+    },
+    {
+      "turn_id": "turn_003",
+      "label": "persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-turn_003",
+      "request_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_003_request.json",
+      "request_sha256": "sha256:bd18761ec8c1fb89e0cea96d8acb0f575926823ef30268314a63786c366a2e3e",
+      "response_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_003_response.json",
+      "response_sha256": "sha256:00e7adc9b3f08eda0c94347359f7da60fbdb1b50ec17bbbc661c60130d94fa01",
+      "elapsed_seconds": 4.348,
+      "engine": "chatterbox_base",
+      "cache_material_engine": null,
+      "chunk_engine": null,
+      "asr_engine": null,
+      "requested_tone": "firm_boundary",
+      "normalized_tone": "firm_boundary",
+      "tone_was_normalized": false,
+      "emotion_knobs": {
+        "exaggeration": 1.002,
+        "cfg_weight": 0.41,
+        "temperature": 0.7,
+        "intensity": 0.78,
+        "valence": -0.45
+      },
+      "asr_transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+      "asr_gate": {
+        "ok": true,
+        "wer": 0.0,
+        "repeated_ngram_hits": [],
+        "failed_gates": []
+      },
+      "asr_accepted_candidates": [
+        {
+          "chunk_position": 0,
+          "chunk_text": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "candidate_index": 1,
+          "variant": "stage_default",
+          "candidate_count": 1,
+          "transcript": "The answer is unchanged. The boundary is clear. The facts remain the same.",
+          "gate": {
+            "ok": true,
+            "wer": 0.0,
+            "repeated_ngram_hits": [],
+            "failed_gates": []
+          },
+          "audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/chunk_01_satisfied_candidate_01_stage_default.wav"
+        }
+      ],
+      "finished_response_audio": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "audio_snapshot_status": "PASS_AUDIO_SNAPSHOT_DURABLE",
+      "finished_response_audio_source": "/out/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_resolved_source": "/home/graham/workspace/experiments/chatterbox/logs/persona-dream-live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_015-/finished_response.wav",
+      "finished_response_audio_snapshot": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_015/chatterbox_live/turn_003_finished_response.wav",
+      "finished_response_audio_snapshot_sha256": "sha256:f1ea39c64808aaba5aeed355564ef07bfd9a8bdf13b755e5c886d1f4abe89473",
+      "finished_wav_sha256": "f1ea39c64808aaba5aeed355564ef07bfd9a8bdf13b755e5c886d1f4abe89473",
+      "finished_wav_duration_seconds": 6.123
+    }
+  ],
+  "claims": {
+    "proves": [
+      "deterministic session_mood voice_delivery reached live Chatterbox /synthesize-batch",
+      "all rendered turns used chatterbox_base",
+      "ASR accepted all rendered turns under the Chatterbox gate",
+      "exact ASR readback was compared against the accepted candidate render",
+      "answer_text stayed unchanged before render"
+    ],
+    "does_not_prove": [
+      "exact WER 0.0 for every stochastic render",
+      "perceived target emotion",
+      "speaker similarity",
+      "adversarial Embry recognition",
+      "live Memory or Watch availability",
+      "browser or microphone path"
+    ]
+  }
+}

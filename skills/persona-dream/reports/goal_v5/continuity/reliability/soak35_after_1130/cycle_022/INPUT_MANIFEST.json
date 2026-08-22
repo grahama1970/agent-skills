@@ -1,0 +1,38 @@
+{
+  "cycle_id": "live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_022",
+  "manifest_sha256": "sha256:d16e4de7ff2c8926926462423e1b4d88282a9cab4f567a676dfb325f5456a501",
+  "schema": "persona_dream.live_chain_reliability.input_manifest.v1",
+  "source_artifact_sha256": {
+    "autonomous_cycle": "sha256:78c64ea97417cad9d767557938ed05222fcbbac488f1f817217f5070e6a92352",
+    "persist_proof": "sha256:74c078ab21bb34ed74a1332f156ddfcbdfeddc833b5307ee33a2880e6ebbebfe",
+    "phase13": "sha256:cd6631f4981e9f5bd82f3527b62315d8d342170d95464093d0ba9873b407c015",
+    "phase14": "sha256:228fc0aed3a06e4f5ed9d41f22a6b5ae35d7469456bdec0a593bc0a82326b2af",
+    "source_journal": "sha256:310e9fcd62e148226bf9be65acc2e40978b0a4eda0742f7dff46a084024310f1",
+    "watch_observation": "sha256:69742493c57be88ef59393b3ff7cc05c8b11bd54c9315f4f48a843d24558373e",
+    "watch_receipt": "sha256:34f45e8b3067e42f2be40df27d7c7a022f5cf8832dbf2b9b86edc06c7bb885f1"
+  },
+  "source_cycle_dir": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z",
+  "source_cycle_id": "cycle_20260723T234851Z",
+  "source_dream_node_key": "dream_auto_cycle_20260723T234851Z",
+  "source_roots": [
+    "embry_age23_current_b01_memory_001",
+    "embry_age23_current_b01_memory_003",
+    "embry_age23_current_b01_memory_012"
+  ],
+  "tom_candidate_ids": [
+    "tom-001",
+    "tom-002",
+    "tom-003",
+    "tom-004"
+  ],
+  "watch_observation_ids": [
+    "frame_0001",
+    "frame_0002",
+    "frame_0003",
+    "frame_0004",
+    "identity_temporal_continuity_review",
+    "coverage_gap_00",
+    "coverage_gap_01",
+    "coverage_gap_02"
+  ]
+}

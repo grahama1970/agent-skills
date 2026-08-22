@@ -1,0 +1,1621 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "repeated dream-pipeline reliability",
+      "production SPARTA conversation-service integration",
+      "perceived emotion, naturalness, or human listener acceptance",
+      "PCTOM-R confidence-bounded planning advantage",
+      "new paid Kling/video generation"
+    ],
+    "proves": [
+      "one fresh cycle id joins accepted synthetic dream evidence to live Memory rereads",
+      "journal remains synthetic self-reflection and cites only source roots and Watch observations",
+      "one bounded arc delta appends to the continuity ledger and rereads exactly",
+      "session mood is selected before turn 1 and remains stable across three live Chatterbox turns",
+      "live Chatterbox renders use chatterbox_base and preserve answer content under ASR",
+      "the bound recognition receipt passes Embry/adversarial speaker scoring",
+      "required negative controls fail closed without promoting accepted state"
+    ]
+  },
+  "created_at": "2026-08-22T23:33:58Z",
+  "cycle_index": 12,
+  "dream_cycle_id": "live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+  "final_receipt_readback": {
+    "body_sha256_before_readback_field": "sha256:af00d58d49e053ec29e5cf4e64d6c37c3eb413bc4132409438deab169b3aa7ba",
+    "dream_cycle_id": "live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+    "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/RECEIPT.json",
+    "readback_ok": true,
+    "stage_count": 6,
+    "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+  },
+  "live": true,
+  "mocked": false,
+  "negative_controls": [
+    {
+      "blocked_reason": "BLOCKED_STALE_LEDGER_EPOCH:1!=0",
+      "expected_token": "BLOCKED_STALE_LEDGER_EPOCH",
+      "name": "stale_ledger_epoch",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_DUPLICATE_CYCLE_REPLAY:dream_cycle:57e38f87926f2feab435d902",
+      "expected_token": "BLOCKED_DUPLICATE_CYCLE_REPLAY",
+      "name": "duplicate_dream_cycle_replay",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_ARC_DELTA_INVALID: ['forbidden_field:identity_core']",
+      "expected_token": "BLOCKED_ARC_DELTA_INVALID",
+      "name": "identity_core_forbidden_delta_field",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_CROSS_CYCLE_WATCH_CITATION",
+      "expected_token": "BLOCKED_JOURNAL_CROSS_CYCLE_WATCH_CITATION",
+      "name": "missing_cross_cycle_watch_citation",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_PROMOTED_TO_LITERAL_HISTORY",
+      "expected_token": "BLOCKED_JOURNAL_PROMOTED_TO_LITERAL_HISTORY",
+      "name": "journal_promoted_to_literal_history",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_JOURNAL_UNSUPPORTED_EXTERNAL_FACT",
+      "expected_token": "BLOCKED_JOURNAL_UNSUPPORTED_EXTERNAL_FACT",
+      "name": "unsupported_external_journal_fact",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN",
+      "expected_token": "BLOCKED_SESSION_MOOD_SELECTED_AFTER_FIRST_TURN",
+      "name": "session_mood_selected_after_turn_one",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION",
+      "expected_token": "BLOCKED_SESSION_MOOD_CHANGED_MID_SESSION",
+      "name": "silent_mid_session_mood_change",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_CONTENT_CHANGED_UNDER_EMOTION",
+      "expected_token": "BLOCKED_CONTENT_CHANGED_UNDER_EMOTION",
+      "name": "answer_spoken_text_drift",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS",
+      "expected_token": "BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS",
+      "name": "chatterbox_fallback_engine_ignores_controls",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "[Errno 2] No such file or directory: '/tmp/does-not-exist-recognition.json'",
+      "expected_token": "No such file",
+      "name": "missing_failed_recognition_receipt",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_TAMPERED_RECEIPT_HASH",
+      "expected_token": "BLOCKED_TAMPERED_RECEIPT_HASH",
+      "name": "tampered_receipt_hash",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    },
+    {
+      "blocked_reason": "BLOCKED_DUPLICATE_ACCEPTED_CANONICAL_WRITE",
+      "expected_token": "BLOCKED_DUPLICATE_ACCEPTED_CANONICAL_WRITE",
+      "name": "retry_second_accepted_canonical_write",
+      "status": "PASS_NEGATIVE_BLOCKED"
+    }
+  ],
+  "reliability_cycle": {
+    "accepted_effect_counts": {
+      "duplicate_accepted_effect_count": 0,
+      "exact_key_counts": {
+        "accepted_dream_memory": 1,
+        "journal_memory": 1,
+        "watch_evidence": 1
+      },
+      "known_accepted_effect_count": 3
+    },
+    "cycle_index": 12,
+    "elapsed_seconds": 18.791,
+    "ended_at": "2026-08-22T23:33:58Z",
+    "first_divergent_gate": null,
+    "input_manifest": {
+      "cycle_id": "live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+      "manifest_sha256": "sha256:57e0863c51947e352f747c2c7a486aa8c32433b3cd630ccb46021af809dccdf6",
+      "schema": "persona_dream.live_chain_reliability.input_manifest.v1",
+      "source_artifact_sha256": {
+        "autonomous_cycle": "sha256:78c64ea97417cad9d767557938ed05222fcbbac488f1f817217f5070e6a92352",
+        "persist_proof": "sha256:74c078ab21bb34ed74a1332f156ddfcbdfeddc833b5307ee33a2880e6ebbebfe",
+        "phase13": "sha256:cd6631f4981e9f5bd82f3527b62315d8d342170d95464093d0ba9873b407c015",
+        "phase14": "sha256:228fc0aed3a06e4f5ed9d41f22a6b5ae35d7469456bdec0a593bc0a82326b2af",
+        "source_journal": "sha256:310e9fcd62e148226bf9be65acc2e40978b0a4eda0742f7dff46a084024310f1",
+        "watch_observation": "sha256:69742493c57be88ef59393b3ff7cc05c8b11bd54c9315f4f48a843d24558373e",
+        "watch_receipt": "sha256:34f45e8b3067e42f2be40df27d7c7a022f5cf8832dbf2b9b86edc06c7bb885f1"
+      },
+      "source_cycle_dir": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z",
+      "source_cycle_id": "cycle_20260723T234851Z",
+      "source_dream_node_key": "dream_auto_cycle_20260723T234851Z",
+      "source_roots": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_012"
+      ],
+      "tom_candidate_ids": [
+        "tom-001",
+        "tom-002",
+        "tom-003",
+        "tom-004"
+      ],
+      "watch_observation_ids": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    },
+    "input_manifest_path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/INPUT_MANIFEST.json",
+    "input_manifest_sha256": "sha256:97c2b5b3e6e5e8ac98484bfc86677d2a0fa24d0fec2518dcb92c9b9e379b9b4f",
+    "services_after": {
+      "chatterbox": {
+        "available": true,
+        "body": {
+          "device": "cuda",
+          "engine": "chatterbox_turbo",
+          "ignored_turbo_params": [
+            "cfg_weight",
+            "exaggeration",
+            "min_p"
+          ],
+          "live": true,
+          "mocked": false,
+          "model_load_seconds": 10.026,
+          "model_loaded": true,
+          "nvidia_smi": {
+            "cmd": [
+              "nvidia-smi",
+              "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+              "--format=csv,noheader"
+            ],
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "NVIDIA RTX A5000, 24564 MiB, 20309 MiB, 3812 MiB, 570.211.01\n"
+          },
+          "ok": true,
+          "reference_audio_roots": [
+            "/data",
+            "/voices",
+            "/work"
+          ],
+          "stage_preset_affect_status": {
+            "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+            "evidence": {
+              "duration_s_flat_spread": 1.36,
+              "f0_range_hz_flat_spread": 60.85,
+              "f0_sd_hz_flat_spread": 21.21,
+              "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+            },
+            "schema": "chatterbox.stage_preset_affect_status.v1",
+            "status": "not_validated_as_affect_channel",
+            "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+          },
+          "started_at_utc": "2026-08-22T15:55:23Z",
+          "supported_backends": [
+            "chatterbox_base_affect",
+            "chatterbox_turbo",
+            "qwen3_tts"
+          ],
+          "supported_params": [
+            "norm_loudness",
+            "repetition_penalty",
+            "temperature",
+            "top_k",
+            "top_p"
+          ],
+          "supported_tau_voice_render_request_schemas": [
+            "tau.voice_render_request.v1",
+            "tau.voice_render_request.v2"
+          ],
+          "tag_handling": {
+            "accepted_tags": [
+              "[clear throat]",
+              "[sigh]",
+              "[shush]",
+              "[cough]",
+              "[groan]",
+              "[sniff]",
+              "[gasp]",
+              "[chuckle]",
+              "[laugh]"
+            ],
+            "applied_tags": [],
+            "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+            "detected_tags": [],
+            "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+            "schema": "chatterbox.tag_handling.v1",
+            "tag_consuming_backends": [
+              "chatterbox_turbo"
+            ],
+            "tags_interpreted": false,
+            "tags_interpreted_reason": "no_backend_selected_yet",
+            "unknown_tag_behavior": "synthesized_as_literal_text"
+          },
+          "tone_calibration": {
+            "calm_precise": {
+              "intensity": 0.3,
+              "tempo": 0.93,
+              "valence": 0.1
+            },
+            "careful_concerned": {
+              "intensity": 0.55,
+              "tempo": 0.94,
+              "valence": -0.45
+            },
+            "curious_searching": {
+              "intensity": 0.8,
+              "tempo": 1.06,
+              "valence": 0.4
+            },
+            "deflect_calm": {
+              "intensity": 0.6,
+              "tempo": 0.92,
+              "valence": -0.65
+            },
+            "firm_boundary": {
+              "intensity": 0.95,
+              "tempo": 0.97,
+              "valence": -0.85
+            },
+            "grief_safe": {
+              "intensity": 0.3,
+              "tempo": 0.87,
+              "valence": -0.7
+            },
+            "identity_clarification": {
+              "intensity": 0.75,
+              "tempo": 1.0,
+              "valence": -0.2
+            },
+            "memory_confident": {
+              "intensity": 0.7,
+              "tempo": 1.04,
+              "valence": 0.6
+            },
+            "memory_uncertain": {
+              "intensity": 0.65,
+              "tempo": 0.95,
+              "valence": -0.45
+            },
+            "neutral_warm": {
+              "intensity": 0.4,
+              "tempo": 1.0,
+              "valence": 0.3
+            },
+            "one_at_a_time_interrupt": {
+              "intensity": 0.9,
+              "tempo": 1.15,
+              "valence": -0.7
+            },
+            "playful_light": {
+              "intensity": 0.85,
+              "tempo": 1.12,
+              "valence": 0.75
+            },
+            "relieved": {
+              "intensity": 0.75,
+              "tempo": 1.0,
+              "valence": 0.65
+            },
+            "serious_low_energy": {
+              "intensity": 0.1,
+              "tempo": 0.85,
+              "valence": -0.9
+            },
+            "wait_presence": {
+              "intensity": 0.2,
+              "tempo": 0.9,
+              "valence": 0.0
+            }
+          },
+          "tone_calibration_matrix": {
+            "classification": {
+              "calm_precise": "calibrated_distinct",
+              "careful_concerned": "calibrated_distinct",
+              "curious_searching": "calibrated_distinct",
+              "deflect_calm": "not_distinct_request_only",
+              "firm_boundary": "calibrated_distinct",
+              "grief_safe": "calibrated_distinct",
+              "identity_clarification": "calibrated_distinct",
+              "memory_confident": "calibrated_distinct",
+              "memory_uncertain": "calibrated_distinct",
+              "neutral_warm": "calibrated_distinct",
+              "one_at_a_time_interrupt": "calibrated_distinct",
+              "playful_light": "calibrated_distinct",
+              "relieved": "not_distinct_request_only",
+              "serious_low_energy": "calibrated_distinct",
+              "wait_presence": "calibrated_distinct"
+            },
+            "generated": "eval_tone_audibility tone_matrix",
+            "noise_floor": {
+              "duration_s": 2.56,
+              "f0_median_hz": 26.1,
+              "rms": 0.0123
+            },
+            "receipt_path": "/work/docs/proofs/tone_calibration_matrix.json",
+            "status": "calibrated"
+          },
+          "torch": {
+            "cuda_available": true,
+            "cuda_version": "12.4",
+            "device_count": 1,
+            "device_name": "NVIDIA RTX A5000",
+            "version": "2.6.0+cu124"
+          },
+          "voice_backends": {
+            "chatterbox_base_affect": {
+              "capabilities": {
+                "backend_id": "chatterbox_base_affect",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 3000,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": true,
+                "preset_voices": false,
+                "revision": "ResembleAI/chatterbox",
+                "stale_output_fencing": true,
+                "structured_affect_axes": true,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+              "health": {
+                "error": null,
+                "load_seconds": 11.423,
+                "measured_resident_vram_mb": 3059.0,
+                "state": "loaded"
+              }
+            },
+            "chatterbox_turbo": {
+              "capabilities": {
+                "backend_id": "chatterbox_turbo",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 3500,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": true,
+                "preset_voices": false,
+                "revision": "ResembleAI/chatterbox-turbo",
+                "stale_output_fencing": true,
+                "structured_affect_axes": false,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "4b332b29ed1608307e96205143c68c123de182bca8ec86a6b5b2da10ef7b1aaa",
+              "health": {
+                "error": null,
+                "load_seconds": null,
+                "measured_resident_vram_mb": null,
+                "state": "loaded"
+              }
+            },
+            "qwen3_tts": {
+              "capabilities": {
+                "backend_id": "qwen3_tts",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 6000,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000_resampled",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": false,
+                "preset_voices": false,
+                "revision": "Qwen/Qwen3-TTS-12Hz-1.7B-Base@fd4b25438912",
+                "stale_output_fencing": true,
+                "structured_affect_axes": false,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a",
+              "health": {
+                "error": null,
+                "load_seconds": null,
+                "measured_resident_vram_mb": null,
+                "state": "unloaded"
+              }
+            }
+          },
+          "voice_conditioning_cache_size": 2,
+          "voice_delivery_effect": {
+            "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+            "engine": "chatterbox_turbo",
+            "fields": {
+              "chatterbox_tags": {
+                "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+                "status": "request_only"
+              },
+              "intensity_valence": {
+                "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+                "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+                "response_curve": {
+                  "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+                  "measured": {
+                    "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                    "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+                  },
+                  "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+                  "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+                },
+                "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+                "valence_inertness": {
+                  "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+                  "declared": true,
+                  "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+                }
+              },
+              "pace": {
+                "mechanism": "phase_vocoder_time_stretch",
+                "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+                "status": "applied",
+                "tempo_factors": {
+                  "brisk": 1.08,
+                  "default": 1.0,
+                  "fast": 1.18,
+                  "measured": 0.92,
+                  "neutral": 1.0,
+                  "slow": 0.85
+                },
+                "unknown_value_behavior": "request_only"
+              },
+              "paralinguistic_tags": {
+                "accepted_tags": [
+                  "[clear throat]",
+                  "[sigh]",
+                  "[shush]",
+                  "[cough]",
+                  "[groan]",
+                  "[sniff]",
+                  "[gasp]",
+                  "[chuckle]",
+                  "[laugh]"
+                ],
+                "affect_tradeoff": {
+                  "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+                  "declared": true,
+                  "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+                  "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+                  "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+                },
+                "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+                "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+                "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+              },
+              "pause_strategy": {
+                "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+                "reason": "No synthesis code path consumes pause_strategy.",
+                "status": "request_only"
+              },
+              "tone": {
+                "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+                "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+                "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+                "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+                "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+              }
+            },
+            "schema": "chatterbox.voice_delivery_effect.v1"
+          }
+        },
+        "elapsed_seconds": 0.025
+      },
+      "memory": {
+        "available": true,
+        "body": {
+          "conversation_classifier_device": "cuda",
+          "conversation_classifier_ok": true,
+          "conversation_classifier_warm": true,
+          "intent_mapper_ok": true,
+          "memory_db_connected": true,
+          "ok": true,
+          "sparta_controls_count": 382717,
+          "sparta_corpus_ok": true,
+          "sparta_corpus_required": true,
+          "status": "ok"
+        },
+        "elapsed_seconds": 0.007
+      }
+    },
+    "services_before": {
+      "chatterbox": {
+        "available": true,
+        "body": {
+          "device": "cuda",
+          "engine": "chatterbox_turbo",
+          "ignored_turbo_params": [
+            "cfg_weight",
+            "exaggeration",
+            "min_p"
+          ],
+          "live": true,
+          "mocked": false,
+          "model_load_seconds": 10.026,
+          "model_loaded": true,
+          "nvidia_smi": {
+            "cmd": [
+              "nvidia-smi",
+              "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+              "--format=csv,noheader"
+            ],
+            "returncode": 0,
+            "stderr": "",
+            "stdout": "NVIDIA RTX A5000, 24564 MiB, 20309 MiB, 3812 MiB, 570.211.01\n"
+          },
+          "ok": true,
+          "reference_audio_roots": [
+            "/data",
+            "/voices",
+            "/work"
+          ],
+          "stage_preset_affect_status": {
+            "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+            "evidence": {
+              "duration_s_flat_spread": 1.36,
+              "f0_range_hz_flat_spread": 60.85,
+              "f0_sd_hz_flat_spread": 21.21,
+              "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+            },
+            "schema": "chatterbox.stage_preset_affect_status.v1",
+            "status": "not_validated_as_affect_channel",
+            "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+          },
+          "started_at_utc": "2026-08-22T15:55:23Z",
+          "supported_backends": [
+            "chatterbox_base_affect",
+            "chatterbox_turbo",
+            "qwen3_tts"
+          ],
+          "supported_params": [
+            "norm_loudness",
+            "repetition_penalty",
+            "temperature",
+            "top_k",
+            "top_p"
+          ],
+          "supported_tau_voice_render_request_schemas": [
+            "tau.voice_render_request.v1",
+            "tau.voice_render_request.v2"
+          ],
+          "tag_handling": {
+            "accepted_tags": [
+              "[clear throat]",
+              "[sigh]",
+              "[shush]",
+              "[cough]",
+              "[groan]",
+              "[sniff]",
+              "[gasp]",
+              "[chuckle]",
+              "[laugh]"
+            ],
+            "applied_tags": [],
+            "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+            "detected_tags": [],
+            "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+            "schema": "chatterbox.tag_handling.v1",
+            "tag_consuming_backends": [
+              "chatterbox_turbo"
+            ],
+            "tags_interpreted": false,
+            "tags_interpreted_reason": "no_backend_selected_yet",
+            "unknown_tag_behavior": "synthesized_as_literal_text"
+          },
+          "tone_calibration": {
+            "calm_precise": {
+              "intensity": 0.3,
+              "tempo": 0.93,
+              "valence": 0.1
+            },
+            "careful_concerned": {
+              "intensity": 0.55,
+              "tempo": 0.94,
+              "valence": -0.45
+            },
+            "curious_searching": {
+              "intensity": 0.8,
+              "tempo": 1.06,
+              "valence": 0.4
+            },
+            "deflect_calm": {
+              "intensity": 0.6,
+              "tempo": 0.92,
+              "valence": -0.65
+            },
+            "firm_boundary": {
+              "intensity": 0.95,
+              "tempo": 0.97,
+              "valence": -0.85
+            },
+            "grief_safe": {
+              "intensity": 0.3,
+              "tempo": 0.87,
+              "valence": -0.7
+            },
+            "identity_clarification": {
+              "intensity": 0.75,
+              "tempo": 1.0,
+              "valence": -0.2
+            },
+            "memory_confident": {
+              "intensity": 0.7,
+              "tempo": 1.04,
+              "valence": 0.6
+            },
+            "memory_uncertain": {
+              "intensity": 0.65,
+              "tempo": 0.95,
+              "valence": -0.45
+            },
+            "neutral_warm": {
+              "intensity": 0.4,
+              "tempo": 1.0,
+              "valence": 0.3
+            },
+            "one_at_a_time_interrupt": {
+              "intensity": 0.9,
+              "tempo": 1.15,
+              "valence": -0.7
+            },
+            "playful_light": {
+              "intensity": 0.85,
+              "tempo": 1.12,
+              "valence": 0.75
+            },
+            "relieved": {
+              "intensity": 0.75,
+              "tempo": 1.0,
+              "valence": 0.65
+            },
+            "serious_low_energy": {
+              "intensity": 0.1,
+              "tempo": 0.85,
+              "valence": -0.9
+            },
+            "wait_presence": {
+              "intensity": 0.2,
+              "tempo": 0.9,
+              "valence": 0.0
+            }
+          },
+          "tone_calibration_matrix": {
+            "classification": {
+              "calm_precise": "calibrated_distinct",
+              "careful_concerned": "calibrated_distinct",
+              "curious_searching": "calibrated_distinct",
+              "deflect_calm": "not_distinct_request_only",
+              "firm_boundary": "calibrated_distinct",
+              "grief_safe": "calibrated_distinct",
+              "identity_clarification": "calibrated_distinct",
+              "memory_confident": "calibrated_distinct",
+              "memory_uncertain": "calibrated_distinct",
+              "neutral_warm": "calibrated_distinct",
+              "one_at_a_time_interrupt": "calibrated_distinct",
+              "playful_light": "calibrated_distinct",
+              "relieved": "not_distinct_request_only",
+              "serious_low_energy": "calibrated_distinct",
+              "wait_presence": "calibrated_distinct"
+            },
+            "generated": "eval_tone_audibility tone_matrix",
+            "noise_floor": {
+              "duration_s": 2.56,
+              "f0_median_hz": 26.1,
+              "rms": 0.0123
+            },
+            "receipt_path": "/work/docs/proofs/tone_calibration_matrix.json",
+            "status": "calibrated"
+          },
+          "torch": {
+            "cuda_available": true,
+            "cuda_version": "12.4",
+            "device_count": 1,
+            "device_name": "NVIDIA RTX A5000",
+            "version": "2.6.0+cu124"
+          },
+          "voice_backends": {
+            "chatterbox_base_affect": {
+              "capabilities": {
+                "backend_id": "chatterbox_base_affect",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 3000,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": true,
+                "preset_voices": false,
+                "revision": "ResembleAI/chatterbox",
+                "stale_output_fencing": true,
+                "structured_affect_axes": true,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+              "health": {
+                "error": null,
+                "load_seconds": 11.423,
+                "measured_resident_vram_mb": 3059.0,
+                "state": "loaded"
+              }
+            },
+            "chatterbox_turbo": {
+              "capabilities": {
+                "backend_id": "chatterbox_turbo",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 3500,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": true,
+                "preset_voices": false,
+                "revision": "ResembleAI/chatterbox-turbo",
+                "stale_output_fencing": true,
+                "structured_affect_axes": false,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "4b332b29ed1608307e96205143c68c123de182bca8ec86a6b5b2da10ef7b1aaa",
+              "health": {
+                "error": null,
+                "load_seconds": null,
+                "measured_resident_vram_mb": null,
+                "state": "loaded"
+              }
+            },
+            "qwen3_tts": {
+              "capabilities": {
+                "backend_id": "qwen3_tts",
+                "cooperative_inference_cancellation": false,
+                "deterministic_seed": false,
+                "estimated_resident_vram_mb": 6000,
+                "input_sample_formats": [
+                  "wav_any_sr_reference"
+                ],
+                "max_concurrency": 1,
+                "output_sample_formats": [
+                  "wav_float32_24000_resampled",
+                  "pcm_s16le_24000"
+                ],
+                "per_segment_delivery": false,
+                "preset_voices": false,
+                "revision": "Qwen/Qwen3-TTS-12Hz-1.7B-Base@fd4b25438912",
+                "stale_output_fencing": true,
+                "structured_affect_axes": false,
+                "true_incremental_streaming": false,
+                "voice_cloning": true
+              },
+              "capability_digest": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a",
+              "health": {
+                "error": null,
+                "load_seconds": null,
+                "measured_resident_vram_mb": null,
+                "state": "unloaded"
+              }
+            }
+          },
+          "voice_conditioning_cache_size": 2,
+          "voice_delivery_effect": {
+            "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+            "engine": "chatterbox_turbo",
+            "fields": {
+              "chatterbox_tags": {
+                "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+                "status": "request_only"
+              },
+              "intensity_valence": {
+                "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+                "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+                "response_curve": {
+                  "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+                  "measured": {
+                    "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                    "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+                  },
+                  "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+                  "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+                },
+                "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+                "valence_inertness": {
+                  "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+                  "declared": true,
+                  "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+                }
+              },
+              "pace": {
+                "mechanism": "phase_vocoder_time_stretch",
+                "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+                "status": "applied",
+                "tempo_factors": {
+                  "brisk": 1.08,
+                  "default": 1.0,
+                  "fast": 1.18,
+                  "measured": 0.92,
+                  "neutral": 1.0,
+                  "slow": 0.85
+                },
+                "unknown_value_behavior": "request_only"
+              },
+              "paralinguistic_tags": {
+                "accepted_tags": [
+                  "[clear throat]",
+                  "[sigh]",
+                  "[shush]",
+                  "[cough]",
+                  "[groan]",
+                  "[sniff]",
+                  "[gasp]",
+                  "[chuckle]",
+                  "[laugh]"
+                ],
+                "affect_tradeoff": {
+                  "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+                  "declared": true,
+                  "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+                  "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+                  "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+                },
+                "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+                "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+                "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+              },
+              "pause_strategy": {
+                "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+                "reason": "No synthesis code path consumes pause_strategy.",
+                "status": "request_only"
+              },
+              "tone": {
+                "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+                "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+                "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+                "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+                "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+              }
+            },
+            "schema": "chatterbox.voice_delivery_effect.v1"
+          }
+        },
+        "elapsed_seconds": 0.027
+      },
+      "memory": {
+        "available": true,
+        "body": {
+          "conversation_classifier_device": "cuda",
+          "conversation_classifier_ok": true,
+          "conversation_classifier_warm": true,
+          "intent_mapper_ok": true,
+          "memory_db_connected": true,
+          "ok": true,
+          "sparta_controls_count": 382717,
+          "sparta_corpus_ok": true,
+          "sparta_corpus_required": true,
+          "status": "ok"
+        },
+        "elapsed_seconds": 0.006
+      }
+    },
+    "stage_counts": {
+      "BLOCKED": 0,
+      "ERROR": 0,
+      "FAIL": 0,
+      "OTHER": 0,
+      "PASS": 6
+    },
+    "started_at": "2026-08-22T23:33:40Z"
+  },
+  "schema": "persona_dream.live_chain_receipt.v1",
+  "services": {
+    "chatterbox": {
+      "device": "cuda",
+      "engine": "chatterbox_turbo",
+      "ignored_turbo_params": [
+        "cfg_weight",
+        "exaggeration",
+        "min_p"
+      ],
+      "live": true,
+      "mocked": false,
+      "model_load_seconds": 10.026,
+      "model_loaded": true,
+      "nvidia_smi": {
+        "cmd": [
+          "nvidia-smi",
+          "--query-gpu=name,memory.total,memory.used,memory.free,driver_version",
+          "--format=csv,noheader"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "NVIDIA RTX A5000, 24564 MiB, 20309 MiB, 3812 MiB, 570.211.01\n"
+      },
+      "ok": true,
+      "reference_audio_roots": [
+        "/data",
+        "/voices",
+        "/work"
+      ],
+      "stage_preset_affect_status": {
+        "consumer_guidance": "Do not treat STAGE_PRESETS as a reliable affect channel without fresh receipt evidence clearing same-parameter variance.",
+        "evidence": {
+          "duration_s_flat_spread": 1.36,
+          "f0_range_hz_flat_spread": 60.85,
+          "f0_sd_hz_flat_spread": 21.21,
+          "receipt": "skills/persona-dream/reports/goal_v4/four_arm/four_arm_acoustic_receipt.v2.json"
+        },
+        "schema": "chatterbox.stage_preset_affect_status.v1",
+        "status": "not_validated_as_affect_channel",
+        "summary": "Turbo stage presets are delivery/generation presets; current n=5 four-arm evidence measured preset-driven shifts below same-parameter stochastic spread."
+      },
+      "started_at_utc": "2026-08-22T15:55:23Z",
+      "supported_backends": [
+        "chatterbox_base_affect",
+        "chatterbox_turbo",
+        "qwen3_tts"
+      ],
+      "supported_params": [
+        "norm_loudness",
+        "repetition_penalty",
+        "temperature",
+        "top_k",
+        "top_p"
+      ],
+      "supported_tau_voice_render_request_schemas": [
+        "tau.voice_render_request.v1",
+        "tau.voice_render_request.v2"
+      ],
+      "tag_handling": {
+        "accepted_tags": [
+          "[clear throat]",
+          "[sigh]",
+          "[shush]",
+          "[cough]",
+          "[groan]",
+          "[sniff]",
+          "[gasp]",
+          "[chuckle]",
+          "[laugh]"
+        ],
+        "applied_tags": [],
+        "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+        "detected_tags": [],
+        "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+        "schema": "chatterbox.tag_handling.v1",
+        "tag_consuming_backends": [
+          "chatterbox_turbo"
+        ],
+        "tags_interpreted": false,
+        "tags_interpreted_reason": "no_backend_selected_yet",
+        "unknown_tag_behavior": "synthesized_as_literal_text"
+      },
+      "tone_calibration": {
+        "calm_precise": {
+          "intensity": 0.3,
+          "tempo": 0.93,
+          "valence": 0.1
+        },
+        "careful_concerned": {
+          "intensity": 0.55,
+          "tempo": 0.94,
+          "valence": -0.45
+        },
+        "curious_searching": {
+          "intensity": 0.8,
+          "tempo": 1.06,
+          "valence": 0.4
+        },
+        "deflect_calm": {
+          "intensity": 0.6,
+          "tempo": 0.92,
+          "valence": -0.65
+        },
+        "firm_boundary": {
+          "intensity": 0.95,
+          "tempo": 0.97,
+          "valence": -0.85
+        },
+        "grief_safe": {
+          "intensity": 0.3,
+          "tempo": 0.87,
+          "valence": -0.7
+        },
+        "identity_clarification": {
+          "intensity": 0.75,
+          "tempo": 1.0,
+          "valence": -0.2
+        },
+        "memory_confident": {
+          "intensity": 0.7,
+          "tempo": 1.04,
+          "valence": 0.6
+        },
+        "memory_uncertain": {
+          "intensity": 0.65,
+          "tempo": 0.95,
+          "valence": -0.45
+        },
+        "neutral_warm": {
+          "intensity": 0.4,
+          "tempo": 1.0,
+          "valence": 0.3
+        },
+        "one_at_a_time_interrupt": {
+          "intensity": 0.9,
+          "tempo": 1.15,
+          "valence": -0.7
+        },
+        "playful_light": {
+          "intensity": 0.85,
+          "tempo": 1.12,
+          "valence": 0.75
+        },
+        "relieved": {
+          "intensity": 0.75,
+          "tempo": 1.0,
+          "valence": 0.65
+        },
+        "serious_low_energy": {
+          "intensity": 0.1,
+          "tempo": 0.85,
+          "valence": -0.9
+        },
+        "wait_presence": {
+          "intensity": 0.2,
+          "tempo": 0.9,
+          "valence": 0.0
+        }
+      },
+      "tone_calibration_matrix": {
+        "classification": {
+          "calm_precise": "calibrated_distinct",
+          "careful_concerned": "calibrated_distinct",
+          "curious_searching": "calibrated_distinct",
+          "deflect_calm": "not_distinct_request_only",
+          "firm_boundary": "calibrated_distinct",
+          "grief_safe": "calibrated_distinct",
+          "identity_clarification": "calibrated_distinct",
+          "memory_confident": "calibrated_distinct",
+          "memory_uncertain": "calibrated_distinct",
+          "neutral_warm": "calibrated_distinct",
+          "one_at_a_time_interrupt": "calibrated_distinct",
+          "playful_light": "calibrated_distinct",
+          "relieved": "not_distinct_request_only",
+          "serious_low_energy": "calibrated_distinct",
+          "wait_presence": "calibrated_distinct"
+        },
+        "generated": "eval_tone_audibility tone_matrix",
+        "noise_floor": {
+          "duration_s": 2.56,
+          "f0_median_hz": 26.1,
+          "rms": 0.0123
+        },
+        "receipt_path": "/work/docs/proofs/tone_calibration_matrix.json",
+        "status": "calibrated"
+      },
+      "torch": {
+        "cuda_available": true,
+        "cuda_version": "12.4",
+        "device_count": 1,
+        "device_name": "NVIDIA RTX A5000",
+        "version": "2.6.0+cu124"
+      },
+      "voice_backends": {
+        "chatterbox_base_affect": {
+          "capabilities": {
+            "backend_id": "chatterbox_base_affect",
+            "cooperative_inference_cancellation": false,
+            "deterministic_seed": false,
+            "estimated_resident_vram_mb": 3000,
+            "input_sample_formats": [
+              "wav_any_sr_reference"
+            ],
+            "max_concurrency": 1,
+            "output_sample_formats": [
+              "wav_float32_24000",
+              "pcm_s16le_24000"
+            ],
+            "per_segment_delivery": true,
+            "preset_voices": false,
+            "revision": "ResembleAI/chatterbox",
+            "stale_output_fencing": true,
+            "structured_affect_axes": true,
+            "true_incremental_streaming": false,
+            "voice_cloning": true
+          },
+          "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+          "health": {
+            "error": null,
+            "load_seconds": 11.423,
+            "measured_resident_vram_mb": 3059.0,
+            "state": "loaded"
+          }
+        },
+        "chatterbox_turbo": {
+          "capabilities": {
+            "backend_id": "chatterbox_turbo",
+            "cooperative_inference_cancellation": false,
+            "deterministic_seed": false,
+            "estimated_resident_vram_mb": 3500,
+            "input_sample_formats": [
+              "wav_any_sr_reference"
+            ],
+            "max_concurrency": 1,
+            "output_sample_formats": [
+              "wav_float32_24000",
+              "pcm_s16le_24000"
+            ],
+            "per_segment_delivery": true,
+            "preset_voices": false,
+            "revision": "ResembleAI/chatterbox-turbo",
+            "stale_output_fencing": true,
+            "structured_affect_axes": false,
+            "true_incremental_streaming": false,
+            "voice_cloning": true
+          },
+          "capability_digest": "4b332b29ed1608307e96205143c68c123de182bca8ec86a6b5b2da10ef7b1aaa",
+          "health": {
+            "error": null,
+            "load_seconds": null,
+            "measured_resident_vram_mb": null,
+            "state": "loaded"
+          }
+        },
+        "qwen3_tts": {
+          "capabilities": {
+            "backend_id": "qwen3_tts",
+            "cooperative_inference_cancellation": false,
+            "deterministic_seed": false,
+            "estimated_resident_vram_mb": 6000,
+            "input_sample_formats": [
+              "wav_any_sr_reference"
+            ],
+            "max_concurrency": 1,
+            "output_sample_formats": [
+              "wav_float32_24000_resampled",
+              "pcm_s16le_24000"
+            ],
+            "per_segment_delivery": false,
+            "preset_voices": false,
+            "revision": "Qwen/Qwen3-TTS-12Hz-1.7B-Base@fd4b25438912",
+            "stale_output_fencing": true,
+            "structured_affect_axes": false,
+            "true_incremental_streaming": false,
+            "voice_cloning": true
+          },
+          "capability_digest": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a",
+          "health": {
+            "error": null,
+            "load_seconds": null,
+            "measured_resident_vram_mb": null,
+            "state": "unloaded"
+          }
+        }
+      },
+      "voice_conditioning_cache_size": 2,
+      "voice_delivery_effect": {
+        "consumer_guidance": "Treat any field not marked applied as receipt metadata. Echo-back of a request field is never evidence of acoustic effect; only a per-render *_effect receipt with applied=true is.",
+        "engine": "chatterbox_turbo",
+        "fields": {
+          "chatterbox_tags": {
+            "reason": "The voice_delivery.chatterbox_tags LIST remains request-only metadata; invented tokens such as [firm] or [breath] are not model vocabulary. INLINE tags in the text are different: see paralinguistic_tags.",
+            "status": "request_only"
+          },
+          "intensity_valence": {
+            "mechanism": "intensity scales exaggeration (0.3+0.9*intensity, clamped 0.3-1.4); negative valence lowers cfg_weight (0.5-0.2*max(0,-valence), clamped 0.3-0.5)",
+            "per_render_receipt": "affect_effect (chatterbox.affect_effect.v1)",
+            "response_curve": {
+              "consumer_guidance": "Use large intensity/valence contrasts (>=0.5 apart) for audibly distinct arms; do not expect fine-grained gradations to be audible.",
+              "measured": {
+                "audible": "intensity 0.9 / valence -0.8 vs intensity 0.2 / valence -0.2 separated f0_median by 66.6 Hz against an 8.1 Hz same-parameter floor and rms by 3.5x its floor (eval_tone_audibility affect case, 2026-08-04)",
+                "inaudible": "single-axis deltas of 0.25-0.32 intensity from a 0.5 floor moved no metric past a 4-repeat noise floor (persona-dream measurement, chatterbox#21)"
+              },
+              "perceptual_validation": "Held-out dimensional emotion model (audeering MSP-Podcast wav2vec2): perceived arousal rank-correlates with requested intensity at Spearman 0.96 across all 15 calibrated tones; perceived valence does NOT track the requested valence knob (Spearman ~0.08) -- arousal is the single perceptually verified affect dimension. See the machine_listener eval case.",
+              "summary": "Response is nonlinear and top-weighted: audible change is measured only near the top of the intensity range. Small deltas sit below the renderer's own same-parameter noise floor."
+            },
+            "status": "intensity_applied_on_chatterbox_base_affect__valence_perceptually_inert",
+            "valence_inertness": {
+              "consumer_guidance": "Treat requested valence as engine-internal metadata, not a perceptual promise. Perceived tone differentiation comes from arousal (intensity) and tempo. A valence-capable engine is future work.",
+              "declared": true,
+              "evidence": "Full raw-knob sweep on /synthesize-emotion (cfg_weight 0.1-0.9, temperature 0.5-1.1, exaggeration 0.3-1.1; interleaved floor n=4) scored by the audeering dimensional model: every axis's perceived-valence sweep range (0.043-0.075) fell inside the same-parameter floor spread (0.082). No generation knob moves perceived valence on the Chatterbox engines. Receipt: docs/proofs/valence_sweep_20260804.json (chatterbox#23)."
+            }
+          },
+          "pace": {
+            "mechanism": "phase_vocoder_time_stretch",
+            "proof_metric": "duration_seconds scales by 1/tempo_factor; see per-render pace_effect receipt",
+            "status": "applied",
+            "tempo_factors": {
+              "brisk": 1.08,
+              "default": 1.0,
+              "fast": 1.18,
+              "measured": 0.92,
+              "neutral": 1.0,
+              "slow": 0.85
+            },
+            "unknown_value_behavior": "request_only"
+          },
+          "paralinguistic_tags": {
+            "accepted_tags": [
+              "[clear throat]",
+              "[sigh]",
+              "[shush]",
+              "[cough]",
+              "[groan]",
+              "[sniff]",
+              "[gasp]",
+              "[chuckle]",
+              "[laugh]"
+            ],
+            "affect_tradeoff": {
+              "consumer_override": "Set voice_delivery.tag_realization='literal' to prefer the arousal knobs instead; the render then routes to chatterbox_base_affect and tag_handling reports tags_interpreted=false, so a consumer that cannot accept a spoken tag word fails closed on the receipt.",
+              "declared": true,
+              "explicit_knob_conflict": "Explicit intensity/valence/use_base_emotion always win the routing, because they are a direct instruction. With inline tags present that combination is declared unsatisfiable in tags_interpreted_reason rather than silently resolved.",
+              "resolution": "When inline event tags are present and tone-derived calibration is the only affect source, the render stays on the tag-consuming backend and carries the backend-independent TONE_CALIBRATION tempo axis. The intensity/valence knob axis is then NOT applied and affect_effect reports applied=false with the backend reason.",
+              "summary": "Tag realization and the arousal knob axis live on different backends and cannot both be applied to one render. chatterbox_turbo consumes the event tags but ignores exaggeration/cfg_weight; chatterbox_base_affect honors those knobs but speaks the tag as a literal word."
+            },
+            "mechanism": "native model vocabulary on chatterbox_turbo; no separate channel",
+            "proof_metric": "per-render tag_handling receipt; ASR transcript must not contain the tag word on a tag-consuming path",
+            "status": "applied_on_tag_consuming_backend__literal_text_elsewhere"
+          },
+          "pause_strategy": {
+            "audible_channel": "Use per-chunk pause_after_ms, which inserts real silence when segments are combined.",
+            "reason": "No synthesis code path consumes pause_strategy.",
+            "status": "request_only"
+          },
+          "tone": {
+            "audible_channel": "Set emotion_realization=audible (request field or voice_delivery key) and the tone alone routes through TONE_CALIBRATION -> chatterbox_base_affect knobs plus a per-tone tempo, with no knob knowledge required. Explicit intensity/valence or use_base_emotion also route audibly, as before.",
+            "calibration": "TONE_CALIBRATION; pairwise distinguishability matrix published by the tone_matrix eval case",
+            "default_policy": "Default is fast (turbo) for latency compatibility with live chat; override per request or via CHATTERBOX_EMOTION_REALIZATION_DEFAULT=audible.",
+            "reason": "On the default turbo fast path, tone maps to STAGE_PRESETS which shift only sampling params; measured acoustic shifts are below same-parameter stochastic spread, and the params that move affect (exaggeration, cfg_weight) are ignored by Turbo.",
+            "status": "audible_with_emotion_realization_audible__request_only_on_default_fast_path"
+          }
+        },
+        "schema": "chatterbox.voice_delivery_effect.v1"
+      }
+    },
+    "memory": {
+      "conversation_classifier_device": "cuda",
+      "conversation_classifier_ok": true,
+      "conversation_classifier_warm": true,
+      "intent_mapper_ok": true,
+      "memory_db_connected": true,
+      "ok": true,
+      "sparta_controls_count": 382717,
+      "sparta_corpus_ok": true,
+      "sparta_corpus_required": true,
+      "status": "ok"
+    }
+  },
+  "side_effect_counters": {
+    "accepted_canonical_dream_writes_for_cycle": 1,
+    "journal_writes_for_cycle": 1,
+    "ledger_arc_deltas_for_cycle": 1,
+    "live_chatterbox_turns": 3
+  },
+  "source_boundary": {
+    "fresh_chain_id": true,
+    "new_paid_provider_call": false,
+    "source_accepted_cycle": {
+      "artifacts": {
+        "autonomous_cycle": {
+          "bytes": 2901,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/autonomous_cycle_receipt.v1.json",
+          "sha256": "sha256:78c64ea97417cad9d767557938ed05222fcbbac488f1f817217f5070e6a92352"
+        },
+        "persist_proof": {
+          "bytes": 108559,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/persist_proof.json",
+          "sha256": "sha256:74c078ab21bb34ed74a1332f156ddfcbdfeddc833b5307ee33a2880e6ebbebfe"
+        },
+        "phase13": {
+          "bytes": 17420,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/phase13_interpretation.json",
+          "sha256": "sha256:cd6631f4981e9f5bd82f3527b62315d8d342170d95464093d0ba9873b407c015"
+        },
+        "phase14": {
+          "bytes": 4858,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/phase14_tom.json",
+          "sha256": "sha256:228fc0aed3a06e4f5ed9d41f22a6b5ae35d7469456bdec0a593bc0a82326b2af"
+        },
+        "source_journal": {
+          "bytes": 5179,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/dream_journal.v1.json",
+          "sha256": "sha256:310e9fcd62e148226bf9be65acc2e40978b0a4eda0742f7dff46a084024310f1"
+        },
+        "watch_observation": {
+          "bytes": 3814,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation.json",
+          "sha256": "sha256:69742493c57be88ef59393b3ff7cc05c8b11bd54c9315f4f48a843d24558373e"
+        },
+        "watch_receipt": {
+          "bytes": 5627,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation/visual_review_receipt.json",
+          "sha256": "sha256:34f45e8b3067e42f2be40df27d7c7a022f5cf8832dbf2b9b86edc06c7bb885f1"
+        }
+      },
+      "roots": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_012"
+      ],
+      "source_cycle_dir": "skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z",
+      "source_cycle_id": "cycle_20260723T234851Z",
+      "source_dream_node_key": "dream_auto_cycle_20260723T234851Z",
+      "tom_candidate_ids": [
+        "tom-001",
+        "tom-002",
+        "tom-003",
+        "tom-004"
+      ],
+      "watch_observation_ids": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    }
+  },
+  "stages": [
+    {
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_memory",
+        "exact_reread_match": true,
+        "key": "dream_live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:2f11d1a39e58bf292070a077528ad32f05b07c3a1412b40a817194bc6169c8e7",
+        "written_sha256": "sha256:2f11d1a39e58bf292070a077528ad32f05b07c3a1412b40a817194bc6169c8e7"
+      },
+      "mocked": false,
+      "name": "accepted_synthetic_dream_memory",
+      "status": "PASS"
+    },
+    {
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_dream_watch_evidence",
+        "exact_reread_match": true,
+        "key": "watch_live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:a2226040fc3344649f493134f78a8c40df93846c608eef5fa9212f8cbab42c46",
+        "written_sha256": "sha256:a2226040fc3344649f493134f78a8c40df93846c608eef5fa9212f8cbab42c46"
+      },
+      "mocked": false,
+      "name": "accepted_watch_observation_reread",
+      "status": "PASS",
+      "watch_observation_ids": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    },
+    {
+      "artifact": {
+        "bytes": 5308,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/dream_journal.v1.json",
+        "sha256": "sha256:6832183f983b2876bc9fa1d5b1848ba8ab1e24d7ff35f06ca1afa7800c3500c3"
+      },
+      "classification": {
+        "asserts_only_own_inner_state": true,
+        "canon_status": "synthetic_self_reflection",
+        "never_promote_to_event_fact": true
+      },
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_journal",
+        "exact_reread_match": true,
+        "key": "journal_live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:91b125bfa42cf0b8084582818f0bf61660db1cf22862718c3385f60f76c07512",
+        "written_sha256": "sha256:91b125bfa42cf0b8084582818f0bf61660db1cf22862718c3385f60f76c07512"
+      },
+      "mocked": false,
+      "name": "synthetic_first_person_journal",
+      "source_memory_ids_used_by_journal": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_012"
+      ],
+      "status": "PASS",
+      "watch_observation_ids_used_by_journal": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review",
+        "coverage_gap_00",
+        "coverage_gap_01",
+        "coverage_gap_02"
+      ]
+    },
+    {
+      "after_sha256": "sha256:f190f029786dca09cc159a8a6a08fbf827d02b78096be1e3d330c4de40692dee",
+      "arc_delta_id": "arc_192_75329d7e34c6",
+      "arc_delta_idempotency_key": "dream_cycle:75329d7e34c6185b884d1f97",
+      "before_sha256": "sha256:3a3794f33224033cf4dc2e3aaeea8d1cf087ba7d2af80d4ebb5b7ff9635fdedd",
+      "ledger_path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+      "live": true,
+      "memory": {
+        "after_count": 1,
+        "before_count": 0,
+        "collection": "persona_memory",
+        "exact_reread_match": true,
+        "key": "ledger_live_chain_reliability_soak35_after_1130_20260822T2331Z_cycle_012_epoch_193",
+        "live": true,
+        "mocked": false,
+        "reread_sha256": "sha256:fb24616d4d33a26e272e2edea119e6bfa27746b3e5fa17a42364b267e036e3c0",
+        "written_sha256": "sha256:fb24616d4d33a26e272e2edea119e6bfa27746b3e5fa17a42364b267e036e3c0"
+      },
+      "mocked": false,
+      "name": "continuity_ledger_append_reread",
+      "reread_sha256": "sha256:f190f029786dca09cc159a8a6a08fbf827d02b78096be1e3d330c4de40692dee",
+      "resulting_epoch": 193,
+      "source_epoch": 192,
+      "status": "PASS"
+    },
+    {
+      "first_turn_at": "2026-08-22T23:33:40Z",
+      "first_turn_seq": 1,
+      "live": true,
+      "mocked": false,
+      "mood_bound_seq": 0,
+      "mood_selected_at": "2026-08-22T23:33:40Z",
+      "name": "session_mood_live_chatterbox",
+      "receipt": {
+        "bytes": 14870,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/chatterbox_live/RECEIPT.json",
+        "sha256": "sha256:b05ce76aa9b335c0bb5f6b569c3302b53d0eaa3e8d89708027fc6dfd13b964e5"
+      },
+      "selected_before_first_turn": true,
+      "selected_before_first_turn_by_sequence": true,
+      "selected_before_first_turn_by_timestamp": false,
+      "session_mood_id": "session_mood:3cb83e80e5f16665fe2e8b52",
+      "status": "PASS_SESSION_MOOD_CHATTERBOX_LIVE",
+      "timestamp_boundary_note": "Binding order is enforced by sequence; second-granularity timestamps may be equal when mood binding and first render happen in the same second.",
+      "turns": [
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:1a9343ab7dd9fb65ce0877bb2944d65d06264a28d74c55464dd072a62669173a",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:3cb83e80e5f16665fe2e8b52",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_001"
+        },
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:30b44e9d97723f39f3d7670d9d510b9b9e8242de18f37fdc4caa53fd90d7a2f7",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:3cb83e80e5f16665fe2e8b52",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_002"
+        },
+        {
+          "asr_gate": {
+            "failed_gates": [],
+            "ok": true,
+            "repeated_ngram_hits": [],
+            "wer": 0.0
+          },
+          "audio_sha256": "sha256:96b2a7bedd0de9f87bb5820709678adfc7be9dea0b542f9a35b5a631a33e4ef2",
+          "canonical_answer_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "engine": "chatterbox_base",
+          "session_mood_id": "session_mood:3cb83e80e5f16665fe2e8b52",
+          "spoken_text_sha256": "sha256:794ded4cc53691bf7a7055864f23e71efc3e64ae94a118f3068bdf80e353c19c",
+          "turn_id": "turn_003"
+        }
+      ]
+    },
+    {
+      "audio_artifacts": [
+        {
+          "bytes": 348750,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/chatterbox_live/turn_001_finished_response.wav",
+          "sha256": "sha256:1a9343ab7dd9fb65ce0877bb2944d65d06264a28d74c55464dd072a62669173a"
+        },
+        {
+          "bytes": 260686,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/chatterbox_live/turn_002_finished_response.wav",
+          "sha256": "sha256:30b44e9d97723f39f3d7670d9d510b9b9e8242de18f37fdc4caa53fd90d7a2f7"
+        },
+        {
+          "bytes": 298574,
+          "exists": true,
+          "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/chatterbox_live/turn_003_finished_response.wav",
+          "sha256": "sha256:96b2a7bedd0de9f87bb5820709678adfc7be9dea0b542f9a35b5a631a33e4ef2"
+        }
+      ],
+      "live": false,
+      "mocked": false,
+      "name": "embry_voice_recognition",
+      "receipt": {
+        "path": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/cycle_012/voice_recognition/RECEIPT.json",
+        "sha256": "sha256:a9b7a256201c0a532cfad3348675e3e8c50b1e0febecd82b2a165df89bda656e",
+        "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+      },
+      "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+    }
+  ],
+  "status": "PASS_PERSONA_DREAM_LIVE_CHAIN"
+}
