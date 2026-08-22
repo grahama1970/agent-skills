@@ -1,0 +1,77 @@
+{
+  "schema_version": "ops-linkedin.opportunity_capture.v1",
+  "source": "linkedin_top_applicant",
+  "top_candidate": true,
+  "opportunities": [
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381463Z",
+      "title": "Senior Lead AI Engineer (Gen AI Platform Services: Distributed Systems)",
+      "organization": "Find Data Science Jobs",
+      "location": "Buffalo-Niagara Falls Area (On-site)",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4457820331/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381484Z",
+      "title": "Forward Deployed Engineer - Products",
+      "organization": "Accenture",
+      "location": "Buffalo-Niagara Falls Area (On-site)",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4450021383/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381490Z",
+      "title": "AI Principal Engineer",
+      "organization": "AI Principal Engineer with verification",
+      "location": "Voya Financial",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4446821030/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381493Z",
+      "title": "Sr. ML Scientist",
+      "organization": "Sr. ML Scientist with verification",
+      "location": "Cleerly",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4283917990/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381496Z",
+      "title": "Capgemini Invent - Forward Deployed Engineer Senior Consultant",
+      "organization": "Capgemini Invent - Forward Deployed Engineer Senior Consultant with verification",
+      "location": "Capgemini",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4438481686/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381499Z",
+      "title": "ERP AI Engineer - Manager",
+      "organization": "ERP AI Engineer - Manager with verification",
+      "location": "PwC",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4453640906/",
+      "top_candidate": true
+    },
+    {
+      "source": "human_authorized_linkedin_tab",
+      "observed_at": "2026-08-22T14:37:29.381502Z",
+      "title": "US E ES - Lead Data Scientist GenAI, Financial Planning & Analysis - Strategic Analytics",
+      "organization": "US E ES - Lead Data Scientist GenAI, Financial Planning & Analysis - Strategic Analytics with verification",
+      "location": "Deloitte",
+      "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
+      "primary_evidence_url": "https://www.linkedin.com/jobs/view/4441222922/",
+      "top_candidate": true
+    }
+  ]
+}

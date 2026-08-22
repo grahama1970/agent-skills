@@ -529,6 +529,29 @@
       "seams": [
         "ats.ashby_prefill"
       ]
+    },
+    {
+      "name": "linkedin-org-parse",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "discovery.linkedin_org_parse"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_org_parse.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_ORG_PARSE_OK"
+        ],
+        "stderr_excludes": [
+          "LINKEDIN_ORG_MISPARSE"
+        ]
+      }
     }
   ]
 }

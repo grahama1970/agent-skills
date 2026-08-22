@@ -235,6 +235,39 @@
       },
       "status": "ACTIVE",
       "notes": "Ashby blank-submit fix."
+    },
+    {
+      "regression_id": "linkedin-org-misparse-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "LinkedIn top-applicant rows emit organization equal to a fragment of the role title (e.g. 'AI Principal Engineer' -> 'AI Principal Engineer with verification'); the real employer is misaligned into another field.",
+        "root_cause": "_linkedin_evidence_candidates / capture field alignment for top-applicant cards echoes the title into organization.",
+        "correct_behavior": "each top-applicant candidate's organization is the real employer, distinct from the title, with no 'with verification' artifact."
+      },
+      "threatens": {
+        "capability": "eligibility_and_ranking",
+        "seams": [
+          "discovery.linkedin_org_parse"
+        ]
+      },
+      "retained_case": "linkedin-org-parse",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "uv",
+          "run",
+          "--project",
+          ".",
+          "python",
+          "scripts/eval_linkedin_org_parse.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "LINKEDIN_ORG_MISPARSE",
+        "observed_pre_fix": "5 of 7 fixture rows have organization == title fragment"
+      },
+      "status": "ACTIVE",
+      "notes": "Ticket #1483. Guard fails until the parser recovers the real employer. To be resolved by project-watchdog."
     }
   ]
 }

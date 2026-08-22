@@ -14,6 +14,7 @@
         "ats.form_capture",
         "ats.linkedin_easy_apply",
         "discovery.linkedin_evidence_merge",
+        "discovery.linkedin_org_parse",
         "ranking.eligibility_escalation",
         "ranking.response_score",
         "ranking.shortlist_selection",
