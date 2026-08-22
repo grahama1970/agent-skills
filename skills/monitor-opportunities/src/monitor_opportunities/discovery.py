@@ -187,6 +187,64 @@ def _employer_indistinguishable_from_title(employer: str, title: str) -> bool:
     return bool(candidate) and normalized_title.startswith(candidate)
 
 
+# Aggregator vocabulary for LinkedIn organization fields. A board or aggregator
+# name ("Find Data Science Jobs") is a listing surface, not the hiring employer,
+# so it must never be surfaced as the organization. Token-level matching, not
+# substring or regex classification: "Jobcase" and "Careerbuilder" tokenize to a
+# single token and are therefore not treated as boards.
+_JOB_BOARD_TOKENS = frozenset(
+    {
+        "job",
+        "jobs",
+        "career",
+        "careers",
+        "hiring",
+        "listing",
+        "listings",
+        "opening",
+        "openings",
+        "vacancy",
+        "vacancies",
+        "recruiting",
+        "recruitment",
+        "staffing",
+    }
+)
+
+# Named boards whose brand carries no aggregator token of its own.
+_KNOWN_JOB_BOARDS = frozenset(
+    {
+        "linkedin",
+        "indeed",
+        "ziprecruiter",
+        "glassdoor",
+        "monster",
+        "dice",
+        "simplyhired",
+        "hiddenjobs",
+        "wellfound",
+        "lever",
+        "greenhouse",
+        "workday",
+    }
+)
+
+
+def _name_tokens(value: str) -> list[str]:
+    """Lowercase alphanumeric word tokens of a name, punctuation dropped."""
+    return ["".join(ch for ch in part if ch.isalnum()).lower() for part in value.split()]
+
+
+def _is_job_board_name(value: str) -> bool:
+    """True when `value` names a job board or aggregator rather than an employer."""
+    tokens = [token for token in _name_tokens(value) if token]
+    if not tokens:
+        return False
+    if any(token in _KNOWN_JOB_BOARDS for token in tokens):
+        return True
+    return any(token in _JOB_BOARD_TOKENS for token in tokens)
+
+
 def _realign_linkedin_row(record: dict[str, Any], title: str, organization: str, location: str) -> tuple[str, str]:
     """Return (organization, location) with the #1483 field shift undone.
 
@@ -196,14 +254,28 @@ def _realign_linkedin_row(record: dict[str, Any], title: str, organization: str,
     carries no usable location.
     """
     organization = _strip_verification_artifact(organization)
+    if _is_job_board_name(organization):
+        # A board name is never the employer. Recover an explicit employer field
+        # when the capture supplied one; otherwise the row has no employer and is
+        # dropped by the caller rather than ranked under the board's name.
+        for key in ("employer", "company_name", "company", "hiring_organization", "organization_name"):
+            explicit = _strip_verification_artifact(str(record.get(key) or ""))
+            if explicit and not _is_title_echo(explicit, title) and not _is_job_board_name(explicit):
+                return explicit, location
+        return "", location
     if not _is_title_echo(organization, title):
         return organization, location
     for key in ("employer", "company_name", "company", "hiring_organization", "organization_name"):
         explicit = _strip_verification_artifact(str(record.get(key) or ""))
-        if explicit and not _is_title_echo(explicit, title):
+        if explicit and not _is_title_echo(explicit, title) and not _is_job_board_name(explicit):
             return explicit, location
     shifted = _strip_verification_artifact(location)
-    if shifted and not _is_title_echo(shifted, title) and not _employer_indistinguishable_from_title(shifted, title):
+    if (
+        shifted
+        and not _is_title_echo(shifted, title)
+        and not _employer_indistinguishable_from_title(shifted, title)
+        and not _is_job_board_name(shifted)
+    ):
         return shifted, "Unknown"
     return "", location
 
