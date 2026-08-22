@@ -4,7 +4,7 @@
   "map_version": "1",
   "categories": {
     "regression-guards": {
-      "category_id": "agentic-evals:monitor-opportunities:regression-guards",
+      "category_id": "agentic-evals:agent-skills:monitor-opportunities-regression-guards",
       "label": "eval-cat-regression-guards",
       "defect": "any monitor-opportunities feature regresses (resume render, field classification, ranking, ats/linkedin apply)",
       "expected": "every deterministic regression guard passes",
