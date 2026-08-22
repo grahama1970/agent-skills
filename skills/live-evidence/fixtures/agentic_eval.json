@@ -727,6 +727,31 @@
         ]
       },
       "notes": "Briefing packs: pre-call talking points matched against the live transcript; the Straive pack (fixtures/briefing_straive.json) is the shipped example. Deterministic stem-matching floor; every surfaced point cites its trigger events."
+    },
+    {
+      "name": "meeting-campaign-goal-v2",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-meeting-campaign"
+      ],
+      "timeout_seconds": 900,
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "no stored wav available"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "== session sparta-explorer-synthetic",
+          "== session pinned-coding-interview",
+          "campaign: PASS"
+        ]
+      },
+      "notes": "Goal v2 self-test: a chatterbox-rendered synthetic Sparta meeting plus the pinned interview wav, both through the real PipeWire null-sink -> Docker RealtimeSTT -> resolver -> retrieval path, scored per card family (memory / research / code) against oracles derived before the run, with question-onset-to-card latency recorded. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
     }
   ]
 }
