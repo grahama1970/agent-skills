@@ -1,16 +1,16 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-08-04T00:00:00Z",
+  "updated_at": "2026-08-22T15:43:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
-    "sha256": "sha256:7ce90ef7b9acc3ea2a3fba1e3f48b8ec864f10e9d375d5540eb6d01370ea8b48",
+    "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
     "summary": "Determine through preregistered, falsifiable, fail-closed experiments whether provenance-bound synthetic dreaming adds measurable value over direct memory and structured reflection, while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries; transfer validated mechanisms and failure modes into Graph Memory Operator, Tau, SPARTA, and Chatterbox, and retire or simplify components that fail controlled ablation.",
     "registered_with": "skills/goal-drift/run.sh goal --project persona-dream",
     "registered_source": "human_prompt",
     "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
-  "current_phase": "P2_LIVE_CONTINUITY_CHAIN",
+  "current_phase": "P2_CORRECTED_GOAL_PAIR_PROOF",
   "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
   "latest_accepted_dream_cycle": {
     "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
@@ -428,13 +428,13 @@
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.",
-    "receipt_target": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
+    "default": "Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbox paths, then emit a fail-closed corrected_goal_receipt.json.",
+    "receipt_target": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/corrected_goal_receipt.json",
     "ordered_steps": [
-      "#1179: re-render all four conditions identically, then rerun the frozen technical-confound screen without changing thresholds.",
-      "#1130: cross-mood machine identity, then #1058 human collection once the screen passes.",
-      "#1129 restart/recovery, then #1128 no-restart reliability soak.",
-      "Defer PCTOM-R condition-benefit expansion until continuity runtime reliability has deterministic evidence or the operator explicitly reprioritizes the research workstream."
+      "PD-CORRECTED-GOAL-V1: validate the operational goal and sealed manifest fixture.",
+      "PD-CORRECTED-GOAL-V1: run C0_STRUCTURED_REFLECTION and C1_DREAM_JOURNAL against the same source-memory and answer capsule.",
+      "PD-CORRECTED-GOAL-V1: adjudicate answer invariance before emotional lineage or delivery effects.",
+      "#1179 listener stimuli, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists."
     ]
   },
   "current_claims": {

@@ -1,0 +1,26 @@
+{
+  "artifacts": {
+    "manifest.json": "sha256:51e9b1a9a4ac874ac5184d73bf1ab9ad1cabc3528c2ee82f4588c8aba298aaea"
+  },
+  "claims": {
+    "does_not_prove": "reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal",
+    "one_passing_pair_proves": "one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body"
+  },
+  "failures": [
+    "missing_root_artifact:answer_invariance.json",
+    "missing_root_artifact:emotional_carryover.json",
+    "missing_root_artifact:chatterbox_delivery.json",
+    "missing_condition_dir:control",
+    "missing_condition_dir:treatment",
+    "live_true_missing"
+  ],
+  "gate_statuses": {},
+  "live": false,
+  "manifest": "skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json",
+  "manifest_sha256": "sha256:51e9b1a9a4ac874ac5184d73bf1ab9ad1cabc3528c2ee82f4588c8aba298aaea",
+  "mocked": false,
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "run_root": "skills/persona-dream/local/proofs/pd-corrected-goal-v1",
+  "schema": "persona_dream.corrected_goal_receipt.v1",
+  "status": "BLOCKED_CORRECTED_GOAL_PAIRED_PROOF"
+}

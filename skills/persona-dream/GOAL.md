@@ -33,6 +33,45 @@ ablation.
 Read it back with `skills/goal-drift/run.sh goal --project persona-dream`; that
 registry, not this file, is the authority.
 
+## Corrected Operational Goal: PD-CORRECTED-GOAL-V1
+
+Amended 2026-08-22 from the operator's clarification:
+
+```text
+PD-CORRECTED-GOAL-V1: Demonstrate in a paired Horus/Embry run whether a
+provenance-bound synthetic dream plus Embry's journal/reflection about that
+dream can introduce one bounded emotional conflict and measurable Chatterbox
+delivery changes during a dynamic conversation, while the factual answer body,
+factual correctness, identity core, provenance, and synthetic-versus-literal
+boundary remain unchanged relative to a structured-reflection control.
+```
+
+The causal chain under test is:
+
+```text
+dream residue
+-> synthetic dream packet
+-> Embry journal/reflection naming conflict, mood, and feelings
+-> bounded session mood / arc delta
+-> dynamic Horus/Embry conversation
+-> identical answer body and protected facts
+-> changed emotional framing and Chatterbox intensity/tempo/native-tag delivery
+```
+
+The first proof target is a single sealed paired experiment:
+
+```text
+PD-CORRECTED-GOAL-V1
+C0_STRUCTURED_REFLECTION: same memory, same answer capsule, no active conflict
+C1_DREAM_JOURNAL: same memory and answer capsule, one journaled conflict
+```
+
+`#1179` listener-study rerendering is no longer the active next step. It is a
+supporting perceptual lane that remains blocked/deferred until this paired
+technical proof exists. A listener result cannot establish the corrected goal
+unless the paired artifacts first prove answer-body invariance, emotional
+lineage, Chatterbox delivery movement, and synthetic provenance.
+
 The prior goal ("build and verify Embry as a persistent persona whose synthetic
 dreams produce...") assumed the desired mechanism works and implicitly rewarded
 the project for continuing until every positive claim was demonstrated. That

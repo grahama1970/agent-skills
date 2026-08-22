@@ -1,0 +1,147 @@
+{
+  "schema": "persona_dream.corrected_goal_manifest.v1",
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "created_at": "2026-08-22T15:43:00Z",
+  "source_run": {
+    "run_id": "eval-full-cycle-20260820T143356Z",
+    "source_memory_digest": "sha256:896509cee3307a9139f2b7ef91f1fb3f84b6852bad6683aaddcafbcfa7977799",
+    "boundary": "frozen source-memory identifier for the paired proof; the live runner must replace this with a read-back digest from the actual source snapshot before a passing receipt is allowed"
+  },
+  "answer_capsule": {
+    "question_id": "pd_corrected_goal_q1",
+    "answer_content_id": "pd_corrected_goal_answer_v1",
+    "answer_body": "Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict.",
+    "answer_body_sha256": "sha256:2affabb779ce53259b9005cbe37b385934fd387ebbf249d291cb49df1c75ed9b",
+    "protected_tokens": [
+      "Embry",
+      "synthetic",
+      "answer body",
+      "temporary conflict"
+    ],
+    "max_answer_body_asr_wer": 0.15
+  },
+  "conditions": [
+    {
+      "condition_id": "C0_STRUCTURED_REFLECTION",
+      "kind": "control",
+      "conflict_id": null,
+      "required_packet": "reflection_packet.json",
+      "session_mood": {
+        "intensity": 0.3,
+        "tempo": 1.0,
+        "native_tag": null
+      }
+    },
+    {
+      "condition_id": "C1_DREAM_JOURNAL",
+      "kind": "treatment",
+      "conflict_id": "conflict_pd_corrected_goal_v1",
+      "required_packet": "dream_packet.json",
+      "required_journal_fields": [
+        "conflict",
+        "mood",
+        "feelings"
+      ],
+      "session_arc": [
+        {
+          "checkpoint": "opening",
+          "intensity": 0.5,
+          "tempo": 0.85,
+          "native_tag": "[sigh]"
+        },
+        {
+          "checkpoint": "challenge",
+          "intensity": 0.65,
+          "tempo": 0.85,
+          "native_tag": null
+        },
+        {
+          "checkpoint": "close",
+          "intensity": 0.4,
+          "tempo": 1.0,
+          "native_tag": null
+        }
+      ]
+    }
+  ],
+  "mood_to_chatterbox_mapping": {
+    "allowed_channels": [
+      "intensity",
+      "tempo",
+      "native_tag"
+    ],
+    "forbidden_observed_channels": [
+      "valence"
+    ],
+    "allowed_native_tags": [
+      "[clear throat]",
+      "[sigh]",
+      "[shush]",
+      "[cough]",
+      "[groan]",
+      "[sniff]",
+      "[gasp]",
+      "[chuckle]",
+      "[laugh]"
+    ],
+    "minimum_opening_duration_ratio": 1.08,
+    "maximum_opening_speech_rate_ratio": 0.92,
+    "closing_duration_ratio_range": [
+      0.92,
+      1.08
+    ]
+  },
+  "identity": {
+    "identity_core_digest": "sha256:ad03d8f174a94aa9c72c8b7bd631fd61ceca133e287408a346e97930c1d6dca5",
+    "must_remain_unchanged": true
+  },
+  "required_artifacts": {
+    "control": [
+      "reflection_packet.json",
+      "spoken_reflection.wav",
+      "spoken_reflection.asr.json",
+      "session_mood.json",
+      "conversation.jsonl",
+      "conversation_asr.jsonl",
+      "audio"
+    ],
+    "treatment": [
+      "dream_residue.json",
+      "dream_packet.json",
+      "journal.json",
+      "spoken_journal.wav",
+      "spoken_journal.asr.json",
+      "session_mood.json",
+      "conversation.jsonl",
+      "conversation_asr.jsonl",
+      "emotion_lineage.json",
+      "audio"
+    ],
+    "root": [
+      "manifest.json",
+      "answer_invariance.json",
+      "emotional_carryover.json",
+      "chatterbox_delivery.json",
+      "corrected_goal_receipt.json"
+    ]
+  },
+  "fail_closed_gates": [
+    "live_true_mocked_false",
+    "same_source_memory_digest",
+    "same_answer_capsule_digest",
+    "exact_answer_body_hash_across_aligned_embry_turns",
+    "protected_tokens_recovered_by_asr",
+    "no_factual_claims_in_emotional_frame",
+    "treatment_emotion_lineage_complete",
+    "control_conflict_null",
+    "chatterbox_opening_anchor_slower",
+    "chatterbox_closing_anchor_returns_to_control",
+    "literal_native_tag_words_absent",
+    "identity_core_digest_unchanged",
+    "synthetic_provenance_preserved"
+  ],
+  "claims": {
+    "one_passing_pair_proves": "one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body",
+    "does_not_prove": "reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal"
+  }
+}

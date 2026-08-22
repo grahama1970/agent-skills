@@ -269,9 +269,63 @@
           "conversation:3_pairs_all_voiced"
         ]
       }
+    },
+    {
+      "name": "corrected-goal-manifest-validators",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "bash ../run.sh validate-operational-goal --goal ../GOAL.md --status ../CURRENT_STATUS.json --expected-proof-id PD-CORRECTED-GOAL-V1 >/tmp/persona-dream-operational-goal-validation.json && bash ../run.sh validate-corrected-goal-manifest --manifest ../evals/fixtures/pd_corrected_goal_v1.json --strict"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CORRECTED_GOAL_MANIFEST"
+        ]
+      }
+    },
+    {
+      "name": "corrected-goal-pair-blocks-without-live-artifacts",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-corrected-goal-pair.XXXXXX); bash ../run.sh corrected-goal-pair --manifest ../evals/fixtures/pd_corrected_goal_v1.json --out \"$D\" --require-live --forbid-mocked; RC=$?; test \"$RC\" -eq 2; test -f \"$D/manifest.json\"; test -f \"$D/corrected_goal_pair_runner_receipt.json\"; grep -q BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING \"$D/corrected_goal_pair_runner_receipt.json\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING"
+        ]
+      }
     }
   ],
   "capability_claims": [
+    {
+      "id": "persona_dream.corrected_goal_manifest",
+      "description": "The corrected operational goal and PD-CORRECTED-GOAL-V1 sealed manifest are pinned with deterministic fail-closed validators before any live paired run can be claimed.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
     {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
@@ -314,6 +368,14 @@
     }
   ],
   "seams": [
+    {
+      "seam_id": "experiment.corrected_goal.manifest",
+      "seam_type": "experiment_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
     {
       "seam_id": "ui.dream_workspace.render",
       "seam_type": "ui_render",

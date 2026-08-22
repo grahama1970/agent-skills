@@ -29,6 +29,13 @@ Commands:
   check-pctom-v2-negative-controls  Adversarial controls: each must BLOCK with a typed reason
   check-skill-contract  Static check: SKILL.md remains a stable executable contract
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
+  validate-operational-goal Validate the corrected operational goal/status pin
+  validate-corrected-goal-manifest Validate the PD-CORRECTED-GOAL-V1 sealed manifest
+  validate-emotion-lineage Validate paired run emotion lineage artifacts
+  validate-answer-invariance Validate paired run answer-body invariance
+  validate-chatterbox-delivery Validate paired run Chatterbox delivery artifacts
+  corrected-goal-pair Validate/install the sealed paired proof target and refuse missing live artifacts
+  adjudicate-corrected-goal Emit the fail-closed corrected-goal receipt
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
   generate             Create a persona dream packet
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
@@ -887,6 +894,27 @@ case "$COMMAND" in
     # Fail closed when CURRENT_STATUS.json, PROJECT_KNOWLEDGE.md, or README.md
     # contradict the receipts they describe. Receipts outrank prose.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_current_state_consistency.py" "$@"
+    ;;
+  validate-operational-goal)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_operational_goal.py" "$@"
+    ;;
+  validate-corrected-goal-manifest)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_corrected_goal_manifest.py" "$@"
+    ;;
+  validate-emotion-lineage)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_emotion_lineage.py" "$@"
+    ;;
+  validate-answer-invariance)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_answer_invariance.py" "$@"
+    ;;
+  validate-chatterbox-delivery)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_chatterbox_delivery.py" "$@"
+    ;;
+  corrected-goal-pair)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_corrected_goal_pair.py" "$@"
+    ;;
+  adjudicate-corrected-goal)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/adjudicate_corrected_goal.py" "$@"
     ;;
   check-tau-routing-boundary)
     # Enforce operator rule "only /tau may reach /scillm": deterministic static
