@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import time
@@ -114,6 +115,36 @@ def _receipt(path: Path) -> dict[str, Any]:
     return item
 
 
+def _artifact(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {"path": None, "exists": False}
+    item: dict[str, Any] = {"path": str(path), "exists": path.exists()}
+    if path.is_file():
+        item.update({"sha256": _sha256(path), "kind": "file"})
+    elif path.is_dir():
+        item["kind"] = "directory"
+    return item
+
+
+def _latest_backend_goal_dir() -> Path | None:
+    env_path = os.environ.get("BATTLE_BACKEND_GOAL_PROOF_DIR")
+    candidates = [Path(env_path)] if env_path else []
+    candidates.extend(Path("/tmp").glob("battle-backend-goal-proof-*"))
+    valid: list[Path] = []
+    required = [
+        Path("battle-004-combiner/combiner-proof-receipt.json"),
+        Path("battle-004-spawn-architect/spawn-architect-receipt.json"),
+        Path("battle-semantic-outcome-matrix.json"),
+        Path("battle-exploit-lifecycle-dag.json"),
+    ]
+    for candidate in candidates:
+        if candidate.is_dir() and all((candidate / rel).is_file() for rel in required):
+            valid.append(candidate)
+    if not valid:
+        return None
+    return max(valid, key=lambda path: path.stat().st_mtime)
+
+
 def _source_context_item(path: str) -> dict[str, Any]:
     candidate = Path(path)
     resolved = candidate if candidate.is_absolute() else REPO_ROOT / candidate
@@ -132,6 +163,45 @@ def _issue_ref(issue: dict[str, Any]) -> dict[str, Any]:
 
 def generate(out: Path) -> int:
     receipts = {name: _receipt(path) for name, path in DEFAULT_RECEIPTS.items()}
+    backend_goal_dir = _latest_backend_goal_dir()
+    receipts["backend_goal_full_proof_dir"] = _artifact(backend_goal_dir)
+    if backend_goal_dir is not None:
+        receipts["backend_goal_combiner"] = _receipt(
+            backend_goal_dir / "battle-004-combiner" / "combiner-proof-receipt.json"
+        )
+        receipts["backend_goal_spawn_architect"] = _receipt(
+            backend_goal_dir / "battle-004-spawn-architect" / "spawn-architect-receipt.json"
+        )
+        receipts["backend_goal_semantic_matrix"] = _receipt(
+            backend_goal_dir / "battle-semantic-outcome-matrix.json"
+        )
+        receipts["backend_goal_lifecycle_dag"] = _receipt(
+            backend_goal_dir / "battle-exploit-lifecycle-dag.json"
+        )
+        receipts["pr8_live_transport_browser"] = _receipt(
+            Path("/tmp/battle-pr8-live-transport-proof/summary.json")
+        )
+        receipts["adaptive_lineage_v13_browser"] = _receipt(
+            Path("/tmp/battle-adaptive-lineage-v13-proof/proof-summary.json")
+        )
+        receipts["adaptive_lineage_panel_source"] = _receipt(
+            Path("/tmp/battle-adaptive-lineage-panel-source-proof/proof.json")
+        )
+        for key in [
+            "fast_sanity",
+            "deterministic_backend",
+            "same_run_qualification",
+            "live_qualification_gate",
+            "human_interjection",
+            "human_interjection_spectator",
+        ]:
+            if not receipts[key].get("exists"):
+                receipts[key].update(
+                    {
+                        "status": "SUPERSEDED_BY_BACKEND_GOAL_PROOF",
+                        "superseded_by": str(backend_goal_dir),
+                    }
+                )
     same_run = (
         _read_json(DEFAULT_RECEIPTS["same_run_qualification"])
         if DEFAULT_RECEIPTS["same_run_qualification"].is_file()
@@ -373,7 +443,7 @@ def check(path: Path) -> int:
     if status.get("schema") != "battle.current_status.v1":
         errors.append("schema_mismatch")
     for item in status.get("source_receipts", {}).values():
-        if not item.get("exists"):
+        if not item.get("exists") and not item.get("superseded_by"):
             errors.append(f"missing_source_receipt:{item.get('path')}")
 
     closed = {

@@ -4798,7 +4798,7 @@
   },
   "lifecycle_enrichment": {
     "schema": "battle.lifecycle_enrichment.v1",
-    "source": "local/backend-goal-proof-20260728T-rebased/battle-004-combiner",
+    "source": "/tmp/battle-backend-goal-proof-20260822-full/battle-004-combiner",
     "proof_mode": "receipt_backed_fixture",
     "fields_emitted": [
       "knowledge_packet",

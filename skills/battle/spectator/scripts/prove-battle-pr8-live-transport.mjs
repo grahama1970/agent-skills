@@ -1,12 +1,97 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { createServer } from 'node:net'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
-const liveBase = (process.env.BATTLE_LIVE_TRANSPORT_BASE ?? 'http://127.0.0.1:18765').replace(/\/$/, '')
 const outDir = resolve(process.env.BATTLE_LIVE_TRANSPORT_PROOF_DIR ?? '/tmp/battle-pr8-live-transport-proof')
+let liveBase = (process.env.BATTLE_LIVE_TRANSPORT_BASE ?? 'http://127.0.0.1:18765').replace(/\/$/, '')
+let liveAdapterProcess = null
+
+async function freePort() {
+  return await new Promise((resolvePort, rejectPort) => {
+    const server = createServer()
+    server.on('error', rejectPort)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      const port = typeof address === 'object' && address ? address.port : null
+      server.close(() => {
+        if (port) resolvePort(port)
+        else rejectPort(new Error('failed to allocate a loopback port'))
+      })
+    })
+  })
+}
+
+async function liveAdapterHealthy(base) {
+  try {
+    const response = await fetch(`${base}/healthz`, { signal: AbortSignal.timeout(800) })
+    if (!response.ok) return false
+    const health = await response.json()
+    return health.schema === 'battle.live_transport_health.v1' && health.status === 'PASS'
+  } catch {
+    return false
+  }
+}
+
+function stopLiveAdapter() {
+  if (liveAdapterProcess && !liveAdapterProcess.killed) {
+    liveAdapterProcess.kill('SIGTERM')
+  }
+}
+
+async function ensureLiveAdapter() {
+  if (await liveAdapterHealthy(liveBase)) return liveBase
+  if (process.env.BATTLE_LIVE_TRANSPORT_BASE) return liveBase
+
+  const httpPort = await freePort()
+  const websocketPort = await freePort()
+  liveBase = `http://127.0.0.1:${httpPort}`
+  liveAdapterProcess = spawn(
+    './run.sh',
+    [
+      'serve-live-transport',
+      '--port',
+      String(httpPort),
+      '--websocket-port',
+      String(websocketPort),
+      '--fixture',
+      'spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json',
+    ],
+    {
+      cwd: resolve(process.cwd(), '..'),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  )
+  let stderr = ''
+  liveAdapterProcess.stderr.on('data', (chunk) => {
+    stderr += chunk.toString()
+  })
+  process.on('exit', stopLiveAdapter)
+  process.on('SIGINT', () => {
+    stopLiveAdapter()
+    process.exit(130)
+  })
+  process.on('SIGTERM', () => {
+    stopLiveAdapter()
+    process.exit(143)
+  })
+
+  const deadline = Date.now() + 15_000
+  while (Date.now() < deadline) {
+    if (liveAdapterProcess.exitCode !== null) {
+      throw new Error(`serve-live-transport exited early with ${liveAdapterProcess.exitCode}: ${stderr.slice(-1000)}`)
+    }
+    if (await liveAdapterHealthy(liveBase)) return liveBase
+    await new Promise((resolveTimer) => setTimeout(resolveTimer, 200))
+  }
+  throw new Error(`serve-live-transport did not become healthy at ${liveBase}: ${stderr.slice(-1000)}`)
+}
+
+await ensureLiveAdapter()
 const liveUrl = `${host}/#battle/live?engine=pixi&battle=battle-004&liveBase=${encodeURIComponent(liveBase)}`
 const contractOnlyUrl = `${host}/#battle/live?engine=pixi&battle=battle-004&liveBase=${encodeURIComponent('http://127.0.0.1:59999')}`
 const fileBackedUrl = `${host}/#battle/live?engine=pixi&fixture=battle-004-parent-spawn`
@@ -175,6 +260,7 @@ await writeFile(
   ),
 )
 await browser.close()
+stopLiveAdapter()
 if (failed.length) {
   console.error(`prove-battle-pr8-live-transport failed: ${failed.map((item) => item.id).join(', ')}`)
   process.exit(1)
