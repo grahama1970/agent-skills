@@ -18,6 +18,27 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "routable-requires-agentic-eval",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . python scripts/eval_routable_requires_agentic_eval.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ROUTABLE_REQUIRES_AGENTIC_EVAL_OK"
+        ],
+        "stderr_excludes": [
+          "ROUTABLE_NO_EVAL_ACCEPTED",
+          "HUMAN_FIRST_SUBJECTED"
+        ]
+      }
     }
   ]
 }

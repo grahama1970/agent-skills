@@ -350,8 +350,36 @@ def _labels(ticket_type: str, target: str, route: str, agent: str, extra: list[s
     return labels
 
 
+def _require_agentic_eval_proof(proof: str, ticket_type: str, route: str) -> None:
+    """An agent-routable ticket must prove its fix with an /agentic-evals run.
+
+    project-watchdog's repair loop never authors a regression guard — the creator
+    fixes and the reviewer verifies against the ticket's Required proof. So the
+    ONLY thing that prevents the fix from silently regressing is the proof itself
+    being an /agentic-evals run (a retained regression guard). Without it, the
+    loop would fix the bug and leave nothing to stop it recurring. Human-first
+    tickets (questions/triage) are exempt; they are not auto-dispatched.
+    """
+    if not _is_agent_routable(ticket_type, route):
+        return
+    norm = proof.lower().replace("_", "-")
+    if "agentic-eval" not in norm:
+        _die(
+            "agent-routable tickets must prove the fix with an /agentic-evals run so it "
+            "cannot silently regress.\n"
+            "  project-watchdog's repair loop does NOT create a regression guard; the "
+            "ticket's proof IS the guard.\n"
+            "  Make --proof run the sanctioned runner against a committed guard case, e.g.:\n"
+            "    'cd skills/agentic-evals && ./run.sh run ../<skill>/fixtures/agentic_eval.json "
+            "--only-category <id> --map ../<skill>/fixtures/category_map.json shows READY'\n"
+            "  Add the guard case to fixtures/agentic_eval.json first if it does not exist.\n"
+            "  If no eval can exist yet, file as 'triage' (human-first, not auto-dispatched)."
+        )
+
+
 def _validate_common(ticket_type: str, target: str, proof: str, route: str) -> None:
     _validate_live_proof(proof, ticket_type)
+    _require_agentic_eval_proof(proof, ticket_type, route)
     if ticket_type not in VALID_TYPES:
         _die(f"unknown ticket type {ticket_type!r}")
     if not target.strip():
