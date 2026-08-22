@@ -416,6 +416,41 @@
           "PASS_CORRECTED_GOAL_LIVE_PAIR_PREFLIGHT"
         ]
       }
+    },
+    {
+      "name": "session-mood-recognition-floor-margin-audit",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "seams": [
+        "continuity.session_mood.voice_recognition_status"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python3 ../scripts/audit_recognition_floor_margins.py --root ../reports/goal_v5/continuity/reliability --out /tmp/persona-dream-recognition-floor-margin-audit.report.json --report-only"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOGNITION_FLOOR_MARGIN_AUDIT_OK",
+          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_001/render1 seconds=5.483 similarity=0.765845 fixed_threshold=0.75 floor=0.774093 margin=-0.008248",
+          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_013/render1 seconds=4.907 similarity=0.7639 fixed_threshold=0.75 floor=0.771094 margin=-0.007194",
+          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_021/render2 seconds=6.741 similarity=0.770638 fixed_threshold=0.75 floor=0.779838 margin=-0.0092",
+          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_001/render1",
+          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_013/render1",
+          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_021/render2",
+          "\"fixed_pass_floor_fail\": 6",
+          "\"renders\": 381",
+          "\"renders_judged\": 336"
+        ],
+        "stdout_not_contains": [
+          "FAIL "
+        ]
+      }
     }
   ],
   "capability_claims": [
