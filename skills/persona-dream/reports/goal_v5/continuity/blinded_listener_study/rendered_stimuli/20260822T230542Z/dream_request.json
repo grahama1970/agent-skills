@@ -1,0 +1,16 @@
+{
+  "answer_text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.0,
+  "asr_verify": true,
+  "label": "pd_listener_20260822T230542Z_dream",
+  "norm_loudness": true,
+  "ref_audio": "/data/embry_ref.wav",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "intensity": 0.72,
+    "tone": "firm_boundary",
+    "valence": -0.25
+  }
+}

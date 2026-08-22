@@ -5,7 +5,7 @@
     "qwen3_tts": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a"
   },
   "boundary": "Measures same-parameter renderer spread only. Not evidence of emotion, identity, or naturalness.",
-  "created_at": "2026-08-22T22:59:57Z",
+  "created_at": "2026-08-22T23:06:41Z",
   "deterministic_seed": {
     "chatterbox_base_affect": false,
     "chatterbox_turbo": false,
@@ -69,9 +69,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_01.raw.wav",
-      "raw_wav_sha256": "sha256:5cdf860d7b26813b98a0dcadfc5a178edd71eaebf3aed10f367882daa10b0fe2",
+      "raw_wav_sha256": "sha256:87051b959bf3d18c8f2e3cd0875c5085cc52a66e8f2a5568f9159274fa596d2a",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_01.wav",
-      "wav_sha256": "sha256:3c2dfbd3775922796fca829edf7e9a8ecec4a57629270d92801110baa9c78260"
+      "wav_sha256": "sha256:d0da47dfa639644d675ddc64129e7e9e9611d8595be1111af5ece49a0035ff79"
     },
     {
       "asr_transcript": null,
@@ -111,9 +111,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_02.raw.wav",
-      "raw_wav_sha256": "sha256:052143d461ca18d062e42395dd2e87bd338bc09472542606ce2944970500d140",
+      "raw_wav_sha256": "sha256:baaaa022af22dd68c934811e33331dd9d6b27ac9e1def5cc47cb1cfde8bacbe6",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_02.wav",
-      "wav_sha256": "sha256:63e96a6716b498f7c6ffe8cdf850ff90b8b64b665e91f7bac9b2e45217f5c614"
+      "wav_sha256": "sha256:212581f49fffef15d7c5531747123c39be0a440a440930e70737fe6af1ea3a8e"
     },
     {
       "asr_transcript": null,
@@ -153,9 +153,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_03.raw.wav",
-      "raw_wav_sha256": "sha256:103d1bd009ef65f66249f8f42a8d79503c23681f5d56fd519c8be32d6afe63e3",
+      "raw_wav_sha256": "sha256:6eb83cd9e60149814a072eba51420977428f1c74864aa651bf3bd25f609810f8",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_03.wav",
-      "wav_sha256": "sha256:9b1563050d963b29cd72895ba802d7f26c18723b21d5d87d0b13023a82da93dc"
+      "wav_sha256": "sha256:026292438c32fb7accf8b9c0ec99eab0ee7371da334955e3e132a8db5cca8532"
     },
     {
       "asr_transcript": null,
@@ -195,9 +195,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_04.raw.wav",
-      "raw_wav_sha256": "sha256:f709c91ffa84fd927406661e4f500f8431b0d84021ab7126326ef62510a1aa7e",
+      "raw_wav_sha256": "sha256:fc8a7a359ab837977fedf8c433197ad7a0fe129627d50891a0496b1fa1b48036",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_04.wav",
-      "wav_sha256": "sha256:6b4161c8c75600555c788e4e5922a98fcb868055abe88cc4310838fed4fe5b5d"
+      "wav_sha256": "sha256:cceaf3ad04960220ac0da48f321dbf3db7fd534e9dcd4343729bc78962cb0d98"
     },
     {
       "asr_transcript": null,
@@ -237,9 +237,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_05.raw.wav",
-      "raw_wav_sha256": "sha256:5b82cd34a05eadfcbc3a2fae2ebaf5be9f10ad4332bdd76d9cb77025f8111b16",
+      "raw_wav_sha256": "sha256:52769c751f9bc58cb47b5796a48b66b18e3f84f3de2f2695117197fd7b6fc622",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_05.wav",
-      "wav_sha256": "sha256:f123aa1f8e9e52e9784de236fd15a85d60d0515c6190e59d295226962bde8c00"
+      "wav_sha256": "sha256:440f96a86bd241bcb5f9e1022e136e368569317d8fe3f32ec3a2e737f942a4e7"
     },
     {
       "asr_transcript": null,
@@ -279,9 +279,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_06.raw.wav",
-      "raw_wav_sha256": "sha256:3e0e366c558a744620136100450bb2739f132e1044cfc6c352dfe5ce2cd4bec5",
+      "raw_wav_sha256": "sha256:7a338d65b47b5eafd49a05553c0431ac7df21ef9c0c17262c7a35c9385770bd3",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_06.wav",
-      "wav_sha256": "sha256:84b02e5cb3c303ca8f590fd31e0b0232793004638db592008ecfc3b370a7c7f7"
+      "wav_sha256": "sha256:88227cdfaa70b7d8d45d5b270739f8195cfce9c8ae21494bc2b00ce1e315f172"
     },
     {
       "asr_transcript": null,
@@ -321,9 +321,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_07.raw.wav",
-      "raw_wav_sha256": "sha256:dd14e0fa2b15727dacfc4415ddd63abed1469efcb953adf7beb210fd6c237bde",
+      "raw_wav_sha256": "sha256:ea24be731c8a41fa787b64719cb1f4c25931edde7cd569bf1678f669a6499b2a",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_07.wav",
-      "wav_sha256": "sha256:da78c2c4094cf4cf759783c8e2736cc4dc46ee8a00ed07fdb62d94dc884cdbc4"
+      "wav_sha256": "sha256:1fa6d3cc9f23da4c3510f4932a82297baa51c72067cf4bcf1018c0582d461e22"
     },
     {
       "asr_transcript": null,
@@ -363,9 +363,9 @@
         "stdout": ""
       },
       "raw_wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_08.raw.wav",
-      "raw_wav_sha256": "sha256:f976cc84dcf86c7b8894e948e801eb375073aa97959f3c5fe638bd68cee98524",
+      "raw_wav_sha256": "sha256:e8c8aa683ec8eae4d96caa60604b9d70fdf1edae3879d1ea3ecc4761d895c902",
       "wav": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/neutral_calibration/neutral_08.wav",
-      "wav_sha256": "sha256:becc5a627158edce78a140b653791d632384740b83a4af1f56abdfc29465dc1d"
+      "wav_sha256": "sha256:e79bf268053f33bce3254d80a751dbf578aa20a4d4334f8e125d149d359354c3"
     }
   ],
   "request": {

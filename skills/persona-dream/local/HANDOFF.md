@@ -76,13 +76,13 @@ slice, P2.1-P2.3 receipts) — recoverable at
   negative controls.
 - **`/api/tau/dream/*`** (story/script draft endpoints the workspace calls)
   has no server implementation anywhere; those UI actions fail.
-- **Blinded listener study**: #1179 now has the required retained typed block.
-  The four target stimuli were rendered under shared Chatterbox
-  `norm_loudness=true` and shared ffmpeg loudnorm post-processing; raw and
-  final metrics are retained in
+- **Blinded listener study**: #1179 removed the loudness nuisance confound and
+  #1497 cleared the retained control ASR gate. The four target stimuli were
+  rendered under shared Chatterbox `norm_loudness=true` and shared ffmpeg
+  loudnorm post-processing; raw and final metrics are retained in
   `reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_MANIFEST.json`.
-  The frozen screen has `nuisance_count=0` and the remaining typed gate is
-  `asr_wer_exceeds_hard_gate:control`, so no human collection (#1058) yet.
+  The frozen screen now reports `PASS_STIMULUS_TECHNICAL_SCREEN`,
+  `nuisance_outside_spread=0`, `failed_gates=[]`.
 - **Environment traps** (each cost real time on 2026-08-19/20):
   - `uv sync --extra ux` prunes the other extra — reinstall identity deps with
     `uv pip install insightface==0.7.3 onnxruntime==1.19.2` (NOT `-e .[identity]`);
@@ -101,8 +101,8 @@ slice, P2.1-P2.3 receipts) — recoverable at
 1. Decide the next reliability ticket action under `project-watchdog`: #1128
    needs 35 no-restart cycles and depends on cross-mood identity policy (#1130),
    while #1130 is still agent-blocked and needs a frozen 36-render matrix.
-2. Close/route the post-#1179 dependency: #1130/#1058 remain gated by the
-   retained `asr_wer_exceeds_hard_gate:control` stimulus-screen block.
+2. Unblock/continue #1130 cross-mood identity matrix, then #1058 human
+   listener collection. The technical screen no longer blocks those lanes.
 3. Optional UX: implement or stub `/api/tau/dream/*` server-side; commit the
    ux-lab registry surface entry if still uncommitted.
 

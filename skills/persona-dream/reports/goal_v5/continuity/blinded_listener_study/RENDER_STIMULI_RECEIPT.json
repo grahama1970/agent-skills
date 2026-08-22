@@ -13,7 +13,7 @@
       "ASR readback preserved the shared answer text for the accepted renders"
     ]
   },
-  "created_at": "2026-08-22T22:58:53Z",
+  "created_at": "2026-08-22T23:06:00Z",
   "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
   "failed_gates": [],
   "health": {
@@ -90,19 +90,19 @@
       },
       "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
-      "bytes": 263118,
+      "bytes": 272718,
       "chunk_norm_loudness_values": [
         true
       ],
       "condition": "control",
       "conditioning_norm_loudness": null,
-      "elapsed_seconds": 4.205,
+      "elapsed_seconds": 3.789,
       "engine": "chatterbox_base",
       "finished_response_metrics": {
-        "bytes": 263118,
+        "bytes": 272718,
         "channels": 1,
         "codec_name": "pcm_s16le",
-        "duration_seconds": 5.48,
+        "duration_seconds": 5.68,
         "exists": true,
         "ffprobe": {
           "cmd": [
@@ -116,16 +116,16 @@
             "stream=codec_name,sample_rate,channels",
             "-of",
             "json",
-            "/out/pd_listener_20260822T225836Z_control/finished_response.wav"
+            "/out/pd_listener_20260822T230542Z_control/finished_response.wav"
           ],
           "returncode": 0,
           "stderr": "",
-          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.480000\",\n        \"size\": \"263118\"\n    }\n}\n"
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.680000\",\n        \"size\": \"272718\"\n    }\n}\n"
         },
-        "ffprobe_size": 263118,
-        "path": "/out/pd_listener_20260822T225836Z_control/finished_response.wav",
+        "ffprobe_size": 272718,
+        "path": "/out/pd_listener_20260822T230542Z_control/finished_response.wav",
         "sample_rate": 24000,
-        "sha256": "9a8acb1e6a6303a5e426b8549bc0d389a737a4c82b9e716ee242ed8774a92028"
+        "sha256": "c149c9be44fdb1a474fca912b12c5fa05de3d832da518ff22efdafda6c418633"
       },
       "norm_loudness": true,
       "normalized_tone": "neutral_warm",
@@ -147,7 +147,7 @@
           "error",
           "-y",
           "-i",
-          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/control.raw.wav",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/control.raw.wav",
           "-af",
           "loudnorm=I=-27:TP=-2:LRA=7",
           "-ar",
@@ -163,17 +163,17 @@
         "stdout": ""
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/control.raw.wav",
-      "raw_bytes": 263118,
-      "raw_sha256": "sha256:9a8acb1e6a6303a5e426b8549bc0d389a737a4c82b9e716ee242ed8774a92028",
-      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/control_request.json",
-      "request_sha256": "sha256:d3fcf77019b418ee44856de1f61f23f525127dcf4460ed286933c08f8a24588d",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/control.raw.wav",
+      "raw_bytes": 272718,
+      "raw_sha256": "sha256:c149c9be44fdb1a474fca912b12c5fa05de3d832da518ff22efdafda6c418633",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/control_request.json",
+      "request_sha256": "sha256:31d21516641a38c78b8c20c43b1f64ffe7c05da009aeaeccc61739d36b8eebaa",
       "requested_tone": "neutral",
-      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/control_response.json",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/control_response.json",
       "response_norm_loudness": true,
-      "response_sha256": "sha256:fc940f72ce4c6206e7fdf3122296a5bc12b8159916469a6438627185a5f34ca6",
-      "sha256": "sha256:0eafc8784043e5fddcd1a16ed250bd114c6570419eae900199af6b2605a89086",
-      "source_audio": "/out/pd_listener_20260822T225836Z_control/finished_response.wav",
+      "response_sha256": "sha256:b60d23a244f5dd6bd7a228d658a0ed3780abd354ff7813a7dc3b0020fa72b245",
+      "sha256": "sha256:ab48192a6cc779cd5dc6dbfbcc414ae0778464ff56e3da181a849032e469fc55",
+      "source_audio": "/out/pd_listener_20260822T230542Z_control/finished_response.wav",
       "voice_delivery": {
         "intensity": 0.0,
         "tone": "neutral",
@@ -204,19 +204,19 @@
       },
       "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
-      "bytes": 288078,
+      "bytes": 282318,
       "chunk_norm_loudness_values": [
         true
       ],
       "condition": "baseline",
       "conditioning_norm_loudness": null,
-      "elapsed_seconds": 4.096,
+      "elapsed_seconds": 4.666,
       "engine": "chatterbox_base",
       "finished_response_metrics": {
-        "bytes": 288078,
+        "bytes": 282318,
         "channels": 1,
         "codec_name": "pcm_s16le",
-        "duration_seconds": 6.0,
+        "duration_seconds": 5.88,
         "exists": true,
         "ffprobe": {
           "cmd": [
@@ -230,16 +230,16 @@
             "stream=codec_name,sample_rate,channels",
             "-of",
             "json",
-            "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav"
+            "/out/pd_listener_20260822T230542Z_baseline/finished_response.wav"
           ],
           "returncode": 0,
           "stderr": "",
-          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"6.000000\",\n        \"size\": \"288078\"\n    }\n}\n"
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.880000\",\n        \"size\": \"282318\"\n    }\n}\n"
         },
-        "ffprobe_size": 288078,
-        "path": "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav",
+        "ffprobe_size": 282318,
+        "path": "/out/pd_listener_20260822T230542Z_baseline/finished_response.wav",
         "sample_rate": 24000,
-        "sha256": "0fcf251bf7462d96d0bfd71ffefb8cd78c6f1f231d67a19bdb2115ee770b74ba"
+        "sha256": "5a5ac77070c85767265fa7b2da81a01373a51bfa2395474a62f4e1526912e9d9"
       },
       "norm_loudness": true,
       "normalized_tone": "careful_concerned",
@@ -261,7 +261,7 @@
           "error",
           "-y",
           "-i",
-          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/baseline.raw.wav",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/baseline.raw.wav",
           "-af",
           "loudnorm=I=-27:TP=-2:LRA=7",
           "-ar",
@@ -277,17 +277,17 @@
         "stdout": ""
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/baseline.raw.wav",
-      "raw_bytes": 288078,
-      "raw_sha256": "sha256:0fcf251bf7462d96d0bfd71ffefb8cd78c6f1f231d67a19bdb2115ee770b74ba",
-      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/baseline_request.json",
-      "request_sha256": "sha256:4c4d2e59decadaefd3a466e84fcbb74291845e3d90d0aa8b857669a0a49b0226",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/baseline.raw.wav",
+      "raw_bytes": 282318,
+      "raw_sha256": "sha256:5a5ac77070c85767265fa7b2da81a01373a51bfa2395474a62f4e1526912e9d9",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/baseline_request.json",
+      "request_sha256": "sha256:a3e221d2f3ec320e6d6d10fd3c96d414b3c5894516398cd968b07f9e3ebbd588",
       "requested_tone": "careful_concerned",
-      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/baseline_response.json",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/baseline_response.json",
       "response_norm_loudness": true,
-      "response_sha256": "sha256:efe574190efa41cd4eb36a5885f63f4778636fa822ed29ec46d770cd96f3e161",
-      "sha256": "sha256:ba582772c9df1cf82a90be87e692b6410c98a8b7c8e6cf9cd7a302796111811f",
-      "source_audio": "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav",
+      "response_sha256": "sha256:1f78a1e9a1d7d75d8bf73c30aaaed9ced929da22baca024a10bbfd5301262508",
+      "sha256": "sha256:ab6d661f26f47896783f398d9e14ad6b2c74e645f40c116742ddedc28f2b7197",
+      "source_audio": "/out/pd_listener_20260822T230542Z_baseline/finished_response.wav",
       "voice_delivery": {
         "intensity": 0.4,
         "tone": "careful_concerned",
@@ -318,19 +318,19 @@
       },
       "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
-      "bytes": 276558,
+      "bytes": 320718,
       "chunk_norm_loudness_values": [
         true
       ],
       "condition": "dream",
       "conditioning_norm_loudness": null,
-      "elapsed_seconds": 4.11,
+      "elapsed_seconds": 4.527,
       "engine": "chatterbox_base",
       "finished_response_metrics": {
-        "bytes": 276558,
+        "bytes": 320718,
         "channels": 1,
         "codec_name": "pcm_s16le",
-        "duration_seconds": 5.76,
+        "duration_seconds": 6.68,
         "exists": true,
         "ffprobe": {
           "cmd": [
@@ -344,16 +344,16 @@
             "stream=codec_name,sample_rate,channels",
             "-of",
             "json",
-            "/out/pd_listener_20260822T225836Z_dream/finished_response.wav"
+            "/out/pd_listener_20260822T230542Z_dream/finished_response.wav"
           ],
           "returncode": 0,
           "stderr": "",
-          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.760000\",\n        \"size\": \"276558\"\n    }\n}\n"
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"6.680000\",\n        \"size\": \"320718\"\n    }\n}\n"
         },
-        "ffprobe_size": 276558,
-        "path": "/out/pd_listener_20260822T225836Z_dream/finished_response.wav",
+        "ffprobe_size": 320718,
+        "path": "/out/pd_listener_20260822T230542Z_dream/finished_response.wav",
         "sample_rate": 24000,
-        "sha256": "43ecc0b921acb29a281a23177fb470052b876ef90f4df252d737a78edec9a644"
+        "sha256": "822b23b9ed5c348528ffefe9adba603af8606b7893d1fdce8daa0c650c0f93e9"
       },
       "norm_loudness": true,
       "normalized_tone": "firm_boundary",
@@ -375,7 +375,7 @@
           "error",
           "-y",
           "-i",
-          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/dream.raw.wav",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/dream.raw.wav",
           "-af",
           "loudnorm=I=-27:TP=-2:LRA=7",
           "-ar",
@@ -391,17 +391,17 @@
         "stdout": ""
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/dream.raw.wav",
-      "raw_bytes": 276558,
-      "raw_sha256": "sha256:43ecc0b921acb29a281a23177fb470052b876ef90f4df252d737a78edec9a644",
-      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/dream_request.json",
-      "request_sha256": "sha256:3c030339aab3c88551b28f67a57ad4be9620ff9cc6e55b0deb90829b831053ca",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/dream.raw.wav",
+      "raw_bytes": 320718,
+      "raw_sha256": "sha256:822b23b9ed5c348528ffefe9adba603af8606b7893d1fdce8daa0c650c0f93e9",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/dream_request.json",
+      "request_sha256": "sha256:2710eafb23d4eed5156ed4c7a8da035cb52bfa416b9e26b2bc9871396c74307f",
       "requested_tone": "firm_boundary",
-      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/dream_response.json",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/dream_response.json",
       "response_norm_loudness": true,
-      "response_sha256": "sha256:44f18cab46a5eeda990ed502ebbb2d30394c9714be352e15dcc33626ca18c107",
-      "sha256": "sha256:dcfd3fef78e6f2c97356526bfbf2c102c2791c7090b866c073b143e9586b4db6",
-      "source_audio": "/out/pd_listener_20260822T225836Z_dream/finished_response.wav",
+      "response_sha256": "sha256:ba0f6118fb6d08c0edb16300f2943305187bb6789784cf0f09f6ff9db510102c",
+      "sha256": "sha256:0d28901f81247c21221a394ba7440d4a9f5d67c099d3f62466ddd8faf05a6d26",
+      "source_audio": "/out/pd_listener_20260822T230542Z_dream/finished_response.wav",
       "voice_delivery": {
         "intensity": 0.72,
         "tone": "firm_boundary",
@@ -432,19 +432,19 @@
       },
       "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
-      "bytes": 288078,
+      "bytes": 266958,
       "chunk_norm_loudness_values": [
         true
       ],
       "condition": "adversarial",
       "conditioning_norm_loudness": null,
-      "elapsed_seconds": 4.414,
+      "elapsed_seconds": 3.726,
       "engine": "chatterbox_base",
       "finished_response_metrics": {
-        "bytes": 288078,
+        "bytes": 266958,
         "channels": 1,
         "codec_name": "pcm_s16le",
-        "duration_seconds": 6.0,
+        "duration_seconds": 5.56,
         "exists": true,
         "ffprobe": {
           "cmd": [
@@ -458,16 +458,16 @@
             "stream=codec_name,sample_rate,channels",
             "-of",
             "json",
-            "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav"
+            "/out/pd_listener_20260822T230542Z_adversarial/finished_response.wav"
           ],
           "returncode": 0,
           "stderr": "",
-          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"6.000000\",\n        \"size\": \"288078\"\n    }\n}\n"
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.560000\",\n        \"size\": \"266958\"\n    }\n}\n"
         },
-        "ffprobe_size": 288078,
-        "path": "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav",
+        "ffprobe_size": 266958,
+        "path": "/out/pd_listener_20260822T230542Z_adversarial/finished_response.wav",
         "sample_rate": 24000,
-        "sha256": "889486688e3e58fe41485f80efdfd0a7ab1c4b18310a5b8c32a4c6c779f33107"
+        "sha256": "2e12e89fc2cbcb45a4724545cec9eafd069f7d61a54457394dae3555b845583b"
       },
       "norm_loudness": true,
       "normalized_tone": "neutral_warm",
@@ -489,7 +489,7 @@
           "error",
           "-y",
           "-i",
-          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/adversarial.raw.wav",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/adversarial.raw.wav",
           "-af",
           "loudnorm=I=-27:TP=-2:LRA=7",
           "-ar",
@@ -505,17 +505,17 @@
         "stdout": ""
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/adversarial.raw.wav",
-      "raw_bytes": 288078,
-      "raw_sha256": "sha256:889486688e3e58fe41485f80efdfd0a7ab1c4b18310a5b8c32a4c6c779f33107",
-      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/adversarial_request.json",
-      "request_sha256": "sha256:d2fa1450e7e71d4fc455803d43b84dd400706e1720910187b1ddb412a8fe1ccd",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T230542Z/adversarial.raw.wav",
+      "raw_bytes": 266958,
+      "raw_sha256": "sha256:2e12e89fc2cbcb45a4724545cec9eafd069f7d61a54457394dae3555b845583b",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/adversarial_request.json",
+      "request_sha256": "sha256:39467d45535dc917e54c8db424e1121b817f703300f46ec3bb0e04c6b54ea8bb",
       "requested_tone": "cheerful",
-      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/adversarial_response.json",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T230542Z/adversarial_response.json",
       "response_norm_loudness": true,
-      "response_sha256": "sha256:df6ff2a86e9f8b55afb37dd66bb6393d8d8953d21df178d3dfe15de879445539",
-      "sha256": "sha256:e24be91421664d8f483690bb702f5750385b7dae055fe4fe2f491f3d0c7bd3f3",
-      "source_audio": "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav",
+      "response_sha256": "sha256:df257eb429bb87d55f5fd8421d867fe25e9579934ec8cb7ef3f0978f0a7d42d4",
+      "sha256": "sha256:e5ed7de9135bda06ac7505ea20bde45f315cd677b83d46aac4937476509886d5",
+      "source_audio": "/out/pd_listener_20260822T230542Z_adversarial/finished_response.wav",
       "voice_delivery": {
         "intensity": 0.95,
         "tone": "cheerful",
@@ -524,7 +524,7 @@
       "voice_delivery_sha256": "sha256:47f993aa5ec9b3b59b0eec33a0895885b4946599e0d34c0cf9f2440cb8ac69d4"
     }
   ],
-  "run_id": "20260822T225836Z",
+  "run_id": "20260822T230542Z",
   "schema": "persona_dream.blinded_listener_stimuli_render.v1",
   "status": "PASS_RENDERED_BLINDED_LISTENER_STIMULI",
   "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"

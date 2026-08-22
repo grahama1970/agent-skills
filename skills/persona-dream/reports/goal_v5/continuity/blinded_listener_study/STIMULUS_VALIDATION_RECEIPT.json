@@ -7,12 +7,12 @@
       "the study result, until append-only human responses and signed interpretation exist"
     ],
     "proves": [
-      "preregistered stimulus files exist and match their exact hashes"
+      "preregistered stimulus files exist and match their exact hashes",
+      "stimulus content ASR is within the configured WER limit"
     ]
   },
-  "created_at": "2026-08-22T22:59:01Z",
+  "created_at": "2026-08-22T23:06:01Z",
   "failed_gates": [
-    "stimulus_asr_wer:control",
     "human_responses_complete"
   ],
   "live": true,
@@ -21,7 +21,7 @@
     "bytes": 10668,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
-    "sha256": "sha256:87eb309d5ff588c0113df3aa6641e0f865ab5c585cb3773fe79bb0e51c2ee61d"
+    "sha256": "sha256:bad560067665d3b99e333cd90f940acbf8227fdbcc5b4f0df136b3b61550a045"
   },
   "response_contract": {
     "rater_instructions": {
@@ -66,28 +66,28 @@
     "valid_response_count": 0
   },
   "schema": "persona_dream.blinded_listener_study_validation.v1",
-  "status": "BLOCKED_BLINDED_LISTENER_STUDY",
+  "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
   "stimuli": [
     {
       "asr": {
         "base_url": "http://127.0.0.1:2022",
         "live": true,
         "mocked": false,
-        "ok": false,
-        "transcript": "commit to that plan because the constraint changed this morning.",
-        "wer": 0.411765
+        "ok": true,
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "wer": 0.0
       },
       "audio": {
-        "bytes": 263118,
+        "bytes": 272718,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
-        "sha256": "sha256:0eafc8784043e5fddcd1a16ed250bd114c6570419eae900199af6b2605a89086"
+        "sha256": "sha256:ab48192a6cc779cd5dc6dbfbcc414ae0778464ff56e3da181a849032e469fc55"
       },
       "bytes_match": true,
       "condition": "control",
       "engine": "chatterbox_base",
-      "expected_bytes": 263118,
-      "expected_sha256": "sha256:0eafc8784043e5fddcd1a16ed250bd114c6570419eae900199af6b2605a89086",
+      "expected_bytes": 272718,
+      "expected_sha256": "sha256:ab48192a6cc779cd5dc6dbfbcc414ae0778464ff56e3da181a849032e469fc55",
       "hash_match": true,
       "stimulus_id": "S01",
       "voice_delivery": {
@@ -106,16 +106,16 @@
         "wer": 0.0
       },
       "audio": {
-        "bytes": 288078,
+        "bytes": 282318,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
-        "sha256": "sha256:ba582772c9df1cf82a90be87e692b6410c98a8b7c8e6cf9cd7a302796111811f"
+        "sha256": "sha256:ab6d661f26f47896783f398d9e14ad6b2c74e645f40c116742ddedc28f2b7197"
       },
       "bytes_match": true,
       "condition": "baseline",
       "engine": "chatterbox_base",
-      "expected_bytes": 288078,
-      "expected_sha256": "sha256:ba582772c9df1cf82a90be87e692b6410c98a8b7c8e6cf9cd7a302796111811f",
+      "expected_bytes": 282318,
+      "expected_sha256": "sha256:ab6d661f26f47896783f398d9e14ad6b2c74e645f40c116742ddedc28f2b7197",
       "hash_match": true,
       "stimulus_id": "S04",
       "voice_delivery": {
@@ -130,20 +130,20 @@
         "live": true,
         "mocked": false,
         "ok": true,
-        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this\n morning.",
         "wer": 0.0
       },
       "audio": {
-        "bytes": 276558,
+        "bytes": 320718,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
-        "sha256": "sha256:dcfd3fef78e6f2c97356526bfbf2c102c2791c7090b866c073b143e9586b4db6"
+        "sha256": "sha256:0d28901f81247c21221a394ba7440d4a9f5d67c099d3f62466ddd8faf05a6d26"
       },
       "bytes_match": true,
       "condition": "dream",
       "engine": "chatterbox_base",
-      "expected_bytes": 276558,
-      "expected_sha256": "sha256:dcfd3fef78e6f2c97356526bfbf2c102c2791c7090b866c073b143e9586b4db6",
+      "expected_bytes": 320718,
+      "expected_sha256": "sha256:0d28901f81247c21221a394ba7440d4a9f5d67c099d3f62466ddd8faf05a6d26",
       "hash_match": true,
       "stimulus_id": "S02",
       "voice_delivery": {
@@ -158,20 +158,20 @@
         "live": true,
         "mocked": false,
         "ok": true,
-        "transcript": "I need you to wait before you commit to that plan because the constraint changed this\n morning.",
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
         "wer": 0.0
       },
       "audio": {
-        "bytes": 288078,
+        "bytes": 266958,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
-        "sha256": "sha256:e24be91421664d8f483690bb702f5750385b7dae055fe4fe2f491f3d0c7bd3f3"
+        "sha256": "sha256:e5ed7de9135bda06ac7505ea20bde45f315cd677b83d46aac4937476509886d5"
       },
       "bytes_match": true,
       "condition": "adversarial",
       "engine": "chatterbox_base",
-      "expected_bytes": 288078,
-      "expected_sha256": "sha256:e24be91421664d8f483690bb702f5750385b7dae055fe4fe2f491f3d0c7bd3f3",
+      "expected_bytes": 266958,
+      "expected_sha256": "sha256:e5ed7de9135bda06ac7505ea20bde45f315cd677b83d46aac4937476509886d5",
       "hash_match": true,
       "stimulus_id": "S03",
       "voice_delivery": {

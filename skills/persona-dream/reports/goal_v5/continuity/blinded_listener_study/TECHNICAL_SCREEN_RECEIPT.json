@@ -6,7 +6,11 @@
       "perceived emotion, naturalness, or human identity recognition",
       "anything about conditions or renderers outside this preregistered set"
     ],
-    "proves": []
+    "proves": [
+      "every scored WAV binds to one canonical request text, voice_delivery, backend, and reference audio",
+      "no nuisance acoustic metric separates a condition from neutral by more than the renderer's own same-parameter stochastic spread",
+      "no condition clips, drifts in ASR, repeats, or differs in encoding"
+    ]
   },
   "comparison_row_count": 52,
   "conditions_screened": [
@@ -15,76 +19,74 @@
     "control",
     "dream"
   ],
-  "created_at": "2026-08-22T23:00:11Z",
-  "failed_gates": [
-    "asr_wer_exceeds_hard_gate:control"
-  ],
+  "created_at": "2026-08-22T23:06:55Z",
+  "failed_gates": [],
   "intended_mediator_rows_outside_neutral_spread": [
     {
       "class": "intended_mediator",
       "condition": "adversarial",
-      "delta": 102.76035,
+      "delta": 88.1663,
       "metric": "f0_median_hz",
-      "neutral_median": 192.71435,
-      "neutral_sd": 8.222683,
-      "tolerance": 24.668049,
-      "value": 295.4747,
+      "neutral_median": 189.1183,
+      "neutral_sd": 5.58377,
+      "tolerance": 16.751311,
+      "value": 277.2846,
       "within_neutral_spread": false
     },
     {
       "class": "intended_mediator",
       "condition": "adversarial",
-      "delta": 110.04315,
+      "delta": 124.46155,
       "metric": "f0_range_hz",
-      "neutral_median": 111.83355,
-      "neutral_sd": 29.267906,
-      "tolerance": 87.803717,
-      "value": 221.8767,
+      "neutral_median": 96.43545,
+      "neutral_sd": 31.881592,
+      "tolerance": 95.644776,
+      "value": 220.897,
       "within_neutral_spread": false
     },
     {
       "class": "intended_mediator",
       "condition": "baseline",
-      "delta": 42.48335,
+      "delta": 41.3712,
       "metric": "f0_median_hz",
-      "neutral_median": 192.71435,
-      "neutral_sd": 8.222683,
-      "tolerance": 24.668049,
-      "value": 235.1977,
+      "neutral_median": 189.1183,
+      "neutral_sd": 5.58377,
+      "tolerance": 16.751311,
+      "value": 230.4895,
+      "within_neutral_spread": false
+    },
+    {
+      "class": "intended_mediator",
+      "condition": "control",
+      "delta": 24.6974,
+      "metric": "f0_median_hz",
+      "neutral_median": 189.1183,
+      "neutral_sd": 5.58377,
+      "tolerance": 16.751311,
+      "value": 213.8157,
       "within_neutral_spread": false
     },
     {
       "class": "intended_mediator",
       "condition": "dream",
-      "delta": 66.00135,
+      "delta": 84.9815,
       "metric": "f0_median_hz",
-      "neutral_median": 192.71435,
-      "neutral_sd": 8.222683,
-      "tolerance": 24.668049,
-      "value": 258.7157,
-      "within_neutral_spread": false
-    },
-    {
-      "class": "intended_mediator",
-      "condition": "dream",
-      "delta": 121.04795,
-      "metric": "f0_range_hz",
-      "neutral_median": 111.83355,
-      "neutral_sd": 29.267906,
-      "tolerance": 87.803717,
-      "value": 232.8815,
+      "neutral_median": 189.1183,
+      "neutral_sd": 5.58377,
+      "tolerance": 16.751311,
+      "value": 274.0998,
       "within_neutral_spread": false
     }
   ],
   "issue": "grahama1970/agent-skills#1127",
   "live": true,
   "manifest": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_MANIFEST.json",
-  "manifest_sha256": "sha256:e250659d2b57acaa54bab123a8f2c88ae771ad81facea90ccbc5ec0d0ac9a074",
+  "manifest_sha256": "sha256:755b7b05a558c3f39b2b5e7dd17ea836bd1b33f4497a7318b1d73ad90f2695b5",
   "mocked": false,
   "neutral_render_count": 8,
   "nuisance_rows_outside_neutral_spread": [],
   "schema": "persona_dream.technical_screen_receipt.v1",
-  "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
+  "status": "PASS_STIMULUS_TECHNICAL_SCREEN",
   "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study",
   "tolerance_rule_sha256": "sha256:b5005fd8b67a2117428d2a4a893dd3ef847505d641cd31e01f8eec09f382a4c8"
 }
