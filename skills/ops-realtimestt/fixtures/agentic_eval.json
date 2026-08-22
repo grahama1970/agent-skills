@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "skill": "ops-realtimestt",
+  "trials": 3,
+  "proof_scope": "deterministic ops-realtimestt CLI and receipt behavior",
+  "claims": {
+    "proves": "the skill entrypoint emits structured receipts for health failure, usage assessment, and live-transcription gating",
+    "does_not_prove": "live STT availability, CUDA usability, transcription accuracy, streaming WebSocket correctness, or Persona Dream listener identity"
+  },
+  "cases": [
+    {
+      "name": "live-doctor-receipt-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh doctor --json --out /tmp/ops-realtimestt-agentic-doctor.json >/tmp/ops-realtimestt-agentic-doctor.stdout && jq -e '.schema == \"ops_realtimestt.doctor_receipt.v1\" and .status == \"PASS_STT_DOCTOR\" and .live == true and .mocked == false and .checks.health_ok == true and .checks.container_running == true' /tmp/ops-realtimestt-agentic-doctor.json >/dev/null && echo PASS_LIVE_STT_DOCTOR_READBACK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_STT_DOCTOR_READBACK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/ops-realtimestt-agentic-doctor.json",
+            "json_pointer": "/schema",
+            "equals": "ops_realtimestt.doctor_receipt.v1"
+          },
+          {
+            "path": "/tmp/ops-realtimestt-agentic-doctor.json",
+            "json_pointer": "/status",
+            "equals": "PASS_STT_DOCTOR"
+          },
+          {
+            "path": "/tmp/ops-realtimestt-agentic-doctor.json",
+            "json_pointer": "/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/ops-realtimestt-agentic-doctor.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "unreachable-health-receipt",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh health --url http://127.0.0.1:9 --timeout 0.2 --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_realtimestt.health_receipt.v1\"",
+          "\"status\": \"NEEDS_ATTENTION\"",
+          "health_endpoint_not_ok"
+        ]
+      }
+    },
+    {
+      "name": "transcribe-smoke-requires-live-flag",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh transcribe-smoke --audio /no/such/audio.wav --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"BLOCKED_LIVE_FLAG_REQUIRED\"",
+          "\"live\": false"
+        ]
+      }
+    }
+  ]
+}

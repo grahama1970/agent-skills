@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "skill": "ops-chatterbox",
+  "trials": 3,
+  "proof_scope": "deterministic ops-chatterbox CLI and receipt behavior",
+  "claims": {
+    "proves": "the skill entrypoint emits structured receipts for health failure, usage assessment, and live-render gating",
+    "does_not_prove": "live Chatterbox availability, model loading, acoustic effect, ASR accuracy, or Persona Dream emotional correctness"
+  },
+  "cases": [
+    {
+      "name": "live-doctor-receipt-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh doctor --json --out /tmp/ops-chatterbox-agentic-doctor.json >/tmp/ops-chatterbox-agentic-doctor.stdout && jq -e '.schema == \"ops_chatterbox.doctor_receipt.v1\" and .status == \"PASS_CHATTERBOX_DOCTOR\" and .live == true and .mocked == false and .checks.health_ok == true and .checks.container_running == true' /tmp/ops-chatterbox-agentic-doctor.json >/dev/null && echo PASS_LIVE_CHATTERBOX_DOCTOR_READBACK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_CHATTERBOX_DOCTOR_READBACK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
+            "json_pointer": "/schema",
+            "equals": "ops_chatterbox.doctor_receipt.v1"
+          },
+          {
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
+            "json_pointer": "/status",
+            "equals": "PASS_CHATTERBOX_DOCTOR"
+          },
+          {
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
+            "json_pointer": "/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "unreachable-health-receipt",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh health --url http://127.0.0.1:9/health --timeout 0.2 --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_chatterbox.health_receipt.v1\"",
+          "\"status\": \"NEEDS_ATTENTION\"",
+          "health_unreachable"
+        ]
+      }
+    },
+    {
+      "name": "render-smoke-requires-live-flag",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh render-smoke --text sanity --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"BLOCKED_LIVE_FLAG_REQUIRED\"",
+          "\"live\": false"
+        ]
+      }
+    }
+  ]
+}
