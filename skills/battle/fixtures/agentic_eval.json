@@ -6,7 +6,7 @@
   "live": true,
   "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, and an explicit fail-closed adaptive-lineage exact-chain receipt gate",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, memory-lineage contract guards, same-run transport, pause/resume transport safety, receipt-backed Pixi parent/child replay visibility and scrub behavior, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, production staging route availability, production WebSocket TLS/auth/fanout, or full visual design acceptance"
   },
   "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
@@ -66,6 +66,15 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.immutable_goal.adaptive_lineage_pixi",
+      "description": "Battle immutable goal close gate requires both durable adaptive-lineage exact-chain proof and browser-visible PixiJS replay evidence",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true,
+        "live_e2e": true
       }
     },
     {
@@ -197,6 +206,20 @@
       ],
       "required_evidence": [
         "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "immutable_goal.close_gate",
+      "claim_id": "battle.immutable_goal.adaptive_lineage_pixi",
+      "seam_type": "cross-surface readiness gate",
+      "criticality": "critical",
+      "failure_modes": [
+        "Battle readiness passes with adaptive lineage proven but Pixi replay unproven",
+        "Battle readiness passes with Pixi replay proven but durable exact-chain lineage unproven"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e",
+        "live_e2e"
       ]
     },
     {
@@ -409,10 +432,12 @@
       "real_world": true,
       "evidence_class": "adversarial_live_e2e",
       "supports_claims": [
-        "battle.adaptive_lineage.live_exact_chain"
+        "battle.adaptive_lineage.live_exact_chain",
+        "battle.immutable_goal.adaptive_lineage_pixi"
       ],
       "seams": [
-        "adaptive_lineage.live_exact_chain"
+        "adaptive_lineage.live_exact_chain",
+        "immutable_goal.close_gate"
       ],
       "timeout_seconds": 900,
       "blocked_when_stdout_contains": [
@@ -510,10 +535,12 @@
       "real_world": true,
       "evidence_class": "live_e2e",
       "supports_claims": [
-        "battle.receipt_pixi.replay"
+        "battle.receipt_pixi.replay",
+        "battle.immutable_goal.adaptive_lineage_pixi"
       ],
       "seams": [
-        "receipt_pixi.replay"
+        "receipt_pixi.replay",
+        "immutable_goal.close_gate"
       ],
       "timeout_seconds": 240,
       "command": [
