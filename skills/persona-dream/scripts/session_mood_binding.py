@@ -41,7 +41,7 @@ MOOD_TO_VOICE = {
         "tone": "firm_boundary",
         "intensity": 0.78,
         "valence": -0.45,
-        "pace": "steady",
+        "pace": "measured",
         "emphasis_tag": "boundary",
     },
     "warm_but_withholding": {

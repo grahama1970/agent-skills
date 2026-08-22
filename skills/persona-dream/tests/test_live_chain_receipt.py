@@ -134,6 +134,15 @@ def test_ledger_snapshot_uses_existing_persona_memory_contract():
     assert "persona_continuity_ledgers" not in text
 
 
+def test_chain_turns_keep_one_full_invariant_answer_body():
+    assert live_chain.CHAIN_TURNS == [
+        "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "The answer is unchanged. The boundary is clear. The facts remain the same.",
+        "The answer is unchanged. The boundary is clear. The facts remain the same.",
+    ]
+    assert len(set(live_chain.CHAIN_TURNS)) == 1
+
+
 def test_session_mood_ordering_uses_sequence_not_second_granularity_timestamps():
     evidence = live_chain.session_mood_ordering(
         {

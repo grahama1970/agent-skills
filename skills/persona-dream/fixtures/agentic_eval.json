@@ -321,6 +321,29 @@
       }
     },
     {
+      "name": "session-mood-delivery-contract-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.session_mood_delivery_contract"
+      ],
+      "seams": [
+        "continuity.session_mood.delivery"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_session_mood_binding.py ../tests/test_live_chain_receipt.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ]
+      }
+    },
+    {
       "name": "corrected-goal-pair-blocks-without-live-artifacts",
       "type": "adversarial",
       "real_world": true,
@@ -385,6 +408,14 @@
       }
     },
     {
+      "id": "persona_dream.session_mood_delivery_contract",
+      "description": "Session mood maps dream/journal conflict into Chatterbox delivery fields while preserving one invariant answer body and using calibrated pace values instead of request-only delivery labels.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -440,6 +471,14 @@
       "criticality": "critical",
       "required_evidence": [
         "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuity.session_mood.delivery",
+      "seam_type": "delivery_contract",
+      "criticality": "important",
+      "required_evidence": [
+        "deterministic"
       ]
     },
     {

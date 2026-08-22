@@ -92,6 +92,32 @@ def test_chatterbox_control_ignoring_engine_blocks(seeded_ledger):
         session_mod.validate_binding(binding)
 
 
+def test_boundary_mood_uses_calibrated_pace_not_request_only_steady(tmp_path, monkeypatch):
+    monkeypatch.setattr(ledger_mod, "CONTINUITY_DIR", tmp_path)
+    monkeypatch.setattr(session_mod.continuity_ledger, "CONTINUITY_DIR", tmp_path)
+    ledger_mod.init_ledger("embry")
+    ledger_mod.append_arc_delta(
+        "embry",
+        {
+            "before": "Access was assumed.",
+            "now": "The boundary has to stay clear.",
+            "because": "dream cycle held intrusion and protection in tension",
+            "still_true": "I protect the boundary.",
+            "open_tension": "boundary without hostility",
+            "possible_expression": "firm and not hostile",
+        },
+        dream_id="cycle_boundary",
+        journal_id="journal_boundary",
+        expected_epoch=0,
+    )
+
+    binding = session_mod.bind_session("embry", session_id="s_boundary")
+    turn = session_mod.add_turn(binding, "The boundary is clear.", turn_id="t1")
+
+    assert binding["session_mood"]["mood_label"] == "boundary_forward_not_hostile"
+    assert turn["voice_delivery"]["pace"] == "measured"
+
+
 def test_no_arc_delta_blocks_session_mood(tmp_path, monkeypatch):
     monkeypatch.setattr(ledger_mod, "CONTINUITY_DIR", tmp_path)
     monkeypatch.setattr(session_mod.continuity_ledger, "CONTINUITY_DIR", tmp_path)
