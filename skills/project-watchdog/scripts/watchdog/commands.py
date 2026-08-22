@@ -802,7 +802,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     # into the crontab or into a file in the repo.
     inner = (
         f"cd {shlex.quote(str(config.SKILL_DIR))} && "
-        f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project tau "
+        f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project all "
         f"--max-tickets 1"
     )
     init_file = config.shell_init_file()

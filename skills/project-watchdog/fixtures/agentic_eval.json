@@ -281,12 +281,13 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; assert not line.startswith('* * * * *'), line; assert line.split()[0].startswith('*/'), line; print('default interval is', line.split()[0])\""
+        "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; assert not line.startswith('* * * * *'), line; assert line.split()[0].startswith('*/'), line; assert '--project all' in line, line; print('default interval is', line.split()[0], 'project all')\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "default interval is */"
+          "default interval is */",
+          "project all"
         ]
       },
       "real_world": true

@@ -1236,6 +1236,7 @@ def test_the_cron_line_sources_a_shell_init_file(tmp_path, monkeypatch) -> None:
     line = captured["receipt"]["cron_line"]
     assert f"source {rc}" in line, "the rc file must be sourced before the tick"
     assert "/usr/bin/zsh -c" in line
+    assert "--project all" in line
 
 
 def test_a_missing_rc_file_is_not_sourced(tmp_path, monkeypatch) -> None:

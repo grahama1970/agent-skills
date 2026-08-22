@@ -421,6 +421,58 @@
         "health_check": "systemctl --user is-active embry-voice",
         "proof_needs_restart": true
       }
+    },
+    {
+      "project_id": "pdf_oxide",
+      "display_name": "pdf_oxide",
+      "repo": "grahama1970/pdf_oxide",
+      "worktree": "/home/graham/workspace/experiments/pdf_oxide",
+      "status": "registered",
+      "state_policy": {
+        "default_state": "active",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "true",
+        "cwd": "/home/graham/workspace/experiments/pdf_oxide",
+        "requires_start_handoff": false
+      },
+      "repair_creator": "oc-deepseek",
+      "repair_reviewer": "claude-opus-5-medium",
+      "ticket_repair_timeout_s": 10800,
+      "allowed_agents": [
+        "coder",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "pdf-extraction",
+        "agentic-evals",
+        "github-issue-routing"
+      ],
+      "notes": [
+        "Registered for /ticket-filed pdf_oxide hardening issues. The repair lane uses project-watchdog ticket_repair via $ask tau-dag; issues must keep concrete target paths and live proof requirements from local/HANDOFF.md.",
+        "Current usability target is PDF-EXTRACTION-GS001: census has 320 resolved, 19 unverified, and 7 still_broken findings as of local/HANDOFF.md dated 2026-08-22."
+      ],
+      "service": {
+        "kind": "none",
+        "note": "Rust library/Python wheel; no long-running service to restart. Repairs must verify the release wheel path when extraction behavior is affected.",
+        "proof_needs_restart": false
+      }
     }
   ]
 }

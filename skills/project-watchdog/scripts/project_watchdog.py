@@ -19,8 +19,8 @@ Failure modes
     non-zero exit.
 
 Usage
-    ./run.sh tick --project tau                 # dry-run scan
-    ./run.sh tick --apply --project tau         # one bounded dispatch
+    ./run.sh tick --project all                 # dry-run fleet scan
+    ./run.sh tick --apply --project all         # one bounded fleet dispatch
     ./run.sh status
     ./run.sh set-state global paused --reason "maintenance"
     ./run.sh install-cron --apply
