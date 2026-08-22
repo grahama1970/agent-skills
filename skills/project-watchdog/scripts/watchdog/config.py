@@ -179,11 +179,28 @@ _SEAT_PROVIDER = {
 _BROWSER_SEATS = {"webgpt", "webclaude", "webgrok"}
 
 
+#: OpenCode Go seat (`oc-<family>`) -> provider family. A non-codex coding
+#: harness running open models; distinct provider from the codex/OpenAI creator
+#: and from the Anthropic reviewer.
+_OC_FAMILY_PROVIDER = {
+    "deepseek": "deepseek", "ds": "deepseek",
+    "glm": "zhipu", "kimi": "moonshot", "minimax": "minimax",
+    "qwen": "alibaba", "mimo": "xiaomi",
+}
+#: Seats that route through `codex exec` (the hobbled Codex CLI) regardless of
+#: the model they name -- rejected as a creator/reviewer here (2026-08-22).
+_CODEX_EXEC_SEATS_PREFIXES = ("gpt-", "codex-", "o1", "o3")
+
+
 def seat_provider(seat: str) -> str:
     s = seat.strip().lower()
     if s in _SEAT_PROVIDER:
         return _SEAT_PROVIDER[s]
-    if s.startswith("gpt") or s.startswith("o1") or s.startswith("o3") or "codex" in s:
+    if s.startswith("oc-"):
+        return _OC_FAMILY_PROVIDER.get(s[3:].split("-")[0], "opencode")
+    if s == "codex" or "codex" in s:
+        return "openai"
+    if s.startswith("gpt") or s.startswith("o1") or s.startswith("o3"):
         return "openai"
     if s.startswith("claude") or s.startswith("opus") or s.startswith("sonnet") or s.startswith("haiku"):
         return "anthropic"
@@ -194,13 +211,28 @@ def seat_provider(seat: str) -> str:
     return "unknown"
 
 
+def seat_uses_codex_exec(seat: str) -> bool:
+    """True if the seat runs through the Codex CLI (codex, or gpt-*/Codex-* via
+    `codex exec --model`). Rejected: the Codex harness is hobbled/inferior."""
+    s = seat.strip().lower()
+    return s == "codex" or s.startswith(_CODEX_EXEC_SEATS_PREFIXES)
+
+
 def seat_can_run_code(seat: str) -> bool:
-    """A reviewer must execute the ticket's live proof; a browser chat cannot."""
-    return seat.strip().lower() not in _BROWSER_SEATS
+    """A reviewer must execute the ticket's live proof; a browser chat cannot.
+    OpenCode Go (`oc-*`) and the local `claude` CLI run code; browser seats don't."""
+    s = seat.strip().lower()
+    return s not in _BROWSER_SEATS and not s.startswith("web")
 
 
 def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
-    """Fail loudly if the reviewer is not an independent, code-running second seat."""
+    """Fail loudly if the seats are codex, same-provider, or a non-code reviewer."""
+    for role, seat in (("creator", creator), ("reviewer", reviewer)):
+        if seat_uses_codex_exec(seat):
+            raise SeatIndependenceError(
+                f"repair {role} {seat!r} runs through the Codex CLI (codex exec); the Codex "
+                "harness is not used. Use a local `claude` seat or an OpenCode Go `oc-*` seat."
+            )
     cp, rp = seat_provider(creator), seat_provider(reviewer)
     if cp == rp:
         raise SeatIndependenceError(
