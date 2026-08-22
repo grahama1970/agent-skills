@@ -95,12 +95,47 @@ WebGPT advised freezing acceptance at the commit, running service preflight, usi
 Persona Dream proof commit:
 
 - `7f9b4d1cce43b468e3ebc7920e4493a75ad4f0c6` (`Add Persona Dream corrected goal live proof`)
+- `44ecb04816a828ce15dd9748e682a6b00223a094` (`persona-dream: add ticket closure evidence`)
 
 Remote readback:
 
 - `git merge-base --is-ancestor 7f9b4d1cce43b468e3ebc7920e4493a75ad4f0c6 origin/main`
 - Result: exit code `0`
-- Current `origin/main` at readback time: `c9b9af8d704ed50f2dd21bbc16e95a42ec3df394`
+- `git ls-remote origin refs/heads/main`
+- Result at closure-evidence push: `44ecb04816a828ce15dd9748e682a6b00223a094 refs/heads/main`
+
+## Worktree Retention
+
+The first real `$ticket close` attempt accepted the closure evidence, then failed the repo-wide worktree retention audit because of dirty secondary worktrees unrelated to #1479.
+
+Audit blocker from `$ticket close`:
+
+- `dirty_secondary`: `4`
+- `tmp`: `0`
+- `prunable`: `0`
+
+Retained paths:
+
+- `/home/graham/workspace/experiments/agent-skills-monitor-opportunities-nightly`
+  - Branch: `codex/monitor-opportunities-safe-nightly-20260813`
+  - HEAD: `b2ce6a54143d7044ecb8e80316423d418afd9f9f`
+  - Dirty summary: `?? skills/brave-search/uv.lock`; `?? skills/browser-oracle/.venv.lock`
+  - Owner/reason: unrelated monitor-opportunities worktree; retained to avoid deleting or committing unrelated work.
+- `/home/graham/workspace/experiments/agent-skills/.worktrees/live-evidence-collapse-20260816T181717Z`
+  - Branch: detached
+  - HEAD: `296f0a13128285d72c7eef0b07f0dd68dd9ca8d7`
+  - Dirty summary: modified `.codex/ui-verification/latest.json`; modified `skills/live-evidence/fixtures/agentic_eval.json`; modified `skills/live-evidence/run.sh`; modified `skills/live-evidence/src/live_evidence/coordinator.py`; modified `skills/live-evidence/src/live_evidence/question_window.py`; modified `skills/live-evidence/tests/test_coordinator.py`; modified `skills/live-evidence/tests/test_question_window.py`; modified `skills/live-evidence/ui/src/components/MemoryVaultRecord.tsx`; modified `skills/live-evidence/ui/src/lib/vaultRecords.ts`; untracked `skills/live-evidence/local/`; untracked `skills/live-evidence/scripts/eval_live_youtube_oracle.py`; additional unrelated untracked proof files.
+  - Owner/reason: unrelated live-evidence worktree; retained to avoid deleting or committing unrelated work.
+- `/mnt/storage12tb/tmp/live-evidence-ask-env-fix-20260814`
+  - Branch: `live-evidence-ask-env-fix-20260814`
+  - HEAD: `126b10c905ed03e0c793008337b8d162fcc88558`
+  - Dirty summary: modified `.codex/ui-verification/latest.json`; modified `skills/live-evidence/src/live_evidence/retrieval/memory.py`; modified `skills/live-evidence/tests/test_memory_policy.py`; untracked `.codex/ui-verification/live-evidence-canonical-projection-current.latest.json`; untracked `.codex/ui-verification/live-evidence-indexed-lane.latest.json`; untracked `skills/brave-search/uv.lock`
+  - Owner/reason: unrelated live-evidence worktree; retained to avoid deleting or committing unrelated work.
+- `/mnt/storage12tb/tmp/live-evidence-main-integrate-20260814T213418Z`
+  - Branch: detached
+  - HEAD: `e646ccb123124f308b921eb9404411ae214e2b2a`
+  - Dirty summary: untracked `.codex/ui-verification/live-evidence-memory-acoustic-r11-ui-built.latest.json`; untracked `.codex/ui-verification/live-evidence-memory-acoustic-r11.latest.json`
+  - Owner/reason: unrelated live-evidence worktree; retained to avoid deleting unrelated evidence artifacts.
 
 ## Proof Boundary
 
