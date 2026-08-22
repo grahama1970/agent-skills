@@ -76,9 +76,13 @@ slice, P2.1-P2.3 receipts) — recoverable at
   negative controls.
 - **`/api/tau/dream/*`** (story/script draft endpoints the workspace calls)
   has no server implementation anywhere; those UI actions fail.
-- **Blinded listener study**: stimuli must be re-rendered under one identical
-  normalization (#1179) before any human collection (#1058). Ordered next
-  steps live in `CURRENT_STATUS.json.next_step`.
+- **Blinded listener study**: #1179 now has the required retained typed block.
+  The four target stimuli were rendered under shared Chatterbox
+  `norm_loudness=true` and shared ffmpeg loudnorm post-processing; raw and
+  final metrics are retained in
+  `reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_MANIFEST.json`.
+  The frozen screen has `nuisance_count=0` and the remaining typed gate is
+  `asr_wer_exceeds_hard_gate:control`, so no human collection (#1058) yet.
 - **Environment traps** (each cost real time on 2026-08-19/20):
   - `uv sync --extra ux` prunes the other extra — reinstall identity deps with
     `uv pip install insightface==0.7.3 onnxruntime==1.19.2` (NOT `-e .[identity]`);
@@ -97,8 +101,8 @@ slice, P2.1-P2.3 receipts) — recoverable at
 1. Decide the next reliability ticket action under `project-watchdog`: #1128
    needs 35 no-restart cycles and depends on cross-mood identity policy (#1130),
    while #1130 is still agent-blocked and needs a frozen 36-render matrix.
-2. #1179 listener-stimuli re-render under one normalization; rerun the frozen
-   technical screen unchanged; then #1130, #1058.
+2. Close/route the post-#1179 dependency: #1130/#1058 remain gated by the
+   retained `asr_wer_exceeds_hard_gate:control` stimulus-screen block.
 3. Optional UX: implement or stub `/api/tau/dream/*` server-side; commit the
    ux-lab registry surface entry if still uncommitted.
 

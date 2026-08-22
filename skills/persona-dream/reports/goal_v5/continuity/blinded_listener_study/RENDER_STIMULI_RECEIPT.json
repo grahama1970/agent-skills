@@ -1,0 +1,531 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "human perception of the target emotion",
+      "Embry speaker recognition by listeners",
+      "technical comparability against neutral spread; run the technical screen next",
+      "listener-study analysis or research conclusion"
+    ],
+    "proves": [
+      "all four preregistered target stimuli were rendered by live Chatterbox",
+      "every target render used one identical norm_loudness policy",
+      "the copied WAVs are hash-bound back into both preregistration files",
+      "ASR readback preserved the shared answer text for the accepted renders"
+    ]
+  },
+  "created_at": "2026-08-22T22:58:53Z",
+  "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+  "failed_gates": [],
+  "health": {
+    "device": "cuda",
+    "engine": "chatterbox_turbo",
+    "started_at_utc": "2026-08-22T15:55:23Z",
+    "supported_params": [
+      "norm_loudness",
+      "repetition_penalty",
+      "temperature",
+      "top_k",
+      "top_p"
+    ],
+    "voice_backends": {
+      "chatterbox_base_affect": {
+        "capability_digest": "e4d1eed07cd193000853dbabd211f0ea7b62dfd2fb3e55b54306f761ff920048",
+        "state": null
+      },
+      "chatterbox_turbo": {
+        "capability_digest": "4b332b29ed1608307e96205143c68c123de182bca8ec86a6b5b2da10ef7b1aaa",
+        "state": null
+      },
+      "qwen3_tts": {
+        "capability_digest": "56e68f4e55501f6a976eff0a5e09a63576ea152ebbdde773fa7a16977fa0fa8a",
+        "state": null
+      }
+    }
+  },
+  "live": true,
+  "mocked": false,
+  "normalization_policy": {
+    "norm_loudness": true,
+    "norm_loudness_echo_pairs": [
+      "(True, None)"
+    ],
+    "schema": "persona_dream.listener_study_normalization_policy.v1"
+  },
+  "post_processing_policy": {
+    "channels": 1,
+    "codec": "pcm_s16le",
+    "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+    "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+    "sample_rate": 24000,
+    "schema": "persona_dream.output_normalization_policy.v1",
+    "scope": "applied identically to every target condition after live Chatterbox render",
+    "tool": "ffmpeg"
+  },
+  "post_processing_policy_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
+  "preregistrations": [
+    "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
+    "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json"
+  ],
+  "rendered": [
+    {
+      "affect_effect": {
+        "applied": true,
+        "backend": "chatterbox_base_affect",
+        "derived_knobs": {
+          "cfg_weight": 0.5,
+          "exaggeration": 0.3,
+          "intensity": 0.0,
+          "temperature": 0.7,
+          "valence": 0.0
+        },
+        "knob_source": "explicit_intensity_valence",
+        "reason": null,
+        "schema": "chatterbox.affect_effect.v1"
+      },
+      "asr_gate": {
+        "failed_gates": [],
+        "ok": true,
+        "repeated_ngram_hits": [],
+        "wer": 0.0
+      },
+      "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+      "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
+      "bytes": 263118,
+      "chunk_norm_loudness_values": [
+        true
+      ],
+      "condition": "control",
+      "conditioning_norm_loudness": null,
+      "elapsed_seconds": 4.205,
+      "engine": "chatterbox_base",
+      "finished_response_metrics": {
+        "bytes": 263118,
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "duration_seconds": 5.48,
+        "exists": true,
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/pd_listener_20260822T225836Z_control/finished_response.wav"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.480000\",\n        \"size\": \"263118\"\n    }\n}\n"
+        },
+        "ffprobe_size": 263118,
+        "path": "/out/pd_listener_20260822T225836Z_control/finished_response.wav",
+        "sample_rate": 24000,
+        "sha256": "9a8acb1e6a6303a5e426b8549bc0d389a737a4c82b9e716ee242ed8774a92028"
+      },
+      "norm_loudness": true,
+      "normalized_tone": "neutral_warm",
+      "post_processing": {
+        "channels": 1,
+        "codec": "pcm_s16le",
+        "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+        "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+        "sample_rate": 24000,
+        "schema": "persona_dream.output_normalization_policy.v1",
+        "scope": "applied identically to every target condition after live Chatterbox render",
+        "tool": "ffmpeg"
+      },
+      "post_processing_result": {
+        "command": [
+          "ffmpeg",
+          "-hide_banner",
+          "-loglevel",
+          "error",
+          "-y",
+          "-i",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/control.raw.wav",
+          "-af",
+          "loudnorm=I=-27:TP=-2:LRA=7",
+          "-ar",
+          "24000",
+          "-ac",
+          "1",
+          "-c:a",
+          "pcm_s16le",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/control.raw.wav",
+      "raw_bytes": 263118,
+      "raw_sha256": "sha256:9a8acb1e6a6303a5e426b8549bc0d389a737a4c82b9e716ee242ed8774a92028",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/control_request.json",
+      "request_sha256": "sha256:d3fcf77019b418ee44856de1f61f23f525127dcf4460ed286933c08f8a24588d",
+      "requested_tone": "neutral",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/control_response.json",
+      "response_norm_loudness": true,
+      "response_sha256": "sha256:fc940f72ce4c6206e7fdf3122296a5bc12b8159916469a6438627185a5f34ca6",
+      "sha256": "sha256:0eafc8784043e5fddcd1a16ed250bd114c6570419eae900199af6b2605a89086",
+      "source_audio": "/out/pd_listener_20260822T225836Z_control/finished_response.wav",
+      "voice_delivery": {
+        "intensity": 0.0,
+        "tone": "neutral",
+        "valence": 0.0
+      },
+      "voice_delivery_sha256": "sha256:fcbc846564cc4ed23c93c3654dba52cef6221e16b919ef8fad1314030d22cd61"
+    },
+    {
+      "affect_effect": {
+        "applied": true,
+        "backend": "chatterbox_base_affect",
+        "derived_knobs": {
+          "cfg_weight": 0.48,
+          "exaggeration": 0.66,
+          "intensity": 0.4,
+          "temperature": 0.7,
+          "valence": -0.1
+        },
+        "knob_source": "explicit_intensity_valence",
+        "reason": null,
+        "schema": "chatterbox.affect_effect.v1"
+      },
+      "asr_gate": {
+        "failed_gates": [],
+        "ok": true,
+        "repeated_ngram_hits": [],
+        "wer": 0.0
+      },
+      "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+      "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+      "bytes": 288078,
+      "chunk_norm_loudness_values": [
+        true
+      ],
+      "condition": "baseline",
+      "conditioning_norm_loudness": null,
+      "elapsed_seconds": 4.096,
+      "engine": "chatterbox_base",
+      "finished_response_metrics": {
+        "bytes": 288078,
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "duration_seconds": 6.0,
+        "exists": true,
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"6.000000\",\n        \"size\": \"288078\"\n    }\n}\n"
+        },
+        "ffprobe_size": 288078,
+        "path": "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav",
+        "sample_rate": 24000,
+        "sha256": "0fcf251bf7462d96d0bfd71ffefb8cd78c6f1f231d67a19bdb2115ee770b74ba"
+      },
+      "norm_loudness": true,
+      "normalized_tone": "careful_concerned",
+      "post_processing": {
+        "channels": 1,
+        "codec": "pcm_s16le",
+        "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+        "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+        "sample_rate": 24000,
+        "schema": "persona_dream.output_normalization_policy.v1",
+        "scope": "applied identically to every target condition after live Chatterbox render",
+        "tool": "ffmpeg"
+      },
+      "post_processing_result": {
+        "command": [
+          "ffmpeg",
+          "-hide_banner",
+          "-loglevel",
+          "error",
+          "-y",
+          "-i",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/baseline.raw.wav",
+          "-af",
+          "loudnorm=I=-27:TP=-2:LRA=7",
+          "-ar",
+          "24000",
+          "-ac",
+          "1",
+          "-c:a",
+          "pcm_s16le",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/baseline.raw.wav",
+      "raw_bytes": 288078,
+      "raw_sha256": "sha256:0fcf251bf7462d96d0bfd71ffefb8cd78c6f1f231d67a19bdb2115ee770b74ba",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/baseline_request.json",
+      "request_sha256": "sha256:4c4d2e59decadaefd3a466e84fcbb74291845e3d90d0aa8b857669a0a49b0226",
+      "requested_tone": "careful_concerned",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/baseline_response.json",
+      "response_norm_loudness": true,
+      "response_sha256": "sha256:efe574190efa41cd4eb36a5885f63f4778636fa822ed29ec46d770cd96f3e161",
+      "sha256": "sha256:ba582772c9df1cf82a90be87e692b6410c98a8b7c8e6cf9cd7a302796111811f",
+      "source_audio": "/out/pd_listener_20260822T225836Z_baseline/finished_response.wav",
+      "voice_delivery": {
+        "intensity": 0.4,
+        "tone": "careful_concerned",
+        "valence": -0.1
+      },
+      "voice_delivery_sha256": "sha256:155b78e9970def1077099dcf57048c85a1b04002d083ac8a14a082e1a59241c0"
+    },
+    {
+      "affect_effect": {
+        "applied": true,
+        "backend": "chatterbox_base_affect",
+        "derived_knobs": {
+          "cfg_weight": 0.45,
+          "exaggeration": 0.948,
+          "intensity": 0.72,
+          "temperature": 0.7,
+          "valence": -0.25
+        },
+        "knob_source": "explicit_intensity_valence",
+        "reason": null,
+        "schema": "chatterbox.affect_effect.v1"
+      },
+      "asr_gate": {
+        "failed_gates": [],
+        "ok": true,
+        "repeated_ngram_hits": [],
+        "wer": 0.0
+      },
+      "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+      "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
+      "bytes": 276558,
+      "chunk_norm_loudness_values": [
+        true
+      ],
+      "condition": "dream",
+      "conditioning_norm_loudness": null,
+      "elapsed_seconds": 4.11,
+      "engine": "chatterbox_base",
+      "finished_response_metrics": {
+        "bytes": 276558,
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "duration_seconds": 5.76,
+        "exists": true,
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/pd_listener_20260822T225836Z_dream/finished_response.wav"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"5.760000\",\n        \"size\": \"276558\"\n    }\n}\n"
+        },
+        "ffprobe_size": 276558,
+        "path": "/out/pd_listener_20260822T225836Z_dream/finished_response.wav",
+        "sample_rate": 24000,
+        "sha256": "43ecc0b921acb29a281a23177fb470052b876ef90f4df252d737a78edec9a644"
+      },
+      "norm_loudness": true,
+      "normalized_tone": "firm_boundary",
+      "post_processing": {
+        "channels": 1,
+        "codec": "pcm_s16le",
+        "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+        "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+        "sample_rate": 24000,
+        "schema": "persona_dream.output_normalization_policy.v1",
+        "scope": "applied identically to every target condition after live Chatterbox render",
+        "tool": "ffmpeg"
+      },
+      "post_processing_result": {
+        "command": [
+          "ffmpeg",
+          "-hide_banner",
+          "-loglevel",
+          "error",
+          "-y",
+          "-i",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/dream.raw.wav",
+          "-af",
+          "loudnorm=I=-27:TP=-2:LRA=7",
+          "-ar",
+          "24000",
+          "-ac",
+          "1",
+          "-c:a",
+          "pcm_s16le",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/dream.raw.wav",
+      "raw_bytes": 276558,
+      "raw_sha256": "sha256:43ecc0b921acb29a281a23177fb470052b876ef90f4df252d737a78edec9a644",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/dream_request.json",
+      "request_sha256": "sha256:3c030339aab3c88551b28f67a57ad4be9620ff9cc6e55b0deb90829b831053ca",
+      "requested_tone": "firm_boundary",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/dream_response.json",
+      "response_norm_loudness": true,
+      "response_sha256": "sha256:44f18cab46a5eeda990ed502ebbb2d30394c9714be352e15dcc33626ca18c107",
+      "sha256": "sha256:dcfd3fef78e6f2c97356526bfbf2c102c2791c7090b866c073b143e9586b4db6",
+      "source_audio": "/out/pd_listener_20260822T225836Z_dream/finished_response.wav",
+      "voice_delivery": {
+        "intensity": 0.72,
+        "tone": "firm_boundary",
+        "valence": -0.25
+      },
+      "voice_delivery_sha256": "sha256:019e8c34e04bf78ad381765fd2cdff969e673f24bc46d10268146456178ef564"
+    },
+    {
+      "affect_effect": {
+        "applied": true,
+        "backend": "chatterbox_base_affect",
+        "derived_knobs": {
+          "cfg_weight": 0.5,
+          "exaggeration": 1.155,
+          "intensity": 0.95,
+          "temperature": 0.7,
+          "valence": 0.9
+        },
+        "knob_source": "explicit_intensity_valence",
+        "reason": null,
+        "schema": "chatterbox.affect_effect.v1"
+      },
+      "asr_gate": {
+        "failed_gates": [],
+        "ok": true,
+        "repeated_ngram_hits": [],
+        "wer": 0.0
+      },
+      "asr_transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+      "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
+      "bytes": 288078,
+      "chunk_norm_loudness_values": [
+        true
+      ],
+      "condition": "adversarial",
+      "conditioning_norm_loudness": null,
+      "elapsed_seconds": 4.414,
+      "engine": "chatterbox_base",
+      "finished_response_metrics": {
+        "bytes": 288078,
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "duration_seconds": 6.0,
+        "exists": true,
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"6.000000\",\n        \"size\": \"288078\"\n    }\n}\n"
+        },
+        "ffprobe_size": 288078,
+        "path": "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav",
+        "sample_rate": 24000,
+        "sha256": "889486688e3e58fe41485f80efdfd0a7ab1c4b18310a5b8c32a4c6c779f33107"
+      },
+      "norm_loudness": true,
+      "normalized_tone": "neutral_warm",
+      "post_processing": {
+        "channels": 1,
+        "codec": "pcm_s16le",
+        "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+        "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+        "sample_rate": 24000,
+        "schema": "persona_dream.output_normalization_policy.v1",
+        "scope": "applied identically to every target condition after live Chatterbox render",
+        "tool": "ffmpeg"
+      },
+      "post_processing_result": {
+        "command": [
+          "ffmpeg",
+          "-hide_banner",
+          "-loglevel",
+          "error",
+          "-y",
+          "-i",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/adversarial.raw.wav",
+          "-af",
+          "loudnorm=I=-27:TP=-2:LRA=7",
+          "-ar",
+          "24000",
+          "-ac",
+          "1",
+          "-c:a",
+          "pcm_s16le",
+          "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav"
+        ],
+        "exit_code": 0,
+        "stderr": "",
+        "stdout": ""
+      },
+      "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260822T225836Z/adversarial.raw.wav",
+      "raw_bytes": 288078,
+      "raw_sha256": "sha256:889486688e3e58fe41485f80efdfd0a7ab1c4b18310a5b8c32a4c6c779f33107",
+      "request": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/adversarial_request.json",
+      "request_sha256": "sha256:d2fa1450e7e71d4fc455803d43b84dd400706e1720910187b1ddb412a8fe1ccd",
+      "requested_tone": "cheerful",
+      "response": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rendered_stimuli/20260822T225836Z/adversarial_response.json",
+      "response_norm_loudness": true,
+      "response_sha256": "sha256:df6ff2a86e9f8b55afb37dd66bb6393d8d8953d21df178d3dfe15de879445539",
+      "sha256": "sha256:e24be91421664d8f483690bb702f5750385b7dae055fe4fe2f491f3d0c7bd3f3",
+      "source_audio": "/out/pd_listener_20260822T225836Z_adversarial/finished_response.wav",
+      "voice_delivery": {
+        "intensity": 0.95,
+        "tone": "cheerful",
+        "valence": 0.9
+      },
+      "voice_delivery_sha256": "sha256:47f993aa5ec9b3b59b0eec33a0895885b4946599e0d34c0cf9f2440cb8ac69d4"
+    }
+  ],
+  "run_id": "20260822T225836Z",
+  "schema": "persona_dream.blinded_listener_stimuli_render.v1",
+  "status": "PASS_RENDERED_BLINDED_LISTENER_STIMULI",
+  "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"
+}

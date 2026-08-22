@@ -46,6 +46,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -58,6 +59,15 @@ DEFAULT_STUDY_DIR = ROOT / "reports/goal_v5/continuity/blinded_listener_study"
 CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
 NEUTRAL_DIR_NAME = "neutral_calibration"
 DEFAULT_NEUTRAL_RENDERS = 8
+DEFAULT_OUTPUT_NORMALIZATION_POLICY = {
+    "schema": "persona_dream.output_normalization_policy.v1",
+    "name": "ffmpeg_loudnorm_i27_tp2_lra7_pcm16_v1",
+    "tool": "ffmpeg",
+    "filter": "loudnorm=I=-27:TP=-2:LRA=7",
+    "codec": "pcm_s16le",
+    "sample_rate": 24000,
+    "channels": 1,
+}
 
 #: Frozen BEFORE any target condition is measured. A condition metric may sit
 #: at most ``k_sd`` neutral standard deviations from the neutral median. The
@@ -142,6 +152,48 @@ def sha_obj(obj: Any) -> str:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def parse_norm_loudness(raw: str) -> bool:
+    value = raw.strip().lower()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    raise argparse.ArgumentTypeError("--norm-loudness must be true or false")
+
+
+def normalize_wav(raw_audio: Path, final_audio: Path,
+                  policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    effective = policy or DEFAULT_OUTPUT_NORMALIZATION_POLICY
+    final_audio.parent.mkdir(parents=True, exist_ok=True)
+    if final_audio.exists():
+        final_audio.unlink()
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-y",
+        "-i",
+        str(raw_audio),
+        "-af",
+        str(effective["filter"]),
+        "-ar",
+        str(effective["sample_rate"]),
+        "-ac",
+        str(effective["channels"]),
+        "-c:a",
+        str(effective["codec"]),
+        str(final_audio),
+    ]
+    proc = subprocess.run(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    return {
+        "command": cmd,
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr,
+    }
 
 
 def resolve_bundle_path(raw: str | None) -> Path:
@@ -340,7 +392,8 @@ def post_json(url: str, payload: dict[str, Any], timeout: int = 600) -> dict[str
 
 
 def render_neutral_set(study_dir: Path, count: int, *, ref_audio: str, answer_text: str,
-                       voice_delivery: dict[str, Any]) -> dict[str, Any]:
+                       voice_delivery: dict[str, Any], norm_loudness: bool | None = None,
+                       post_processing_policy: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render N byte-identical neutral requests to measure stochastic spread."""
     out_dir = study_dir / NEUTRAL_DIR_NAME
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -357,6 +410,8 @@ def render_neutral_set(study_dir: Path, count: int, *, ref_audio: str, answer_te
         "voice_delivery": voice_delivery,
         "ref_audio": ref_audio,
     }
+    if norm_loudness is not None:
+        request["norm_loudness"] = norm_loudness
     health = json.loads(urllib.request.urlopen(f"{CHATTERBOX}/health", timeout=30).read().decode())
     renders: list[dict[str, Any]] = []
     for idx in range(1, count + 1):
@@ -369,14 +424,29 @@ def render_neutral_set(study_dir: Path, count: int, *, ref_audio: str, answer_te
             src_path = host_root.joinpath(*src_path.parts[2:])
         if not src_path.is_file():
             raise RuntimeError(f"neutral render {idx}: audio not found at {source!r}")
+        raw_dest = out_dir / f"neutral_{idx:02d}.raw.wav"
         dest = out_dir / f"neutral_{idx:02d}.wav"
-        dest.write_bytes(src_path.read_bytes())
+        raw_dest.write_bytes(src_path.read_bytes())
+        normalization_result = None
+        if post_processing_policy:
+            normalization_result = normalize_wav(raw_dest, dest, post_processing_policy)
+            if normalization_result["exit_code"] != 0:
+                raise RuntimeError(
+                    f"neutral render {idx}: output normalization failed: "
+                    f"{normalization_result['stderr']}"
+                )
+        else:
+            dest.write_bytes(raw_dest.read_bytes())
         renders.append({
             "index": idx,
+            "raw_wav": rel(raw_dest),
+            "raw_wav_sha256": sha_file(raw_dest),
             "wav": rel(dest),
             "wav_sha256": sha_file(dest),
             "engine": response.get("engine"),
             "asr_transcript": response.get("asr_transcript"),
+            "post_processing": post_processing_policy or "none",
+            "post_processing_result": normalization_result,
         })
     manifest = {
         "schema": "persona_dream.technical_screen_neutral_calibration.v1",
@@ -387,6 +457,12 @@ def render_neutral_set(study_dir: Path, count: int, *, ref_audio: str, answer_te
         "render_count": len(renders),
         "request": request,
         "request_sha256": sha_obj(request),
+        "normalization_policy": {
+            "schema": "persona_dream.listener_study_normalization_policy.v1",
+            "norm_loudness": norm_loudness,
+            "scope": "neutral calibration renders",
+        },
+        "post_processing_policy": post_processing_policy or "none",
         "server_boot": {
             "started_at_utc": health.get("started_at_utc"),
             "engine": health.get("engine"),
@@ -543,10 +619,13 @@ def build_bindings(prereg: dict[str, Any], study_dir: Path,
             "reference_audio_sha256": "sha256:" + hashlib.sha256(reference.encode()).hexdigest(),
             "wav": metrics.get("path"),
             "wav_sha256": metrics.get("wav_sha256"),
+            "raw_wav": stimulus.get("raw_audio"),
+            "raw_wav_sha256": stimulus.get("raw_sha256"),
             "sample_rate": metrics.get("sample_rate"),
             "channels": metrics.get("channels"),
             "duration_s": metrics.get("duration_s"),
-            "post_processing": "none",
+            "post_processing": stimulus.get("post_processing") or "none",
+            "post_processing_sha256": stimulus.get("post_processing_sha256"),
         }
     return bindings
 
@@ -565,21 +644,26 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         control = next(
             (s for s in prereg.get("stimuli") or [] if str(s.get("condition")) == "control"), {}
         )
+        post_processing_policy = (prereg.get("stimulus_source") or {}).get("post_processing_policy")
         render_neutral_set(
             study_dir,
             args.render_neutral,
             ref_audio=args.ref_audio,
             answer_text=str((prereg.get("stimulus_source") or {}).get("answer_text") or ""),
             voice_delivery=control.get("voice_delivery") or {"tone": "neutral", "intensity": 0.0, "valence": 0.0},
+            norm_loudness=args.norm_loudness,
+            post_processing_policy=post_processing_policy if isinstance(post_processing_policy, dict) else None,
         )
 
     if not neutral_manifest_path.is_file():
         failed.append("neutral_calibration_set_missing")
         neutral_manifest: dict[str, Any] = {}
         neutral_metrics: list[dict[str, Any]] = []
+        neutral_raw_metrics: list[dict[str, Any]] = []
     else:
         neutral_manifest = load_json(neutral_manifest_path)
         neutral_metrics = []
+        neutral_raw_metrics = []
         for row in neutral_manifest.get("renders") or []:
             wav = resolve_bundle_path(row.get("wav"))
             if not wav.is_file():
@@ -589,11 +673,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 failed.append(f"neutral_render_hash_mismatch:{row.get('wav')}")
                 continue
             neutral_metrics.append(measure_wav(wav))
+            raw_wav = resolve_bundle_path(row.get("raw_wav"))
+            if raw_wav.is_file():
+                if row.get("raw_wav_sha256") and sha_file(raw_wav) != row.get("raw_wav_sha256"):
+                    failed.append(f"neutral_raw_render_hash_mismatch:{row.get('raw_wav')}")
+                neutral_raw_metrics.append(measure_wav(raw_wav))
         if len(neutral_metrics) < int(args.min_neutral):
             failed.append(
                 f"neutral_calibration_too_small:{len(neutral_metrics)}<{args.min_neutral}"
             )
 
+    raw_condition_metrics: dict[str, dict[str, Any]] = {}
     condition_metrics: dict[str, dict[str, Any]] = {}
     asr_rows: dict[str, dict[str, Any]] = {}
     expected_text = str((prereg.get("stimulus_source") or {}).get("answer_text") or "")
@@ -604,6 +694,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             failed.append(f"stimulus_missing:{condition}")
             continue
         condition_metrics[condition] = measure_wav(wav, expected_text=expected_text)
+        raw_wav = resolve_bundle_path(stimulus.get("raw_audio"))
+        if raw_wav.is_file():
+            if stimulus.get("raw_sha256") and sha_file(raw_wav) != stimulus.get("raw_sha256"):
+                failed.append(f"raw_stimulus_hash_mismatch:{condition}")
+            raw_condition_metrics[condition] = measure_wav(raw_wav, expected_text=expected_text)
 
     # ASR rows come from the existing validation receipt so this screen does not
     # duplicate (or diverge from) the study's own transcription authority.
@@ -645,10 +740,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "neutral_calibration_manifest_sha256": sha_file(neutral_manifest_path)
         if neutral_manifest_path.is_file() else None,
         "neutral_render_count": len(neutral_metrics),
-        "neutral_metrics_raw": neutral_metrics,
+        "neutral_metrics_raw": neutral_raw_metrics,
+        "neutral_metrics_final": neutral_metrics,
         "calibration": calibration,
         "stimulus_bindings": bindings,
-        "condition_metrics_raw": condition_metrics,
+        "condition_metrics_raw": raw_condition_metrics,
+        "condition_metrics_final": condition_metrics,
         "asr": asr_rows,
         "comparison_rows": rows,
     }
@@ -712,6 +809,8 @@ def main() -> int:
     parser.add_argument("--min-neutral", type=int, default=DEFAULT_NEUTRAL_RENDERS,
                         help="Fail closed below this many usable neutral renders.")
     parser.add_argument("--ref-audio", default="/data/embry_ref.wav")
+    parser.add_argument("--norm-loudness", type=parse_norm_loudness, default=None,
+                        help="Pass one Chatterbox norm_loudness policy into live neutral renders.")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     receipt = run(args)

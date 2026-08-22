@@ -188,6 +188,7 @@ Commands:
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
+  render-blinded-listener-stimuli Render all target stimuli with one Chatterbox normalization policy
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
   analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
   validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
@@ -850,6 +851,9 @@ case "$COMMAND" in
     ;;
   render-blinded-listener-rater-page)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/render_blinded_listener_rater_page.py" "$@"
+    ;;
+  render-blinded-listener-stimuli)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/render_blinded_listener_stimuli.py" "$@"
     ;;
   validate-blinded-listener-study)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_blinded_listener_study.py" "$@"

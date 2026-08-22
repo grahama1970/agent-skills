@@ -95,6 +95,29 @@
       }
     },
     {
+      "name": "render-blinded-listener-stimuli-policy-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.blinded_listener_stimuli_normalized_render"
+      ],
+      "seams": [
+        "listener_study.normalized_render"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_render_blinded_listener_stimuli.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "dream-workspace-ssr-render",
       "type": "positive",
       "real_world": true,
@@ -641,6 +664,15 @@
       }
     },
     {
+      "id": "persona_dream.blinded_listener_stimuli_normalized_render",
+      "description": "The listener-study target stimuli can be rendered through live Chatterbox with one shared norm_loudness policy and hash-bound back into both preregistration files.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
       "id": "persona_dream.full_cycle.live",
       "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), tone-annotated day journal, ASR-verified spoken journal, memory write, artifact store, a 3-pair fully audible dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
       "criticality": "critical",
@@ -728,6 +760,15 @@
       "seam_type": "multi_agent_voice",
       "criticality": "critical",
       "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "listener_study.normalized_render",
+      "seam_type": "voice_stimulus_render",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
         "live_e2e"
       ]
     },
