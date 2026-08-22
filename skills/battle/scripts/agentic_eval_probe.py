@@ -14,9 +14,12 @@ import json
 import os
 import random
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -27,6 +30,7 @@ BATTLE_DIR = REPO_ROOT / "skills" / "battle"
 RUN_SH = BATTLE_DIR / "run.sh"
 AUTH_TEMPLATE = BATTLE_DIR / "fixtures" / "reactive-judge" / "authorization.json"
 TARGET_IDENTITY = "battle-reactive-judge-fixture@sha256:reactive-judge-v1"
+SPECTATOR_DIR = BATTLE_DIR / "spectator"
 
 for candidate in (REPO_ROOT / "skills", BATTLE_DIR / "src"):
     raw = str(candidate)
@@ -62,6 +66,47 @@ def _run(command: list[str], *, timeout: int = 240) -> subprocess.CompletedProce
         check=False,
         timeout=timeout,
     )
+
+
+def _run_in(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout: int = 240,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    merged_env = os.environ.copy()
+    if env:
+        merged_env.update(env)
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=timeout,
+        env=merged_env,
+    )
+
+
+def _free_local_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def _wait_for_http(host: str, *, timeout_s: float = 10.0) -> None:
+    deadline = time.monotonic() + timeout_s
+    latest: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(host, timeout=1.0) as response:
+                if 200 <= response.status < 500:
+                    return
+        except Exception as exc:  # pragma: no cover - diagnostic path
+            latest = exc
+        time.sleep(0.1)
+    raise RuntimeError(f"HTTP host did not become ready: {host}: {latest!r}")
 
 
 def _fresh_authorization(path: Path, *, target_identity: str = TARGET_IDENTITY) -> dict[str, Any]:
@@ -608,6 +653,105 @@ def probe_transport(summary_path: Path) -> int:
     )
 
 
+def probe_receipt_pixi_replay(summary_path: Path) -> int:
+    out_root = summary_path.parent / "receipt-pixi-replay"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    build = _run_in(["npm", "run", "build"], cwd=SPECTATOR_DIR, timeout=180)
+    (out_root / "build.stdout.txt").write_text(build.stdout, encoding="utf-8")
+    (out_root / "build.stderr.txt").write_text(build.stderr, encoding="utf-8")
+    if build.returncode != 0:
+        raise AssertionError("spectator build failed before receipt Pixi replay proof")
+
+    port = _free_local_port()
+    host = f"http://127.0.0.1:{port}"
+    screenshot_dir = out_root / "screenshots"
+    server = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "http.server",
+            str(port),
+            "--bind",
+            "127.0.0.1",
+            "-d",
+            "dist",
+        ],
+        cwd=SPECTATOR_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        _wait_for_http(host)
+        proof = _run_in(
+            ["npm", "run", "prove:receipt-pixi"],
+            cwd=SPECTATOR_DIR,
+            timeout=90,
+            env={
+                "BATTLE_HOST": host,
+                "BATTLE_RECEIPT_CAPTURE_DIR": str(screenshot_dir),
+            },
+        )
+    finally:
+        server.terminate()
+        try:
+            stdout, stderr = server.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            stdout, stderr = server.communicate(timeout=5)
+        (out_root / "server.stdout.txt").write_text(stdout or "", encoding="utf-8")
+        (out_root / "server.stderr.txt").write_text(stderr or "", encoding="utf-8")
+
+    (out_root / "prove-receipt-pixi.stdout.txt").write_text(proof.stdout, encoding="utf-8")
+    (out_root / "prove-receipt-pixi.stderr.txt").write_text(proof.stderr, encoding="utf-8")
+    if proof.returncode != 0:
+        raise AssertionError("receipt Pixi replay proof failed")
+    if "PASS battle-receipt-pixi-sanity" not in proof.stdout:
+        raise AssertionError("receipt Pixi replay proof did not emit PASS marker")
+
+    required_screenshots = [
+        screenshot_dir / "before-spawn.png",
+        screenshot_dir / "after-spawn.png",
+    ]
+    missing = [str(path) for path in required_screenshots if not path.is_file() or path.stat().st_size < 1000]
+    if missing:
+        raise AssertionError(f"receipt Pixi replay screenshots missing or too small: {missing}")
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite="receipt-pixi-replay",
+            live="local_http_static_bundle_playwright_pixi_receipt_replay",
+            checks=[
+                {
+                    "name": "receipt_pixi_replay_browser_proof",
+                    "status": "PASS",
+                    "host": host,
+                    "screenshots": [str(path) for path in required_screenshots],
+                }
+            ],
+            artifacts={
+                "stdout": str(out_root / "prove-receipt-pixi.stdout.txt"),
+                "stderr": str(out_root / "prove-receipt-pixi.stderr.txt"),
+                "before_spawn_screenshot": str(required_screenshots[0]),
+                "after_spawn_screenshot": str(required_screenshots[1]),
+            },
+            claims_proves=[
+                "receipt-backed Pixi replay derives parent/child visibility from the served fixture",
+                "browser-rendered Pixi replay shows child lanes after the fixture spawn point and supports playhead scrub",
+            ],
+            claims_does_not_prove=[
+                "production staging route availability",
+                "arbitrary future fixture schemas",
+                "full adaptive-lineage exact-chain backend qualification",
+            ],
+        ),
+    )
+
+
 def probe_production_fail_closed(summary_path: Path) -> int:
     with tempfile.TemporaryDirectory(prefix="battle-agentic-prod-") as raw:
         root = Path(raw)
@@ -816,6 +960,8 @@ def main() -> int:
             )
         if args.suite == "transport":
             return probe_transport(args.summary)
+        if args.suite == "receipt-pixi-replay":
+            return probe_receipt_pixi_replay(args.summary)
         if args.suite == "production-fail-closed":
             return probe_production_fail_closed(args.summary)
         raise SystemExit(f"unknown suite: {args.suite}")

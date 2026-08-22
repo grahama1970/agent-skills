@@ -8,7 +8,7 @@ import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
-const url = `${host}/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn-pixi-replay`
+const url = `${host}/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13`
 const checks = []
 
 function record(id, pass, detail) {
@@ -44,6 +44,7 @@ const proof = await page.evaluate(() => {
   const centerWrap = main?.children?.[1]
   const agentWrap = main?.children?.[2]
   const scroll = document.querySelector('[data-qid="battle:timeline:scroll"]')
+  const scrub = document.querySelector('[data-qid="battle:timeline:scrub"]')
 
   const headerCols = header ? getComputedStyle(header).gridTemplateColumns : ''
   const factsCols = facts ? getComputedStyle(facts).gridTemplateColumns : ''
@@ -72,6 +73,7 @@ const proof = await page.evaluate(() => {
   const centerBox = box(centerWrap)
   const agentBox = box(agentWrap)
   const scrollBox = box(scroll)
+  const scrubBox = box(scrub)
 
   return {
     headerColCount: colCount(headerCols),
@@ -90,6 +92,8 @@ const proof = await page.evaluate(() => {
     agentInViewport: !!(agentBox && agentBox.right <= window.innerWidth + 2 && agentBox.bottom <= vpH + 48),
     scrollHasGrid: scroll ? /linear-gradient/i.test(getComputedStyle(scroll).backgroundImage) : false,
     scrollHeight: scrollBox?.height ?? 0,
+    scrubHeight: scrubBox?.height ?? 0,
+    scrubWidth: scrubBox?.width ?? 0,
   }
 })
 
@@ -103,7 +107,7 @@ record('7-difficulty-label-unclipped', proof.difficultyClipped === false, proof.
 record('8-no-nav-collisions', proof.navHits.length === 0, proof.navHits)
 record('9-race-fills-center-height', proof.raceFillsCenter, { race: proof.raceHeight, center: proof.centerHeight })
 record('10-agent-pane-in-viewport', proof.agentInViewport, true)
-record('11-scroll-track-atmosphere', proof.scrollHasGrid && proof.scrollHeight > 200, { scrollHasGrid: proof.scrollHasGrid, scrollHeight: proof.scrollHeight })
+record('11-scroll-track-atmosphere', proof.scrubHeight > 200 && proof.scrubWidth > 900, { scrollHasGrid: proof.scrollHasGrid, scrollHeight: proof.scrollHeight, scrubHeight: proof.scrubHeight, scrubWidth: proof.scrubWidth })
 
 await browser.close()
 const failed = checks.filter((c) => !c.pass).length

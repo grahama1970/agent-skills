@@ -40,8 +40,12 @@ record(
   'source-receipt-index-valid',
   sourceIndex.status === 'PASS'
     && sourceIndex.schema === 'battle.adaptive_lineage_source_receipt_index.v1'
-    && sourceIndex.campaign_root_id === 'battle-004-adaptive-red-blue-lineage-v13',
-  { status: sourceIndex.status, schema: sourceIndex.schema, campaign_root_id: sourceIndex.campaign_root_id },
+    && sourceIndex.battle_id === 'battle-004'
+    && typeof sourceIndex.run_id === 'string'
+    && sourceIndex.run_id.length > 0
+    && typeof sourceIndex.campaign_root_id === 'string'
+    && sourceIndex.campaign_root_id.length > 0,
+  { status: sourceIndex.status, schema: sourceIndex.schema, battle_id: sourceIndex.battle_id, run_id: sourceIndex.run_id, campaign_root_id: sourceIndex.campaign_root_id },
 )
 record(
   'source-receipt-index-public-receipts',
@@ -65,8 +69,23 @@ page.on('request', (request) => {
 const fixtureResponse = await fetch(`${host}/battle-fixtures/${fixtureId}/battle.normalized_ux_fixture.json`)
 const fixture = await fixtureResponse.json()
 record('fixture-http', fixtureResponse.ok && fixture.schema === 'battle.normalized_adaptive_lineage_fixture.v1', { status: fixtureResponse.status, schema: fixture.schema })
+record('source-index-fixture-run-match', sourceIndex.run_id === fixture.run_id && sourceIndex.battle_id === fixture.battle_id, { source_run_id: sourceIndex.run_id, fixture_run_id: fixture.run_id, source_battle_id: sourceIndex.battle_id, fixture_battle_id: fixture.battle_id })
 record('fixture-causal-contract', fixture.causal_continuity_proven === true && fixture.events?.length === 24 && fixture.lanes?.length === 4 && fixture.lineage_edges?.length === 2, { causal: fixture.causal_continuity_proven, events: fixture.events?.length, lanes: fixture.lanes?.length, edges: fixture.lineage_edges?.length })
 record('fixture-shared-atlas', fixture.sprite_theme?.shared_atlas === true && fixture.sprite_theme?.semantic_authority === false && fixture.sprite_theme?.variants?.['v13-shared-runner']?.sprite_id === 'plague_nurgling', fixture.sprite_theme)
+
+const childLanes = (fixture.lanes ?? []).filter((lane) => lane.role === 'child')
+const firstChildVisibleSeconds = Math.min(...childLanes.map((lane) => Number(lane.visible_from_elapsed_seconds)).filter(Number.isFinite))
+const firstChildActiveSeconds = Math.min(...childLanes.map((lane) => Number(lane.active_from_elapsed_seconds)).filter(Number.isFinite))
+const firstMutationSeconds = Math.min(...(fixture.events ?? []).filter((event) => event.event_type === 'genome_mutated').map((event) => Number(event.elapsed_seconds)).filter(Number.isFinite))
+const finalSeconds = Number(fixture.campaign?.elapsed_seconds ?? 134.457076)
+const checkpointSeconds = {
+  preSpawn: Math.max(0, Number.isFinite(firstChildVisibleSeconds) ? firstChildVisibleSeconds - 2 : 71.67),
+  pending: Number.isFinite(firstChildVisibleSeconds) ? firstChildVisibleSeconds + 0.5 : 72,
+  descending: Number.isFinite(firstChildActiveSeconds) ? firstChildActiveSeconds + 0.4 : 79.2,
+  active: Number.isFinite(firstChildActiveSeconds) ? firstChildActiveSeconds + 3 : 82,
+  mutation: Number.isFinite(firstMutationSeconds) && Number.isFinite(finalSeconds) ? (firstMutationSeconds + finalSeconds) / 2 : 134.451,
+  final: finalSeconds,
+}
 
 function replayStateSummary(state) {
   return {
@@ -124,11 +143,14 @@ async function scrubContinuousReplayTo(initialCanvas, seconds) {
   const maxSeconds = Number(await slider.getAttribute('aria-valuemax'))
   if (!Number.isFinite(maxSeconds) || maxSeconds <= 0) throw new Error('Battle replay scrub maximum is unavailable')
   const target = Math.max(0, Math.min(maxSeconds, seconds))
-  const x = target <= 0 ? 1 : target >= maxSeconds ? Math.max(1, box.width - 1) : Math.max(1, Math.min(box.width - 1, (target / maxSeconds) * box.width))
+  const secondsPerPixel = maxSeconds / Math.max(1, box.width)
+  const nearStart = target <= secondsPerPixel * 2
+  const nearEnd = target >= maxSeconds - secondsPerPixel * 2
+  const x = nearStart ? 1 : nearEnd ? Math.max(1, box.width - 1) : Math.max(1, Math.min(box.width - 1, (target / maxSeconds) * box.width))
   await slider.click({ position: { x, y: Math.max(1, Math.min(box.height - 1, box.height / 2)) } })
-  if (target <= 0) await slider.press('ArrowLeft')
-  if (target >= maxSeconds) await slider.press('ArrowRight')
-  const tolerance = target <= 0 || target >= maxSeconds ? 0.05 : Math.max(0.35, (maxSeconds / Math.max(1, box.width)) * 2)
+  if (nearStart) await slider.press('ArrowLeft')
+  if (nearEnd) await slider.press('ArrowRight')
+  const tolerance = nearStart || nearEnd ? 0.05 : Math.max(0.35, secondsPerPixel * 2)
   return waitForContinuousReplayState(
     initialCanvas,
     `scrub to ${target.toFixed(3)}s`,
@@ -184,23 +206,23 @@ async function inspectAt(seconds, name, viewport = { width: 1600, height: 1050 }
   return { ...state, screenshot, raceScreenshot, raceScreenshotBuffer }
 }
 
-const preSpawn = await inspectAt(71.67, '01-pre-spawn-children-hidden.png')
+const preSpawn = await inspectAt(checkpointSeconds.preSpawn, '01-pre-spawn-children-hidden.png')
 record('pre-spawn-parent-only', JSON.stringify([...new Set(preSpawn.laneIds)].sort()) === JSON.stringify(['blue-g1', 'red-g1']), { laneIds: preSpawn.laneIds, animations: preSpawn.animations })
 
-const pending = await inspectAt(72, '02-spawn-authorized-pending.png')
+const pending = await inspectAt(checkpointSeconds.pending, '02-spawn-authorized-pending.png')
 record('authorized-four-lanes', ['red-g1', 'red-g2', 'blue-g1', 'blue-g2'].every((id) => pending.laneIds.includes(id)), pending.laneIds)
 record('authorized-pending-not-active', pending.lineagePhases['red-g2'] === 'authorized_pending' && pending.lineagePhases['blue-g2'] === 'authorized_pending' && pending.animations['red-g2'] === 'idle' && pending.animations['blue-g2'] === 'idle' && /AUTHORIZED PENDING/.test(pending.body), { lineagePhases: pending.lineagePhases, animations: pending.animations })
 
-const descending = await inspectAt(79.2, '03-ladder-descent-hop.png')
+const descending = await inspectAt(checkpointSeconds.descending, '03-ladder-descent-hop.png')
 record('research-materializes-child', descending.lineagePhases['red-g2'] === 'descending' && descending.lineagePhases['blue-g2'] === 'descending' && descending.animations['red-g2'] === 'spawn' && descending.animations['blue-g2'] === 'spawn', { lineagePhases: descending.lineagePhases, animations: descending.animations })
 
-const active = await inspectAt(82, '04-children-active-research.png')
+const active = await inspectAt(checkpointSeconds.active, '04-children-active-research.png')
 record('children-active-research', active.lineagePhases['red-g2'] === 'active' && active.lineagePhases['blue-g2'] === 'active' && active.animations['red-g2'] === 'research' && active.animations['blue-g2'] === 'research', { lineagePhases: active.lineagePhases, animations: active.animations })
 
-const mutation = await inspectAt(134.451, '05-mutation-evidence.png')
+const mutation = await inspectAt(checkpointSeconds.mutation, '05-mutation-evidence.png')
 record('mutation-evidence-animation', mutation.animations['red-g2'] === 'mutate' && mutation.animations['blue-g2'] === 'mutate' && /MUTATION EVIDENCE VERIFIED/.test(mutation.body), { animations: mutation.animations })
 
-const finalState = await inspectAt(134.457, '06-judge-selection-memory-boundary.png')
+const finalState = await inspectAt(checkpointSeconds.final, '06-judge-selection-memory-boundary.png')
 record('no-terminal-overclaim', Object.values(finalState.animations).every((value) => !['killed', 'victory', 'promoted'].includes(value)), finalState.animations)
 record('canvas-nonblank-dimensions', finalState.canvas.width > 900 && finalState.canvas.height > 200, finalState.canvas)
 
@@ -320,13 +342,13 @@ try {
   const pauseEnd = await readContinuousReplayState(initialCanvas)
   const pauseDelta = Math.abs((pauseEnd.playheadSeconds ?? Number.NaN) - (pauseStart.playheadSeconds ?? Number.NaN))
 
-  await scrubContinuousReplayTo(initialCanvas, 71)
+  await scrubContinuousReplayTo(initialCanvas, checkpointSeconds.preSpawn)
   const preSpawnContinuous = await waitForContinuousReplayState(
     initialCanvas,
     'pre-spawn parent-only state',
     (state) => JSON.stringify(state.laneIds) === JSON.stringify(['blue-g1', 'red-g1']),
   )
-  await scrubContinuousReplayTo(initialCanvas, 72)
+  await scrubContinuousReplayTo(initialCanvas, checkpointSeconds.pending)
   const pendingContinuous = await waitForContinuousReplayState(
     initialCanvas,
     'authorized-pending state',
@@ -335,7 +357,7 @@ try {
       && state.animations['red-g2'] === 'idle'
       && state.animations['blue-g2'] === 'idle',
   )
-  await scrubContinuousReplayTo(initialCanvas, 79.2)
+  await scrubContinuousReplayTo(initialCanvas, checkpointSeconds.descending)
   const descendingContinuous = await waitForContinuousReplayState(
     initialCanvas,
     'child descent state',
@@ -344,7 +366,7 @@ try {
       && state.animations['red-g2'] === 'spawn'
       && state.animations['blue-g2'] === 'spawn',
   )
-  await scrubContinuousReplayTo(initialCanvas, 82)
+  await scrubContinuousReplayTo(initialCanvas, checkpointSeconds.active)
   const researchContinuous = await waitForContinuousReplayState(
     initialCanvas,
     'child research state',
@@ -353,7 +375,7 @@ try {
       && state.animations['red-g2'] === 'research'
       && state.animations['blue-g2'] === 'research',
   )
-  await scrubContinuousReplayTo(initialCanvas, Number(fixture.campaign?.elapsed_seconds ?? 134.457076))
+  await scrubContinuousReplayTo(initialCanvas, checkpointSeconds.final)
   const mutationContinuous = await waitForContinuousReplayState(
     initialCanvas,
     'mutation/final state',

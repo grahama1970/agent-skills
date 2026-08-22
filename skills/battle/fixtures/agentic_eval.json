@@ -4,13 +4,13 @@
   "trials": 2,
   "eval_tier": "compliance",
   "live": true,
-  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, focused contract suites, and an explicit fail-closed adaptive-lineage exact-chain receipt gate",
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, and an explicit fail-closed adaptive-lineage exact-chain receipt gate",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
-    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, production staging route availability, production WebSocket TLS/auth/fanout, or visual Pixi correctness"
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, memory-lineage contract guards, same-run transport, pause/resume transport safety, receipt-backed Pixi parent/child replay visibility and scrub behavior, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, production staging route availability, production WebSocket TLS/auth/fanout, or full visual design acceptance"
   },
-  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, and independent JSON receipt readback",
-  "what_remains_unverified": "passing battle-004 exact-byte live adaptive-lineage recovered proof chain (#1336), external staging authority bundle (#1149), and browser visual Pixi verification",
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
+  "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout, and full visual design acceptance",
   "capability_claims": [
     {
       "id": "battle.authorization.fail_closed",
@@ -82,6 +82,14 @@
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.receipt_pixi.replay",
+      "description": "Receipt-backed Pixi replay derives parent/child visibility from the served fixture and supports scrub on the browser-rendered route",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
       }
     },
     {
@@ -228,6 +236,20 @@
       ],
       "required_evidence": [
         "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "receipt_pixi.replay",
+      "claim_id": "battle.receipt_pixi.replay",
+      "seam_type": "browser/UI rendering",
+      "criticality": "critical",
+      "failure_modes": [
+        "Pixi replay proof is pinned to stale lane IDs",
+        "child lanes render before fixture spawn time",
+        "timeline scrub control stops moving the playhead"
+      ],
+      "required_evidence": [
+        "live_e2e"
       ]
     },
     {
@@ -475,6 +497,38 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/transport-pixi-pause-resume-safety.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "receipt-backed-pixi-replay-browser-proof",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "battle.receipt_pixi.replay"
+      ],
+      "seams": [
+        "receipt_pixi.replay"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py receipt-pixi-replay --summary /tmp/battle-agentic-evals/receipt-backed-pixi-replay-browser-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=receipt-pixi-replay"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/receipt-backed-pixi-replay-browser-proof.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

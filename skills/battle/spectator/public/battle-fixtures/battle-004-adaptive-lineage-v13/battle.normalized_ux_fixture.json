@@ -1,8 +1,8 @@
 {
   "battle_id": "battle-004",
   "campaign": {
-    "campaign_clock_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-clock",
-    "elapsed_seconds": 132.838229,
+    "campaign_clock_id": "battle-agentic-exact-chain-20260822T161458Z-clock",
+    "elapsed_seconds": 141.183247,
     "generation_count": 2,
     "generation_ids": [
       1,
@@ -47,8 +47,8 @@
         "red-g1",
         "blue-g1"
       ],
-      "elapsed_seconds": 54.712643,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0001",
+      "elapsed_seconds": 44.301563,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0001",
       "event_type": "judge_verdict",
       "generation": 1,
       "lane_id": null,
@@ -58,21 +58,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "3864ca621eaa8201b9a8eb79aff2ac061017b5bd642f2e4002785b8eaf3f503e",
+        "sha256": "14b3ae11ee1566fe72facf722bb1f88e60b9130c182e3e6120fedd28ecfd59fc",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
       "scope": "generation_pair",
       "seq": 1,
-      "source_created_at": "2026-08-01T15:06:47Z",
+      "source_created_at": "2026-08-22T16:15:42Z",
       "team": null
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 54.759112,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0002",
+      "elapsed_seconds": 44.302986,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0002",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -80,23 +80,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "a467eadf5d144e1b4489f562e2d9e819a4588e61de50b144d4a7d79dcb92c689",
+        "sha256": "244f91413779656a6dc7a53d0d9e44830e89c52ee83398a4bae60033b5b021a2",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 2,
-      "source_created_at": "2026-08-01T15:06:48Z",
+      "source_created_at": "2026-08-22T16:15:42Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 54.800458,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0003",
+      "elapsed_seconds": 44.303669,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0003",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -109,23 +109,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
+        "sha256": "3c2ff008e2dbe2ba20a4d611b7ee63bf4354d14243e477a7a370510eff987373",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 3,
-      "source_created_at": "2026-08-01T15:06:48Z",
+      "source_created_at": "2026-08-22T16:15:42Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 54.842369,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0004",
+      "elapsed_seconds": 44.304355,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0004",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -133,23 +133,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "859228168a067c55480351830ddacb9419a4fe0fb1319af4506e7693a4014d57",
+        "sha256": "0dc5702aad80d13fd86c672b9b2768151c75db639bc677d3c945e30312ba0a2f",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 4,
-      "source_created_at": "2026-08-01T15:06:48Z",
+      "source_created_at": "2026-08-22T16:15:42Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 54.884153,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0005",
+      "elapsed_seconds": 44.305026,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0005",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -162,23 +162,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
+        "sha256": "d25d06e3f9c2bd60e069cef515ccc9a4b0c58b69ceff72c22543544be9d25388",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 5,
-      "source_created_at": "2026-08-01T15:06:48Z",
+      "source_created_at": "2026-08-22T16:15:42Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 82.391921,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0006",
+      "elapsed_seconds": 69.799862,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0006",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "red-g1",
@@ -186,23 +186,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "79f164ca418dd3a029f35426b490bb5809fe6ad9e93934a972fdce4359b7853e",
+        "sha256": "60e7fc7a624c68e179d435a67e45ffdeb104e8684cc113c83911a73a74fa6320",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 6,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 82.459916,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0007",
+      "elapsed_seconds": 69.80054,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0007",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -210,23 +210,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "d15e15a96987f60fc691e16b0a6940480a603d92251b1ee922a807bc8b626878",
+        "sha256": "0b1c7d50829d381f00ba2b4b411c76f20929693bbf80111056ccf92b712f94d5",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 7,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 82.499347,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0008",
+      "elapsed_seconds": 69.801523,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0008",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -234,23 +234,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "dca2a1cd2ce5d1196c363eb719429a95ddb3456917d60231d41e046d5537f240",
+        "sha256": "ad282e35e78cba00678949a648836ecadaf7d4b31c7fe3ca7a825878eb33b067",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 8,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 82.540831,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0009",
+      "elapsed_seconds": 69.802111,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0009",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -258,23 +258,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "3928c023a57a2ea7c8354c5cef8fef9812e0a9f758af04064e76eaf95fcaec85",
+        "sha256": "8a566b629baabab2de621af47f2da5587d28074d032492c2f319da9bbde53b7d",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 9,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 82.574887,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0010",
+      "elapsed_seconds": 69.803312,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0010",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -282,23 +282,23 @@
         "packet_id": "battle-004-red-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-knowledge-packet",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "cf43a54560994aa1bac1b9b234ab82c10cdf65e5b299c8c6515a8aaa0fedb396",
+        "sha256": "998dfccbe745596816eb26993c7ecfb2721b0bfb9ffc88db6a27dab94cf3ade9",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 10,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 82.60762,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0011",
+      "elapsed_seconds": 69.803952,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0011",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -306,23 +306,23 @@
         "packet_id": "battle-004-blue-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-knowledge-packet",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "a7dd38462a1a96d422cb950406e07e80f951e15d085c12c8d3401189de5e35ad",
+        "sha256": "58d84b55dbff84e5d1fb1a2b94248c198461d4ed1ab032289abd25edb9ecdd62",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 11,
-      "source_created_at": "2026-08-01T15:07:15Z",
+      "source_created_at": "2026-08-22T16:16:08Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 91.530273,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0012",
+      "elapsed_seconds": 78.809455,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0012",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -332,21 +332,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "9ed0c1bf5a94923496f4a419a5af846e95919a54c87d189fed69982dc8e7cdc0",
+        "sha256": "4e0815cc1680fda6ef958483701d49dbab2cf87513486a3fa73a237842e195ea",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 12,
-      "source_created_at": "2026-08-01T15:07:24Z",
+      "source_created_at": "2026-08-22T16:16:17Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 91.584291,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0013",
+      "elapsed_seconds": 78.810362,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0013",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -356,13 +356,13 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "616a15e80e285f8b1b3926e322ebcb752673d772e179e67cf8ddfe1f2dfd718d",
+        "sha256": "0f178e6fd0e0091baef909feee0bd28cc3a570661777c2744421534aee04eeaa",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 13,
-      "source_created_at": "2026-08-01T15:07:24Z",
+      "source_created_at": "2026-08-22T16:16:17Z",
       "team": "blue"
     },
     {
@@ -370,8 +370,8 @@
         "red-g2",
         "blue-g2"
       ],
-      "elapsed_seconds": 132.42603,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0014",
+      "elapsed_seconds": 141.175068,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0014",
       "event_type": "judge_verdict",
       "generation": 2,
       "lane_id": null,
@@ -381,21 +381,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "5fa342648faf9819a1b16540c99e92830fff3f7f0307e928c1b6b923a0222c86",
+        "sha256": "e8084acabbf1201d41d38936226616db5ef47f0ae7cd1991cb2a6023df63d1c9",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
       "scope": "generation_pair",
       "seq": 14,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": null
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 132.462922,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0015",
+      "elapsed_seconds": 141.176424,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0015",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
       "lane_id": "red-g2",
@@ -403,21 +403,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "5d819dcfc2a2bd26f36720166cb852f388f70ddefc589b926bdc0d0458a7fd99",
+        "sha256": "e64eab62ef57e0d64852ab89c8eaeb949e0d7103a4e2064860580f69c42983d2",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 15,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 132.503286,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0016",
+      "elapsed_seconds": 141.176901,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0016",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -425,69 +425,69 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "84f4983c9c1ab95f9bcae8c59095f5b8d6b32b747f1065bef3d696b9d1eccbe4",
+        "sha256": "05b1af85d8e58d620b054abec6f1a59d7432f67ca57b01590222b27359a9927e",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 16,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 132.546167,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0017",
+      "elapsed_seconds": 141.177649,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0017",
       "event_type": "genome_mutated",
       "generation": 2,
       "lane_id": "red-g2",
       "payload": {
-        "semantic_change_count": 26
+        "semantic_change_count": 29
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-g2-delta",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-g2-delta",
         "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "df6adfb7010c5a54f554a9995323c926e18e745cdaae5d13fcf3e42bac7a87e9",
+        "sha256": "2b358bda5015844eebf3539fe0a97e4a27ddc946d7dbbf7bd01b8101da7c4268",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 17,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 132.587791,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0018",
+      "elapsed_seconds": 141.178515,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0018",
       "event_type": "genome_mutated",
       "generation": 2,
       "lane_id": "blue-g2",
       "payload": {
-        "semantic_change_count": 31
+        "semantic_change_count": 30
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-g2-delta",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-g2-delta",
         "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "1d070ee6f5a55c0be08f45b116795e33f8c70ef3fef082db9b7183b22c1fbbc8",
+        "sha256": "6fc2238d7952a7a5d8cb9b560c7727c55d08d643bbfdec90a022e62329ab8cc3",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 18,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 132.629562,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0019",
+      "elapsed_seconds": 141.179193,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0019",
       "event_type": "generation_observation_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -495,23 +495,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "7c9c7ff06455d378471c89ccfa0143b09210c3110037b721601b9afae3d12a4d",
+        "sha256": "1a7f2f3bfeec6aba6bbf8a8a7904ebbcc50e95f0d6be89907b7bef496fcc89e3",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 19,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 132.671203,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0020",
+      "elapsed_seconds": 141.179801,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0020",
       "event_type": "fitness_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -524,23 +524,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
+        "sha256": "cc9c5452e2ccda02e5e54a2185b7fd0f6f404fc4748763df625626144e99b90c",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 20,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 132.712961,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0021",
+      "elapsed_seconds": 141.180438,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0021",
       "event_type": "generation_observation_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -548,23 +548,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "680284fed1304e59069caada1d79f3a28346f2cba7c341ef967c466b1b602caa",
+        "sha256": "35a4103e40bf309bde7ee0a57a108693d105139e83f7bb245ea75660e17ac028",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 21,
-      "source_created_at": "2026-08-01T15:08:05Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 132.754692,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0022",
+      "elapsed_seconds": 141.181138,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0022",
       "event_type": "fitness_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -577,15 +577,15 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
+        "sha256": "6ef97c92d73d47e782b4986f749aaacce0665a371df015fbfb0826bfd96023f3",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 22,
-      "source_created_at": "2026-08-01T15:08:06Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": "blue"
     },
     {
@@ -595,8 +595,8 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 132.796509,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0023",
+      "elapsed_seconds": 141.181761,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0023",
       "event_type": "selection_decision",
       "generation": null,
       "lane_id": null,
@@ -605,15 +605,15 @@
         "red_selected_generation": 2
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
         "schema": "battle.adaptive_selection_receipt.v1",
-        "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+        "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
       "seq": 23,
-      "source_created_at": "2026-08-01T15:08:06Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": null
     },
     {
@@ -623,8 +623,8 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 132.838229,
-      "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0024",
+      "elapsed_seconds": 141.183247,
+      "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0024",
       "event_type": "memory_evaluation",
       "generation": null,
       "lane_id": null,
@@ -635,15 +635,15 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-memory-evaluation",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-memory-evaluation",
         "schema": "battle.memory_promotion_evaluation.v1",
-        "sha256": "7a95e086f16bacdf597967f95f903655965c4e66167c994c22d86f7e9bf42cdc",
+        "sha256": "eef997e72932b39a5ac485be0f406ad33cd207517812dd3aac88446d589eabda",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
       "seq": 24,
-      "source_created_at": "2026-08-01T15:08:06Z",
+      "source_created_at": "2026-08-22T16:17:19Z",
       "team": null
     }
   ],
@@ -657,7 +657,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G1 PARENT",
-      "end_elapsed_seconds": 132.838229,
+      "end_elapsed_seconds": 141.183247,
       "generation": 1,
       "lane_id": "red-g1",
       "parent_lane_id": null,
@@ -666,20 +666,20 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 91.530273,
+      "active_from_elapsed_seconds": 78.809455,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G2 CHILD",
-      "end_elapsed_seconds": 132.838229,
+      "end_elapsed_seconds": 141.183247,
       "generation": 2,
       "lane_id": "red-g2",
       "parent_lane_id": "red-g1",
       "role": "child",
       "team": "red",
-      "visible_from_elapsed_seconds": 82.499347
+      "visible_from_elapsed_seconds": 69.801523
     },
     {
       "active_from_elapsed_seconds": 0.0,
@@ -689,7 +689,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G1 PARENT",
-      "end_elapsed_seconds": 132.838229,
+      "end_elapsed_seconds": 141.183247,
       "generation": 1,
       "lane_id": "blue-g1",
       "parent_lane_id": null,
@@ -698,28 +698,28 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 91.584291,
+      "active_from_elapsed_seconds": 78.810362,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G2 CHILD",
-      "end_elapsed_seconds": 132.838229,
+      "end_elapsed_seconds": 141.183247,
       "generation": 2,
       "lane_id": "blue-g2",
       "parent_lane_id": "blue-g1",
       "role": "child",
       "team": "blue",
-      "visible_from_elapsed_seconds": 82.540831
+      "visible_from_elapsed_seconds": 69.802111
     }
   ],
   "lineage_edges": [
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "dca2a1cd2ce5d1196c363eb719429a95ddb3456917d60231d41e046d5537f240",
+        "sha256": "ad282e35e78cba00678949a648836ecadaf7d4b31c7fe3ca7a825878eb33b067",
         "status": "PASS",
         "verdict": null
       },
@@ -728,20 +728,20 @@
       "edge_kind": "spawn",
       "parent_lane_id": "red-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "79f164ca418dd3a029f35426b490bb5809fe6ad9e93934a972fdce4359b7853e",
+        "sha256": "60e7fc7a624c68e179d435a67e45ffdeb104e8684cc113c83911a73a74fa6320",
         "status": "PASS",
         "verdict": null
       },
       "team": "red",
-      "visible_from_elapsed_seconds": 82.499347
+      "visible_from_elapsed_seconds": 69.801523
     },
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "3928c023a57a2ea7c8354c5cef8fef9812e0a9f758af04064e76eaf95fcaec85",
+        "sha256": "8a566b629baabab2de621af47f2da5587d28074d032492c2f319da9bbde53b7d",
         "status": "PASS",
         "verdict": null
       },
@@ -750,14 +750,14 @@
       "edge_kind": "spawn",
       "parent_lane_id": "blue-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "d15e15a96987f60fc691e16b0a6940480a603d92251b1ee922a807bc8b626878",
+        "sha256": "0b1c7d50829d381f00ba2b4b411c76f20929693bbf80111056ccf92b712f94d5",
         "status": "PASS",
         "verdict": null
       },
       "team": "blue",
-      "visible_from_elapsed_seconds": 82.540831
+      "visible_from_elapsed_seconds": 69.802111
     }
   ],
   "live_source": "adaptive_red_blue_lineage_v2",
@@ -774,9 +774,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-spawn-policy-decision",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "3928c023a57a2ea7c8354c5cef8fef9812e0a9f758af04064e76eaf95fcaec85",
+              "sha256": "8a566b629baabab2de621af47f2da5587d28074d032492c2f319da9bbde53b7d",
               "status": "PASS",
               "verdict": null
             },
@@ -785,22 +785,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "blue-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-parent-spawn-request",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "d15e15a96987f60fc691e16b0a6940480a603d92251b1ee922a807bc8b626878",
+              "sha256": "0b1c7d50829d381f00ba2b4b411c76f20929693bbf80111056ccf92b712f94d5",
               "status": "PASS",
               "verdict": null
             },
             "team": "blue",
-            "visible_from_elapsed_seconds": 82.540831
+            "visible_from_elapsed_seconds": 69.802111
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
+              "sha256": "d25d06e3f9c2bd60e069cef515ccc9a4b0c58b69ceff72c22543544be9d25388",
               "status": "PASS",
               "verdict": null
             },
@@ -809,9 +809,9 @@
             "lane_id": "blue-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "859228168a067c55480351830ddacb9419a4fe0fb1319af4506e7693a4014d57",
+              "sha256": "0dc5702aad80d13fd86c672b9b2768151c75db639bc677d3c945e30312ba0a2f",
               "status": "PASS",
               "verdict": null
             },
@@ -819,9 +819,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+              "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
               "status": "PASS",
               "verdict": null
             },
@@ -829,26 +829,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
+              "sha256": "6ef97c92d73d47e782b4986f749aaacce0665a371df015fbfb0826bfd96023f3",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-g2-delta",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "1d070ee6f5a55c0be08f45b116795e33f8c70ef3fef082db9b7183b22c1fbbc8",
+              "sha256": "6fc2238d7952a7a5d8cb9b560c7727c55d08d643bbfdec90a022e62329ab8cc3",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "blue-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "680284fed1304e59069caada1d79f3a28346f2cba7c341ef967c466b1b602caa",
+              "sha256": "35a4103e40bf309bde7ee0a57a108693d105139e83f7bb245ea75660e17ac028",
               "status": "PASS",
               "verdict": null
             },
@@ -856,9 +856,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+              "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
               "status": "PASS",
               "verdict": null
             },
@@ -871,9 +871,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-spawn-policy-decision",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "dca2a1cd2ce5d1196c363eb719429a95ddb3456917d60231d41e046d5537f240",
+              "sha256": "ad282e35e78cba00678949a648836ecadaf7d4b31c7fe3ca7a825878eb33b067",
               "status": "PASS",
               "verdict": null
             },
@@ -882,22 +882,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "red-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-parent-spawn-request",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "79f164ca418dd3a029f35426b490bb5809fe6ad9e93934a972fdce4359b7853e",
+              "sha256": "60e7fc7a624c68e179d435a67e45ffdeb104e8684cc113c83911a73a74fa6320",
               "status": "PASS",
               "verdict": null
             },
             "team": "red",
-            "visible_from_elapsed_seconds": 82.499347
+            "visible_from_elapsed_seconds": 69.801523
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
+              "sha256": "3c2ff008e2dbe2ba20a4d611b7ee63bf4354d14243e477a7a370510eff987373",
               "status": "PASS",
               "verdict": null
             },
@@ -906,9 +906,9 @@
             "lane_id": "red-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "a467eadf5d144e1b4489f562e2d9e819a4588e61de50b144d4a7d79dcb92c689",
+              "sha256": "244f91413779656a6dc7a53d0d9e44830e89c52ee83398a4bae60033b5b021a2",
               "status": "PASS",
               "verdict": null
             },
@@ -916,9 +916,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+              "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
               "status": "PASS",
               "verdict": null
             },
@@ -926,26 +926,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
+              "sha256": "cc9c5452e2ccda02e5e54a2185b7fd0f6f404fc4748763df625626144e99b90c",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-g2-delta",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "df6adfb7010c5a54f554a9995323c926e18e745cdaae5d13fcf3e42bac7a87e9",
+              "sha256": "2b358bda5015844eebf3539fe0a97e4a27ddc946d7dbbf7bd01b8101da7c4268",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "red-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "7c9c7ff06455d378471c89ccfa0143b09210c3110037b721601b9afae3d12a4d",
+              "sha256": "1a7f2f3bfeec6aba6bbf8a8a7904ebbcc50e95f0d6be89907b7bef496fcc89e3",
               "status": "PASS",
               "verdict": null
             },
@@ -953,9 +953,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+              "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
               "status": "PASS",
               "verdict": null
             },
@@ -971,168 +971,168 @@
       "NO_PROMOTION",
       "NO_PROMOTION"
     ],
-    "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-memory-evaluation",
-    "sha256": "7a95e086f16bacdf597967f95f903655965c4e66167c994c22d86f7e9bf42cdc"
+    "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-memory-evaluation",
+    "sha256": "eef997e72932b39a5ac485be0f406ad33cd207517812dd3aac88446d589eabda"
   },
   "proof_mode": "receipt_backed_fixture",
   "provenance": {
     "projection_kind": "adaptive_lineage_v13",
     "raw_paths_redacted": true,
-    "source_proof_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3",
+    "source_proof_id": "source-run",
     "source_run_count": 1
   },
   "receipt_refs": [
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "a467eadf5d144e1b4489f562e2d9e819a4588e61de50b144d4a7d79dcb92c689",
+      "sha256": "244f91413779656a6dc7a53d0d9e44830e89c52ee83398a4bae60033b5b021a2",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "859228168a067c55480351830ddacb9419a4fe0fb1319af4506e7693a4014d57",
+      "sha256": "0dc5702aad80d13fd86c672b9b2768151c75db639bc677d3c945e30312ba0a2f",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "7c9c7ff06455d378471c89ccfa0143b09210c3110037b721601b9afae3d12a4d",
+      "sha256": "1a7f2f3bfeec6aba6bbf8a8a7904ebbcc50e95f0d6be89907b7bef496fcc89e3",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "680284fed1304e59069caada1d79f3a28346f2cba7c341ef967c466b1b602caa",
+      "sha256": "35a4103e40bf309bde7ee0a57a108693d105139e83f7bb245ea75660e17ac028",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
+      "sha256": "3c2ff008e2dbe2ba20a4d611b7ee63bf4354d14243e477a7a370510eff987373",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
+      "sha256": "d25d06e3f9c2bd60e069cef515ccc9a4b0c58b69ceff72c22543544be9d25388",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g2-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
+      "sha256": "cc9c5452e2ccda02e5e54a2185b7fd0f6f404fc4748763df625626144e99b90c",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g2-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
+      "sha256": "6ef97c92d73d47e782b4986f749aaacce0665a371df015fbfb0826bfd96023f3",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-parent-spawn-request",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "79f164ca418dd3a029f35426b490bb5809fe6ad9e93934a972fdce4359b7853e",
+      "sha256": "60e7fc7a624c68e179d435a67e45ffdeb104e8684cc113c83911a73a74fa6320",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-parent-spawn-request",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "d15e15a96987f60fc691e16b0a6940480a603d92251b1ee922a807bc8b626878",
+      "sha256": "0b1c7d50829d381f00ba2b4b411c76f20929693bbf80111056ccf92b712f94d5",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-g1-g2-delta",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "df6adfb7010c5a54f554a9995323c926e18e745cdaae5d13fcf3e42bac7a87e9",
+      "sha256": "2b358bda5015844eebf3539fe0a97e4a27ddc946d7dbbf7bd01b8101da7c4268",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-g1-g2-delta",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "1d070ee6f5a55c0be08f45b116795e33f8c70ef3fef082db9b7183b22c1fbbc8",
+      "sha256": "6fc2238d7952a7a5d8cb9b560c7727c55d08d643bbfdec90a022e62329ab8cc3",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
       "schema": "battle.adaptive_selection_receipt.v1",
-      "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+      "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-memory-evaluation",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-memory-evaluation",
       "schema": "battle.memory_promotion_evaluation.v1",
-      "sha256": "7a95e086f16bacdf597967f95f903655965c4e66167c994c22d86f7e9bf42cdc",
+      "sha256": "eef997e72932b39a5ac485be0f406ad33cd207517812dd3aac88446d589eabda",
       "status": "PASS"
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "3864ca621eaa8201b9a8eb79aff2ac061017b5bd642f2e4002785b8eaf3f503e",
+      "sha256": "14b3ae11ee1566fe72facf722bb1f88e60b9130c182e3e6120fedd28ecfd59fc",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-spawn-policy-decision",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "dca2a1cd2ce5d1196c363eb719429a95ddb3456917d60231d41e046d5537f240",
+      "sha256": "ad282e35e78cba00678949a648836ecadaf7d4b31c7fe3ca7a825878eb33b067",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-spawn-policy-decision",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "3928c023a57a2ea7c8354c5cef8fef9812e0a9f758af04064e76eaf95fcaec85",
+      "sha256": "8a566b629baabab2de621af47f2da5587d28074d032492c2f319da9bbde53b7d",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-red-knowledge-packet",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-red-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "cf43a54560994aa1bac1b9b234ab82c10cdf65e5b299c8c6515a8aaa0fedb396",
+      "sha256": "998dfccbe745596816eb26993c7ecfb2721b0bfb9ffc88db6a27dab94cf3ade9",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-blue-knowledge-packet",
+      "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-blue-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "a7dd38462a1a96d422cb950406e07e80f951e15d085c12c8d3401189de5e35ad",
+      "sha256": "58d84b55dbff84e5d1fb1a2b94248c198461d4ed1ab032289abd25edb9ecdd62",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "9ed0c1bf5a94923496f4a419a5af846e95919a54c87d189fed69982dc8e7cdc0",
+      "sha256": "4e0815cc1680fda6ef958483701d49dbab2cf87513486a3fa73a237842e195ea",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "616a15e80e285f8b1b3926e322ebcb752673d772e179e67cf8ddfe1f2dfd718d",
+      "sha256": "0f178e6fd0e0091baef909feee0bd28cc3a570661777c2744421534aee04eeaa",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "5fa342648faf9819a1b16540c99e92830fff3f7f0307e928c1b6b923a0222c86",
+      "sha256": "e8084acabbf1201d41d38936226616db5ef47f0ae7cd1991cb2a6023df63d1c9",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "5d819dcfc2a2bd26f36720166cb852f388f70ddefc589b926bdc0d0458a7fd99",
+      "sha256": "e64eab62ef57e0d64852ab89c8eaeb949e0d7103a4e2064860580f69c42983d2",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "84f4983c9c1ab95f9bcae8c59095f5b8d6b32b747f1065bef3d696b9d1eccbe4",
+      "sha256": "05b1af85d8e58d620b054abec6f1a59d7432f67ca57b01590222b27359a9927e",
       "status": "PASS",
       "verdict": null
     }
@@ -1149,7 +1149,7 @@
     "sprite_identity_is_cosmetic_only": true,
     "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
   },
-  "run_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3",
+  "run_id": "battle-agentic-exact-chain-20260822T161458Z",
   "schema": "battle.normalized_adaptive_lineage_fixture.v1",
   "scoreboard": {
     "blue_score": 2,
@@ -1164,12 +1164,12 @@
     "inputs": [
       {
         "blue_delta": 1,
-        "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0001",
+        "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0001",
         "generation": 1,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "3864ca621eaa8201b9a8eb79aff2ac061017b5bd642f2e4002785b8eaf3f503e",
+          "sha256": "14b3ae11ee1566fe72facf722bb1f88e60b9130c182e3e6120fedd28ecfd59fc",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1178,12 +1178,12 @@
       },
       {
         "blue_delta": 1,
-        "event_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-event-0014",
+        "event_id": "battle-agentic-exact-chain-20260822T161458Z-event-0014",
         "generation": 2,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "5fa342648faf9819a1b16540c99e92830fff3f7f0307e928c1b6b923a0222c86",
+          "sha256": "e8084acabbf1201d41d38936226616db5ef47f0ae7cd1991cb2a6023df63d1c9",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1198,8 +1198,8 @@
   },
   "selection": {
     "improvement_claimed": false,
-    "receipt_id": "battle-004-adaptive-lineage-v13-20260801-issue1147-r3-selection",
-    "sha256": "adb0fb6680f4bb675ec39d07c20322d686f3a9b53733b306081943aefa094467",
+    "receipt_id": "battle-agentic-exact-chain-20260822T161458Z-selection",
+    "sha256": "41833147c17b191047e9c077a41d0f5be63a4fa1ecf7737136ff8450639821e2",
     "teams": {
       "blue": {
         "component_comparison": [
@@ -1219,8 +1219,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "a2bef1bbd22189dc6912c1626e65b6cf34a7d81eae4f0716e1a95c74bd7731ec",
-        "generation_2_fitness_receipt_sha256": "5dbbb54781d8fbfa57b518766ee752052f39543369f4ebc6d6a222a6c4a396fc",
+        "generation_1_fitness_receipt_sha256": "d25d06e3f9c2bd60e069cef515ccc9a4b0c58b69ceff72c22543544be9d25388",
+        "generation_2_fitness_receipt_sha256": "6ef97c92d73d47e782b4986f749aaacce0665a371df015fbfb0826bfd96023f3",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
@@ -1243,8 +1243,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "b290698e3f13c22f3fc6a70c089d10e61dceb557357f090046b5a7a8e3052ba6",
-        "generation_2_fitness_receipt_sha256": "29c10cdcd07392f3c7855e3317cf4146d27c89e09f6e595a2238779e6923381f",
+        "generation_1_fitness_receipt_sha256": "3c2ff008e2dbe2ba20a4d611b7ee63bf4354d14243e477a7a370510eff987373",
+        "generation_2_fitness_receipt_sha256": "cc9c5452e2ccda02e5e54a2185b7fd0f6f404fc4748763df625626144e99b90c",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
